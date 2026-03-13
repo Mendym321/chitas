@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>Chitas Daily</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0A0A0F; --surface: #13131A; --card: #1A1A24;
+    --border: #25252F; --hi: #32323E;
+    --gold: #F0A500; --green: #1DB954; --blue: #4A9EFF;
+    --red: #FF4757; --purple: #A855F7;
+    --t1: #F0F0F5; --t2: #8888A0; --t3: #444458;
+  }
+  /* Light mode override */
+  html.light {
+    --bg: #F5F5F0; --surface: #EEEEE8; --card: #FFFFFF;
+    --border: #DDDDD5; --hi: #CCCCBF;
+    --t1: #111118; --t2: #555560; --t3: #99998A;
+  }
+  @media (prefers-color-scheme: light) {
+    html:not(.dark) {
+      --bg: #F5F5F0; --surface: #EEEEE8; --card: #FFFFFF;
+      --border: #DDDDD5; --hi: #CCCCBF;
+      --t1: #111118; --t2: #555560; --t3: #99998A;
+    }
+  }
+  html, body { background: var(--bg); color: var(--t1); font-family: 'DM Sans', sans-serif; min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+  #app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+  button { font-family: inherit; cursor: pointer; }
+  button:active { opacity: .8; }
+  a { -webkit-tap-highlight-color: transparent; }
+  input { font-family: inherit; }
+  input:focus { outline: none; }
+
+  /* Animations */
+  @keyframes up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  @keyframes pop { 0%{transform:scale(.7);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+
+  .anim-up { animation: up .32s ease both; }
+  .anim-fadeup { animation: fadeUp .4s ease both; }
+  .spinner { width:30px;height:30px;border:3px solid var(--border);border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite; }
+
+  /* Layout helpers */
+  .flex { display: flex; }
+  .flex-col { display: flex; flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-center { justify-content: center; }
+  .justify-between { justify-content: space-between; }
+  .flex-1 { flex: 1; min-width: 0; }
+  .gap-6 { gap: 6px; } .gap-8 { gap: 8px; } .gap-10 { gap: 10px; } .gap-12 { gap: 12px; }
+  .text-center { text-align: center; }
+  .ellipsis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .w100 { width: 100%; }
+
+  /* Sections */
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .panel { display: none; position:fixed; inset:0; z-index:500; background:var(--bg); flex-direction:column; }
+  .panel.open { display: flex; }
+
+  /* Toast */
+  #toast { position:fixed;top:14px;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:99px;font-size:14px;font-weight:700;z-index:600;white-space:nowrap;box-shadow:0 8px 40px rgba(0,0,0,.7);display:none;pointer-events:none; }
+
+  /* Bottom nav */
+  #bottom-nav { position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:10px 16px 20px;gap:6px;z-index:100; }
+  .nav-btn { flex:1;padding:7px 4px;border-radius:10px;border:none;background:transparent;color:var(--t3);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s; }
+  .nav-btn.active { background:rgba(240,165,0,.12); color:var(--gold); }
+
+  /* Cards */
+  .card { background:var(--card);border:1px solid var(--border);border-radius:14px; }
+  .section-card { background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:10px;transition:border-color .3s; }
+  .section-card.done { border-color: rgba(29,185,84,.5); }
+
+  /* Skeleton */
+  .skel { background:var(--border);border-radius:6px;animation:up .35s ease both; }
+
+  /* Onboarding input */
+  .ob-input { width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--t1);font-size:16px;caret-color:var(--gold);margin-bottom:12px; }
+  .ob-input:focus { border-color:var(--gold); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── ONBOARDING ── -->
+  <div id="onboarding" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
+    <div style="max-width:360px;width:100%;" class="anim-fadeup">
+
+      <!-- Step 1: Name -->
+      <div id="ob-step1">
+        <div style="width:58px;height:58px;border-radius:16px;background:var(--card);border:1px solid var(--hi);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--gold)"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+        </div>
+        <h1 style="font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:10px;">Chitas<br><span style="color:var(--gold)">Daily</span></h1>
+        <p style="color:var(--t2);font-size:14px;margin-bottom:36px;line-height:1.6;">Your daily learning companion.<br>Chumash · Tehillim · Tanya · Rambam</p>
+        <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">Your Name</label>
+        <input id="ob-name" class="ob-input" placeholder="e.g. Yosef Cohen" autocomplete="off"/>
+        <button id="ob-next1" onclick="obNext1()" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;">Continue →</button>
+      </div>
+
+      <!-- Step 2: City (no age — just for leaderboard location flavour) -->
+      <div id="ob-step2" style="display:none;">
+        <button onclick="document.getElementById('ob-step1').style.display='';document.getElementById('ob-step2').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
+        <h2 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Where are you learning from?</h2>
+        <p style="color:var(--t2);font-size:13px;margin-bottom:28px;line-height:1.6;">Shows on the leaderboard next to your name.<br><span style="color:var(--t3);">Skip if you prefer.</span></p>
+        <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">City</label>
+        <input id="ob-city" class="ob-input" placeholder="e.g. Crown Heights" autocomplete="off"/>
+        <button onclick="obNext2()" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;">Continue →</button>
+        <button onclick="obNext2()" style="width:100%;padding:11px;border-radius:12px;background:transparent;border:none;color:var(--t3);font-size:13px;margin-top:6px;">Skip →</button>
+      </div>
+
+      <!-- Step 3: Rambam track -->
+      <div id="ob-step3" style="display:none;">
+        <button onclick="document.getElementById('ob-step2').style.display='';document.getElementById('ob-step3').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
+        <h2 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Rambam Track</h2>
+        <p style="color:var(--t2);font-size:13px;margin-bottom:24px;line-height:1.5;">Which daily Rambam cycle are you following?</p>
+        <div id="track-options"></div>
+        <button id="ob-start" onclick="obStart()" style="width:100%;padding:14px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--t3);font-size:15px;font-weight:800;margin-top:8px;transition:all .2s;">Start Learning</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN APP ── -->
+  <div id="main-app" style="display:none;">
+
+    <!-- Header -->
+    <div style="padding:26px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;">
+      <div>
+        <p id="heb-date-label" style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Loading…</p>
+        <h2 id="greeting" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);line-height:1;">Shalom</h2>
+      </div>
+      <div style="text-align:center;background:var(--card);border:1px solid var(--hi);border-radius:14px;padding:8px 14px;min-width:55px;">
+        <p style="font-size:9px;font-weight:800;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;">LVL</p>
+        <p id="level-num" style="font-size:28px;font-weight:800;color:var(--t1);line-height:1.1;">1</p>
+      </div>
+    </div>
+
+    <!-- XP Bar -->
+    <div style="padding:12px 20px 0;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <span id="xp-label" style="font-size:11px;color:var(--t3);">0 XP</span>
+        <span id="xp-next" style="font-size:11px;color:var(--t3);">0/100 → Lv2</span>
+      </div>
+      <div style="height:4px;background:var(--border);border-radius:99px;">
+        <div id="xp-bar" style="height:100%;width:0%;background:var(--gold);border-radius:99px;transition:width 1s cubic-bezier(.22,1,.36,1);"></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:6px;padding:18px 20px 0;">
+      <button class="nav-tab active" data-tab="learn" onclick="switchTab('learn')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--gold);background:var(--gold);color:#000;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
+        <svg width="17" height="17" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Learn
+      </button>
+      <button class="nav-tab" data-tab="medals" onclick="switchTab('medals')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
+        <svg width="17" height="17" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9 2l3 6 3-6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>Medals
+      </button>
+      <button class="nav-tab" data-tab="leaders" onclick="switchTab('leaders')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
+        <svg width="17" height="17" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M5 3h14v7a7 7 0 01-14 0V3z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M5 7H2a3 3 0 003 3M19 7h3a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Leaders
+      </button>
+      <button class="nav-tab" data-tab="stats" onclick="switchTab('stats')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
+        <svg width="17" height="17" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>Stats
+      </button>
+    </div>
+
+    <!-- ── LEARN TAB ── -->
+    <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
+      <!-- Progress ring -->
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;transition:border-color .4s;" id="progress-card">
+        <svg width="58" height="58" viewBox="0 0 58 58" style="flex-shrink:0;">
+          <circle cx="29" cy="29" r="23" fill="none" stroke="var(--border)" stroke-width="5"/>
+          <circle id="ring-circle" cx="29" cy="29" r="23" fill="none" stroke="var(--gold)" stroke-width="5"
+            stroke-dasharray="0 144.5" stroke-linecap="round"
+            style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dasharray .7s cubic-bezier(.22,1,.36,1)"/>
+          <text id="ring-text" x="29" y="34" text-anchor="middle" fill="var(--t1)" font-size="13" font-weight="800" font-family="DM Sans,sans-serif">0/4</text>
+        </svg>
+        <div>
+          <p id="progress-title" style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:3px;">Fetching schedule…</p>
+          <p id="progress-sub" style="font-size:12px;color:var(--t2);">Connecting to Hebcal…</p>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 8px;text-align:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--red);margin:0 auto;display:block;"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z" fill="currentColor"/></svg>
+          <p id="stat-streak" style="font-size:22px;font-weight:800;color:var(--t1);line-height:1;margin:6px 0 3px;letter-spacing:-.5px;">0</p>
+          <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Streak</p>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 8px;text-align:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--gold);margin:0 auto;display:block;"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill="currentColor"/></svg>
+          <p id="stat-days" style="font-size:22px;font-weight:800;color:var(--t1);line-height:1;margin:6px 0 3px;letter-spacing:-.5px;">0</p>
+          <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Days</p>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 8px;text-align:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--purple);margin:0 auto;display:block;"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+          <p id="stat-xp" style="font-size:22px;font-weight:800;color:var(--t1);line-height:1;margin:6px 0 3px;letter-spacing:-.5px;">0</p>
+          <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">XP</p>
+        </div>
+      </div>
+
+      <!-- API error -->
+      <div id="api-error" style="display:none;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.25);border-radius:14px;padding:12px 16px;margin-bottom:16px;gap:10px;align-items:flex-start;color:var(--red);">
+        <svg width="18" height="18" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+        <div><p style="font-size:13px;font-weight:700;margin-bottom:2px;">Could not reach Hebcal</p><p style="font-size:11px;color:var(--t3);">Check your connection. Buttons still open Chabad.org.</p></div>
+      </div>
+
+      <!-- Section header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;">Today's Sections</p>
+        <a id="hebcal-link" href="https://www.chabad.org/dailystudy" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:none;font-weight:700;display:none;align-items:center;gap:3px;">via Chabad.org ↗</a>
+      </div>
+
+      <!-- Skeleton loaders -->
+      <div id="skeletons">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:17px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:center;opacity:.4;animation:up .35s ease both;"><div style="width:44px;height:44px;border-radius:13px;background:var(--surface);flex-shrink:0;"></div><div style="flex:1;"><div class="skel" style="height:13px;width:38%;margin-bottom:8px;"></div><div class="skel" style="height:10px;width:60%;"></div></div></div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:17px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:center;opacity:.4;animation:up .35s ease both .07s;"><div style="width:44px;height:44px;border-radius:13px;background:var(--surface);flex-shrink:0;"></div><div style="flex:1;"><div class="skel" style="height:13px;width:42%;margin-bottom:8px;"></div><div class="skel" style="height:10px;width:55%;"></div></div></div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:17px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:center;opacity:.4;animation:up .35s ease both .14s;"><div style="width:44px;height:44px;border-radius:13px;background:var(--surface);flex-shrink:0;"></div><div style="flex:1;"><div class="skel" style="height:13px;width:35%;margin-bottom:8px;"></div><div class="skel" style="height:10px;width:65%;"></div></div></div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:17px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:center;opacity:.4;animation:up .35s ease both .21s;"><div style="width:44px;height:44px;border-radius:13px;background:var(--surface);flex-shrink:0;"></div><div style="flex:1;"><div class="skel" style="height:13px;width:40%;margin-bottom:8px;"></div><div class="skel" style="height:10px;width:58%;"></div></div></div>
+      </div>
+
+      <!-- Actual sections -->
+      <div id="sections-list" style="display:none;"></div>
+
+      <!-- tanya-note removed -->
+      <div id="tanya-note" style="display:none;"></div>
+
+
+    </div>
+
+    <!-- ── MEDALS TAB ── -->
+    <div id="tab-medals" class="screen" style="padding:20px 20px 0;">
+      <p id="medals-count" style="font-size:13px;color:var(--t2);margin-bottom:18px;"><span style="color:var(--gold);font-weight:700;">0</span> of 6 earned</p>
+      <div id="medals-grid"></div>
+    </div>
+
+    <!-- ── LEADERS TAB ── -->
+    <div id="tab-leaders" class="screen" style="padding:20px 20px 0;">
+      <!-- Tab switcher -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:4px;">
+        <button id="lb-tab-xp" onclick="switchLb('xp')" style="flex:1;padding:8px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--gold);color:#000;transition:all .2s;">⭐ XP</button>
+        <button id="lb-tab-streak" onclick="switchLb('streak')" style="flex:1;padding:8px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:var(--t3);transition:all .2s;">🔥 Streak</button>
+      </div>
+      <div id="leaders-list"></div>
+      <p style="text-align:center;color:var(--t3);font-size:12px;margin-top:16px;padding:16px;">Global leaderboard coming soon</p>
+    </div>
+
+    <!-- ── STATS TAB ── -->
+    <div id="tab-stats" class="screen" style="padding:20px 20px 0;">
+      <div id="stats-content"></div>
+    </div>
+
+  </div><!-- /main-app -->
+
+</div><!-- /app -->
+
+
+<!-- Quiz panel -->
+<div id="quiz-panel" style="position:fixed;inset:0;z-index:998;background:var(--bg);display:none;flex-direction:column;overflow-y:auto;">
+  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:1;">
+    <button onclick="closeQuiz()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    </button>
+    <div style="flex:1;">
+      <p id="quiz-title" style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:var(--t1);"></p>
+      <p id="quiz-subtitle" style="font-size:11px;color:var(--t3);margin-top:1px;"></p>
+    </div>
+    <div id="quiz-score-badge" style="display:none;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.4);border-radius:10px;padding:4px 10px;">
+      <p id="quiz-score-text" style="font-size:12px;font-weight:700;color:#A855F7;"></p>
+    </div>
+  </div>
+  <div id="quiz-body" style="flex:1;padding:24px 20px;max-width:430px;margin:0 auto;width:100%;"></div>
+</div>
+
+<!-- Chabad iframe panel (slides in on top of reader) -->
+<div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;">
+  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;">
+    <button onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    </button>
+    <div style="flex:1;min-width:0;">
+      <p id="chabad-panel-title" style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
+      <p style="font-size:11px;color:var(--t3);">via Chabad.org</p>
+    </div>
+    <a id="chabad-panel-extlink" href="#" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);text-decoration:none;" title="Open in browser">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" fill="none"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8"/></svg>
+    </a>
+  </div>
+  <iframe id="chabad-iframe" src="" style="flex:1;border:none;width:100%;background:white;" allow="autoplay"></iframe>
+  <div style="padding:13px 18px 30px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+    <div style="display:flex;gap:10px;">
+      <button id="chabad-mark-btn" style="flex:1;padding:16px 14px;border-radius:14px;border:none;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">Mark Done</button>
+      <button id="chabad-quiz-btn" style="display:none;flex:1;padding:16px 14px;border-radius:14px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+        <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+        Take Quiz
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
+let user = (() => { try { const s=localStorage.getItem('chitas_v11'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let schedule = null;
+let toastTimer = null;
+
+const RAMBAM_TRACKS = {
+  '3': {label:'3 Chapters / Day', sub:'Completes Mishneh Torah yearly'},
+  '1': {label:'1 Chapter / Day',  sub:'Completes in ~3 years'},
+  'm': {label:'Sefer HaMitzvos',  sub:'613 mitzvos, runs with 3-ch cycle'},
+};
+
+// 4 worlds × 6 medals. Each world unlocks when all medals in previous world earned.
+const WORLDS = [
+  {
+    id:'bronze', label:'Bronze', color:'#CD7F32', lockColor:'#3D2E1E',
+    medals:[
+      {id:'b_streak3',  label:'Starter',   desc:'3-day streak',          icon:'flame',  req:u=>u.streak>=3},
+      {id:'b_streak7',  label:'Regular',   desc:'7-day streak',          icon:'flame',  req:u=>u.streak>=7},
+      {id:'b_days10',   label:'Dedicated', desc:'10 days completed',     icon:'book',   req:u=>u.total>=10},
+      {id:'b_days30',   label:'Committed', desc:'30 days completed',     icon:'book',   req:u=>u.total>=30},
+      {id:'b_perfect5', label:'Sharp',     desc:'5 perfect days',        icon:'star',   req:u=>(u.perfectDays||0)>=5},
+      {id:'b_quiz',     label:'Curious',   desc:'10 quizzes at 80%+',    icon:'quiz',   req:u=>(u.quizTotal||0)>=10&&(u.quizCorrect/Math.max(u.quizTotal,1))>=0.8},
+    ]
+  },
+  {
+    id:'silver', label:'Silver', color:'#A8A8B8', lockColor:'#2A2A35',
+    medals:[
+      {id:'s_streak30',  label:'Consistent', desc:'30-day streak',         icon:'flame',  req:u=>u.streak>=30},
+      {id:'s_streak60',  label:'Reliable',   desc:'60-day streak',         icon:'flame',  req:u=>u.streak>=60},
+      {id:'s_days50',    label:'Veteran',    desc:'50 days completed',     icon:'book',   req:u=>u.total>=50},
+      {id:'s_days100',   label:'Century',    desc:'100 days completed',    icon:'book',   req:u=>u.total>=100},
+      {id:'s_perfect20', label:'Precise',    desc:'20 perfect days',       icon:'star',   req:u=>(u.perfectDays||0)>=20},
+      {id:'s_quiz',      label:'Scholar',    desc:'25 quizzes at 80%+',    icon:'quiz',   req:u=>(u.quizTotal||0)>=25&&(u.quizCorrect/Math.max(u.quizTotal,1))>=0.8},
+    ]
+  },
+  {
+    id:'gold', label:'Gold', color:'#F0A500', lockColor:'#2E2500',
+    medals:[
+      {id:'g_streak90',  label:'Unstoppable',desc:'90-day streak',         icon:'flame',  req:u=>u.streak>=90},
+      {id:'g_streak180', label:'Iron Will',  desc:'180-day streak',        icon:'flame',  req:u=>u.streak>=180},
+      {id:'g_days200',   label:'Elite',      desc:'200 days completed',    icon:'trophy', req:u=>u.total>=200},
+      {id:'g_days365',   label:'Year One',   desc:'365 days completed',    icon:'trophy', req:u=>u.total>=365},
+      {id:'g_perfect50', label:'Flawless',   desc:'50 perfect days',       icon:'star',   req:u=>(u.perfectDays||0)>=50},
+      {id:'g_quiz',      label:'Expert',     desc:'50 quizzes at 80%+',    icon:'quiz',   req:u=>(u.quizTotal||0)>=50&&(u.quizCorrect/Math.max(u.quizTotal,1))>=0.8},
+    ]
+  },
+  {
+    id:'diamond', label:'Diamond', color:'#7DF9FF', lockColor:'#001A1C',
+    medals:[
+      {id:'d_streak365', label:'Legend',     desc:'365-day streak',        icon:'flame',  req:u=>u.streak>=365},
+      {id:'d_streak730', label:'Mythic',     desc:'730-day streak',        icon:'flame',  req:u=>u.streak>=730},
+      {id:'d_days500',   label:'500 Days',   desc:'500 days completed',    icon:'trophy', req:u=>u.total>=500},
+      {id:'d_days1000',  label:'1000 Days',  desc:'1000 days completed',   icon:'trophy', req:u=>u.total>=1000},
+      {id:'d_perfect100',label:'Perfect 100','desc':'100 perfect days',    icon:'star',   req:u=>(u.perfectDays||0)>=100},
+      {id:'d_quiz',      label:'Master',     desc:'100 quizzes at 80%+',   icon:'quiz',   req:u=>(u.quizTotal||0)>=100&&(u.quizCorrect/Math.max(u.quizTotal,1))>=0.8},
+    ]
+  },
+];
+// Flat list for backward compat
+const MEDALS = WORLDS.flatMap(w => w.medals.map(m => ({...m, world:w.id, worldColor:w.color})));
+
+const LB_MOCK = [
+  {name:'Menachem M.',city:'Crown Heights',streak:47,total:312},
+  {name:'Rivka L.',   city:'Boca Raton',   streak:33,total:201},
+  {name:'Yosef B.',   city:'London',       streak:28,total:189},
+  {name:'Chana T.',   city:'Melbourne',    streak:21,total:156},
+  {name:'Moshe K.',   city:'Montreal',     streak:19,total:134},
+];
+
+const SVG_ICONS = {
+  scroll: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  music:  '<path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  hex:    '<polygon points="12,2 21.5,7.5 21.5,17.5 12,23 2.5,17.5 2.5,7.5" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  rambam: '<rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  flame:  '<path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z" fill="currentColor"/>',
+  star:   '<polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill="currentColor"/>',
+  trophy: '<path d="M8 21h8M12 17v4M5 3h14v7a7 7 0 01-14 0V3z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M5 7H2a3 3 0 003 3M19 7h3a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  book:   '<path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  medal:  '<circle cx="12" cy="14" r="6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9 2l3 6 3-6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/>',
+  bolt:   '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>',
+  check:  '<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  ext:    '<path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" fill="none"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8"/>',
+  quiz:   '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/>',
+};
+function icon(name, size=20, color='currentColor') {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="display:block;flex-shrink:0;color:${color};">${SVG_ICONS[name]||''}</svg>`;
+}
+
+// ── SAVE ──────────────────────────────────────────────────────────────────────
+function saveUser() { try { localStorage.setItem('chitas_v11', JSON.stringify(user)); } catch{} }
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function fire(msg, type='gold') {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.background = type==='gold' ? '#F0A500' : '#1A1A24';
+  t.style.color = type==='gold' ? '#000' : '#F0F0F5';
+  t.style.border = `1px solid ${type==='gold'?'#F0A500':'#32323E'}`;
+  toastTimer = setTimeout(()=>{ t.style.display='none'; }, 3000);
+}
+
+// ── ONBOARDING ────────────────────────────────────────────────────────────────
+let selectedTrack = '';
+
+function buildTrackOptions() {
+  const el = document.getElementById('track-options');
+  el.innerHTML = Object.entries(RAMBAM_TRACKS).map(([id,t]) => `
+    <div onclick="selectTrack('${id}')" id="track-${id}" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .15s;">
+      <div style="width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--t3);">${icon('rambam',18)}</div>
+      <div><p style="font-weight:700;font-size:14px;color:var(--t1);">${t.label}</p><p style="font-size:11px;color:var(--t3);margin-top:2px;">${t.sub}</p></div>
+    </div>
+  `).join('');
+}
+
+function selectTrack(id) {
+  selectedTrack = id;
+  Object.keys(RAMBAM_TRACKS).forEach(k => {
+    const el = document.getElementById(`track-${k}`);
+    if (k === id) {
+      el.style.background = 'rgba(240,165,0,.12)';
+      el.style.borderColor = '#F0A500';
+      el.querySelector('p').style.color = '#F0A500';
+    } else {
+      el.style.background = 'var(--card)';
+      el.style.borderColor = 'var(--border)';
+      el.querySelector('p').style.color = 'var(--t1)';
+    }
+  });
+  const btn = document.getElementById('ob-start');
+  btn.style.background = '#F0A500';
+  btn.style.borderColor = '#F0A500';
+  btn.style.color = '#000';
+}
+
+function obNext1() {
+  const name = document.getElementById('ob-name').value.trim();
+  if (!name) return;
+  document.getElementById('ob-step1').style.display = 'none';
+  document.getElementById('ob-step2').style.display = 'block';
+}
+
+function obNext2() {
+  document.getElementById('ob-step2').style.display = 'none';
+  document.getElementById('ob-step3').style.display = 'block';
+  buildTrackOptions();
+}
+
+function obStart() {
+  if (!selectedTrack) return;
+  const name = document.getElementById('ob-name').value.trim();
+  const city = document.getElementById('ob-city').value.trim();
+  user = {...BLANK, name, city, rambamTrack: selectedTrack};
+  saveUser();
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  init();
+}
+
+document.getElementById('ob-name').addEventListener('keydown', e => { if(e.key==='Enter') obNext1(); });
+
+// Init theme immediately so there's no flash
+initTheme();
+
+// ── APIS ──────────────────────────────────────────────────────────────────────
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+async function fetchHebcal() {
+  const date = todayISO();
+  const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=${date}&end=${date}&lg=s`;
+  const r = await fetch(url); if(!r.ok) throw new Error('Hebcal');
+  return r.json();
+}
+
+async function fetchHebDate() {
+  const d = new Date();
+  const url = `https://www.hebcal.com/converter?cfg=json&gy=${d.getFullYear()}&gm=${d.getMonth()+1}&gd=${d.getDate()}&g2h=1`;
+  const r = await fetch(url); if(!r.ok) throw new Error('HebDate');
+  return r.json();
+  // NOTE: response fields are hd (day number), hm (month name), hy (year)
+}
+
+
+
+
+// ── BUILD SCHEDULE ────────────────────────────────────────────────────────────
+function parseHebcal(data) {
+  const items = data.items || [];
+  const parshaItem = items.find(i => i.category==='parashat');
+  const dow = new Date().getDay();
+  const aliyaNum = dow===6 ? 7 : dow+1;
+  const leyning = parshaItem?.leyning || {};
+  const aliyaRef = leyning[String(aliyaNum)] || null;
+  const parshaName = parshaItem?.title?.replace(/Parashat |Parasha /,'') || null;
+
+  const tehItem = items.find(i => i.category==='dailyLearning' && (i.title?.startsWith('Psalms')||i.title?.startsWith('Tehillim')));
+  let tehChapters=[], tehTitle='';
+  if (tehItem) {
+    tehTitle = tehItem.title;
+    const m = tehItem.title.match(/(\d+)(?:\s*[–-]\s*(\d+))?/);
+    if (m) { const s=parseInt(m[1]),e=m[2]?parseInt(m[2]):s; for(let p=s;p<=e;p++) tehChapters.push(p); }
+  }
+
+  const rt = user.rambamTrack;
+  const rambamItem = rt==='m'
+    ? items.find(i=>i.category==='dailyLearning'&&(i.title?.includes('Mitzvot')||i.title?.includes('Mitzvos')||i.title?.startsWith('Sefer')))
+    : rt==='1'
+      ? (items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')&&i.title?.includes('1 Chapter'))||items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')))
+      : (items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')&&!i.title?.includes('1 Chapter'))||items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')));
+
+  return { parshaName, aliyaNum, aliyaRef, tehTitle, tehChapters, rambamTitle: rambamItem?.title||'Daily Rambam' };
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // Reset done on new day
+  const today = new Date().toDateString();
+  if (user.lastDate && user.lastDate !== today) {
+    const prev = new Date(user.lastDate), yest = new Date(); yest.setDate(yest.getDate()-1);
+    user.done = {};
+    user.quizDone = {};
+    if (prev.toDateString() !== yest.toDateString()) user.streak = 0;
+    saveUser();
+  }
+
+  updateHeader();
+  updateStats();
+  renderMedals();
+  renderLeaders();
+  renderStats();
+
+  try {
+    const [cal, hd] = await Promise.all([fetchHebcal(), fetchHebDate()]);
+    const p = parseHebcal(cal);
+    const tdate = `${hd.hm} ${hd.hd}, ${hd.hy}`;
+    const civDate = `${new Date().getMonth()+1}/${new Date().getDate()}/${new Date().getFullYear()}`;
+    const base = 'https://www.chabad.org/dailystudy';
+
+    document.getElementById('heb-date-label').textContent = `${hd.hd} ${hd.hm} ${hd.hy}`;
+    document.getElementById('hebcal-link').style.display = 'flex';
+
+    schedule = {
+      chumash:  { id:'chumash',  label:'Chumash',  icon:'scroll', color:'#F0A500', xp:30, quizzable:true,
+                  subtitle: p.parshaName ? `${p.parshaName} · Aliya ${p.aliyaNum}` : `Aliya ${p.aliyaNum}`,
+                  chabadUrl: `${base}/torahreading.asp?tdate=${civDate}` },
+
+      tehillim: { id:'tehillim', label:'Tehillim', icon:'music',  color:'#4A9EFF', xp:30, quizzable:false,
+                  subtitle: p.tehTitle || `Psalms ${p.tehChapters.join(', ')}`,
+                  chabadUrl: `${base}/tehillim.asp?tdate=${civDate}` },
+
+      tanya:    { id:'tanya',    label:'Tanya',    icon:'hex',    color:'#A855F7', xp:40, quizzable:true,
+                  subtitle: 'Tanya Yomi',
+                  chabadUrl: `${base}/tanya.asp?tdate=${encodeURIComponent(tdate)}` },
+
+      rambam:   { id:'rambam',   label:'Rambam',   icon:'rambam', color:'#1DB954', xp:40, quizzable:true,
+                  subtitle: p.rambamTitle,
+                  chabadUrl: user.rambamTrack === 'm'
+                    ? `${base}/seferHamitzvos.asp?tdate=${encodeURIComponent(tdate)}`
+                    : `${base}/rambam.asp?rambamChapters=${user.rambamTrack==='3'?3:1}&tdate=${encodeURIComponent(tdate)}` },
+    };
+
+    renderSections();
+  } catch(e) {
+    document.getElementById('skeletons').style.display = 'none';
+    document.getElementById('api-error').style.display = 'flex';
+    document.getElementById('progress-title').textContent = 'Schedule unavailable';
+    document.getElementById('progress-sub').textContent = 'Check your connection';
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function updateHeader() {
+  const hr = new Date().getHours();
+  const tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = `${tod}, ${user.name.split(' ')[0]}`;
+  const level = Math.floor(user.xp/100)+1;
+  const pct = user.xp%100;
+  document.getElementById('level-num').textContent = level;
+  document.getElementById('xp-label').textContent = `${user.xp} XP`;
+  document.getElementById('xp-next').textContent = `${pct}/100 → Lv${level+1}`;
+  document.getElementById('xp-bar').style.width = `${pct}%`;
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Shabbos'];
+  if (!document.getElementById('heb-date-label').textContent || document.getElementById('heb-date-label').textContent === 'Loading…') {
+    document.getElementById('heb-date-label').textContent = days[new Date().getDay()];
+  }
+}
+
+function updateStats() {
+  document.getElementById('stat-streak').textContent = user.streak;
+  document.getElementById('stat-days').textContent   = user.total;
+  document.getElementById('stat-xp').textContent     = user.xp;
+}
+
+function renderSections() {
+  document.getElementById('skeletons').style.display = 'none';
+  const list = document.getElementById('sections-list');
+  list.style.display = 'block';
+  const sections = Object.values(schedule);
+
+  list.innerHTML = sections.map((s,i) => {
+    const done = !!user.done[s.id];
+    return `
+    <div id="card-${s.id}" style="background:var(--card);border:1.5px solid ${done?s.color+'80':'var(--border)'};border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:${i*.06}s;transition:border-color .3s;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="icon-${s.id}" style="width:44px;height:44px;border-radius:13px;background:${done?s.color+'33':'var(--surface)'};border:1px solid ${done?s.color+'66':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${done?s.color:'var(--t3)'};transition:all .3s;">
+          ${icon(s.icon,21)}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <p style="font-weight:700;font-size:15px;color:${done?s.color:'var(--t1)'};margin-bottom:2px;">${s.label}</p>
+          <p style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.subtitle}</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+          <button onclick="openChabadPanel('${s.id}')" style="padding:8px 14px;border-radius:10px;background:${s.color}28;border:1px solid ${s.color}55;color:${s.color};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Open →</button>
+          ${s.quizzable ? `<button onclick="openQuiz('${s.id}')" style="width:36px;height:36px;border-radius:10px;background:${(user.quizDone||{})[s.id]?'rgba(168,85,247,.2)':'var(--surface)'};border:1px solid ${(user.quizDone||{})[s.id]?'rgba(168,85,247,.5)':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${(user.quizDone||{})[s.id]?'#A855F7':'var(--t3)'};" title="Quiz">${icon('quiz',18)}</button>` : ''}
+          <button id="tick-${s.id}" onclick="markDone('${s.id}')" style="width:36px;height:36px;border-radius:10px;background:${done?s.color+'28':'var(--surface)'};border:1px solid ${done?s.color+'55':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${done?'#1DB954':'var(--t3)'};" ${done?'disabled':''}>
+            ${icon('check',18)}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateProgressRing();
+}
+
+function updateProgressRing() {
+  const sections = schedule ? Object.values(schedule) : [];
+  const doneCount = sections.filter(s => user.done[s.id]).length;
+  const allDone   = sections.length > 0 && doneCount === sections.length;
+  const pct = sections.length ? doneCount/sections.length : 0;
+  const circle = document.getElementById('ring-circle');
+  circle.setAttribute('stroke-dasharray', `${pct*144.5} 144.5`);
+  circle.setAttribute('stroke', allDone ? '#1DB954' : '#F0A500');
+  document.getElementById('ring-text').textContent = `${doneCount}/${sections.length||4}`;
+  const card = document.getElementById('progress-card');
+  card.style.borderColor = allDone ? 'rgba(29,185,84,.5)' : 'var(--border)';
+  document.getElementById('progress-title').style.color = allDone ? '#1DB954' : 'var(--t1)';
+  document.getElementById('progress-title').textContent = allDone ? "All done for today" : "Today's Learning";
+  document.getElementById('progress-sub').textContent = allDone
+    ? `${user.streak}-day streak · All done for today`
+    : `${sections.length - doneCount} section${sections.length-doneCount!==1?'s':''} remaining`;
+}
+
+function markDone(id) {
+  if (user.done[id] || !schedule) return;
+  const s = schedule[id];
+  user.done[id] = true;
+  user.xp += s.xp;
+  user.lastDate = new Date().toDateString();
+
+  const ids = ['chumash','tehillim','tanya','rambam'];
+  const allNow = ids.every(x => user.done[x]);
+  if (allNow) {
+    user.streak++;
+    user.total++;
+    user.xp += 150;
+    if (id==='tanya') user.tanyaCount++;
+    fire(`Day ${user.total} done · +${s.xp+150} XP`,'gold');
+  } else {
+    fire(`+${s.xp} XP`,'xp');
+  }
+  saveUser();
+
+  // Update tick button
+  const tick = document.getElementById(`tick-${id}`);
+  if (tick) {
+    tick.style.background = '#1DB95428';
+    tick.style.borderColor = '#1DB95455';
+    tick.style.color = '#1DB954';
+    tick.disabled = true;
+    tick.style.animation = 'pop .25s ease';
+  }
+  const card = document.getElementById(`card-${id}`);
+  if (card) card.style.borderColor = s.color+'80';
+  const ic = document.getElementById(`icon-${id}`);
+  if (ic) { ic.style.background=s.color+'33'; ic.style.borderColor=s.color+'66'; ic.style.color=s.color; }
+  const lbl = card?.querySelector('p');
+  if (lbl) lbl.style.color = s.color;
+
+  updateStats();
+  updateHeader();
+  updateProgressRing();
+  renderMedals();
+  renderStats();
+}
+
+// ── QUIZ ─────────────────────────────────────────────────────────────────────
+let quizState = { sectionId: null, questions: [], current: 0, score: 0, answered: false };
+
+function buildQuizPrompt(s) {
+  // Build a prompt specific to today's section content
+  const hints = {
+    chumash: `Today's Torah portion: ${s.subtitle}. The user just read this aliya on Chabad.org.`,
+    tanya:   `Today's Tanya: ${s.subtitle}. The user just read this chapter on Chabad.org.`,
+    rambam:  `Today's Rambam: ${s.subtitle}. The user just read these halachos on Chabad.org.`,
+  };
+  return `You are a quiz generator for a daily Jewish learning app. Generate exactly 3 multiple-choice questions to test comprehension of today's learning.
+
+Context: ${hints[s.id] || s.subtitle}
+
+Rules:
+- Questions must be specific to the actual content (not generic)
+- Each question has exactly 4 options (A, B, C, D)
+- Exactly one correct answer per question
+- Questions should test real understanding, not just trivia
+- Keep questions concise and clear
+- For Chumash: ask about events, characters, or halachos in the specific aliya
+- For Tanya: ask about concepts, teachings, or the main idea of the chapter
+- For Rambam: ask about the specific halacha or ruling covered today
+
+Respond ONLY with a valid JSON array, no other text:
+[
+  {
+    "q": "Question text here?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "answer": 0
+  }
+]
+
+The "answer" field is the 0-based index of the correct option.`;
+}
+
+async function openQuiz(sectionId) {
+  const s = schedule[sectionId];
+  if (!s) return;
+
+  quizState = { sectionId, questions: [], current: 0, score: 0, answered: false };
+
+  document.getElementById('quiz-title').textContent = s.label + ' Quiz';
+  document.getElementById('quiz-subtitle').textContent = s.subtitle;
+  document.getElementById('quiz-score-badge').style.display = 'none';
+  document.getElementById('quiz-panel').style.display = 'flex';
+
+  // Show loading state
+  document.getElementById('quiz-body').innerHTML = `
+    <div style="text-align:center;padding-top:60px;">
+      <div class="spinner" style="margin:0 auto;color:${s.color};"></div>
+      <p style="color:var(--t3);font-size:13px;margin-top:16px;">Generating your quiz…</p>
+    </div>`;
+
+  // DUMMY questions — replace with live API call once connection confirmed working
+  const DUMMY = {
+    chumash: [
+      { q: "What was the primary subject of today's aliya?", options: ["Building the Mishkan", "The Ten Commandments", "Laws of Shabbat", "The Golden Calf"], answer: 0 },
+      { q: "Which craftsman was appointed to lead the construction?", options: ["Moshe", "Aharon", "Betzalel", "Chiram"], answer: 2 },
+      { q: "What material was NOT used in the construction described?", options: ["Gold", "Silver", "Iron", "Copper"], answer: 2 },
+    ],
+    tanya: [
+      { q: "What is the main concept discussed in today's Tanya?", options: ["The two souls in man", "The nature of Teshuva", "Love and fear of G-d", "The hidden light"], answer: 0 },
+      { q: "According to today's chapter, where does the divine soul originate?", options: ["The heart", "The mind", "Under G-d's throne of glory", "The world of Atzilut"], answer: 2 },
+      { q: "What does the Alter Rebbe compare the relationship between body and soul to?", options: ["A king and his servant", "A flame and its wick", "A tree and its roots", "Water and its vessel"], answer: 1 },
+    ],
+    rambam: [
+      { q: "What is the central halacha covered in today's Rambam?", options: ["Laws of Shabbat", "Laws of prayer", "Laws covered in today's chapter", "Laws of tzitzis"], answer: 2 },
+      { q: "How many positive commandments are discussed today?", options: ["One", "Two", "Three", "Four"], answer: 0 },
+      { q: "What is the Rambam's ruling on someone who performs this act unintentionally?", options: ["No consequence", "Brings a korban", "Must repeat the act", "Asks a rabbi"], answer: 1 },
+    ],
+  };
+
+  // Simulate a short loading delay so the spinner is visible
+  await new Promise(r => setTimeout(r, 1200));
+  quizState.questions = DUMMY[sectionId] || DUMMY.chumash;
+  renderQuestion();
+}
+
+function closeQuiz() {
+  document.getElementById('quiz-panel').style.display = 'none';
+  quizState = { sectionId: null, questions: [], current: 0, score: 0, answered: false };
+}
+
+function renderQuestion() {
+  const { questions, current, sectionId } = quizState;
+  const q = questions[current];
+  if (!q) return;
+  const s = schedule[sectionId];
+  const total = questions.length;
+
+  document.getElementById('quiz-body').innerHTML = `
+    <div style="animation:fadeUp .3s ease both;">
+      <!-- Progress -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
+        ${Array.from({length:total},(_,i) => `
+          <div style="flex:1;height:4px;border-radius:2px;background:${i<current?s.color:i===current?s.color+'60':'var(--border)'};" ></div>
+        `).join('')}
+      </div>
+
+      <!-- Question number -->
+      <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Question ${current+1} of ${total}</p>
+
+      <!-- Question text -->
+      <p style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5;margin-bottom:28px;">${q.q}</p>
+
+      <!-- Options -->
+      <div id="options-list">
+        ${q.options.map((opt, i) => `
+          <button onclick="selectAnswer(${i})"
+            id="opt-${i}"
+            style="width:100%;text-align:left;padding:14px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:all .15s;">
+            <span style="width:26px;height:26px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--t3);flex-shrink:0;">${['A','B','C','D'][i]}</span>
+            ${opt}
+          </button>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function selectAnswer(idx) {
+  if (quizState.answered) return;
+  quizState.answered = true;
+
+  const { questions, current, sectionId } = quizState;
+  const q = questions[current];
+  const s = schedule[sectionId];
+  const correct = q.answer;
+  const isRight = idx === correct;
+
+  if (isRight) quizState.score++;
+
+  // Color the buttons
+  q.options.forEach((_, i) => {
+    const btn = document.getElementById(`opt-${i}`);
+    if (!btn) return;
+    btn.style.cursor = 'default';
+    if (i === correct) {
+      btn.style.background = 'rgba(29,185,84,.15)';
+      btn.style.borderColor = '#1DB954';
+      btn.style.color = '#1DB954';
+      btn.querySelector('span').style.background = '#1DB95430';
+      btn.querySelector('span').style.borderColor = '#1DB954';
+      btn.querySelector('span').style.color = '#1DB954';
+    } else if (i === idx && !isRight) {
+      btn.style.background = 'rgba(255,71,87,.15)';
+      btn.style.borderColor = '#FF4757';
+      btn.style.color = '#FF4757';
+    } else {
+      btn.style.opacity = '0.4';
+    }
+  });
+
+  // Show feedback + Next button
+  const feedback = isRight
+    ? `<p style="color:#1DB954;font-weight:700;font-size:14px;margin-bottom:0;">Correct</p>`
+    : `<p style="color:#FF4757;font-weight:700;font-size:14px;margin-bottom:0;">Incorrect</p>`;
+
+  const isLast = current === questions.length - 1;
+  const nextLabel = isLast ? 'See Results' : 'Next →';
+
+  const feedbackDiv = document.createElement('div');
+  feedbackDiv.style.cssText = 'margin-top:20px;display:flex;align-items:center;justify-content:space-between;animation:fadeUp .2s ease both;';
+  feedbackDiv.innerHTML = `
+    ${feedback}
+    <button onclick="nextQuestion()" style="padding:12px 22px;border-radius:12px;background:${s.color};border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">${nextLabel}</button>`;
+  document.getElementById('quiz-body').querySelector('div').appendChild(feedbackDiv);
+}
+
+function nextQuestion() {
+  const { questions, sectionId } = quizState;
+  quizState.current++;
+  quizState.answered = false;
+
+  if (quizState.current >= questions.length) {
+    showQuizResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showQuizResults() {
+  const { score, questions, sectionId } = quizState;
+  const s = schedule[sectionId];
+  const total = questions.length;
+  const xpEarned = score * 15;
+  const pct = Math.round((score / total) * 100);
+
+  // Guard: quizDone may not exist on old saved state
+  if (!user.quizDone) user.quizDone = {};
+
+  const alreadyDone = !!user.quizDone[sectionId];
+  if (!alreadyDone) {
+    user.xp += xpEarned;
+    user.quizDone[sectionId] = true;
+    // Track quiz accuracy for medal system
+    user.quizTotal  = (user.quizTotal  || 0) + total;
+    user.quizCorrect = (user.quizCorrect || 0) + score;
+    saveUser();
+    updateHeader();
+    updateStats();
+  }
+
+  // Update score badge in header
+  document.getElementById('quiz-score-text').textContent = `${score}/${total}`;
+  document.getElementById('quiz-score-badge').style.display = 'block';
+
+  const sid = sectionId; // capture for use in inline handlers below
+  const emoji = score === total ? '🎯' : score >= total * 0.6 ? '👍' : '📖';
+  const msg = score === total ? 'Perfect score!' : score >= total * 0.6 ? 'Good job' : 'Keep studying';
+  const xpLine = (!alreadyDone && xpEarned > 0)
+    ? `<p style="font-size:13px;color:#A855F7;font-weight:700;margin-bottom:32px;">+${xpEarned} XP earned</p>`
+    : `<p style="font-size:13px;color:var(--t3);margin-bottom:32px;">${xpEarned === 0 ? 'No XP this time' : 'Already counted today'}</p>`;
+
+  document.getElementById('quiz-body').innerHTML = `
+    <div style="text-align:center;padding-top:40px;animation:fadeUp .35s ease both;">
+      <div style="font-size:48px;margin-bottom:16px;">${emoji}</div>
+      <p style="font-size:22px;font-weight:800;color:var(--t1);margin-bottom:6px;">${score} / ${total}</p>
+      <p style="font-size:14px;color:var(--t2);margin-bottom:4px;">${msg}</p>
+      ${xpLine}
+
+      <!-- Score bar -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="font-size:12px;color:var(--t3);">Score</span>
+          <span style="font-size:12px;font-weight:700;color:${s.color};">${pct}%</span>
+        </div>
+        <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${s.color};border-radius:4px;transition:width .8s cubic-bezier(.22,1,.36,1);"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button id="retry-btn" style="flex:1;padding:13px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Try Again</button>
+        <button id="done-btn" style="flex:1;padding:13px;border-radius:14px;background:${s.color};border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done</button>
+      </div>
+    </div>`;
+
+  // Attach handlers AFTER innerHTML is set — avoids the inline onclick + variable scope issue
+  document.getElementById('retry-btn').onclick = () => retryQuiz(sid);
+  document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSections(); };
+}
+
+function retryQuiz(sid) {
+  quizState.current = 0;
+  quizState.score = 0;
+  quizState.answered = false;
+  document.getElementById('quiz-score-badge').style.display = 'none';
+  renderQuestion();
+}
+
+// ── READER ────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+function openChabadPanel(sectionId) {
+  const s = schedule[sectionId];
+  if (!s) return;
+  document.getElementById('chabad-panel-title').textContent = s.label;
+  document.getElementById('chabad-panel-extlink').href = s.chabadUrl;
+  document.getElementById('chabad-iframe').src = s.chabadUrl;
+
+  // Mark done button
+  const markBtn = document.getElementById('chabad-mark-btn');
+  if (user.done[sectionId]) {
+    markBtn.style.background = 'rgba(29,185,84,.15)';
+    markBtn.style.border = '1px solid rgba(29,185,84,.4)';
+    markBtn.style.color = '#1DB954';
+    markBtn.textContent = '✓ Done';
+    markBtn.onclick = null;
+  } else {
+    markBtn.style.background = s.color;
+    markBtn.style.border = 'none';
+    markBtn.style.color = '#000';
+    markBtn.textContent = 'Mark Done · +' + s.xp + ' XP';
+    markBtn.onclick = () => { markDone(sectionId); closeChabadPanel(); };
+  }
+
+  // Quiz button — only show for quizzable sections
+  const quizBtn = document.getElementById('chabad-quiz-btn');
+  if (s.quizzable) {
+    quizBtn.style.display = 'flex';
+    quizBtn.onclick = () => { closeChabadPanel(); openQuiz(sectionId); };
+    // Purple if already quizzed today, muted if not
+    if (!user.quizDone) user.quizDone = {};
+    if (user.quizDone[sectionId]) {
+      quizBtn.style.background = 'rgba(29,185,84,.15)';
+      quizBtn.style.borderColor = 'rgba(29,185,84,.4)';
+      quizBtn.style.color = '#1DB954';
+    } else {
+      quizBtn.style.background = 'rgba(168,85,247,.15)';
+      quizBtn.style.borderColor = 'rgba(168,85,247,.4)';
+      quizBtn.style.color = '#A855F7';
+    }
+  } else {
+    quizBtn.style.display = 'none';
+  }
+
+  document.getElementById('chabad-panel').style.display = 'flex';
+}
+
+function closeChabadPanel() {
+  document.getElementById('chabad-panel').style.display = 'none';
+  document.getElementById('chabad-iframe').src = ''; // stop loading
+}
+
+// ── MEDALS ────────────────────────────────────────────────────────────────────
+function worldUnlocked(worldIndex) {
+  if (worldIndex === 0) return true;
+  return WORLDS[worldIndex - 1].medals.every(m => m.req(user));
+}
+
+function currentWorldIndex() {
+  for (let i = 0; i < WORLDS.length; i++) {
+    if (!worldUnlocked(i)) return Math.max(0, i - 1);
+    if (!WORLDS[i].medals.every(m => m.req(user))) return i;
+  }
+  return WORLDS.length - 1;
+}
+
+function renderMedals() {
+  const totalEarned = MEDALS.filter(m => m.req(user)).length;
+  document.getElementById('medals-count').innerHTML =
+    `<span style="color:var(--gold);font-weight:700;">${totalEarned}</span> / ${MEDALS.length} earned`;
+
+  const activeWi = currentWorldIndex();
+  let html = '';
+
+  // ── HERO: current world full-width on top ──
+  {
+    const world = WORLDS[activeWi];
+    const worldEarned = world.medals.filter(m => m.req(user)).length;
+    const worldComplete = worldEarned === world.medals.length;
+    const pct = Math.round((worldEarned / world.medals.length) * 100);
+
+    const medalRows = world.medals.map((m, mi) => {
+      const e = m.req(user);
+      return `
+      <div style="display:flex;align-items:center;gap:14px;background:${e ? world.color+'12' : 'var(--surface)'};border:1.5px solid ${e ? world.color+'45' : 'var(--border)'};border-radius:14px;padding:13px 14px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${mi*.05}s;">
+        <div style="width:42px;height:42px;border-radius:12px;background:${e ? world.color+'25' : 'var(--card)'};border:1px solid ${e ? world.color+'50' : 'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${e ? world.color : 'var(--t3)'};">${icon(m.icon, 20)}</div>
+        <div style="flex:1;min-width:0;">
+          <p style="font-weight:800;font-size:14px;color:${e ? 'var(--t1)' : 'var(--t2)'};">${m.label}</p>
+          <p style="font-size:11px;color:var(--t3);margin-top:2px;">${m.desc}</p>
+        </div>
+        <p style="font-size:11px;font-weight:800;color:${e ? '#1DB954' : 'var(--t3)'};flex-shrink:0;">${e ? '✓' : ''}</p>
+      </div>`;
+    }).join('');
+
+    html += `
+    <div style="background:${world.color}0C;border:2px solid ${world.color}40;border-radius:20px;padding:18px;margin-bottom:20px;animation:up .3s ease both;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:12px;background:${world.color}22;border:1.5px solid ${world.color}55;display:flex;align-items:center;justify-content:center;font-size:20px;">${worldComplete ? '✨' : '🌍'}</div>
+          <div>
+            <p style="font-size:18px;font-weight:900;color:${world.color};font-family:'Playfair Display',serif;">${world.label} World</p>
+            <p style="font-size:11px;color:var(--t2);">Current · ${worldEarned} of ${world.medals.length} earned</p>
+          </div>
+        </div>
+        ${worldComplete
+          ? `<span style="font-size:11px;font-weight:700;color:#1DB954;background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);border-radius:99px;padding:4px 11px;">Complete! 🎉</span>`
+          : `<span style="font-size:13px;font-weight:800;color:${world.color};">${pct}%</span>`}
+      </div>
+      <div style="height:5px;background:var(--border);border-radius:99px;margin-bottom:16px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${world.color};border-radius:99px;transition:width 1s cubic-bezier(.22,1,.36,1);"></div>
+      </div>
+      ${medalRows}
+    </div>`;
+  }
+
+  // ── COLLAPSED ROWS: all other worlds below ──
+  html += `<p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Other Worlds</p>`;
+
+  WORLDS.forEach((world, wi) => {
+    if (wi === activeWi) return;
+    const unlocked = worldUnlocked(wi);
+    const worldEarned = unlocked ? world.medals.filter(m => m.req(user)).length : 0;
+    const worldComplete = unlocked && worldEarned === world.medals.length;
+    const rowColor = unlocked ? world.color : '#666';
+    const dots = world.medals.map(m => {
+      const e = unlocked && m.req(user);
+      return `<div style="width:8px;height:8px;border-radius:50%;background:${e ? world.color : 'var(--border)'};flex-shrink:0;"></div>`;
+    }).join('');
+
+    html += `
+    <div style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:8px;opacity:${unlocked ? 0.7 : 0.35};animation:up .3s ease both;animation-delay:${wi*.06}s;">
+      <div style="width:36px;height:36px;border-radius:10px;background:${rowColor}15;border:1px solid ${rowColor}30;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${!unlocked ? '🔒' : worldComplete ? '✨' : '🌍'}</div>
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:14px;font-weight:800;color:${rowColor};">${world.label} World</p>
+        <p style="font-size:10px;color:var(--t3);margin-top:2px;">${unlocked ? `${worldEarned} / ${world.medals.length} earned` : 'Unlock by completing previous world'}</p>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">${dots}</div>
+    </div>`;
+  });
+
+  document.getElementById('medals-grid').innerHTML = html;
+}
+
+// ── LEADERS ───────────────────────────────────────────────────────────────────
+let lbMode = 'xp'; // 'xp' | 'streak'
+
+function switchLb(mode) {
+  lbMode = mode;
+  const xpBtn = document.getElementById('lb-tab-xp');
+  const stBtn = document.getElementById('lb-tab-streak');
+  if (mode === 'xp') {
+    xpBtn.style.background = 'var(--gold)'; xpBtn.style.color = '#000';
+    stBtn.style.background = 'transparent'; stBtn.style.color = 'var(--t3)';
+  } else {
+    stBtn.style.background = '#FF4757'; stBtn.style.color = '#fff';
+    xpBtn.style.background = 'transparent'; xpBtn.style.color = 'var(--t3)';
+  }
+  renderLeaders();
+}
+
+function renderLeaders() {
+  const me = {name: user.name || 'You', city: user.city || '', streak: user.streak, total: user.total, xp: user.xp, isMe: true};
+  const all = [me, ...LB_MOCK].sort((a, b) => lbMode === 'xp' ? b.xp - a.xp : b.streak - a.streak);
+  const podium = ['#F0A500','#C0C0C0','#CD7F32'];
+  document.getElementById('leaders-list').innerHTML = all.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:12px;background:${p.isMe?'rgba(240,165,0,.1)':'var(--card)'};border:1.5px solid ${p.isMe?'rgba(240,165,0,.4)':'var(--border)'};border-radius:14px;padding:13px 14px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${i*.04}s;">
+      <div style="width:28px;text-align:center;font-size:14px;font-weight:800;color:${podium[i]||'var(--t3)'};flex-shrink:0;">${i+1}</div>
+      <div style="flex:1;min-width:0;">
+        <p style="font-weight:700;font-size:14px;color:${p.isMe?'var(--gold)':'var(--t1)'};">${p.name}${p.isMe?' (You)':''}</p>
+        <p style="font-size:11px;color:var(--t3);">${p.city || ''}</p>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        ${lbMode === 'xp'
+          ? `<p style="font-size:16px;font-weight:800;color:var(--gold);">${p.xp} <span style="font-size:11px;font-weight:600;color:var(--t3);">XP</span></p><p style="font-size:10px;color:var(--t3);">${p.total} days</p>`
+          : `<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">${icon('flame',12)} <span style="font-size:16px;font-weight:800;color:var(--t1);">${p.streak}</span></div><p style="font-size:10px;color:var(--t3);">day streak</p>`
+        }
+      </div>
+    </div>`).join('');
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function renderStats() {
+  const level = Math.floor(user.xp/100)+1;
+  const earned = MEDALS.filter(m=>m.req(user));
+  // Next unearned medal in current world
+  const cw = WORLDS[currentWorldIndex()];
+  const next = cw ? cw.medals.find(m => !m.req(user)) : null;
+  if (next) { next.color = cw.color; }
+  // vals/reqs no longer used — next milestone uses WORLDS structure
+  const vals = {};
+  const reqs = {};
+
+  document.getElementById('stats-content').innerHTML = `
+    <div style="background:var(--card);border:1px solid rgba(29,185,84,.25);border-radius:14px;padding:13px 15px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(29,185,84,.15);display:flex;align-items:center;justify-content:center;color:var(--green);">${icon('rambam',18)}</div>
+      <div style="flex:1;"><p style="font-size:11px;color:var(--t3);margin-bottom:2px;">Rambam Track</p><p style="font-size:14px;font-weight:700;color:var(--t1);">${RAMBAM_TRACKS[user.rambamTrack]?.label}</p></div>
+      <button onclick="changeTrack()" style="background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;">Change</button>
+    </div>
+
+    ${[
+      ['var(--red)','flame',user.streak,'Current Streak','days'],
+      ['var(--gold)','star',user.total,'Days Completed',''],
+      ['var(--purple)','bolt',user.xp,'Total XP',''],
+      ['var(--gold)','trophy',level,'Level',''],
+      ['var(--green)','star',user.perfectDays||0,'Perfect Days',''],
+      ['var(--gold)','medal',`${earned.length}/${MEDALS.length}`,'Medals',''],
+    ].map(([color,ic,val,lb,sf],i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:13px;padding:13px 15px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${i*.04}s;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:34px;height:34px;border-radius:9px;background:${color}18;display:flex;align-items:center;justify-content:center;color:${color};">${icon(ic,16)}</div>
+          <p style="font-size:13px;color:var(--t2);">${lb}</p>
+        </div>
+        <p style="font-size:15px;font-weight:800;color:var(--t1);">${val}${sf?' '+sf:''}</p>
+      </div>`).join('')}
+
+    ${next ? `
+    <div style="background:var(--card);border:1px solid ${next.color}25;border-radius:16px;padding:16px;margin-top:4px;">
+      <p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Next Milestone</p>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div style="width:42px;height:42px;border-radius:12px;background:${next.color}18;display:flex;align-items:center;justify-content:center;color:${next.color};">${icon(next.icon,22)}</div>
+        <div><p style="font-weight:700;color:var(--t1);font-size:14px;">${next.label}</p><p style="font-size:11px;color:var(--t3);">${next.desc}</p></div>
+      </div>
+      <div style="height:5px;background:var(--border);border-radius:99px;"><div style="height:100%;width:${Math.min((vals[next.id]||0)/(reqs[next.id]||1)*100,100)}%;background:${next.color};border-radius:99px;transition:width .8s ease;"></div></div>
+      <p style="text-align:right;font-size:11px;color:var(--t3);margin-top:5px;">${vals[next.id]||0} / ${reqs[next.id]||1}</p>
+    </div>` : `<div style="background:var(--card);border:1px solid rgba(29,185,84,.4);border-radius:14px;padding:16px;text-align:center;color:var(--green);font-weight:700;font-size:14px;margin-top:4px;">All medals earned! 🏆</div>`}
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-top:12px;">
+      <p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Schedule Sources</p>
+      ${[['Chumash, Tehillim & Rambam','https://www.hebcal.com','Hebcal.com','var(--blue)'],
+         ['Torah & Psalm in-app text','https://www.sefaria.org','Sefaria.org','var(--blue)'],
+         ['Tanya + full study texts','https://www.chabad.org/dailystudy','Chabad.org','var(--red)'],
+        ].map(([lb,url,nm,color])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+          <p style="font-size:11px;color:var(--t2);flex:1;padding-right:8px;">${lb}</p>
+          <a href="${url}" target="_blank" style="font-size:11px;color:${color};text-decoration:none;font-weight:700;flex-shrink:0;display:flex;align-items:center;gap:3px;">${nm} ${icon('ext',9,color)}</a>
+        </div>`).join('')}
+    </div>
+
+    <!-- Settings row -->
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+
+      <button onclick="shareApp()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px;">📤</span> Share App
+        </span>
+        <span style="font-size:12px;color:var(--t3);">Invite a friend</span>
+      </button>
+
+      <button onclick="toggleTheme()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:10px;">
+          <span id="theme-icon" style="font-size:16px;">🌙</span> Appearance
+        </span>
+        <span id="theme-label" style="font-size:12px;color:var(--t3);">Dark</span>
+      </button>
+
+      <button onclick="signOut()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px;">🚪</span> Sign Out
+        </span>
+        <span style="font-size:12px;color:var(--t3);">Your data stays saved</span>
+      </button>
+
+      <button onclick="resetProgress()" style="width:100%;padding:13px 16px;border-radius:12px;background:transparent;border:1px solid var(--border);color:var(--t3);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:16px;">🗑️</span> Reset All Progress
+      </button>
+    </div>
+  `;
+}
+
+function changeTrack() {
+  user.rambamTrack = '';
+  saveUser();
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('onboarding').style.display = 'flex';
+  document.getElementById('ob-step1').style.display = 'block';
+  document.getElementById('ob-step2').style.display = 'none';
+  document.getElementById('ob-name').value = user.name;
+  buildTrackOptions();
+  // Jump directly to step 2
+  document.getElementById('ob-step1').style.display = 'none';
+  document.getElementById('ob-step2').style.display = 'block';
+}
+
+// ── THEME ─────────────────────────────────────────────────────────────────────
+function initTheme() {
+  // Read saved preference, fallback to system
+  const saved = localStorage.getItem('chitas_theme');
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = saved ? saved === 'dark' : systemDark;
+  setTheme(isDark ? 'dark' : 'light', false);
+}
+function setTheme(mode, save=true) {
+  const html = document.documentElement;
+  if (mode === 'light') { html.classList.add('light'); html.classList.remove('dark'); }
+  else                  { html.classList.remove('light'); html.classList.add('dark'); }
+  const icon  = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+  if (icon)  icon.textContent  = mode === 'light' ? '☀️' : '🌙';
+  if (label) label.textContent = mode === 'light' ? 'Light' : 'Dark';
+  if (save) localStorage.setItem('chitas_theme', mode);
+}
+function toggleTheme() {
+  const isLight = document.documentElement.classList.contains('light');
+  setTheme(isLight ? 'dark' : 'light');
+}
+
+// ── SIGN OUT ───────────────────────────────────────────────────────────────────
+function signOut() {
+  // Keep the data, just go back to the login/onboarding screen
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('onboarding').style.display = 'flex';
+  // Pre-fill name so they can sign back in quickly
+  document.getElementById('ob-step1').style.display = 'block';
+  document.getElementById('ob-step2').style.display = 'none';
+  document.getElementById('ob-step3').style.display = 'none';
+  const nameInput = document.getElementById('ob-name');
+  if (nameInput && user.name) nameInput.value = user.name;
+  showToast('Signed out — your progress is saved 👋');
+}
+
+// ── SHARE ─────────────────────────────────────────────────────────────────────
+function shareApp() {
+  const text = `I'm learning Chitas daily — Chumash, Tehillim, Tanya & Rambam every day. 🔥 ${user.streak}-day streak! Join me on Chitas Daily.`;
+  if (navigator.share) {
+    navigator.share({ title: 'Chitas Daily', text, url: window.location.href })
+      .catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text + '\n' + window.location.href)
+      .then(() => showToast('Copied to clipboard! 📋'))
+      .catch(() => showToast('Share: ' + window.location.href));
+  }
+}
+
+function resetProgress() {
+  if (!confirm('Reset all your progress?')) return;
+  user = {...BLANK, name:user.name, rambamTrack:user.rambamTrack};
+  saveUser();
+  updateStats();
+  updateHeader();
+  renderMedals();
+  renderLeaders();
+  renderStats();
+  if (schedule) renderSections();
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`tab-${id}`).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(b => {
+    const active = b.dataset.tab === id;
+    b.style.background = active ? '#F0A500' : 'var(--card)';
+    b.style.borderColor = active ? '#F0A500' : 'var(--border)';
+    b.style.color = active ? '#000' : 'var(--t2)';
+  });
+  if (id==='stats') renderStats();
+  if (id==='medals') renderMedals();
+  if (id==='leaders') renderLeaders();
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+if (user.name && user.rambamTrack) {
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  init();
+}
+</script>
+</body>
+</html>
