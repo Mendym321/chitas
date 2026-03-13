@@ -1826,8 +1826,10 @@ function bootApp() {
     document.getElementById('main-app').style.display = 'block';
     init();
   }
-  // If Firebase says we're signed in but local data is empty, load from Firestore
-  window._fb._onAuthReady = async (fbUser) => {
+
+  // Register the auth-ready callback — works whether _fb is ready or not yet
+  // The Firebase module script sets window._fb then calls _onAuthReady if defined
+  const authHandler = async (fbUser) => {
     if (fbUser && (!user.uid || !user.rambamTrack)) {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
@@ -1839,6 +1841,18 @@ function bootApp() {
       }
     }
   };
+
+  // _fb may not exist yet (module loads async) — poll briefly
+  const tryRegister = () => {
+    if (window._fb) {
+      window._fb._onAuthReady = authHandler;
+      // If auth already resolved before we registered, call it now
+      if (window._fb._authReady) authHandler(window._fb._authUser);
+    } else {
+      setTimeout(tryRegister, 50);
+    }
+  };
+  tryRegister();
 }
 bootApp();
 </script>
