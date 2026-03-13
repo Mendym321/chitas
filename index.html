@@ -87,6 +87,102 @@
   .ob-input { width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--t1);font-size:16px;caret-color:var(--gold);margin-bottom:12px; }
   .ob-input:focus { border-color:var(--gold); }
 </style>
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyApK4ahGQYr-9n6_U6_BB1yLXR-8ICpYr4",
+  authDomain: "chitas-daily.firebaseapp.com",
+  projectId: "chitas-daily",
+  storageBucket: "chitas-daily.firebasestorage.app",
+  messagingSenderId: "706230735824",
+  appId: "1:706230735824:web:779c49f5d6078dc9215fd5"
+};
+
+const fbApp  = initializeApp(firebaseConfig);
+const auth   = getAuth(fbApp);
+const db     = getFirestore(fbApp);
+const gProvider = new GoogleAuthProvider();
+
+// Expose to global scope so regular scripts can call them
+window._fb = {
+  // Sign in with Google
+  async signInGoogle() {
+    try {
+      // Try popup first (works on desktop + most mobile)
+      const result = await signInWithPopup(auth, gProvider);
+      return result.user;
+    } catch(e) {
+      // Fallback to redirect on mobile browsers that block popups
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+        await signInWithRedirect(auth, gProvider);
+      } else {
+        throw e;
+      }
+    }
+  },
+
+  // Sign out
+  async signOut() {
+    await fbSignOut(auth);
+  },
+
+  // Save full user object to Firestore
+  async saveUser(uid, data) {
+    try {
+      await setDoc(doc(db, 'users', uid), {
+        ...data,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    } catch(e) { console.error('saveUser:', e); }
+  },
+
+  // Load user data from Firestore
+  async loadUser(uid) {
+    try {
+      const snap = await getDoc(doc(db, 'users', uid));
+      return snap.exists() ? snap.data() : null;
+    } catch(e) { console.error('loadUser:', e); return null; }
+  },
+
+  // Fetch leaderboard (top 50 by xp or streak)
+  async fetchLeaderboard(field = 'xp') {
+    try {
+      const q = query(collection(db, 'users'), orderBy(field, 'desc'), limit(50));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    } catch(e) { console.error('fetchLeaderboard:', e); return []; }
+  },
+
+  // Auth state listener
+  onAuthStateChanged(cb) {
+    onAuthStateChanged(auth, cb);
+  },
+
+  getCurrentUser() {
+    return auth.currentUser;
+  }
+};
+
+// Listen for redirect result (after Google redirect sign-in on mobile)
+getRedirectResult(auth).then(result => {
+  if (result?.user) {
+    window._fb._onSignInSuccess?.(result.user);
+  }
+}).catch(e => console.warn('redirect result:', e));
+
+// Watch auth state
+onAuthStateChanged(auth, user => {
+  window._fb._authUser = user || null;
+  window._fb._authReady = true;
+  window._fb._onAuthReady?.(user);
+});
+</script>
 </head>
 <body>
 <div id="app">
@@ -95,16 +191,20 @@
   <div id="onboarding" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
     <div style="max-width:360px;width:100%;" class="anim-fadeup">
 
-      <!-- Step 1: Name -->
+      <!-- Step 1: Sign in -->
       <div id="ob-step1">
         <div style="width:58px;height:58px;border-radius:16px;background:var(--card);border:1px solid var(--hi);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
           <svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--gold)"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
         </div>
         <h1 style="font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:10px;">Chitas<br><span style="color:var(--gold)">Daily</span></h1>
         <p style="color:var(--t2);font-size:14px;margin-bottom:36px;line-height:1.6;">Your daily learning companion.<br>Chumash · Tehillim · Tanya · Rambam</p>
-        <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">Your Name</label>
-        <input id="ob-name" class="ob-input" placeholder="e.g. Yosef Cohen" autocomplete="off"/>
-        <button id="ob-next1" onclick="obNext1()" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;">Continue →</button>
+        <!-- Google sign-in -->
+        <button id="ob-google-btn" onclick="signInWithGoogle()" style="width:100%;padding:14px;border-radius:12px;background:#fff;border:1.5px solid #ddd;color:#222;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;font-family:inherit;margin-bottom:12px;">
+          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>
+          Continue with Google
+        </button>
+        <p id="ob-signin-error" style="display:none;color:var(--red);font-size:12px;text-align:center;margin-top:8px;"></p>
+        <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:16px;">Your progress syncs across all your devices</p>
       </div>
 
       <!-- Step 2: City (no age — just for leaderboard location flavour) -->
@@ -351,8 +451,8 @@
 
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
-const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v24'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
+let user = (() => { try { const s=localStorage.getItem('chitas_v25'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -440,7 +540,26 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v24', JSON.stringify(user)); } catch{} }
+function saveUser() {
+  // Always save locally first (fast, offline-safe)
+  try { localStorage.setItem('chitas_v25', JSON.stringify(user)); } catch{}
+  // Then sync to Firebase if signed in
+  if (user.uid && window._fb) {
+    window._fb.saveUser(user.uid, {
+      name: user.name,
+      photoURL: user.photoURL || '',
+      city: user.city || '',
+      rambamTrack: user.rambamTrack,
+      streak: user.streak,
+      total: user.total,
+      xp: user.xp,
+      perfectDays: user.perfectDays || 0,
+      quizTotal: user.quizTotal || 0,
+      quizCorrect: user.quizCorrect || 0,
+      lastDate: user.lastDate || null,
+    });
+  }
+}
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -487,9 +606,50 @@ function selectTrack(id) {
   btn.style.color = '#000';
 }
 
+// ── FIREBASE AUTH ────────────────────────────────────────────────────────────
+async function signInWithGoogle() {
+  const btn = document.getElementById('ob-google-btn');
+  const err = document.getElementById('ob-signin-error');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  err.style.display = 'none';
+  try {
+    const fbUser = await window._fb.signInGoogle();
+    await onSignedIn(fbUser);
+  } catch(e) {
+    console.error('sign in error:', e);
+    err.textContent = 'Sign in failed — please try again';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continue with Google`;
+  }
+}
+
+async function onSignedIn(fbUser) {
+  // Try to load existing data from Firestore
+  const remote = await window._fb.loadUser(fbUser.uid);
+  if (remote && remote.rambamTrack) {
+    // Returning user — restore their data
+    user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
+    try { localStorage.setItem('chitas_v25', JSON.stringify(user)); } catch{}
+    document.getElementById('onboarding').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    init();
+  } else {
+    // New user — keep going through onboarding to get name + track
+    user.uid = fbUser.uid;
+    user.name = fbUser.displayName || '';
+    user.photoURL = fbUser.photoURL || '';
+    // Pre-fill name input and skip to step 2 (city)
+    document.getElementById('ob-step1').style.display = 'none';
+    document.getElementById('ob-step2').style.display = 'block';
+    const cityEl = document.getElementById('ob-city');
+    if (cityEl) cityEl.focus();
+  }
+}
+
 function obNext1() {
-  const name = document.getElementById('ob-name').value.trim();
-  if (!name) return;
+  // name comes from Google — just advance
   document.getElementById('ob-step1').style.display = 'none';
   document.getElementById('ob-step2').style.display = 'block';
 }
@@ -502,16 +662,16 @@ function obNext2() {
 
 function obStart() {
   if (!selectedTrack) return;
-  const name = document.getElementById('ob-name').value.trim();
   const city = document.getElementById('ob-city').value.trim();
-  user = {...BLANK, name, city, rambamTrack: selectedTrack};
+  // name comes from Google sign-in, uid already set
+  user = {...BLANK, uid: user.uid, name: user.name, photoURL: user.photoURL, city, rambamTrack: selectedTrack};
   saveUser();
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
   init();
 }
 
-document.getElementById('ob-name').addEventListener('keydown', e => { if(e.key==='Enter') obNext1(); });
+// ob-name removed (name comes from Google)
 
 // Init theme immediately so there's no flash
 initTheme();
@@ -1435,24 +1595,44 @@ function switchLb(mode) {
   renderLeaders();
 }
 
-function renderLeaders() {
-  const me = {name: user.name || 'You', city: user.city || '', streak: user.streak, total: user.total, xp: user.xp, isMe: true};
-  const all = [me, ...LB_MOCK].sort((a, b) => lbMode === 'xp' ? b.xp - a.xp : b.streak - a.streak);
+async function renderLeaders() {
+  const list = document.getElementById('leaders-list');
+  list.innerHTML = '<p style="text-align:center;color:var(--t3);font-size:13px;padding:32px 0;">Loading…</p>';
+
+  let all = [];
+  if (window._fb && user.uid) {
+    all = await window._fb.fetchLeaderboard(lbMode);
+  }
+
+  // Make sure current user is in the list even if not yet synced
+  const meInList = all.find(p => p.uid === user.uid);
+  if (!meInList && user.name) {
+    all.push({ uid: user.uid, name: user.name, city: user.city, streak: user.streak, total: user.total, xp: user.xp });
+    all.sort((a,b) => lbMode === 'xp' ? b.xp - a.xp : b.streak - a.streak);
+  }
+
+  if (!all.length) {
+    list.innerHTML = '<p style="text-align:center;color:var(--t3);font-size:13px;padding:32px 0;">No data yet — be the first! 🏆</p>';
+    return;
+  }
+
   const podium = ['#F0A500','#C0C0C0','#CD7F32'];
-  document.getElementById('leaders-list').innerHTML = all.map((p, i) => `
-    <div style="display:flex;align-items:center;gap:12px;background:${p.isMe?'rgba(240,165,0,.1)':'var(--card)'};border:1.5px solid ${p.isMe?'rgba(240,165,0,.4)':'var(--border)'};border-radius:14px;padding:13px 14px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${i*.04}s;">
+  list.innerHTML = all.map((p, i) => {
+    const isMe = p.uid === user.uid;
+    return `<div style="display:flex;align-items:center;gap:12px;background:${isMe?'rgba(240,165,0,.1)':'var(--card)'};border:1.5px solid ${isMe?'rgba(240,165,0,.4)':'var(--border)'};border-radius:14px;padding:13px 14px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${i*.04}s;">
       <div style="width:28px;text-align:center;font-size:14px;font-weight:800;color:${podium[i]||'var(--t3)'};flex-shrink:0;">${i+1}</div>
       <div style="flex:1;min-width:0;">
-        <p style="font-weight:700;font-size:14px;color:${p.isMe?'var(--gold)':'var(--t1)'};">${p.name}${p.isMe?' (You)':''}</p>
-        <p style="font-size:11px;color:var(--t3);">${p.city || ''}</p>
+        <p style="font-weight:700;font-size:14px;color:${isMe?'var(--gold)':'var(--t1)'};">${p.name||'Anonymous'}${isMe?' (You)':''}</p>
+        <p style="font-size:11px;color:var(--t3);">${p.city||''}</p>
       </div>
       <div style="text-align:right;flex-shrink:0;">
         ${lbMode === 'xp'
-          ? `<p style="font-size:16px;font-weight:800;color:var(--gold);">${p.xp} <span style="font-size:11px;font-weight:600;color:var(--t3);">XP</span></p><p style="font-size:10px;color:var(--t3);">${p.total} days</p>`
-          : `<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">${icon('flame',12)} <span style="font-size:16px;font-weight:800;color:var(--t1);">${p.streak}</span></div><p style="font-size:10px;color:var(--t3);">day streak</p>`
+          ? `<p style="font-size:16px;font-weight:800;color:var(--gold);">${p.xp||0} <span style="font-size:11px;font-weight:600;color:var(--t3);">XP</span></p><p style="font-size:10px;color:var(--t3);">${p.total||0} days</p>`
+          : `<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">${icon('flame',12)} <span style="font-size:16px;font-weight:800;color:var(--t1);">${p.streak||0}</span></div><p style="font-size:10px;color:var(--t3);">day streak</p>`
         }
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
@@ -1551,7 +1731,7 @@ function changeTrack() {
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
   document.getElementById('ob-step2').style.display = 'none';
-  document.getElementById('ob-name').value = user.name;
+  // name from Google, no input to prefill
   buildTrackOptions();
   // Jump directly to step 2
   document.getElementById('ob-step1').style.display = 'none';
@@ -1582,17 +1762,19 @@ function toggleTheme() {
 }
 
 // ── SIGN OUT ───────────────────────────────────────────────────────────────────
-function signOut() {
-  // Keep the data, just go back to the login/onboarding screen
+async function signOut() {
+  if (window._fb) await window._fb.signOut().catch(()=>{});
+  user = {...BLANK};
+  try { localStorage.removeItem('chitas_v25'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
-  // Pre-fill name so they can sign back in quickly
   document.getElementById('ob-step1').style.display = 'block';
   document.getElementById('ob-step2').style.display = 'none';
   document.getElementById('ob-step3').style.display = 'none';
-  const nameInput = document.getElementById('ob-name');
-  if (nameInput && user.name) nameInput.value = user.name;
-  showToast('Signed out — your progress is saved 👋');
+  // Reset google button
+  const btn = document.getElementById('ob-google-btn');
+  if (btn) { btn.disabled = false; btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continue with Google`; }
+  showToast('Signed out 👋');
 }
 
 // ── SHARE ─────────────────────────────────────────────────────────────────────
@@ -1636,11 +1818,29 @@ function switchTab(id) {
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-if (user.name && user.rambamTrack) {
-  document.getElementById('onboarding').style.display = 'none';
-  document.getElementById('main-app').style.display = 'block';
-  init();
+// Wait for Firebase auth to be ready, then decide what to show
+function bootApp() {
+  // If we have a local user with uid and rambamTrack, show the app immediately
+  if (user.uid && user.rambamTrack) {
+    document.getElementById('onboarding').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    init();
+  }
+  // If Firebase says we're signed in but local data is empty, load from Firestore
+  window._fb._onAuthReady = async (fbUser) => {
+    if (fbUser && (!user.uid || !user.rambamTrack)) {
+      const remote = await window._fb.loadUser(fbUser.uid);
+      if (remote && remote.rambamTrack) {
+        user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
+        try { localStorage.setItem('chitas_v25', JSON.stringify(user)); } catch{}
+        document.getElementById('onboarding').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        if (typeof init === 'function') init();
+      }
+    }
+  };
 }
+bootApp();
 </script>
 </body>
 </html>
