@@ -341,7 +341,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v14'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v15'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -429,7 +429,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v14', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v15', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -592,51 +592,28 @@ async function init() {
     // Pull Sefaria refs from calendar
     const sefariaItems = sefariaCalRaw?.calendar_items || [];
 
-    // Chumash: aliya ref from Hebcal, or parasha from Sefaria calendar
+    // Chumash: aliya ref from Hebcal, or full parasha from Sefaria calendar
     const parshaItem = sefariaItems.find(i => i.title?.en === 'Parashat Hashavua');
     const chumashRef = p.aliyaRef || parshaItem?.ref || null;
 
-    // Tehillim: build ref from chapter list e.g. "Psalms 48-49"
+    // Tehillim: build ref from Hebcal chapter list e.g. "Psalms 48-49"
+    // Sefaria accepts "Psalms 48" or "Psalms 48-49" as valid refs
     const tehRef = p.tehChapters.length
       ? (p.tehChapters.length === 1
           ? `Psalms ${p.tehChapters[0]}`
           : `Psalms ${p.tehChapters[0]}-${p.tehChapters[p.tehChapters.length-1]}`)
       : null;
 
-    // Tanya: Sefaria calendar returns a date-label not a ref.
-    // Instead, look for the ref directly in the calendar items.
-    // The item title is "Daily Tanya" and ref looks like "Tanya, Likkutei Amarim.37"
+    // Tanya: calendar title is "Tanya Yomi", ref is e.g. "Tanya, Part I; Likkutei Amarim 37:9"
     const tanyaCalItem = sefariaItems.find(i =>
-      i.title?.en === 'Daily Tanya' ||
-      i.ref?.startsWith('Tanya') ||
-      i.category === 'Tanya'
+      i.title?.en === 'Tanya Yomi' ||
+      i.ref?.startsWith('Tanya')
     );
-    // If calendar gives us a ref use it, otherwise derive from Hebrew date
-    let tanyaRef = tanyaCalItem?.ref || null;
-    if (!tanyaRef) {
-      // Tanya cycle: 365 sections mapped across the year starting 19 Kislev.
-      // Simpler approach: use day-of-year since Sefaria numbers them 1-365
-      // We'll request by Hebrew day-of-year from the calendar item's url or
-      // fall back to a direct lookup by Hebrew date via Sefaria's texts API.
-      // For now derive a best-guess from Hebrew date fields:
-      // Sefaria Tanya refs are like: "Tanya, Likkutei Amarim.1" through ".53",
-      // then Shaar Hayichud, Igeret Hateshuvah, Igeret Hakodesh, Kuntres Acharon
-      // The daily cycle on Sefaria matches: just use the calendar item url if present
-      tanyaRef = tanyaCalItem?.url
-        ? null // url exists but no ref — Sefaria displays date not ref for Tanya
-        : null;
-    }
+    const tanyaRef = tanyaCalItem?.ref || null;
 
-    // Rambam ref — Sefaria calendar has "Daily Rambam (3 Chapters)" 
-    const rambam3Item = sefariaItems.find(i =>
-      i.title?.en === 'Daily Rambam (3 Chapters)' ||
-      i.title?.en === 'Daily Rambam' ||
-      (i.ref?.startsWith('Mishneh Torah'))
-    );
-    const rambam1Item = sefariaItems.find(i =>
-      i.title?.en === 'Daily Rambam (1 Chapter)' ||
-      (i.ref?.startsWith('Mishneh Torah') && i !== rambam3Item)
-    );
+    // Rambam: "Daily Rambam (3 Chapters)" or "Daily Rambam (1 Chapter)"
+    const rambam3Item = sefariaItems.find(i => i.title?.en === 'Daily Rambam (3 Chapters)');
+    const rambam1Item = sefariaItems.find(i => i.title?.en === 'Daily Rambam');
     const rambamRef = user.rambamTrack === '1'
       ? (rambam1Item?.ref || rambam3Item?.ref || null)
       : (rambam3Item?.ref || null);
@@ -653,7 +630,7 @@ async function init() {
                   sefariaRef: tehRef },
 
       tanya:    { id:'tanya',    label:'Tanya',    icon:'hex',    color:'#A855F7', xp:40, quizzable:true,
-                  subtitle: tanyaCalItem?.displayValue?.en || 'Tanya Yomi',
+                  subtitle: tanyaCalItem?.displayValue?.en || tanyaCalItem?.ref || 'Tanya Yomi',
                   chabadUrl: `${base}/tanya.asp?tdate=${encodeURIComponent(tdate)}`,
                   sefariaRef: tanyaRef },
 
@@ -1260,17 +1237,20 @@ async function openChabadPanel(sectionId) {
     try {
       if (!s.sefariaRef) throw new Error('no ref');
 
-      // Fetch both languages in parallel
+      // Fetch both languages — Sefaria v3: omit version for Hebrew (returns he field),
+      // add version=english for English translation
       const [enResp, heResp] = await Promise.all([
         fetch(`https://www.sefaria.org/api/v3/texts/${encodeURIComponent(s.sefariaRef)}?version=english`),
-        fetch(`https://www.sefaria.org/api/v3/texts/${encodeURIComponent(s.sefariaRef)}?version=he`),
+        fetch(`https://www.sefaria.org/api/v3/texts/${encodeURIComponent(s.sefariaRef)}`),
       ]);
 
       const enData = enResp.ok ? await enResp.json() : null;
       const heData = heResp.ok ? await heResp.json() : null;
 
-      const enVerses = flattenSefariaText(enData?.versions?.[0]?.text || enData?.text || []);
-      const heVerses = flattenSefariaText(heData?.versions?.[0]?.text || heData?.text || []);
+      // English: in versions[0].text when version=english requested
+      const enVerses = flattenSefariaText(enData?.versions?.[0]?.text || []);
+      // Hebrew: in the 'he' field of the base response (no version param)
+      const heVerses = flattenSefariaText(heData?.he || heData?.versions?.[0]?.text || []);
 
       if (!enVerses.length && !heVerses.length) throw new Error('empty text');
 
