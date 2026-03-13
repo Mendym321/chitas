@@ -278,22 +278,55 @@
   <div id="quiz-body" style="flex:1;padding:24px 20px;max-width:430px;margin:0 auto;width:100%;"></div>
 </div>
 
-<!-- Chabad iframe panel (slides in on top of reader) -->
+<!-- Reader panel — native text for Chumash/Tanya/Rambam, iframe for Tehillim -->
 <div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;">
-  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;">
+
+  <!-- Sticky header -->
+  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
     <button onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;min-width:0;">
       <p id="chabad-panel-title" style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
-      <p style="font-size:11px;color:var(--t3);">via Chabad.org</p>
+      <p id="chabad-panel-sub" style="font-size:11px;color:var(--t3);">via Chabad.org</p>
     </div>
     <a id="chabad-panel-extlink" href="#" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);text-decoration:none;" title="Open in browser">
       <svg width="16" height="16" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" fill="none"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8"/></svg>
     </a>
   </div>
-  <iframe id="chabad-iframe" src="" style="flex:1;border:none;width:100%;background:white;" allow="autoplay"></iframe>
+
+  <!-- Scroll progress bar (native reader only) -->
+  <div id="reader-progress-wrap" style="display:none;height:3px;background:var(--border);flex-shrink:0;">
+    <div id="reader-progress-bar" style="height:100%;width:0%;background:var(--gold);transition:width .15s linear;"></div>
+  </div>
+
+  <!-- Native reader (Chumash / Tanya / Rambam) -->
+  <div id="native-reader" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;" onscroll="onReaderScroll()">
+    <div style="padding:24px 22px 40px;max-width:430px;margin:0 auto;">
+      <div id="native-reader-loading" style="text-align:center;padding:60px 0;">
+        <div class="spinner" style="margin:0 auto 16px;color:var(--gold);"></div>
+        <p style="font-size:13px;color:var(--t3);">Loading from Chabad.org…</p>
+      </div>
+      <div id="native-reader-content" style="display:none;">
+        <!-- content injected here -->
+      </div>
+      <div id="native-reader-error" style="display:none;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.25);border-radius:14px;padding:16px;text-align:center;">
+        <p style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:6px;">Couldn't load text</p>
+        <p style="font-size:12px;color:var(--t3);margin-bottom:14px;">Opening Chabad.org directly instead</p>
+        <a id="reader-fallback-link" href="#" target="_blank" style="font-size:13px;font-weight:700;color:var(--blue);">Open in Browser ↗</a>
+      </div>
+      <!-- invisible sentinel at bottom for scroll detection -->
+      <div id="reader-bottom-sentinel" style="height:1px;"></div>
+    </div>
+  </div>
+
+  <!-- Iframe (Tehillim only) -->
+  <iframe id="chabad-iframe" src="" style="display:none;flex:1;border:none;width:100%;background:white;" allow="autoplay"></iframe>
+
+  <!-- Bottom bar -->
   <div style="padding:13px 18px 30px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+    <!-- Scroll hint (shown while not at bottom, native reader only) -->
+    <p id="scroll-hint" style="display:none;text-align:center;font-size:11px;color:var(--t3);margin-bottom:10px;">↓ Scroll to finish reading to mark done</p>
     <div style="display:flex;gap:10px;">
       <button id="chabad-mark-btn" style="flex:1;padding:16px 14px;border-radius:14px;border:none;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">Mark Done</button>
       <button id="chabad-quiz-btn" style="display:none;flex:1;padding:16px 14px;border-radius:14px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
@@ -310,7 +343,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v11'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v12'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -398,7 +431,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v11', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v12', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -959,35 +992,215 @@ function retryQuiz(sid) {
 
 
 
-function openChabadPanel(sectionId) {
+// ── READER ────────────────────────────────────────────────────────────────────
+// Sections that use native reader (scroll-to-unlock) vs iframe
+const NATIVE_READER_SECTIONS = ['chumash', 'tanya', 'rambam'];
+
+// Extract readable content from Chabad.org HTML
+function extractChabadContent(html, sectionId) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // Remove noise: nav, ads, scripts, styles, headers, footers, sidebars
+  ['script','style','nav','header','footer','.sidebar','.ad',
+   '.social-share','.print-link','#navigation','#header','#footer',
+   '.donate-banner','.top-bar','.breadcrumbs','.related-articles'
+  ].forEach(sel => doc.querySelectorAll(sel).forEach(el => el.remove()));
+
+  // Each Chabad.org study page has its content in different containers
+  // Try selectors in priority order
+  const selectors = [
+    '.article-body',        // most study pages
+    '.body-text',
+    '#article-body',
+    '.study-text',
+    '.content-body',
+    '[itemprop="articleBody"]',
+    '.col-md-8',            // fallback — main column
+    'article',
+    'main',
+  ];
+
+  let container = null;
+  for (const sel of selectors) {
+    container = doc.querySelector(sel);
+    if (container && container.innerText?.trim().length > 200) break;
+  }
+
+  if (!container) return null;
+
+  // Clean up remaining elements inside the container
+  container.querySelectorAll('script,style,iframe,.ad,.donate,button,form').forEach(el => el.remove());
+
+  // Get clean HTML — keep paragraphs, headings, strong/em
+  return container.innerHTML;
+}
+
+// Scroll handler — updates progress bar and unlocks Mark Done
+function onReaderScroll() {
+  const reader = document.getElementById('native-reader');
+  const sentinel = document.getElementById('reader-bottom-sentinel');
+  if (!reader || !sentinel) return;
+
+  const readerRect = reader.getBoundingClientRect();
+  const sentinelRect = sentinel.getBoundingClientRect();
+  const scrollTop = reader.scrollTop;
+  const scrollHeight = reader.scrollHeight - reader.clientHeight;
+
+  // Progress bar
+  const pct = scrollHeight > 0 ? Math.min(100, Math.round((scrollTop / scrollHeight) * 100)) : 100;
+  document.getElementById('reader-progress-bar').style.width = pct + '%';
+
+  // Unlock when sentinel is visible (within 120px of viewport bottom)
+  const nearBottom = sentinelRect.top <= readerRect.bottom + 120;
+  if (nearBottom) unlockMarkDone();
+}
+
+let markDoneUnlocked = false;
+function unlockMarkDone() {
+  if (markDoneUnlocked) return;
+  markDoneUnlocked = true;
+  const hint = document.getElementById('scroll-hint');
+  if (hint) hint.style.display = 'none';
+  // Re-style the mark done button to show it's active
+  const markBtn = document.getElementById('chabad-mark-btn');
+  if (markBtn && markBtn.dataset.locked === 'true') {
+    markBtn.dataset.locked = 'false';
+    const sid = markBtn.dataset.sectionId;
+    const s = schedule[sid];
+    if (s && !user.done[sid]) {
+      markBtn.style.background = s.color;
+      markBtn.style.opacity = '1';
+      markBtn.style.cursor = 'pointer';
+      markBtn.textContent = 'Mark Done · +' + s.xp + ' XP';
+      markBtn.onclick = () => { markDone(sid); closeChabadPanel(); };
+    }
+  }
+}
+
+async function openChabadPanel(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
+
+  markDoneUnlocked = false;
+  const useNative = NATIVE_READER_SECTIONS.includes(sectionId) && !user.done[sectionId];
+
+  // Header
   document.getElementById('chabad-panel-title').textContent = s.label;
   document.getElementById('chabad-panel-extlink').href = s.chabadUrl;
-  document.getElementById('chabad-iframe').src = s.chabadUrl;
 
-  // Mark done button
+  // Show panel
+  const panel = document.getElementById('chabad-panel');
+  panel.style.display = 'flex';
+
+  // Toggle native vs iframe
+  const nativeEl = document.getElementById('native-reader');
+  const iframeEl = document.getElementById('chabad-iframe');
+  const progressWrap = document.getElementById('reader-progress-wrap');
+  const scrollHint = document.getElementById('scroll-hint');
+
+  if (useNative) {
+    nativeEl.style.display = 'block';
+    iframeEl.style.display = 'none';
+    iframeEl.src = '';
+    progressWrap.style.display = 'block';
+    scrollHint.style.display = 'block';
+
+    // Show loading state
+    document.getElementById('native-reader-loading').style.display = 'block';
+    document.getElementById('native-reader-content').style.display = 'none';
+    document.getElementById('native-reader-error').style.display = 'none';
+    nativeEl.scrollTop = 0;
+
+    // Fetch via proxy
+    try {
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(s.chabadUrl)}`;
+      const resp = await fetch(proxyUrl);
+      if (!resp.ok) throw new Error('proxy ' + resp.status);
+      const html = await resp.text();
+      const extracted = extractChabadContent(html, sectionId);
+
+      if (extracted && extracted.trim().length > 100) {
+        const contentEl = document.getElementById('native-reader-content');
+        contentEl.innerHTML = `
+          <style>
+            #native-reader-content p { font-size:16px;line-height:1.85;color:var(--t1);margin-bottom:18px; }
+            #native-reader-content h1,#native-reader-content h2,#native-reader-content h3 {
+              font-family:'Playfair Display',serif;color:var(--t1);margin:24px 0 10px;line-height:1.3; }
+            #native-reader-content h2 { font-size:20px; }
+            #native-reader-content h3 { font-size:17px; }
+            #native-reader-content strong { color:var(--t1);font-weight:700; }
+            #native-reader-content em { color:var(--t2); }
+            #native-reader-content a { color:var(--blue);text-decoration:none; }
+            #native-reader-content img { display:none; }
+          </style>
+          ${extracted}`;
+        document.getElementById('native-reader-loading').style.display = 'none';
+        contentEl.style.display = 'block';
+      } else {
+        throw new Error('no content extracted');
+      }
+    } catch(err) {
+      console.warn('Native reader failed, falling back to iframe:', err);
+      document.getElementById('native-reader-loading').style.display = 'none';
+      document.getElementById('native-reader-error').style.display = 'block';
+      document.getElementById('reader-fallback-link').href = s.chabadUrl;
+      // Auto-unlock mark done since we can't track scroll
+      unlockMarkDone();
+    }
+  } else {
+    // Tehillim or already-done section — use iframe
+    nativeEl.style.display = 'none';
+    iframeEl.style.display = 'flex';
+    iframeEl.src = s.chabadUrl;
+    progressWrap.style.display = 'none';
+    scrollHint.style.display = 'none';
+    // Already done or iframe — unlock immediately
+    unlockMarkDone();
+  }
+
+  // ── Mark done button ──
   const markBtn = document.getElementById('chabad-mark-btn');
+  markBtn.dataset.sectionId = sectionId;
+
   if (user.done[sectionId]) {
+    // Already done — show green, no action
     markBtn.style.background = 'rgba(29,185,84,.15)';
     markBtn.style.border = '1px solid rgba(29,185,84,.4)';
     markBtn.style.color = '#1DB954';
+    markBtn.style.opacity = '1';
+    markBtn.style.cursor = 'default';
     markBtn.textContent = '✓ Done';
+    markBtn.dataset.locked = 'false';
+    markBtn.onclick = null;
+    scrollHint.style.display = 'none';
+  } else if (useNative) {
+    // Locked until scrolled
+    markBtn.style.background = 'var(--border)';
+    markBtn.style.border = 'none';
+    markBtn.style.color = 'var(--t3)';
+    markBtn.style.opacity = '0.6';
+    markBtn.style.cursor = 'not-allowed';
+    markBtn.textContent = 'Scroll to finish reading';
+    markBtn.dataset.locked = 'true';
     markBtn.onclick = null;
   } else {
+    // Iframe or already done — unlock immediately
     markBtn.style.background = s.color;
     markBtn.style.border = 'none';
     markBtn.style.color = '#000';
+    markBtn.style.opacity = '1';
+    markBtn.style.cursor = 'pointer';
     markBtn.textContent = 'Mark Done · +' + s.xp + ' XP';
+    markBtn.dataset.locked = 'false';
     markBtn.onclick = () => { markDone(sectionId); closeChabadPanel(); };
   }
 
-  // Quiz button — only show for quizzable sections
+  // ── Quiz button ──
   const quizBtn = document.getElementById('chabad-quiz-btn');
   if (s.quizzable) {
     quizBtn.style.display = 'flex';
     quizBtn.onclick = () => { closeChabadPanel(); openQuiz(sectionId); };
-    // Purple if already quizzed today, muted if not
     if (!user.quizDone) user.quizDone = {};
     if (user.quizDone[sectionId]) {
       quizBtn.style.background = 'rgba(29,185,84,.15)';
@@ -1001,13 +1214,14 @@ function openChabadPanel(sectionId) {
   } else {
     quizBtn.style.display = 'none';
   }
-
-  document.getElementById('chabad-panel').style.display = 'flex';
 }
 
 function closeChabadPanel() {
   document.getElementById('chabad-panel').style.display = 'none';
-  document.getElementById('chabad-iframe').src = ''; // stop loading
+  document.getElementById('chabad-iframe').src = '';
+  document.getElementById('native-reader-content').innerHTML = '';
+  document.getElementById('reader-progress-bar').style.width = '0%';
+  markDoneUnlocked = false;
 }
 
 // ── MEDALS ────────────────────────────────────────────────────────────────────
