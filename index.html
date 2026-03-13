@@ -343,7 +343,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v12'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v13'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -431,7 +431,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v12', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v13', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -578,7 +578,11 @@ async function init() {
   renderStats();
 
   try {
-    const [cal, hd] = await Promise.all([fetchHebcal(), fetchHebDate()]);
+    const [cal, hd, sefariaCalRaw] = await Promise.all([
+      fetchHebcal(),
+      fetchHebDate(),
+      fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York').then(r=>r.json()).catch(()=>null),
+    ]);
     const p = parseHebcal(cal);
     const tdate = `${hd.hm} ${hd.hd}, ${hd.hy}`;
     const civDate = `${new Date().getMonth()+1}/${new Date().getDate()}/${new Date().getFullYear()}`;
@@ -587,24 +591,44 @@ async function init() {
     document.getElementById('heb-date-label').textContent = `${hd.hd} ${hd.hm} ${hd.hy}`;
     document.getElementById('hebcal-link').style.display = 'flex';
 
+    // Pull Sefaria refs from calendar
+    const sefariaItems = sefariaCalRaw?.calendar_items || [];
+    const findRef = (title) => sefariaItems.find(i => i.title?.en === title || i.displayValue?.en?.includes(title));
+
+    // Parasha ref: use aliya ref from hebcal (already parsed), or calendar
+    const parshaItem = sefariaItems.find(i => i.title?.en === 'Parashat Hashavua');
+    const chumashRef = p.aliyaRef || parshaItem?.ref || null;
+
+    // Tanya ref from Sefaria calendar
+    const tanyaItem = sefariaItems.find(i => i.title?.en === 'Daily Tanya' || i.category === 'Tanya');
+    const tanyaRef = tanyaItem?.ref || null;
+
+    // Rambam ref — depends on track
+    const rambam3Item = sefariaItems.find(i => i.title?.en === 'Daily Rambam' || (i.category === 'Halakhah' && i.ref?.startsWith('Mishneh Torah')));
+    const rambamRef = rambam3Item?.ref || null;
+
     schedule = {
       chumash:  { id:'chumash',  label:'Chumash',  icon:'scroll', color:'#F0A500', xp:30, quizzable:true,
                   subtitle: p.parshaName ? `${p.parshaName} · Aliya ${p.aliyaNum}` : `Aliya ${p.aliyaNum}`,
-                  chabadUrl: `${base}/torahreading.asp?tdate=${civDate}` },
+                  chabadUrl: `${base}/torahreading.asp?tdate=${civDate}`,
+                  sefariaRef: chumashRef },
 
       tehillim: { id:'tehillim', label:'Tehillim', icon:'music',  color:'#4A9EFF', xp:30, quizzable:false,
                   subtitle: p.tehTitle || `Psalms ${p.tehChapters.join(', ')}`,
-                  chabadUrl: `${base}/tehillim.asp?tdate=${civDate}` },
+                  chabadUrl: `${base}/tehillim.asp?tdate=${civDate}`,
+                  sefariaRef: null }, // iframe only
 
       tanya:    { id:'tanya',    label:'Tanya',    icon:'hex',    color:'#A855F7', xp:40, quizzable:true,
-                  subtitle: 'Tanya Yomi',
-                  chabadUrl: `${base}/tanya.asp?tdate=${encodeURIComponent(tdate)}` },
+                  subtitle: tanyaItem?.displayValue?.en || 'Tanya Yomi',
+                  chabadUrl: `${base}/tanya.asp?tdate=${encodeURIComponent(tdate)}`,
+                  sefariaRef: tanyaRef },
 
       rambam:   { id:'rambam',   label:'Rambam',   icon:'rambam', color:'#1DB954', xp:40, quizzable:true,
-                  subtitle: p.rambamTitle,
+                  subtitle: p.rambamTitle || rambam3Item?.displayValue?.en || 'Rambam Yomi',
                   chabadUrl: user.rambamTrack === 'm'
                     ? `${base}/seferHamitzvos.asp?tdate=${encodeURIComponent(tdate)}`
-                    : `${base}/rambam.asp?rambamChapters=${user.rambamTrack==='3'?3:1}&tdate=${encodeURIComponent(tdate)}` },
+                    : `${base}/rambam.asp?rambamChapters=${user.rambamTrack==='3'?3:1}&tdate=${encodeURIComponent(tdate)}`,
+                  sefariaRef: rambamRef },
     };
 
     renderSections();
@@ -996,7 +1020,18 @@ function retryQuiz(sid) {
 // Sections that use native reader (scroll-to-unlock) vs iframe
 const NATIVE_READER_SECTIONS = ['chumash', 'tanya', 'rambam'];
 
-// Extract readable content from Chabad.org HTML
+// Flatten Sefaria's nested array text structure into a flat array of strings
+function flattenSefariaText(text) {
+  if (!text) return [];
+  if (typeof text === 'string') return [text];
+  if (Array.isArray(text)) {
+    // Could be array of strings or array of arrays
+    return text.flatMap(item => flattenSefariaText(item)).filter(s => s && s.trim());
+  }
+  return [];
+}
+
+// Extract readable content from Chabad.org HTML (kept as fallback, not used)
 function extractChabadContent(html, sectionId) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
@@ -1112,40 +1147,41 @@ async function openChabadPanel(sectionId) {
     document.getElementById('native-reader-error').style.display = 'none';
     nativeEl.scrollTop = 0;
 
-    // Fetch via proxy
+    // Fetch text from Sefaria API (no proxy needed — Sefaria has open CORS)
     try {
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(s.chabadUrl)}`;
-      const resp = await fetch(proxyUrl);
-      if (!resp.ok) throw new Error('proxy ' + resp.status);
-      const html = await resp.text();
-      const extracted = extractChabadContent(html, sectionId);
+      if (!s.sefariaRef) throw new Error('no ref');
+      const apiUrl = `https://www.sefaria.org/api/v3/texts/${encodeURIComponent(s.sefariaRef)}?version=english`;
+      const resp = await fetch(apiUrl);
+      if (!resp.ok) throw new Error('sefaria ' + resp.status);
+      const data = await resp.json();
 
-      if (extracted && extracted.trim().length > 100) {
-        const contentEl = document.getElementById('native-reader-content');
-        contentEl.innerHTML = `
-          <style>
-            #native-reader-content p { font-size:16px;line-height:1.85;color:var(--t1);margin-bottom:18px; }
-            #native-reader-content h1,#native-reader-content h2,#native-reader-content h3 {
-              font-family:'Playfair Display',serif;color:var(--t1);margin:24px 0 10px;line-height:1.3; }
-            #native-reader-content h2 { font-size:20px; }
-            #native-reader-content h3 { font-size:17px; }
-            #native-reader-content strong { color:var(--t1);font-weight:700; }
-            #native-reader-content em { color:var(--t2); }
-            #native-reader-content a { color:var(--blue);text-decoration:none; }
-            #native-reader-content img { display:none; }
-          </style>
-          ${extracted}`;
-        document.getElementById('native-reader-loading').style.display = 'none';
-        contentEl.style.display = 'block';
-      } else {
-        throw new Error('no content extracted');
-      }
+      // Sefaria returns text as nested arrays of strings (one per verse/paragraph)
+      // Flatten them into a readable list of paragraphs
+      const verses = flattenSefariaText(data.versions?.[0]?.text || data.text);
+      if (!verses || verses.length === 0) throw new Error('empty text');
+
+      const title = data.heRef || data.ref || s.label;
+      const contentEl = document.getElementById('native-reader-content');
+      contentEl.innerHTML = `
+        <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">
+          ${title} · via Sefaria
+        </p>
+        ${verses.map((v, i) => v.trim()
+          ? `<p style="font-size:16px;line-height:1.9;color:var(--t1);margin-bottom:16px;padding-bottom:16px;${i < verses.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">${v}</p>`
+          : ''
+        ).join('')}
+        <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;">
+          — End of today's portion —
+        </p>`;
+
+      document.getElementById('native-reader-loading').style.display = 'none';
+      contentEl.style.display = 'block';
+
     } catch(err) {
-      console.warn('Native reader failed, falling back to iframe:', err);
+      console.warn('Sefaria fetch failed, falling back to iframe:', err);
       document.getElementById('native-reader-loading').style.display = 'none';
       document.getElementById('native-reader-error').style.display = 'block';
       document.getElementById('reader-fallback-link').href = s.chabadUrl;
-      // Auto-unlock mark done since we can't track scroll
       unlockMarkDone();
     }
   } else {
