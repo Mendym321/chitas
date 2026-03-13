@@ -341,7 +341,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v16'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v17'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -429,7 +429,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v16', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v17', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -1060,12 +1060,12 @@ function renderReaderContent() {
     if (lang === 'both') {
       rowsHtml += `
       <div style="margin-bottom:16px;padding-bottom:16px;${borderStyle}">
-        ${he ? `<p style="font-size:17px;line-height:1.8;color:var(--t1);direction:rtl;text-align:right;font-family:'Times New Roman',serif;margin-bottom:10px;">${he}</p>` : ''}
+        ${he ? `<p style="font-size:17px;line-height:1.8;color:var(--t1);direction:rtl;text-align:right;font-family:'Times New Roman','David','Ezra SIL',serif;margin-bottom:10px;">${he}</p>` : ''}
         ${en ? `<p style="font-size:14px;line-height:1.75;color:var(--t2);">${en}</p>` : ''}
       </div>`;
     } else if (lang === 'he') {
       rowsHtml += he
-        ? `<p style="font-size:18px;line-height:1.9;color:var(--t1);direction:rtl;text-align:right;font-family:'Times New Roman',serif;margin-bottom:16px;padding-bottom:16px;${borderStyle}">${he}</p>`
+        ? `<p style="font-size:18px;line-height:1.9;color:var(--t1);direction:rtl;text-align:right;font-family:'Times New Roman','David','Ezra SIL',serif;margin-bottom:16px;padding-bottom:16px;${borderStyle}">${he}</p>`
         : '';
     } else {
       rowsHtml += en
@@ -1254,17 +1254,26 @@ async function openChabadPanel(sectionId) {
       const refs = s.sefariaRef.split('|');
 
       async function fetchBothLangs(ref) {
-        const [enR, heR] = await Promise.all([
-          fetch(`https://www.sefaria.org/api/v3/texts/${encodeURIComponent(ref)}?version=english`),
-          fetch(`https://www.sefaria.org/api/v3/texts/${encodeURIComponent(ref)}`),
-        ]);
-        const enD = enR.ok ? await enR.json() : null;
-        const heD = heR.ok ? await heR.json() : null;
+        // Fetch all versions in one call
+        const resp = await fetch(`https://www.sefaria.org/api/v3/texts/${encodeURIComponent(ref)}?fill_in_missing_segments=1`);
+        if (!resp.ok) throw new Error('sefaria ' + resp.status);
+        const d = await resp.json();
+        const versions = d.versions || [];
+
+        // Hebrew: prefer vocalized/primary source
+        const heVer = versions.find(v => (v.language === 'he' || v.actualLanguage === 'he') && v.isPrimary)
+                   || versions.find(v =>  v.language === 'he' || v.actualLanguage === 'he');
+
+        // English: prefer Steinsaltz (Talmud), then Koren, then any English
+        const enVer = versions.find(v => v.versionTitle?.includes('Steinsaltz') || v.versionTitle?.includes('William Davidson'))
+                   || versions.find(v => v.versionTitle?.includes('Koren'))
+                   || versions.find(v => v.language === 'en' || v.actualLanguage === 'en');
+
         return {
-          en: flattenSefariaText(enD?.versions?.[0]?.text || []),
-          he: flattenSefariaText(heD?.he || heD?.versions?.[0]?.text || []),
-          heRef: enD?.heRef || heD?.heRef || ref,
-          enRef: enD?.ref  || heD?.ref  || ref,
+          he: flattenSefariaText(heVer?.text || []),
+          en: flattenSefariaText(enVer?.text || []),
+          heRef: d.heRef || ref,
+          enRef: d.ref   || ref,
         };
       }
 
