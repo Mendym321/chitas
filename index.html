@@ -350,7 +350,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v19'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v20'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -438,7 +438,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v19', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v20', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -1254,22 +1254,27 @@ function unlockMarkDone() {
   }
 }
 
-async function openChabadPanel(sectionId) {
+function openChabadPanel(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
 
   markDoneUnlocked = false;
-  const useNative = NATIVE_READER_SECTIONS.includes(sectionId) && !user.done[sectionId];
 
   // Header
   document.getElementById('chabad-panel-title').textContent = s.label;
+  document.getElementById('chabad-panel-sub').textContent = s.subtitle || 'via Chabad.org';
   document.getElementById('chabad-panel-extlink').href = s.chabadUrl;
 
   // Show panel
   const panel = document.getElementById('chabad-panel');
   panel.style.display = 'flex';
 
-  // Auto-hide bottom bar after 4s, tap anywhere on panel to show again
+  // Load iframe
+  const iframeEl = document.getElementById('chabad-iframe');
+  iframeEl.style.display = 'flex';
+  iframeEl.src = s.chabadUrl;
+
+  // Auto-hide bottom bar after 4s; tap anywhere to show again
   const bar = document.getElementById('reader-bottom-bar');
   bar.style.transform = '';
   bar.style.opacity = '';
@@ -1278,7 +1283,6 @@ async function openChabadPanel(sectionId) {
     bar.style.transform = 'translateY(100%)';
     bar.style.opacity = '0';
   }, 4000);
-  // Tap anywhere on the iframe area → slide bar back up
   panel.ontouchstart = panel.onpointerdown = () => {
     bar.style.transform = '';
     bar.style.opacity = '';
@@ -1289,144 +1293,31 @@ async function openChabadPanel(sectionId) {
     }, 4000);
   };
 
-  // Toggle native vs iframe
-  const nativeEl = document.getElementById('native-reader');
-  const iframeEl = document.getElementById('chabad-iframe');
-  const progressWrap = document.getElementById('reader-progress-wrap');
-  const scrollHint = document.getElementById('scroll-hint');
-
-  if (useNative) {
-    nativeEl.style.display = 'block';
-    iframeEl.style.display = 'none';
-    iframeEl.src = '';
-    progressWrap.style.display = 'block';
-    scrollHint.style.display = 'block';
-
-    // Show loading state
-    document.getElementById('native-reader-loading').style.display = 'block';
-    document.getElementById('native-reader-content').style.display = 'none';
-    document.getElementById('native-reader-error').style.display = 'none';
-    nativeEl.scrollTop = 0;
-
-    // Fetch text from Sefaria API — both Hebrew and English
-    try {
-      if (!s.sefariaRef) throw new Error('no ref');
-
-      // Support pipe-separated refs for multi-chapter Tehillim
-      const refs = s.sefariaRef.split('|');
-
-      async function fetchBothLangs(ref) {
-        // Fetch all versions in one call
-        const resp = await fetch(`https://www.sefaria.org/api/v3/texts/${encodeURIComponent(ref)}?fill_in_missing_segments=1`);
-        if (!resp.ok) throw new Error('sefaria ' + resp.status);
-        const d = await resp.json();
-        const versions = d.versions || [];
-
-        // Hebrew: prefer primary/vocalized source
-        const heVer = versions.find(v => (v.language === 'he' || v.actualLanguage === 'he') && v.isPrimary)
-                   || versions.find(v =>  v.language === 'he' || v.actualLanguage === 'he');
-
-        // English: prefer Steinsaltz, then Koren, then any English
-        const enVer = versions.find(v => v.versionTitle?.includes('Steinsaltz') || v.versionTitle?.includes('William Davidson'))
-                   || versions.find(v => v.versionTitle?.includes('Koren'))
-                   || versions.find(v => (v.language === 'en' || v.actualLanguage === 'en') && v.status !== 'locked')
-                   || versions.find(v =>  v.language === 'en' || v.actualLanguage === 'en');
-
-        // text can be a string (single passage) or array
-        const heText = heVer?.text;
-        const enText = enVer?.text;
-
-        return {
-          he: typeof heText === 'string'
-                ? (stripSefariaHtml(heText) ? [stripSefariaHtml(heText)] : [])
-                : flattenSefariaText(heText || []),
-          en: typeof enText === 'string'
-                ? (stripSefariaHtml(enText) ? [stripSefariaHtml(enText)] : [])
-                : flattenSefariaText(enText || []),
-          heRef: d.heRef || ref,
-          enRef: d.ref   || ref,
-        };
-      }
-
-      const results = await Promise.all(refs.map(fetchBothLangs));
-
-      // Combine results from multiple chapters
-      const enVerses = results.flatMap(r => r.en);
-      const heVerses = results.flatMap(r => r.he);
-      const heRef    = results.map(r => r.heRef).join(' · ');
-      const enRef    = results.map(r => r.enRef).join(' · ');
-
-      if (!enVerses.length && !heVerses.length) throw new Error('empty text');
-
-      const maxLen = Math.max(enVerses.length, heVerses.length);
-
-      // Store verses on window so lang toggle can reuse them
-      window._readerData = { enVerses, heVerses, heRef, enRef, maxLen, sectionColor: s.color };
-      window._readerLang = 'he'; // default: Hebrew only
-
-      renderReaderContent();
-
-      document.getElementById('native-reader-loading').style.display = 'none';
-      document.getElementById('native-reader-content').style.display = 'block';
-
-    } catch(err) {
-      console.warn('Sefaria fetch failed, falling back to iframe:', err);
-      document.getElementById('native-reader-loading').style.display = 'none';
-      document.getElementById('native-reader-error').style.display = 'block';
-      document.getElementById('reader-fallback-link').href = s.chabadUrl;
-      unlockMarkDone();
-    }
-  } else {
-    // Tehillim or already-done section — use iframe
-    nativeEl.style.display = 'none';
-    iframeEl.style.display = 'flex';
-    iframeEl.src = s.chabadUrl;
-    progressWrap.style.display = 'none';
-    scrollHint.style.display = 'none';
-    // Already done or iframe — unlock immediately
-    unlockMarkDone();
-  }
-
   // ── Mark done button ──
   const markBtn = document.getElementById('chabad-mark-btn');
   markBtn.dataset.sectionId = sectionId;
 
   if (user.done[sectionId]) {
-    // Already done — show green, no action
     markBtn.style.background = 'rgba(29,185,84,.15)';
     markBtn.style.border = '1px solid rgba(29,185,84,.4)';
     markBtn.style.color = '#1DB954';
     markBtn.style.opacity = '1';
     markBtn.style.cursor = 'default';
     markBtn.textContent = '✓ Done';
-    markBtn.dataset.locked = 'false';
-    markBtn.onclick = null;
-    scrollHint.style.display = 'none';
-  } else if (useNative) {
-    // Locked until scrolled
-    markBtn.style.background = 'var(--border)';
-    markBtn.style.border = 'none';
-    markBtn.style.color = 'var(--t3)';
-    markBtn.style.opacity = '0.6';
-    markBtn.style.cursor = 'not-allowed';
-    markBtn.textContent = 'Scroll to finish reading';
-    markBtn.dataset.locked = 'true';
     markBtn.onclick = null;
   } else {
-    // Iframe or already done — unlock immediately
     markBtn.style.background = s.color;
     markBtn.style.border = 'none';
     markBtn.style.color = '#000';
     markBtn.style.opacity = '1';
     markBtn.style.cursor = 'pointer';
     markBtn.textContent = 'Mark Done · +' + s.xp + ' XP';
-    markBtn.dataset.locked = 'false';
     markBtn.onclick = () => showConfirm(sectionId, true);
   }
 
   // ── Quiz button ──
   const quizBtn = document.getElementById('chabad-quiz-btn');
-  if (s.quizzable) {
+  if (s.quizzable && !user.done[sectionId]) {
     quizBtn.style.display = 'flex';
     quizBtn.onclick = () => { closeChabadPanel(); openQuiz(sectionId); };
     if (!user.quizDone) user.quizDone = {};
@@ -1450,8 +1341,6 @@ function closeChabadPanel() {
   if (bar) { bar.style.transform = ''; bar.style.opacity = ''; }
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
-  document.getElementById('native-reader-content').innerHTML = '';
-  document.getElementById('reader-progress-bar').style.width = '0%';
   markDoneUnlocked = false;
 }
 
