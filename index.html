@@ -321,17 +321,26 @@
   <!-- Iframe (Tehillim only) -->
   <iframe id="chabad-iframe" src="" style="display:none;flex:1;border:none;width:100%;background:white;" allow="autoplay"></iframe>
 
-  <!-- Bottom bar -->
-  <div style="padding:13px 18px 30px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
-    <!-- Scroll hint (shown while not at bottom, native reader only) -->
-    <p id="scroll-hint" style="display:none;text-align:center;font-size:11px;color:var(--t3);margin-bottom:10px;">↓ Scroll to finish reading to mark done</p>
-    <div style="display:flex;gap:10px;">
-      <button id="chabad-mark-btn" style="flex:1;padding:16px 14px;border-radius:14px;border:none;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">Mark Done</button>
-      <button id="chabad-quiz-btn" style="display:none;flex:1;padding:16px 14px;border-radius:14px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
-        <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
-        Take Quiz
+  <!-- Bottom bar — compact, auto-hides after a few seconds, tap panel to show again -->
+  <div id="reader-bottom-bar" style="padding:8px 14px 20px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;transition:transform .3s ease,opacity .3s ease;">
+    <div style="display:flex;gap:8px;">
+      <button id="chabad-mark-btn" style="flex:1;padding:10px 12px;border-radius:12px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">Mark Done ✓</button>
+      <button id="chabad-quiz-btn" style="display:none;padding:10px 14px;border-radius:12px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;align-items:center;justify-content:center;gap:5px;">
+        <svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+        Quiz
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Confirm done modal -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:430px;animation:fadeUp .22s ease;">
+    <div id="confirm-icon" style="width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px;"></div>
+    <p id="confirm-title" style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--t1);text-align:center;margin-bottom:6px;"></p>
+    <p id="confirm-sub" style="font-size:13px;color:var(--t3);text-align:center;margin-bottom:24px;line-height:1.5;"></p>
+    <button id="confirm-yes" style="width:100%;padding:14px;border-radius:14px;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;" onclick="confirmDone()">Yes, I learned it ✓</button>
+    <button onclick="closeConfirm()" style="width:100%;padding:12px;border-radius:14px;border:1px solid var(--border);background:transparent;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--t2);">Not yet</button>
   </div>
 </div>
 
@@ -341,7 +350,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v18'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v19'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -429,7 +438,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v18', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v19', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -696,7 +705,7 @@ function renderSections() {
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
           <button onclick="openChabadPanel('${s.id}')" style="padding:8px 14px;border-radius:10px;background:${s.color}28;border:1px solid ${s.color}55;color:${s.color};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Open →</button>
           ${s.quizzable ? `<button onclick="openQuiz('${s.id}')" style="width:36px;height:36px;border-radius:10px;background:${(user.quizDone||{})[s.id]?'rgba(168,85,247,.2)':'var(--surface)'};border:1px solid ${(user.quizDone||{})[s.id]?'rgba(168,85,247,.5)':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${(user.quizDone||{})[s.id]?'#A855F7':'var(--t3)'};" title="Quiz">${icon('quiz',18)}</button>` : ''}
-          <button id="tick-${s.id}" onclick="markDone('${s.id}')" style="width:36px;height:36px;border-radius:10px;background:${done?s.color+'28':'var(--surface)'};border:1px solid ${done?s.color+'55':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${done?'#1DB954':'var(--t3)'};" ${done?'disabled':''}>
+          <button id="tick-${s.id}" onclick="showConfirm('${s.id}', false)" style="width:36px;height:36px;border-radius:10px;background:${done?s.color+'28':'var(--surface)'};border:1px solid ${done?s.color+'55':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${done?'#1DB954':'var(--t3)'};" ${done?'disabled':''}>
             ${icon('check',18)}
           </button>
         </div>
@@ -723,6 +732,39 @@ function updateProgressRing() {
   document.getElementById('progress-sub').textContent = allDone
     ? `${user.streak}-day streak · All done for today`
     : `${sections.length - doneCount} section${sections.length-doneCount!==1?'s':''} remaining`;
+}
+
+// ── CONFIRM MODAL ────────────────────────────────────────────────────────────
+let _confirmSectionId = null;
+let _confirmCallback = null;
+
+function showConfirm(sectionId, fromReader) {
+  if (!schedule) return;
+  const s = schedule[sectionId];
+  _confirmSectionId = sectionId;
+  _confirmCallback = fromReader ? () => { markDone(sectionId); closeChabadPanel(); }
+                                : () => markDone(sectionId);
+
+  const modal = document.getElementById('confirm-modal');
+  document.getElementById('confirm-icon').style.background = s.color + '22';
+  document.getElementById('confirm-icon').textContent = {chumash:'📜',tehillim:'🎵',tanya:'📖',rambam:'⚖️'}[sectionId] || '✓';
+  document.getElementById('confirm-title').textContent = `Mark ${s.label} done?`;
+  document.getElementById('confirm-sub').textContent = `Did you learn today's ${s.label}?
+${s.subtitle}`;
+  document.getElementById('confirm-yes').style.background = s.color;
+  document.getElementById('confirm-yes').style.color = sectionId === 'tehillim' ? '#000' : '#000';
+  modal.style.display = 'flex';
+}
+
+function confirmDone() {
+  closeConfirm();
+  if (_confirmCallback) _confirmCallback();
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-modal').style.display = 'none';
+  _confirmSectionId = null;
+  _confirmCallback = null;
 }
 
 function markDone(id) {
@@ -1207,7 +1249,7 @@ function unlockMarkDone() {
       markBtn.style.opacity = '1';
       markBtn.style.cursor = 'pointer';
       markBtn.textContent = 'Mark Done · +' + s.xp + ' XP';
-      markBtn.onclick = () => { markDone(sid); closeChabadPanel(); };
+      markBtn.onclick = () => showConfirm(sid, true);
     }
   }
 }
@@ -1226,6 +1268,26 @@ async function openChabadPanel(sectionId) {
   // Show panel
   const panel = document.getElementById('chabad-panel');
   panel.style.display = 'flex';
+
+  // Auto-hide bottom bar after 4s, tap anywhere on panel to show again
+  const bar = document.getElementById('reader-bottom-bar');
+  bar.style.transform = '';
+  bar.style.opacity = '';
+  clearTimeout(window._barHideTimer);
+  window._barHideTimer = setTimeout(() => {
+    bar.style.transform = 'translateY(100%)';
+    bar.style.opacity = '0';
+  }, 4000);
+  // Tap anywhere on the iframe area → slide bar back up
+  panel.ontouchstart = panel.onpointerdown = () => {
+    bar.style.transform = '';
+    bar.style.opacity = '';
+    clearTimeout(window._barHideTimer);
+    window._barHideTimer = setTimeout(() => {
+      bar.style.transform = 'translateY(100%)';
+      bar.style.opacity = '0';
+    }, 4000);
+  };
 
   // Toggle native vs iframe
   const nativeEl = document.getElementById('native-reader');
@@ -1359,7 +1421,7 @@ async function openChabadPanel(sectionId) {
     markBtn.style.cursor = 'pointer';
     markBtn.textContent = 'Mark Done · +' + s.xp + ' XP';
     markBtn.dataset.locked = 'false';
-    markBtn.onclick = () => { markDone(sectionId); closeChabadPanel(); };
+    markBtn.onclick = () => showConfirm(sectionId, true);
   }
 
   // ── Quiz button ──
@@ -1383,6 +1445,9 @@ async function openChabadPanel(sectionId) {
 }
 
 function closeChabadPanel() {
+  clearTimeout(window._barHideTimer);
+  const bar = document.getElementById('reader-bottom-bar');
+  if (bar) { bar.style.transform = ''; bar.style.opacity = ''; }
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
   document.getElementById('native-reader-content').innerHTML = '';
