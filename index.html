@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 <title>Chitas Daily</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap" rel="stylesheet"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -341,7 +341,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v17'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v18'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -429,7 +429,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v17', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v18', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -631,9 +631,9 @@ async function init() {
                   sefariaRef: tehRef },
 
       tanya:    { id:'tanya',    label:'Tanya',    icon:'hex',    color:'#A855F7', xp:40, quizzable:true,
-                  subtitle: tanyaCalItem?.displayValue?.en || tanyaCalItem?.ref || 'Tanya Yomi',
+                  subtitle: tanyaCalItem?.displayValue?.en || 'Tanya Yomi',
                   chabadUrl: `${base}/tanya.asp?tdate=${encodeURIComponent(tdate)}`,
-                  sefariaRef: tanyaRef },
+                  sefariaRef: null }, // Sefaria has no English for Tanya; Chabad.org is better
 
       rambam:   { id:'rambam',   label:'Rambam',   icon:'rambam', color:'#1DB954', xp:40, quizzable:true,
                   subtitle: p.rambamTitle || rambam3Item?.displayValue?.en || 'Rambam Yomi',
@@ -1060,12 +1060,12 @@ function renderReaderContent() {
     if (lang === 'both') {
       rowsHtml += `
       <div style="margin-bottom:16px;padding-bottom:16px;${borderStyle}">
-        ${he ? `<p style="font-size:17px;line-height:1.8;color:var(--t1);direction:rtl;text-align:right;font-family:'Times New Roman','David','Ezra SIL',serif;margin-bottom:10px;">${he}</p>` : ''}
+        ${he ? `<p style="font-size:17px;line-height:1.8;color:var(--t1);direction:rtl;text-align:right;font-family:'Frank Ruhl Libre','Times New Roman',serif;margin-bottom:10px;">${he}</p>` : ''}
         ${en ? `<p style="font-size:14px;line-height:1.75;color:var(--t2);">${en}</p>` : ''}
       </div>`;
     } else if (lang === 'he') {
       rowsHtml += he
-        ? `<p style="font-size:18px;line-height:1.9;color:var(--t1);direction:rtl;text-align:right;font-family:'Times New Roman','David','Ezra SIL',serif;margin-bottom:16px;padding-bottom:16px;${borderStyle}">${he}</p>`
+        ? `<p style="font-size:18px;line-height:1.9;color:var(--t1);direction:rtl;text-align:right;font-family:'Frank Ruhl Libre','Times New Roman',serif;margin-bottom:16px;padding-bottom:16px;${borderStyle}">${he}</p>`
         : '';
     } else {
       rowsHtml += en
@@ -1260,18 +1260,27 @@ async function openChabadPanel(sectionId) {
         const d = await resp.json();
         const versions = d.versions || [];
 
-        // Hebrew: prefer vocalized/primary source
+        // Hebrew: prefer primary/vocalized source
         const heVer = versions.find(v => (v.language === 'he' || v.actualLanguage === 'he') && v.isPrimary)
                    || versions.find(v =>  v.language === 'he' || v.actualLanguage === 'he');
 
-        // English: prefer Steinsaltz (Talmud), then Koren, then any English
+        // English: prefer Steinsaltz, then Koren, then any English
         const enVer = versions.find(v => v.versionTitle?.includes('Steinsaltz') || v.versionTitle?.includes('William Davidson'))
                    || versions.find(v => v.versionTitle?.includes('Koren'))
-                   || versions.find(v => v.language === 'en' || v.actualLanguage === 'en');
+                   || versions.find(v => (v.language === 'en' || v.actualLanguage === 'en') && v.status !== 'locked')
+                   || versions.find(v =>  v.language === 'en' || v.actualLanguage === 'en');
+
+        // text can be a string (single passage) or array
+        const heText = heVer?.text;
+        const enText = enVer?.text;
 
         return {
-          he: flattenSefariaText(heVer?.text || []),
-          en: flattenSefariaText(enVer?.text || []),
+          he: typeof heText === 'string'
+                ? (stripSefariaHtml(heText) ? [stripSefariaHtml(heText)] : [])
+                : flattenSefariaText(heText || []),
+          en: typeof enText === 'string'
+                ? (stripSefariaHtml(enText) ? [stripSefariaHtml(enText)] : [])
+                : flattenSefariaText(enText || []),
           heRef: d.heRef || ref,
           enRef: d.ref   || ref,
         };
