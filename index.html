@@ -321,8 +321,8 @@
   <!-- Iframe (Tehillim only) -->
   <iframe id="chabad-iframe" src="" style="display:none;flex:1;border:none;width:100%;background:white;" allow="autoplay"></iframe>
 
-  <!-- Bottom bar — compact, auto-hides after a few seconds, tap panel to show again -->
-  <div id="reader-bottom-bar" style="padding:8px 14px 20px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;transition:transform .3s ease,opacity .3s ease;">
+  <!-- Bottom bar — always visible, compact -->
+  <div id="reader-bottom-bar" style="padding:8px 14px 20px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
     <div style="display:flex;gap:8px;">
       <button id="chabad-mark-btn" style="flex:1;padding:10px 12px;border-radius:12px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">Mark Done ✓</button>
       <button id="chabad-quiz-btn" style="display:none;padding:10px 14px;border-radius:12px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;align-items:center;justify-content:center;gap:5px;">
@@ -350,7 +350,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v20'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v21'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -438,7 +438,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v20', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v21', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -1274,24 +1274,7 @@ function openChabadPanel(sectionId) {
   iframeEl.style.display = 'flex';
   iframeEl.src = s.chabadUrl;
 
-  // Auto-hide bottom bar after 4s; tap anywhere to show again
-  const bar = document.getElementById('reader-bottom-bar');
-  bar.style.transform = '';
-  bar.style.opacity = '';
-  clearTimeout(window._barHideTimer);
-  window._barHideTimer = setTimeout(() => {
-    bar.style.transform = 'translateY(100%)';
-    bar.style.opacity = '0';
-  }, 4000);
-  panel.ontouchstart = panel.onpointerdown = () => {
-    bar.style.transform = '';
-    bar.style.opacity = '';
-    clearTimeout(window._barHideTimer);
-    window._barHideTimer = setTimeout(() => {
-      bar.style.transform = 'translateY(100%)';
-      bar.style.opacity = '0';
-    }, 4000);
-  };
+
 
   // ── Mark done button ──
   const markBtn = document.getElementById('chabad-mark-btn');
@@ -1336,9 +1319,6 @@ function openChabadPanel(sectionId) {
 }
 
 function closeChabadPanel() {
-  clearTimeout(window._barHideTimer);
-  const bar = document.getElementById('reader-bottom-bar');
-  if (bar) { bar.style.transform = ''; bar.style.opacity = ''; }
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
   markDoneUnlocked = false;
