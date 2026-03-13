@@ -350,7 +350,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v21'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v22'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -438,7 +438,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v21', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v22', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -757,8 +757,9 @@ ${s.subtitle}`;
 }
 
 function confirmDone() {
+  const cb = _confirmCallback; // save before closeConfirm nulls it
   closeConfirm();
-  if (_confirmCallback) _confirmCallback();
+  if (cb) cb();
 }
 
 function closeConfirm() {
