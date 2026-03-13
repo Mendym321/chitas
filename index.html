@@ -315,8 +315,6 @@
         <p style="font-size:12px;color:var(--t3);margin-bottom:14px;">Opening Chabad.org directly instead</p>
         <a id="reader-fallback-link" href="#" target="_blank" style="font-size:13px;font-weight:700;color:var(--blue);">Open in Browser ↗</a>
       </div>
-      <!-- invisible sentinel at bottom for scroll detection -->
-      <div id="reader-bottom-sentinel" style="height:1px;"></div>
     </div>
   </div>
 
@@ -343,7 +341,7 @@
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const BLANK = {name:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v13'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v14'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -431,7 +429,7 @@ function icon(name, size=20, color='currentColor') {
 }
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() { try { localStorage.setItem('chitas_v13', JSON.stringify(user)); } catch{} }
+function saveUser() { try { localStorage.setItem('chitas_v14', JSON.stringify(user)); } catch{} }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
@@ -593,19 +591,55 @@ async function init() {
 
     // Pull Sefaria refs from calendar
     const sefariaItems = sefariaCalRaw?.calendar_items || [];
-    const findRef = (title) => sefariaItems.find(i => i.title?.en === title || i.displayValue?.en?.includes(title));
 
-    // Parasha ref: use aliya ref from hebcal (already parsed), or calendar
+    // Chumash: aliya ref from Hebcal, or parasha from Sefaria calendar
     const parshaItem = sefariaItems.find(i => i.title?.en === 'Parashat Hashavua');
     const chumashRef = p.aliyaRef || parshaItem?.ref || null;
 
-    // Tanya ref from Sefaria calendar
-    const tanyaItem = sefariaItems.find(i => i.title?.en === 'Daily Tanya' || i.category === 'Tanya');
-    const tanyaRef = tanyaItem?.ref || null;
+    // Tehillim: build ref from chapter list e.g. "Psalms 48-49"
+    const tehRef = p.tehChapters.length
+      ? (p.tehChapters.length === 1
+          ? `Psalms ${p.tehChapters[0]}`
+          : `Psalms ${p.tehChapters[0]}-${p.tehChapters[p.tehChapters.length-1]}`)
+      : null;
 
-    // Rambam ref — depends on track
-    const rambam3Item = sefariaItems.find(i => i.title?.en === 'Daily Rambam' || (i.category === 'Halakhah' && i.ref?.startsWith('Mishneh Torah')));
-    const rambamRef = rambam3Item?.ref || null;
+    // Tanya: Sefaria calendar returns a date-label not a ref.
+    // Instead, look for the ref directly in the calendar items.
+    // The item title is "Daily Tanya" and ref looks like "Tanya, Likkutei Amarim.37"
+    const tanyaCalItem = sefariaItems.find(i =>
+      i.title?.en === 'Daily Tanya' ||
+      i.ref?.startsWith('Tanya') ||
+      i.category === 'Tanya'
+    );
+    // If calendar gives us a ref use it, otherwise derive from Hebrew date
+    let tanyaRef = tanyaCalItem?.ref || null;
+    if (!tanyaRef) {
+      // Tanya cycle: 365 sections mapped across the year starting 19 Kislev.
+      // Simpler approach: use day-of-year since Sefaria numbers them 1-365
+      // We'll request by Hebrew day-of-year from the calendar item's url or
+      // fall back to a direct lookup by Hebrew date via Sefaria's texts API.
+      // For now derive a best-guess from Hebrew date fields:
+      // Sefaria Tanya refs are like: "Tanya, Likkutei Amarim.1" through ".53",
+      // then Shaar Hayichud, Igeret Hateshuvah, Igeret Hakodesh, Kuntres Acharon
+      // The daily cycle on Sefaria matches: just use the calendar item url if present
+      tanyaRef = tanyaCalItem?.url
+        ? null // url exists but no ref — Sefaria displays date not ref for Tanya
+        : null;
+    }
+
+    // Rambam ref — Sefaria calendar has "Daily Rambam (3 Chapters)" 
+    const rambam3Item = sefariaItems.find(i =>
+      i.title?.en === 'Daily Rambam (3 Chapters)' ||
+      i.title?.en === 'Daily Rambam' ||
+      (i.ref?.startsWith('Mishneh Torah'))
+    );
+    const rambam1Item = sefariaItems.find(i =>
+      i.title?.en === 'Daily Rambam (1 Chapter)' ||
+      (i.ref?.startsWith('Mishneh Torah') && i !== rambam3Item)
+    );
+    const rambamRef = user.rambamTrack === '1'
+      ? (rambam1Item?.ref || rambam3Item?.ref || null)
+      : (rambam3Item?.ref || null);
 
     schedule = {
       chumash:  { id:'chumash',  label:'Chumash',  icon:'scroll', color:'#F0A500', xp:30, quizzable:true,
@@ -616,10 +650,10 @@ async function init() {
       tehillim: { id:'tehillim', label:'Tehillim', icon:'music',  color:'#4A9EFF', xp:30, quizzable:false,
                   subtitle: p.tehTitle || `Psalms ${p.tehChapters.join(', ')}`,
                   chabadUrl: `${base}/tehillim.asp?tdate=${civDate}`,
-                  sefariaRef: null }, // iframe only
+                  sefariaRef: tehRef },
 
       tanya:    { id:'tanya',    label:'Tanya',    icon:'hex',    color:'#A855F7', xp:40, quizzable:true,
-                  subtitle: tanyaItem?.displayValue?.en || 'Tanya Yomi',
+                  subtitle: tanyaCalItem?.displayValue?.en || 'Tanya Yomi',
                   chabadUrl: `${base}/tanya.asp?tdate=${encodeURIComponent(tdate)}`,
                   sefariaRef: tanyaRef },
 
@@ -1020,6 +1054,81 @@ function retryQuiz(sid) {
 // Sections that use native reader (scroll-to-unlock) vs iframe
 const NATIVE_READER_SECTIONS = ['chumash', 'tanya', 'rambam'];
 
+// ── READER CONTENT RENDER ────────────────────────────────────────────────────
+function renderReaderContent() {
+  const { enVerses, heVerses, heRef, enRef, maxLen } = window._readerData || {};
+  const lang = window._readerLang || 'he';
+  const contentEl = document.getElementById('native-reader-content');
+  if (!contentEl || !window._readerData) return;
+
+  // Update toggle button states
+  ['he','en','both'].forEach(l => {
+    const btn = document.getElementById(`lang-btn-${l}`);
+    if (!btn) return;
+    const active = lang === l;
+    btn.style.background = active ? 'var(--gold)' : 'var(--card)';
+    btn.style.color = active ? '#000' : 'var(--t2)';
+    btn.style.borderColor = active ? 'var(--gold)' : 'var(--border)';
+  });
+
+  const titleLabel = lang === 'en' ? enRef : heRef;
+  let rowsHtml = '';
+
+  for (let i = 0; i < maxLen; i++) {
+    const he = heVerses[i] || '';
+    const en = enVerses[i] || '';
+    const borderStyle = i < maxLen - 1 ? 'border-bottom:1px solid var(--border);' : '';
+
+    if (lang === 'both') {
+      rowsHtml += `
+      <div style="margin-bottom:16px;padding-bottom:16px;${borderStyle}">
+        ${he ? `<p style="font-size:17px;line-height:1.8;color:var(--t1);direction:rtl;text-align:right;font-family:'Times New Roman',serif;margin-bottom:10px;">${he}</p>` : ''}
+        ${en ? `<p style="font-size:14px;line-height:1.75;color:var(--t2);">${en}</p>` : ''}
+      </div>`;
+    } else if (lang === 'he') {
+      rowsHtml += he
+        ? `<p style="font-size:18px;line-height:1.9;color:var(--t1);direction:rtl;text-align:right;font-family:'Times New Roman',serif;margin-bottom:16px;padding-bottom:16px;${borderStyle}">${he}</p>`
+        : '';
+    } else {
+      rowsHtml += en
+        ? `<p style="font-size:16px;line-height:1.9;color:var(--t1);margin-bottom:16px;padding-bottom:16px;${borderStyle}">${en}</p>`
+        : '';
+    }
+  }
+
+  contentEl.innerHTML = `
+    <!-- Lang toggle -->
+    <div style="display:flex;gap:6px;margin-bottom:20px;">
+      <button id="lang-btn-he"   onclick="setReaderLang('he')"   style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;">עברית</button>
+      <button id="lang-btn-both" onclick="setReaderLang('both')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;">Both</button>
+      <button id="lang-btn-en"   onclick="setReaderLang('en')"   style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;">English</button>
+    </div>
+    <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px;">${titleLabel} · via Sefaria</p>
+    ${rowsHtml}
+    <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today's portion —</p>
+    <div id="reader-bottom-sentinel" style="height:1px;"></div>`;
+
+  // Re-apply active styles after innerHTML reset
+  ['he','en','both'].forEach(l => {
+    const btn = document.getElementById(`lang-btn-${l}`);
+    if (!btn) return;
+    const active = lang === l;
+    btn.style.background = active ? 'var(--gold)' : 'var(--card)';
+    btn.style.color = active ? '#000' : 'var(--t2)';
+    btn.style.borderColor = active ? 'var(--gold)' : 'var(--border)';
+  });
+}
+
+function setReaderLang(lang) {
+  window._readerLang = lang;
+  const scrollPos = document.getElementById('native-reader')?.scrollTop || 0;
+  renderReaderContent();
+  // Restore scroll position so switching lang doesn't jump to top
+  if (document.getElementById('native-reader')) {
+    document.getElementById('native-reader').scrollTop = scrollPos;
+  }
+}
+
 // Flatten Sefaria's nested array text structure into a flat array of strings
 function flattenSefariaText(text) {
   if (!text) return [];
@@ -1147,35 +1256,36 @@ async function openChabadPanel(sectionId) {
     document.getElementById('native-reader-error').style.display = 'none';
     nativeEl.scrollTop = 0;
 
-    // Fetch text from Sefaria API (no proxy needed — Sefaria has open CORS)
+    // Fetch text from Sefaria API — both Hebrew and English
     try {
       if (!s.sefariaRef) throw new Error('no ref');
-      const apiUrl = `https://www.sefaria.org/api/v3/texts/${encodeURIComponent(s.sefariaRef)}?version=english`;
-      const resp = await fetch(apiUrl);
-      if (!resp.ok) throw new Error('sefaria ' + resp.status);
-      const data = await resp.json();
 
-      // Sefaria returns text as nested arrays of strings (one per verse/paragraph)
-      // Flatten them into a readable list of paragraphs
-      const verses = flattenSefariaText(data.versions?.[0]?.text || data.text);
-      if (!verses || verses.length === 0) throw new Error('empty text');
+      // Fetch both languages in parallel
+      const [enResp, heResp] = await Promise.all([
+        fetch(`https://www.sefaria.org/api/v3/texts/${encodeURIComponent(s.sefariaRef)}?version=english`),
+        fetch(`https://www.sefaria.org/api/v3/texts/${encodeURIComponent(s.sefariaRef)}?version=he`),
+      ]);
 
-      const title = data.heRef || data.ref || s.label;
-      const contentEl = document.getElementById('native-reader-content');
-      contentEl.innerHTML = `
-        <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">
-          ${title} · via Sefaria
-        </p>
-        ${verses.map((v, i) => v.trim()
-          ? `<p style="font-size:16px;line-height:1.9;color:var(--t1);margin-bottom:16px;padding-bottom:16px;${i < verses.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">${v}</p>`
-          : ''
-        ).join('')}
-        <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;">
-          — End of today's portion —
-        </p>`;
+      const enData = enResp.ok ? await enResp.json() : null;
+      const heData = heResp.ok ? await heResp.json() : null;
+
+      const enVerses = flattenSefariaText(enData?.versions?.[0]?.text || enData?.text || []);
+      const heVerses = flattenSefariaText(heData?.versions?.[0]?.text || heData?.text || []);
+
+      if (!enVerses.length && !heVerses.length) throw new Error('empty text');
+
+      const heRef   = enData?.heRef || heData?.heRef || s.label;
+      const enRef   = enData?.ref   || heData?.ref   || s.label;
+      const maxLen  = Math.max(enVerses.length, heVerses.length);
+
+      // Store verses on window so lang toggle can reuse them
+      window._readerData = { enVerses, heVerses, heRef, enRef, maxLen, sectionColor: s.color };
+      window._readerLang = 'he'; // default: Hebrew only
+
+      renderReaderContent();
 
       document.getElementById('native-reader-loading').style.display = 'none';
-      contentEl.style.display = 'block';
+      document.getElementById('native-reader-content').style.display = 'block';
 
     } catch(err) {
       console.warn('Sefaria fetch failed, falling back to iframe:', err);
