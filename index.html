@@ -282,8 +282,11 @@ onAuthStateChanged(auth, user => {
             style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dasharray .7s cubic-bezier(.22,1,.36,1)"/>
           <text id="ring-text" x="29" y="34" text-anchor="middle" fill="var(--t1)" font-size="13" font-weight="800" font-family="DM Sans,sans-serif">0/4</text>
         </svg>
-        <div>
-          <p id="progress-title" style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:3px;">Fetching schedule…</p>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px;">
+            <p id="progress-title" style="font-weight:700;font-size:15px;color:var(--t1);">Fetching schedule…</p>
+            <div id="header-avatar"></div>
+          </div>
           <p id="progress-sub" style="font-size:12px;color:var(--t2);">Connecting to Hebcal…</p>
         </div>
       </div>
@@ -479,7 +482,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v26'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v27'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -569,7 +572,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v26', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v27', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -658,7 +661,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v26', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v27', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1649,10 +1652,11 @@ async function renderLeaders() {
   const podium = ['#F0A500','#C0C0C0','#CD7F32'];
   list.innerHTML = all.map((p, i) => {
     const isMe = p.uid === user.uid;
-    return `<div style="display:flex;align-items:center;gap:12px;background:${isMe?'rgba(240,165,0,.1)':'var(--card)'};border:1.5px solid ${isMe?'rgba(240,165,0,.4)':'var(--border)'};border-radius:14px;padding:13px 14px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${i*.04}s;">
-      <div style="width:28px;text-align:center;font-size:14px;font-weight:800;color:${podium[i]||'var(--t3)'};flex-shrink:0;">${i+1}</div>
+    return `<div style="display:flex;align-items:center;gap:10px;background:${isMe?'rgba(240,165,0,.1)':'var(--card)'};border:1.5px solid ${isMe?'rgba(240,165,0,.4)':'var(--border)'};border-radius:14px;padding:11px 13px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${i*.04}s;">
+      <div style="width:20px;text-align:center;font-size:12px;font-weight:800;color:${podium[i]||'var(--t3)'};flex-shrink:0;">${i+1}</div>
+      ${letterAvatar(p.name||'?', 34, 14)}
       <div style="flex:1;min-width:0;">
-        <p style="font-weight:700;font-size:14px;color:${isMe?'var(--gold)':'var(--t1)'};">${p.name||'Anonymous'}${isMe?' (You)':''}</p>
+        <p style="font-weight:700;font-size:14px;color:${isMe?'var(--gold)':'var(--t1)'};">${lbName(p.name||'Anonymous')}${isMe?' (You)':''}</p>
         <p style="font-size:11px;color:var(--t3);">${p.city||''}</p>
       </div>
       <div style="text-align:right;flex-shrink:0;">
@@ -1795,7 +1799,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v26'); } catch{}
+  try { localStorage.removeItem('chitas_v27'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -1864,7 +1868,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v26', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v27', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
