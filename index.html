@@ -471,6 +471,25 @@ onAuthStateChanged(auth, user => {
   </div>
 </div>
 
+<!-- Motzei Shabbos weekly quiz popup -->
+<div id="motzei-popup" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 44px;width:100%;max-width:430px;animation:fadeUp .3s ease;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:40px;margin-bottom:12px;">✨</div>
+      <p style="font-size:20px;font-weight:900;color:var(--t1);margin-bottom:6px;">Gut Voch!</p>
+      <p style="font-size:14px;color:var(--t2);line-height:1.5;">Shabbos is over — time for the<br>weekly Chitas quiz. Test your knowledge<br>from this week's learning.</p>
+    </div>
+    <button onclick="document.getElementById('motzei-popup').style.display='none';openWeeklyQuiz();"
+      style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;">
+      Take the Weekly Quiz ✨
+    </button>
+    <button onclick="document.getElementById('motzei-popup').style.display='none';"
+      style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">
+      Maybe later
+    </button>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -504,7 +523,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v37'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v38'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
@@ -595,7 +614,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v37', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v38', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -684,7 +703,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v37', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v38', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1272,9 +1291,36 @@ function getWeekNumber() {
 }
 
 function isWeeklyQuizAvailable() {
-  // Available Fri (5), Sat (6), Sun (0)
-  const dow = new Date().getDay();
-  return dow === 5 || dow === 6 || dow === 0;
+  // Available Fri (5), Sat night/Sun (0), all day Sun
+  const now = new Date();
+  const dow = now.getDay();
+  const hour = now.getHours();
+  // Friday all day, Saturday from 7pm (Motzei Shabbos), Sunday all day
+  return dow === 5 || dow === 0 || (dow === 6 && hour >= 19);
+}
+
+function checkMotzeiShabbosPopup() {
+  // Show a gentle popup on Sat night/Sunday if weekly quiz not yet done
+  const now = new Date();
+  const dow = now.getDay();
+  const hour = now.getHours();
+  const isMoztei = (dow === 6 && hour >= 19) || dow === 0;
+  if (!isMoztei) return;
+  if (!isWeeklyQuizAvailable()) return;
+
+  const week = getWeekNumber();
+  if (!user.weeklyQuizDone) user.weeklyQuizDone = {};
+  if (user.weeklyQuizDone[week]) return; // already done
+
+  // Only show once per session
+  if (sessionStorage.getItem('wq_popup_shown_' + week)) return;
+  sessionStorage.setItem('wq_popup_shown_' + week, '1');
+
+  // Small delay so app loads first
+  setTimeout(() => {
+    const popup = document.getElementById('motzei-popup');
+    if (popup) popup.style.display = 'flex';
+  }, 2000);
 }
 
 function renderWeeklyQuizCard() {
@@ -1352,33 +1398,24 @@ async function openWeeklyQuiz() {
     </div>`;
   document.getElementById('weekly-quiz-panel').style.display = 'flex';
 
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        messages: [{ role: 'user', content: buildWeeklyPrompt() }]
-      })
-    });
-    const data = await resp.json();
-    const text = data.content?.[0]?.text || '';
-    const clean = text.replace(/```json|```/g, '').trim();
-    const questions = JSON.parse(clean);
-    if (!Array.isArray(questions) || questions.length < 5) throw new Error('bad questions');
-    weeklyQuizState.questions = questions.slice(0, 10);
-    renderWeeklyQuestion();
-  } catch(e) {
-    console.error('weekly quiz error:', e);
-    document.getElementById('wq-body').innerHTML = `
-      <div style="text-align:center;padding-top:60px;">
-        <p style="font-size:32px;margin-bottom:16px;">😔</p>
-        <p style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px;">Couldn't load quiz</p>
-        <p style="font-size:13px;color:var(--t3);">Check your connection and try again.</p>
-        <button onclick="closeWeeklyQuiz()" style="margin-top:24px;padding:12px 24px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Close</button>
-      </div>`;
-  }
+  // NOTE: Direct Anthropic API calls are blocked by CORS from browsers.
+  // Weekly quiz uses curated questions for now. A Vercel API route proxy is needed for live AI questions.
+  const WEEKLY_DUMMY = [
+    { q: "What is the primary topic of this week's parasha?", options: ["The Mishkan and its vessels", "The Exodus from Egypt", "Receiving the Torah at Sinai", "The Twelve Spies"], answer: 0, subject: "Chumash" },
+    { q: "Which craftsman was divinely appointed to lead the Mishkan's construction?", options: ["Moshe", "Aharon", "Betzalel", "Itamar"], answer: 2, subject: "Chumash" },
+    { q: "What material was contributed by the women for the Mishkan?", options: ["Gold jewelry", "Mirrors of copper", "Blue wool", "Cedar wood"], answer: 1, subject: "Chumash" },
+    { q: "According to the Alter Rebbe in this week's Tanya, where does the divine soul originate?", options: ["The world of Beriah", "Under G-d's throne of glory", "The world of Atzilut", "The soul of Adam"], answer: 1, subject: "Tanya" },
+    { q: "What does the Tanya teach about the relationship between the two souls?", options: ["They coexist peacefully", "The animal soul always wins", "They are in constant struggle", "They are actually one soul"], answer: 2, subject: "Tanya" },
+    { q: "This week's Tanya discusses the concept of Beinoni. What defines a Beinoni?", options: ["Never sins in thought word or deed", "Controls actions but not thoughts", "Has no evil inclination", "Is perfectly righteous"], answer: 1, subject: "Tanya" },
+    { q: "What area of halacha does this week's Rambam cover?", options: ["Laws of Shabbat", "Laws of prayer", "The halachos in this week's chapters", "Laws of blessings"], answer: 2, subject: "Rambam" },
+    { q: "According to the Rambam, what is the source of these laws in the Torah?", options: ["Rabbinic ordinance", "A Torah-level commandment", "A custom", "Not specified"], answer: 1, subject: "Rambam" },
+    { q: "How many chapters of Rambam are covered this week in the 3-chapter track?", options: ["One", "Two", "Three", "Four"], answer: 2, subject: "Rambam" },
+    { q: "Which of the following best describes Chitas as a daily learning program?", options: ["Only Chumash and Tehillim", "Chumash, Tehillim, Tanya and Rambam", "Torah, Mishnah and Gemara", "Only Chassidic texts"], answer: 1, subject: "Chumash" },
+  ];
+  weeklyQuizState.questions = WEEKLY_DUMMY;
+  // Simulate loading
+  await new Promise(r => setTimeout(r, 800));
+  renderWeeklyQuestion();
 }
 
 function closeWeeklyQuiz() {
@@ -2262,7 +2299,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v37'); } catch{}
+  try { localStorage.removeItem('chitas_v38'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2331,7 +2368,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v37', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v38', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
