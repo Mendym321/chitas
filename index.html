@@ -451,8 +451,35 @@ onAuthStateChanged(auth, user => {
 
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
+// Format name for leaderboard: "Mendel Moskovitz" → "Mendel M."
+function lbName(fullName) {
+  if (!fullName) return 'Anonymous';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return parts[0] + ' ' + parts[parts.length - 1][0] + '.';
+}
+
+// Letter avatar — first letter of first name, deterministic color from name
+const AVATAR_COLORS = [
+  ['#F0A500','#000'],['#4A9EFF','#000'],['#1DB954','#000'],
+  ['#A855F7','#fff'],['#FF4757','#fff'],['#FF6B35','#000'],
+  ['#00C9A7','#000'],['#845EC2','#fff'],
+];
+function avatarColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+function letterAvatar(name, size=32, fontSize=14) {
+  const letter = (name || '?')[0].toUpperCase();
+  const [bg, fg] = avatarColor(name || '?');
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};
+    display:flex;align-items:center;justify-content:center;
+    font-size:${fontSize}px;font-weight:800;color:${fg};flex-shrink:0;font-family:'DM Sans',sans-serif;">${letter}</div>`;
+}
+
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v25'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v26'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -542,7 +569,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v25', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v26', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -631,7 +658,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v25', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v26', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -891,6 +918,9 @@ function updateProgressRing() {
   card.style.borderColor = allDone ? 'rgba(29,185,84,.5)' : 'var(--border)';
   document.getElementById('progress-title').style.color = allDone ? '#1DB954' : 'var(--t1)';
   document.getElementById('progress-title').textContent = allDone ? "All done for today" : "Today's Learning";
+  // Update avatar in header if present
+  const ha = document.getElementById('header-avatar');
+  if (ha) ha.innerHTML = letterAvatar(user.name, 32, 13);
   document.getElementById('progress-sub').textContent = allDone
     ? `${user.streak}-day streak · All done for today`
     : `${sections.length - doneCount} section${sections.length-doneCount!==1?'s':''} remaining`;
@@ -1765,7 +1795,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v25'); } catch{}
+  try { localStorage.removeItem('chitas_v26'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -1834,7 +1864,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v25', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v26', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
