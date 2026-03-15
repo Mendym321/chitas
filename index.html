@@ -441,7 +441,7 @@ onAuthStateChanged(auth, user => {
 <!-- Confirm done modal -->
 <div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:430px;animation:fadeUp .22s ease;">
-    <div id="confirm-icon" style="width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px;"></div>
+
     <p id="confirm-title" style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:var(--t1);text-align:center;margin-bottom:6px;"></p>
     <p id="confirm-sub" style="font-size:13px;color:var(--t3);text-align:center;margin-bottom:24px;line-height:1.5;"></p>
     <button id="confirm-yes" style="width:100%;padding:14px;border-radius:14px;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;" onclick="confirmDone()">Yes, I learned it ✓</button>
@@ -482,7 +482,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v29'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v30'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -572,7 +572,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v29', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v30', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -661,7 +661,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v29', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v30', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -885,17 +885,16 @@ function renderSections() {
   list.innerHTML = sections.map((s,i) => {
     const done = !!user.done[s.id];
     return `
-    <div id="card-${s.id}" style="background:var(--card);border:1.5px solid ${done?s.color+'80':'var(--border)'};border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:${i*.06}s;transition:border-color .3s;">
+    <div id="card-${s.id}" onclick="openChabadPanel('${s.id}')" style="background:var(--card);border:1.5px solid ${done?s.color+'80':'var(--border)'};border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:${i*.06}s;transition:all .2s;cursor:pointer;-webkit-tap-highlight-color:transparent;" onmouseenter="this.style.borderColor='${s.color}55'" onmouseleave="this.style.borderColor='${done?s.color+'80':'var(--border)'}'" >
       <div style="display:flex;align-items:center;gap:14px;">
-        <div id="icon-${s.id}" style="width:44px;height:44px;border-radius:13px;background:${done?s.color+'33':'var(--surface)'};border:1px solid ${done?s.color+'66':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${done?s.color:'var(--t3)'};transition:all .3s;">
+        <div id="icon-${s.id}" style="width:44px;height:44px;border-radius:13px;background:${done?s.color+'33':'var(--surface)'};border:1px solid ${done?s.color+'66':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${done?s.color:'var(--t3)'};transition:all .3s;pointer-events:none;">
           ${icon(s.icon,21)}
         </div>
-        <div style="flex:1;min-width:0;">
+        <div style="flex:1;min-width:0;pointer-events:none;">
           <p style="font-weight:700;font-size:15px;color:${done?s.color:'var(--t1)'};margin-bottom:2px;">${s.label}</p>
           <p style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.subtitle}</p>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
-          <button onclick="openChabadPanel('${s.id}')" style="padding:8px 14px;border-radius:10px;background:${s.color}28;border:1px solid ${s.color}55;color:${s.color};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Open →</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">
           ${s.quizzable ? `<button onclick="openQuiz('${s.id}')" style="width:36px;height:36px;border-radius:10px;background:${(user.quizDone||{})[s.id]?'rgba(168,85,247,.2)':'var(--surface)'};border:1px solid ${(user.quizDone||{})[s.id]?'rgba(168,85,247,.5)':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${(user.quizDone||{})[s.id]?'#A855F7':'var(--t3)'};" title="Quiz">${icon('quiz',18)}</button>` : ''}
           <button id="tick-${s.id}" onclick="showConfirm('${s.id}', false)" style="width:36px;height:36px;border-radius:10px;background:${done?s.color+'28':'var(--surface)'};border:1px solid ${done?s.color+'55':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${done?'#1DB954':'var(--t3)'};" ${done?'disabled':''}>
             ${icon('check',18)}
@@ -941,12 +940,7 @@ function showConfirm(sectionId, fromReader) {
                                 : () => markDone(sectionId);
 
   const modal = document.getElementById('confirm-modal');
-  document.getElementById('confirm-icon').style.background = s.color + '22';
-  document.getElementById('confirm-icon').style.color = s.color;
-  document.getElementById('confirm-icon').style.fontSize = '22px';
-  document.getElementById('confirm-icon').style.fontWeight = '800';
-  document.getElementById('confirm-icon').style.fontFamily = "'DM Sans',sans-serif";
-  document.getElementById('confirm-icon').textContent = s.label[0];
+
   document.getElementById('confirm-title').textContent = `Mark ${s.label} done?`;
   const verb = sectionId === 'tehillim' ? 'read' : 'learn';
   document.getElementById('confirm-sub').textContent = `Did you ${verb} today's ${s.label}?\n${s.subtitle}`;
@@ -1805,7 +1799,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v29'); } catch{}
+  try { localStorage.removeItem('chitas_v30'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -1874,7 +1868,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v29', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v30', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
