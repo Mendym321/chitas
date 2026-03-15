@@ -485,7 +485,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v31'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v32'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
@@ -576,7 +576,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v31', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v32', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -665,7 +665,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v31', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v32', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -965,7 +965,7 @@ function checkCatchupNeeded() {
         </div>
         <button onclick="openCatchup('${m.iso}')" style="padding:8px 14px;border-radius:10px;background:var(--gold);border:none;color:#000;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">Catch up →</button>
       </div>
-      ${missed.length > 1 ? `<div style="display:flex;gap:6px;margin-top:10px;">${missed.map(mx=>`<button onclick="openCatchup('${mx.iso}')" style="flex:1;padding:6px 4px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${mx.label}</button>`).join('')}</div>` : ''}
+      ${missed.length > 1 ? '<div style="display:flex;gap:6px;margin-top:10px;">' + missed.map(mx=>'<button onclick="openCatchup(\'' + mx.iso + '\')" style="flex:1;padding:6px 4px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">' + mx.label + '</button>').join('') + '</div>' : ''}
     </div>`;
 }
 
@@ -1956,7 +1956,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v31'); } catch{}
+  try { localStorage.removeItem('chitas_v32'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2025,7 +2025,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v31', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v32', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
