@@ -339,6 +339,8 @@ onAuthStateChanged(auth, user => {
       <!-- tanya-note removed -->
       <div id="tanya-note" style="display:none;"></div>
 
+      <!-- Weekly quiz card -->
+      <div id="weekly-quiz-card" style="display:none;margin-top:6px;margin-bottom:4px;"></div>
 
     </div>
 
@@ -384,6 +386,23 @@ onAuthStateChanged(auth, user => {
     </div>
   </div>
   <div id="quiz-body" style="flex:1;padding:24px 20px;max-width:430px;margin:0 auto;width:100%;"></div>
+</div>
+
+<!-- Weekly Quiz panel -->
+<div id="weekly-quiz-panel" style="position:fixed;inset:0;z-index:998;background:var(--bg);display:none;flex-direction:column;overflow-y:auto;">
+  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:1;">
+    <button onclick="closeWeeklyQuiz()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    </button>
+    <div style="flex:1;">
+      <p id="wq-title" style="font-size:17px;font-weight:900;color:var(--t1);">Weekly Quiz</p>
+      <p id="wq-subtitle" style="font-size:11px;color:var(--t3);margin-top:1px;">This week's Chumash, Tanya & Rambam</p>
+    </div>
+    <div id="wq-score-badge" style="display:none;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.4);border-radius:10px;padding:4px 10px;">
+      <p id="wq-score-text" style="font-size:12px;font-weight:700;color:var(--gold);"></p>
+    </div>
+  </div>
+  <div id="wq-body" style="flex:1;padding:24px 20px;max-width:430px;margin:0 auto;width:100%;"></div>
 </div>
 
 <!-- Reader panel — native text for Chumash/Tanya/Rambam, iframe for Tehillim -->
@@ -484,8 +503,8 @@ function letterAvatar(name, size=32, fontSize=14) {
     font-size:${fontSize}px;font-weight:800;color:${fg};flex-shrink:0;font-family:'DM Sans',sans-serif;">${letter}</div>`;
 }
 
-const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v33'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
+let user = (() => { try { const s=localStorage.getItem('chitas_v34'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
@@ -576,7 +595,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v33', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v34', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -665,7 +684,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v33', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v34', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1239,6 +1258,299 @@ async function openQuiz(sectionId) {
   await new Promise(r => setTimeout(r, 1200));
   quizState.questions = DUMMY[sectionId] || DUMMY.chumash;
   renderQuestion();
+}
+
+// ── WEEKLY QUIZ ───────────────────────────────────────────────────────────────
+
+function getWeekNumber() {
+  // ISO week number — consistent across devices
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return d.getFullYear() + '-W' + String(1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7)).padStart(2,'0');
+}
+
+function isWeeklyQuizAvailable() {
+  // Available Fri (5), Sat (6), Sun (0)
+  const dow = new Date().getDay();
+  return dow === 5 || dow === 6 || dow === 0;
+}
+
+function renderWeeklyQuizCard() {
+  const card = document.getElementById('weekly-quiz-card');
+  if (!card || !schedule) return;
+  if (!isWeeklyQuizAvailable()) { card.style.display = 'none'; return; }
+
+  const week = getWeekNumber();
+  if (!user.weeklyQuizDone) user.weeklyQuizDone = {};
+  const done = !!user.weeklyQuizDone[week];
+
+  card.style.display = 'block';
+  card.innerHTML = `
+    <div onclick="${done ? '' : 'openWeeklyQuiz()'}" style="
+      background: linear-gradient(135deg, rgba(240,165,0,.12), rgba(168,85,247,.08));
+      border: 1.5px solid ${done ? 'rgba(29,185,84,.4)' : 'rgba(240,165,0,.35)'};
+      border-radius: 16px; padding: 16px; cursor: ${done ? 'default' : 'pointer'};
+      transition: all .15s; ${done ? '' : '-webkit-tap-highlight-color:transparent;'}
+    " ${done ? '' : 'onmouseenter="this.style.background='linear-gradient(135deg,rgba(240,165,0,.18),rgba(168,85,247,.12))'" onmouseleave="this.style.background='linear-gradient(135deg,rgba(240,165,0,.12),rgba(168,85,247,.08))'"'}>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:44px;height:44px;border-radius:13px;background:${done ? 'rgba(29,185,84,.15)' : 'rgba(240,165,0,.15)'};border:1px solid ${done ? 'rgba(29,185,84,.3)' : 'rgba(240,165,0,.3)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">
+          ${done ? '✅' : '📋'}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <p style="font-weight:800;font-size:15px;color:${done ? '#1DB954' : 'var(--gold)'};margin-bottom:2px;">
+            ${done ? 'Weekly Quiz Done' : 'Weekly Quiz'}
+          </p>
+          <p style="font-size:12px;color:var(--t3);">
+            ${done
+              ? 'Score: ' + (user.weeklyQuizDone[week].score || 0) + '/10 · ' + user.weeklyQuizDone[week].xp + ' XP earned'
+              : 'Test this week's Chumash, Tanya & Rambam · +100 XP'
+            }
+          </p>
+        </div>
+        ${done ? '' : '<svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+      </div>
+    </div>`;
+}
+
+let weeklyQuizState = { questions: [], current: 0, score: 0, answered: false };
+
+function buildWeeklyPrompt() {
+  const subs = [];
+  if (schedule?.chumash) subs.push('Chumash (Torah): ' + schedule.chumash.subtitle);
+  if (schedule?.tanya)   subs.push('Tanya: ' + schedule.tanya.subtitle);
+  if (schedule?.rambam)  subs.push('Rambam: ' + schedule.rambam.subtitle);
+
+  return `You are a quiz generator for a weekly Jewish learning review app.
+Generate exactly 10 multiple-choice questions testing the user's knowledge from this week's learning.
+Cover all three subjects roughly evenly (about 3-4 questions each).
+
+This week's learning includes:
+${subs.map((s,i) => (i+1) + '. ' + s).join('\n')}
+
+Rules:
+- Questions must be specific to the actual content, not generic
+- Each question has exactly 4 options (A B C D)  
+- Exactly one correct answer per question
+- Vary difficulty: mix easier recall and deeper comprehension
+- Keep questions concise and clear
+- Tag each question with its subject
+
+Respond ONLY with a valid JSON array, no markdown, no backticks:
+[{"q":"...","options":["...","...","...","..."],"answer":0,"subject":"Chumash"},...]`;
+}
+
+async function openWeeklyQuiz() {
+  const week = getWeekNumber();
+  if (!user.weeklyQuizDone) user.weeklyQuizDone = {};
+  // Already done — just show results
+  if (user.weeklyQuizDone[week]) { openWeeklyQuizResults(); return; }
+
+  weeklyQuizState = { questions: [], current: 0, score: 0, answered: false };
+
+  document.getElementById('wq-score-badge').style.display = 'none';
+  document.getElementById('wq-body').innerHTML = `
+    <div style="text-align:center;padding-top:60px;">
+      <div class="spinner" style="margin:0 auto;color:var(--gold);"></div>
+      <p style="color:var(--t3);font-size:13px;margin-top:16px;">Generating your weekly quiz…</p>
+    </div>`;
+  document.getElementById('weekly-quiz-panel').style.display = 'flex';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: buildWeeklyPrompt() }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.[0]?.text || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const questions = JSON.parse(clean);
+    if (!Array.isArray(questions) || questions.length < 5) throw new Error('bad questions');
+    weeklyQuizState.questions = questions.slice(0, 10);
+    renderWeeklyQuestion();
+  } catch(e) {
+    console.error('weekly quiz error:', e);
+    document.getElementById('wq-body').innerHTML = `
+      <div style="text-align:center;padding-top:60px;">
+        <p style="font-size:32px;margin-bottom:16px;">😔</p>
+        <p style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px;">Couldn't load quiz</p>
+        <p style="font-size:13px;color:var(--t3);">Check your connection and try again.</p>
+        <button onclick="closeWeeklyQuiz()" style="margin-top:24px;padding:12px 24px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Close</button>
+      </div>`;
+  }
+}
+
+function closeWeeklyQuiz() {
+  document.getElementById('weekly-quiz-panel').style.display = 'none';
+  weeklyQuizState = { questions: [], current: 0, score: 0, answered: false };
+}
+
+function renderWeeklyQuestion() {
+  const { questions, current } = weeklyQuizState;
+  const q = questions[current];
+  if (!q) return;
+  const total = questions.length;
+  const subjectColor = {Chumash:'#F0A500',Tanya:'#A855F7',Rambam:'#4A9EFF'}[q.subject] || '#F0A500';
+
+  document.getElementById('wq-body').innerHTML = `
+    <div style="animation:fadeUp .3s ease both;">
+      <!-- Progress dots -->
+      <div style="display:flex;gap:4px;margin-bottom:20px;">
+        ${Array.from({length:total},(_,i) => '<div style="flex:1;height:4px;border-radius:2px;background:' + (i<current?'var(--gold)':i===current?'rgba(240,165,0,.5)':'var(--border)') + ';"></div>').join('')}
+      </div>
+      <!-- Subject tag -->
+      <div style="display:inline-block;padding:3px 10px;border-radius:20px;background:' + subjectColor + '22;border:1px solid ' + subjectColor + '44;margin-bottom:12px;">
+        <span style="font-size:10px;font-weight:700;color:${subjectColor};text-transform:uppercase;letter-spacing:.08em;">${q.subject || 'Question'}</span>
+      </div>
+      <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Question ${current+1} of ${total}</p>
+      <p style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5;margin-bottom:24px;">${q.q}</p>
+      <div id="wq-options">
+        ${q.options.map((opt,i) => '<button onclick="selectWeeklyAnswer(' + i + ')" id="wqopt-' + i + '" style="width:100%;text-align:left;padding:14px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:all .15s;"><span style="width:26px;height:26px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--t3);flex-shrink:0;">' + ['A','B','C','D'][i] + '</span>' + opt + '</button>').join('')}
+      </div>
+    </div>`;
+}
+
+function selectWeeklyAnswer(idx) {
+  if (weeklyQuizState.answered) return;
+  weeklyQuizState.answered = true;
+  const { questions, current } = weeklyQuizState;
+  const q = questions[current];
+  const correct = q.answer;
+  const isRight = idx === correct;
+  if (isRight) weeklyQuizState.score++;
+
+  // Color options
+  q.options.forEach((_,i) => {
+    const btn = document.getElementById('wqopt-' + i);
+    if (!btn) return;
+    btn.style.cursor = 'default';
+    if (i === correct) {
+      btn.style.background = 'rgba(29,185,84,.15)';
+      btn.style.borderColor = '#1DB954';
+      btn.style.color = '#1DB954';
+    } else if (i === idx && !isRight) {
+      btn.style.background = 'rgba(255,71,87,.15)';
+      btn.style.borderColor = '#FF4757';
+      btn.style.color = '#FF4757';
+    } else {
+      btn.style.opacity = '0.4';
+    }
+  });
+
+  // Next button
+  const isLast = current === questions.length - 1;
+  const fb = document.createElement('div');
+  fb.style.cssText = 'margin-top:20px;display:flex;align-items:center;justify-content:space-between;animation:fadeUp .2s ease both;';
+  fb.innerHTML = isRight
+    ? '<p style="color:#1DB954;font-weight:700;font-size:14px;">Correct</p>'
+    : '<p style="color:#FF4757;font-weight:700;font-size:14px;">Incorrect</p>';
+  const nextBtn = document.createElement('button');
+  nextBtn.style.cssText = 'padding:12px 22px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;';
+  nextBtn.textContent = isLast ? 'See Results' : 'Next →';
+  nextBtn.onclick = () => {
+    if (isLast) {
+      showWeeklyResults();
+    } else {
+      weeklyQuizState.current++;
+      weeklyQuizState.answered = false;
+      renderWeeklyQuestion();
+    }
+  };
+  fb.appendChild(nextBtn);
+  document.getElementById('wq-body').appendChild(fb);
+
+  // Update score badge
+  document.getElementById('wq-score-text').textContent = weeklyQuizState.score + '/' + (current+1);
+  document.getElementById('wq-score-badge').style.display = 'block';
+}
+
+function showWeeklyResults() {
+  const { score, questions } = weeklyQuizState;
+  const total = questions.length;
+  const week = getWeekNumber();
+  const xpEarned = Math.round((score / total) * 100);
+  const pct = Math.round((score / total) * 100);
+
+  // Save result
+  if (!user.weeklyQuizDone) user.weeklyQuizDone = {};
+  if (!user.weeklyQuizDone[week]) {
+    user.weeklyQuizDone[week] = { score, total, xp: xpEarned, week };
+    user.xp += xpEarned;
+    user.quizTotal  = (user.quizTotal  || 0) + total;
+    user.quizCorrect = (user.quizCorrect || 0) + score;
+    saveUser();
+    updateHeader();
+    updateStats();
+  }
+
+  const emoji = score === total ? '🎯' : score >= total * 0.8 ? '🔥' : score >= total * 0.6 ? '👍' : '📖';
+  const msg   = score === total ? 'Perfect score!' : score >= 8 ? 'Excellent!' : score >= 6 ? 'Good work!' : 'Keep learning!';
+
+  // Wordle-style squares
+  const squares = questions.map((q, i) => {
+    const subColor = {Chumash:'#F0A500',Tanya:'#A855F7',Rambam:'#4A9EFF'}[q.subject] || '#F0A500';
+    // We don't have per-question tracking so use score proportion
+    return '<span style="display:inline-block;width:24px;height:24px;border-radius:5px;margin:2px;background:' + subColor + ';opacity:' + (i < score ? '1' : '0.2') + ';"></span>';
+  }).join('');
+
+  document.getElementById('wq-body').innerHTML = `
+    <div style="text-align:center;padding-top:32px;animation:fadeUp .35s ease both;">
+      <div style="font-size:48px;margin-bottom:16px;">${emoji}</div>
+      <p style="font-size:28px;font-weight:900;color:var(--t1);margin-bottom:6px;">${score} / ${total}</p>
+      <p style="font-size:16px;color:var(--t2);margin-bottom:4px;">${msg}</p>
+      <p style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:28px;">+${xpEarned} XP earned</p>
+
+      <!-- Score squares -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;">
+        <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Weekly Chitas Quiz</p>
+        <div style="margin-bottom:14px;">${squares}</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:4px;">
+          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:12px;height:12px;border-radius:3px;background:#F0A500;display:inline-block;"></span>Chumash</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:12px;height:12px;border-radius:3px;background:#A855F7;display:inline-block;"></span>Tanya</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:12px;height:12px;border-radius:3px;background:#4A9EFF;display:inline-block;"></span>Rambam</span>
+        </div>
+        <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;margin-top:14px;">
+          <div style="height:100%;width:${pct}%;background:var(--gold);border-radius:3px;transition:width .8s cubic-bezier(.22,1,.36,1);"></div>
+        </div>
+      </div>
+
+      <!-- Share + Done buttons -->
+      <div style="display:flex;gap:10px;">
+        <button onclick="shareWeeklyResult(${score},${total})" style="flex:1;padding:13px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Share
+        </button>
+        <button onclick="closeWeeklyQuiz();renderWeeklyQuizCard();renderSections();" style="flex:1;padding:13px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done ✓</button>
+      </div>
+    </div>`;
+}
+
+function openWeeklyQuizResults() {
+  // Re-show results for an already-completed week
+  const week = getWeekNumber();
+  const saved = user.weeklyQuizDone?.[week];
+  if (!saved) return;
+  weeklyQuizState.score = saved.score;
+  weeklyQuizState.questions = Array(saved.total).fill({subject:'Chumash'});
+  document.getElementById('weekly-quiz-panel').style.display = 'flex';
+  showWeeklyResults();
+}
+
+function shareWeeklyResult(score, total) {
+  const pct = Math.round(score/total*100);
+  const bars = ['🟡','🟣','🔵'];
+  const text = 'I scored ' + score + '/' + total + ' (' + pct + '%) on this week's Chitas Daily quiz!\n\n📜 Chumash  📖 Tanya  ⚖️ Rambam\n\nCan you beat me? ' + window.location.href;
+  if (navigator.share) {
+    navigator.share({ title: 'Chitas Daily Weekly Quiz', text }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(text).then(() => fire('Copied to clipboard!','gold')).catch(()=>{});
+  }
 }
 
 function closeQuiz() {
@@ -1956,7 +2268,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v33'); } catch{}
+  try { localStorage.removeItem('chitas_v34'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2025,7 +2337,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v33', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v34', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
