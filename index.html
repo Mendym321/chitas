@@ -316,9 +316,12 @@ onAuthStateChanged(auth, user => {
         <div><p style="font-size:13px;font-weight:700;margin-bottom:2px;">Could not reach Hebcal</p><p style="font-size:11px;color:var(--t3);">Check your connection. Buttons still open Chabad.org.</p></div>
       </div>
 
+      <!-- Catch-up banner (shown when past days have incomplete sections) -->
+      <div id="catchup-banner" style="display:none;margin-bottom:12px;"></div>
+
       <!-- Section header -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;">Today's Sections</p>
+        <p id="sections-day-label" style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;">Today's Sections</p>
         <a id="hebcal-link" href="https://www.chabad.org/dailystudy" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:none;font-weight:700;display:none;align-items:center;gap:3px;">via Chabad.org ↗</a>
       </div>
 
@@ -481,9 +484,10 @@ function letterAvatar(name, size=32, fontSize=14) {
     font-size:${fontSize}px;font-weight:800;color:${fg};flex-shrink:0;font-family:'DM Sans',sans-serif;">${letter}</div>`;
 }
 
-const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v30'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{}};
+let user = (() => { try { const s=localStorage.getItem('chitas_v31'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
+let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
 
 const RAMBAM_TRACKS = {
@@ -572,7 +576,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v30', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v31', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -661,7 +665,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v30', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v31', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -760,10 +764,17 @@ function parseHebcal(data) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Reset done on new day
+  // Reset done on new day — archive previous day's progress
   const today = new Date().toDateString();
   if (user.lastDate && user.lastDate !== today) {
-    const prev = new Date(user.lastDate), yest = new Date(); yest.setDate(yest.getDate()-1);
+    const prev = new Date(user.lastDate);
+    const yest = new Date(); yest.setDate(yest.getDate()-1);
+    // Archive to pastDone keyed by ISO date
+    if (!user.pastDone) user.pastDone = {};
+    if (!user.pastQuizDone) user.pastQuizDone = {};
+    const prevISO = prev.toISOString().slice(0,10);
+    user.pastDone[prevISO] = { ...user.done };
+    user.pastQuizDone[prevISO] = { ...user.quizDone };
     user.done = {};
     user.quizDone = {};
     if (prev.toDateString() !== yest.toDateString()) user.streak = 0;
@@ -885,7 +896,7 @@ function renderSections() {
   list.innerHTML = sections.map((s,i) => {
     const done = !!user.done[s.id];
     return `
-    <div id="card-${s.id}" onclick="openChabadPanel('${s.id}')" style="background:var(--card);border:1.5px solid ${done?s.color+'80':'var(--border)'};border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:${i*.06}s;transition:all .2s;cursor:pointer;-webkit-tap-highlight-color:transparent;" onmouseenter="this.style.borderColor='${s.color}55'" onmouseleave="this.style.borderColor='${done?s.color+'80':'var(--border)'}'" >
+    <div id="card-${s.id}" onclick="openChabadPanel('${s.id}')" style="background:var(--card);border:1.5px solid ${done?s.color+'80':'var(--border)'};border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:${i*.06}s;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='var(--card)'" onmousedown="this.style.transform='scale(.985)'" onmouseup="this.style.transform=''" ontouchstart="this.style.background='var(--hi)'" ontouchend="this.style.background='var(--card)';this.style.transform=''">
       <div style="display:flex;align-items:center;gap:14px;">
         <div id="icon-${s.id}" style="width:44px;height:44px;border-radius:13px;background:${done?s.color+'33':'var(--surface)'};border:1px solid ${done?s.color+'66':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${done?s.color:'var(--t3)'};transition:all .3s;pointer-events:none;">
           ${icon(s.icon,21)}
@@ -894,6 +905,8 @@ function renderSections() {
           <p style="font-weight:700;font-size:15px;color:${done?s.color:'var(--t1)'};margin-bottom:2px;">${s.label}</p>
           <p style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.subtitle}</p>
         </div>
+        <!-- Chevron — signals tappability -->
+        <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);pointer-events:none;margin-right:2px;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">
           ${s.quizzable ? `<button onclick="openQuiz('${s.id}')" style="width:36px;height:36px;border-radius:10px;background:${(user.quizDone||{})[s.id]?'rgba(168,85,247,.2)':'var(--surface)'};border:1px solid ${(user.quizDone||{})[s.id]?'rgba(168,85,247,.5)':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${(user.quizDone||{})[s.id]?'#A855F7':'var(--t3)'};" title="Quiz">${icon('quiz',18)}</button>` : ''}
           <button id="tick-${s.id}" onclick="showConfirm('${s.id}', false)" style="width:36px;height:36px;border-radius:10px;background:${done?s.color+'28':'var(--surface)'};border:1px solid ${done?s.color+'55':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${done?'#1DB954':'var(--t3)'};" ${done?'disabled':''}>
@@ -905,6 +918,150 @@ function renderSections() {
   }).join('');
 
   updateProgressRing();
+}
+
+// ── CATCH-UP ──────────────────────────────────────────────────────────────────
+function dateISO(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function checkCatchupNeeded() {
+  // Look back up to 3 days for any day with incomplete sections
+  if (!user.pastDone) user.pastDone = {};
+  const ids = ['chumash','tehillim','tanya','rambam'];
+  const banner = document.getElementById('catchup-banner');
+  if (!banner) return;
+
+  const missed = [];
+  for (let i = 1; i <= 3; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const iso = dateISO(d);
+    const past = user.pastDone[iso] || {};
+    const allDone = ids.every(id => past[id]);
+    if (!allDone) {
+      const dayLabel = i === 1 ? 'Yesterday' : i === 2 ? '2 days ago' : '3 days ago';
+      missed.push({ iso, label: dayLabel, done: past });
+    }
+  }
+
+  if (!missed.length) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  // Show banner for most recent missed day
+  const m = missed[0];
+  const ids2 = ['chumash','tehillim','tanya','rambam'];
+  const doneCount = ids2.filter(id => m.done[id]).length;
+  banner.style.display = 'block';
+  banner.innerHTML = `
+    <div style="background:rgba(240,165,0,.08);border:1.5px solid rgba(240,165,0,.25);border-radius:14px;padding:12px 14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <p style="font-size:12px;font-weight:800;color:var(--gold);margin-bottom:2px;">
+            ${missed.length > 1 ? missed.length + ' days' : m.label} to catch up
+          </p>
+          <p style="font-size:11px;color:var(--t3);">${doneCount}/4 done ${m.label.toLowerCase()}</p>
+        </div>
+        <button onclick="openCatchup('${m.iso}')" style="padding:8px 14px;border-radius:10px;background:var(--gold);border:none;color:#000;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">Catch up →</button>
+      </div>
+      ${missed.length > 1 ? `<div style="display:flex;gap:6px;margin-top:10px;">${missed.map(mx=>`<button onclick="openCatchup('${mx.iso}')" style="flex:1;padding:6px 4px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${mx.label}</button>`).join('')}</div>` : ''}
+    </div>`;
+}
+
+function openCatchup(iso) {
+  catchupDate = iso;
+  const d = new Date(iso + 'T12:00:00');
+  const dayLabel = (() => {
+    const diff = Math.round((new Date().setHours(0,0,0,0) - d.setHours(0,0,0,0)) / 86400000);
+    return diff === 1 ? 'Yesterday' : diff === 2 ? '2 days ago' : '3 days ago';
+  })();
+  document.getElementById('sections-day-label').textContent = dayLabel + ''s Sections';
+  document.getElementById('sections-day-label').style.color = 'var(--gold)';
+  // Add back-to-today button
+  const header = document.getElementById('sections-day-label').parentElement;
+  if (!document.getElementById('back-to-today')) {
+    const btn = document.createElement('button');
+    btn.id = 'back-to-today';
+    btn.textContent = '← Today';
+    btn.style.cssText = 'padding:5px 10px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;';
+    btn.onclick = closeCatchup;
+    header.insertBefore(btn, header.firstChild);
+  }
+  renderCatchupSections(iso);
+}
+
+function closeCatchup() {
+  catchupDate = null;
+  document.getElementById('sections-day-label').textContent = "Today's Sections";
+  document.getElementById('sections-day-label').style.color = '';
+  const backBtn = document.getElementById('back-to-today');
+  if (backBtn) backBtn.remove();
+  renderSections();
+  checkCatchupNeeded();
+}
+
+function renderCatchupSections(iso) {
+  document.getElementById('skeletons').style.display = 'none';
+  const list = document.getElementById('sections-list');
+  list.style.display = 'block';
+  if (!schedule) return;
+  if (!user.pastDone) user.pastDone = {};
+  if (!user.pastQuizDone) user.pastQuizDone = {};
+  const pastDay = user.pastDone[iso] || {};
+  const pastQuiz = user.pastQuizDone[iso] || {};
+  const sections = Object.values(schedule);
+
+  list.innerHTML = sections.map((s, i) => {
+    const done = !!pastDay[s.id];
+    return `
+    <div id="card-past-${s.id}" onclick="openChabadPanel('${s.id}')" style="background:var(--card);border:1.5px solid ${done?s.color+'80':'var(--border)'};border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:${i*.06}s;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='var(--card)'">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:44px;height:44px;border-radius:13px;background:${done?s.color+'33':'var(--surface)'};border:1px solid ${done?s.color+'66':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${done?s.color:'var(--t3)'};pointer-events:none;">
+          ${icon(s.icon,21)}
+        </div>
+        <div style="flex:1;min-width:0;pointer-events:none;">
+          <p style="font-weight:700;font-size:15px;color:${done?s.color:'var(--t1)'};margin-bottom:2px;">${s.label}</p>
+          <p style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.subtitle}</p>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);pointer-events:none;margin-right:2px;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">
+          <button onclick="markDonePast('${s.id}','${iso}')" style="width:36px;height:36px;border-radius:10px;background:${done?s.color+'28':'var(--surface)'};border:1px solid ${done?s.color+'55':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${done?'#1DB954':'var(--t3)'};" ${done?'disabled':''}>
+            ${icon('check',18)}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function markDonePast(sectionId, iso) {
+  if (!user.pastDone) user.pastDone = {};
+  if (!user.pastDone[iso]) user.pastDone[iso] = {};
+  if (user.pastDone[iso][sectionId]) return;
+
+  const s = schedule[sectionId];
+  user.pastDone[iso][sectionId] = true;
+  user.xp += s.xp;
+
+  const ids = ['chumash','tehillim','tanya','rambam'];
+  const allNow = ids.every(id => user.pastDone[iso][id]);
+  if (allNow) {
+    user.streak++;
+    user.total++;
+    user.xp += 150;
+    // Patch streak properly — if this was yesterday and streak was broken
+    fire(`Day patched! +${s.xp+150} XP 🔥`, 'gold');
+  } else {
+    fire(`+${s.xp} XP`, 'xp');
+  }
+  saveUser();
+  updateStats();
+  updateHeader();
+  renderMedals();
+  renderStats();
+  renderCatchupSections(iso);
+  checkCatchupNeeded();
 }
 
 function updateProgressRing() {
@@ -1799,7 +1956,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v30'); } catch{}
+  try { localStorage.removeItem('chitas_v31'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -1868,7 +2025,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v30', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v31', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
