@@ -210,7 +210,7 @@ onAuthStateChanged(auth, user => {
       <!-- Step 2: City (no age — just for leaderboard location flavour) -->
       <div id="ob-step2" style="display:none;">
         <button onclick="document.getElementById('ob-step1').style.display='';document.getElementById('ob-step2').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
-        <h2 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Where are you learning from?</h2>
+        <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Where are you learning from?</h2>
         <p style="color:var(--t2);font-size:13px;margin-bottom:28px;line-height:1.6;">Shows on the leaderboard next to your name.<br><span style="color:var(--t3);">Skip if you prefer.</span></p>
         <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">City</label>
         <input id="ob-city" class="ob-input" placeholder="e.g. Crown Heights" autocomplete="off"/>
@@ -221,7 +221,7 @@ onAuthStateChanged(auth, user => {
       <!-- Step 3: Rambam track -->
       <div id="ob-step3" style="display:none;">
         <button onclick="document.getElementById('ob-step2').style.display='';document.getElementById('ob-step3').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
-        <h2 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Rambam Track</h2>
+        <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Rambam Track</h2>
         <p style="color:var(--t2);font-size:13px;margin-bottom:24px;line-height:1.5;">Which daily Rambam cycle are you following?</p>
         <div id="track-options"></div>
         <button id="ob-start" onclick="obStart()" style="width:100%;padding:14px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--t3);font-size:15px;font-weight:800;margin-top:8px;transition:all .2s;">Start Learning</button>
@@ -236,7 +236,7 @@ onAuthStateChanged(auth, user => {
     <div style="padding:26px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;">
       <div>
         <p id="heb-date-label" style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Loading…</p>
-        <h2 id="greeting" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);line-height:1;">Shalom</h2>
+        <h2 id="greeting" style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);line-height:1;">Shalom</h2>
       </div>
       <div style="text-align:center;background:var(--card);border:1px solid var(--hi);border-radius:14px;padding:8px 14px;min-width:55px;">
         <p style="font-size:9px;font-weight:800;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;">LVL</p>
@@ -373,7 +373,7 @@ onAuthStateChanged(auth, user => {
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;">
-      <p id="quiz-title" style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:var(--t1);"></p>
+      <p id="quiz-title" style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;color:var(--t1);"></p>
       <p id="quiz-subtitle" style="font-size:11px;color:var(--t3);margin-top:1px;"></p>
     </div>
     <div id="quiz-score-badge" style="display:none;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.4);border-radius:10px;padding:4px 10px;">
@@ -392,7 +392,7 @@ onAuthStateChanged(auth, user => {
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;min-width:0;">
-      <p id="chabad-panel-title" style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
+      <p id="chabad-panel-title" style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
       <p id="chabad-panel-sub" style="font-size:11px;color:var(--t3);">via Chabad.org</p>
     </div>
     <a id="chabad-panel-extlink" href="#" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);text-decoration:none;" title="Open in browser">
@@ -442,7 +442,7 @@ onAuthStateChanged(auth, user => {
 <div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:430px;animation:fadeUp .22s ease;">
     <div id="confirm-icon" style="width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px;"></div>
-    <p id="confirm-title" style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--t1);text-align:center;margin-bottom:6px;"></p>
+    <p id="confirm-title" style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:var(--t1);text-align:center;margin-bottom:6px;"></p>
     <p id="confirm-sub" style="font-size:13px;color:var(--t3);text-align:center;margin-bottom:24px;line-height:1.5;"></p>
     <button id="confirm-yes" style="width:100%;padding:14px;border-radius:14px;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;" onclick="confirmDone()">Yes, I learned it ✓</button>
     <button onclick="closeConfirm()" style="width:100%;padding:12px;border-radius:14px;border:1px solid var(--border);background:transparent;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--t2);">Not yet</button>
@@ -482,7 +482,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null};
-let user = (() => { try { const s=localStorage.getItem('chitas_v27'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v29'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let toastTimer = null;
 
@@ -572,7 +572,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v27', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v29', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -661,7 +661,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v27', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v29', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -942,12 +942,17 @@ function showConfirm(sectionId, fromReader) {
 
   const modal = document.getElementById('confirm-modal');
   document.getElementById('confirm-icon').style.background = s.color + '22';
-  document.getElementById('confirm-icon').textContent = {chumash:'📜',tehillim:'🎵',tanya:'📖',rambam:'⚖️'}[sectionId] || '✓';
+  document.getElementById('confirm-icon').style.color = s.color;
+  document.getElementById('confirm-icon').style.fontSize = '22px';
+  document.getElementById('confirm-icon').style.fontWeight = '800';
+  document.getElementById('confirm-icon').style.fontFamily = "'DM Sans',sans-serif";
+  document.getElementById('confirm-icon').textContent = s.label[0];
   document.getElementById('confirm-title').textContent = `Mark ${s.label} done?`;
-  document.getElementById('confirm-sub').textContent = `Did you learn today's ${s.label}?
-${s.subtitle}`;
+  const verb = sectionId === 'tehillim' ? 'read' : 'learn';
+  document.getElementById('confirm-sub').textContent = `Did you ${verb} today's ${s.label}?\n${s.subtitle}`;
   document.getElementById('confirm-yes').style.background = s.color;
-  document.getElementById('confirm-yes').style.color = sectionId === 'tehillim' ? '#000' : '#000';
+  document.getElementById('confirm-yes').style.color = '#000';
+  document.getElementById('confirm-yes').textContent = sectionId === 'tehillim' ? 'Yes, I read it ✓' : 'Yes, I learned it ✓';
   modal.style.display = 'flex';
 }
 
@@ -1239,13 +1244,14 @@ function showQuizResults() {
       </div>
 
       <div style="display:flex;gap:10px;">
-        <button id="retry-btn" style="flex:1;padding:13px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Try Again</button>
-        <button id="done-btn" style="flex:1;padding:13px;border-radius:14px;background:${s.color};border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done</button>
+        ${!alreadyDone ? `<button id="retry-btn" style="flex:1;padding:13px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Try Again</button>` : ''}
+        <button id="done-btn" style="flex:1;padding:13px;border-radius:14px;background:${s.color};border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done ✓</button>
       </div>
+      ${alreadyDone ? '' : `<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:12px;">You can retry to learn — XP only counted once</p>`}
     </div>`;
 
-  // Attach handlers AFTER innerHTML is set — avoids the inline onclick + variable scope issue
-  document.getElementById('retry-btn').onclick = () => retryQuiz(sid);
+  // Attach handlers AFTER innerHTML is set
+  if (!alreadyDone) document.getElementById('retry-btn').onclick = () => retryQuiz(sid);
   document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSections(); };
 }
 
@@ -1568,7 +1574,7 @@ function renderMedals() {
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:40px;height:40px;border-radius:12px;background:${world.color}22;border:1.5px solid ${world.color}55;display:flex;align-items:center;justify-content:center;font-size:20px;">${worldComplete ? '✨' : '🌍'}</div>
           <div>
-            <p style="font-size:18px;font-weight:900;color:${world.color};font-family:'Playfair Display',serif;">${world.label} World</p>
+            <p style="font-size:18px;font-weight:900;color:${world.color};font-family:'DM Sans',sans-serif;">${world.label} World</p>
             <p style="font-size:11px;color:var(--t2);">Current · ${worldEarned} of ${world.medals.length} earned</p>
           </div>
         </div>
@@ -1799,7 +1805,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v27'); } catch{}
+  try { localStorage.removeItem('chitas_v29'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -1868,7 +1874,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v27', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v29', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
