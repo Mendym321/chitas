@@ -523,7 +523,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v43'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v44'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
@@ -614,7 +614,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v43', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v44', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -703,7 +703,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v43', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v44', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1499,7 +1499,7 @@ function selectWeeklyAnswer(idx) {
 
   // Update score badge — show question progress, not score
   const totalQ = weeklyQuizState.questions.length;
-  document.getElementById('wq-score-text').textContent = 'Q' + (current+1) + ' of ' + totalQ;
+  document.getElementById('wq-score-text').textContent = (current+1) + ' of ' + totalQ;
   document.getElementById('wq-score-badge').style.display = 'block';
 }
 
@@ -1587,116 +1587,196 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 function drawShareCard(score, total) {
-  const pct  = Math.round(score / total * 100);
+  const pct     = Math.round(score / total * 100);
   const weekNum = getWeekNumber().split('-W')[1];
-  const W = 540, H = 720;
+  const W = 600, H = 800;
+  const R = 36; // corner radius
   const c = document.createElement('canvas');
-  c.width = W; c.height = H;
+  c.width = W * 2; c.height = H * 2; // retina
   const ctx = c.getContext('2d');
+  ctx.scale(2, 2);
 
-  // Background
-  const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, '#0D0D18'); bg.addColorStop(1, '#0A0A14');
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  // ── Background: deep navy with subtle texture ──
+  ctx.fillStyle = '#080810';
+  ctx.fillRect(0, 0, W, H);
 
-  // Gold glow top
-  const glow = ctx.createRadialGradient(W/2, 60, 0, W/2, 60, 300);
-  glow.addColorStop(0, 'rgba(240,165,0,0.2)'); glow.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+  // Layered radial glows for depth
+  const g1 = ctx.createRadialGradient(W*0.3, H*0.15, 0, W*0.3, H*0.15, W*0.6);
+  g1.addColorStop(0, 'rgba(240,165,0,0.14)'); g1.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g1; ctx.fillRect(0, 0, W, H);
 
-  // Border
-  ctx.strokeStyle = 'rgba(240,165,0,0.4)'; ctx.lineWidth = 1.5;
-  roundRect(ctx, 14, 14, W-28, H-28, 28); ctx.stroke();
+  const g2 = ctx.createRadialGradient(W*0.75, H*0.7, 0, W*0.75, H*0.7, W*0.5);
+  g2.addColorStop(0, 'rgba(168,85,247,0.1)'); g2.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+
+  // Card border with glow
+  ctx.save();
+  ctx.shadowColor = 'rgba(240,165,0,0.3)';
+  ctx.shadowBlur = 20;
+  ctx.strokeStyle = 'rgba(240,165,0,0.5)';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, 16, 16, W-32, H-32, R); ctx.stroke();
+  ctx.restore();
+
+  // Inner card surface
+  const cardGrad = ctx.createLinearGradient(0, 0, W, H);
+  cardGrad.addColorStop(0, 'rgba(255,255,255,0.03)');
+  cardGrad.addColorStop(1, 'rgba(255,255,255,0.01)');
+  ctx.fillStyle = cardGrad;
+  roundRect(ctx, 16, 16, W-32, H-32, R); ctx.fill();
+
+  // ── TOP SECTION ──
+  // Small dot decorations
+  ctx.fillStyle = 'rgba(240,165,0,0.4)';
+  ctx.beginPath(); ctx.arc(52, 54, 4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(240,165,0,0.2)';
+  ctx.beginPath(); ctx.arc(52, 54, 8, 0, Math.PI*2); ctx.fill();
 
   // App name
+  ctx.fillStyle = 'rgba(240,165,0,0.85)';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.letterSpacing = '4px';
+  ctx.textAlign = 'left';
+  ctx.fillText('CHITAS DAILY', 70, 59);
+
+  // Week pill top-right
+  ctx.fillStyle = 'rgba(240,165,0,0.12)';
+  roundRect(ctx, W-110, 36, 90, 28, 14); ctx.fill();
+  ctx.strokeStyle = 'rgba(240,165,0,0.3)'; ctx.lineWidth = 1;
+  roundRect(ctx, W-110, 36, 90, 28, 14); ctx.stroke();
   ctx.fillStyle = 'rgba(240,165,0,0.7)';
-  ctx.font = 'bold 12px sans-serif';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.letterSpacing = '1px';
   ctx.textAlign = 'center';
-  ctx.fillText('CHITAS  DAILY', W/2, 60);
+  ctx.fillText('WEEK ' + weekNum, W-65, 55);
 
-  // Big score number
+  // ── SCORE HERO ──
+  // Large background score circle
+  const scoreGlow = ctx.createRadialGradient(W/2, 195, 0, W/2, 195, 120);
+  scoreGlow.addColorStop(0, 'rgba(240,165,0,0.15)');
+  scoreGlow.addColorStop(1, 'rgba(240,165,0,0)');
+  ctx.fillStyle = scoreGlow; ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.shadowColor = '#F0A500';
+  ctx.shadowBlur = 30;
   ctx.fillStyle = '#F0F0F5';
-  ctx.font = 'bold 100px sans-serif';
-  ctx.fillText(score + '/' + total, W/2, 182);
+  ctx.font = 'bold 108px sans-serif';
+  ctx.letterSpacing = '-4px';
+  ctx.textAlign = 'center';
+  ctx.fillText(score + '/' + total, W/2, 190);
+  ctx.restore();
 
-  // Pct
-  ctx.fillStyle = '#F0A500';
-  ctx.font = 'bold 22px sans-serif';
-  ctx.fillText(pct + '%  correct', W/2, 224);
+  // Pct badge
+  const badgeX = W/2 - 64, badgeY = 208, badgeW = 128, badgeH = 34;
+  const badgeFill = ctx.createLinearGradient(badgeX, 0, badgeX+badgeW, 0);
+  badgeFill.addColorStop(0, '#F0A500'); badgeFill.addColorStop(1, '#D08000');
+  ctx.fillStyle = badgeFill;
+  roundRect(ctx, badgeX, badgeY, badgeW, badgeH, badgeH/2); ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.letterSpacing = '0px';
+  ctx.fillText(pct + '% correct', W/2, 230);
 
-  // Week
-  ctx.fillStyle = 'rgba(255,255,255,0.28)';
-  ctx.font = '15px sans-serif';
-  ctx.fillText('Week ' + weekNum + ' Quiz', W/2, 258);
+  // ── DIVIDER ──
+  const divGrad = ctx.createLinearGradient(60, 0, W-60, 0);
+  divGrad.addColorStop(0, 'rgba(255,255,255,0)');
+  divGrad.addColorStop(0.5, 'rgba(255,255,255,0.12)');
+  divGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.strokeStyle = divGrad; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(60, 262); ctx.lineTo(W-60, 262); ctx.stroke();
 
-  // Divider
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(60, 282); ctx.lineTo(W-60, 282); ctx.stroke();
-
-  // Subject bars
+  // ── SUBJECT BARS ──
   const subjects = [
-    { label: 'Chumash', color: '#F0A500', q: 4 },
-    { label: 'Tanya',   color: '#A855F7', q: 3 },
-    { label: 'Rambam',  color: '#4A9EFF', q: 3 },
+    { label: 'Chumash', icon: 'C', color: '#F0A500', q: 4 },
+    { label: 'Tanya',   icon: 'T', color: '#A855F7', q: 3 },
+    { label: 'Rambam',  icon: 'R', color: '#4A9EFF', q: 3 },
   ];
   let scoreLeft = score;
   subjects.forEach((s, i) => {
-    const y = 318 + i * 76;
+    const y = 290 + i * 92;
     const correct = i < subjects.length-1
       ? Math.min(s.q, Math.round((score/total) * s.q))
       : Math.max(0, Math.min(s.q, scoreLeft));
     scoreLeft -= correct;
     const pctBar = correct / s.q;
 
-    // Label
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(s.label.toUpperCase(), 58, y + 8);
-
-    // Score
+    // Subject icon circle
+    ctx.fillStyle = s.color + '22';
+    ctx.beginPath(); ctx.arc(58, y+20, 18, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = s.color + '55'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(58, y+20, 18, 0, Math.PI*2); ctx.stroke();
     ctx.fillStyle = s.color;
     ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(s.icon, 58, y+25);
+
+    // Label
+    ctx.fillStyle = '#F0F0F5';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(s.label, 86, y+16);
+
+    // Score fraction
+    ctx.fillStyle = s.color;
+    ctx.font = 'bold 15px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(correct + '/' + s.q, W-58, y + 8);
+    ctx.fillText(correct + ' / ' + s.q, W-50, y+16);
 
-    // Track bg
-    ctx.fillStyle = 'rgba(255,255,255,0.07)';
-    roundRect(ctx, 58, y+18, W-116, 14, 7); ctx.fill();
+    // Track background
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    roundRect(ctx, 86, y+26, W-136, 12, 6); ctx.fill();
 
-    // Fill
+    // Filled bar with glow
     if (pctBar > 0) {
-      const g = ctx.createLinearGradient(58, 0, 58+(W-116)*pctBar, 0);
-      g.addColorStop(0, s.color); g.addColorStop(1, s.color+'99');
-      ctx.fillStyle = g;
-      roundRect(ctx, 58, y+18, (W-116)*pctBar, 14, 7); ctx.fill();
+      ctx.save();
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 8;
+      const barGrad = ctx.createLinearGradient(86, 0, 86+(W-136)*pctBar, 0);
+      barGrad.addColorStop(0, s.color + 'DD');
+      barGrad.addColorStop(1, s.color);
+      ctx.fillStyle = barGrad;
+      roundRect(ctx, 86, y+26, (W-136)*pctBar, 12, 6); ctx.fill();
+      ctx.restore();
+    }
+
+    // Dot markers for each question
+    for (let d = 0; d < s.q; d++) {
+      const dotX = 86 + ((W-136)/s.q) * d + (W-136)/s.q/2;
+      ctx.fillStyle = d < correct ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)';
+      ctx.beginPath(); ctx.arc(dotX, y+32, 2, 0, Math.PI*2); ctx.fill();
     }
   });
 
+  // ── BOTTOM SECTION ──
   // Divider
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(60, 556); ctx.lineTo(W-60, 556); ctx.stroke();
+  ctx.strokeStyle = divGrad; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(60, 574); ctx.lineTo(W-60, 574); ctx.stroke();
 
-  // Stars
-  const stars = score >= 9 ? 3 : score >= 7 ? 2 : 1;
-  ctx.font = '28px serif'; ctx.textAlign = 'center';
+  // Message
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '0px';
+  ctx.fillText('Can you beat me on this week's quiz?', W/2, 614);
+
+  // URL pill
+  const urlX = W/2 - 110, urlY = 630, urlW = 220, urlH = 36;
+  ctx.fillStyle = 'rgba(240,165,0,0.1)';
+  roundRect(ctx, urlX, urlY, urlW, urlH, urlH/2); ctx.fill();
+  ctx.strokeStyle = 'rgba(240,165,0,0.4)'; ctx.lineWidth = 1;
+  roundRect(ctx, urlX, urlY, urlW, urlH, urlH/2); ctx.stroke();
   ctx.fillStyle = '#F0A500';
-  ctx.fillText('★'.repeat(stars) + '☆'.repeat(3-stars), W/2, 604);
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText('chitas.vercel.app', W/2, 653);
 
-  // CTA
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.font = '15px sans-serif';
-  ctx.fillText('Can you beat me?', W/2, 638);
-
-  ctx.fillStyle = '#F0A500';
-  ctx.font = 'bold 15px sans-serif';
-  ctx.fillText('chitas.vercel.app', W/2, 664);
-
-  // Footer
-  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  // Tagline
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
   ctx.font = '11px sans-serif';
-  ctx.fillText('Chumash · Tehillim · Tanya · Rambam', W/2, 698);
+  ctx.letterSpacing = '1px';
+  ctx.fillText('CHUMASH · TEHILLIM · TANYA · RAMBAM', W/2, 694);
 
+  c.style.width = W + 'px';
   return c.toDataURL('image/png');
 }
 
@@ -2454,7 +2534,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v43'); } catch{}
+  try { localStorage.removeItem('chitas_v44'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2523,7 +2603,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v43', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v44', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
