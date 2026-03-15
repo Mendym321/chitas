@@ -523,7 +523,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v42'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v43'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
@@ -614,7 +614,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v42', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v43', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -703,7 +703,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v42', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v43', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1557,7 +1557,9 @@ function showWeeklyResults() {
     </div>`;
   // Draw the share card preview after DOM updates
   setTimeout(() => renderSharePreview(score, total), 80);
-} {
+}
+
+function openWeeklyQuizResults() {
   // Re-show results for an already-completed week
   const week = getWeekNumber();
   const saved = user.weeklyQuizDone?.[week];
@@ -2452,7 +2454,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v42'); } catch{}
+  try { localStorage.removeItem('chitas_v43'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2521,7 +2523,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v42', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v43', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
