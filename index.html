@@ -523,7 +523,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v41'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v42'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
@@ -614,7 +614,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v41', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v42', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -703,7 +703,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v41', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v42', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1539,19 +1539,7 @@ function showWeeklyResults() {
       <p style="font-size:16px;color:var(--t2);margin-bottom:4px;">${msg}</p>
       <p style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:28px;">+${xpEarned} XP earned</p>
 
-      <!-- Score squares -->
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;">
-        <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Weekly Chitas Quiz</p>
-        <div style="margin-bottom:14px;">${squares}</div>
-        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:4px;">
-          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:12px;height:12px;border-radius:3px;background:#F0A500;display:inline-block;"></span>Chumash</span>
-          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:12px;height:12px;border-radius:3px;background:#A855F7;display:inline-block;"></span>Tanya</span>
-          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:12px;height:12px;border-radius:3px;background:#4A9EFF;display:inline-block;"></span>Rambam</span>
-        </div>
-        <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;margin-top:14px;">
-          <div style="height:100%;width:${pct}%;background:var(--gold);border-radius:3px;transition:width .8s cubic-bezier(.22,1,.36,1);"></div>
-        </div>
-      </div>
+
 
       <!-- Share card preview + buttons -->
       <div id="wq-share-preview" style="margin-bottom:16px;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);"></div>
@@ -2464,7 +2452,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v41'); } catch{}
+  try { localStorage.removeItem('chitas_v42'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2533,7 +2521,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v41', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v42', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
