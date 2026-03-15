@@ -504,7 +504,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v36'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v37'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
@@ -595,7 +595,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v36', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v37', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -684,7 +684,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v36', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v37', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1540,7 +1540,7 @@ function openWeeklyQuizResults() {
 function shareWeeklyResult(score, total) {
   const pct = Math.round(score/total*100);
   const bars = ['🟡','🟣','🔵'];
-  const text = 'I scored ' + score + '/' + total + ' (' + pct + '%) on this week's Chitas Daily quiz!\n\n📜 Chumash  📖 Tanya  ⚖️ Rambam\n\nCan you beat me? ' + window.location.href;
+  const text = "I scored " + score + "/" + total + " (" + pct + "%) on this week's Chitas Daily quiz!\n\n📜 Chumash  📖 Tanya  ⚖️ Rambam\n\nCan you beat me? " + window.location.href;
   if (navigator.share) {
     navigator.share({ title: 'Chitas Daily Weekly Quiz', text }).catch(()=>{});
   } else {
@@ -2262,7 +2262,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v36'); } catch{}
+  try { localStorage.removeItem('chitas_v37'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2331,7 +2331,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v36', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v37', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
