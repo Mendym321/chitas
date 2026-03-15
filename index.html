@@ -523,7 +523,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v38'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v41'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
@@ -614,7 +614,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v38', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v41', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -703,7 +703,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v38', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v41', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1497,8 +1497,9 @@ function selectWeeklyAnswer(idx) {
   fb.appendChild(nextBtn);
   document.getElementById('wq-body').appendChild(fb);
 
-  // Update score badge
-  document.getElementById('wq-score-text').textContent = weeklyQuizState.score + '/' + (current+1);
+  // Update score badge — show question progress, not score
+  const totalQ = weeklyQuizState.questions.length;
+  document.getElementById('wq-score-text').textContent = 'Q' + (current+1) + ' of ' + totalQ;
   document.getElementById('wq-score-badge').style.display = 'block';
 }
 
@@ -1532,7 +1533,7 @@ function showWeeklyResults() {
   }).join('');
 
   document.getElementById('wq-body').innerHTML = `
-    <div style="text-align:center;padding-top:32px;animation:fadeUp .35s ease both;">
+    <div style="text-align:center;padding-top:24px;animation:fadeUp .35s ease both;">
       <div style="font-size:48px;margin-bottom:16px;">${emoji}</div>
       <p style="font-size:28px;font-weight:900;color:var(--t1);margin-bottom:6px;">${score} / ${total}</p>
       <p style="font-size:16px;color:var(--t2);margin-bottom:4px;">${msg}</p>
@@ -1552,18 +1553,23 @@ function showWeeklyResults() {
         </div>
       </div>
 
-      <!-- Share + Done buttons -->
-      <div style="display:flex;gap:10px;">
-        <button onclick="shareWeeklyResult(${score},${total})" style="flex:1;padding:13px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
-          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <!-- Share card preview + buttons -->
+      <div id="wq-share-preview" style="margin-bottom:16px;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);"></div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button onclick="shareWeeklyCard(${score},${total},'whatsapp')" style="flex:1;padding:12px 8px;border-radius:14px;background:#25D366;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.122.558 4.118 1.535 5.849L.057 23.5l5.797-1.524A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.882 0-3.645-.516-5.148-1.414l-.368-.219-3.441.905.921-3.36-.239-.384A9.96 9.96 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+          WhatsApp
+        </button>
+        <button onclick="shareWeeklyCard(${score},${total},'other')" style="flex:1;padding:12px 8px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Share
         </button>
-        <button onclick="closeWeeklyQuiz();renderWeeklyQuizCard();renderSections();" style="flex:1;padding:13px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done ✓</button>
       </div>
+      <button onclick="closeWeeklyQuiz();renderWeeklyQuizCard();renderSections();" style="width:100%;padding:13px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done ✓</button>
     </div>`;
-}
-
-function openWeeklyQuizResults() {
+  // Draw the share card preview after DOM updates
+  setTimeout(() => renderSharePreview(score, total), 80);
+} {
   // Re-show results for an already-completed week
   const week = getWeekNumber();
   const saved = user.weeklyQuizDone?.[week];
@@ -1574,14 +1580,173 @@ function openWeeklyQuizResults() {
   showWeeklyResults();
 }
 
-function shareWeeklyResult(score, total) {
-  const pct = Math.round(score/total*100);
-  const bars = ['🟡','🟣','🔵'];
-  const text = "I scored " + score + "/" + total + " (" + pct + "%) on this week's Chitas Daily quiz!\n\n📜 Chumash  📖 Tanya  ⚖️ Rambam\n\nCan you beat me? " + window.location.href;
-  if (navigator.share) {
-    navigator.share({ title: 'Chitas Daily Weekly Quiz', text }).catch(()=>{});
-  } else {
-    navigator.clipboard.writeText(text).then(() => fire('Copied to clipboard!','gold')).catch(()=>{});
+// ── SHARE CARD (canvas-drawn image) ──────────────────────────────────────────
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+function drawShareCard(score, total) {
+  const pct  = Math.round(score / total * 100);
+  const weekNum = getWeekNumber().split('-W')[1];
+  const W = 540, H = 720;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+
+  // Background
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#0D0D18'); bg.addColorStop(1, '#0A0A14');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  // Gold glow top
+  const glow = ctx.createRadialGradient(W/2, 60, 0, W/2, 60, 300);
+  glow.addColorStop(0, 'rgba(240,165,0,0.2)'); glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+  // Border
+  ctx.strokeStyle = 'rgba(240,165,0,0.4)'; ctx.lineWidth = 1.5;
+  roundRect(ctx, 14, 14, W-28, H-28, 28); ctx.stroke();
+
+  // App name
+  ctx.fillStyle = 'rgba(240,165,0,0.7)';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('CHITAS  DAILY', W/2, 60);
+
+  // Big score number
+  ctx.fillStyle = '#F0F0F5';
+  ctx.font = 'bold 100px sans-serif';
+  ctx.fillText(score + '/' + total, W/2, 182);
+
+  // Pct
+  ctx.fillStyle = '#F0A500';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText(pct + '%  correct', W/2, 224);
+
+  // Week
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  ctx.font = '15px sans-serif';
+  ctx.fillText('Week ' + weekNum + ' Quiz', W/2, 258);
+
+  // Divider
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(60, 282); ctx.lineTo(W-60, 282); ctx.stroke();
+
+  // Subject bars
+  const subjects = [
+    { label: 'Chumash', color: '#F0A500', q: 4 },
+    { label: 'Tanya',   color: '#A855F7', q: 3 },
+    { label: 'Rambam',  color: '#4A9EFF', q: 3 },
+  ];
+  let scoreLeft = score;
+  subjects.forEach((s, i) => {
+    const y = 318 + i * 76;
+    const correct = i < subjects.length-1
+      ? Math.min(s.q, Math.round((score/total) * s.q))
+      : Math.max(0, Math.min(s.q, scoreLeft));
+    scoreLeft -= correct;
+    const pctBar = correct / s.q;
+
+    // Label
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(s.label.toUpperCase(), 58, y + 8);
+
+    // Score
+    ctx.fillStyle = s.color;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(correct + '/' + s.q, W-58, y + 8);
+
+    // Track bg
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    roundRect(ctx, 58, y+18, W-116, 14, 7); ctx.fill();
+
+    // Fill
+    if (pctBar > 0) {
+      const g = ctx.createLinearGradient(58, 0, 58+(W-116)*pctBar, 0);
+      g.addColorStop(0, s.color); g.addColorStop(1, s.color+'99');
+      ctx.fillStyle = g;
+      roundRect(ctx, 58, y+18, (W-116)*pctBar, 14, 7); ctx.fill();
+    }
+  });
+
+  // Divider
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(60, 556); ctx.lineTo(W-60, 556); ctx.stroke();
+
+  // Stars
+  const stars = score >= 9 ? 3 : score >= 7 ? 2 : 1;
+  ctx.font = '28px serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#F0A500';
+  ctx.fillText('★'.repeat(stars) + '☆'.repeat(3-stars), W/2, 604);
+
+  // CTA
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = '15px sans-serif';
+  ctx.fillText('Can you beat me?', W/2, 638);
+
+  ctx.fillStyle = '#F0A500';
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillText('chitas.vercel.app', W/2, 664);
+
+  // Footer
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('Chumash · Tehillim · Tanya · Rambam', W/2, 698);
+
+  return c.toDataURL('image/png');
+}
+
+function renderSharePreview(score, total) {
+  const preview = document.getElementById('wq-share-preview');
+  if (!preview) return;
+  const dataUrl = drawShareCard(score, total);
+  preview.innerHTML = '<img src="' + dataUrl + '" style="width:100%;display:block;border-radius:16px;"/>';
+}
+
+async function shareWeeklyCard(score, total, method) {
+  const dataUrl = drawShareCard(score, total);
+  const appUrl = window.location.href;
+  const fallbackText = 'I scored ' + score + '/' + total + ' on this week\'s Chitas Daily quiz! ' + appUrl;
+
+  // Convert to file for native share
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], 'chitas-quiz.png', { type: 'image/png' });
+
+    if (method === 'whatsapp') {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: fallbackText });
+      } else {
+        window.open('https://wa.me/?text=' + encodeURIComponent(fallbackText), '_blank');
+      }
+    } else {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: fallbackText });
+      } else {
+        // Download as fallback
+        const a = document.createElement('a');
+        a.href = dataUrl; a.download = 'chitas-quiz.png'; a.click();
+        fire('Image saved — share it on WhatsApp!', 'gold');
+      }
+    }
+  } catch(e) {
+    // Final fallback — just open WhatsApp with text
+    window.open('https://wa.me/?text=' + encodeURIComponent(fallbackText), '_blank');
   }
 }
 
@@ -2299,7 +2464,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v38'); } catch{}
+  try { localStorage.removeItem('chitas_v41'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2368,7 +2533,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v38', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v41', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
