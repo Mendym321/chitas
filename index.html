@@ -504,7 +504,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v34'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v35'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
 let toastTimer = null;
@@ -595,7 +595,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v34', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v35', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -684,7 +684,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v34', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v35', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1405,7 +1405,7 @@ function renderWeeklyQuestion() {
         ${Array.from({length:total},(_,i) => '<div style="flex:1;height:4px;border-radius:2px;background:' + (i<current?'var(--gold)':i===current?'rgba(240,165,0,.5)':'var(--border)') + ';"></div>').join('')}
       </div>
       <!-- Subject tag -->
-      <div style="display:inline-block;padding:3px 10px;border-radius:20px;background:' + subjectColor + '22;border:1px solid ' + subjectColor + '44;margin-bottom:12px;">
+      <div style="display:inline-block;padding:3px 10px;border-radius:20px;background:${subjectColor}22;border:1px solid ${subjectColor}44;margin-bottom:12px;">
         <span style="font-size:10px;font-weight:700;color:${subjectColor};text-transform:uppercase;letter-spacing:.08em;">${q.subject || 'Question'}</span>
       </div>
       <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Question ${current+1} of ${total}</p>
@@ -2268,7 +2268,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v34'); } catch{}
+  try { localStorage.removeItem('chitas_v35'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2337,7 +2337,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v34', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v35', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
