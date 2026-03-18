@@ -242,61 +242,50 @@ onAuthStateChanged(auth, user => {
               Chitas<br>
               <span style="background:linear-gradient(135deg,#F0A500 0%,#FFB830 50%,#F0A500 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;">Daily</span>
             </h1>
-            <p style="color:var(--t2);font-size:14px;line-height:1.6;">Learn Chumash, Tehillim, Tanya & Rambam<br>every single day.</p>
+            <p style="color:var(--t2);font-size:14px;line-height:1.6;">Your daily Chitas — track, learn, and grow.</p>
           </div>
         </div>
 
-        <!-- Feature cards — slide in from left, staggered -->
+        <!-- 4 equal feature cards -->
         <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:20px;">
 
-          <!-- Learn -->
           <div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 15px;animation:cardSlide .5s .6s ease both;">
             <div style="width:40px;height:40px;border-radius:11px;background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
             </div>
-            <div style="flex:1;">
-              <p style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:1px;">Daily learning tracker</p>
-              <p style="font-size:11px;color:var(--t3);">Open, read, mark done. Every day.</p>
+            <div>
+              <p style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:1px;">Daily learning</p>
+              <p style="font-size:11px;color:var(--t3);">Chumash, Tehillim, Tanya & Rambam</p>
             </div>
           </div>
 
-          <!-- Quiz — featured prominently -->
-          <div style="background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(168,85,247,.06));border:1.5px solid rgba(168,85,247,.35);border-radius:16px;padding:14px 15px;animation:cardSlide .5s .72s ease both;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(168,85,247,.2),transparent 70%);pointer-events:none;"></div>
-            <div style="display:flex;align-items:center;gap:13px;">
-              <div style="width:40px;height:40px;border-radius:11px;background:rgba(168,85,247,.18);border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="1" fill="#A855F7"/></svg>
-              </div>
-              <div style="flex:1;">
-                <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px;">
-                  <p style="font-weight:800;font-size:14px;color:#A855F7;">Test your knowledge</p>
-                  <span style="font-size:9px;font-weight:700;background:rgba(168,85,247,.2);color:#A855F7;padding:2px 7px;border-radius:10px;letter-spacing:.05em;">QUIZ</span>
-                </div>
-                <p style="font-size:11px;color:var(--t3);">Daily quizzes + weekly challenge</p>
-              </div>
+          <div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 15px;animation:cardSlide .5s .72s ease both;">
+            <div style="width:40px;height:40px;border-radius:11px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="1" fill="#A855F7"/></svg>
             </div>
-            <!-- Animated dots to suggest activity -->
-            <div style="display:flex;gap:4px;margin-top:10px;padding-left:53px;">
-              <div style="width:6px;height:6px;border-radius:50%;background:#A855F7;animation:dotBlink 1.2s .0s infinite;"></div>
-              <div style="width:6px;height:6px;border-radius:50%;background:#A855F7;animation:dotBlink 1.2s .3s infinite;"></div>
-              <div style="width:6px;height:6px;border-radius:50%;background:#A855F7;animation:dotBlink 1.2s .6s infinite;"></div>
-              <p style="font-size:11px;color:rgba(168,85,247,.6);margin-left:4px;">Share your score with friends</p>
+            <div>
+              <p style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:1px;">Test your knowledge</p>
+              <p style="font-size:11px;color:var(--t3);">Daily quizzes + weekly challenge</p>
             </div>
           </div>
 
-          <!-- Streak + Leaderboard -->
-          <div style="display:flex;gap:9px;animation:cardSlide .5s .84s ease both;">
-            <div style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 12px;display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
-              </div>
-              <div><p style="font-weight:700;font-size:12px;color:var(--t1);">Streak</p><p style="font-size:11px;color:var(--t3);">Daily habit</p></div>
+          <div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 15px;animation:cardSlide .5s .84s ease both;">
+            <div style="width:40px;height:40px;border-radius:11px;background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
             </div>
-            <div style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 12px;display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:10px;background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.8"><path d="M8 21h8M12 17v4M5 3h14v7a7 7 0 01-14 0V3z"/><path d="M5 7H2a3 3 0 003 3M19 7h3a3 3 0 01-3 3"/></svg>
-              </div>
-              <div><p style="font-weight:700;font-size:12px;color:var(--t1);">Compete</p><p style="font-size:11px;color:var(--t3);">Leaderboard</p></div>
+            <div>
+              <p style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:1px;">Build your streak</p>
+              <p style="font-size:11px;color:var(--t3);">XP, medals, and daily progress</p>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 15px;animation:cardSlide .5s .96s ease both;">
+            <div style="width:40px;height:40px;border-radius:11px;background:rgba(74,158,255,.12);border:1px solid rgba(74,158,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.8"><path d="M8 21h8M12 17v4M5 3h14v7a7 7 0 01-14 0V3z"/><path d="M5 7H2a3 3 0 003 3M19 7h3a3 3 0 01-3 3"/></svg>
+            </div>
+            <div>
+              <p style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:1px;">Compete with others</p>
+              <p style="font-size:11px;color:var(--t3);">Global leaderboard, share your results</p>
             </div>
           </div>
 
@@ -304,10 +293,10 @@ onAuthStateChanged(auth, user => {
 
         <!-- CTA button — glows, pulses subtly -->
         <button onclick="document.getElementById('ob-step0').style.display='none';document.getElementById('ob-step1').style.display='block';"
-          style="width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#F0A500,#E09000);border:none;color:#000;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:11px;animation:up .5s .96s ease both, glowPulse 3s 1.5s ease infinite;letter-spacing:-.2px;">
+          style="width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#F0A500,#E09000);border:none;color:#000;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:11px;animation:up .5s 1.08s ease both, glowPulse 3s 1.6s ease infinite;letter-spacing:-.2px;">
           Get Started
         </button>
-        <p style="font-size:11px;color:var(--t3);text-align:center;animation:up .4s 1.1s ease both;letter-spacing:.01em;">Free · Syncs across all your devices</p>
+        <p style="font-size:11px;color:var(--t3);text-align:center;animation:up .4s 1.2s ease both;letter-spacing:.01em;">Free · Syncs across all your devices</p>
 
       </div>
 
@@ -646,7 +635,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v51'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v52'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -738,7 +727,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v51', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v52', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -753,6 +742,11 @@ function saveUser() {
       quizTotal: user.quizTotal || 0,
       quizCorrect: user.quizCorrect || 0,
       lastDate: user.lastDate || null,
+      done: user.done || {},
+      quizDone: user.quizDone || {},
+      pastDone: user.pastDone || {},
+      pastQuizDone: user.pastQuizDone || {},
+      weeklyQuizDone: user.weeklyQuizDone || {},
     });
   }
 }
@@ -827,7 +821,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v51', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v52', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -2905,7 +2899,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v51'); } catch{}
+  try { localStorage.removeItem('chitas_v52'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2974,7 +2968,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v51', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v52', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
