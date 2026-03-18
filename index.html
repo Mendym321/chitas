@@ -41,6 +41,7 @@
   @keyframes up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
   @keyframes pop { 0%{transform:scale(.7);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes flamePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
   @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
 
   .anim-up { animation: up .32s ease both; }
@@ -316,14 +317,20 @@ onAuthStateChanged(auth, user => {
         <div><p style="font-size:13px;font-weight:700;margin-bottom:2px;">Could not reach Hebcal</p><p style="font-size:11px;color:var(--t3);">Check your connection. Buttons still open Chabad.org.</p></div>
       </div>
 
-      <!-- Catch-up banner (shown when past days have incomplete sections) -->
-      <div id="catchup-banner" style="display:none;margin-bottom:12px;"></div>
-
-      <!-- Section header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <p id="sections-day-label" style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;">Today's Sections</p>
-        <a id="hebcal-link" href="https://www.chabad.org/dailystudy" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:none;font-weight:700;display:none;align-items:center;gap:3px;">via Chabad.org ↗</a>
+      <!-- Day Navigator -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;">
+        <button id="day-nav-prev" onclick="navDay(-1)" style="width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2);flex-shrink:0;transition:all .15s;">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div style="flex:1;text-align:center;">
+          <p id="day-nav-label" style="font-size:14px;font-weight:800;color:var(--t1);">Today</p>
+          <p id="day-nav-date" style="font-size:11px;color:var(--t3);margin-top:1px;"></p>
+        </div>
+        <button id="day-nav-next" onclick="navDay(1)" style="width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2);flex-shrink:0;transition:all .15s;opacity:0.3;pointer-events:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
       </div>
+      <a id="hebcal-link" href="https://www.chabad.org/dailystudy" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:none;font-weight:700;display:none;align-items:center;gap:3px;margin-bottom:10px;">via Chabad.org ↗</a>
 
       <!-- Skeleton loaders -->
       <div id="skeletons">
@@ -523,9 +530,10 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v45'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v46'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
-let catchupDate = null; // ISO string like "2025-03-14" when viewing a past day, null = today
+let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
+const MAX_DAYS_BACK = 4;
 let toastTimer = null;
 
 const RAMBAM_TRACKS = {
@@ -614,7 +622,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v45', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v46', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -703,7 +711,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v45', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v46', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1096,10 +1104,151 @@ function markDonePast(sectionId, iso) {
   saveUser();
   updateStats();
   updateHeader();
+  updateProgressRing();
   renderMedals();
   renderStats();
-  renderCatchupSections(iso);
-  checkCatchupNeeded();
+  const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
+  renderSectionsForOffset(dateISO(d2));
+}
+
+// ── DAY NAVIGATION ───────────────────────────────────────────────────────────
+function navDay(delta) {
+  const newOffset = dayOffset + delta;
+  if (newOffset > 0) return; // can't go to future
+  if (newOffset < -MAX_DAYS_BACK) return; // cap at max days back
+  dayOffset = newOffset;
+  updateDayNav();
+  rebuildScheduleForOffset();
+}
+
+function updateDayNav() {
+  const labels = ['Today', 'Yesterday', '2 days ago', '3 days ago', '4 days ago'];
+  const label = labels[Math.abs(dayOffset)] || Math.abs(dayOffset) + ' days ago';
+  document.getElementById('day-nav-label').textContent = label;
+  document.getElementById('day-nav-label').style.color = dayOffset === 0 ? 'var(--t1)' : 'var(--gold)';
+
+  // Date subtitle
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  const dateStr = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+  document.getElementById('day-nav-date').textContent = dateStr;
+
+  // Prev arrow — disable at max
+  const prev = document.getElementById('day-nav-prev');
+  if (dayOffset <= -MAX_DAYS_BACK) {
+    prev.style.opacity = '0.3'; prev.style.pointerEvents = 'none';
+  } else {
+    prev.style.opacity = '1'; prev.style.pointerEvents = '';
+  }
+
+  // Next arrow — disable on today
+  const next = document.getElementById('day-nav-next');
+  if (dayOffset >= 0) {
+    next.style.opacity = '0.3'; next.style.pointerEvents = 'none';
+  } else {
+    next.style.opacity = '1'; next.style.pointerEvents = '';
+  }
+}
+
+async function rebuildScheduleForOffset() {
+  if (!schedule) return;
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  const iso = dateISO(d);
+  const civDate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+  const base = 'https://www.chabad.org/dailystudy';
+
+  // Fetch Hebcal for that date
+  const isoDate = iso;
+  let p = null;
+  try {
+    const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + isoDate + '&end=' + isoDate + '&lg=s');
+    const cal = await r.json();
+    p = parseHebcalForDate(cal, d);
+  } catch(e) { p = null; }
+
+  // Update Chabad URLs for this date
+  // tdate for Chabad: M/D/YYYY
+  const tdate = civDate;
+  const hd = await fetchHebDateFor(d).catch(() => null);
+  const tdateLong = hd ? hd.hm + ' ' + hd.hd + ', ' + hd.hy : tdate;
+
+  // Update schedule URLs
+  Object.values(schedule).forEach(s => {
+    if (s.id === 'chumash')  s.chabadUrl = base + '/torahreading.asp?tdate=' + tdate;
+    if (s.id === 'tehillim') s.chabadUrl = base + '/tehillim.asp?tdate=' + tdate;
+    if (s.id === 'tanya')    s.chabadUrl = base + '/tanya.asp?tdate=' + encodeURIComponent(tdateLong);
+    if (s.id === 'rambam') {
+      const track = user.rambamTrack;
+      if (track === 'm') s.chabadUrl = base + '/seferHamitzvos.asp?tdate=' + tdate;
+      else s.chabadUrl = base + '/rambam.asp?rambamChapters=' + (track === '1' ? '1' : '3') + '&tdate=' + tdate;
+    }
+    // Update subtitle if we got Hebcal data
+    if (p) {
+      if (s.id === 'chumash' && p.parshaName) s.subtitle = p.parshaName + ' · Aliya ' + p.aliyaNum;
+      if (s.id === 'tehillim' && p.tehTitle)   s.subtitle = p.tehTitle;
+      if (s.id === 'rambam' && p.rambamTitle)  s.subtitle = p.rambamTitle;
+    }
+  });
+
+  // Render sections using that day's done state
+  renderSectionsForOffset(iso);
+}
+
+function parseHebcalForDate(data, d) {
+  const items = data.items || [];
+  const parshaItem = items.find(i => i.category === 'parashat');
+  const dow = d.getDay();
+  const aliyaNum = dow === 6 ? 7 : dow + 1;
+  const parshaName = parshaItem?.title?.replace(/Parashat |Parasha /, '') || null;
+  const tehItem = items.find(i => i.category === 'dailyLearning' && (i.title?.startsWith('Psalms') || i.title?.startsWith('Tehillim')));
+  const rt = user.rambamTrack;
+  const rambamItem = rt === 'm'
+    ? items.find(i => i.category === 'dailyLearning' && (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos')))
+    : items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
+  return {
+    parshaName, aliyaNum,
+    tehTitle: tehItem?.title || null,
+    rambamTitle: rambamItem?.title || null,
+  };
+}
+
+async function fetchHebDateFor(d) {
+  const url = 'https://www.hebcal.com/converter?cfg=json&gy=' + d.getFullYear() + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1';
+  const r = await fetch(url);
+  return r.json();
+}
+
+function renderSectionsForOffset(iso) {
+  document.getElementById('skeletons').style.display = 'none';
+  const list = document.getElementById('sections-list');
+  list.style.display = 'block';
+  if (!schedule) return;
+
+  // Use today's done if offset=0, else pastDone
+  const isToday = dayOffset === 0;
+  if (!user.pastDone) user.pastDone = {};
+  const dayDone = isToday ? user.done : (user.pastDone[iso] || {});
+
+  list.innerHTML = Object.values(schedule).map((s, i) => {
+    const done = !!dayDone[s.id];
+    return '<div id="card-' + s.id + '" onclick="openChabadPanel('' + s.id + '')" style="background:var(--card);border:1.5px solid ' + (done ? s.color + '80' : 'var(--border)') + ';border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:' + (i*.06) + 's;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='var(--card)'" onmousedown="this.style.transform='scale(.985)'" onmouseup="this.style.transform=''" ontouchstart="this.style.background='var(--hi)'" ontouchend="this.style.background='var(--card)';this.style.transform=''">' +
+      '<div style="display:flex;align-items:center;gap:14px;">' +
+        '<div id="icon-' + s.id + '" style="width:44px;height:44px;border-radius:13px;background:' + (done ? s.color+'33' : 'var(--surface)') + ';border:1px solid ' + (done ? s.color+'66' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + (done ? s.color : 'var(--t3)') + ';pointer-events:none;">' + icon(s.icon,21) + '</div>' +
+        '<div style="flex:1;min-width:0;pointer-events:none;">' +
+          '<p style="font-weight:700;font-size:15px;color:' + (done ? s.color : 'var(--t1)') + ';margin-bottom:2px;">' + s.label + '</p>' +
+          '<p style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.subtitle + '</p>' +
+        '</div>' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);pointer-events:none;margin-right:2px;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">' +
+          (s.quizzable ? '<button onclick="openQuiz('' + s.id + '')" style="width:36px;height:36px;border-radius:10px;background:' + ((isToday ? user.quizDone : {})[s.id] ? 'rgba(168,85,247,.2)' : 'var(--surface)') + ';border:1px solid ' + ((isToday ? user.quizDone : {})[s.id] ? 'rgba(168,85,247,.5)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + ((isToday ? user.quizDone : {})[s.id] ? '#A855F7' : 'var(--t3)') + ';">' + icon('quiz',18) + '</button>' : '') +
+          '<button id="tick-' + s.id + '" onclick="' + (isToday ? 'showConfirm('' + s.id + '',false)' : 'markDonePast('' + s.id + '','' + iso + '')') + '" style="width:36px;height:36px;border-radius:10px;background:' + (done ? s.color+'28' : 'var(--surface)') + ';border:1px solid ' + (done ? s.color+'55' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (done ? '#1DB954' : 'var(--t3)') + ';" ' + (done ? 'disabled' : '') + '>' + icon('check',18) + '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  updateProgressRing();
 }
 
 function updateProgressRing() {
@@ -1131,8 +1280,9 @@ function showConfirm(sectionId, fromReader) {
   if (!schedule) return;
   const s = schedule[sectionId];
   _confirmSectionId = sectionId;
-  _confirmCallback = fromReader ? () => { markDone(sectionId); closeChabadPanel(); }
-                                : () => markDone(sectionId);
+  _confirmCallback = fromReader
+    ? () => { markDone(sectionId); closeChabadPanel(); const d2=new Date(); d2.setDate(d2.getDate()+dayOffset); renderSectionsForOffset(dateISO(d2)); }
+    : () => { markDone(sectionId); const d2=new Date(); d2.setDate(d2.getDate()+dayOffset); renderSectionsForOffset(dateISO(d2)); };
 
   const modal = document.getElementById('confirm-modal');
 
@@ -2406,91 +2556,121 @@ async function renderLeaders() {
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
 function renderStats() {
-  const level = Math.floor(user.xp/100)+1;
-  const earned = MEDALS.filter(m=>m.req(user));
-  // Next unearned medal in current world
+  const level = Math.floor(user.xp / 100) + 1;
+  const xpInLevel = user.xp % 100;
+  const earned = MEDALS.filter(m => m.req(user));
   const cw = WORLDS[currentWorldIndex()];
   const next = cw ? cw.medals.find(m => !m.req(user)) : null;
-  if (next) { next.color = cw.color; }
-  // vals/reqs no longer used — next milestone uses WORLDS structure
-  const vals = {};
-  const reqs = {};
+  if (next) next.color = cw.color;
 
-  document.getElementById('stats-content').innerHTML = `
-    <div style="background:var(--card);border:1px solid rgba(29,185,84,.25);border-radius:14px;padding:13px 15px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
-      <div style="width:36px;height:36px;border-radius:10px;background:rgba(29,185,84,.15);display:flex;align-items:center;justify-content:center;color:var(--green);">${icon('rambam',18)}</div>
-      <div style="flex:1;"><p style="font-size:11px;color:var(--t3);margin-bottom:2px;">Rambam Track</p><p style="font-size:14px;font-weight:700;color:var(--t1);">${RAMBAM_TRACKS[user.rambamTrack]?.label}</p></div>
-      <button onclick="changeTrack()" style="background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;">Change</button>
-    </div>
+  // Build activity grid — 28 days
+  const today = new Date();
+  const gridDays = [];
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const iso = dateISO(d);
+    const isToday = i === 0;
+    const dayData = isToday ? user.done : (user.pastDone?.[iso] || {});
+    const count = ['chumash','tehillim','tanya','rambam'].filter(id => dayData[id]).length;
+    gridDays.push({ iso, count, isToday });
+  }
 
-    ${[
-      ['var(--red)','flame',user.streak,'Current Streak','days'],
-      ['var(--gold)','star',user.total,'Days Completed',''],
-      ['var(--purple)','bolt',user.xp,'Total XP',''],
-      ['var(--gold)','trophy',level,'Level',''],
-      ['var(--green)','star',user.perfectDays||0,'Perfect Days',''],
-      ['var(--gold)','medal',`${earned.length}/${MEDALS.length}`,'Medals',''],
-    ].map(([color,ic,val,lb,sf],i)=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:13px;padding:13px 15px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${i*.04}s;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:34px;height:34px;border-radius:9px;background:${color}18;display:flex;align-items:center;justify-content:center;color:${color};">${icon(ic,16)}</div>
-          <p style="font-size:13px;color:var(--t2);">${lb}</p>
-        </div>
-        <p style="font-size:15px;font-weight:800;color:var(--t1);">${val}${sf?' '+sf:''}</p>
-      </div>`).join('')}
+  const gridHTML = gridDays.map(d => {
+    const opacity = d.count === 0 ? '0.07' : d.count === 1 ? '0.3' : d.count === 2 ? '0.55' : d.count === 3 ? '0.8' : '1';
+    const border = d.isToday ? '1.5px solid var(--gold)' : '1.5px solid transparent';
+    return '<div style="width:100%;aspect-ratio:1;border-radius:4px;background:var(--gold);opacity:' + opacity + ';border:' + border + ';transition:opacity .2s;" title="' + d.iso + ': ' + d.count + '/4"></div>';
+  }).join('');
 
-    ${next ? `
-    <div style="background:var(--card);border:1px solid ${next.color}25;border-radius:16px;padding:16px;margin-top:4px;">
-      <p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Next Milestone</p>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-        <div style="width:42px;height:42px;border-radius:12px;background:${next.color}18;display:flex;align-items:center;justify-content:center;color:${next.color};">${icon(next.icon,22)}</div>
-        <div><p style="font-weight:700;color:var(--t1);font-size:14px;">${next.label}</p><p style="font-size:11px;color:var(--t3);">${next.desc}</p></div>
-      </div>
-      <div style="height:5px;background:var(--border);border-radius:99px;"><div style="height:100%;width:${Math.min((vals[next.id]||0)/(reqs[next.id]||1)*100,100)}%;background:${next.color};border-radius:99px;transition:width .8s ease;"></div></div>
-      <p style="text-align:right;font-size:11px;color:var(--t3);margin-top:5px;">${vals[next.id]||0} / ${reqs[next.id]||1}</p>
-    </div>` : `<div style="background:var(--card);border:1px solid rgba(29,185,84,.4);border-radius:14px;padding:16px;text-align:center;color:var(--green);font-weight:700;font-size:14px;margin-top:4px;">All medals earned! 🏆</div>`}
+  // Streak flame pulse animation
+  const streakColor = user.streak >= 30 ? '#FF4757' : user.streak >= 7 ? '#FF6B35' : '#F0A500';
 
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-top:12px;">
-      <p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Schedule Sources</p>
-      ${[['Chumash, Tehillim & Rambam','https://www.hebcal.com','Hebcal.com','var(--blue)'],
-         ['Torah & Psalm in-app text','https://www.sefaria.org','Sefaria.org','var(--blue)'],
-         ['Tanya + full study texts','https://www.chabad.org/dailystudy','Chabad.org','var(--red)'],
-        ].map(([lb,url,nm,color])=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-          <p style="font-size:11px;color:var(--t2);flex:1;padding-right:8px;">${lb}</p>
-          <a href="${url}" target="_blank" style="font-size:11px;color:${color};text-decoration:none;font-weight:700;flex-shrink:0;display:flex;align-items:center;gap:3px;">${nm} ${icon('ext',9,color)}</a>
-        </div>`).join('')}
-    </div>
+  document.getElementById('stats-content').innerHTML = '<div style="padding-bottom:20px;">' +
 
-    <!-- Settings row -->
-    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+    // ── STREAK HERO ──
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 20px;margin-bottom:12px;text-align:center;position:relative;overflow:hidden;">' +
+      '<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 0%, ' + streakColor + '18, transparent 70%);pointer-events:none;"></div>' +
+      '<div style="font-size:52px;line-height:1;margin-bottom:4px;animation:flamePulse 2s ease-in-out infinite;">🔥</div>' +
+      '<p style="font-size:52px;font-weight:900;color:' + streakColor + ';line-height:1;margin-bottom:4px;letter-spacing:-2px;">' + user.streak + '</p>' +
+      '<p style="font-size:13px;font-weight:700;color:var(--t2);">day streak</p>' +
+      (user.streak >= 7 ? '<div style="margin-top:10px;display:inline-block;padding:3px 12px;border-radius:20px;background:' + streakColor + '22;border:1px solid ' + streakColor + '44;"><span style="font-size:11px;font-weight:700;color:' + streakColor + ';">' + (user.streak >= 30 ? '🏆 Incredible!' : user.streak >= 14 ? '⚡ On fire!' : '✨ Great run!') + '</span></div>' : '') +
+    '</div>' +
 
-      <button onclick="shareApp()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
-        <span style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:16px;">📤</span> Share App
-        </span>
-        <span style="font-size:12px;color:var(--t3);">Invite a friend</span>
-      </button>
+    // ── QUICK STATS ROW ──
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">' +
+        '<p style="font-size:11px;color:var(--t3);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Days Done</p>' +
+        '<p style="font-size:30px;font-weight:900;color:var(--t1);line-height:1;">' + user.total + '</p>' +
+      '</div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">' +
+        '<p style="font-size:11px;color:var(--t3);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Perfect Days</p>' +
+        '<p style="font-size:30px;font-weight:900;color:var(--green);line-height:1;">' + (user.perfectDays||0) + '</p>' +
+      '</div>' +
+    '</div>' +
 
-      <button onclick="toggleTheme()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
-        <span style="display:flex;align-items:center;gap:10px;">
-          <span id="theme-icon" style="font-size:16px;">🌙</span> Appearance
-        </span>
-        <span id="theme-label" style="font-size:12px;color:var(--t3);">Dark</span>
-      </button>
+    // ── LEVEL + XP ──
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+        '<div><p style="font-size:11px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Level</p>' +
+        '<p style="font-size:26px;font-weight:900;color:var(--gold);line-height:1.1;">' + level + ' <span style="font-size:13px;color:var(--t3);font-weight:600;">/ ' + user.xp + ' XP</span></p></div>' +
+        '<div style="width:48px;height:48px;border-radius:14px;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;">' + icon('bolt',22,'var(--gold)') + '</div>' +
+      '</div>' +
+      '<div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">' +
+        '<div style="height:100%;width:' + xpInLevel + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:4px;transition:width 1s cubic-bezier(.22,1,.36,1);"></div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;margin-top:5px;">' +
+        '<span style="font-size:10px;color:var(--t3);">' + xpInLevel + ' XP</span>' +
+        '<span style="font-size:10px;color:var(--t3);">100 XP → Lv' + (level+1) + '</span>' +
+      '</div>' +
+    '</div>' +
 
-      <button onclick="signOut()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
-        <span style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:16px;">🚪</span> Sign Out
-        </span>
-        <span style="font-size:12px;color:var(--t3);">Your data stays saved</span>
-      </button>
+    // ── ACTIVITY GRID ──
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+        '<p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;">Activity</p>' +
+        '<p style="font-size:11px;color:var(--t3);">Last 28 days</p>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;">' + gridHTML + '</div>' +
+      '<div style="display:flex;align-items:center;gap:6px;margin-top:10px;justify-content:flex-end;">' +
+        '<span style="font-size:10px;color:var(--t3);">Less</span>' +
+        '<div style="width:10px;height:10px;border-radius:3px;background:var(--gold);opacity:.07;"></div>' +
+        '<div style="width:10px;height:10px;border-radius:3px;background:var(--gold);opacity:.3;"></div>' +
+        '<div style="width:10px;height:10px;border-radius:3px;background:var(--gold);opacity:.7;"></div>' +
+        '<div style="width:10px;height:10px;border-radius:3px;background:var(--gold);opacity:1;"></div>' +
+        '<span style="font-size:10px;color:var(--t3);">More</span>' +
+      '</div>' +
+    '</div>' +
 
-      <button onclick="resetProgress()" style="width:100%;padding:13px 16px;border-radius:12px;background:transparent;border:1px solid var(--border);color:var(--t3);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:10px;">
-        <span style="font-size:16px;">🗑️</span> Reset All Progress
-      </button>
-    </div>
-  `;
+    // ── MEDALS + NEXT MILESTONE ──
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:' + (next ? '14px' : '0') + '">' +
+        '<p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;">Medals</p>' +
+        '<p style="font-size:13px;font-weight:800;color:var(--gold);">' + earned.length + ' / ' + MEDALS.length + '</p>' +
+      '</div>' +
+      (next ? '<div style="display:flex;align-items:center;gap:12px;">' +
+        '<div style="width:40px;height:40px;border-radius:12px;background:' + next.color + '18;border:1px solid ' + next.color + '30;display:flex;align-items:center;justify-content:center;color:' + next.color + ';flex-shrink:0;">' + icon(next.icon,20) + '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<p style="font-size:13px;font-weight:700;color:var(--t1);">' + next.label + '</p>' +
+          '<p style="font-size:11px;color:var(--t3);">' + next.desc + '</p>' +
+        '</div>' +
+        '<span style="font-size:11px;color:' + next.color + ';font-weight:700;flex-shrink:0;">Next up</span>' +
+      '</div>' : '<p style="font-size:13px;color:var(--green);font-weight:700;">All medals earned! 🏆</p>') +
+    '</div>' +
+
+    // ── RAMBAM TRACK ──
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">' +
+      '<div style="flex:1;"><p style="font-size:11px;color:var(--t3);margin-bottom:2px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Rambam Track</p><p style="font-size:14px;font-weight:700;color:var(--t1);">' + (RAMBAM_TRACKS[user.rambamTrack]?.label || '') + '</p></div>' +
+      '<button onclick="changeTrack()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit;padding:5px 10px;">Change</button>' +
+    '</div>' +
+
+    // ── SETTINGS ──
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">' +
+      '<button onclick="shareApp()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">📤</span> Share App</span><span style="font-size:12px;color:var(--t3);">Invite a friend</span></button>' +
+      '<button onclick="toggleTheme()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span id="theme-icon" style="font-size:16px;">🌙</span> Appearance</span><span id="theme-label" style="font-size:12px;color:var(--t3);">Dark</span></button>' +
+      '<button onclick="signOut()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">🚪</span> Sign Out</span><span style="font-size:12px;color:var(--t3);">Data stays saved</span></button>' +
+      '<button onclick="resetProgress()" style="width:100%;padding:13px 16px;border-radius:12px;background:transparent;border:1px solid var(--border);color:var(--t3);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">🗑️</span> Reset All Progress</button>' +
+    '</div>' +
+  '</div>';
 }
 
 function changeTrack() {
@@ -2534,7 +2714,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v45'); } catch{}
+  try { localStorage.removeItem('chitas_v46'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2603,7 +2783,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v45', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v46', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
