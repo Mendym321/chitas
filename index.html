@@ -56,7 +56,9 @@
   @keyframes checkPop { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.3)} 100%{transform:scale(1);opacity:1} }
   @keyframes streakBurst { 0%{transform:scale(1)} 30%{transform:scale(1.18)} 60%{transform:scale(.95)} 100%{transform:scale(1)} }
   @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
-  @keyframes momentSlide { 0%{transform:translateY(100%);opacity:0} 100%{transform:translateY(0);opacity:1} }
+  @keyframes momentSlide { 0%{transform:scale(.85) translateY(20px);opacity:0} 60%{transform:scale(1.03)} 100%{transform:scale(1) translateY(0);opacity:1} }
+  @keyframes iconBounce { 0%{transform:scale(0) rotate(-15deg);opacity:0} 60%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1) rotate(0);opacity:1} }
+  @keyframes glowRing { 0%,100%{box-shadow:0 0 0 0 rgba(240,165,0,0)} 50%{box-shadow:0 0 0 8px rgba(240,165,0,.12)} }
   @keyframes celebSlide { 0%{transform:translateY(100%);opacity:0} 20%{transform:translateY(0);opacity:1} 80%{transform:translateY(0);opacity:1} 100%{transform:translateY(100%);opacity:0} }
   @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
   #confetti-container { position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden; }
@@ -533,41 +535,46 @@ onAuthStateChanged(auth, user => {
 </div>
 
 <!-- Confirm done modal -->
-<div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:430px;animation:fadeUp .22s ease;">
-
-    <p id="confirm-title" style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:var(--t1);text-align:center;margin-bottom:6px;"></p>
-    <p id="confirm-sub" style="font-size:13px;color:var(--t3);text-align:center;margin-bottom:24px;line-height:1.5;"></p>
-    <button id="confirm-yes" style="width:100%;padding:14px;border-radius:14px;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;" onclick="confirmDone()">Yes, I learned it ✓</button>
-    <button onclick="closeConfirm()" style="width:100%;padding:12px;border-radius:14px;border:1px solid var(--border);background:transparent;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--t2);">Not yet</button>
+<div id="confirm-modal" onclick="if(event.target.id==='confirm-modal')closeConfirm()" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.65);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:28px;padding:32px 24px 28px;width:100%;max-width:360px;text-align:center;animation:momentSlide .35s cubic-bezier(.22,1,.36,1);box-shadow:0 24px 64px rgba(0,0,0,.6);">
+    <div id="confirm-icon" style="width:64px;height:64px;border-radius:20px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;animation:iconBounce .5s .1s cubic-bezier(.22,1,.36,1) both;"></div>
+    <p id="confirm-title" style="font-size:22px;font-weight:900;color:var(--t1);margin-bottom:6px;letter-spacing:-.3px;"></p>
+    <p id="confirm-sub" style="font-size:14px;color:var(--t3);margin-bottom:28px;line-height:1.5;"></p>
+    <button id="confirm-yes" style="width:100%;padding:15px;border-radius:14px;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;" onclick="confirmDone()"></button>
+    <button onclick="closeConfirm()" style="width:100%;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:transparent;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--t3);">Not yet</button>
   </div>
 </div>
 
-<!-- ── MOMENT MODAL — reusable full-screen popup ── -->
-<div id="moment-modal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;">
-  <div id="moment-card" style="background:var(--surface);border:1px solid var(--border);border-radius:28px 28px 0 0;padding:32px 24px 48px;width:100%;max-width:430px;text-align:center;animation:momentSlide .4s cubic-bezier(.22,1,.36,1);">
-    <div id="moment-icon" style="font-size:56px;margin-bottom:16px;"></div>
-    <p id="moment-title" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);line-height:1.1;margin-bottom:8px;"></p>
-    <p id="moment-sub" style="font-size:15px;color:var(--t2);line-height:1.5;margin-bottom:6px;"></p>
-    <p id="moment-xp" style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:28px;"></p>
-    <div id="moment-btns" style="display:flex;flex-direction:column;gap:10px;"></div>
+<!-- ── MOMENT MODAL — centered celebration popup ── -->
+<div id="moment-modal" onclick="if(event.target.id==='moment-modal')closeMoment()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.75);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:24px;">
+  <div id="moment-card" style="background:var(--surface);border:1px solid rgba(255,255,255,.07);border-radius:32px;padding:36px 28px 28px;width:100%;max-width:360px;text-align:center;animation:momentSlide .45s cubic-bezier(.22,1,.36,1);box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;overflow:hidden;">
+    <!-- Background glow — color set by JS -->
+    <div id="moment-glow" style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;border-radius:50%;pointer-events:none;filter:blur(40px);opacity:.35;"></div>
+    <!-- Icon -->
+    <div id="moment-icon" style="width:80px;height:80px;border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;position:relative;animation:iconBounce .5s .2s cubic-bezier(.22,1,.36,1) both;"></div>
+    <!-- Content -->
+    <p id="moment-title" style="font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:var(--t1);line-height:1.05;margin-bottom:10px;letter-spacing:-.5px;position:relative;"></p>
+    <p id="moment-sub" style="font-size:15px;color:var(--t2);line-height:1.55;margin-bottom:8px;position:relative;"></p>
+    <p id="moment-xp" style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:28px;position:relative;letter-spacing:.02em;"></p>
+    <div id="moment-btns" style="display:flex;flex-direction:column;gap:10px;position:relative;"></div>
   </div>
 </div>
 
 <!-- Motzei Shabbos weekly quiz popup -->
-<div id="motzei-popup" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 44px;width:100%;max-width:430px;animation:fadeUp .3s ease;">
-    <div style="text-align:center;margin-bottom:20px;">
-      <div style="font-size:40px;margin-bottom:12px;">✨</div>
-      <p style="font-size:20px;font-weight:900;color:var(--t1);margin-bottom:6px;">Gut Voch!</p>
-      <p style="font-size:14px;color:var(--t2);line-height:1.5;">Shabbos is over — time for the<br>weekly Chitas quiz. Test your knowledge<br>from this week's learning.</p>
+<div id="motzei-popup" onclick="if(event.target.id==='motzei-popup')this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--surface);border:1px solid rgba(255,255,255,.07);border-radius:32px;padding:36px 28px 28px;width:100%;max-width:360px;text-align:center;animation:momentSlide .45s cubic-bezier(.22,1,.36,1);box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;border-radius:50%;background:#A855F7;filter:blur(40px);opacity:.25;pointer-events:none;"></div>
+    <div style="width:72px;height:72px;border-radius:22px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:iconBounce .5s .2s cubic-bezier(.22,1,.36,1) both;">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.6" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
     </div>
+    <p style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;letter-spacing:-.3px;position:relative;">Weekly Quiz</p>
+    <p style="font-size:14px;color:var(--t2);line-height:1.55;margin-bottom:28px;position:relative;">Shabbos is over. Test your knowledge from this week's Chumash, Tanya and Rambam.</p>
     <button onclick="document.getElementById('motzei-popup').style.display='none';openWeeklyQuiz();"
-      style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;">
-      Take the Weekly Quiz ✨
+      style="width:100%;padding:15px;border-radius:14px;background:#A855F7;border:none;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;box-shadow:0 4px 20px rgba(168,85,247,.4);position:relative;">
+      Take the quiz
     </button>
     <button onclick="document.getElementById('motzei-popup').style.display='none';"
-      style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">
+      style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--t3);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;position:relative;">
       Maybe later
     </button>
   </div>
@@ -608,7 +615,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v58'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v59'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -700,7 +707,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v58', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v59', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -794,7 +801,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v58', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v59', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -2146,24 +2153,40 @@ function celebrateSection(sectionId) {
 }
 
 // ── MOMENT MODAL SYSTEM ─────────────────────────────────────────────────────
-function showMoment({ icon, title, sub, xp, btns }) {
-  document.getElementById('moment-icon').innerHTML = icon;
+function showMoment({ icon, title, sub, xp, btns, color }) {
+  const c = color || '#F0A500';
+  // Icon
+  const iconEl = document.getElementById('moment-icon');
+  iconEl.innerHTML = icon;
+  iconEl.style.background = c + '1A';
+  iconEl.style.border = '1.5px solid ' + c + '40';
+  iconEl.style.boxShadow = '0 4px 24px ' + c + '30';
+  // Glow
+  document.getElementById('moment-glow').style.background = c;
+  // Text
   document.getElementById('moment-title').textContent = title;
   document.getElementById('moment-sub').textContent = sub;
   document.getElementById('moment-xp').textContent = xp || '';
+  // Buttons
   const btnsEl = document.getElementById('moment-btns');
   btnsEl.innerHTML = '';
   (btns || [{ label: 'Keep going', primary: true }]).forEach(b => {
     const btn = document.createElement('button');
     btn.textContent = b.label;
-    btn.style.cssText = 'width:100%;padding:15px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;border:none;' +
-      (b.primary ? 'background:var(--gold);color:#000;' : 'background:transparent;border:1px solid var(--border);color:var(--t2);padding:13px;font-size:14px;font-weight:600;');
+    if (b.primary) {
+      btn.style.cssText = 'width:100%;padding:15px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;border:none;background:' + c + ';color:' + (c === '#F0A500' || c === '#1DB954' ? '#000' : '#fff') + ';box-shadow:0 4px 20px ' + c + '44;';
+    } else {
+      btn.style.cssText = 'width:100%;padding:13px;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--t3);';
+    }
     btn.onclick = () => { closeMoment(); if (b.action) b.action(); };
     btnsEl.appendChild(btn);
   });
   const modal = document.getElementById('moment-modal');
   modal.style.display = 'flex';
-  document.getElementById('moment-card').style.animation = 'momentSlide .4s cubic-bezier(.22,1,.36,1)';
+  document.getElementById('moment-card').style.animation = 'none';
+  requestAnimationFrame(() => {
+    document.getElementById('moment-card').style.animation = 'momentSlide .45s cubic-bezier(.22,1,.36,1)';
+  });
 }
 
 function closeMoment() {
@@ -2191,13 +2214,7 @@ function celebrateStreakMilestone(streak) {
   // Bonus XP for big milestones
   if (streak === 30)  { user.xp += 500;  saveUser(); }
   if (streak === 100) { user.xp += 2000; saveUser(); }
-  setTimeout(() => showMoment({
-    icon: m.icon,
-    title: m.title,
-    sub: m.sub,
-    xp: m.xp,
-    btns: [{ label: 'Keep it going', primary: true }],
-  }), 600);
+  setTimeout(() => showMoment({ icon: m.icon, title: m.title, sub: m.sub, xp: m.xp, color: streak >= 30 ? '#F0A500' : '#FF4757', btns: [{ label: 'Keep it going', primary: true }] }), 600);
 }
 
 // ── 2. PERFECT DAY ───────────────────────────────────────────────────────────
@@ -2210,13 +2227,7 @@ function celebrateAllDone() {
 
   if (isFirstPerfect) {
     // First ever perfect day — big moment
-    setTimeout(() => showMoment({
-      icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      title: 'Perfect day',
-      sub: 'All four sections done. This is what it looks like.',
-      xp: '+150 XP',
-      btns: [{ label: 'Nice', primary: true }],
-    }), 800);
+    setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>', title: 'Perfect day', sub: 'All four sections. Every single one.', xp: '+150 XP', color: '#1DB954', btns: [{ label: 'Nice', primary: true }] }), 800);
   } else {
     celebrateBanner('All done for today');
   }
@@ -2227,13 +2238,7 @@ function checkLevelUp(xpBefore, xpAfter) {
   const levelBefore = Math.floor(xpBefore / 100) + 1;
   const levelAfter  = Math.floor(xpAfter  / 100) + 1;
   if (levelAfter > levelBefore) {
-    setTimeout(() => showMoment({
-      icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>',
-      title: 'Level ' + levelAfter,
-      sub: 'You just leveled up. ' + (levelAfter < 5 ? 'Keep at it.' : levelAfter < 10 ? 'You know what you are doing.' : 'Seriously impressive.'),
-      xp: '',
-      btns: [{ label: 'Keep learning', primary: true }],
-    }), 400);
+    setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>', title: 'Level ' + levelAfter, sub: levelAfter < 5 ? 'Keep at it.' : levelAfter < 10 ? 'You know what you are doing.' : 'Seriously impressive.', color: '#F0A500', btns: [{ label: 'Keep learning', primary: true }] }), 400);
   }
 }
 
@@ -2248,18 +2253,7 @@ function checkWelcomeBack() {
     const alreadyShown = sessionStorage.getItem('chitas_welcomed_back');
     if (alreadyShown) return;
     sessionStorage.setItem('chitas_welcomed_back', '1');
-    setTimeout(() => showMoment({
-      icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10,17 15,12 10,7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>',
-      title: 'Good to have you back',
-      sub: diffDays === 2
-        ? 'You missed yesterday. No big deal — today is what counts.'
-        : "It's been " + diffDays + ' days. Pick up where you left off.',
-      xp: '',
-      btns: [
-        { label: "Let's go", primary: true },
-        { label: 'Maybe later', primary: false },
-      ],
-    }), 800);
+    setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10,17 15,12 10,7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>', title: 'Good to have you back', sub: diffDays === 2 ? 'You missed yesterday. No big deal — today is what counts.' : 'It has been ' + diffDays + ' days. Pick up where you left off.', color: '#4A9EFF', btns: [{ label: "Let's go", primary: true }, { label: 'Maybe later', primary: false }] }), 800);
   }
 }
 
@@ -2294,15 +2288,7 @@ function checkWeeklySummary() {
   };
   const m = msgs[daysDone] || msgs[1];
 
-  setTimeout(() => showMoment({
-    icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-    title: m.title,
-    sub: m.sub + (user.streak > 0 ? ' Your streak is at ' + user.streak + '.' : ''),
-    xp: '',
-    btns: [
-      { label: "Gut Shabbos", primary: true },
-    ],
-  }), 1200);
+  setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', title: m.title, sub: m.sub + (user.streak > 0 ? ' Streak: ' + user.streak + ' days.' : ''), color: '#A855F7', btns: [{ label: 'Good Shabbos', primary: true }] }), 1200);
 }
 
 // ── LANDING TICKER ───────────────────────────────────────────────────────────
@@ -3131,7 +3117,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v58'); } catch{}
+  try { localStorage.removeItem('chitas_v59'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3200,7 +3186,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v58', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v59', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
