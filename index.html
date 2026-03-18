@@ -211,98 +211,53 @@ onAuthStateChanged(auth, user => {
     <div style="max-width:360px;width:100%;">
 
       <!-- Step 0: Animated landing page -->
-      <div id="ob-step0" style="position:relative;z-index:1;">
+      <div id="ob-step0" style="position:relative;z-index:1;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
 
-        <!-- Hero: logo + title sequence -->
-        <div style="text-align:center;margin-bottom:24px;padding-top:8px;">
-
-          <!-- Logo ring — 3 layers -->
-          <div style="width:96px;height:96px;margin:0 auto 20px;position:relative;animation:logoReveal .7s cubic-bezier(.22,1,.36,1) both;">
-            <!-- Outer orbit -->
-            <svg width="96" height="96" viewBox="0 0 96 96" style="position:absolute;inset:0;animation:spinSlow 18s linear infinite;">
-              <circle cx="48" cy="48" r="44" fill="none" stroke="rgba(240,165,0,0.12)" stroke-width="1" stroke-dasharray="3 7"/>
-              <circle cx="48" cy="8" r="3" fill="rgba(240,165,0,0.5)"/>
-            </svg>
-            <!-- Middle orbit -->
-            <svg width="96" height="96" viewBox="0 0 96 96" style="position:absolute;inset:0;animation:spinSlow 10s linear infinite reverse;">
-              <circle cx="48" cy="48" r="34" fill="none" stroke="rgba(240,165,0,0.2)" stroke-width="1.5" stroke-dasharray="2 6"/>
-              <circle cx="48" cy="14" r="2.5" fill="rgba(240,165,0,0.7)"/>
-            </svg>
-            <!-- Gold glow bg -->
-            <div style="position:absolute;inset:12px;border-radius:50%;background:radial-gradient(circle,rgba(240,165,0,.18),transparent 70%);"></div>
-            <!-- Center icon -->
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-              <div style="width:58px;height:58px;border-radius:18px;background:linear-gradient(145deg,rgba(240,165,0,.22),rgba(240,165,0,.06));border:1.5px solid rgba(240,165,0,.45);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(240,165,0,.2);">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.7" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
-              </div>
+        <!-- Logo -->
+        <div style="width:88px;height:88px;margin:0 auto 32px;position:relative;animation:logoReveal .7s cubic-bezier(.22,1,.36,1) both;">
+          <svg width="88" height="88" viewBox="0 0 88 88" style="position:absolute;inset:0;animation:spinSlow 18s linear infinite;">
+            <circle cx="44" cy="44" r="42" fill="none" stroke="rgba(240,165,0,0.1)" stroke-width="1" stroke-dasharray="3 8"/>
+            <circle cx="44" cy="3" r="2.5" fill="rgba(240,165,0,0.45)"/>
+          </svg>
+          <svg width="88" height="88" viewBox="0 0 88 88" style="position:absolute;inset:0;animation:spinSlow 11s linear infinite reverse;">
+            <circle cx="44" cy="44" r="32" fill="none" stroke="rgba(240,165,0,0.18)" stroke-width="1.5" stroke-dasharray="2 6"/>
+            <circle cx="44" cy="12" r="2" fill="rgba(240,165,0,0.6)"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+            <div style="width:56px;height:56px;border-radius:17px;background:linear-gradient(145deg,rgba(240,165,0,.2),rgba(240,165,0,.05));border:1.5px solid rgba(240,165,0,.4);display:flex;align-items:center;justify-content:center;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.7" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
             </div>
-          </div>
-
-          <!-- Title -->
-          <div style="animation:titleReveal .6s .4s ease both;">
-            <h1 style="font-family:'Playfair Display',serif;font-size:48px;font-weight:900;color:var(--t1);line-height:.9;margin-bottom:10px;letter-spacing:-1.5px;">
-              Chitas<br>
-              <span style="background:linear-gradient(135deg,#F0A500 0%,#FFB830 50%,#F0A500 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;">Daily</span>
-            </h1>
-            <!-- Ticker -->
-            <div style="height:48px;display:flex;align-items:center;justify-content:center;margin-top:4px;overflow:hidden;position:relative;">
-              <p id="ob-ticker-word" style="font-size:22px;font-weight:800;color:var(--t1);position:absolute;transition:none;"></p>
-            </div>
-            <p id="ob-ticker-sub" style="font-size:13px;color:var(--t3);margin-top:2px;min-height:18px;transition:opacity .25s;"></p>
           </div>
         </div>
 
-        <!-- 4 equal feature cards -->
-        <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:20px;">
-
-          <div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 15px;animation:cardSlide .5s .6s ease both;">
-            <div style="width:40px;height:40px;border-radius:11px;background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-            </div>
-            <div>
-              <p style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:1px;">Daily learning</p>
-              <p style="font-size:11px;color:var(--t3);">Chumash, Tehillim, Tanya & Rambam</p>
-            </div>
-          </div>
-
-          <div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 15px;animation:cardSlide .5s .72s ease both;">
-            <div style="width:40px;height:40px;border-radius:11px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="1" fill="#A855F7"/></svg>
-            </div>
-            <div>
-              <p style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:1px;">Test your knowledge</p>
-              <p style="font-size:11px;color:var(--t3);">Daily quizzes + weekly challenge</p>
-            </div>
-          </div>
-
-          <div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 15px;animation:cardSlide .5s .84s ease both;">
-            <div style="width:40px;height:40px;border-radius:11px;background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
-            </div>
-            <div>
-              <p style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:1px;">Build your streak</p>
-              <p style="font-size:11px;color:var(--t3);">XP, medals, and daily progress</p>
-            </div>
-          </div>
-
-          <div style="display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 15px;animation:cardSlide .5s .96s ease both;">
-            <div style="width:40px;height:40px;border-radius:11px;background:rgba(74,158,255,.12);border:1px solid rgba(74,158,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.8"><path d="M8 21h8M12 17v4M5 3h14v7a7 7 0 01-14 0V3z"/><path d="M5 7H2a3 3 0 003 3M19 7h3a3 3 0 01-3 3"/></svg>
-            </div>
-            <div>
-              <p style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:1px;">Compete with others</p>
-              <p style="font-size:11px;color:var(--t3);">Global leaderboard, share your results</p>
-            </div>
-          </div>
-
+        <!-- Title -->
+        <div style="animation:titleReveal .6s .35s ease both;margin-bottom:48px;">
+          <h1 style="font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:var(--t1);line-height:.88;letter-spacing:-2px;margin-bottom:0;">
+            Chitas<br>
+            <span id="ob-gold-title" style="background:linear-gradient(135deg,#F0A500 0%,#FFB830 50%,#F0A500 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;">Daily</span>
+          </h1>
         </div>
 
-        <!-- CTA button — glows, pulses subtly -->
-        <button onclick="document.getElementById('ob-step0').style.display='none';document.getElementById('ob-step1').style.display='block';stopObTicker();"
-          style="width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#F0A500,#E09000);border:none;color:#000;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:11px;animation:up .5s 1.08s ease both, glowPulse 3s 1.6s ease infinite;letter-spacing:-.2px;">
-          Get Started
-        </button>
-        <p style="font-size:11px;color:var(--t3);text-align:center;animation:up .4s 1.2s ease both;letter-spacing:.01em;">Free · Syncs across all your devices</p>
+        <!-- Big ticker — the hero -->
+        <div style="animation:titleReveal .5s .55s ease both;margin-bottom:16px;width:100%;">
+          <div style="height:64px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+            <p id="ob-ticker-word" style="font-size:42px;font-weight:900;color:var(--t1);position:absolute;letter-spacing:-1px;font-family:'DM Sans',sans-serif;"></p>
+          </div>
+          <p id="ob-ticker-sub" style="font-size:13px;color:var(--t3);min-height:18px;transition:opacity .2s;margin-top:4px;"></p>
+        </div>
+
+        <!-- Progress dots -->
+        <div id="ob-ticker-dots" style="display:flex;gap:7px;justify-content:center;margin-bottom:52px;animation:titleReveal .4s .7s ease both;">
+        </div>
+
+        <!-- CTA -->
+        <div style="width:100%;animation:up .5s .85s ease both;">
+          <button onclick="document.getElementById('ob-step0').style.display='none';document.getElementById('ob-step1').style.display='block';stopObTicker();"
+            style="width:100%;padding:18px;border-radius:16px;background:linear-gradient(135deg,#F0A500,#E09000);border:none;color:#000;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:12px;animation:glowPulse 3s 1.4s ease infinite;letter-spacing:-.3px;">
+            Get Started
+          </button>
+          <p style="font-size:11px;color:var(--t3);">Free · Syncs across all your devices</p>
+        </div>
 
       </div>
 
@@ -641,7 +596,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v54'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v55'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -733,7 +688,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v54', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v55', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -827,7 +782,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v54', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v55', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -2202,6 +2157,31 @@ const OB_TICKER_ITEMS = [
   { word: 'Share',   gold: false, sub: 'Challenge friends with your weekly score.' },
 ];
 
+function buildTickerDots() {
+  const dotsEl = document.getElementById('ob-ticker-dots');
+  if (!dotsEl || dotsEl.children.length) return;
+  OB_TICKER_ITEMS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.style.cssText = 'width:5px;height:5px;border-radius:50%;background:rgba(240,165,0,0.2);transition:all .3s;';
+    d.id = 'ob-dot-' + i;
+    dotsEl.appendChild(d);
+  });
+}
+
+function updateTickerDots(idx) {
+  OB_TICKER_ITEMS.forEach((_, i) => {
+    const d = document.getElementById('ob-dot-' + i);
+    if (!d) return;
+    if (i === idx) {
+      d.style.background = '#F0A500';
+      d.style.transform = 'scale(1.4)';
+    } else {
+      d.style.background = 'rgba(240,165,0,0.2)';
+      d.style.transform = 'scale(1)';
+    }
+  });
+}
+
 function runObTicker() {
   const wordEl = document.getElementById('ob-ticker-word');
   const subEl  = document.getElementById('ob-ticker-sub');
@@ -2209,23 +2189,35 @@ function runObTicker() {
 
   const item = OB_TICKER_ITEMS[_obTickerIdx];
 
-  // Exit
-  wordEl.style.animation = 'tickerExitUp .3s cubic-bezier(.4,0,1,1) forwards';
+  wordEl.style.animation = 'tickerExitUp .25s cubic-bezier(.4,0,1,1) forwards';
   subEl.style.opacity = '0';
 
   setTimeout(() => {
     wordEl.textContent = item.word;
-    wordEl.style.color = item.gold ? '#F0A500' : 'var(--t1)';
+    if (item.gold) {
+      wordEl.style.background = 'linear-gradient(135deg,#F0A500,#FFB830)';
+      wordEl.style.webkitBackgroundClip = 'text';
+      wordEl.style.webkitTextFillColor = 'transparent';
+      wordEl.style.backgroundClip = 'text';
+    } else {
+      wordEl.style.background = '';
+      wordEl.style.webkitBackgroundClip = '';
+      wordEl.style.webkitTextFillColor = '';
+      wordEl.style.backgroundClip = '';
+      wordEl.style.color = 'var(--t1)';
+    }
     wordEl.style.animation = 'tickerEnterDown .3s cubic-bezier(0,0,.2,1) forwards';
     subEl.textContent = item.sub;
     subEl.style.opacity = '1';
+    updateTickerDots(_obTickerIdx);
     _obTickerIdx = (_obTickerIdx + 1) % OB_TICKER_ITEMS.length;
-  }, 280);
+  }, 240);
 }
 
 function startObTicker() {
+  buildTickerDots();
   runObTicker();
-  _obTickerTimer = setInterval(runObTicker, 2200);
+  _obTickerTimer = setInterval(runObTicker, 1800);
 }
 
 function stopObTicker() {
@@ -2979,7 +2971,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v54'); } catch{}
+  try { localStorage.removeItem('chitas_v55'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3048,7 +3040,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v54', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v55', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
