@@ -615,7 +615,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v60'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v61'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -707,7 +707,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v60', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v61', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -801,7 +801,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v60', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v61', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1221,7 +1221,10 @@ function updateDayNav() {
   let label;
   if (dayOffset === 0) label = 'Today';
   else if (dayOffset === -1) label = 'Yesterday';
-  else label = d.toLocaleDateString('en-US', { weekday: 'long' }); // Monday, Tuesday etc
+  else {
+    const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
+    label = weekday === 'Saturday' ? 'Shabbos' : weekday;
+  }
   document.getElementById('day-nav-label').textContent = label;
   document.getElementById('day-nav-label').style.color = dayOffset === 0 ? 'var(--t1)' : 'var(--gold)';
 
@@ -1254,8 +1257,24 @@ async function rebuildScheduleForOffset() {
   const civDate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
   const base = 'https://www.chabad.org/dailystudy';
 
-  // Reset subtitles to loading state while we fetch
-  Object.values(schedule).forEach(s => { s.subtitle = 'Loading...'; });
+  // If back to today — restore from snapshot, no need to re-fetch
+  if (dayOffset === 0 && window._todaySchedule) {
+    Object.entries(window._todaySchedule).forEach(([k,v]) => {
+      if (schedule[k]) { schedule[k].subtitle = v.subtitle; schedule[k].chabadUrl = v.chabadUrl; }
+    });
+    renderSectionsForOffset(iso);
+    return;
+  }
+
+  // Set smart fallback subtitles while fetching (not "Loading...")
+  const dow = d.getDay();
+  const aliyaFallback = dow === 6 ? 'Shabbos · Full Parasha' : 'Aliya ' + (dow === 0 ? 1 : dow + 1);
+  Object.values(schedule).forEach(s => {
+    if (s.id === 'chumash')  s.subtitle = aliyaFallback;
+    if (s.id === 'tehillim') s.subtitle = 'Daily Psalms';
+    if (s.id === 'tanya')    s.subtitle = 'Tanya Yomi';
+    if (s.id === 'rambam')   s.subtitle = 'Daily Rambam';
+  });
   renderSectionsForOffset(iso);
 
   // Fetch Hebcal for that date
@@ -1284,10 +1303,21 @@ async function rebuildScheduleForOffset() {
       else s.chabadUrl = base + '/rambam.asp?rambamChapters=' + (track === '1' ? '1' : '3') + '&tdate=' + tdate;
     }
     // Update subtitle if we got Hebcal data
-    if (p) {
-      if (s.id === 'chumash' && p.parshaName) s.subtitle = p.parshaName + ' · Aliya ' + p.aliyaNum;
-      if (s.id === 'tehillim' && p.tehTitle)   s.subtitle = p.tehTitle;
-      if (s.id === 'rambam' && p.rambamTitle)  s.subtitle = p.rambamTitle;
+    // Always update subtitles — use Hebcal data if available, smart fallback if not
+    const pastDow = d.getDay();
+    const pastAliya = pastDow === 6 ? 'Shabbos · Full Parasha' : 'Aliya ' + (pastDow === 0 ? 1 : pastDow + 1);
+    if (s.id === 'chumash') {
+      s.subtitle = p?.parshaName ? p.parshaName + ' · ' + (pastDow === 6 ? 'Full Parasha' : 'Aliya ' + p.aliyaNum) : pastAliya;
+    }
+    if (s.id === 'tehillim') {
+      s.subtitle = p?.tehTitle || 'Daily Psalms';
+    }
+    if (s.id === 'tanya') {
+      // Tanya subtitle stays as the Hebrew date which we already have
+      s.subtitle = tdateLong || 'Tanya Yomi';
+    }
+    if (s.id === 'rambam') {
+      s.subtitle = p?.rambamTitle || 'Daily Rambam';
     }
   });
 
@@ -3156,7 +3186,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v60'); } catch{}
+  try { localStorage.removeItem('chitas_v61'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3225,7 +3255,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v60', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v61', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
