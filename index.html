@@ -326,16 +326,17 @@ onAuthStateChanged(auth, user => {
       </div>
     </div>
 
-    <!-- Tabs — simplified to 3 -->
-    <div style="display:flex;gap:6px;padding:18px 20px 0;">
+    <!-- 2 tabs + avatar tap for profile -->
+    <div style="display:flex;gap:6px;padding:18px 20px 0;align-items:center;">
       <button class="nav-tab active" data-tab="learn" onclick="switchTab('learn')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--gold);background:var(--gold);color:#000;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
         <svg width="17" height="17" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Learn
       </button>
       <button class="nav-tab" data-tab="leaders" onclick="switchTab('leaders')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
         <svg width="17" height="17" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M5 3h14v7a7 7 0 01-14 0V3z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M5 7H2a3 3 0 003 3M19 7h3a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Leaders
       </button>
-      <button class="nav-tab" data-tab="profile" onclick="switchTab('profile')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
-        <svg width="17" height="17" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>Profile
+      <!-- Avatar tap → profile sheet -->
+      <button id="avatar-tab-btn" onclick="openProfileSheet()" style="width:42px;height:42px;border-radius:12px;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;transition:all .15s;" title="Profile">
+        <div id="avatar-tab"></div>
       </button>
     </div>
 
@@ -418,12 +419,10 @@ onAuthStateChanged(auth, user => {
 
     </div>
 
-    <!-- ── PROFILE TAB (medals + stats merged) ── -->
-    <div id="tab-profile" class="screen" style="padding:20px 20px 0;">
-      <div id="stats-content"></div>
-      <div style="margin-top:4px;">
-        <div id="medals-grid"></div>
-      </div>
+    <!-- Profile is now a sheet (opened via avatar) — keep hidden elements for JS -->
+    <div id="tab-profile" class="screen" style="display:none;">
+      <div id="stats-content" style="display:none;"></div>
+      <div id="medals-grid" style="display:none;"></div>
     </div>
 
     <!-- ── LEADERS TAB ── -->
@@ -563,6 +562,76 @@ onAuthStateChanged(auth, user => {
   </div>
 </div>
 
+<!-- ── PROFILE SHEET — slides up from bottom ── -->
+<div id="profile-sheet" onclick="if(event.target.id==='profile-sheet')closeProfileSheet()" style="display:none;position:fixed;inset:0;z-index:2500;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:28px 28px 0 0;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;animation:momentSlide .35s cubic-bezier(.22,1,.36,1);">
+    <!-- Handle -->
+    <div style="width:36px;height:4px;border-radius:2px;background:var(--border);margin:12px auto 0;"></div>
+    <!-- Header -->
+    <div style="padding:20px 24px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);">
+      <div id="profile-sheet-avatar"></div>
+      <div style="flex:1;min-width:0;">
+        <p id="profile-sheet-name" style="font-weight:800;font-size:17px;color:var(--t1);margin-bottom:2px;"></p>
+        <p id="profile-sheet-city" style="font-size:12px;color:var(--t3);"></p>
+      </div>
+      <button onclick="closeProfileSheet()" style="width:32px;height:32px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);">
+        <svg width="14" height="14" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:16px 24px;border-bottom:1px solid var(--border);">
+      <div style="text-align:center;">
+        <p id="ps-streak" style="font-size:26px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:3px;">0</p>
+        <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Streak</p>
+      </div>
+      <div style="text-align:center;">
+        <p id="ps-days" style="font-size:26px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:3px;">0</p>
+        <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Days</p>
+      </div>
+      <div style="text-align:center;">
+        <p id="ps-xp" style="font-size:26px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:3px;">0</p>
+        <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">XP</p>
+      </div>
+    </div>
+    <!-- Content — stats + medals -->
+    <div style="padding:16px 24px;">
+      <div id="profile-sheet-content"></div>
+    </div>
+    <!-- Actions -->
+    <div style="padding:0 24px 48px;display:flex;flex-direction:column;gap:8px;">
+      <button onclick="shareApp()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+          Share app
+        </span>
+        <span style="font-size:12px;color:var(--t3);">Invite a friend</span>
+      </button>
+      <button onclick="toggleTheme()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Appearance
+        </span>
+        <span id="ps-theme-label" style="font-size:12px;color:var(--t3);">Dark</span>
+      </button>
+      <button onclick="changeTrack();closeProfileSheet();" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+          Rambam track
+        </span>
+        <span style="font-size:12px;color:var(--t3);" id="ps-track"></span>
+      </button>
+      <button onclick="signOut();closeProfileSheet();" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;gap:10px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Sign out
+      </button>
+      <button onclick="resetProgress();closeProfileSheet();" style="width:100%;padding:12px 16px;border-radius:12px;background:transparent;border:1px solid var(--border);color:var(--t3);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:10px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        Reset progress
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Motzei Shabbos weekly quiz popup -->
 <div id="motzei-popup" onclick="if(event.target.id==='motzei-popup')this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:24px;">
   <div style="background:var(--surface);border:1px solid rgba(255,255,255,.07);border-radius:32px;padding:36px 28px 28px;width:100%;max-width:360px;text-align:center;animation:momentSlide .45s cubic-bezier(.22,1,.36,1);box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;overflow:hidden;">
@@ -618,7 +687,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v65'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v66'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -704,7 +773,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v65', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v66', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -798,7 +867,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v65', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v66', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1127,7 +1196,7 @@ async function rebuildScheduleForOffset() {
 
   // Set smart fallback subtitles while fetching (not "Loading...")
   const dow = d.getDay();
-  const aliyaFallback = dow === 6 ? 'Shabbos · Full Parasha' : 'Aliya ' + (dow === 0 ? 1 : dow + 1);
+  const aliyaFallback = dow === 6 ? 'Shabbos' : 'Aliya ' + (dow === 0 ? 1 : dow + 1);
   Object.values(schedule).forEach(s => {
     if (s.id === 'chumash')  s.subtitle = aliyaFallback;
     if (s.id === 'tehillim') s.subtitle = 'Daily Psalms';
@@ -1164,9 +1233,9 @@ async function rebuildScheduleForOffset() {
     // Update subtitle if we got Hebcal data
     // Always update subtitles — use Hebcal data if available, smart fallback if not
     const pastDow = d.getDay();
-    const pastAliya = pastDow === 6 ? 'Shabbos · Full Parasha' : 'Aliya ' + (pastDow === 0 ? 1 : pastDow + 1);
+    const pastAliya = pastDow === 6 ? 'Shabbos' : 'Aliya ' + (pastDow === 0 ? 1 : pastDow + 1);
     if (s.id === 'chumash') {
-      s.subtitle = p?.parshaName ? p.parshaName + ' · ' + (pastDow === 6 ? 'Full Parasha' : 'Aliya ' + p.aliyaNum) : pastAliya;
+      s.subtitle = p?.parshaName ? p.parshaName + (pastDow === 6 ? ' · Shabbos' : ' · Aliya ' + p.aliyaNum) : pastAliya;
     }
     if (s.id === 'tehillim') {
       s.subtitle = p?.tehTitle || 'Daily Psalms';
@@ -1263,6 +1332,9 @@ function updateProgressRing() {
   // Update avatar in header if present
   const ha = document.getElementById('header-avatar');
   if (ha) ha.innerHTML = letterAvatar(user.name, 32, 13);
+  // Also update avatar tab button
+  const at = document.getElementById('avatar-tab');
+  if (at) at.innerHTML = letterAvatar(user.name, 32, 13);
   document.getElementById('progress-sub').textContent = allDone
     ? `${user.streak}-day streak · All done for today`
     : `${sections.length - doneCount} section${sections.length-doneCount!==1?'s':''} remaining`;
@@ -3013,6 +3085,76 @@ function renderStats() {
   '</div>';
 }
 
+function openProfileSheet() {
+  // Populate
+  document.getElementById('profile-sheet-avatar').innerHTML = letterAvatar(user.name || '?', 48, 18);
+  document.getElementById('profile-sheet-name').textContent = user.name || 'Anonymous';
+  document.getElementById('profile-sheet-city').textContent = user.city || '';
+  document.getElementById('ps-streak').textContent = user.streak;
+  document.getElementById('ps-days').textContent = user.total;
+  document.getElementById('ps-xp').textContent = user.xp;
+  document.getElementById('ps-track').textContent = RAMBAM_TRACKS[user.rambamTrack]?.label || '';
+  // Render stats content (activity grid + next medal)
+  renderProfileSheetContent();
+  document.getElementById('profile-sheet').style.display = 'flex';
+}
+
+function closeProfileSheet() {
+  document.getElementById('profile-sheet').style.display = 'none';
+}
+
+function renderProfileSheetContent() {
+  const level = Math.floor(user.xp / 100) + 1;
+  const xpInLevel = user.xp % 100;
+  const earned = MEDALS.filter(m => m.req(user));
+  const cw = WORLDS[currentWorldIndex()];
+  const next = cw ? cw.medals.find(m => !m.req(user)) : null;
+  if (next) next.color = cw.color;
+
+  // Activity grid 28 days
+  const today = new Date();
+  let gridHTML = '';
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const iso = dateISO(d);
+    const isToday = i === 0;
+    const dayData = isToday ? user.done : (user.pastDone?.[iso] || {});
+    const count = ['chumash','tehillim','tanya','rambam'].filter(id => dayData[id]).length;
+    const opacity = count === 0 ? '0.07' : count === 1 ? '0.3' : count === 2 ? '0.55' : count === 3 ? '0.8' : '1';
+    const border = isToday ? '1.5px solid var(--gold)' : '1.5px solid transparent';
+    gridHTML += '<div style="width:100%;aspect-ratio:1;border-radius:4px;background:var(--gold);opacity:' + opacity + ';border:' + border + ';"></div>';
+  }
+
+  document.getElementById('profile-sheet-content').innerHTML =
+    // Level bar
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<span style="font-size:13px;font-weight:700;color:var(--t1);">Level ' + level + '</span>' +
+        '<span style="font-size:12px;color:var(--t3);">' + xpInLevel + ' / 100 XP</span>' +
+      '</div>' +
+      '<div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;">' +
+        '<div style="height:100%;width:' + xpInLevel + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:3px;transition:width .8s ease;"></div>' +
+      '</div>' +
+    '</div>' +
+    // Activity grid
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;">Activity</p>' +
+        '<p style="font-size:11px;color:var(--t3);">28 days</p>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">' + gridHTML + '</div>' +
+    '</div>' +
+    // Next medal
+    (next ?
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">' +
+        '<div style="width:38px;height:38px;border-radius:11px;background:' + next.color + '18;border:1px solid ' + next.color + '30;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + next.color + ';">' + icon(next.icon, 18) + '</div>' +
+        '<div><p style="font-size:13px;font-weight:700;color:var(--t1);">' + next.label + '</p><p style="font-size:11px;color:var(--t3);">' + next.desc + '</p></div>' +
+        '<span style="font-size:11px;color:' + next.color + ';font-weight:700;flex-shrink:0;margin-left:auto;">Next</span>' +
+      '</div>'
+      : '<div style="font-size:13px;color:var(--green);font-weight:700;text-align:center;padding:8px;">All medals earned!</div>'
+    );
+}
+
 function changeTrack() {
   user.rambamTrack = '';
   saveUser();
@@ -3054,7 +3196,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v65'); } catch{}
+  try { localStorage.removeItem('chitas_v66'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3102,7 +3244,6 @@ function switchTab(id) {
     b.style.borderColor = active ? '#F0A500' : 'var(--border)';
     b.style.color = active ? '#000' : 'var(--t2)';
   });
-  if (id === 'profile') { renderStats(); renderMedals(); }
   if (id === 'leaders') renderLeaders();
 }
 
@@ -3123,7 +3264,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v65', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v66', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
