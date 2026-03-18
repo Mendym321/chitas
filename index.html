@@ -42,6 +42,12 @@
   @keyframes pop { 0%{transform:scale(.7);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   @keyframes flamePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+  @keyframes checkPop { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.3)} 100%{transform:scale(1);opacity:1} }
+  @keyframes streakBurst { 0%{transform:scale(1)} 30%{transform:scale(1.18)} 60%{transform:scale(.95)} 100%{transform:scale(1)} }
+  @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+  @keyframes celebSlide { 0%{transform:translateY(100%);opacity:0} 20%{transform:translateY(0);opacity:1} 80%{transform:translateY(0);opacity:1} 100%{transform:translateY(100%);opacity:0} }
+  @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  #confetti-container { position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden; }
   @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
 
   .anim-up { animation: up .32s ease both; }
@@ -192,13 +198,43 @@ onAuthStateChanged(auth, user => {
   <div id="onboarding" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
     <div style="max-width:360px;width:100%;" class="anim-fadeup">
 
-      <!-- Step 1: Sign in -->
-      <div id="ob-step1">
-        <div style="width:58px;height:58px;border-radius:16px;background:var(--card);border:1px solid var(--hi);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
-          <svg width="28" height="28" viewBox="0 0 24 24" style="color:var(--gold)"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+      <!-- Step 0: Splash / value prop (shown first) -->
+      <div id="ob-step0">
+        <div style="text-align:center;margin-bottom:32px;">
+          <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,rgba(240,165,0,.2),rgba(240,165,0,.05));border:1px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+            <svg width="34" height="34" viewBox="0 0 24 24" style="color:var(--gold)"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+          </div>
+          <h1 style="font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:10px;">Chitas<br><span style="color:var(--gold)">Daily</span></h1>
+          <p style="color:var(--t2);font-size:15px;line-height:1.6;">Your daily Chitas companion.</p>
         </div>
-        <h1 style="font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:10px;">Chitas<br><span style="color:var(--gold)">Daily</span></h1>
-        <p style="color:var(--t2);font-size:14px;margin-bottom:36px;line-height:1.6;">Your daily learning companion.<br>Chumash · Tehillim · Tanya · Rambam</p>
+
+        <!-- Feature highlights -->
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px;">
+          <div style="display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:rgba(240,165,0,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">📜</div>
+            <div><p style="font-weight:700;font-size:14px;color:var(--t1);">Today's Learning</p><p style="font-size:12px;color:var(--t3);">Chumash, Tehillim, Tanya & Rambam</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,71,87,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">🔥</div>
+            <div><p style="font-weight:700;font-size:14px;color:var(--t1);">Build Your Streak</p><p style="font-size:12px;color:var(--t3);">Track consistency, earn medals & XP</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:rgba(74,158,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">🏆</div>
+            <div><p style="font-weight:700;font-size:14px;color:var(--t1);">Compete & Share</p><p style="font-size:12px;color:var(--t3);">Global leaderboard + weekly quiz</p></div>
+          </div>
+        </div>
+
+        <button onclick="document.getElementById('ob-step0').style.display='none';document.getElementById('ob-step1').style.display='block';" style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:12px;">
+          Get Started →
+        </button>
+        <p style="font-size:11px;color:var(--t3);text-align:center;">Free forever · Syncs across devices</p>
+      </div>
+
+      <!-- Step 1: Sign in -->
+      <div id="ob-step1" style="display:none;">
+        <button onclick="document.getElementById('ob-step0').style.display='block';document.getElementById('ob-step1').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
+        <h2 style="font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Sign in to save progress</h2>
+        <p style="color:var(--t2);font-size:14px;margin-bottom:28px;line-height:1.5;">Your streak, XP and medals sync<br>across all your devices.</p>
         <!-- Google sign-in -->
         <button id="ob-google-btn" onclick="signInWithGoogle()" style="width:100%;padding:14px;border-radius:12px;background:#fff;border:1.5px solid #ddd;color:#222;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;font-family:inherit;margin-bottom:12px;">
           <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>
@@ -256,19 +292,16 @@ onAuthStateChanged(auth, user => {
       </div>
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs — simplified to 3 -->
     <div style="display:flex;gap:6px;padding:18px 20px 0;">
       <button class="nav-tab active" data-tab="learn" onclick="switchTab('learn')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--gold);background:var(--gold);color:#000;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
-        <svg width="17" height="17" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Learn
-      </button>
-      <button class="nav-tab" data-tab="medals" onclick="switchTab('medals')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
-        <svg width="17" height="17" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9 2l3 6 3-6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>Medals
+        <svg width="17" height="17" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Learn
       </button>
       <button class="nav-tab" data-tab="leaders" onclick="switchTab('leaders')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
         <svg width="17" height="17" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M5 3h14v7a7 7 0 01-14 0V3z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M5 7H2a3 3 0 003 3M19 7h3a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Leaders
       </button>
-      <button class="nav-tab" data-tab="stats" onclick="switchTab('stats')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
-        <svg width="17" height="17" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>Stats
+      <button class="nav-tab" data-tab="profile" onclick="switchTab('profile')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
+        <svg width="17" height="17" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>Profile
       </button>
     </div>
 
@@ -351,10 +384,13 @@ onAuthStateChanged(auth, user => {
 
     </div>
 
-    <!-- ── MEDALS TAB ── -->
-    <div id="tab-medals" class="screen" style="padding:20px 20px 0;">
-      <p id="medals-count" style="font-size:13px;color:var(--t2);margin-bottom:18px;"><span style="color:var(--gold);font-weight:700;">0</span> of 6 earned</p>
-      <div id="medals-grid"></div>
+    <!-- ── PROFILE TAB (medals + stats merged) ── -->
+    <div id="tab-profile" class="screen" style="padding:20px 20px 0;">
+      <div id="stats-content"></div>
+      <div style="margin-top:20px;">
+        <p id="medals-count" style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;"><span id="medals-count-val" style="color:var(--gold);">0</span> medals earned</p>
+        <div id="medals-grid"></div>
+      </div>
     </div>
 
     <!-- ── LEADERS TAB ── -->
@@ -368,10 +404,7 @@ onAuthStateChanged(auth, user => {
       <p style="text-align:center;color:var(--t3);font-size:12px;margin-top:16px;padding:16px;">Global leaderboard coming soon</p>
     </div>
 
-    <!-- ── STATS TAB ── -->
-    <div id="tab-stats" class="screen" style="padding:20px 20px 0;">
-      <div id="stats-content"></div>
-    </div>
+
 
   </div><!-- /main-app -->
 
@@ -499,6 +532,8 @@ onAuthStateChanged(auth, user => {
 
 <!-- Toast -->
 <div id="toast"></div>
+<div id="confetti-container"></div>
+<div id="celeb-banner" style="display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:2000;background:linear-gradient(135deg,#F0A500,#FFB830);color:#000;padding:14px 28px;border-radius:20px;font-size:16px;font-weight:900;text-align:center;box-shadow:0 8px 32px rgba(240,165,0,.5);white-space:nowrap;"></div>
 
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -530,7 +565,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v47'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v49'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -622,7 +657,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v47', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v49', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -711,7 +746,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v47', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v49', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -913,8 +948,9 @@ async function init() {
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function updateHeader() {
   const hr = new Date().getHours();
+  const firstName = user.name.split(' ')[0];
   const tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('greeting').textContent = `${tod}, ${user.name.split(' ')[0]}`;
+  document.getElementById('greeting').textContent = tod + ', ' + firstName;
   const level = Math.floor(user.xp/100)+1;
   const pct = user.xp%100;
   document.getElementById('level-num').textContent = level;
@@ -1324,7 +1360,8 @@ function markDone(id) {
     user.total++;
     user.xp += 150;
     if (id==='tanya') user.tanyaCount++;
-    fire(`Day ${user.total} done · +${s.xp+150} XP`,'gold');
+    const dayMsgs = ['Day ' + user.total + ' complete', 'All done for today', user.streak + '-day streak'];
+    fire(dayMsgs[user.total % dayMsgs.length] + ' · +' + (s.xp+150) + ' XP', 'gold');
   } else {
     fire(`+${s.xp} XP`,'xp');
   }
@@ -1337,7 +1374,6 @@ function markDone(id) {
     tick.style.borderColor = '#1DB95455';
     tick.style.color = '#1DB954';
     tick.disabled = true;
-    tick.style.animation = 'pop .25s ease';
   }
   const card = document.getElementById(`card-${id}`);
   if (card) card.style.borderColor = s.color+'80';
@@ -1345,6 +1381,13 @@ function markDone(id) {
   if (ic) { ic.style.background=s.color+'33'; ic.style.borderColor=s.color+'66'; ic.style.color=s.color; }
   const lbl = card?.querySelector('p');
   if (lbl) lbl.style.color = s.color;
+
+  // Celebrations
+  celebrateSection(id);
+  if (allNow) {
+    setTimeout(celebrateAllDone, 300);
+    celebrateStreakMilestone(user.streak);
+  }
 
   updateStats();
   updateHeader();
@@ -1970,6 +2013,70 @@ async function shareWeeklyCard(score, total, method) {
   } catch(e) {
     // Final fallback — just open WhatsApp with text
     window.open('https://wa.me/?text=' + encodeURIComponent(fallbackText), '_blank');
+  }
+}
+
+// ── CELEBRATIONS ─────────────────────────────────────────────────────────────
+function launchConfetti(count=60) {
+  const container = document.getElementById('confetti-container');
+  if (!container) return;
+  container.innerHTML = '';
+  const colors = ['#F0A500','#1DB954','#4A9EFF','#A855F7','#FF4757','#FF6B35','#fff'];
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    const size = 6 + Math.random() * 8;
+    el.style.cssText = [
+      'position:absolute',
+      'left:' + (Math.random()*100) + '%',
+      'top:-20px',
+      'width:' + size + 'px',
+      'height:' + size + 'px',
+      'background:' + colors[Math.floor(Math.random()*colors.length)],
+      'border-radius:' + (Math.random()>0.5?'50%':'2px'),
+      'animation:confettiFall ' + (1.5+Math.random()*2) + 's ' + (Math.random()*0.8) + 's ease-in forwards',
+    ].join(';');
+    container.appendChild(el);
+  }
+  setTimeout(() => { if (container) container.innerHTML = ''; }, 4000);
+}
+
+function celebrateBanner(msg) {
+  const el = document.getElementById('celeb-banner');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.animation = 'celebSlide 3s ease forwards';
+  setTimeout(() => { el.style.display = 'none'; el.style.animation = ''; }, 3200);
+}
+
+function celebrateSection(sectionId) {
+  // Quick satisfying pop on the card
+  const card = document.getElementById('card-' + sectionId);
+  if (card) {
+    card.style.transition = 'transform .15s ease, box-shadow .3s ease';
+    card.style.transform = 'scale(1.02)';
+    card.style.boxShadow = '0 0 24px ' + (window.schedule?.[sectionId]?.color || '#F0A500') + '66';
+    setTimeout(() => { card.style.transform = ''; card.style.boxShadow = ''; }, 300);
+  }
+  // Tick animation
+  const tick = document.getElementById('tick-' + sectionId);
+  if (tick) tick.style.animation = 'checkPop .4s ease';
+}
+
+function celebrateAllDone() {
+  launchConfetti(80);
+  celebrateBanner('All done for today 🔥');
+  // Streak burst on header
+  const streakEl = document.getElementById('stat-streak');
+  if (streakEl) streakEl.style.animation = 'streakBurst .5s ease';
+  setTimeout(() => { if (streakEl) streakEl.style.animation = ''; }, 600);
+}
+
+function celebrateStreakMilestone(streak) {
+  const milestones = { 3:'3-day streak! You're building a habit 🔥', 7:'One week straight! 🔥🔥', 14:'Two weeks! You're unstoppable 💪', 30:'30 days! A whole month of learning 🏆', 100:'100 days! Legendary dedication ✡️' };
+  if (milestones[streak]) {
+    launchConfetti(100);
+    celebrateBanner(milestones[streak]);
   }
 }
 
@@ -2717,7 +2824,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v47'); } catch{}
+  try { localStorage.removeItem('chitas_v49'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2757,16 +2864,16 @@ function resetProgress() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(`tab-${id}`).classList.add('active');
+  const tab = document.getElementById('tab-' + id);
+  if (tab) tab.classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(b => {
     const active = b.dataset.tab === id;
     b.style.background = active ? '#F0A500' : 'var(--card)';
     b.style.borderColor = active ? '#F0A500' : 'var(--border)';
     b.style.color = active ? '#000' : 'var(--t2)';
   });
-  if (id==='stats') renderStats();
-  if (id==='medals') renderMedals();
-  if (id==='leaders') renderLeaders();
+  if (id === 'profile') { renderStats(); renderMedals(); }
+  if (id === 'leaders') renderLeaders();
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -2786,7 +2893,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v47', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v49', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
