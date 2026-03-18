@@ -435,7 +435,7 @@ onAuthStateChanged(auth, user => {
         <button id="lb-tab-streak" onclick="switchLb('streak')" style="flex:1;padding:8px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:var(--t3);transition:all .2s;">🔥 Streak</button>
       </div>
       <div id="leaders-list"></div>
-      <p style="text-align:center;color:var(--t3);font-size:12px;margin-top:16px;padding:16px;">Global leaderboard coming soon</p>
+      
     </div>
 
 
@@ -615,7 +615,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v61'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v63'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -677,13 +677,7 @@ const WORLDS = [
 // Flat list for backward compat
 const MEDALS = WORLDS.flatMap(w => w.medals.map(m => ({...m, world:w.id, worldColor:w.color})));
 
-const LB_MOCK = [
-  {name:'Menachem M.',city:'Crown Heights',streak:47,total:312},
-  {name:'Rivka L.',   city:'Boca Raton',   streak:33,total:201},
-  {name:'Yosef B.',   city:'London',       streak:28,total:189},
-  {name:'Chana T.',   city:'Melbourne',    streak:21,total:156},
-  {name:'Moshe K.',   city:'Montreal',     streak:19,total:134},
-];
+// Leaderboard uses live Firebase data
 
 const SVG_ICONS = {
   scroll: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.8" fill="none"/>',
@@ -707,7 +701,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v61', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v63', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -801,7 +795,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v61', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v63', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -991,7 +985,7 @@ async function init() {
                   sefariaRef: rambamRef },
     };
 
-    renderSections();
+    renderSectionsForOffset(dateISO(new Date()));
   } catch(e) {
     document.getElementById('skeletons').style.display = 'none';
     document.getElementById('api-error').style.display = 'flex';
@@ -1062,158 +1056,6 @@ function dateISO(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function checkCatchupNeeded() {
-  // Look back up to 3 days for any day with incomplete sections
-  if (!user.pastDone) user.pastDone = {};
-  const ids = ['chumash','tehillim','tanya','rambam'];
-  const banner = document.getElementById('catchup-banner');
-  if (!banner) return;
-
-  const missed = [];
-  for (let i = 1; i <= 3; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const iso = dateISO(d);
-    const past = user.pastDone[iso] || {};
-    const allDone = ids.every(id => past[id]);
-    if (!allDone) {
-      const pd = new Date(); pd.setDate(pd.getDate() - i);
-      const dayLabel = i === 1 ? 'Yesterday' : pd.toLocaleDateString('en-US', { weekday: 'long' });
-      missed.push({ iso, label: dayLabel, done: past });
-    }
-  }
-
-  if (!missed.length) {
-    banner.style.display = 'none';
-    return;
-  }
-
-  // Show banner for most recent missed day
-  const m = missed[0];
-  const ids2 = ['chumash','tehillim','tanya','rambam'];
-  const doneCount = ids2.filter(id => m.done[id]).length;
-  banner.style.display = 'block';
-  banner.innerHTML = `
-    <div style="background:rgba(240,165,0,.08);border:1.5px solid rgba(240,165,0,.25);border-radius:14px;padding:12px 14px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div>
-          <p style="font-size:12px;font-weight:800;color:var(--gold);margin-bottom:2px;">
-            ${missed.length > 1 ? missed.length + ' days' : m.label} to catch up
-          </p>
-          <p style="font-size:11px;color:var(--t3);">${doneCount}/4 done ${m.label.toLowerCase()}</p>
-        </div>
-        <button onclick="openCatchup(this.dataset.iso)" data-iso="${m.iso}" style="padding:8px 14px;border-radius:10px;background:var(--gold);border:none;color:#000;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">Catch up</button>
-      </div>
-      ${missed.length > 1 ? '<div style="display:flex;gap:6px;margin-top:10px;">' + missed.map(mx=>'<button onclick="openCatchup(this.dataset.iso)" data-iso="' + mx.iso + '" style="flex:1;padding:6px 4px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">' + mx.label + '</button>').join('') + '</div>' : ''}
-    </div>`;
-}
-
-function openCatchup(iso) {
-  catchupDate = iso;
-  const d = new Date(iso + 'T12:00:00');
-  const dayLabel = (() => {
-    const diff = Math.round((new Date().setHours(0,0,0,0) - d.setHours(0,0,0,0)) / 86400000);
-    if (diff === 1) return 'Yesterday';
-  const pd2 = new Date(today); pd2.setDate(pd2.getDate() - diff);
-  return pd2.toLocaleDateString('en-US', { weekday: 'long' });
-  })();
-  document.getElementById('sections-day-label').textContent = dayLabel + "'s Sections";
-  document.getElementById('sections-day-label').style.color = 'var(--gold)';
-  // Add back-to-today button
-  const header = document.getElementById('sections-day-label').parentElement;
-  if (!document.getElementById('back-to-today')) {
-    const btn = document.createElement('button');
-    btn.id = 'back-to-today';
-    btn.textContent = '← Today';
-    btn.style.cssText = 'padding:5px 10px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;';
-    btn.onclick = closeCatchup;
-    header.insertBefore(btn, header.firstChild);
-  }
-  renderCatchupSections(iso);
-}
-
-function closeCatchup() {
-  catchupDate = null;
-  document.getElementById('sections-day-label').textContent = "Today's Sections";
-  document.getElementById('sections-day-label').style.color = '';
-  const backBtn = document.getElementById('back-to-today');
-  if (backBtn) backBtn.remove();
-  renderSections();
-  checkCatchupNeeded();
-}
-
-function renderCatchupSections(iso) {
-  document.getElementById('skeletons').style.display = 'none';
-  const list = document.getElementById('sections-list');
-  list.style.display = 'block';
-  if (!schedule) return;
-  if (!user.pastDone) user.pastDone = {};
-  if (!user.pastQuizDone) user.pastQuizDone = {};
-  const pastDay = user.pastDone[iso] || {};
-  const pastQuiz = user.pastQuizDone[iso] || {};
-  const sections = Object.values(schedule);
-
-  list.innerHTML = sections.map((s, i) => {
-    const done = !!pastDay[s.id];
-    return `
-    <div id="card-past-${s.id}" onclick="openChabadPanel('${s.id}')" style="background:var(--card);border:1.5px solid ${done?s.color+'80':'var(--border)'};border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:${i*.06}s;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='var(--card)'">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div style="width:44px;height:44px;border-radius:13px;background:${done?s.color+'33':'var(--surface)'};border:1px solid ${done?s.color+'66':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${done?s.color:'var(--t3)'};pointer-events:none;">
-          ${icon(s.icon,21)}
-        </div>
-        <div style="flex:1;min-width:0;pointer-events:none;">
-          <p style="font-weight:700;font-size:15px;color:${done?s.color:'var(--t1)'};margin-bottom:2px;">${s.label}</p>
-          <p style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.subtitle}</p>
-        </div>
-        <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);pointer-events:none;margin-right:2px;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">
-          <button onclick="markDonePast('${s.id}','${iso}')" style="width:36px;height:36px;border-radius:10px;background:${done?s.color+'28':'var(--surface)'};border:1px solid ${done?s.color+'55':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${done?'#1DB954':'var(--t3)'};" ${done?'disabled':''}>
-            ${icon('check',18)}
-          </button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function markDonePast(sectionId, iso) {
-  if (!user.pastDone) user.pastDone = {};
-  if (!user.pastDone[iso]) user.pastDone[iso] = {};
-  if (user.pastDone[iso][sectionId]) return;
-
-  const s = schedule[sectionId];
-  user.pastDone[iso][sectionId] = true;
-  user.xp += s.xp;
-
-  const ids = ['chumash','tehillim','tanya','rambam'];
-  const allNow = ids.every(id => user.pastDone[iso][id]);
-  if (allNow) {
-    user.streak++;
-    user.total++;
-    user.xp += 150;
-    // Patch streak properly — if this was yesterday and streak was broken
-    fire(`Day patched! +${s.xp+150} XP 🔥`, 'gold');
-  } else {
-    fire(`+${s.xp} XP`, 'xp');
-  }
-  saveUser();
-  updateStats();
-  updateHeader();
-  updateProgressRing();
-  renderMedals();
-  renderStats();
-  const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
-  renderSectionsForOffset(dateISO(d2));
-}
-
-// ── DAY NAVIGATION ───────────────────────────────────────────────────────────
-function navDay(delta) {
-  const newOffset = dayOffset + delta;
-  if (newOffset > 0) return; // can't go to future
-  if (newOffset < -MAX_DAYS_BACK) return; // cap at max days back
-  dayOffset = newOffset;
-  updateDayNav();
-  rebuildScheduleForOffset();
-}
 
 function updateDayNav() {
   const d = new Date();
@@ -1313,8 +1155,9 @@ async function rebuildScheduleForOffset() {
       s.subtitle = p?.tehTitle || 'Daily Psalms';
     }
     if (s.id === 'tanya') {
-      // Tanya subtitle stays as the Hebrew date which we already have
-      s.subtitle = tdateLong || 'Tanya Yomi';
+      // Hebrew date without the year e.g. "3 Tammuz"
+      const hebrewNoYear = hd ? hd.hd + ' ' + hd.hm : 'Tanya Yomi';
+      s.subtitle = hebrewNoYear;
     }
     if (s.id === 'rambam') {
       s.subtitle = p?.rambamTitle || 'Daily Rambam';
@@ -1485,7 +1328,6 @@ function markDone(id) {
     user.total++;
     user.xp += 150;
     user.perfectDays = (user.perfectDays || 0) + 1;
-    if (id==='tanya') user.tanyaCount++;
     const dayMsgs = ['Day ' + user.total + ' complete', 'All done for today', user.streak + '-day streak'];
     fire(dayMsgs[user.total % dayMsgs.length] + ' · +' + (s.xp+150) + ' XP', 'gold');
   } else {
@@ -1877,7 +1719,7 @@ function showWeeklyResults() {
           Share
         </button>
       </div>
-      <button onclick="closeWeeklyQuiz();renderWeeklyQuizCard();renderSections();" style="width:100%;padding:13px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done ✓</button>
+      <button onclick="closeWeeklyQuiz();renderWeeklyQuizCard();renderSectionsForOffset(dateISO(new Date()));" style="width:100%;padding:13px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done ✓</button>
     </div>`;
   // Draw the share card preview after DOM updates
   setTimeout(() => renderSharePreview(score, total), 80);
@@ -2604,7 +2446,7 @@ function showQuizResults() {
 
   // Attach handlers AFTER innerHTML is set
   if (!alreadyDone) document.getElementById('retry-btn').onclick = () => retryQuiz(sid);
-  document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSections(); };
+  document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSectionsForOffset(dateISO(new Date())); };
 }
 
 function retryQuiz(sid) {
@@ -3186,7 +3028,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v61'); } catch{}
+  try { localStorage.removeItem('chitas_v63'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3220,7 +3062,7 @@ function resetProgress() {
   renderMedals();
   renderLeaders();
   renderStats();
-  if (schedule) renderSections();
+  if (schedule) renderSectionsForOffset(dateISO(new Date()));
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
@@ -3255,7 +3097,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v61', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v63', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
