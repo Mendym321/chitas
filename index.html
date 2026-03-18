@@ -342,8 +342,8 @@ onAuthStateChanged(auth, user => {
     <!-- ── LEARN TAB ── -->
     <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
       <!-- Progress ring -->
-      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;transition:border-color .4s;" id="progress-card">
-        <svg width="58" height="58" viewBox="0 0 58 58" style="flex-shrink:0;">
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:16px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;transition:border-color .4s;" id="progress-card">
+        <svg width="54" height="54" viewBox="0 0 58 58" style="flex-shrink:0;">
           <circle cx="29" cy="29" r="23" fill="none" stroke="var(--border)" stroke-width="5"/>
           <circle id="ring-circle" cx="29" cy="29" r="23" fill="none" stroke="var(--gold)" stroke-width="5"
             stroke-dasharray="0 144.5" stroke-linecap="round"
@@ -351,32 +351,32 @@ onAuthStateChanged(auth, user => {
           <text id="ring-text" x="29" y="34" text-anchor="middle" fill="var(--t1)" font-size="13" font-weight="800" font-family="DM Sans,sans-serif">0/4</text>
         </svg>
         <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;">
             <p id="progress-title" style="font-weight:700;font-size:15px;color:var(--t1);">Fetching schedule…</p>
             <div id="header-avatar"></div>
           </div>
-          <p id="progress-sub" style="font-size:12px;color:var(--t2);">Connecting to Hebcal…</p>
+          <p id="progress-sub" style="font-size:12px;color:var(--t2);margin-bottom:6px;">Connecting to Hebcal…</p>
+          <!-- Streak + XP inline — compact -->
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
+              <span id="stat-streak-inline" style="font-size:12px;font-weight:800;color:var(--t1);">0</span>
+              <span style="font-size:11px;color:var(--t3);">day streak</span>
+            </div>
+            <span style="color:var(--border);font-size:11px;">·</span>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>
+              <span id="stat-xp-inline" style="font-size:12px;font-weight:800;color:var(--t1);">0</span>
+              <span style="font-size:11px;color:var(--t3);">XP</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Stats row -->
-      <div class="grid-3" style="margin-bottom:20px;">
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 8px;text-align:center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--red);margin:0 auto;display:block;"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z" fill="currentColor"/></svg>
-          <p id="stat-streak" style="font-size:22px;font-weight:800;color:var(--t1);line-height:1;margin:6px 0 3px;letter-spacing:-.5px;">0</p>
-          <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Streak</p>
-        </div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 8px;text-align:center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--gold);margin:0 auto;display:block;"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill="currentColor"/></svg>
-          <p id="stat-days" style="font-size:22px;font-weight:800;color:var(--t1);line-height:1;margin:6px 0 3px;letter-spacing:-.5px;">0</p>
-          <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Days</p>
-        </div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 8px;text-align:center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--purple);margin:0 auto;display:block;"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
-          <p id="stat-xp" style="font-size:22px;font-weight:800;color:var(--t1);line-height:1;margin:6px 0 3px;letter-spacing:-.5px;">0</p>
-          <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">XP</p>
-        </div>
-      </div>
+      <!-- Hidden stat elements still needed for JS updates -->
+      <span id="stat-streak" style="display:none;">0</span>
+      <span id="stat-days" style="display:none;">0</span>
+      <span id="stat-xp" style="display:none;">0</span>
 
       <!-- API error -->
       <div id="api-error" style="display:none;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.25);border-radius:14px;padding:12px 16px;margin-bottom:16px;gap:10px;align-items:flex-start;color:var(--red);">
@@ -397,7 +397,7 @@ onAuthStateChanged(auth, user => {
           <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
-      <a id="hebcal-link" href="https://www.chabad.org/dailystudy" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:none;font-weight:700;display:none;align-items:center;gap:3px;margin-bottom:10px;">via Chabad.org ↗</a>
+      <span id="hebcal-link" style="display:none;"></span>
 
       <!-- Skeleton loaders -->
       <div id="skeletons">
@@ -421,8 +421,7 @@ onAuthStateChanged(auth, user => {
     <!-- ── PROFILE TAB (medals + stats merged) ── -->
     <div id="tab-profile" class="screen" style="padding:20px 20px 0;">
       <div id="stats-content"></div>
-      <div style="margin-top:20px;">
-        <p id="medals-count" style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;"><span id="medals-count-val" style="color:var(--gold);">0</span> medals earned</p>
+      <div style="margin-top:4px;">
         <div id="medals-grid"></div>
       </div>
     </div>
@@ -431,8 +430,12 @@ onAuthStateChanged(auth, user => {
     <div id="tab-leaders" class="screen" style="padding:20px 20px 0;">
       <!-- Tab switcher -->
       <div style="display:flex;gap:8px;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:4px;">
-        <button id="lb-tab-xp" onclick="switchLb('xp')" style="flex:1;padding:8px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--gold);color:#000;transition:all .2s;">⭐ XP</button>
-        <button id="lb-tab-streak" onclick="switchLb('streak')" style="flex:1;padding:8px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:var(--t3);transition:all .2s;">🔥 Streak</button>
+        <button id="lb-tab-xp" onclick="switchLb('xp')" style="flex:1;padding:8px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--gold);color:#000;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>XP
+        </button>
+        <button id="lb-tab-streak" onclick="switchLb('streak')" style="flex:1;padding:8px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:var(--t3);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>Streak
+        </button>
       </div>
       <div id="leaders-list"></div>
       
@@ -615,7 +618,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v63'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v64'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -701,7 +704,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v63', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v64', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -795,7 +798,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v63', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v64', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1013,9 +1016,15 @@ function updateHeader() {
 }
 
 function updateStats() {
+  // Hidden elements (kept for any legacy references)
   document.getElementById('stat-streak').textContent = user.streak;
   document.getElementById('stat-days').textContent   = user.total;
   document.getElementById('stat-xp').textContent     = user.xp;
+  // Inline elements in progress card
+  const si = document.getElementById('stat-streak-inline');
+  const xi = document.getElementById('stat-xp-inline');
+  if (si) si.textContent = user.streak;
+  if (xi) xi.textContent = user.xp;
 }
 
 function renderSections() {
@@ -1039,7 +1048,7 @@ function renderSections() {
         <!-- Chevron — signals tappability -->
         <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);pointer-events:none;margin-right:2px;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">
-          ${s.quizzable ? '<button onclick="openQuiz(\'' + s.id + '\')" style="width:36px;height:36px;border-radius:10px;background:' + ((user.quizDone||{})[s.id]?'rgba(168,85,247,.2)':'var(--surface)') + ';border:1px solid ' + ((user.quizDone||{})[s.id]?'rgba(168,85,247,.5)':'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + ((user.quizDone||{})[s.id]?'#A855F7':'var(--t3)') + ';" title="Quiz">' + icon('quiz',18) + '</button>' : ''}
+          
           <button id="tick-${s.id}" onclick="showConfirm('${s.id}', false)" style="width:36px;height:36px;border-radius:10px;background:${done?s.color+'28':'var(--surface)'};border:1px solid ${done?s.color+'55':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${done?'#1DB954':'var(--t3)'};" ${done?'disabled':''}>
             ${icon('check',18)}
           </button>
@@ -1051,9 +1060,17 @@ function renderSections() {
   updateProgressRing();
 }
 
-// ── CATCH-UP ──────────────────────────────────────────────────────────────────
 function dateISO(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function navDay(delta) {
+  const newOffset = dayOffset + delta;
+  if (newOffset > 0) return;
+  if (newOffset < -MAX_DAYS_BACK) return;
+  dayOffset = newOffset;
+  updateDayNav();
+  rebuildScheduleForOffset();
 }
 
 
@@ -1208,7 +1225,7 @@ function renderSectionsForOffset(iso) {
     const cardStyle = 'background:var(--card);border:1.5px solid ' + (done ? s.color+'80' : 'var(--border)') + ';border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:' + (i*.06) + 's;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;';
     const iconStyle = 'width:44px;height:44px;border-radius:13px;background:' + (done ? s.color+'33' : 'var(--surface)') + ';border:1px solid ' + (done ? s.color+'66' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + (done ? s.color : 'var(--t3)') + ';pointer-events:none;';
     const quizDoneToday = isToday && (user.quizDone||{})[s.id];
-    const quizBtn = s.quizzable ? '<button onclick="openQuiz(\'' + s.id + '\')" style="width:36px;height:36px;border-radius:10px;background:' + (quizDoneToday ? 'rgba(168,85,247,.2)' : 'var(--surface)') + ';border:1px solid ' + (quizDoneToday ? 'rgba(168,85,247,.5)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (quizDoneToday ? '#A855F7' : 'var(--t3)') + ';">' + icon('quiz',18) + '</button>' : '';
+    const quizBtn = ''; // Quiz accessed from reader bottom bar, not card
     const tickAction = isToday
       ? (done ? 'unmarkDone(\'' + s.id + '\')' : 'showConfirm(\'' + s.id + '\',false)')
       : 'markDonePast(\'' + s.id + '\',\'' + iso + '\')';
@@ -2844,12 +2861,20 @@ async function renderLeaders() {
   }
 
   if (!all.length) {
-    list.innerHTML = '<p style="text-align:center;color:var(--t3);font-size:13px;padding:32px 0;">No data yet — be the first! 🏆</p>';
+    list.innerHTML = '<p style="text-align:center;color:var(--t3);font-size:13px;padding:32px 0;">No one here yet — you could be first.</p>';
     return;
   }
 
+  const myRank = all.findIndex(p => p.uid === user.uid);
+  const rankHeader = myRank >= 0
+    ? '<div style="background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">' +
+      '<span style="font-size:13px;color:var(--t2);">Your rank</span>' +
+      '<span style="font-size:16px;font-weight:900;color:var(--gold);">#' + (myRank+1) + '</span>' +
+      '</div>'
+    : '';
+
   const podium = ['#F0A500','#C0C0C0','#CD7F32'];
-  list.innerHTML = all.map((p, i) => {
+  list.innerHTML = rankHeader + all.map((p, i) => {
     const isMe = p.uid === user.uid;
     return `<div style="display:flex;align-items:center;gap:10px;background:${isMe?'rgba(240,165,0,.1)':'var(--card)'};border:1.5px solid ${isMe?'rgba(240,165,0,.4)':'var(--border)'};border-radius:14px;padding:11px 13px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${i*.04}s;">
       <div style="width:20px;text-align:center;font-size:12px;font-weight:800;color:${podium[i]||'var(--t3)'};flex-shrink:0;">${i+1}</div>
@@ -3028,7 +3053,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v63'); } catch{}
+  try { localStorage.removeItem('chitas_v64'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3097,7 +3122,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v63', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v64', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
