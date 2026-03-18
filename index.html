@@ -615,7 +615,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v59'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v60'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -707,7 +707,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v59', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v60', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -801,7 +801,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v59', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v60', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1076,7 +1076,8 @@ function checkCatchupNeeded() {
     const past = user.pastDone[iso] || {};
     const allDone = ids.every(id => past[id]);
     if (!allDone) {
-      const dayLabel = i === 1 ? 'Yesterday' : i === 2 ? '2 days ago' : '3 days ago';
+      const pd = new Date(); pd.setDate(pd.getDate() - i);
+      const dayLabel = i === 1 ? 'Yesterday' : pd.toLocaleDateString('en-US', { weekday: 'long' });
       missed.push({ iso, label: dayLabel, done: past });
     }
   }
@@ -1111,7 +1112,9 @@ function openCatchup(iso) {
   const d = new Date(iso + 'T12:00:00');
   const dayLabel = (() => {
     const diff = Math.round((new Date().setHours(0,0,0,0) - d.setHours(0,0,0,0)) / 86400000);
-    return diff === 1 ? 'Yesterday' : diff === 2 ? '2 days ago' : '3 days ago';
+    if (diff === 1) return 'Yesterday';
+  const pd2 = new Date(today); pd2.setDate(pd2.getDate() - diff);
+  return pd2.toLocaleDateString('en-US', { weekday: 'long' });
   })();
   document.getElementById('sections-day-label').textContent = dayLabel + "'s Sections";
   document.getElementById('sections-day-label').style.color = 'var(--gold)';
@@ -1213,15 +1216,17 @@ function navDay(delta) {
 }
 
 function updateDayNav() {
-  const labels = ['Today', 'Yesterday', '2 days ago', '3 days ago', '4 days ago'];
-  const label = labels[Math.abs(dayOffset)] || Math.abs(dayOffset) + ' days ago';
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  let label;
+  if (dayOffset === 0) label = 'Today';
+  else if (dayOffset === -1) label = 'Yesterday';
+  else label = d.toLocaleDateString('en-US', { weekday: 'long' }); // Monday, Tuesday etc
   document.getElementById('day-nav-label').textContent = label;
   document.getElementById('day-nav-label').style.color = dayOffset === 0 ? 'var(--t1)' : 'var(--gold)';
 
-  // Date subtitle
-  const d = new Date();
-  d.setDate(d.getDate() + dayOffset);
-  const dateStr = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+  // Date subtitle — e.g. "Mar 15"
+  const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   document.getElementById('day-nav-date').textContent = dateStr;
 
   // Prev arrow — disable at max
@@ -1248,6 +1253,10 @@ async function rebuildScheduleForOffset() {
   const iso = dateISO(d);
   const civDate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
   const base = 'https://www.chabad.org/dailystudy';
+
+  // Reset subtitles to loading state while we fetch
+  Object.values(schedule).forEach(s => { s.subtitle = 'Loading...'; });
+  renderSectionsForOffset(iso);
 
   // Fetch Hebcal for that date
   const isoDate = iso;
@@ -2153,7 +2162,8 @@ function celebrateSection(sectionId) {
 }
 
 // ── MOMENT MODAL SYSTEM ─────────────────────────────────────────────────────
-function showMoment({ icon, title, sub, xp, btns, color }) {
+function showMoment(opts) {
+  const { icon, title, sub, xp, btns, color } = opts;
   const c = color || '#F0A500';
   // Icon
   const iconEl = document.getElementById('moment-icon');
@@ -2187,6 +2197,25 @@ function showMoment({ icon, title, sub, xp, btns, color }) {
   requestAnimationFrame(() => {
     document.getElementById('moment-card').style.animation = 'momentSlide .45s cubic-bezier(.22,1,.36,1)';
   });
+
+  // Number ticker for level up
+  if (opts.levelTicker) {
+    const titleEl = document.getElementById('moment-title');
+    const { from, to } = opts.levelTicker;
+    let current = from;
+    titleEl.textContent = 'Level ' + from;
+    setTimeout(() => {
+      const interval = setInterval(() => {
+        current++;
+        titleEl.style.animation = 'none';
+        requestAnimationFrame(() => {
+          titleEl.style.animation = 'tickerEnterDown .2s ease';
+          titleEl.textContent = 'Level ' + current;
+        });
+        if (current >= to) clearInterval(interval);
+      }, 180);
+    }, 600);
+  }
 }
 
 function closeMoment() {
@@ -2237,9 +2266,19 @@ function celebrateAllDone() {
 function checkLevelUp(xpBefore, xpAfter) {
   const levelBefore = Math.floor(xpBefore / 100) + 1;
   const levelAfter  = Math.floor(xpAfter  / 100) + 1;
-  if (levelAfter > levelBefore) {
-    setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>', title: 'Level ' + levelAfter, sub: levelAfter < 5 ? 'Keep at it.' : levelAfter < 10 ? 'You know what you are doing.' : 'Seriously impressive.', color: '#F0A500', btns: [{ label: 'Keep learning', primary: true }] }), 400);
-  }
+  if (levelAfter <= levelBefore) return;
+  launchConfetti(60);
+  setTimeout(() => {
+    // Show level up modal with number ticker
+    showMoment({
+      icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>',
+      title: 'Level up',
+      sub: levelAfter < 5 ? 'Keep at it.' : levelAfter < 10 ? 'You know what you are doing.' : 'Seriously impressive.',
+      color: '#F0A500',
+      btns: [{ label: 'Keep learning', primary: true }],
+      levelTicker: { from: levelBefore, to: levelAfter },
+    });
+  }, 400);
 }
 
 // ── 4. WELCOME BACK ──────────────────────────────────────────────────────────
@@ -3117,7 +3156,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v59'); } catch{}
+  try { localStorage.removeItem('chitas_v60'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3186,7 +3225,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v59', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v60', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
