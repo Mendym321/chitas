@@ -41,6 +41,8 @@
   @keyframes up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
   @keyframes pop { 0%{transform:scale(.7);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes tickerExitUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-20px) scale(.93)} }
+  @keyframes tickerEnterDown { 0%{opacity:0;transform:translateY(18px) scale(.95)} 100%{opacity:1;transform:translateY(0) scale(1)} }
   @keyframes spinSlow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   @keyframes logoReveal { 0%{transform:scale(.4) rotate(-20deg);opacity:0} 70%{transform:scale(1.08) rotate(2deg)} 100%{transform:scale(1) rotate(0deg);opacity:1} }
   @keyframes titleReveal { 0%{transform:translateY(24px);opacity:0} 100%{transform:translateY(0);opacity:1} }
@@ -242,7 +244,11 @@ onAuthStateChanged(auth, user => {
               Chitas<br>
               <span style="background:linear-gradient(135deg,#F0A500 0%,#FFB830 50%,#F0A500 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;">Daily</span>
             </h1>
-            <p style="color:var(--t2);font-size:14px;line-height:1.6;">Your daily Chitas — track, learn, and grow.</p>
+            <!-- Ticker -->
+            <div style="height:48px;display:flex;align-items:center;justify-content:center;margin-top:4px;overflow:hidden;position:relative;">
+              <p id="ob-ticker-word" style="font-size:22px;font-weight:800;color:var(--t1);position:absolute;transition:none;"></p>
+            </div>
+            <p id="ob-ticker-sub" style="font-size:13px;color:var(--t3);margin-top:2px;min-height:18px;transition:opacity .25s;"></p>
           </div>
         </div>
 
@@ -292,7 +298,7 @@ onAuthStateChanged(auth, user => {
         </div>
 
         <!-- CTA button — glows, pulses subtly -->
-        <button onclick="document.getElementById('ob-step0').style.display='none';document.getElementById('ob-step1').style.display='block';"
+        <button onclick="document.getElementById('ob-step0').style.display='none';document.getElementById('ob-step1').style.display='block';stopObTicker();"
           style="width:100%;padding:17px;border-radius:16px;background:linear-gradient(135deg,#F0A500,#E09000);border:none;color:#000;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:11px;animation:up .5s 1.08s ease both, glowPulse 3s 1.6s ease infinite;letter-spacing:-.2px;">
           Get Started
         </button>
@@ -635,7 +641,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v52'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v53'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -727,7 +733,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v52', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v53', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -821,7 +827,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v52', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v53', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1347,8 +1353,11 @@ function renderSectionsForOffset(iso) {
     const iconStyle = 'width:44px;height:44px;border-radius:13px;background:' + (done ? s.color+'33' : 'var(--surface)') + ';border:1px solid ' + (done ? s.color+'66' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + (done ? s.color : 'var(--t3)') + ';pointer-events:none;';
     const quizDoneToday = isToday && (user.quizDone||{})[s.id];
     const quizBtn = s.quizzable ? '<button onclick="openQuiz(\'' + s.id + '\')" style="width:36px;height:36px;border-radius:10px;background:' + (quizDoneToday ? 'rgba(168,85,247,.2)' : 'var(--surface)') + ';border:1px solid ' + (quizDoneToday ? 'rgba(168,85,247,.5)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (quizDoneToday ? '#A855F7' : 'var(--t3)') + ';">' + icon('quiz',18) + '</button>' : '';
-    const tickAction = isToday ? 'showConfirm(\'' + s.id + '\',false)' : 'markDonePast(\'' + s.id + '\',\'' + iso + '\')';
-    const tickBtn = '<button id="tick-' + s.id + '" onclick="' + tickAction + '" style="width:36px;height:36px;border-radius:10px;background:' + (done ? s.color+'28' : 'var(--surface)') + ';border:1px solid ' + (done ? s.color+'55' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (done ? '#1DB954' : 'var(--t3)') + ';" ' + (done ? 'disabled' : '') + '>' + icon('check',18) + '</button>';
+    const tickAction = isToday
+      ? (done ? 'unmarkDone(\'' + s.id + '\')' : 'showConfirm(\'' + s.id + '\',false)')
+      : 'markDonePast(\'' + s.id + '\',\'' + iso + '\')';"
+    const tickTitle = done && isToday ? 'Undo' : '';
+    const tickBtn = '<button id="tick-' + s.id + '" onclick="' + tickAction + '" title="' + tickTitle + '" style="width:36px;height:36px;border-radius:10px;background:' + (done ? (isToday ? '#1DB95422' : s.color+'28') : 'var(--surface)') + ';border:1px solid ' + (done ? (isToday ? '#1DB95455' : s.color+'55') : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (done ? '#1DB954' : 'var(--t3)') + ';transition:all .15s;">' + icon('check',18) + '</button>';
     return '<div id="card-' + s.id + '" onclick="openChabadPanel(\'' + s.id + '\')" style="' + cardStyle + '" onmouseenter="this.style.background=\'var(--hi)\'" onmouseleave="this.style.background=\'var(--card)\'" onmousedown="this.style.transform=\'scale(.985)\'" onmouseup="this.style.transform=\'\'" ontouchstart="this.style.background=\'var(--hi)\'" ontouchend="this.style.background=\'var(--card)\';this.style.transform=\'\'">' +
       '<div style="display:flex;align-items:center;gap:14px;">' +
         '<div id="icon-' + s.id + '" style="' + iconStyle + '">' + icon(s.icon,21) + '</div>' +
@@ -1419,6 +1428,33 @@ function closeConfirm() {
   document.getElementById('confirm-modal').style.display = 'none';
   _confirmSectionId = null;
   _confirmCallback = null;
+}
+
+function unmarkDone(id) {
+  if (!user.done[id] || !schedule) return;
+  const s = schedule[id];
+  // Deduct XP — but don't go below 0
+  user.xp = Math.max(0, user.xp - s.xp);
+  // If all were done (streak was counted), undo that too
+  const ids = ['chumash','tehillim','tanya','rambam'];
+  const wasAllDone = ids.every(x => user.done[x]);
+  if (wasAllDone) {
+    user.streak = Math.max(0, user.streak - 1);
+    user.total  = Math.max(0, user.total - 1);
+    user.xp     = Math.max(0, user.xp - 150);
+  }
+  user.done[id] = false;
+  user.lastDate = new Date().toDateString();
+  saveUser();
+  updateStats();
+  updateHeader();
+  updateProgressRing();
+  renderMedals();
+  renderStats();
+  // Re-render sections
+  const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
+  renderSectionsForOffset(dateISO(d2));
+  fire('Unmarked ' + s.label, 'xp');
 }
 
 function markDone(id) {
@@ -2154,6 +2190,50 @@ function celebrateStreakMilestone(streak) {
     celebrateBanner(milestones[streak]);
   }
 }
+
+// ── LANDING TICKER ───────────────────────────────────────────────────────────
+let _obTickerTimer = null;
+let _obTickerIdx = 0;
+const OB_TICKER_ITEMS = [
+  { word: 'Learn',    gold: false, sub: 'Chumash, Tehillim, Tanya & Rambam' },
+  { word: 'Streak',  gold: false, sub: 'Build a daily habit. Watch it grow.' },
+  { word: 'Quiz',    gold: true,  sub: 'Test yourself. Lock in what you learned.' },
+  { word: 'Compete', gold: false, sub: 'See where you rank on the leaderboard.' },
+  { word: 'Share',   gold: false, sub: 'Challenge friends with your weekly score.' },
+];
+
+function runObTicker() {
+  const wordEl = document.getElementById('ob-ticker-word');
+  const subEl  = document.getElementById('ob-ticker-sub');
+  if (!wordEl || !subEl) return;
+
+  const item = OB_TICKER_ITEMS[_obTickerIdx];
+
+  // Exit
+  wordEl.style.animation = 'tickerExitUp .3s cubic-bezier(.4,0,1,1) forwards';
+  subEl.style.opacity = '0';
+
+  setTimeout(() => {
+    wordEl.textContent = item.word;
+    wordEl.style.color = item.gold ? '#F0A500' : 'var(--t1)';
+    wordEl.style.animation = 'tickerEnterDown .3s cubic-bezier(0,0,.2,1) forwards';
+    subEl.textContent = item.sub;
+    subEl.style.opacity = '1';
+    _obTickerIdx = (_obTickerIdx + 1) % OB_TICKER_ITEMS.length;
+  }, 280);
+}
+
+function startObTicker() {
+  runObTicker();
+  _obTickerTimer = setInterval(runObTicker, 2200);
+}
+
+function stopObTicker() {
+  clearInterval(_obTickerTimer);
+}
+
+// Start ticker after landing animates in
+setTimeout(startObTicker, 1000);
 
 function closeQuiz() {
   document.getElementById('quiz-panel').style.display = 'none';
@@ -2899,7 +2979,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v52'); } catch{}
+  try { localStorage.removeItem('chitas_v53'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -2968,7 +3048,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v52', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v53', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
