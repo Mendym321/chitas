@@ -641,7 +641,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v53'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v54'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -733,7 +733,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v53', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v54', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -827,7 +827,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v53', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v54', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1355,7 +1355,7 @@ function renderSectionsForOffset(iso) {
     const quizBtn = s.quizzable ? '<button onclick="openQuiz(\'' + s.id + '\')" style="width:36px;height:36px;border-radius:10px;background:' + (quizDoneToday ? 'rgba(168,85,247,.2)' : 'var(--surface)') + ';border:1px solid ' + (quizDoneToday ? 'rgba(168,85,247,.5)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (quizDoneToday ? '#A855F7' : 'var(--t3)') + ';">' + icon('quiz',18) + '</button>' : '';
     const tickAction = isToday
       ? (done ? 'unmarkDone(\'' + s.id + '\')' : 'showConfirm(\'' + s.id + '\',false)')
-      : 'markDonePast(\'' + s.id + '\',\'' + iso + '\')';"
+      : 'markDonePast(\'' + s.id + '\',\'' + iso + '\')';
     const tickTitle = done && isToday ? 'Undo' : '';
     const tickBtn = '<button id="tick-' + s.id + '" onclick="' + tickAction + '" title="' + tickTitle + '" style="width:36px;height:36px;border-radius:10px;background:' + (done ? (isToday ? '#1DB95422' : s.color+'28') : 'var(--surface)') + ';border:1px solid ' + (done ? (isToday ? '#1DB95455' : s.color+'55') : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (done ? '#1DB954' : 'var(--t3)') + ';transition:all .15s;">' + icon('check',18) + '</button>';
     return '<div id="card-' + s.id + '" onclick="openChabadPanel(\'' + s.id + '\')" style="' + cardStyle + '" onmouseenter="this.style.background=\'var(--hi)\'" onmouseleave="this.style.background=\'var(--card)\'" onmousedown="this.style.transform=\'scale(.985)\'" onmouseup="this.style.transform=\'\'" ontouchstart="this.style.background=\'var(--hi)\'" ontouchend="this.style.background=\'var(--card)\';this.style.transform=\'\'">' +
@@ -2979,7 +2979,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v53'); } catch{}
+  try { localStorage.removeItem('chitas_v54'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3048,7 +3048,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v53', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v54', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
