@@ -56,6 +56,7 @@
   @keyframes checkPop { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.3)} 100%{transform:scale(1);opacity:1} }
   @keyframes streakBurst { 0%{transform:scale(1)} 30%{transform:scale(1.18)} 60%{transform:scale(.95)} 100%{transform:scale(1)} }
   @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+  @keyframes momentSlide { 0%{transform:translateY(100%);opacity:0} 100%{transform:translateY(0);opacity:1} }
   @keyframes celebSlide { 0%{transform:translateY(100%);opacity:0} 20%{transform:translateY(0);opacity:1} 80%{transform:translateY(0);opacity:1} 100%{transform:translateY(100%);opacity:0} }
   @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
   #confetti-container { position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden; }
@@ -542,6 +543,17 @@ onAuthStateChanged(auth, user => {
   </div>
 </div>
 
+<!-- ── MOMENT MODAL — reusable full-screen popup ── -->
+<div id="moment-modal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;">
+  <div id="moment-card" style="background:var(--surface);border:1px solid var(--border);border-radius:28px 28px 0 0;padding:32px 24px 48px;width:100%;max-width:430px;text-align:center;animation:momentSlide .4s cubic-bezier(.22,1,.36,1);">
+    <div id="moment-icon" style="font-size:56px;margin-bottom:16px;"></div>
+    <p id="moment-title" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);line-height:1.1;margin-bottom:8px;"></p>
+    <p id="moment-sub" style="font-size:15px;color:var(--t2);line-height:1.5;margin-bottom:6px;"></p>
+    <p id="moment-xp" style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:28px;"></p>
+    <div id="moment-btns" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+</div>
+
 <!-- Motzei Shabbos weekly quiz popup -->
 <div id="motzei-popup" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 44px;width:100%;max-width:430px;animation:fadeUp .3s ease;">
@@ -564,7 +576,7 @@ onAuthStateChanged(auth, user => {
 <!-- Toast -->
 <div id="toast"></div>
 <div id="confetti-container"></div>
-<div id="celeb-banner" style="display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:2000;background:linear-gradient(135deg,#F0A500,#FFB830);color:#000;padding:14px 28px;border-radius:20px;font-size:16px;font-weight:900;text-align:center;box-shadow:0 8px 32px rgba(240,165,0,.5);white-space:nowrap;"></div>
+<div id="celeb-banner"  style="display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:2000;background:linear-gradient(135deg,#F0A500,#FFB830);color:#000;padding:14px 28px;border-radius:20px;font-size:16px;font-weight:900;text-align:center;box-shadow:0 8px 32px rgba(240,165,0,.5);white-space:nowrap;"></div>
 
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -596,7 +608,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v55'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v58'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -688,7 +700,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v55', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v58', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -782,7 +794,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v55', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v58', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1416,6 +1428,7 @@ function markDone(id) {
   if (user.done[id] || !schedule) return;
   const s = schedule[id];
   user.done[id] = true;
+  const xpBefore = user.xp;
   user.xp += s.xp;
   user.lastDate = new Date().toDateString();
 
@@ -1425,6 +1438,7 @@ function markDone(id) {
     user.streak++;
     user.total++;
     user.xp += 150;
+    user.perfectDays = (user.perfectDays || 0) + 1;
     if (id==='tanya') user.tanyaCount++;
     const dayMsgs = ['Day ' + user.total + ' complete', 'All done for today', user.streak + '-day streak'];
     fire(dayMsgs[user.total % dayMsgs.length] + ' · +' + (s.xp+150) + ' XP', 'gold');
@@ -1450,10 +1464,12 @@ function markDone(id) {
 
   // Celebrations
   celebrateSection(id);
+
   if (allNow) {
     setTimeout(celebrateAllDone, 300);
     celebrateStreakMilestone(user.streak);
   }
+  checkLevelUp(xpBefore, user.xp);
 
   updateStats();
   updateHeader();
@@ -2129,21 +2145,164 @@ function celebrateSection(sectionId) {
   if (tick) tick.style.animation = 'checkPop .4s ease';
 }
 
-function celebrateAllDone() {
-  launchConfetti(80);
-  celebrateBanner('All done for today 🔥');
-  // Streak burst on header
-  const streakEl = document.getElementById('stat-streak');
-  if (streakEl) streakEl.style.animation = 'streakBurst .5s ease';
-  setTimeout(() => { if (streakEl) streakEl.style.animation = ''; }, 600);
+// ── MOMENT MODAL SYSTEM ─────────────────────────────────────────────────────
+function showMoment({ icon, title, sub, xp, btns }) {
+  document.getElementById('moment-icon').innerHTML = icon;
+  document.getElementById('moment-title').textContent = title;
+  document.getElementById('moment-sub').textContent = sub;
+  document.getElementById('moment-xp').textContent = xp || '';
+  const btnsEl = document.getElementById('moment-btns');
+  btnsEl.innerHTML = '';
+  (btns || [{ label: 'Keep going', primary: true }]).forEach(b => {
+    const btn = document.createElement('button');
+    btn.textContent = b.label;
+    btn.style.cssText = 'width:100%;padding:15px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;border:none;' +
+      (b.primary ? 'background:var(--gold);color:#000;' : 'background:transparent;border:1px solid var(--border);color:var(--t2);padding:13px;font-size:14px;font-weight:600;');
+    btn.onclick = () => { closeMoment(); if (b.action) b.action(); };
+    btnsEl.appendChild(btn);
+  });
+  const modal = document.getElementById('moment-modal');
+  modal.style.display = 'flex';
+  document.getElementById('moment-card').style.animation = 'momentSlide .4s cubic-bezier(.22,1,.36,1)';
 }
 
+function closeMoment() {
+  const modal = document.getElementById('moment-modal');
+  modal.style.display = 'none';
+}
+
+// Tap outside to dismiss
+document.getElementById('moment-modal')?.addEventListener('click', e => {
+  if (e.target.id === 'moment-modal') closeMoment();
+});
+
+// ── 1. STREAK MILESTONE ──────────────────────────────────────────────────────
 function celebrateStreakMilestone(streak) {
-  const milestones = { 3:'3 days in a row', 7:'One full week', 14:'Two weeks straight', 30:'30 days — a real habit', 100:'100 days 🔥' };
-  if (milestones[streak]) {
-    launchConfetti(100);
-    celebrateBanner(milestones[streak]);
+  const milestones = {
+    3:  { icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#FF6B35"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>', title: '3 days in a row', sub: 'A habit starts at 3. Keep showing up.', xp: '' },
+    7:  { icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>', title: 'One full week', sub: "Seven days straight. You're building something real.", xp: '' },
+    14: { icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>', title: 'Two weeks', sub: 'Two weeks of daily Chitas. This is a real streak.', xp: '' },
+    30: { icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#F0A500"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>', title: '30 days', sub: 'A full month of learning. This is the real thing.', xp: '+500 bonus XP' },
+    100:{ icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#F0A500"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>', title: '100 days', sub: "One hundred days of Chitas. That's extraordinary.", xp: '+2000 bonus XP' },
+  };
+  const m = milestones[streak];
+  if (!m) return;
+  launchConfetti(streak >= 30 ? 150 : 100);
+  // Bonus XP for big milestones
+  if (streak === 30)  { user.xp += 500;  saveUser(); }
+  if (streak === 100) { user.xp += 2000; saveUser(); }
+  setTimeout(() => showMoment({
+    icon: m.icon,
+    title: m.title,
+    sub: m.sub,
+    xp: m.xp,
+    btns: [{ label: 'Keep it going', primary: true }],
+  }), 600);
+}
+
+// ── 2. PERFECT DAY ───────────────────────────────────────────────────────────
+function celebrateAllDone() {
+  launchConfetti(80);
+  const isFirstPerfect = (user.perfectDays || 0) === 1;
+  // Streak burst on header
+  const streakEl = document.getElementById('stat-streak');
+  if (streakEl) { streakEl.style.animation = 'streakBurst .5s ease'; setTimeout(() => { streakEl.style.animation = ''; }, 600); }
+
+  if (isFirstPerfect) {
+    // First ever perfect day — big moment
+    setTimeout(() => showMoment({
+      icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      title: 'Perfect day',
+      sub: 'All four sections done. This is what it looks like.',
+      xp: '+150 XP',
+      btns: [{ label: 'Nice', primary: true }],
+    }), 800);
+  } else {
+    celebrateBanner('All done for today');
   }
+}
+
+// ── 3. LEVEL UP ──────────────────────────────────────────────────────────────
+function checkLevelUp(xpBefore, xpAfter) {
+  const levelBefore = Math.floor(xpBefore / 100) + 1;
+  const levelAfter  = Math.floor(xpAfter  / 100) + 1;
+  if (levelAfter > levelBefore) {
+    setTimeout(() => showMoment({
+      icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>',
+      title: 'Level ' + levelAfter,
+      sub: 'You just leveled up. ' + (levelAfter < 5 ? 'Keep at it.' : levelAfter < 10 ? 'You know what you are doing.' : 'Seriously impressive.'),
+      xp: '',
+      btns: [{ label: 'Keep learning', primary: true }],
+    }), 400);
+  }
+}
+
+// ── 4. WELCOME BACK ──────────────────────────────────────────────────────────
+function checkWelcomeBack() {
+  const lastDate = user.lastDate;
+  if (!lastDate) return;
+  const last = new Date(lastDate);
+  const today = new Date();
+  const diffDays = Math.floor((today - last) / (1000 * 60 * 60 * 24));
+  if (diffDays >= 2 && diffDays <= 30) {
+    const alreadyShown = sessionStorage.getItem('chitas_welcomed_back');
+    if (alreadyShown) return;
+    sessionStorage.setItem('chitas_welcomed_back', '1');
+    setTimeout(() => showMoment({
+      icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10,17 15,12 10,7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>',
+      title: 'Good to have you back',
+      sub: diffDays === 2
+        ? 'You missed yesterday. No big deal — today is what counts.'
+        : "It's been " + diffDays + ' days. Pick up where you left off.',
+      xp: '',
+      btns: [
+        { label: "Let's go", primary: true },
+        { label: 'Maybe later', primary: false },
+      ],
+    }), 800);
+  }
+}
+
+// ── 5. WEEKLY SUMMARY ────────────────────────────────────────────────────────
+function checkWeeklySummary() {
+  const dow = new Date().getDay(); // 5 = Friday
+  if (dow !== 5) return;
+  const key = 'chitas_weekly_summary_' + getWeekNumber();
+  if (sessionStorage.getItem(key)) return;
+  sessionStorage.setItem(key, '1');
+
+  // Count days done this week
+  let daysDone = 0;
+  const today = new Date();
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const iso = dateISO(d);
+    const isToday = i === 0;
+    const dayData = isToday ? user.done : (user.pastDone?.[iso] || {});
+    const count = ['chumash','tehillim','tanya','rambam'].filter(id => dayData[id]).length;
+    if (count > 0) daysDone++;
+  }
+  if (daysDone === 0) return; // nothing to summarize
+
+  const msgs = {
+    5: { title: 'Perfect week', sub: 'Five for five. Every single day this week.' },
+    4: { title: '4 out of 5', sub: 'Strong week. One slip — but four strong days.' },
+    3: { title: '3 days this week', sub: 'More than half the week. Building momentum.' },
+    2: { title: '2 days this week', sub: 'A start. Show up more next week.' },
+    1: { title: '1 day this week', sub: "You came. That's something. Come back tomorrow." },
+  };
+  const m = msgs[daysDone] || msgs[1];
+
+  setTimeout(() => showMoment({
+    icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    title: m.title,
+    sub: m.sub + (user.streak > 0 ? ' Your streak is at ' + user.streak + '.' : ''),
+    xp: '',
+    btns: [
+      { label: "Gut Shabbos", primary: true },
+    ],
+  }), 1200);
 }
 
 // ── LANDING TICKER ───────────────────────────────────────────────────────────
@@ -2226,6 +2385,7 @@ function stopObTicker() {
 
 // Start ticker after landing animates in
 setTimeout(startObTicker, 1000);
+
 
 function closeQuiz() {
   document.getElementById('quiz-panel').style.display = 'none';
@@ -2971,7 +3131,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v55'); } catch{}
+  try { localStorage.removeItem('chitas_v58'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3040,7 +3200,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v55', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v58', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
