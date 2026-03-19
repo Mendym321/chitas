@@ -358,21 +358,25 @@ onAuthStateChanged(auth, user => {
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;">
             <p id="progress-title" style="font-weight:700;font-size:15px;color:var(--t1);">Fetching schedule…</p>
-            <div id="header-avatar"></div>
-          </div>
-          <p id="progress-sub" style="font-size:12px;color:var(--t2);margin-bottom:6px;">Connecting to Hebcal…</p>
-          <!-- Streak + XP inline — compact -->
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="display:flex;align-items:center;gap:4px;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
-              <span id="stat-streak-inline" style="font-size:12px;font-weight:800;color:var(--t1);">0</span>
-              <span style="font-size:11px;color:var(--t3);">day streak</span>
+            <!-- Level badge replaces duplicate avatar -->
+            <div style="background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.3);border-radius:10px;padding:3px 9px;flex-shrink:0;">
+              <span style="font-size:9px;font-weight:800;color:rgba(240,165,0,.7);letter-spacing:.1em;">LVL</span>
+              <span id="header-avatar" style="font-size:15px;font-weight:900;color:var(--gold);margin-left:3px;"></span>
             </div>
-            <span style="color:var(--border);font-size:11px;">·</span>
-            <div style="display:flex;align-items:center;gap:4px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>
-              <span id="stat-xp-inline" style="font-size:12px;font-weight:800;color:var(--t1);">0</span>
-              <span style="font-size:11px;color:var(--t3);">XP</span>
+          </div>
+          <p id="progress-sub" style="font-size:12px;color:var(--t2);margin-bottom:7px;">Connecting to Hebcal…</p>
+          <!-- Streak + XP — more prominent -->
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="display:flex;align-items:center;gap:5px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
+              <span id="stat-streak-inline" style="font-size:15px;font-weight:900;color:var(--t1);letter-spacing:-.5px;">0</span>
+              <span style="font-size:11px;color:var(--t3);font-weight:600;">streak</span>
+            </div>
+            <div style="width:1px;height:14px;background:var(--border);"></div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#F0A500"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>
+              <span id="stat-xp-inline" style="font-size:15px;font-weight:900;color:var(--t1);letter-spacing:-.5px;">0</span>
+              <span style="font-size:11px;color:var(--t3);font-weight:600;">XP</span>
             </div>
           </div>
         </div>
@@ -542,7 +546,7 @@ onAuthStateChanged(auth, user => {
       <!-- Quiz — right half, equal size -->
       <button id="chabad-quiz-btn" style="display:none;flex:1;padding:12px;border-radius:14px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
         <span style="font-size:14px;font-weight:800;">Quiz</span>
-        <span style="font-size:11px;font-weight:700;opacity:.7;">+15 XP</span>
+        <span style="font-size:11px;font-weight:700;opacity:.7;">+35 XP</span>
       </button>
     </div>
   </div>
@@ -725,7 +729,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v71'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v73'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -811,7 +815,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v71', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v73', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -905,7 +909,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v71', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v73', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1072,22 +1076,22 @@ async function init() {
       : (rambam3Item?.ref || null);
 
     schedule = {
-      chumash:  { id:'chumash',  label:'Chumash',  icon:'scroll', color:'#F0A500', xp:30, quizzable:true,
+      chumash:  { id:'chumash',  label:'Chumash',  icon:'scroll', color:'#F0A500', xp:25, quizzable:true,
                   subtitle: p.parshaName ? `${p.parshaName} · Aliya ${p.aliyaNum}` : `Aliya ${p.aliyaNum}`,
                   chabadUrl: `${base}/torahreading.asp?tdate=${civDate}`,
                   sefariaRef: chumashRef },
 
-      tehillim: { id:'tehillim', label:'Tehillim', icon:'music',  color:'#4A9EFF', xp:30, quizzable:false,
+      tehillim: { id:'tehillim', label:'Tehillim', icon:'music',  color:'#4A9EFF', xp:25, quizzable:false,
                   subtitle: p.tehTitle || `Psalms ${p.tehChapters.join(', ')}`,
                   chabadUrl: `${base}/tehillim.asp?tdate=${civDate}`,
                   sefariaRef: tehRef },
 
-      tanya:    { id:'tanya',    label:'Tanya',    icon:'hex',    color:'#A855F7', xp:40, quizzable:true,
+      tanya:    { id:'tanya',    label:'Tanya',    icon:'hex',    color:'#A855F7', xp:25, quizzable:true,
                   subtitle: tanyaCalItem?.displayValue?.en || 'Tanya Yomi',
                   chabadUrl: `${base}/tanya.asp?tdate=${encodeURIComponent(tdate)}`,
                   sefariaRef: null }, // Sefaria has no English for Tanya; Chabad.org is better
 
-      rambam:   { id:'rambam',   label:'Rambam',   icon:'rambam', color:'#1DB954', xp:40, quizzable:true,
+      rambam:   { id:'rambam',   label:'Rambam',   icon:'rambam', color:'#1DB954', xp:25, quizzable:true,
                   subtitle: p.rambamTitle || rambam3Item?.displayValue?.en || 'Rambam Yomi',
                   chabadUrl: user.rambamTrack === 'm'
                     ? `${base}/seferHamitzvos.asp?tdate=${encodeURIComponent(tdate)}`
@@ -1106,20 +1110,31 @@ async function init() {
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function updateHeader() {
-  const hr = new Date().getHours();
-  const firstName = user.name.split(' ')[0];
-  const tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('greeting').textContent = tod + ', ' + firstName;
-  const level = Math.floor(user.xp/100)+1;
-  const pct = user.xp%100;
-  document.getElementById('level-num').textContent = level;
-  document.getElementById('xp-label').textContent = `${user.xp} XP`;
-  document.getElementById('xp-next').textContent = `${pct}/100 → Lv${level+1}`;
-  document.getElementById('xp-bar').style.width = `${pct}%`;
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Shabbos'];
-  if (!document.getElementById('heb-date-label').textContent || document.getElementById('heb-date-label').textContent === 'Loading…') {
-    document.getElementById('heb-date-label').textContent = days[new Date().getDay()];
-  }
+  const level    = levelFromXp(user.xp);
+  const inLevel  = xpInCurrentLevel(user.xp);
+  const needed   = xpNeededForLevel(level);
+  const pct      = Math.round(inLevel / needed * 100);
+
+  document.getElementById('level-num').textContent  = level;
+  document.getElementById('xp-label').textContent   = user.xp + ' XP';
+  document.getElementById('xp-next').textContent    = 'Lv' + level + ' · ' + inLevel + '/' + needed;
+  document.getElementById('xp-bar').style.width     = pct + '%';
+
+  // Update inline stats
+  const si = document.getElementById('stat-streak-inline');
+  const xi = document.getElementById('stat-xp-inline');
+  if (si) si.textContent = user.streak;
+  if (xi) xi.textContent = user.xp;
+
+  // Avatar
+  // Level badge in progress card
+  const ha = document.getElementById('header-avatar');
+  if (ha) ha.textContent = level;
+  // Avatar tab (top-right profile button)
+  const at = document.getElementById('avatar-tab');
+  if (at) at.innerHTML = letterAvatar(user.name, 34, 14);
+  const dot = document.getElementById('avatar-dot');
+  if (dot) dot.style.display = (!user.city) ? 'block' : 'none';
 }
 
 function updateStats() {
@@ -1165,6 +1180,33 @@ function renderSections() {
   }).join('');
 
   updateProgressRing();
+}
+
+// ── XP / LEVEL SYSTEM ────────────────────────────────────────────────────────
+// Scaling levels: each level takes ~40% more XP than the last
+// Level 1→2: 100 XP, 2→3: 140, 3→4: 196, 4→5: 274, 5→6: 384...
+function xpForLevel(level) {
+  // Total XP needed to reach this level from level 1
+  let total = 0;
+  for (let i = 1; i < level; i++) {
+    total += Math.floor(100 * Math.pow(1.4, i - 1));
+  }
+  return total;
+}
+
+function levelFromXp(xp) {
+  let level = 1;
+  while (xp >= xpForLevel(level + 1)) level++;
+  return level;
+}
+
+function xpInCurrentLevel(xp) {
+  const level = levelFromXp(xp);
+  return xp - xpForLevel(level);
+}
+
+function xpNeededForLevel(level) {
+  return Math.floor(100 * Math.pow(1.4, level - 1));
 }
 
 function dateISO(d) {
@@ -1458,7 +1500,7 @@ function unmarkDonePast(id, iso) {
   const wasAllDone = ids.every(x => user.pastDone[iso][x]);
   if (wasAllDone) {
     user.total = Math.max(0, user.total - 1);
-    user.xp    = Math.max(0, user.xp - 150);
+    user.xp    = Math.max(0, user.xp - 50);
   }
   user.pastDone[iso][id] = false;
   saveUser();
@@ -1483,7 +1525,7 @@ function unmarkDone(id) {
   if (wasAllDone) {
     user.streak = Math.max(0, user.streak - 1);
     user.total  = Math.max(0, user.total - 1);
-    user.xp     = Math.max(0, user.xp - 150);
+    user.xp     = Math.max(0, user.xp - 50);
   }
   user.done[id] = false;
   user.lastDate = new Date().toDateString();
@@ -1513,7 +1555,7 @@ function markDonePast(id, iso) {
   const allNow = ids.every(x => user.pastDone[iso][x]);
   if (allNow) {
     user.total++;
-    user.xp += 150;
+    user.xp += 50;
     fire('Day complete · +' + (s.xp + 150) + ' XP', 'gold');
   } else {
     fire('+' + s.xp + ' XP', 'xp');
@@ -1542,7 +1584,7 @@ function markDone(id) {
   if (allNow) {
     user.streak++;
     user.total++;
-    user.xp += 150;
+    user.xp += 50;
     user.perfectDays = (user.perfectDays || 0) + 1;
     const dayMsgs = ['Day ' + user.total + ' complete', 'All done for today', user.streak + '-day streak'];
     fire(dayMsgs[user.total % dayMsgs.length] + ' · +' + (s.xp+150) + ' XP', 'gold');
@@ -2235,7 +2277,12 @@ function celebrateBanner(msg) {
   setTimeout(() => { el.style.display = 'none'; el.style.animation = ''; }, 3200);
 }
 
+function vibrate(pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+}
+
 function celebrateSection(sectionId) {
+  vibrate(50); // single short pulse on mark done
   // Quick satisfying pop on the card
   const card = document.getElementById('card-' + sectionId);
   if (card) {
@@ -2338,6 +2385,7 @@ function celebrateStreakMilestone(streak) {
 
 // ── 2. PERFECT DAY ───────────────────────────────────────────────────────────
 function celebrateAllDone() {
+  vibrate([50, 50, 100]); // double pulse on completing all 4
   launchConfetti(80);
   const isFirstPerfect = (user.perfectDays || 0) === 1;
   // Streak burst on header
@@ -2354,8 +2402,8 @@ function celebrateAllDone() {
 
 // ── 3. LEVEL UP ──────────────────────────────────────────────────────────────
 function checkLevelUp(xpBefore, xpAfter) {
-  const levelBefore = Math.floor(xpBefore / 100) + 1;
-  const levelAfter  = Math.floor(xpAfter  / 100) + 1;
+  const levelBefore = levelFromXp(xpBefore);
+  const levelAfter  = levelFromXp(xpAfter);
   if (levelAfter <= levelBefore) return;
   launchConfetti(60);
   setTimeout(() => {
@@ -2608,7 +2656,7 @@ function showQuizResults() {
   const { score, questions, sectionId } = quizState;
   const s = schedule[sectionId];
   const total = questions.length;
-  const xpEarned = score * 15;
+  const xpEarned = score * 35;
   const pct = Math.round((score / total) * 100);
 
   // Guard: quizDone may not exist on old saved state
@@ -3104,8 +3152,9 @@ async function renderLeaders() {
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
 function renderStats() {
-  const level = Math.floor(user.xp / 100) + 1;
-  const xpInLevel = user.xp % 100;
+  const level = levelFromXp(user.xp);
+  const xpInLevel = xpInCurrentLevel(user.xp);
+  const xpNeeded = xpNeededForLevel(level);
   const earned = MEDALS.filter(m => m.req(user));
   const cw = WORLDS[currentWorldIndex()];
   const next = cw ? cw.medals.find(m => !m.req(user)) : null;
@@ -3164,7 +3213,7 @@ function renderStats() {
         '<div style="width:48px;height:48px;border-radius:14px;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;">' + icon('bolt',22,'var(--gold)') + '</div>' +
       '</div>' +
       '<div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">' +
-        '<div style="height:100%;width:' + xpInLevel + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:4px;transition:width 1s cubic-bezier(.22,1,.36,1);"></div>' +
+        '<div style="height:100%;width:' + Math.round(xpInLevel/xpNeeded*100) + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:4px;transition:width 1s cubic-bezier(.22,1,.36,1);"></div>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;margin-top:5px;">' +
         '<span style="font-size:10px;color:var(--t3);">' + xpInLevel + ' XP</span>' +
@@ -3269,8 +3318,9 @@ function closeProfileSheet() {
 }
 
 function renderProfileSheetContent() {
-  const level = Math.floor(user.xp / 100) + 1;
-  const xpInLevel = user.xp % 100;
+  const level = levelFromXp(user.xp);
+  const xpInLevel = xpInCurrentLevel(user.xp);
+  const xpNeeded = xpNeededForLevel(level);
   const earned = MEDALS.filter(m => m.req(user));
   const cw = WORLDS[currentWorldIndex()];
   const next = cw ? cw.medals.find(m => !m.req(user)) : null;
@@ -3298,7 +3348,7 @@ function renderProfileSheetContent() {
         '<span style="font-size:12px;color:var(--t3);">' + xpInLevel + ' / 100 XP</span>' +
       '</div>' +
       '<div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;">' +
-        '<div style="height:100%;width:' + xpInLevel + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:3px;transition:width .8s ease;"></div>' +
+        '<div style="height:100%;width:' + Math.round(xpInLevel/xpNeeded*100) + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:3px;transition:width .8s ease;"></div>' +
       '</div>' +
     '</div>' +
     // Activity grid
@@ -3361,7 +3411,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v71'); } catch{}
+  try { localStorage.removeItem('chitas_v73'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3430,7 +3480,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v71', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v73', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
