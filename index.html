@@ -732,8 +732,8 @@ function letterAvatar(name, size=32, fontSize=14) {
     font-size:${fontSize}px;font-weight:800;color:${fg};flex-shrink:0;font-family:'DM Sans',sans-serif;">${letter}</div>`;
 }
 
-const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v74'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
+let user = (() => { try { const s=localStorage.getItem('chitas_v75'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -819,7 +819,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v74', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v75', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -913,7 +913,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v74', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v75', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1590,6 +1590,7 @@ function markDone(id) {
   const allNow = ids.every(x => user.done[x]);
   if (allNow) {
     user.streak++;
+    if (user.streak > (user.longestStreak||0)) user.longestStreak = user.streak;
     user.total++;
     user.xp += 50;
     user.perfectDays = (user.perfectDays || 0) + 1;
@@ -3162,120 +3163,153 @@ function renderStats() {
   const level = levelFromXp(user.xp);
   const xpInLevel = xpInCurrentLevel(user.xp);
   const xpNeeded = xpNeededForLevel(level);
-  const earned = MEDALS.filter(m => m.req(user));
-  const cw = WORLDS[currentWorldIndex()];
-  const next = cw ? cw.medals.find(m => !m.req(user)) : null;
-  if (next) next.color = cw.color;
+  const streakColor = user.streak >= 30 ? '#FF4757' : user.streak >= 7 ? '#FF6B35' : '#F0A500';
 
-  // Build activity grid — 28 days
+  // ── Compute lifetime stats ──
+  // Total sections learned across all days
+  let totalSections = 0;
+  const sectionCounts = {chumash:0, tehillim:0, tanya:0, rambam:0};
+  const ids = ['chumash','tehillim','tanya','rambam'];
+  // Today
+  ids.forEach(id => { if (user.done?.[id]) { totalSections++; sectionCounts[id]++; } });
+  // Past days
+  Object.values(user.pastDone || {}).forEach(dayDone => {
+    ids.forEach(id => { if (dayDone[id]) { totalSections++; sectionCounts[id]++; } });
+  });
+
+  // Quiz accuracy
+  const quizAcc = user.quizTotal > 0 ? Math.round(user.quizCorrect / user.quizTotal * 100) : null;
+
+  // Weekly consistency (last 4 weeks = 28 days)
+  let activeDays = 0;
   const today = new Date();
+  for (let i = 0; i < 28; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const iso = dateISO(d);
+    const dayData = i === 0 ? user.done : (user.pastDone?.[iso] || {});
+    if (ids.some(id => dayData[id])) activeDays++;
+  }
+  const consistency = Math.round(activeDays / 28 * 100);
+
+  // Activity grid
   const gridDays = [];
   for (let i = 27; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
+    const d = new Date(today); d.setDate(d.getDate() - i);
     const iso = dateISO(d);
     const isToday = i === 0;
     const dayData = isToday ? user.done : (user.pastDone?.[iso] || {});
-    const count = ['chumash','tehillim','tanya','rambam'].filter(id => dayData[id]).length;
+    const count = ids.filter(id => dayData[id]).length;
     gridDays.push({ iso, count, isToday });
   }
-
   const gridHTML = gridDays.map(d => {
-    const opacity = d.count === 0 ? '0.07' : d.count === 1 ? '0.3' : d.count === 2 ? '0.55' : d.count === 3 ? '0.8' : '1';
+    const op = d.count === 0 ? '0.07' : d.count === 1 ? '0.3' : d.count === 2 ? '0.55' : d.count === 3 ? '0.8' : '1';
     const border = d.isToday ? '1.5px solid var(--gold)' : '1.5px solid transparent';
-    return '<div style="width:100%;aspect-ratio:1;border-radius:4px;background:var(--gold);opacity:' + opacity + ';border:' + border + ';transition:opacity .2s;" title="' + d.iso + ': ' + d.count + '/4"></div>';
+    return '<div style="width:100%;aspect-ratio:1;border-radius:4px;background:var(--gold);opacity:' + op + ';border:' + border + ';"></div>';
   }).join('');
 
-  // Streak flame pulse animation
-  const streakColor = user.streak >= 30 ? '#FF4757' : user.streak >= 7 ? '#FF6B35' : '#F0A500';
+  // Section breakdown bars
+  const sectionDefs = [
+    {id:'chumash',  label:'Chumash',  color:'#F0A500'},
+    {id:'tehillim', label:'Tehillim', color:'#4A9EFF'},
+    {id:'tanya',    label:'Tanya',    color:'#A855F7'},
+    {id:'rambam',   label:'Rambam',   color:'#1DB954'},
+  ];
+  const maxCount = Math.max(...Object.values(sectionCounts), 1);
+  const sectionBarsHTML = sectionDefs.map(s =>
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+      '<span style="font-size:11px;color:var(--t3);width:52px;flex-shrink:0;">' + s.label + '</span>' +
+      '<div style="flex:1;height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">' +
+        '<div style="height:100%;width:' + Math.round(sectionCounts[s.id]/maxCount*100) + '%;background:' + s.color + ';border-radius:4px;transition:width 1s ease;"></div>' +
+      '</div>' +
+      '<span style="font-size:11px;font-weight:700;color:var(--t2);width:28px;text-align:right;flex-shrink:0;">' + sectionCounts[s.id] + '</span>' +
+    '</div>'
+  ).join('');
 
-  document.getElementById('stats-content').innerHTML = '<div style="padding-bottom:20px;">' +
+  // Next medal
+  const cw = WORLDS[currentWorldIndex()];
+  const nextMedal = cw ? cw.medals.find(m => !m.req(user)) : null;
+  if (nextMedal) nextMedal.color = cw.color;
+  const earned = MEDALS.filter(m => m.req(user));
+
+  document.getElementById('stats-content').innerHTML = '<div style="padding-bottom:24px;">' +
 
     // ── STREAK HERO ──
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 20px;margin-bottom:12px;text-align:center;position:relative;overflow:hidden;">' +
-      '<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 0%, ' + streakColor + '18, transparent 70%);pointer-events:none;"></div>' +
-      '<div style="margin-bottom:8px;animation:flamePulse 2s ease-in-out infinite;"><svg width="44" height="44" viewBox="0 0 24 24" fill="' + streakColor + '"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg></div>' +
-      '<p style="font-size:52px;font-weight:900;color:' + streakColor + ';line-height:1;margin-bottom:4px;letter-spacing:-2px;">' + user.streak + '</p>' +
-      '<p style="font-size:13px;font-weight:700;color:var(--t2);">day streak</p>' +
-      (user.streak >= 7 ? '<div style="margin-top:10px;display:inline-block;padding:3px 12px;border-radius:20px;background:' + streakColor + '22;border:1px solid ' + streakColor + '44;"><span style="font-size:11px;font-weight:700;color:' + streakColor + ';">' + (user.streak >= 30 ? 'Incredible' : user.streak >= 14 ? 'On fire' : 'Great run') + '</span></div>' : '') +
-    '</div>' +
-
-    // ── QUICK STATS ROW ──
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">' +
-        '<p style="font-size:11px;color:var(--t3);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Days Done</p>' +
-        '<p style="font-size:30px;font-weight:900;color:var(--t1);line-height:1;">' + user.total + '</p>' +
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;">' +
+      '<div style="position:absolute;inset:0;background:radial-gradient(circle at 0% 50%, ' + streakColor + '15, transparent 60%);pointer-events:none;"></div>' +
+      '<div style="animation:flamePulse 2s ease-in-out infinite;flex-shrink:0;">' +
+        '<svg width="40" height="40" viewBox="0 0 24 24" fill="' + streakColor + '"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>' +
       '</div>' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">' +
-        '<p style="font-size:11px;color:var(--t3);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Perfect Days</p>' +
-        '<p style="font-size:30px;font-weight:900;color:var(--green);line-height:1;">' + (user.perfectDays||0) + '</p>' +
+      '<div style="flex:1;">' +
+        '<p style="font-size:38px;font-weight:900;color:' + streakColor + ';line-height:1;letter-spacing:-1.5px;">' + user.streak + '<span style="font-size:16px;font-weight:700;color:var(--t3);margin-left:4px;">days</span></p>' +
+        '<p style="font-size:12px;color:var(--t3);margin-top:2px;">Best: ' + (user.longestStreak||user.streak) + ' days' + (user.streak >= 7 ? ' · ' + (user.streak >= 30 ? 'Incredible' : user.streak >= 14 ? 'On fire' : 'Great run') : '') + '</p>' +
+      '</div>' +
+      '<div style="text-align:right;flex-shrink:0;">' +
+        '<p style="font-size:22px;font-weight:900;color:var(--t1);">' + consistency + '%</p>' +
+        '<p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;">28-day rate</p>' +
       '</div>' +
     '</div>' +
 
-    // ── LEVEL + XP ──
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
-        '<div><p style="font-size:11px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Level</p>' +
-        '<p style="font-size:26px;font-weight:900;color:var(--gold);line-height:1.1;">' + level + ' <span style="font-size:13px;color:var(--t3);font-weight:600;">/ ' + user.xp + ' XP</span></p></div>' +
-        '<div style="width:48px;height:48px;border-radius:14px;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;">' + icon('bolt',22,'var(--gold)') + '</div>' +
+    // ── KEY NUMBERS — 3 across ──
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;">' +
+        '<p style="font-size:26px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:3px;">' + totalSections + '</p>' +
+        '<p style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Sections</p>' +
       '</div>' +
-      '<div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">' +
-        '<div style="height:100%;width:' + Math.round(xpInLevel/xpNeeded*100) + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:4px;transition:width 1s cubic-bezier(.22,1,.36,1);"></div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;">' +
+        '<p style="font-size:26px;font-weight:900;color:' + (quizAcc !== null ? (quizAcc >= 80 ? '#1DB954' : quizAcc >= 60 ? '#F0A500' : '#FF4757') : 'var(--t3)') + ';line-height:1;margin-bottom:3px;">' + (quizAcc !== null ? quizAcc + '%' : '—') + '</p>' +
+        '<p style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Quiz Acc.</p>' +
       '</div>' +
-      '<div style="display:flex;justify-content:space-between;margin-top:5px;">' +
-        '<span style="font-size:10px;color:var(--t3);">' + xpInLevel + ' XP</span>' +
-        '<span style="font-size:10px;color:var(--t3);">' + xpNeeded + ' XP → Lv' + (level+1) + '</span>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;">' +
+        '<p style="font-size:26px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:3px;">' + level + '</p>' +
+        '<p style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Level</p>' +
+      '</div>' +
+    '</div>' +
+
+    // ── XP PROGRESS ──
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
+        '<span style="font-size:12px;font-weight:700;color:var(--t1);">' + user.xp + ' XP total</span>' +
+        '<span style="font-size:12px;color:var(--t3);">' + xpInLevel + ' / ' + xpNeeded + ' → Lv' + (level+1) + '</span>' +
+      '</div>' +
+      '<div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;">' +
+        '<div style="height:100%;width:' + Math.round(xpInLevel/xpNeeded*100) + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:3px;transition:width 1s ease;"></div>' +
       '</div>' +
     '</div>' +
 
     // ── ACTIVITY GRID ──
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
         '<p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;">Activity</p>' +
-        '<p style="font-size:11px;color:var(--t3);">Last 28 days</p>' +
+        '<p style="font-size:11px;color:var(--t3);">' + activeDays + ' of 28 days</p>' +
       '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;">' + gridHTML + '</div>' +
-      '<div style="display:flex;align-items:center;gap:6px;margin-top:10px;justify-content:flex-end;">' +
-        '<span style="font-size:10px;color:var(--t3);">Less</span>' +
-        '<div style="width:10px;height:10px;border-radius:3px;background:var(--gold);opacity:.07;"></div>' +
-        '<div style="width:10px;height:10px;border-radius:3px;background:var(--gold);opacity:.3;"></div>' +
-        '<div style="width:10px;height:10px;border-radius:3px;background:var(--gold);opacity:.7;"></div>' +
-        '<div style="width:10px;height:10px;border-radius:3px;background:var(--gold);opacity:1;"></div>' +
-        '<span style="font-size:10px;color:var(--t3);">More</span>' +
-      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">' + gridHTML + '</div>' +
     '</div>' +
 
-    // ── MEDALS + NEXT MILESTONE ──
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:' + (next ? '14px' : '0') + '">' +
-        '<p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;">Medals</p>' +
-        '<p style="font-size:13px;font-weight:800;color:var(--gold);">' + earned.length + ' / ' + MEDALS.length + '</p>' +
-      '</div>' +
-      (next ? '<div style="display:flex;align-items:center;gap:12px;">' +
-        '<div style="width:40px;height:40px;border-radius:12px;background:' + next.color + '18;border:1px solid ' + next.color + '30;display:flex;align-items:center;justify-content:center;color:' + next.color + ';flex-shrink:0;">' + icon(next.icon,20) + '</div>' +
+    // ── SECTION BREAKDOWN ──
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
+      '<p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Lifetime Learning</p>' +
+      sectionBarsHTML +
+    '</div>' +
+
+    // ── NEXT MEDAL ──
+    (nextMedal ?
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">' +
+        '<div style="width:38px;height:38px;border-radius:11px;background:' + nextMedal.color + '18;border:1px solid ' + nextMedal.color + '30;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + nextMedal.color + ';">' + icon(nextMedal.icon, 18) + '</div>' +
         '<div style="flex:1;min-width:0;">' +
-          '<p style="font-size:13px;font-weight:700;color:var(--t1);">' + next.label + '</p>' +
-          '<p style="font-size:11px;color:var(--t3);">' + next.desc + '</p>' +
+          '<p style="font-size:12px;font-weight:700;color:var(--t1);">' + nextMedal.label + '</p>' +
+          '<p style="font-size:11px;color:var(--t3);">' + nextMedal.desc + '</p>' +
         '</div>' +
-        '<span style="font-size:11px;color:' + next.color + ';font-weight:700;flex-shrink:0;">Next up</span>' +
-      '</div>' : '<p style="font-size:13px;color:var(--green);font-weight:700;">All medals earned! 🏆</p>') +
-    '</div>' +
+        '<div style="text-align:right;flex-shrink:0;">' +
+          '<p style="font-size:10px;color:' + nextMedal.color + ';font-weight:700;">' + earned.length + '/' + MEDALS.length + '</p>' +
+          '<p style="font-size:9px;color:var(--t3);">medals</p>' +
+        '</div>' +
+      '</div>'
+    : '<div style="text-align:center;padding:12px;font-size:13px;color:var(--green);font-weight:700;">All medals earned!</div>'
+    ) +
 
-    // ── RAMBAM TRACK ──
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">' +
-      '<div style="flex:1;"><p style="font-size:11px;color:var(--t3);margin-bottom:2px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Rambam Track</p><p style="font-size:14px;font-weight:700;color:var(--t1);">' + (RAMBAM_TRACKS[user.rambamTrack]?.label || '') + '</p></div>' +
-      '<button onclick="changeTrack()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit;padding:5px 10px;">Change</button>' +
-    '</div>' +
-
-    // ── SETTINGS ──
-    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">' +
-      '<button onclick="shareApp()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">📤</span> Share App</span><span style="font-size:12px;color:var(--t3);">Invite a friend</span></button>' +
-      '<button onclick="toggleTheme()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span id="theme-icon" style="font-size:16px;">🌙</span> Appearance</span><span id="theme-label" style="font-size:12px;color:var(--t3);">Dark</span></button>' +
-      '<button onclick="signOut()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">🚪</span> Sign Out</span><span style="font-size:12px;color:var(--t3);">Data stays saved</span></button>' +
-      '<button onclick="resetProgress()" style="width:100%;padding:13px 16px;border-radius:12px;background:transparent;border:1px solid var(--border);color:var(--t3);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">🗑️</span> Reset All Progress</button>' +
-    '</div>' +
   '</div>';
 }
+
 
 function openProfileSheet() {
   document.getElementById('profile-sheet-avatar').innerHTML = letterAvatar(user.name || '?', 48, 18);
@@ -3428,7 +3462,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v74'); } catch{}
+  try { localStorage.removeItem('chitas_v75'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3497,7 +3531,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v74', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v75', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
