@@ -733,7 +733,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v75'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v76'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -819,7 +819,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v75', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v76', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -913,7 +913,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v75', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v76', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -3221,7 +3221,7 @@ function renderStats() {
       '<div style="flex:1;height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">' +
         '<div style="height:100%;width:' + Math.round(sectionCounts[s.id]/maxCount*100) + '%;background:' + s.color + ';border-radius:4px;transition:width 1s ease;"></div>' +
       '</div>' +
-      '<span style="font-size:11px;font-weight:700;color:var(--t2);width:28px;text-align:right;flex-shrink:0;">' + sectionCounts[s.id] + '</span>' +
+      '<span style="font-size:11px;font-weight:700;color:var(--t2);flex-shrink:0;">' + sectionCounts[s.id] + 'x</span>' +
     '</div>'
   ).join('');
 
@@ -3245,7 +3245,7 @@ function renderStats() {
       '</div>' +
       '<div style="text-align:right;flex-shrink:0;">' +
         '<p style="font-size:22px;font-weight:900;color:var(--t1);">' + consistency + '%</p>' +
-        '<p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;">28-day rate</p>' +
+        '<p style="font-size:10px;color:var(--t3);font-weight:600;">days learned<br>this month</p>' +
       '</div>' +
     '</div>' +
 
@@ -3253,23 +3253,23 @@ function renderStats() {
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">' +
       '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;">' +
         '<p style="font-size:26px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:3px;">' + totalSections + '</p>' +
-        '<p style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Sections</p>' +
+        '<p style="font-size:9px;color:var(--t3);font-weight:600;">sections<br>learned</p>' +
       '</div>' +
       '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;">' +
         '<p style="font-size:26px;font-weight:900;color:' + (quizAcc !== null ? (quizAcc >= 80 ? '#1DB954' : quizAcc >= 60 ? '#F0A500' : '#FF4757') : 'var(--t3)') + ';line-height:1;margin-bottom:3px;">' + (quizAcc !== null ? quizAcc + '%' : '—') + '</p>' +
-        '<p style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Quiz Acc.</p>' +
+        '<p style="font-size:9px;color:var(--t3);font-weight:600;">quiz<br>accuracy</p>' +
       '</div>' +
       '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;">' +
         '<p style="font-size:26px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:3px;">' + level + '</p>' +
-        '<p style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Level</p>' +
+        '<p style="font-size:9px;color:var(--t3);font-weight:600;">' + user.xp + '<br>XP total</p>' +
       '</div>' +
     '</div>' +
 
     // ── XP PROGRESS ──
     '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
       '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
-        '<span style="font-size:12px;font-weight:700;color:var(--t1);">' + user.xp + ' XP total</span>' +
-        '<span style="font-size:12px;color:var(--t3);">' + xpInLevel + ' / ' + xpNeeded + ' → Lv' + (level+1) + '</span>' +
+        '<span style="font-size:12px;font-weight:700;color:var(--t1);">Level ' + level + '</span>' +
+        '<span style="font-size:12px;color:var(--t3);">' + xpInLevel + ' / ' + xpNeeded + ' XP to level ' + (level+1) + '</span>' +
       '</div>' +
       '<div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;">' +
         '<div style="height:100%;width:' + Math.round(xpInLevel/xpNeeded*100) + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:3px;transition:width 1s ease;"></div>' +
@@ -3279,15 +3279,15 @@ function renderStats() {
     // ── ACTIVITY GRID ──
     '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-        '<p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;">Activity</p>' +
-        '<p style="font-size:11px;color:var(--t3);">' + activeDays + ' of 28 days</p>' +
+        '<p style="font-size:12px;font-weight:700;color:var(--t1);">Daily learning</p>' +
+        '<p style="font-size:11px;color:var(--t3);">learned on ' + activeDays + ' of the last 28 days</p>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">' + gridHTML + '</div>' +
     '</div>' +
 
     // ── SECTION BREAKDOWN ──
     '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
-      '<p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Lifetime Learning</p>' +
+      '<div style="margin-bottom:12px;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Sections completed</p><p style="font-size:11px;color:var(--t3);margin-top:2px;">Total times each section has been learned</p></div>' +
       sectionBarsHTML +
     '</div>' +
 
@@ -3296,13 +3296,11 @@ function renderStats() {
       '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">' +
         '<div style="width:38px;height:38px;border-radius:11px;background:' + nextMedal.color + '18;border:1px solid ' + nextMedal.color + '30;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + nextMedal.color + ';">' + icon(nextMedal.icon, 18) + '</div>' +
         '<div style="flex:1;min-width:0;">' +
-          '<p style="font-size:12px;font-weight:700;color:var(--t1);">' + nextMedal.label + '</p>' +
+          '<p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Next medal</p>' +
+          '<p style="font-size:13px;font-weight:700;color:var(--t1);">' + nextMedal.label + '</p>' +
           '<p style="font-size:11px;color:var(--t3);">' + nextMedal.desc + '</p>' +
         '</div>' +
-        '<div style="text-align:right;flex-shrink:0;">' +
-          '<p style="font-size:10px;color:' + nextMedal.color + ';font-weight:700;">' + earned.length + '/' + MEDALS.length + '</p>' +
-          '<p style="font-size:9px;color:var(--t3);">medals</p>' +
-        '</div>' +
+        '<p style="font-size:11px;color:' + nextMedal.color + ';font-weight:700;flex-shrink:0;">' + earned.length + '/' + MEDALS.length + '</p>' +
       '</div>'
     : '<div style="text-align:center;padding:12px;font-size:13px;color:var(--green);font-weight:700;">All medals earned!</div>'
     ) +
@@ -3462,7 +3460,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v75'); } catch{}
+  try { localStorage.removeItem('chitas_v76'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3531,7 +3529,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v75', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v76', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
