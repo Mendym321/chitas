@@ -307,7 +307,8 @@ onAuthStateChanged(auth, user => {
     <div style="padding:22px 20px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div style="flex:1;min-width:0;">
         <p id="heb-date-label" style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;">Loading…</p>
-        <h2 id="greeting" style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;color:var(--t1);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Good morning</h2>
+        <h2 id="greeting" style="font-family:'DM Sans',sans-serif;font-size:24px;font-weight:900;color:var(--t1);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Good morning</h2>
+        <p id="greeting-nudge" style="font-size:12px;color:var(--t3);margin-top:3px;"></p>
       </div>
       <!-- Avatar — top right, taps to open profile -->
       <button id="avatar-tab-btn" onclick="openProfileSheet()" style="flex-shrink:0;background:none;border:none;cursor:pointer;padding:0;" title="Profile">
@@ -733,7 +734,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v76'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v77'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -819,7 +820,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v76', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v77', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -913,7 +914,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v76', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v77', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1113,6 +1114,40 @@ async function init() {
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
+function setGreeting() {
+  const hour = new Date().getHours();
+  const tod = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const firstName = (user.name || '').split(' ')[0];
+  const greetEl = document.getElementById('greeting');
+  if (greetEl) greetEl.textContent = firstName ? tod + ', ' + firstName : tod;
+
+  // Contextual nudge — one line, useful, never generic
+  const nudgeEl = document.getElementById('greeting-nudge');
+  if (!nudgeEl) return;
+  const ids = ['chumash','tehillim','tanya','rambam'];
+  const doneSections = ids.filter(id => user.done?.[id]).length;
+  const allDone = doneSections === 4;
+  const noneDone = doneSections === 0;
+
+  let nudge = '';
+  if (allDone) {
+    nudge = user.streak > 1 ? user.streak + '-day streak — keep it going.' : 'All done for today.';
+  } else if (doneSections > 0) {
+    const left = 4 - doneSections;
+    nudge = left === 1 ? 'One section left for today.' : left + ' sections left today.';
+  } else if (user.streak > 0) {
+    nudge = 'Day ' + (user.total + 1) + ' — your streak is at ' + user.streak + '.';
+  } else if (user.total > 0) {
+    nudge = 'Good to have you back.';
+  }
+  // Day-of-week context
+  const dow = new Date().getDay();
+  if (dow === 5 && !allDone) nudge = 'Erev Shabbos — finish before candle lighting.';
+  if (dow === 0 && noneDone && user.streak > 0) nudge = 'New week. Keep the streak alive.';
+
+  nudgeEl.textContent = nudge;
+}
+
 function updateHeader() {
   const level    = levelFromXp(user.xp);
   const inLevel  = xpInCurrentLevel(user.xp);
@@ -1139,6 +1174,7 @@ function updateHeader() {
   if (at) at.innerHTML = letterAvatar(user.name, 34, 14);
   const dot = document.getElementById('avatar-dot');
   if (dot) dot.style.display = (!user.city) ? 'block' : 'none';
+  setGreeting();
 }
 
 function updateStats() {
@@ -3460,7 +3496,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v76'); } catch{}
+  try { localStorage.removeItem('chitas_v77'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3529,7 +3565,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v76', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v77', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
