@@ -725,7 +725,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v68'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v70'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -811,7 +811,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v68', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v70', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -905,7 +905,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v68', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v70', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1145,11 +1145,11 @@ function renderSections() {
     return `
     <div id="card-${s.id}" onclick="openChabadPanel('${s.id}')" style="background:var(--card);border:1.5px solid ${done?s.color+'80':'var(--border)'};border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:${i*.06}s;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='var(--card)'" onmousedown="this.style.transform='scale(.985)'" onmouseup="this.style.transform=''" ontouchstart="this.style.background='var(--hi)'" ontouchend="this.style.background='var(--card)';this.style.transform=''">
       <div style="display:flex;align-items:center;gap:14px;">
-        <div id="icon-${s.id}" style="width:44px;height:44px;border-radius:13px;background:${done?s.color+'33':'var(--surface)'};border:1px solid ${done?s.color+'66':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${done?s.color:'var(--t3)'};transition:all .3s;pointer-events:none;">
+        <div id="icon-${s.id}" style="width:44px;height:44px;border-radius:13px;background:${s.color}18;border:1px solid ${s.color}35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${s.color};transition:all .3s;pointer-events:none;">
           ${icon(s.icon,21)}
         </div>
         <div style="flex:1;min-width:0;pointer-events:none;">
-          <p style="font-weight:700;font-size:15px;color:${done?s.color:'var(--t1)'};margin-bottom:2px;">${s.label}</p>
+          <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">${s.label}</p>
           <p style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.subtitle}</p>
         </div>
         <!-- Chevron — signals tappability -->
@@ -1329,22 +1329,23 @@ function renderSectionsForOffset(iso) {
 
   list.innerHTML = Object.values(schedule).map((s, i) => {
     const done = !!dayDone[s.id];
-    const cardStyle = 'background:var(--card);border:1.5px solid ' + (done ? s.color+'80' : 'var(--border)') + ';border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:' + (i*.06) + 's;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;';
-    const iconStyle = 'width:44px;height:44px;border-radius:13px;background:' + (done ? s.color+'33' : 'var(--surface)') + ';border:1px solid ' + (done ? s.color+'66' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + (done ? s.color : 'var(--t3)') + ';pointer-events:none;';
+    // Option C: icon always colored, rest gray until done
+    const cardStyle = 'background:var(--card);border:1.5px solid ' + (done ? s.color+'70' : 'var(--border)') + ';border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:' + (i*.06) + 's;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;';
+    const iconStyle = 'width:44px;height:44px;border-radius:13px;background:' + s.color + '18;border:1px solid ' + s.color + '35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + s.color + ';pointer-events:none;';
     const quizDoneToday = isToday && (user.quizDone||{})[s.id];
     const quizBtn = s.quizzable
-      ? '<button onclick="event.stopPropagation();' + (isToday ? 'openQuiz(\'' + s.id + '\')' : '') + '" style="width:34px;height:34px;border-radius:10px;background:' + (quizDoneToday ? 'rgba(29,185,84,.15)' : 'rgba(168,85,247,.12)') + ';border:1px solid ' + (quizDoneToday ? 'rgba(29,185,84,.4)' : 'rgba(168,85,247,.3)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (quizDoneToday ? '#1DB954' : '#A855F7') + ';flex-shrink:0;" title="Quiz"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg></button>'
+      ? '<button onclick="event.stopPropagation();' + (isToday ? 'openQuiz(\'' + s.id + '\')' : '') + '" style="width:34px;height:34px;border-radius:10px;background:' + (quizDoneToday ? 'rgba(29,185,84,.12)' : 'var(--surface)') + ';border:1px solid ' + (quizDoneToday ? 'rgba(29,185,84,.35)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (quizDoneToday ? '#1DB954' : 'var(--t3)') + ';flex-shrink:0;" title="Quiz"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg></button>'
       : '';
     const tickAction = isToday
       ? (done ? 'unmarkDone(\'' + s.id + '\')' : 'showConfirm(\'' + s.id + '\',false)')
       : 'markDonePast(\'' + s.id + '\',\'' + iso + '\')';
     const tickTitle = done && isToday ? 'Undo' : '';
-    const tickBtn = '<button id="tick-' + s.id + '" onclick="' + tickAction + '" title="' + tickTitle + '" style="width:36px;height:36px;border-radius:10px;background:' + (done ? (isToday ? '#1DB95422' : s.color+'28') : 'var(--surface)') + ';border:1px solid ' + (done ? (isToday ? '#1DB95455' : s.color+'55') : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (done ? '#1DB954' : 'var(--t3)') + ';transition:all .15s;">' + icon('check',18) + '</button>';
+    const tickBtn = '<button id="tick-' + s.id + '" onclick="' + tickAction + '" title="' + tickTitle + '" style="width:36px;height:36px;border-radius:10px;background:' + (done ? 'rgba(29,185,84,.12)' : 'var(--surface)') + ';border:1px solid ' + (done ? 'rgba(29,185,84,.35)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (done ? '#1DB954' : 'var(--t3)') + ';transition:all .15s;">' + icon('check',18) + '</button>';
     return '<div id="card-' + s.id + '" onclick="openChabadPanel(\'' + s.id + '\')" style="' + cardStyle + '" onmouseenter="this.style.background=\'var(--hi)\'" onmouseleave="this.style.background=\'var(--card)\'" onmousedown="this.style.transform=\'scale(.985)\'" onmouseup="this.style.transform=\'\'" ontouchstart="this.style.background=\'var(--hi)\'" ontouchend="this.style.background=\'var(--card)\';this.style.transform=\'\'">' +
       '<div style="display:flex;align-items:center;gap:14px;">' +
         '<div id="icon-' + s.id + '" style="' + iconStyle + '">' + icon(s.icon,21) + '</div>' +
         '<div style="flex:1;min-width:0;pointer-events:none;">' +
-          '<p style="font-weight:700;font-size:15px;color:' + (done ? s.color : 'var(--t1)') + ';margin-bottom:2px;">' + s.label + '</p>' +
+          '<p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">' + s.label + '</p>' +
           '<p style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.subtitle + '</p>' +
         '</div>' +
         '<svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);pointer-events:none;margin-right:2px;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
@@ -1442,6 +1443,36 @@ function unmarkDone(id) {
   const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
   renderSectionsForOffset(dateISO(d2));
   fire('Unmarked ' + s.label, 'xp');
+}
+
+function markDonePast(id, iso) {
+  if (!schedule) return;
+  if (!user.pastDone) user.pastDone = {};
+  if (!user.pastDone[iso]) user.pastDone[iso] = {};
+  if (user.pastDone[iso][id]) return; // already done
+
+  const s = schedule[id];
+  user.pastDone[iso][id] = true;
+  user.xp += s.xp;
+
+  const ids = ['chumash','tehillim','tanya','rambam'];
+  const allNow = ids.every(x => user.pastDone[iso][x]);
+  if (allNow) {
+    user.total++;
+    user.xp += 150;
+    fire('Day complete · +' + (s.xp + 150) + ' XP', 'gold');
+  } else {
+    fire('+' + s.xp + ' XP', 'xp');
+  }
+
+  saveUser();
+  updateStats();
+  updateHeader();
+  updateProgressRing();
+  renderMedals();
+  renderStats();
+  const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
+  renderSectionsForOffset(dateISO(d2));
 }
 
 function markDone(id) {
@@ -2154,10 +2185,12 @@ function celebrateSection(sectionId) {
   // Quick satisfying pop on the card
   const card = document.getElementById('card-' + sectionId);
   if (card) {
-    card.style.transition = 'transform .15s ease, box-shadow .3s ease';
+    const col = window.schedule?.[sectionId]?.color || '#F0A500';
+    card.style.transition = 'transform .15s ease, box-shadow .3s ease, border-color .3s ease';
     card.style.transform = 'scale(1.02)';
-    card.style.boxShadow = '0 0 24px ' + (window.schedule?.[sectionId]?.color || '#F0A500') + '66';
-    setTimeout(() => { card.style.transform = ''; card.style.boxShadow = ''; }, 300);
+    card.style.boxShadow = '0 0 20px ' + col + '55';
+    card.style.borderColor = col + '70';
+    setTimeout(() => { card.style.transform = ''; card.style.boxShadow = ''; }, 400);
   }
   // Tick animation
   const tick = document.getElementById('tick-' + sectionId);
@@ -3274,7 +3307,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v68'); } catch{}
+  try { localStorage.removeItem('chitas_v70'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3343,7 +3376,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v68', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v70', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
