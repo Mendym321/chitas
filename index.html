@@ -532,12 +532,17 @@ onAuthStateChanged(auth, user => {
   <iframe id="chabad-iframe" src="" style="display:none;flex:1;border:none;width:100%;background:white;" allow="autoplay"></iframe>
 
   <!-- Bottom bar — always visible, compact -->
-  <div id="reader-bottom-bar" style="padding:8px 14px 20px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+  <div id="reader-bottom-bar" style="padding:10px 14px 24px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
     <div style="display:flex;gap:8px;">
-      <button id="chabad-mark-btn" style="flex:1;padding:10px 12px;border-radius:12px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">Mark Done ✓</button>
-      <button id="chabad-quiz-btn" style="display:none;padding:10px 14px;border-radius:12px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;align-items:center;justify-content:center;gap:5px;">
-        <svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
-        Quiz
+      <!-- Mark done — left half, shows XP -->
+      <button id="chabad-mark-btn" style="flex:1;padding:12px;border-radius:14px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
+        <span id="chabad-mark-label" style="font-size:14px;font-weight:800;">Mark Done</span>
+        <span id="chabad-mark-xp" style="font-size:11px;font-weight:700;opacity:.7;">+50 XP</span>
+      </button>
+      <!-- Quiz — right half, equal size -->
+      <button id="chabad-quiz-btn" style="display:none;flex:1;padding:12px;border-radius:14px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
+        <span style="font-size:14px;font-weight:800;">Quiz</span>
+        <span style="font-size:11px;font-weight:700;opacity:.7;">+15 XP</span>
       </button>
     </div>
   </div>
@@ -720,7 +725,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v67'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v68'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -806,7 +811,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v67', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v68', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -900,7 +905,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v67', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v68', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1327,7 +1332,9 @@ function renderSectionsForOffset(iso) {
     const cardStyle = 'background:var(--card);border:1.5px solid ' + (done ? s.color+'80' : 'var(--border)') + ';border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:' + (i*.06) + 's;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;';
     const iconStyle = 'width:44px;height:44px;border-radius:13px;background:' + (done ? s.color+'33' : 'var(--surface)') + ';border:1px solid ' + (done ? s.color+'66' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + (done ? s.color : 'var(--t3)') + ';pointer-events:none;';
     const quizDoneToday = isToday && (user.quizDone||{})[s.id];
-    const quizBtn = ''; // Quiz accessed from reader bottom bar, not card
+    const quizBtn = s.quizzable
+      ? '<button onclick="event.stopPropagation();' + (isToday ? 'openQuiz(\'' + s.id + '\')' : '') + '" style="width:34px;height:34px;border-radius:10px;background:' + (quizDoneToday ? 'rgba(29,185,84,.15)' : 'rgba(168,85,247,.12)') + ';border:1px solid ' + (quizDoneToday ? 'rgba(29,185,84,.4)' : 'rgba(168,85,247,.3)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (quizDoneToday ? '#1DB954' : '#A855F7') + ';flex-shrink:0;" title="Quiz"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg></button>'
+      : '';
     const tickAction = isToday
       ? (done ? 'unmarkDone(\'' + s.id + '\')' : 'showConfirm(\'' + s.id + '\',false)')
       : 'markDonePast(\'' + s.id + '\',\'' + iso + '\')';
@@ -2765,9 +2772,13 @@ function unlockMarkDone() {
     const s = schedule[sid];
     if (s && !user.done[sid]) {
       markBtn.style.background = s.color;
+      markBtn.style.color = s.color === '#F0A500' ? '#000' : '#fff';
       markBtn.style.opacity = '1';
       markBtn.style.cursor = 'pointer';
-      markBtn.textContent = 'Mark Done · +' + s.xp + ' XP';
+      const ml = document.getElementById('chabad-mark-label');
+      const mx = document.getElementById('chabad-mark-xp');
+      if (ml) ml.textContent = sid === 'tehillim' ? 'Mark Read' : 'Mark Done';
+      if (mx) mx.textContent = '+' + s.xp + ' XP';
       markBtn.onclick = () => showConfirm(sid, true);
     }
   }
@@ -2799,27 +2810,29 @@ function openChabadPanel(sectionId) {
   const markBtn = document.getElementById('chabad-mark-btn');
   markBtn.dataset.sectionId = sectionId;
 
+  const markLabel = document.getElementById('chabad-mark-label');
+  const markXp    = document.getElementById('chabad-mark-xp');
   if (user.done[sectionId]) {
     markBtn.style.background = 'rgba(29,185,84,.15)';
     markBtn.style.border = '1px solid rgba(29,185,84,.4)';
     markBtn.style.color = '#1DB954';
-    markBtn.style.opacity = '1';
     markBtn.style.cursor = 'default';
-    markBtn.textContent = '✓ Done';
+    if (markLabel) markLabel.textContent = '✓ Done';
+    if (markXp)    markXp.textContent    = '';
     markBtn.onclick = null;
   } else {
     markBtn.style.background = s.color;
     markBtn.style.border = 'none';
-    markBtn.style.color = '#000';
-    markBtn.style.opacity = '1';
+    markBtn.style.color = s.color === '#F0A500' ? '#000' : '#fff';
     markBtn.style.cursor = 'pointer';
-    markBtn.textContent = 'Mark Done · +' + s.xp + ' XP';
+    if (markLabel) markLabel.textContent = sectionId === 'tehillim' ? 'Mark Read' : 'Mark Done';
+    if (markXp)    markXp.textContent    = '+' + s.xp + ' XP';
     markBtn.onclick = () => showConfirm(sectionId, true);
   }
 
-  // ── Quiz button ──
+  // ── Quiz button — show for quizzable sections always ──
   const quizBtn = document.getElementById('chabad-quiz-btn');
-  if (s.quizzable && !user.done[sectionId]) {
+  if (s.quizzable) {
     quizBtn.style.display = 'flex';
     quizBtn.onclick = () => { closeChabadPanel(); openQuiz(sectionId); };
     if (!user.quizDone) user.quizDone = {};
@@ -2827,6 +2840,7 @@ function openChabadPanel(sectionId) {
       quizBtn.style.background = 'rgba(29,185,84,.15)';
       quizBtn.style.borderColor = 'rgba(29,185,84,.4)';
       quizBtn.style.color = '#1DB954';
+      quizBtn.innerHTML = quizBtn.innerHTML.replace(/Quiz.*/, 'Retake');
     } else {
       quizBtn.style.background = 'rgba(168,85,247,.15)';
       quizBtn.style.borderColor = 'rgba(168,85,247,.4)';
@@ -3260,7 +3274,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v67'); } catch{}
+  try { localStorage.removeItem('chitas_v68'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3329,7 +3343,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v67', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v68', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
