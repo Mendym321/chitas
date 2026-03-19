@@ -594,24 +594,28 @@ onAuthStateChanged(auth, user => {
         <svg width="14" height="14" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <!-- Stats -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:16px 24px;border-bottom:1px solid var(--border);">
-      <div style="text-align:center;">
-        <p id="ps-streak" style="font-size:26px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:3px;">0</p>
-        <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Streak</p>
+    <!-- Level bar — compact, no redundancy with stats tab -->
+    <div style="padding:14px 24px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;">Level</span>
+          <span id="ps-level" style="font-size:16px;font-weight:900;color:var(--gold);">1</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="display:flex;align-items:center;gap:4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
+            <span id="ps-streak" style="font-size:13px;font-weight:800;color:var(--t1);">0</span>
+          </span>
+          <span style="display:flex;align-items:center;gap:4px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="#F0A500"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>
+            <span id="ps-xp" style="font-size:13px;font-weight:800;color:var(--gold);">0</span>
+          </span>
+        </div>
       </div>
-      <div style="text-align:center;">
-        <p id="ps-days" style="font-size:26px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:3px;">0</p>
-        <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">Days</p>
+      <div style="height:5px;background:var(--surface);border-radius:3px;overflow:hidden;">
+        <div id="ps-xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:3px;transition:width .8s ease;"></div>
       </div>
-      <div style="text-align:center;">
-        <p id="ps-xp" style="font-size:26px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:3px;">0</p>
-        <p style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">XP</p>
-      </div>
-    </div>
-    <!-- Content — stats + medals -->
-    <div style="padding:16px 24px;">
-      <div id="profile-sheet-content"></div>
+      <p id="ps-xp-next" style="font-size:10px;color:var(--t3);margin-top:4px;text-align:right;"></p>
     </div>
     <!-- Settings -->
     <div style="padding:0 24px 8px;">
@@ -729,7 +733,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v73'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v74'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -815,7 +819,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v73', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v74', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -909,7 +913,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v73', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v74', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1185,11 +1189,16 @@ function renderSections() {
 // ── XP / LEVEL SYSTEM ────────────────────────────────────────────────────────
 // Scaling levels: each level takes ~40% more XP than the last
 // Level 1→2: 100 XP, 2→3: 140, 3→4: 196, 4→5: 274, 5→6: 384...
+function xpNeededForLvl(level) {
+  // Round to nearest 50 for clean numbers
+  return Math.round(100 * Math.pow(1.5, level - 1) / 50) * 50;
+}
+
 function xpForLevel(level) {
   // Total XP needed to reach this level from level 1
   let total = 0;
   for (let i = 1; i < level; i++) {
-    total += Math.floor(100 * Math.pow(1.4, i - 1));
+    total += xpNeededForLvl(i);
   }
   return total;
 }
@@ -1206,7 +1215,7 @@ function xpInCurrentLevel(xp) {
 }
 
 function xpNeededForLevel(level) {
-  return Math.floor(100 * Math.pow(1.4, level - 1));
+  return xpNeededForLvl(level);
 }
 
 function dateISO(d) {
@@ -1422,8 +1431,6 @@ function updateProgressRing() {
   document.getElementById('progress-title').style.color = allDone ? '#1DB954' : 'var(--t1)';
   document.getElementById('progress-title').textContent = allDone ? "All done for today" : "Today's Learning";
   // Update avatar in header if present
-  const ha = document.getElementById('header-avatar');
-  if (ha) ha.innerHTML = letterAvatar(user.name, 32, 13);
   const at = document.getElementById('avatar-tab');
   if (at) at.innerHTML = letterAvatar(user.name, 34, 14);
   // Show dot if no city
@@ -3187,10 +3194,10 @@ function renderStats() {
     // ── STREAK HERO ──
     '<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 20px;margin-bottom:12px;text-align:center;position:relative;overflow:hidden;">' +
       '<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 0%, ' + streakColor + '18, transparent 70%);pointer-events:none;"></div>' +
-      '<div style="font-size:52px;line-height:1;margin-bottom:4px;animation:flamePulse 2s ease-in-out infinite;">🔥</div>' +
+      '<div style="margin-bottom:8px;animation:flamePulse 2s ease-in-out infinite;"><svg width="44" height="44" viewBox="0 0 24 24" fill="' + streakColor + '"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg></div>' +
       '<p style="font-size:52px;font-weight:900;color:' + streakColor + ';line-height:1;margin-bottom:4px;letter-spacing:-2px;">' + user.streak + '</p>' +
       '<p style="font-size:13px;font-weight:700;color:var(--t2);">day streak</p>' +
-      (user.streak >= 7 ? '<div style="margin-top:10px;display:inline-block;padding:3px 12px;border-radius:20px;background:' + streakColor + '22;border:1px solid ' + streakColor + '44;"><span style="font-size:11px;font-weight:700;color:' + streakColor + ';">' + (user.streak >= 30 ? '🏆 Incredible!' : user.streak >= 14 ? '⚡ On fire!' : '✨ Great run!') + '</span></div>' : '') +
+      (user.streak >= 7 ? '<div style="margin-top:10px;display:inline-block;padding:3px 12px;border-radius:20px;background:' + streakColor + '22;border:1px solid ' + streakColor + '44;"><span style="font-size:11px;font-weight:700;color:' + streakColor + ';">' + (user.streak >= 30 ? 'Incredible' : user.streak >= 14 ? 'On fire' : 'Great run') + '</span></div>' : '') +
     '</div>' +
 
     // ── QUICK STATS ROW ──
@@ -3217,7 +3224,7 @@ function renderStats() {
       '</div>' +
       '<div style="display:flex;justify-content:space-between;margin-top:5px;">' +
         '<span style="font-size:10px;color:var(--t3);">' + xpInLevel + ' XP</span>' +
-        '<span style="font-size:10px;color:var(--t3);">100 XP → Lv' + (level+1) + '</span>' +
+        '<span style="font-size:10px;color:var(--t3);">' + xpNeeded + ' XP → Lv' + (level+1) + '</span>' +
       '</div>' +
     '</div>' +
 
@@ -3275,7 +3282,6 @@ function openProfileSheet() {
   document.getElementById('profile-sheet-name').textContent = user.name || 'Anonymous';
   document.getElementById('profile-sheet-city').textContent = user.city || '';
   document.getElementById('ps-streak').textContent = user.streak;
-  document.getElementById('ps-days').textContent = user.total;
   document.getElementById('ps-xp').textContent = user.xp;
   document.getElementById('ps-track').textContent = RAMBAM_TRACKS[user.rambamTrack]?.label || '';
   // City row
@@ -3287,7 +3293,18 @@ function openProfileSheet() {
   // Notification dot — show if no city
   const dot = document.getElementById('avatar-dot');
   if (dot) dot.style.display = user.city ? 'none' : 'block';
-  renderProfileSheetContent();
+  // Populate compact level bar
+  const psLevel = levelFromXp(user.xp);
+  const psInLevel = xpInCurrentLevel(user.xp);
+  const psNeeded = xpNeededForLevel(psLevel);
+  const el = document.getElementById('ps-level');
+  if (el) el.textContent = psLevel;
+  const bar = document.getElementById('ps-xp-bar');
+  if (bar) bar.style.width = Math.round(psInLevel/psNeeded*100) + '%';
+  const next = document.getElementById('ps-xp-next');
+  if (next) next.textContent = psInLevel + ' / ' + psNeeded + ' XP';
+  document.getElementById('ps-streak').textContent = user.streak;
+  document.getElementById('ps-xp').textContent = user.xp;
   document.getElementById('profile-sheet').style.display = 'flex';
 }
 
@@ -3411,7 +3428,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v73'); } catch{}
+  try { localStorage.removeItem('chitas_v74'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3480,7 +3497,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v73', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v74', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
