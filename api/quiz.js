@@ -220,111 +220,146 @@ async function fetchMitzvos(dateObj) {
 
 // ── Prompts ────────────────────────────────────────────────────────────────────
 
+// Style rules applied to ALL questions regardless of difficulty:
+// - Question max 15 words. Answer max 10 words. No exceptions.
+// - No preamble: never start with "According to", "Based on", "In this passage"
+// - Sound like a chavrusa asking, not a professor examining
+// - Wrong answers must require real knowledge to eliminate — not obviously absurd
+// - Correct answer should feel satisfying to get right, not like a trick
+//
+// Difficulty changes WHAT is tested, not how long the question is:
 const DIFFICULTY_GUIDE = {
-  basic:    'Focus on direct recall of the main points clearly stated in the text.',
-  standard: 'Test understanding of meaning and reasoning, not just surface facts.',
-  deep:     'Test specific distinctions, edge cases, deeper reasoning, and implications.',
+  basic:    'Test the most obvious main point — what happened, what is required, what is forbidden.',
+  standard: 'Test the reasoning or condition — why, when, under what circumstances.',
+  deep:     'Test a specific distinction or implication — what is the edge case, what follows from this.',
 };
 
 function chumashPrompt(c, diff) {
-  return `You are generating quiz questions for a Jewish daily learning app. The user just read this Torah portion with Rashi.
+  return `You are writing quiz questions for a Jewish learning app. The user just read this aliyah with Rashi. Write questions that feel like a knowledgeable friend testing you — natural, clear, interesting.
 
-CONTENT — ${c.sectionLabel}:
+CONTENT:
 ${c.text}
 
-Generate exactly 3 multiple-choice questions:
-- Q1: Plain meaning (pshat) — what the Torah text itself says
-- Q2: Rashi's explanation — specifically what Rashi adds or clarifies${!c.hasRashi ? ' (no Rashi available — ask a second pshat question instead)' : ''}
-- Q3: Understanding — combines text and Rashi to test real comprehension
+DIFFICULTY: ${diff} — ${DIFFICULTY_GUIDE[diff]}
 
-Difficulty: ${diff} — ${DIFFICULTY_GUIDE[diff]}
+STRICT STYLE RULES — violating these makes the quiz unusable:
+1. Questions: max 12 words. Answers: max 8 words. Be ruthlessly concise.
+2. NEVER start a question with "According to", "Based on", "In this passage", "What does the text say"
+3. Questions sound like: "What animal did the woman bring?" not "According to verse 3, what animal does the Torah require?"
+4. Answers sound like: "A female goat" not "A female goat without blemish as stated in the text"
+5. Wrong answers must be things a careless reader might believe — not obviously absurd options
+6. Q1: about what the Torah text says (pshat)
+7. Q2: specifically about what Rashi explains — name Rashi in the question
+8. Q3: connects text and Rashi — tests real understanding
 
-LEGITIMACY (non-negotiable):
-- Every correct answer must be explicitly stated in the text above — no outside knowledge
-- Wrong options must be plausible but clearly wrong based on the text
-- Do not ask about anything not covered in the text above
+LEGITIMACY: Every correct answer must be in the text above. No outside knowledge.
 
-Respond ONLY with a JSON array, no markdown:
+BAD example: "According to the plain text of this aliya, what animal can be brought as a sin offering by someone from the populace who unwittingly incurs guilt?" → "A female goat or a female sheep, both without blemish"
+GOOD example: "What two animals can serve as a sin offering here?" → "A female goat or female sheep"
+
+Respond ONLY with JSON, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
 }
 
 function tanyaPrompt(c, diff) {
-  return `You are generating quiz questions for a Jewish daily learning app. The user just read this Tanya section.
+  return `You are writing quiz questions for a Jewish learning app. The user just read this section of Tanya. Test whether they understood the Alter Rebbe's actual teaching — not vocabulary, not metadata.
 
-CONTENT — ${c.sectionLabel}:
+CONTENT:
 ${c.text}
 
-Generate exactly 3 multiple-choice questions:
-- Q1: The main concept — what specific teaching does the Alter Rebbe present?
-- Q2: The reasoning — what argument or explanation does he give?
-- Q3: Implication — what follows from this teaching?
+DIFFICULTY: ${diff} — ${DIFFICULTY_GUIDE[diff]}
 
-Difficulty: ${diff} — ${DIFFICULTY_GUIDE[diff]}
+STRICT STYLE RULES:
+1. Questions: max 12 words. Answers: max 10 words. Be ruthlessly concise.
+2. NEVER start with "According to", "Based on", "What does the Alter Rebbe say about"
+3. Ask about the SUBSTANCE: what IS the teaching, not who said it or where
+4. Good question: "Why isn't kavanah alone enough for Shema?" Bad: "What does the Alter Rebbe explain about the necessity of verbal articulation?"
+5. Wrong answers must use real Tanya/Chassidus concepts that are close but wrong — not nonsense
+6. Q1: the core teaching or ruling in plain terms
+7. Q2: the reason or mechanism the Alter Rebbe gives
+8. Q3: a consequence or application of this teaching
 
-LEGITIMACY (non-negotiable):
-- Every correct answer must be directly stated or clearly implied in the text above
-- Tanya concepts are precise — do not paraphrase in ways that shift the meaning
-- Wrong options should use real Chassidic concepts that are NOT what this passage says
+LEGITIMACY: Every correct answer must be in the text. Tanya is precise — don't rephrase in ways that change the meaning.
 
-Respond ONLY with a JSON array, no markdown:
+BAD: "Why does the Alter Rebbe explain that verbal articulation through speech is necessary for fulfilling commandments?" → "Because the neshamah requires the letters of speech pronounced by the nefesh to draw forth light"
+GOOD: "Why isn't mental recitation of Shema enough?" → "The neshamah needs the letters of speech to draw light"
+
+Respond ONLY with JSON, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
 }
 
 function rambamPrompt(c, diff) {
-  return `You are generating quiz questions for a Jewish daily learning app. The user just read these halachos.
+  return `You are writing quiz questions for a Jewish learning app. The user just read these halachos of Rambam. Make questions feel like testing a chavrusa — sharp, clear, about the actual halacha.
 
-CONTENT — ${c.sectionLabel}:
+CONTENT:
 ${c.text}
 
-Generate exactly 3 multiple-choice questions:
-- Q1: A specific ruling — what does the Rambam rule in a particular case?
-- Q2: A condition or distinction — when does it apply vs. not apply?
-- Q3: The reason — what reasoning does the Rambam give?
+DIFFICULTY: ${diff} — ${DIFFICULTY_GUIDE[diff]}
 
-Difficulty: ${diff} — ${DIFFICULTY_GUIDE[diff]}
+STRICT STYLE RULES:
+1. Questions: max 12 words. Answers: max 8 words. No exceptions.
+2. NEVER start with "According to the Rambam", "What is the Rambam's ruling", "Based on this halacha"
+3. State the scenario directly: "May one rent a field to a non-Jew in Israel?" not "What is the Rambam's position on the rental of fields?"
+4. Answers state the ruling cleanly: "No, never" / "Yes, but only..." / "Only if..."
+5. Wrong answers must be halachically plausible alternatives — things someone could reasonably think
+6. Spread questions across different halachos if the text covers multiple
+7. Q1: a clear yes/no or what-is-required ruling
+8. Q2: a condition or exception to a ruling
+9. Q3: the reason given for a ruling
 
-LEGITIMACY (non-negotiable — halacha must be exact):
-- Every correct answer must match exactly what the Rambam writes above
-- Do not soften, generalize, or round off rulings
-- Wrong options should describe real halachic positions that differ from what this Rambam says
-- If text covers multiple halachos, spread questions across them
+LEGITIMACY: Halacha is precise. Every correct answer must match exactly what the Rambam writes above.
 
-Respond ONLY with a JSON array, no markdown:
+BAD: "According to the Rambam, under what circumstances may one provide medical treatment to an idolater without payment?" → "Only if one fears negative consequences or ill feeling will be aroused"
+GOOD: "When may a doctor treat a non-Jew for free?" → "Only if refusing would cause hostility"
+
+Respond ONLY with JSON, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
 }
 
 function mitzvosPrompt(c, diff) {
-  return `You are generating quiz questions for a Jewish daily learning app. The user just studied this mitzvah.
+  return `You are writing quiz questions for a Jewish learning app. The user just learned today's mitzvah from Sefer HaMitzvos.
 
-CONTENT — ${c.sectionLabel}:
+CONTENT:
 ${c.text}
 
-Generate exactly 3 multiple-choice questions:
-- Q1: What the mitzvah requires or prohibits
-- Q2: Its Torah source or scope
-- Q3: A specific condition, exception, or application
+DIFFICULTY: ${diff} — ${DIFFICULTY_GUIDE[diff]}
 
-Difficulty: ${diff} — ${DIFFICULTY_GUIDE[diff]}
+STRICT STYLE RULES:
+1. Questions: max 12 words. Answers: max 8 words.
+2. NEVER start with "According to", "What does the Rambam say", "Based on this source"
+3. Ask directly: "What does Kiddush fulfill?" not "What is the mitzvah of remembering Shabbat?"
+4. Answers are clean and direct: "Sanctifying Shabbat in words" not "To sanctify Shabbat and say blessings at its beginning and culmination"
+5. Wrong answers must be adjacent mitzvos or common confusions — not obviously wrong
+6. Q1: what this mitzvah requires in plain terms
+7. Q2: the Torah source (book/verse) or when it applies
+8. Q3: a specific detail, condition, or what this includes
 
-LEGITIMACY: Base questions on the text. If minimal text, use accurate knowledge of this specific mitzvah only.
-
-Respond ONLY with a JSON array, no markdown:
+Respond ONLY with JSON, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
 }
 
 function weeklyPrompt(sections, diff) {
   const content = sections.map(s => `=== ${s.label} ===\n${s.text}`).join('\n\n');
-  return `You are generating a weekly review quiz for a Jewish daily learning app.
+  return `You are writing a weekly review quiz for a Jewish learning app. Make it feel like a lively end-of-week review — sharp questions that reward people who actually learned.
 
 THIS WEEK'S CONTENT:
 ${content}
 
-Generate exactly 10 multiple-choice questions — 3-4 Chumash, 3 Tanya, 3-4 Rambam.
-Difficulty: ${diff} — ${DIFFICULTY_GUIDE[diff]}
+DIFFICULTY: ${diff} — ${DIFFICULTY_GUIDE[diff]}
 
-LEGITIMACY: Every correct answer must be in the text above. Tag each with "subject": "Chumash"/"Tanya"/"Rambam".
+Generate exactly 10 questions: 3-4 Chumash, 3 Tanya, 3-4 Rambam.
 
-Respond ONLY with a JSON array, no markdown:
+STRICT STYLE RULES (same as daily):
+1. Questions: max 12 words. Answers: max 8 words.
+2. No preamble ("According to...", "Based on...", "What does the text say about...")
+3. Direct, natural phrasing — chavrusa style not exam style
+4. Wrong answers must require real knowledge to eliminate
+5. Spread across different topics/halachos covered this week
+6. Tag each: "subject": "Chumash" / "Tanya" / "Rambam"
+
+LEGITIMACY: Every correct answer must be in the content above.
+
+Respond ONLY with JSON, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0,"subject":"Chumash"},...]`;
 }
 
