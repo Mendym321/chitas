@@ -232,27 +232,29 @@ async function fetchMitzvos(dateObj) {
 // Length: question ≤ 15 words. Each answer ≤ 8 words.
 
 const SHARED_STYLE = `
-DIFFICULTY TARGET: Someone who read today's section once, paying reasonable attention, should get about 3 out of 4 right. Not someone who memorized it — just someone who genuinely engaged with it.
+DIFFICULTY TARGET: Someone who read today's section once, paying reasonable attention, should get about 3 out of 4 right.
 
 STYLE (mandatory):
-- Question max 15 words. Each answer max 8 words.
-- Lead with a scenario or direct question. Never start with "According to", "Based on", "Which of the following"
-- Answers are short and direct: "A female goat" not "A female goat without blemish as stated in verse 3"
-- Wrong answers: plausible to someone who skimmed, clearly wrong to someone who read. Not tricks. Not absurd.
-- Never test verse numbers, peripheral details, or things mentioned only once in passing
-- Always test the main point, key distinction, surprising ruling, or central concept
+- Question max 12 words. Each answer max 8 words. If your question is longer, cut it.
+- Scenario questions: name the person, state ONE condition, ask what happens. "Shimon touched something impure and ate kodesh. What does he bring?" — not a 30-word description of the entire case.
+- Never start with "According to", "Based on", "Which of the following"
+- Answers are short and direct. "A sin offering" not "A purgation offering as required by the Torah"
+- Use plain English terms: "sin offering" not "purgation offering", "permitted" not "halachically valid", "forbidden" not "proscribed"
+- Wrong answers: plausible to someone who skimmed, clearly wrong to someone who read
+- Never test verse numbers or peripheral details
+- Always test the main point, key distinction, or surprising ruling
 
-THE GOAL: Getting it right = "yes, I got something from today's learning." Getting it wrong = "I should have caught that" — never "how would anyone know that."
+THE GOAL: Getting it right = "yes, I learned that today." Getting it wrong = "I should have caught that" — never "how would anyone know that."
 
-EXAMPLES OF GOOD vs BAD:
-BAD: "According to the plain text, what animals may be brought as a sin offering by one from the populace?"
-GOOD: "What two animals work as a sin offering here?"
+EXAMPLES:
+BAD: "What happens when someone touches an unclean thing, becomes unclean without realizing it, and then eats holy food or enters the Sanctuary?"
+GOOD: "Shimon touched something impure without knowing, then ate kodesh. What does he bring?"
 
-BAD: "The neshamah requires the letters of speech pronounced by the nefesh to draw forth light"
-GOOD: "The soul needs speech to draw down light"
+BAD: "A female goat without blemish, or a female sheep without blemish"
+GOOD: "A female goat or sheep"
 
-BAD: "According to the Rambam, under what circumstances may one provide medical treatment to an idolater without payment?"
-GOOD: "When may a doctor treat a non-Jew for free?"
+BAD: "They incur guilt and must bring a purgation offering when the matter becomes known"
+GOOD: "A sin offering once he finds out"
 `
 
 function chumashPrompt(c, diff) {
