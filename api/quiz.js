@@ -238,26 +238,28 @@ STYLE (mandatory):
 - Question max 12 words. Each answer max 8 words. If longer, cut it.
 - Scenario questions: name the person, state ONE condition, ask what happens.
 - Never start with "According to", "Based on", "Which of the following"
-- REWRITE answers in plain English — do NOT quote the source text directly. The Sefaria translation is dense academic English. Simplify it.
-- Use plain words: "sin offering" not "purgation offering", "soul" not "neshamah" (unless testing that term specifically), "permitted" not "halachically valid"
-- Wrong answers: plausible to someone who skimmed, clearly wrong to someone who read
+- REWRITE answers in plain English — do NOT quote the source text. Sefaria translations are dense. Simplify.
+- Use plain words: "sin offering" not "purgation offering", "soul" not "neshamah" unless testing that term, "permitted" not "halachically valid"
+- Wrong answers: plausible to a careless reader, clearly wrong to someone who read carefully. Never obviously absurd.
 - Never test verse numbers or peripheral details
-- Always test the main point, key distinction, or surprising ruling
 
-THE GOAL: Getting it right = "yes, I learned that today." Getting it wrong = "I should have caught that" — never "how would anyone know that."
+SPECIFICITY — the most common failure:
+- Do NOT ask generic questions about the topic that someone could answer without reading today's text
+- DO ask about the specific thing this section says, the specific analogy used, the specific case covered
+- If this section uses an analogy or comparison, ask about it directly
+- If this section makes a specific ruling or distinction, ask about that specific one
+- Bad: "What does the Alter Rebbe say about kavanah?" (could apply to 50 chapters)
+- Good: "A mitzvah without kavanah is compared to what?" (specific to this section's analogy)
+- Bad: "What is important about fulfilling mitzvos?" (generic)
+- Good: "Which gives more light — the mitzvah itself or the kavanah?" (tests this section's specific claim)
 
-REWRITING ANSWERS — this is critical:
-BAD answer: "The neshamah draws forth light to perfect the nefesh and body by means of the letters of speech"
-GOOD answer: "Speech draws divine light into the body"
+THE GOAL: Getting it right = "yes, I learned that today." Getting it wrong = "I should have caught that."
 
-BAD answer: "A female goat without blemish, or a female sheep without blemish"
-GOOD answer: "A female goat or sheep"
-
-BAD answer: "They incur guilt and must bring a purgation offering when the matter becomes known"
-GOOD answer: "A sin offering once he finds out"
-
-BAD question: "What happens when someone touches an unclean thing, becomes unclean without realizing it, and then eats holy food or enters the Sanctuary?"
-GOOD question: "Shimon touched something impure without knowing, then ate kodesh. What does he bring?"
+REWRITING ANSWERS:
+BAD: "The neshamah draws forth light to perfect the nefesh and body by means of the letters of speech"
+GOOD: "Speech draws divine light into the body"
+BAD: "G-d wants us to cleave to Him through both action and intention"
+GOOD: "Both action and kavanah together"
 `
 
 function chumashPrompt(c, diff) {
