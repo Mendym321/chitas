@@ -1056,6 +1056,7 @@ async function init() {
     // Chumash: aliya ref from Hebcal, or full parasha from Sefaria calendar
     const parshaItem = sefariaItems.find(i => i.title?.en === 'Parashat Hashavua');
     const chumashRef = p.aliyaRef || null; // only use the specific aliyah, never the full parsha
+    console.log('DEBUG aliyaRef:', p.aliyaRef, '| aliyaNum:', p.aliyaNum, '| sefariaRef will be:', chumashRef);
 
     // Tehillim: build ref from Hebcal chapter list
     // If multiple chapters, fetch them individually and combine
