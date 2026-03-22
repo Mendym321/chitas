@@ -517,10 +517,10 @@ onAuthStateChanged(auth, user => {
 
   <!-- Native reader (Chumash / Tanya / Rambam) -->
   <div id="native-reader" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;" onscroll="onReaderScroll()">
-    <div style="padding:24px 22px 40px;max-width:430px;margin:0 auto;">
+    <div style="padding:20px 18px 40px;max-width:860px;margin:0 auto;width:100%;">
       <div id="native-reader-loading" style="text-align:center;padding:60px 0;">
         <div class="spinner" style="margin:0 auto 16px;color:var(--gold);"></div>
-        <p style="font-size:13px;color:var(--t3);">Loading from Chabad.org…</p>
+        <p style="font-size:13px;color:var(--t3);">Loading…</p>
       </div>
       <div id="native-reader-content" style="display:none;">
         <!-- content injected here -->
@@ -537,7 +537,7 @@ onAuthStateChanged(auth, user => {
   <iframe id="chabad-iframe" src="" style="display:none;flex:1;border:none;width:100%;background:white;" allow="autoplay"></iframe>
 
   <!-- Bottom bar — always visible, compact -->
-  <div id="reader-bottom-bar" style="padding:10px 14px 24px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+  <div id="reader-bottom-bar" style="padding:8px 14px 12px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
     <div style="display:flex;gap:8px;">
       <!-- Mark done — left half, shows XP -->
       <button id="chabad-mark-btn" style="flex:1;padding:12px;border-radius:14px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
@@ -1055,7 +1055,7 @@ async function init() {
 
     // Chumash: aliya ref from Hebcal, or full parasha from Sefaria calendar
     const parshaItem = sefariaItems.find(i => i.title?.en === 'Parashat Hashavua');
-    const chumashRef = p.aliyaRef || parshaItem?.ref || null;
+    const chumashRef = p.aliyaRef || null; // only use the specific aliyah, never the full parsha
 
     // Tehillim: build ref from Hebcal chapter list
     // If multiple chapters, fetch them individually and combine
@@ -3055,11 +3055,17 @@ function _renderChumashContent() {
   const contentEl = document.getElementById('native-reader-content');
   if (!contentEl) return;
 
-  // Lang toggle buttons
-  let toggleHtml = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','עברית'], ['both','Both'], ['en','English']].forEach(([l, label]) => {
-    const active = lang === l;
-    toggleHtml += '<button onclick="_setChumashLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;background:' + (active ? 'var(--gold);color:#000;border-color:var(--gold)' : 'var(--card);color:var(--t2);border-color:var(--border)') + ';">' + label + '</button>';
+  // Shared styles
+  const HE_FONT = "'Noto Serif Hebrew','Frank Ruhl Libre',serif";
+  const RASHI_BG = 'background:rgba(240,165,0,.04);border-left:3px solid rgba(240,165,0,.25);';
+
+  // Lang toggle
+  let toggleHtml = '<div style="display:flex;gap:6px;margin-bottom:24px;">';
+  [['he','עברית'],['both','Both'],['en','English']].forEach(([l,label]) => {
+    const a = lang===l;
+    toggleHtml += '<button onclick="_setChumashLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;'
+      + (a ? 'background:var(--gold);color:#000;border-color:var(--gold);' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
+      + '">' + label + '</button>';
   });
   toggleHtml += '</div>';
 
@@ -3069,30 +3075,47 @@ function _renderChumashContent() {
     const verseHe = torah.he[i] || '';
     const rashiEn = rashi.en[i] || '';
     const rashiHe = rashi.he[i] || '';
+    const verseNumSpan = '<span style="font-size:11px;font-weight:800;color:var(--gold);margin-right:4px;">' + vn + '.</span>';
 
     versesHtml += '<div style="margin-bottom:2px;">';
-    versesHtml += '<div style="padding:14px 0 12px;border-bottom:1px solid var(--border);">';
-    if (lang !== 'en' && verseHe) {
-      versesHtml += '<p style="font-size:19px;line-height:2.1;color:var(--t1);direction:rtl;text-align:right;font-family:\'Noto Serif Hebrew\',\'Frank Ruhl Libre\',serif;' + (lang === 'both' ? 'margin-bottom:10px;' : '') + '">' + verseHe + '</p>';
-    }
-    if (lang !== 'he' && verseEn) {
-      versesHtml += '<p style="font-size:15px;line-height:1.8;color:' + (lang === 'both' ? 'var(--t2)' : 'var(--t1)') + ';"><span style="font-size:11px;font-weight:800;color:var(--gold);margin-right:5px;">' + vn + '.</span>' + verseEn + '</p>';
-    }
-    versesHtml += '</div>';
 
-    if (rashiEn || rashiHe) {
-      versesHtml += '<div style="background:rgba(255,165,0,.05);border-left:3px solid rgba(240,165,0,.3);padding:12px 14px;margin-bottom:2px;">';
-      versesHtml += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:5px;">Rashi</p>';
-      if (lang !== 'he' && rashiEn) versesHtml += '<p style="font-size:14px;line-height:1.65;color:var(--t2);">' + rashiEn + '</p>';
-      if (lang !== 'en' && rashiHe) versesHtml += '<p style="font-size:16px;line-height:1.9;color:var(--t2);direction:rtl;text-align:right;font-family:\'Noto Serif Hebrew\',serif;' + (lang === 'both' ? 'margin-top:8px;' : '') + '">' + rashiHe + '</p>';
+    if (lang === 'both') {
+      // Two-column: English left, Hebrew right
+      versesHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);align-items:start;">';
+      versesHtml += '<div style="font-size:16px;line-height:1.85;color:var(--t2);">' + verseNumSpan + verseEn + '</div>';
+      versesHtml += '<div style="direction:rtl;text-align:right;font-family:' + HE_FONT + ';font-size:19px;line-height:2.0;color:var(--t1);">' + verseNumSpan + verseHe + '</div>';
       versesHtml += '</div>';
+      if (rashiEn || rashiHe) {
+        versesHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RASHI_BG + 'padding:12px 14px;margin-bottom:2px;">';
+        versesHtml += '<div><p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:5px;">Rashi</p><p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + rashiEn + '</p></div>';
+        versesHtml += '<div style="direction:rtl;text-align:right;font-family:' + HE_FONT + ';font-size:15px;line-height:1.9;color:var(--t2);">' + rashiHe + '</div>';
+        versesHtml += '</div>';
+      }
+    } else if (lang === 'he') {
+      versesHtml += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
+      versesHtml += '<p style="direction:rtl;text-align:right;font-family:' + HE_FONT + ';font-size:21px;line-height:2.1;color:var(--t1);">' + verseNumSpan + verseHe + '</p>';
+      versesHtml += '</div>';
+      if (rashiHe) {
+        versesHtml += '<div style="' + RASHI_BG + 'padding:12px 14px;margin-bottom:2px;">';
+        versesHtml += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:5px;">רש"י</p>';
+        versesHtml += '<p style="direction:rtl;text-align:right;font-family:' + HE_FONT + ';font-size:16px;line-height:1.9;color:var(--t2);">' + rashiHe + '</p>';
+        versesHtml += '</div>';
+      }
+    } else {
+      versesHtml += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
+      versesHtml += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + verseNumSpan + verseEn + '</p>';
+      versesHtml += '</div>';
+      if (rashiEn) {
+        versesHtml += '<div style="' + RASHI_BG + 'padding:12px 14px;margin-bottom:2px;">';
+        versesHtml += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:5px;">Rashi</p>';
+        versesHtml += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + rashiEn + '</p>';
+        versesHtml += '</div>';
+      }
     }
     versesHtml += '</div>';
   });
 
-  contentEl.innerHTML = toggleHtml
-    + '<p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;">' + ref + ' · via Sefaria</p>'
-    + versesHtml
+  contentEl.innerHTML = toggleHtml + versesHtml
     + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s portion —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
@@ -3148,6 +3171,7 @@ function openChabadPanel(sectionId) {
   document.getElementById('chabad-panel-title').textContent = s.label;
   document.getElementById('chabad-panel-sub').textContent = s.subtitle || 'via Chabad.org';
   document.getElementById('chabad-panel-extlink').href = s.chabadUrl;
+  document.getElementById('chabad-panel-extlink').style.display = sectionId === 'chumash' ? 'none' : 'flex';
 
   // Show panel
   const panel = document.getElementById('chabad-panel');
@@ -3163,7 +3187,7 @@ function openChabadPanel(sectionId) {
     iframeEl.src = '';
     nativeEl.style.display = 'flex';
     if (progWrap) progWrap.style.display = 'block';
-    document.getElementById('chabad-panel-sub').textContent = s.sefariaRef + ' · via Sefaria';
+    document.getElementById('chabad-panel-sub').textContent = s.sefariaRef;
     _loadChumashNative(sectionId).then(ok => {
       if (!ok) {
         // Sefaria failed — fall back to iframe silently
