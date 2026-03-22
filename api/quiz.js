@@ -235,26 +235,29 @@ const SHARED_STYLE = `
 DIFFICULTY TARGET: Someone who read today's section once, paying reasonable attention, should get about 3 out of 4 right.
 
 STYLE (mandatory):
-- Question max 12 words. Each answer max 8 words. If your question is longer, cut it.
-- Scenario questions: name the person, state ONE condition, ask what happens. "Shimon touched something impure and ate kodesh. What does he bring?" — not a 30-word description of the entire case.
+- Question max 12 words. Each answer max 8 words. If longer, cut it.
+- Scenario questions: name the person, state ONE condition, ask what happens.
 - Never start with "According to", "Based on", "Which of the following"
-- Answers are short and direct. "A sin offering" not "A purgation offering as required by the Torah"
-- Use plain English terms: "sin offering" not "purgation offering", "permitted" not "halachically valid", "forbidden" not "proscribed"
+- REWRITE answers in plain English — do NOT quote the source text directly. The Sefaria translation is dense academic English. Simplify it.
+- Use plain words: "sin offering" not "purgation offering", "soul" not "neshamah" (unless testing that term specifically), "permitted" not "halachically valid"
 - Wrong answers: plausible to someone who skimmed, clearly wrong to someone who read
 - Never test verse numbers or peripheral details
 - Always test the main point, key distinction, or surprising ruling
 
 THE GOAL: Getting it right = "yes, I learned that today." Getting it wrong = "I should have caught that" — never "how would anyone know that."
 
-EXAMPLES:
-BAD: "What happens when someone touches an unclean thing, becomes unclean without realizing it, and then eats holy food or enters the Sanctuary?"
-GOOD: "Shimon touched something impure without knowing, then ate kodesh. What does he bring?"
+REWRITING ANSWERS — this is critical:
+BAD answer: "The neshamah draws forth light to perfect the nefesh and body by means of the letters of speech"
+GOOD answer: "Speech draws divine light into the body"
 
-BAD: "A female goat without blemish, or a female sheep without blemish"
-GOOD: "A female goat or sheep"
+BAD answer: "A female goat without blemish, or a female sheep without blemish"
+GOOD answer: "A female goat or sheep"
 
-BAD: "They incur guilt and must bring a purgation offering when the matter becomes known"
-GOOD: "A sin offering once he finds out"
+BAD answer: "They incur guilt and must bring a purgation offering when the matter becomes known"
+GOOD answer: "A sin offering once he finds out"
+
+BAD question: "What happens when someone touches an unclean thing, becomes unclean without realizing it, and then eats holy food or enters the Sanctuary?"
+GOOD question: "Shimon touched something impure without knowing, then ate kodesh. What does he bring?"
 `
 
 function chumashPrompt(c, diff) {
