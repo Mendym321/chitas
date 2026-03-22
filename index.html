@@ -517,7 +517,7 @@ onAuthStateChanged(auth, user => {
 
   <!-- Native reader (Chumash / Tanya / Rambam) -->
   <div id="native-reader" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;" onscroll="onReaderScroll()">
-    <div style="padding:20px 18px 40px;max-width:860px;margin:0 auto;width:100%;">
+    <div style="padding:20px 18px 40px;width:100%;">
       <div id="native-reader-loading" style="text-align:center;padding:60px 0;">
         <div class="spinner" style="margin:0 auto 16px;color:var(--gold);"></div>
         <p style="font-size:13px;color:var(--t3);">Loading…</p>
@@ -3063,7 +3063,7 @@ function _renderChumashContent() {
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
-  const HE = "'Noto Serif Hebrew','Frank Ruhl Libre',serif";
+  const HE = "Noto Serif Hebrew,Frank Ruhl Libre,serif";
   const RBG = 'background:rgba(240,165,0,.04);border-left:3px solid rgba(240,165,0,.25);';
 
   // Lang toggle
@@ -3185,18 +3185,7 @@ async function _loadChumashNative(sectionId) {
 
 function _setChumashLang(lang) {
   localStorage.setItem('chitas_reader_lang', lang);
-  // Re-render by re-running main without refetching
-  // For simplicity just reload the content element
-  const el = document.getElementById('native-reader-content');
-  if (el) {
-    // Update active button styles
-    document.querySelectorAll('[id^="clang-"]').forEach(b => {
-      const l = b.id.replace('clang-','');
-      b.style.background = l===lang ? 'var(--gold)' : 'var(--card)';
-      b.style.color = l===lang ? '#000' : 'var(--t2)';
-      b.style.borderColor = l===lang ? 'var(--gold)' : 'var(--border)';
-    });
-  }
+  _renderChumashContent();
 }
 
 function openChabadPanel(sectionId) {
