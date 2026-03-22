@@ -2969,7 +2969,7 @@ function unlockMarkDone() {
 const SEFARIA='https://www.sefaria.org';
 
 // Clean Sefaria HTML — depth-aware footnote removal, keep <b>
-function __cleanHtml(s){
+function _cleanHtml(s){
   if(!s)return'';
   function removeFn(str){
     let out='',i=0;
@@ -3004,13 +3004,13 @@ function __cleanHtml(s){
   s=s.replace(/<(?!\/?b\b)[^>]+>/g,'');
   return s.replace(/\s+/g,' ').trim();
 }
-function __flatHtml(x){
+function _flatHtml(x){
   if(!x)return[];
   if(typeof x==='string'){const s=_cleanHtml(x);return s?[s]:[];}
   if(Array.isArray(x))return x.flatMap(flatHtml);
   return[];
 }
-function __flatPlain(x){
+function _flatPlain(x){
   if(!x)return[];
   if(typeof x==='string'){const s=x.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();return s?[s]:[];}
   if(Array.isArray(x))return x.flatMap(flatPlain);
@@ -3018,7 +3018,7 @@ function __flatPlain(x){
 }
 
 // Fetch a single non-spanning ref with preferred translation keyword
-async function __fetchSingleRef(ref, keyword){
+async function _fetchSingleRef(ref, keyword){
   const enc=encodeURIComponent(ref);
   // Step 1: get available versions
   const versions=await fetch(`${SEFARIA}/api/texts/versions/${enc}`).then(r=>r.json()).catch(()=>[]);
