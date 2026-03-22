@@ -3055,86 +3055,64 @@ async function _fetchChumashText(ref, keyword){
   return _fetchSingleRef(ref,keyword);
 }
 
-async function _loadChumashNative(sectionId){
-  try{
-  const today=new Date();
-  // Get Hebrew date + Chumash ref from Sefaria calendar
-  const cal=await fetch(`${SEFARIA}/api/calendars?year=${today.getFullYear()}&month=${today.getMonth()+1}&day=${today.getDate()}`).then(r=>r.json());
+async function _loadChumashNative(sectionId) {
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
 
-  // Date bar
-  const greg=today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  document.getElementById('datebar').innerHTML=`<span class="heb-date">${cal.date||''}</span><span style="color:var(--t3)">·</span>${greg}`;
+  try {
+    // Get ref from Sefaria calendar — same as standalone reader
+    const today = new Date();
+    const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + today.getFullYear() + '&month=' + (today.getMonth()+1) + '&day=' + today.getDate()).then(r => r.json());
 
-  // Get Chumash ref — try calendar items first, fallback to Hebcal
-  let aliyahRef='';
-  const chumashItem=(cal.calendar_items||[]).find(i=>(i.title?.en||'').toLowerCase().includes('chumash'));
-  if(chumashItem?.ref){
-    aliyahRef=chumashItem.ref;
-  } else {
-    // Fallback: Hebcal
-    const dow=today.getDay();
-    const sat=new Date(today);sat.setDate(today.getDate()+(6-dow));
-    const sun=new Date(sat);sun.setDate(sat.getDate()-6);
-    const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const hd=await fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&start=${fmt(sun)}&end=${fmt(sat)}&lg=s`).then(r=>r.json());
-    const pItem=(hd.items||[]).find(i=>i.category==='parashat'&&i.leyning);
-    if(pItem){
-      const aliyahNum=dow===6?7:dow+1;
-      aliyahRef=(pItem.leyning[String(aliyahNum)]||'').replace(/\s*-\s*/g,'-').trim();
+    let aliyahRef = '';
+    const chumashItem = (cal.calendar_items || []).find(i => (i.title?.en || '').toLowerCase().includes('chumash'));
+    if (chumashItem?.ref) {
+      aliyahRef = chumashItem.ref;
+    } else {
+      // Fallback: Hebcal leyning
+      const dow = today.getDay();
+      const sat = new Date(today); sat.setDate(today.getDate() + (6 - dow));
+      const sun = new Date(sat); sun.setDate(sat.getDate() - 6);
+      const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      const hd = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&start=' + fmt(sun) + '&end=' + fmt(sat) + '&lg=s').then(r => r.json());
+      const pItem = (hd.items || []).find(i => i.category === 'parashat' && i.leyning);
+      if (pItem) {
+        const aliyahNum = dow === 6 ? 7 : dow + 1;
+        aliyahRef = (pItem.leyning[String(aliyahNum)] || '').replace(/\s*-\s*/g, '-').trim();
+      }
     }
+
+    if (!aliyahRef) return false;
+
+    const [torah, rashi] = await Promise.all([
+      _fetchChumashText(aliyahRef, 'koren'),
+      _fetchChumashText('Rashi on ' + aliyahRef, 'metsudah').catch(() => ({ en: [], he: [] })),
+    ]);
+
+    if (!torah.en.length && !torah.he.length) return false;
+
+    const startVerse = (() => { const m = aliyahRef.match(/:(\d+)/); return m ? parseInt(m[1]) : 1; })();
+
+    // Update panel subtitle
+    const subEl = document.getElementById('chabad-panel-sub');
+    if (subEl) subEl.textContent = aliyahRef;
+
+    window._chumashData = { torah, rashi, startVerse, ref: aliyahRef };
+    _renderChumashContent();
+
+    if (loadEl) loadEl.style.display = 'none';
+    if (contEl) contEl.style.display = 'block';
+    return true;
+
+  } catch(e) {
+    console.error('Chumash reader error:', e);
+    return false;
   }
-
-  if(!aliyahRef){
-    document.getElementById('loading').textContent='Could not find today\'s portion';
-    return;
-  }
-
-  document.getElementById('subtitle').textContent=aliyahRef;
-
-  // Fetch Torah + Rashi in parallel, prefer Koren for Torah
-  const[torah,rashi]=await Promise.all([
-    _fetchChumashText(aliyahRef,'koren'),
-    _fetchChumashText('Rashi on '+aliyahRef,'metsudah').catch(()=>({en:[],he:[]})),
-  ]);
-
-  // Build HTML
-  const startVerse=(()=>{const m=aliyahRef.match(/:(\d+)/);return m?parseInt(m[1]):1;})();
-  let html=`<div class="chapter-heading">${aliyahRef}</div>`;
-
-  torah.en.forEach((verseEn,i)=>{
-    const vn=startVerse+i;
-    const verseHe=torah.he[i]||'';
-    const rashiEn=rashi.en[i]||'';
-    const rashiHe=rashi.he[i]||'';
-    html+=`<div class="verse-block">
-      <div class="verse-row" id="v${vn}">
-        <div class="verse-en"><span class="verse-num">${vn}.</span> ${verseEn}</div>
-        <div class="verse-he">${verseHe}</div>
-      </div>`;
-    if(rashiEn||rashiHe){
-      html+=`<div class="rashi-block">
-        <div><div class="rashi-label">Rashi</div><div class="rashi-en">${rashiEn}</div></div>
-        <div><div class="rashi-he">${rashiHe}</div></div>
-      </div>`;
-    }
-    html+=`</div>`;
-  });
-
-  if(torah.versionTitle){
-    html+=`<div class="translation-badge">Translation: ${torah.versionTitle}</div>`;
-  }
-
-  document.getElementById('native-reader-loading').style.display='none';
-  const el=document.getElementById('native-reader-content');
-  el.style.display='block'; return true;
-  el.innerHTML=html;
-
 }
 
-main().catch(e=>{
-  console.error('Chumash error:', e); return false;
-  } catch(e) { console.error("Chumash error:", e); return false; }
-}
+
 function _setChumashLang(lang) {
   localStorage.setItem('chitas_reader_lang', lang);
   // Re-render by re-running main without refetching
