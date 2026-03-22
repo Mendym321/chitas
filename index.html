@@ -2969,7 +2969,7 @@ function unlockMarkDone() {
 const SEFARIA='https://www.sefaria.org';
 
 // Clean Sefaria HTML — depth-aware footnote removal, keep <b>
-function _cleanHtml(s){
+function __cleanHtml(s){
   if(!s)return'';
   function removeFn(str){
     let out='',i=0;
@@ -3006,14 +3006,14 @@ function _cleanHtml(s){
 }
 function _flatHtml(x){
   if(!x)return[];
-  if(typeof x==='string'){const s=_cleanHtml(x);return s?[s]:[];}
-  if(Array.isArray(x))return x.flatMap(flatHtml);
+  if(typeof x==='string'){const s=__cleanHtml(x);return s?[s]:[];}
+  if(Array.isArray(x))return x.flatMap(_flatHtml);
   return[];
 }
 function _flatPlain(x){
   if(!x)return[];
   if(typeof x==='string'){const s=x.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();return s?[s]:[];}
-  if(Array.isArray(x))return x.flatMap(flatPlain);
+  if(Array.isArray(x))return x.flatMap(_flatPlain);
   return[];
 }
 
