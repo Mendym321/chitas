@@ -774,7 +774,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v77'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v78'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -863,8 +863,9 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v77', JSON.stringify(user)); } catch{}
-  // Then sync to Firebase if signed in
+  try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
+  // Then sync to Firebase if signed in (fire-and-forget is intentional for
+  // non-critical saves; markDone uses saveUserCritical() for race-safe writes)
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
       name: user.name,
@@ -872,6 +873,34 @@ function saveUser() {
       city: user.city || '',
       rambamTrack: user.rambamTrack,
       streak: user.streak,
+      longestStreak: user.longestStreak || 0,   // FIX 4: was missing
+      total: user.total,
+      xp: user.xp,
+      perfectDays: user.perfectDays || 0,
+      quizTotal: user.quizTotal || 0,
+      quizCorrect: user.quizCorrect || 0,
+      lastDate: user.lastDate || null,
+      done: user.done || {},
+      quizDone: user.quizDone || {},
+      pastDone: user.pastDone || {},
+      pastQuizDone: user.pastQuizDone || {},
+      weeklyQuizDone: user.weeklyQuizDone || {},
+    });
+  }
+}
+
+// saveUserCritical — awaitable version used by markDone/unmarkDone so rapid
+// taps don't race each other. Saves locally first, then awaits Firestore.
+async function saveUserCritical() {
+  try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
+  if (user.uid && window._fb) {
+    await window._fb.saveUser(user.uid, {
+      name: user.name,
+      photoURL: user.photoURL || '',
+      city: user.city || '',
+      rambamTrack: user.rambamTrack,
+      streak: user.streak,
+      longestStreak: user.longestStreak || 0,
       total: user.total,
       xp: user.xp,
       perfectDays: user.perfectDays || 0,
@@ -963,7 +992,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v77', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1071,17 +1100,20 @@ function parseHebcal(data) {
 // ════════════════════════════════════════════════════════════════════
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Reset done on new day — archive previous day's progress
+  // FIX 2: day-rollover runs AFTER we've confirmed we have the latest data
+  // (bootApp already loaded Firestore before calling init, so user is fresh)
   const today = new Date().toDateString();
   if (user.lastDate && user.lastDate !== today) {
     const prev = new Date(user.lastDate);
     const yest = new Date(); yest.setDate(yest.getDate()-1);
-    // Archive to pastDone keyed by ISO date
     if (!user.pastDone) user.pastDone = {};
     if (!user.pastQuizDone) user.pastQuizDone = {};
     const prevISO = prev.toISOString().slice(0,10);
-    user.pastDone[prevISO] = { ...user.done };
-    user.pastQuizDone[prevISO] = { ...user.quizDone };
+    // Only archive if not already archived (guard against double-init)
+    if (!user.pastDone[prevISO]) {
+      user.pastDone[prevISO] = { ...user.done };
+      user.pastQuizDone[prevISO] = { ...user.quizDone };
+    }
     user.done = {};
     user.quizDone = {};
     if (prev.toDateString() !== yest.toDateString()) user.streak = 0;
@@ -1702,7 +1734,7 @@ function markDone(id) {
   } else {
     fire(`+${s.xp} XP`,'xp');
   }
-  saveUser();
+  saveUserCritical(); // FIX 3: awaitable so rapid taps don't race
 
   // Update tick button
   const tick = document.getElementById(`tick-${id}`);
@@ -3717,7 +3749,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v77'); } catch{}
+  try { localStorage.removeItem('chitas_v78'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3775,33 +3807,81 @@ function switchTab(id) {
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 // Wait for Firebase auth to be ready, then decide what to show
 function bootApp() {
-  // If we have a local user with uid and rambamTrack, show the app immediately
+  // Show app immediately from localStorage if we have a local user.
+  // This avoids a blank screen while Firebase auth resolves.
   if (user.uid && user.rambamTrack) {
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
-    init();
+    // Don't call init() yet — wait for Firestore sync below so we have
+    // fresh data before the day-rollover logic runs (FIX 1 + FIX 2)
   }
 
-  // Register the auth-ready callback — works whether _fb is ready or not yet
-  // The Firebase module script sets window._fb then calls _onAuthReady if defined
+  // FIX 1: ALWAYS load from Firestore when auth resolves — even if we already
+  // have local data. This is the only way cross-device sync works reliably.
   const authHandler = async (fbUser) => {
-    if (fbUser && (!user.uid || !user.rambamTrack)) {
-      const remote = await window._fb.loadUser(fbUser.uid);
-      if (remote && remote.rambamTrack) {
+    if (!fbUser) {
+      // Not signed in — if we somehow have local data, show onboarding
+      if (!user.uid || !user.rambamTrack) {
+        document.getElementById('onboarding').style.display = 'flex';
+        document.getElementById('main-app').style.display = 'none';
+      }
+      return;
+    }
+
+    // Always fetch from Firestore — this is the source of truth
+    const remote = await window._fb.loadUser(fbUser.uid);
+
+    if (remote && remote.rambamTrack) {
+      // Merge strategy: Firestore wins on all fields EXCEPT fields where
+      // local is clearly more recent (lastDate is today and remote is older)
+      const localIsNewer = user.uid === fbUser.uid &&
+        user.lastDate && remote.lastDate &&
+        new Date(user.lastDate) > new Date(remote.lastDate);
+
+      if (localIsNewer) {
+        // Local has activity from today that hasn't synced yet — keep it
+        // but pull non-activity fields from remote (name, city, track, etc.)
+        user = {
+          ...BLANK,
+          ...remote,
+          uid: fbUser.uid,
+          photoURL: fbUser.photoURL || '',
+          // Keep local values for today's in-progress data
+          xp: Math.max(user.xp, remote.xp || 0),
+          streak: Math.max(user.streak, remote.streak || 0),
+          total: Math.max(user.total, remote.total || 0),
+          done: user.done || {},
+          quizDone: user.quizDone || {},
+          lastDate: user.lastDate,
+        };
+      } else {
+        // Remote is equal or newer — use it wholesale
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v77', JSON.stringify(user)); } catch{}
+      }
+
+      try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
+      document.getElementById('onboarding').style.display = 'none';
+      document.getElementById('main-app').style.display = 'block';
+      if (typeof init === 'function') init();
+
+    } else if (!remote) {
+      // New user (no Firestore record) — if they already completed onboarding
+      // locally, honour that; otherwise show onboarding
+      if (user.uid === fbUser.uid && user.rambamTrack) {
+        user.uid = fbUser.uid;
+        user.photoURL = fbUser.photoURL || '';
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
       }
+      // else: new user with no local data — stay on onboarding
     }
   };
 
-  // _fb may not exist yet (module loads async) — poll briefly
+  // _fb may not exist yet (Firebase module loads async) — poll briefly
   const tryRegister = () => {
     if (window._fb) {
       window._fb._onAuthReady = authHandler;
-      // If auth already resolved before we registered, call it now
       if (window._fb._authReady) authHandler(window._fb._authUser);
     } else {
       setTimeout(tryRegister, 50);
