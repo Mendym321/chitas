@@ -6,7 +6,7 @@
 <title>Chitas Daily</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Noto+Serif+Hebrew:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -187,6 +187,26 @@ window._fb = {
 
   getCurrentUser() {
     return auth.currentUser;
+  },
+
+  // Quiz question cache — store generated questions by cacheKey
+  // cacheKey examples: "quiz:chumash:Vayakhel:3" or "quiz:weekly:2025-W12"
+  async getCachedQuiz(cacheKey) {
+    try {
+      const snap = await getDoc(doc(db, 'quiz_cache', cacheKey.replace(/[^a-zA-Z0-9_:-]/g, '_')));
+      return snap.exists() ? snap.data().questions : null;
+    } catch(e) { return null; }
+  },
+
+  async cacheQuiz(cacheKey, questions) {
+    try {
+      const safeKey = cacheKey.replace(/[^a-zA-Z0-9_:-]/g, '_');
+      await setDoc(doc(db, 'quiz_cache', safeKey), {
+        questions,
+        createdAt: serverTimestamp(),
+        cacheKey,
+      });
+    } catch(e) { /* non-critical, ignore */ }
   }
 };
 
@@ -734,7 +754,7 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v77'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => { try { const s=localStorage.getItem('chitas_v78'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -820,7 +840,7 @@ function icon(name, size=20, color='currentColor') {
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v77', JSON.stringify(user)); } catch{}
+  try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
   // Then sync to Firebase if signed in
   if (user.uid && window._fb) {
     window._fb.saveUser(user.uid, {
@@ -914,7 +934,7 @@ async function onSignedIn(fbUser) {
   if (remote && remote.rambamTrack) {
     // Returning user — restore their data
     user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    try { localStorage.setItem('chitas_v77', JSON.stringify(user)); } catch{}
+    try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -1722,29 +1742,53 @@ async function openQuiz(sectionId) {
       <p style="color:var(--t3);font-size:13px;margin-top:16px;">Generating your quiz…</p>
     </div>`;
 
-  // DUMMY questions — replace with live API call once connection confirmed working
-  const DUMMY = {
-    chumash: [
-      { q: "What was the primary subject of today's aliya?", options: ["Building the Mishkan", "The Ten Commandments", "Laws of Shabbat", "The Golden Calf"], answer: 0 },
-      { q: "Which craftsman was appointed to lead the construction?", options: ["Moshe", "Aharon", "Betzalel", "Chiram"], answer: 2 },
-      { q: "What material was NOT used in the construction described?", options: ["Gold", "Silver", "Iron", "Copper"], answer: 2 },
-    ],
-    tanya: [
-      { q: "What is the main concept discussed in today's Tanya?", options: ["The two souls in man", "The nature of Teshuva", "Love and fear of G-d", "The hidden light"], answer: 0 },
-      { q: "According to today's chapter, where does the divine soul originate?", options: ["The heart", "The mind", "Under G-d's throne of glory", "The world of Atzilut"], answer: 2 },
-      { q: "What does the Alter Rebbe compare the relationship between body and soul to?", options: ["A king and his servant", "A flame and its wick", "A tree and its roots", "Water and its vessel"], answer: 1 },
-    ],
-    rambam: [
-      { q: "What is the central halacha covered in today's Rambam?", options: ["Laws of Shabbat", "Laws of prayer", "Laws covered in today's chapter", "Laws of tzitzis"], answer: 2 },
-      { q: "How many positive commandments are discussed today?", options: ["One", "Two", "Three", "Four"], answer: 0 },
-      { q: "What is the Rambam's ruling on someone who performs this act unintentionally?", options: ["No consequence", "Brings a korban", "Must repeat the act", "Asks a rabbi"], answer: 1 },
-    ],
-  };
+  // Build cache key from section + subtitle (same content = same questions)
+  const cacheKey = 'quiz:' + sectionId + ':' + s.subtitle.replace(/[^a-zA-Z0-9]/g,'_').slice(0,40);
 
-  // Simulate a short loading delay so the spinner is visible
-  await new Promise(r => setTimeout(r, 1200));
-  quizState.questions = DUMMY[sectionId] || DUMMY.chumash;
-  renderQuestion();
+  try {
+    // 1. Check Firestore cache first
+    let questions = null;
+    if (window._fb && user.uid) {
+      questions = await window._fb.getCachedQuiz(cacheKey);
+    }
+
+    // 2. If not cached, call Vercel proxy
+    if (!questions) {
+      const resp = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'daily',
+          sectionId,
+          subtitle: s.subtitle,
+          cacheKey,
+        }),
+      });
+
+      if (!resp.ok) throw new Error('API error ' + resp.status);
+      const data = await resp.json();
+      questions = data.questions;
+
+      // 3. Cache for next time
+      if (window._fb && user.uid && questions) {
+        window._fb.cacheQuiz(cacheKey, questions); // fire and forget
+      }
+    }
+
+    if (!questions?.length) throw new Error('No questions returned');
+    quizState.questions = questions;
+    renderQuestion();
+
+  } catch(err) {
+    console.error('Quiz generation failed:', err);
+    // Friendly fallback message instead of broken state
+    document.getElementById('quiz-body').innerHTML =
+      '<div style="text-align:center;padding:40px 20px;">' +
+        '<p style="font-size:15px;font-weight:700;color:var(--t1);margin-bottom:8px;">Quiz unavailable</p>' +
+        '<p style="font-size:13px;color:var(--t3);line-height:1.5;">Could not generate questions right now.<br>Check your connection and try again.</p>' +
+        '<button onclick="closeQuiz()" style="margin-top:20px;padding:10px 24px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Close</button>' +
+      '</div>';
+  }
 }
 
 // ── WEEKLY QUIZ ───────────────────────────────────────────────────────────────
@@ -1866,24 +1910,51 @@ async function openWeeklyQuiz() {
     </div>`;
   document.getElementById('weekly-quiz-panel').style.display = 'flex';
 
-  // NOTE: Direct Anthropic API calls are blocked by CORS from browsers.
-  // Weekly quiz uses curated questions for now. A Vercel API route proxy is needed for live AI questions.
-  const WEEKLY_DUMMY = [
-    { q: "What is the primary topic of this week's parasha?", options: ["The Mishkan and its vessels", "The Exodus from Egypt", "Receiving the Torah at Sinai", "The Twelve Spies"], answer: 0, subject: "Chumash" },
-    { q: "Which craftsman was divinely appointed to lead the Mishkan's construction?", options: ["Moshe", "Aharon", "Betzalel", "Itamar"], answer: 2, subject: "Chumash" },
-    { q: "What material was contributed by the women for the Mishkan?", options: ["Gold jewelry", "Mirrors of copper", "Blue wool", "Cedar wood"], answer: 1, subject: "Chumash" },
-    { q: "According to the Alter Rebbe in this week's Tanya, where does the divine soul originate?", options: ["The world of Beriah", "Under G-d's throne of glory", "The world of Atzilut", "The soul of Adam"], answer: 1, subject: "Tanya" },
-    { q: "What does the Tanya teach about the relationship between the two souls?", options: ["They coexist peacefully", "The animal soul always wins", "They are in constant struggle", "They are actually one soul"], answer: 2, subject: "Tanya" },
-    { q: "This week's Tanya discusses the concept of Beinoni. What defines a Beinoni?", options: ["Never sins in thought word or deed", "Controls actions but not thoughts", "Has no evil inclination", "Is perfectly righteous"], answer: 1, subject: "Tanya" },
-    { q: "What area of halacha does this week's Rambam cover?", options: ["Laws of Shabbat", "Laws of prayer", "The halachos in this week's chapters", "Laws of blessings"], answer: 2, subject: "Rambam" },
-    { q: "According to the Rambam, what is the source of these laws in the Torah?", options: ["Rabbinic ordinance", "A Torah-level commandment", "A custom", "Not specified"], answer: 1, subject: "Rambam" },
-    { q: "How many chapters of Rambam are covered this week in the 3-chapter track?", options: ["One", "Two", "Three", "Four"], answer: 2, subject: "Rambam" },
-    { q: "Which of the following best describes Chitas as a daily learning program?", options: ["Only Chumash and Tehillim", "Chumash, Tehillim, Tanya and Rambam", "Torah, Mishnah and Gemara", "Only Chassidic texts"], answer: 1, subject: "Chumash" },
-  ];
-  weeklyQuizState.questions = WEEKLY_DUMMY;
-  // Simulate loading
-  await new Promise(r => setTimeout(r, 800));
-  renderWeeklyQuestion();
+  const wCacheKey = 'quiz:weekly:' + week;
+
+  try {
+    let questions = null;
+
+    // Check cache first
+    if (window._fb && user.uid) {
+      questions = await window._fb.getCachedQuiz(wCacheKey);
+    }
+
+    if (!questions) {
+      // Build week subjects list from schedule
+      const weekSubs = [];
+      if (schedule?.chumash) weekSubs.push('Chumash (this week's parasha): ' + schedule.chumash.subtitle);
+      if (schedule?.tanya)   weekSubs.push('Tanya (today's chapter): ' + schedule.tanya.subtitle);
+      if (schedule?.rambam)  weekSubs.push('Rambam (today's chapters): ' + schedule.rambam.subtitle);
+
+      const resp = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'weekly', weekSubs, cacheKey: wCacheKey }),
+      });
+
+      if (!resp.ok) throw new Error('API error ' + resp.status);
+      const data = await resp.json();
+      questions = data.questions;
+
+      if (window._fb && user.uid && questions) {
+        window._fb.cacheQuiz(wCacheKey, questions);
+      }
+    }
+
+    if (!questions?.length) throw new Error('No questions returned');
+    weeklyQuizState.questions = questions;
+    renderWeeklyQuestion();
+
+  } catch(err) {
+    console.error('Weekly quiz error:', err);
+    document.getElementById('wq-body').innerHTML =
+      '<div style="text-align:center;padding:40px 20px;">' +
+        '<p style="font-size:15px;font-weight:700;color:var(--t1);margin-bottom:8px;">Quiz unavailable</p>' +
+        '<p style="font-size:13px;color:var(--t3);">Check your connection and try again.</p>' +
+        '<button onclick="closeWeeklyQuiz()" style="margin-top:20px;padding:10px 24px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Close</button>' +
+      '</div>';
+  }
 }
 
 function closeWeeklyQuiz() {
@@ -2963,6 +3034,193 @@ function unlockMarkDone() {
   }
 }
 
+// ── CHUMASH NATIVE READER ────────────────────────────────────────────────────
+
+function cleanSefariaHtml(s) {
+  if (!s) return '';
+  function removeFn(str) {
+    let out = '', i = 0;
+    function skipClose(from) {
+      let d = 1, j = from;
+      while (j < str.length && d > 0) {
+        const o = str.indexOf('<i', j), c = str.indexOf('</i>', j);
+        if (o !== -1 && (c === -1 || o < c)) { d++; j = o + 2; }
+        else if (c !== -1) { d--; j = c + 4; }
+        else break;
+      }
+      return j;
+    }
+    while (i < str.length) {
+      const sm = str.slice(i).match(/^<sup\b[^>]*class="footnote-marker"[^>]*>/);
+      if (sm) {
+        const as = str.indexOf('</sup>', i + sm[0].length);
+        if (as !== -1) {
+          const asc = as + 6, rest = str.slice(asc).trimStart();
+          const fm = rest.match(/^<i\b[^>]*class="footnote"[^>]*>/);
+          if (fm) { i = skipClose(asc + str.slice(asc).indexOf(fm[0]) + fm[0].length); continue; }
+          i = asc; continue;
+        }
+      }
+      const fm = str.slice(i).match(/^<i\b[^>]*class="footnote"[^>]*>/);
+      if (fm) { i = skipClose(i + fm[0].length); continue; }
+      out += str[i]; i++;
+    }
+    return out;
+  }
+  s = removeFn(s);
+  s = s.replace(/<(?!\/?b\b)[^>]+>/g, '');
+  return s.replace(/\s+/g, ' ').trim();
+}
+
+function flatChumashHtml(x) {
+  if (!x) return [];
+  if (typeof x === 'string') { const s = cleanSefariaHtml(x); return s ? [s] : []; }
+  if (Array.isArray(x)) return x.flatMap(flatChumashHtml);
+  return [];
+}
+function flatChumashPlain(x) {
+  if (!x) return [];
+  if (typeof x === 'string') { const s = x.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); return s ? [s] : []; }
+  if (Array.isArray(x)) return x.flatMap(flatChumashPlain);
+  return [];
+}
+
+async function fetchChumashSingleRef(ref, keyword) {
+  const enc = encodeURIComponent(ref);
+  const versions = await fetch('https://www.sefaria.org/api/texts/versions/' + enc).then(r=>r.json()).catch(()=>[]);
+  const enVersions = Array.isArray(versions) ? versions.filter(v=>v.language==='en') : [];
+  const picked = keyword
+    ? enVersions.find(v=>v.versionTitle.toLowerCase().includes(keyword.toLowerCase())) || enVersions[0]
+    : enVersions[0];
+  const url = picked
+    ? 'https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0&ven=' + encodeURIComponent(picked.versionTitle)
+    : 'https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0';
+  const d = await fetch(url).then(r=>r.json());
+  return { en: flatChumashHtml(d.text||[]), he: flatChumashPlain(d.he||[]), versionTitle: d.versionTitle };
+}
+
+async function fetchChumashText(ref, keyword) {
+  const spanMatch = ref.match(/^(.+?)\s+(\d+):(\d+)-(\d+):(\d+)$/);
+  if (spanMatch) {
+    const [, book, ch1s, v1s, ch2s, v2s] = spanMatch;
+    const ch1 = parseInt(ch1s), ch2 = parseInt(ch2s);
+    const chunks = [];
+    for (let ch = ch1; ch <= ch2; ch++) {
+      if (ch === ch1 && ch === ch2)  chunks.push(book+' '+ch+':'+v1s+'-'+v2s);
+      else if (ch === ch1)           chunks.push(book+' '+ch+':'+v1s+'-150');
+      else if (ch === ch2)           chunks.push(book+' '+ch+':1-'+v2s);
+      else                           chunks.push(book+' '+ch);
+    }
+    const results = await Promise.all(chunks.map(c => fetchChumashSingleRef(c, keyword)));
+    return { en: results.flatMap(r=>r.en), he: results.flatMap(r=>r.he), versionTitle: results[0].versionTitle };
+  }
+  return fetchChumashSingleRef(ref, keyword);
+}
+
+async function loadChumashNative(sectionId) {
+  const s = schedule[sectionId];
+  const ref = s.sefariaRef;
+  if (!ref) return false;
+
+  const loadingEl = document.getElementById('native-reader-loading');
+  const contentEl = document.getElementById('native-reader-content');
+  const errorEl   = document.getElementById('native-reader-error');
+
+  loadingEl.style.display = 'block';
+  contentEl.style.display = 'none';
+  errorEl.style.display   = 'none';
+
+  try {
+    const lang = localStorage.getItem('chitas_reader_lang') || 'both';
+    const [torah, rashi] = await Promise.all([
+      fetchChumashText(ref, 'koren'),
+      fetchChumashText('Rashi on ' + ref, 'metsudah').catch(()=>({en:[],he:[]})),
+    ]);
+
+    if (!torah.en.length && !torah.he.length) return false;
+
+    const startVerse = (() => { const m = ref.match(/:(\d+)/); return m ? parseInt(m[1]) : 1; })();
+    const langBtns = ['he','both','en'].map(l =>
+      '<button onclick="setChumashLang(\''+l+'\',\''+ref+'\',\''+JSON.stringify(rashi).replace(/'/g,"\\'")+'\','+startVerse+')" id="clang-'+l+'" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;'+(lang===l?'background:var(--gold);color:#000;border-color:var(--gold);':'background:var(--card);color:var(--t2);border-color:var(--border);')+'">'+(l==='he'?'עברית':l==='both'?'Both':'English')+'</button>'
+    ).join('');
+
+    window._chumashData = { torah, rashi, startVerse, ref };
+    renderChumashContent(lang);
+
+    loadingEl.style.display = 'none';
+    contentEl.style.display = 'block';
+    return true;
+  } catch(e) {
+    console.error('Chumash load error:', e);
+    return false;
+  }
+}
+
+function setChumashLang(lang, ref, rashiJson, startVerse) {
+  localStorage.setItem('chitas_reader_lang', lang);
+  renderChumashContent(lang);
+}
+
+function renderChumashContent(lang) {
+  const { torah, rashi, startVerse } = window._chumashData || {};
+  if (!torah) return;
+  const contentEl = document.getElementById('native-reader-content');
+  if (!contentEl) return;
+
+  // Lang toggle
+  const langs = ['he','both','en'];
+  let toggleHtml = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
+  langs.forEach(l => {
+    const active = lang === l;
+    const label = l === 'he' ? 'עברית' : l === 'both' ? 'Both' : 'English';
+    toggleHtml += '<button onclick="setChumashLang(\''+l+'\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;'+(active?'background:var(--gold);color:#000;border-color:var(--gold);':'background:var(--card);color:var(--t2);border-color:var(--border);')+'">'+label+'</button>';
+  });
+  toggleHtml += '</div>';
+
+  let versesHtml = '';
+  torah.en.forEach((verseEn, i) => {
+    const vn = startVerse + i;
+    const verseHe = torah.he[i] || '';
+    const rashiEn = rashi.en[i] || '';
+    const rashiHe = rashi.he[i] || '';
+
+    // Verse row
+    if (lang === 'both') {
+      versesHtml += '<div style="margin-bottom:2px;">';
+      versesHtml += '<div style="padding:14px 0 12px;border-bottom:1px solid var(--border);">';
+      if (verseHe) versesHtml += '<p style="font-size:19px;line-height:2.0;color:var(--t1);direction:rtl;text-align:right;font-family:\'Noto Serif Hebrew\',\'Frank Ruhl Libre\',serif;margin-bottom:10px;">'+verseHe+'</p>';
+      if (verseEn) versesHtml += '<p style="font-size:15px;line-height:1.75;color:var(--t2);"><span style="font-size:11px;font-weight:800;color:var(--gold);margin-right:5px;">'+vn+'.</span>'+verseEn+'</p>';
+      versesHtml += '</div>';
+    } else if (lang === 'he') {
+      versesHtml += '<div style="margin-bottom:2px;">';
+      versesHtml += '<div style="padding:14px 0 12px;border-bottom:1px solid var(--border);">';
+      if (verseHe) versesHtml += '<p style="font-size:20px;line-height:2.1;color:var(--t1);direction:rtl;text-align:right;font-family:\'Noto Serif Hebrew\',\'Frank Ruhl Libre\',serif;">'+verseHe+'</p>';
+      versesHtml += '</div>';
+    } else {
+      versesHtml += '<div style="margin-bottom:2px;">';
+      versesHtml += '<div style="padding:14px 0 12px;border-bottom:1px solid var(--border);">';
+      if (verseEn) versesHtml += '<p style="font-size:16px;line-height:1.85;color:var(--t1);"><span style="font-size:11px;font-weight:800;color:var(--gold);margin-right:5px;">'+vn+'.</span>'+verseEn+'</p>';
+      versesHtml += '</div>';
+    }
+
+    // Rashi
+    if (rashiEn || rashiHe) {
+      versesHtml += '<div style="background:var(--rashi-bg,#141420);border-left:3px solid var(--gold-dim,#7A5000);padding:12px 14px;margin-bottom:2px;">';
+      versesHtml += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--gold-dim,#7A5000);margin-bottom:5px;">Rashi</p>';
+      if (lang !== 'he' && rashiEn) versesHtml += '<p style="font-size:14px;line-height:1.65;color:var(--t2);">'+rashiEn+'</p>';
+      if (lang !== 'en' && rashiHe) versesHtml += '<p style="font-size:16px;line-height:1.9;color:var(--t2);direction:rtl;text-align:right;font-family:\'Noto Serif Hebrew\',serif;'+(lang==='both'?'margin-top:8px;':'')+'">'+rashiHe+'</p>';
+      versesHtml += '</div>';
+    }
+    versesHtml += '</div>';
+  });
+
+  contentEl.innerHTML = toggleHtml
+    + '<p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;">'+window._chumashData.ref+' · via Sefaria</p>'
+    + versesHtml
+    + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today's portion —</p>'
+    + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
 function openChabadPanel(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
@@ -2978,10 +3236,33 @@ function openChabadPanel(sectionId) {
   const panel = document.getElementById('chabad-panel');
   panel.style.display = 'flex';
 
-  // Load iframe
+  // Load content — native reader for Chumash, iframe for others
   const iframeEl = document.getElementById('chabad-iframe');
-  iframeEl.style.display = 'flex';
-  iframeEl.src = s.chabadUrl;
+  const nativeEl = document.getElementById('native-reader');
+  const progressWrap = document.getElementById('reader-progress-wrap');
+
+  if (sectionId === 'chumash' && s.sefariaRef) {
+    // Native Chumash reader
+    iframeEl.style.display = 'none';
+    iframeEl.src = '';
+    nativeEl.style.display = 'flex';
+    if (progressWrap) progressWrap.style.display = 'block';
+    document.getElementById('chabad-panel-sub').textContent = s.sefariaRef + ' · via Sefaria';
+    loadChumashNative(sectionId).then(ok => {
+      if (!ok) {
+        // Fallback to iframe if Sefaria fails
+        nativeEl.style.display = 'none';
+        iframeEl.style.display = 'flex';
+        iframeEl.src = s.chabadUrl;
+      }
+    });
+  } else {
+    // Iframe for all other sections
+    nativeEl.style.display = 'none';
+    if (progressWrap) progressWrap.style.display = 'none';
+    iframeEl.style.display = 'flex';
+    iframeEl.src = s.chabadUrl;
+  }
 
 
 
@@ -3496,7 +3777,7 @@ function toggleTheme() {
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = {...BLANK};
-  try { localStorage.removeItem('chitas_v77'); } catch{}
+  try { localStorage.removeItem('chitas_v78'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   document.getElementById('ob-step1').style.display = 'block';
@@ -3565,7 +3846,7 @@ function bootApp() {
       const remote = await window._fb.loadUser(fbUser.uid);
       if (remote && remote.rambamTrack) {
         user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-        try { localStorage.setItem('chitas_v77', JSON.stringify(user)); } catch{}
+        try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
