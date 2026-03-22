@@ -2969,7 +2969,7 @@ function unlockMarkDone() {
 const SEFARIA='https://www.sefaria.org';
 
 // Clean Sefaria HTML — depth-aware footnote removal, keep <b>
-function __cleanHtml(s){
+function _cleanHtml(s){
   if(!s)return'';
   function removeFn(str){
     let out='',i=0;
@@ -3006,7 +3006,7 @@ function __cleanHtml(s){
 }
 function _flatHtml(x){
   if(!x)return[];
-  if(typeof x==='string'){const s=__cleanHtml(x);return s?[s]:[];}
+  if(typeof x==='string'){const s=_cleanHtml(x);return s?[s]:[];}
   if(Array.isArray(x))return x.flatMap(_flatHtml);
   return[];
 }
@@ -3053,6 +3053,76 @@ async function _fetchChumashText(ref, keyword){
     return{en:results.flatMap(r=>r.en),he:results.flatMap(r=>r.he),versionTitle:results[0].versionTitle};
   }
   return _fetchSingleRef(ref,keyword);
+}
+
+
+function _renderChumashContent() {
+  const { torah, rashi, startVerse } = window._chumashData || {};
+  if (!torah) return;
+  const lang = localStorage.getItem('chitas_reader_lang') || 'both';
+  const el = document.getElementById('native-reader-content');
+  if (!el) return;
+
+  const HE = "'Noto Serif Hebrew','Frank Ruhl Libre',serif";
+  const RBG = 'background:rgba(240,165,0,.04);border-left:3px solid rgba(240,165,0,.25);';
+
+  // Lang toggle
+  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
+  [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
+    const a = lang === l;
+    t += '<button onclick="_setChumashLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
+       + (a ? 'background:var(--gold);color:#000;border-color:var(--gold);' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
+       + '">' + lb + '</button>';
+  });
+  t += '</div>';
+
+  let v = '';
+  torah.en.forEach((en, i) => {
+    const vn = startVerse + i;
+    const he = torah.he[i] || '';
+    const ren = rashi.en[i] || '';
+    const rhe = rashi.he[i] || '';
+    const num = '<span style="font-size:11px;font-weight:800;color:var(--gold);margin-right:4px;">' + vn + '.</span>';
+
+    v += '<div style="margin-bottom:2px;">';
+    if (lang === 'both') {
+      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);">';
+      v += '<p style="font-size:16px;line-height:1.85;color:var(--t2);">' + num + en + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + num + he + '</p>';
+      v += '</div>';
+      if (ren || rhe) {
+        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:12px 14px;">';
+        v += '<div><p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:4px;">Rashi</p><p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + ren + '</p></div>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t2);">' + rhe + '</p>';
+        v += '</div>';
+      }
+    } else if (lang === 'he') {
+      v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.1;color:var(--t1);">' + num + he + '</p>';
+      v += '</div>';
+      if (rhe) {
+        v += '<div style="' + RBG + 'padding:12px 14px;">';
+        v += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:4px;">\u05E8\u05E9"\u05D9</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t2);">' + rhe + '</p>';
+        v += '</div>';
+      }
+    } else {
+      v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
+      v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + en + '</p>';
+      v += '</div>';
+      if (ren) {
+        v += '<div style="' + RBG + 'padding:12px 14px;">';
+        v += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:4px;">Rashi</p>';
+        v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + ren + '</p>';
+        v += '</div>';
+      }
+    }
+    v += '</div>';
+  });
+
+  el.innerHTML = t + v
+    + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s portion —</p>'
+    + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
 async function _loadChumashNative(sectionId) {
