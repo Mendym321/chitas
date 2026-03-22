@@ -705,6 +705,43 @@ onAuthStateChanged(auth, user => {
 <div id="celeb-banner"  style="display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:2000;background:linear-gradient(135deg,#F0A500,#FFB830);color:#000;padding:14px 28px;border-radius:20px;font-size:16px;font-weight:900;text-align:center;box-shadow:0 8px 32px rgba(240,165,0,.5);white-space:nowrap;"></div>
 
 <script>
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║                    CHITAS DAILY — chitas.html                    ║
+// ║                  TABLE OF CONTENTS (line refs)                   ║
+// ╠══════════════════════════════════════════════════════════════════╣
+// ║  ZONE 1 · STATE & CONSTANTS         ~line 710                   ║
+// ║  ZONE 2 · UTILITIES (avatar, icon)  ~line 723                   ║
+// ║  ZONE 3 · SAVE / LOCALSTORAGE       ~line 820                   ║
+// ║  ZONE 4 · TOAST                     ~line 847                   ║
+// ║  ZONE 5 · ONBOARDING                ~line 859                   ║
+// ║  ZONE 6 · FIREBASE AUTH             ~line 892                   ║
+// ║  ZONE 7 · APIS (Hebcal / Sefaria)   ~line 962                   ║
+// ║  ZONE 8 · SCHEDULE BUILDER          ~line 986                   ║
+// ║  ZONE 9 · INIT                      ~line 1014                  ║
+// ║  ZONE 10 · RENDER (header, sections)~line 1116                  ║
+// ║  ZONE 11 · XP / LEVEL SYSTEM        ~line 1225                  ║
+// ║  ZONE 12 · DAY NAVIGATOR            ~line 1261                  ║
+// ║  ZONE 13 · MARK DONE / UNMARK       ~line 1484                  ║
+// ║  ZONE 14 · QUIZ (section)           ~line 1671                  ║
+// ║  ZONE 15 · WEEKLY QUIZ              ~line 1752                  ║
+// ║  ZONE 16 · SHARE CARD (canvas)      ~line 2041                  ║
+// ║  ZONE 17 · CELEBRATIONS             ~line 2291                  ║
+// ║  ZONE 18 · MOMENT MODALS            ~line 2345                  ║
+// ║  ZONE 19 · ONBOARDING TICKER        ~line 2515                  ║
+// ║  ZONE 20 · READER (iframe + native) ~line 2770                  ║
+// ║  ZONE 21 · CHUMASH NATIVE READER    ~line 2967                  ║
+// ║  ZONE 22 · MEDALS                   ~line 3284                  ║
+// ║  ZONE 23 · LEADERBOARD              ~line 3376                  ║
+// ║  ZONE 24 · STATS TAB                ~line 3442                  ║
+// ║  ZONE 25 · PROFILE SHEET            ~line 3593                  ║
+// ║  ZONE 26 · THEME                    ~line 3717                  ║
+// ║  ZONE 27 · SIGN OUT / SHARE / RESET ~line 3741                  ║
+// ║  ZONE 28 · TABS & BOOT              ~line 3781                  ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
+// ════════════════════════════════════════════════════════════════════
+// ZONE 1 · STATE & CONSTANTS
+// ════════════════════════════════════════════════════════════════════
 // ── STATE ─────────────────────────────────────────────────────────────────────
 // Format name for leaderboard: "Mendel Moskovitz" → "Mendel M."
 function lbName(fullName) {
@@ -720,6 +757,9 @@ const AVATAR_COLORS = [
   ['#A855F7','#fff'],['#FF4757','#fff'],['#FF6B35','#000'],
   ['#00C9A7','#000'],['#845EC2','#fff'],
 ];
+// ════════════════════════════════════════════════════════════════════
+// ZONE 2 · UTILITIES  (avatar colors, letter avatars, icon SVGs)
+// ════════════════════════════════════════════════════════════════════
 function avatarColor(name) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
@@ -817,6 +857,9 @@ function icon(name, size=20, color='currentColor') {
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="display:block;flex-shrink:0;color:${color};">${SVG_ICONS[name]||''}</svg>`;
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 3 · SAVE / LOCALSTORAGE
+// ════════════════════════════════════════════════════════════════════
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function saveUser() {
   // Always save locally first (fast, offline-safe)
@@ -844,6 +887,9 @@ function saveUser() {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 4 · TOAST  (fire() shows the little notification pill)
+// ════════════════════════════════════════════════════════════════════
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function fire(msg, type='gold') {
   clearTimeout(toastTimer);
@@ -889,6 +935,9 @@ function selectTrack(id) {
   btn.style.color = '#000';
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 6 · FIREBASE AUTH  (Google sign-in, onSignedIn, Firestore sync)
+// ════════════════════════════════════════════════════════════════════
 // ── FIREBASE AUTH ────────────────────────────────────────────────────────────
 async function signInWithGoogle() {
   const btn = document.getElementById('ob-google-btn');
@@ -959,6 +1008,9 @@ function obStart() {
 // Init theme immediately so there's no flash
 initTheme();
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 7 · APIS  (Hebcal, Sefaria calendar — fetch raw data)
+// ════════════════════════════════════════════════════════════════════
 // ── APIS ──────────────────────────────────────────────────────────────────────
 function todayISO() {
   const d = new Date();
@@ -983,6 +1035,9 @@ async function fetchHebDate() {
 
 
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 8 · SCHEDULE BUILDER  (turn API data into section objects)
+// ════════════════════════════════════════════════════════════════════
 // ── BUILD SCHEDULE ────────────────────────────────────────────────────────────
 function parseHebcal(data) {
   const items = data.items || [];
@@ -1011,6 +1066,9 @@ function parseHebcal(data) {
   return { parshaName, aliyaNum, aliyaRef, tehTitle, tehChapters, rambamTitle: rambamItem?.title||'Daily Rambam' };
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 9 · INIT  (app startup — load user, fetch schedule, render)
+// ════════════════════════════════════════════════════════════════════
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
   // Reset done on new day — archive previous day's progress
@@ -1113,6 +1171,9 @@ async function init() {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 10 · RENDER  (greeting, header, section cards)
+// ════════════════════════════════════════════════════════════════════
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function setGreeting() {
   const hour = new Date().getHours();
@@ -1222,6 +1283,9 @@ function renderSections() {
   updateProgressRing();
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 11 · XP / LEVEL SYSTEM
+// ════════════════════════════════════════════════════════════════════
 // ── XP / LEVEL SYSTEM ────────────────────────────────────────────────────────
 // Scaling levels: each level takes ~40% more XP than the last
 // Level 1→2: 100 XP, 2→3: 140, 3→4: 196, 4→5: 274, 5→6: 384...
@@ -1254,6 +1318,9 @@ function xpNeededForLevel(level) {
   return xpNeededForLvl(level);
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 12 · DAY NAVIGATOR  (prev/next day, date display)
+// ════════════════════════════════════════════════════════════════════
 function dateISO(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
@@ -1668,6 +1735,9 @@ function markDone(id) {
   renderStats();
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 14 · QUIZ (section quiz — questions, answers, results)
+// ════════════════════════════════════════════════════════════════════
 // ── QUIZ ─────────────────────────────────────────────────────────────────────
 let quizState = { sectionId: null, questions: [], current: 0, score: 0, answered: false };
 
@@ -1747,6 +1817,9 @@ async function openQuiz(sectionId) {
   renderQuestion();
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 15 · WEEKLY QUIZ  (Motzei Shabbos popup, results, share card)
+// ════════════════════════════════════════════════════════════════════
 // ── WEEKLY QUIZ ───────────────────────────────────────────────────────────────
 
 function getWeekNumber() {
@@ -2038,6 +2111,9 @@ function openWeeklyQuizResults() {
   showWeeklyResults();
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 16 · SHARE CARD  (canvas image for WhatsApp/social)
+// ════════════════════════════════════════════════════════════════════
 // ── SHARE CARD (canvas-drawn image) ──────────────────────────────────────────
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -2288,6 +2364,9 @@ async function shareWeeklyCard(score, total, method) {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 17 · CELEBRATIONS  (confetti, banner, vibrate, card pop)
+// ════════════════════════════════════════════════════════════════════
 // ── CELEBRATIONS ─────────────────────────────────────────────────────────────
 function launchConfetti(count=60) {
   const container = document.getElementById('confetti-container');
@@ -2342,6 +2421,9 @@ function celebrateSection(sectionId) {
   if (tick) tick.style.animation = 'checkPop .4s ease';
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 18 · MOMENT MODALS  (streak milestone, perfect day, level up)
+// ════════════════════════════════════════════════════════════════════
 // ── MOMENT MODAL SYSTEM ─────────────────────────────────────────────────────
 function showMoment(opts) {
   const { icon, title, sub, xp, btns, color } = opts;
@@ -2512,6 +2594,9 @@ function checkWeeklySummary() {
   setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', title: m.title, sub: m.sub + (user.streak > 0 ? ' Streak: ' + user.streak + ' days.' : ''), color: '#A855F7', btns: [{ label: 'Good Shabbos', primary: true }] }), 1200);
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 19 · ONBOARDING TICKER  (animated word ticker on landing screen)
+// ════════════════════════════════════════════════════════════════════
 // ── LANDING TICKER ───────────────────────────────────────────────────────────
 let _obTickerTimer = null;
 let _obTickerIdx = 0;
@@ -2583,7 +2668,7 @@ function runObTicker() {
 function startObTicker() {
   buildTickerDots();
   runObTicker();
-  _obTickerTimer = setInterval(runObTicker, 1800);
+  _obTickerTimer = setInterval(runObTicker, 1100);
 }
 
 function stopObTicker() {
@@ -2767,155 +2852,20 @@ function retryQuiz(sid) {
   renderQuestion();
 }
 
-// ── READER ────────────────────────────────────────────────────────────────────
-
-
-
-
-
-
-
-
+// ════════════════════════════════════════════════════════════════════
+// ZONE 20 · READER SHELL  (iframe + native reader, scroll tracking)
+// ════════════════════════════════════════════════════════════════════
 // ── READER ────────────────────────────────────────────────────────────────────
 // Sections that use native reader (scroll-to-unlock) vs iframe
 const NATIVE_READER_SECTIONS = ['chumash', 'tanya', 'rambam'];
 
 // ── READER CONTENT RENDER ────────────────────────────────────────────────────
-function renderReaderContent() {
-  const { enVerses, heVerses, heRef, enRef, maxLen } = window._readerData || {};
-  const lang = window._readerLang || 'he';
-  const contentEl = document.getElementById('native-reader-content');
-  if (!contentEl || !window._readerData) return;
-
-  // Update toggle button states
-  ['he','en','both'].forEach(l => {
-    const btn = document.getElementById(`lang-btn-${l}`);
-    if (!btn) return;
-    const active = lang === l;
-    btn.style.background = active ? 'var(--gold)' : 'var(--card)';
-    btn.style.color = active ? '#000' : 'var(--t2)';
-    btn.style.borderColor = active ? 'var(--gold)' : 'var(--border)';
-  });
-
-  const titleLabel = lang === 'en' ? enRef : heRef;
-  let rowsHtml = '';
-
-  for (let i = 0; i < maxLen; i++) {
-    const he = heVerses[i] || '';
-    const en = enVerses[i] || '';
-    const borderStyle = i < maxLen - 1 ? 'border-bottom:1px solid var(--border);' : '';
-
-    if (lang === 'both') {
-      rowsHtml += '<div style="margin-bottom:16px;padding-bottom:16px;' + borderStyle + '">'
-        + (he ? '<p style="font-size:17px;line-height:1.8;color:var(--t1);direction:rtl;text-align:right;font-family:\'Frank Ruhl Libre\',serif;margin-bottom:10px;">' + he + '</p>' : '')
-        + (en ? '<p style="font-size:14px;line-height:1.75;color:var(--t2);">' + en + '</p>' : '')
-        + '</div>';
-    } else if (lang === 'he') {
-      rowsHtml += he
-        ? `<p style="font-size:18px;line-height:1.9;color:var(--t1);direction:rtl;text-align:right;font-family:'Frank Ruhl Libre','Times New Roman',serif;margin-bottom:16px;padding-bottom:16px;${borderStyle}">${he}</p>`
-        : '';
-    } else {
-      rowsHtml += en
-        ? `<p style="font-size:16px;line-height:1.9;color:var(--t1);margin-bottom:16px;padding-bottom:16px;${borderStyle}">${en}</p>`
-        : '';
-    }
-  }
-
-  contentEl.innerHTML = `
-    <!-- Lang toggle -->
-    <div style="display:flex;gap:6px;margin-bottom:20px;">
-      <button id="lang-btn-he"   onclick="setReaderLang('he')"   style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;">עברית</button>
-      <button id="lang-btn-both" onclick="setReaderLang('both')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;">Both</button>
-      <button id="lang-btn-en"   onclick="setReaderLang('en')"   style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;">English</button>
-    </div>
-    <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px;">${titleLabel} · via Sefaria</p>
-    ${rowsHtml}
-    <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today's portion —</p>
-    <div id="reader-bottom-sentinel" style="height:1px;"></div>`;
-
-  // Re-apply active styles after innerHTML reset
-  ['he','en','both'].forEach(l => {
-    const btn = document.getElementById(`lang-btn-${l}`);
-    if (!btn) return;
-    const active = lang === l;
-    btn.style.background = active ? 'var(--gold)' : 'var(--card)';
-    btn.style.color = active ? '#000' : 'var(--t2)';
-    btn.style.borderColor = active ? 'var(--gold)' : 'var(--border)';
-  });
-}
-
-function setReaderLang(lang) {
-  window._readerLang = lang;
-  const scrollPos = document.getElementById('native-reader')?.scrollTop || 0;
-  renderReaderContent();
-  // Restore scroll position so switching lang doesn't jump to top
-  if (document.getElementById('native-reader')) {
-    document.getElementById('native-reader').scrollTop = scrollPos;
-  }
-}
-
-// Strip HTML tags Sefaria embeds (page markers, bold, italic, footnotes)
-function stripSefariaHtml(str) {
-  if (!str) return '';
-  return str
-    .replace(/<i[^>]*data-overlay[^>]*>.*?<\/i>/gi, '') // page markers
-    .replace(/<[^>]+>/g, '')                              // all other tags
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-// Flatten Sefaria's nested array text structure into a flat array of clean strings
-function flattenSefariaText(text) {
-  if (!text) return [];
-  if (typeof text === 'string') {
-    const clean = stripSefariaHtml(text);
-    return clean ? [clean] : [];
-  }
-  if (Array.isArray(text)) {
-    return text.flatMap(item => flattenSefariaText(item)).filter(s => s && s.trim());
-  }
-  return [];
-}
+// renderReaderContent / setReaderLang / stripSefariaHtml / flattenSefariaText
+// removed — prototype reader superseded by _renderChumashContent() in Zone 21.
+// Tanya + Rambam native readers will follow the same Zone 21 pattern.
 
 // Extract readable content from Chabad.org HTML (kept as fallback, not used)
-function extractChabadContent(html, sectionId) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-
-  // Remove noise: nav, ads, scripts, styles, headers, footers, sidebars
-  ['script','style','nav','header','footer','.sidebar','.ad',
-   '.social-share','.print-link','#navigation','#header','#footer',
-   '.donate-banner','.top-bar','.breadcrumbs','.related-articles'
-  ].forEach(sel => doc.querySelectorAll(sel).forEach(el => el.remove()));
-
-  // Each Chabad.org study page has its content in different containers
-  // Try selectors in priority order
-  const selectors = [
-    '.article-body',        // most study pages
-    '.body-text',
-    '#article-body',
-    '.study-text',
-    '.content-body',
-    '[itemprop="articleBody"]',
-    '.col-md-8',            // fallback — main column
-    'article',
-    'main',
-  ];
-
-  let container = null;
-  for (const sel of selectors) {
-    container = doc.querySelector(sel);
-    if (container && container.innerText?.trim().length > 200) break;
-  }
-
-  if (!container) return null;
-
-  // Clean up remaining elements inside the container
-  container.querySelectorAll('script,style,iframe,.ad,.donate,button,form').forEach(el => el.remove());
-
-  // Get clean HTML — keep paragraphs, headings, strong/em
-  return container.innerHTML;
-}
+// extractChabadContent() removed — was never called (superseded by native readers)
 
 // Scroll handler — updates progress bar and unlocks Mark Done
 function onReaderScroll() {
@@ -2964,6 +2914,14 @@ function unlockMarkDone() {
 }
 
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 21 · CHUMASH NATIVE READER
+//   Fetches Koren Torah + Metsudah Rashi from Sefaria.
+//   Two-column layout, Hebrew/Both/English toggle.
+//   ⚠️  All functions prefixed _ to avoid naming conflicts.
+//   TODO: Add Tanya reader here (same pattern, flowing prose)
+//   TODO: Add Rambam reader here (same pattern, Touger translation)
+// ════════════════════════════════════════════════════════════════════
 // ── CHUMASH NATIVE READER ─────────────────────────────────────────────────
 
 const SEFARIA='https://www.sefaria.org';
@@ -3281,6 +3239,9 @@ function closeChabadPanel() {
   markDoneUnlocked = false;
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 22 · MEDALS  (worlds, unlocks, hero + collapsed rows)
+// ════════════════════════════════════════════════════════════════════
 // ── MEDALS ────────────────────────────────────────────────────────────────────
 function worldUnlocked(worldIndex) {
   if (worldIndex === 0) return true;
@@ -3373,6 +3334,9 @@ function renderMedals() {
   document.getElementById('medals-grid').innerHTML = html;
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 23 · LEADERBOARD  (top 50 by XP or streak, Firestore)
+// ════════════════════════════════════════════════════════════════════
 // ── LEADERS ───────────────────────────────────────────────────────────────────
 let lbMode = 'xp'; // 'xp' | 'streak'
 
@@ -3439,6 +3403,9 @@ async function renderLeaders() {
   }).join('');
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 24 · STATS TAB  (streak hero, activity grid, section breakdown)
+// ════════════════════════════════════════════════════════════════════
 // ── STATS ─────────────────────────────────────────────────────────────────────
 function renderStats() {
   const level = levelFromXp(user.xp);
@@ -3590,6 +3557,9 @@ function renderStats() {
 }
 
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 25 · PROFILE SHEET  (name, level bar, city, track, appearance)
+// ════════════════════════════════════════════════════════════════════
 function openProfileSheet() {
   document.getElementById('profile-sheet-avatar').innerHTML = letterAvatar(user.name || '?', 48, 18);
   document.getElementById('profile-sheet-name').textContent = user.name || 'Anonymous';
@@ -3714,6 +3684,9 @@ function changeTrack() {
   document.getElementById('ob-step2').style.display = 'block';
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 26 · THEME  (dark/light, system preference, localStorage)
+// ════════════════════════════════════════════════════════════════════
 // ── THEME ─────────────────────────────────────────────────────────────────────
 function initTheme() {
   // Read saved preference, fallback to system
@@ -3737,6 +3710,9 @@ function toggleTheme() {
   setTheme(isLight ? 'dark' : 'light');
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 27 · SIGN OUT / SHARE / RESET
+// ════════════════════════════════════════════════════════════════════
 // ── SIGN OUT ───────────────────────────────────────────────────────────────────
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
@@ -3778,6 +3754,9 @@ function resetProgress() {
   if (schedule) renderSectionsForOffset(dateISO(new Date()));
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 28 · TABS & BOOT  (tab switching, app entry point)
+// ════════════════════════════════════════════════════════════════════
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
