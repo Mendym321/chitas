@@ -3026,29 +3026,43 @@ async function _fetchSingleRef(ref, keyword){
   return{en:_flatHtml(d.text||[]),he:_flatPlain(d.he||[]),versionTitle:d.versionTitle};
 }
 
-// Split spanning refs into per-chapter chunks so ven= works
+// Split spanning refs into per-chapter chunks so ven= works.
+// Returns { chunks: [{ref, chapter, startVerse, en, he}], versionTitle }
+// Single-chapter refs return a one-element chunks array for consistency.
 async function _fetchChumashText(ref, keyword){
   const spanMatch=ref.match(/^(.+?)\s+(\d+):(\d+)-(\d+):(\d+)$/);
   if(spanMatch){
     const[,book,ch1s,v1s,ch2s,v2s]=spanMatch;
     const ch1=parseInt(ch1s),ch2=parseInt(ch2s);
-    const chunks=[];
+    const chunkDefs=[];
     for(let ch=ch1;ch<=ch2;ch++){
-      if(ch===ch1&&ch===ch2) chunks.push(`${book} ${ch}:${v1s}-${v2s}`);
-      else if(ch===ch1)      chunks.push(`${book} ${ch}:${v1s}-150`);
-      else if(ch===ch2)      chunks.push(`${book} ${ch}:1-${v2s}`);
-      else                   chunks.push(`${book} ${ch}`);
+      if(ch===ch1&&ch===ch2) chunkDefs.push({chunkRef:`${book} ${ch}:${v1s}-${v2s}`, chapter:ch, startVerse:parseInt(v1s)});
+      else if(ch===ch1)      chunkDefs.push({chunkRef:`${book} ${ch}:${v1s}-150`,     chapter:ch, startVerse:parseInt(v1s)});
+      else if(ch===ch2)      chunkDefs.push({chunkRef:`${book} ${ch}:1-${v2s}`,       chapter:ch, startVerse:1});
+      else                   chunkDefs.push({chunkRef:`${book} ${ch}`,                chapter:ch, startVerse:1});
     }
-    const results=await Promise.all(chunks.map(c=>_fetchSingleRef(c,keyword)));
-    return{en:results.flatMap(r=>r.en),he:results.flatMap(r=>r.he),versionTitle:results[0].versionTitle};
+    const fetched=await Promise.all(chunkDefs.map(d=>_fetchSingleRef(d.chunkRef,keyword)));
+    return{
+      chunks:chunkDefs.map((d,i)=>({ref:d.chunkRef,chapter:d.chapter,startVerse:d.startVerse,en:fetched[i].en,he:fetched[i].he})),
+      versionTitle:fetched[0].versionTitle,
+    };
   }
-  return _fetchSingleRef(ref,keyword);
+  // Single-chapter ref
+  const svMatch=ref.match(/:(\d+)/);
+  const chMatch=ref.match(/\s+(\d+)/);
+  const startVerse=svMatch?parseInt(svMatch[1]):1;
+  const chapter=chMatch?parseInt(chMatch[1]):1;
+  const result=await _fetchSingleRef(ref,keyword);
+  return{
+    chunks:[{ref,chapter,startVerse,en:result.en,he:result.he}],
+    versionTitle:result.versionTitle,
+  };
 }
 
 
 function _renderChumashContent() {
-  const { torah, startVerse } = window._chumashData || {};
-  if (!torah) return;
+  const { torahChunks, rashiMap } = window._chumashData || {};
+  if (!torahChunks || !torahChunks.length) return;
   const lang = localStorage.getItem('chitas_reader_lang') || 'both';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
@@ -3066,63 +3080,72 @@ function _renderChumashContent() {
   });
   t += '</div>';
 
-  // rashiByVerse is a verse-number-keyed map built in _loadChumashNative.
-  // Falling back to the old rashi arrays (for backward compat if somehow
-  // _chumashData was set by older code without the map).
-  const rashiByVerse = window._chumashData.rashiByVerse || {};
-
   let v = '';
-  torah.en.forEach((en, i) => {
-    const vn = startVerse + i;
-    const he = torah.he[i] || '';
-    // Look up Rashi by verse number — this ensures Rashi for verse 3
-    // always appears under verse 3 even when Sefaria's array has gaps.
-    const rashiEntry = rashiByVerse[vn] || {};
-    const ren = rashiEntry.en || '';
-    const rhe = rashiEntry.he || '';
-    const num = '<span style="font-size:11px;font-weight:800;color:var(--gold);margin-right:4px;">' + vn + '.</span>';
 
-    v += '<div style="margin-bottom:2px;">';
-    if (lang === 'both') {
-      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-      v += '<p style="font-size:16px;line-height:1.85;color:var(--t2);">' + num + en + '</p>';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + num + he + '</p>';
-      v += '</div>';
-      if (ren || rhe) {
-        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:12px 14px;">';
-        v += '<div><p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:4px;">Rashi</p><p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + ren + '</p></div>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t2);">' + rhe + '</p>';
-        v += '</div>';
-      }
-    } else if (lang === 'he') {
-      v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.1;color:var(--t1);">' + num + he + '</p>';
-      v += '</div>';
-      if (rhe) {
-        v += '<div style="' + RBG + 'padding:12px 14px;">';
-        v += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:4px;">\u05E8\u05E9"\u05D9</p>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t2);">' + rhe + '</p>';
-        v += '</div>';
-      }
-    } else {
-      v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-      v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + en + '</p>';
-      v += '</div>';
-      if (ren) {
-        v += '<div style="' + RBG + 'padding:12px 14px;">';
-        v += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:4px;">Rashi</p>';
-        v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + ren + '</p>';
-        v += '</div>';
-      }
+  // Render chapter by chapter — each chunk knows its own chapter number
+  // and startVerse, so verse numbering is always correct
+  torahChunks.forEach((chunk, chunkIdx) => {
+    // Chapter heading if multi-chapter
+    if (torahChunks.length > 1) {
+      v += '<div style="font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;'
+         + 'color:var(--t3);padding:18px 0 10px;' + (chunkIdx > 0 ? 'border-top:1px solid var(--border);margin-top:4px;' : '') + '">'
+         + 'Chapter ' + chunk.chapter + '</div>';
     }
-    v += '</div>';
+
+    chunk.en.forEach((en, i) => {
+      const vn = chunk.startVerse + i;
+      const he = chunk.he[i] || '';
+      // Rashi keyed by "chapter:verseNum" — exact match, no index drift
+      const rashiKey = chunk.chapter + ':' + vn;
+      const rashiEntry = (rashiMap && rashiMap[rashiKey]) || {};
+      const ren = rashiEntry.en || '';
+      const rhe = rashiEntry.he || '';
+      const num = '<span style="font-size:11px;font-weight:800;color:var(--gold);margin-right:4px;">' + vn + '.</span>';
+
+      v += '<div style="margin-bottom:2px;">';
+
+      if (lang === 'both') {
+        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);">';
+        v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + en + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + num + he + '</p>';
+        v += '</div>';
+        if (ren || rhe) {
+          v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:12px 14px;">';
+          v += '<div><p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:4px;">Rashi</p>'
+             + '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + ren + '</p></div>';
+          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t2);">' + rhe + '</p>';
+          v += '</div>';
+        }
+      } else if (lang === 'he') {
+        v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.1;color:var(--t1);">' + num + he + '</p>';
+        v += '</div>';
+        if (rhe) {
+          v += '<div style="' + RBG + 'padding:12px 14px;">';
+          v += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:4px;">\u05E8\u05E9\"\u05D9</p>';
+          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t2);">' + rhe + '</p>';
+          v += '</div>';
+        }
+      } else {
+        v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
+        v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + en + '</p>';
+        v += '</div>';
+        if (ren) {
+          v += '<div style="' + RBG + 'padding:12px 14px;">';
+          v += '<p style="font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,165,0,.5);margin-bottom:4px;">Rashi</p>';
+          v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + ren + '</p>';
+          v += '</div>';
+        }
+      }
+
+      v += '</div>';
+    });
   });
 
   el.innerHTML = t + v
     + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s portion —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
-
 async function _loadChumashNative(sectionId) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
@@ -3134,25 +3157,21 @@ async function _loadChumashNative(sectionId) {
     const viewedDay = new Date();
     viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
 
-    // First try: use the ref already loaded into schedule (avoids extra API call)
+    // Primary: use the ref already in schedule (rebuilt per day by rebuildScheduleForOffset)
     let aliyahRef = schedule?.chumash?.sefariaRef || '';
 
-    // If schedule ref is stale (e.g. user navigated to a past day and schedule
-    // was rebuilt for that day), it will already be correct. But if somehow
-    // it is missing, fall back to fetching the calendar for the viewed day.
+    // Fallback: fetch calendar for the viewed day
     if (!aliyahRef) {
       const cal = await fetch(
         'https://www.sefaria.org/api/calendars?year=' + viewedDay.getFullYear() +
         '&month=' + (viewedDay.getMonth()+1) + '&day=' + viewedDay.getDate()
       ).then(r => r.json());
-
       const chumashItem = (cal.calendar_items || []).find(i =>
         (i.title?.en || '').toLowerCase().includes('chumash')
       );
       if (chumashItem?.ref) {
         aliyahRef = chumashItem.ref;
       } else {
-        // Fallback: Hebcal leyning for the viewed day
         const dow = viewedDay.getDay();
         const sat = new Date(viewedDay); sat.setDate(viewedDay.getDate() + (6 - dow));
         const sun = new Date(sat); sun.setDate(sat.getDate() - 6);
@@ -3168,34 +3187,32 @@ async function _loadChumashNative(sectionId) {
 
     if (!aliyahRef) return false;
 
+    // Fetch Torah and Rashi in parallel — both now return { chunks, versionTitle }
     const [torah, rashi] = await Promise.all([
       _fetchChumashText(aliyahRef, 'koren'),
-      _fetchChumashText('Rashi on ' + aliyahRef, 'metsudah').catch(() => ({ en: [], he: [] })),
+      _fetchChumashText('Rashi on ' + aliyahRef, 'metsudah').catch(() => ({ chunks: [], versionTitle: '' })),
     ]);
 
-    if (!torah.en.length && !torah.he.length) return false;
+    if (!torah.chunks.length) return false;
 
-    const startVerse = (() => { const m = aliyahRef.match(/:(\d+)/); return m ? parseInt(m[1]) : 1; })();
+    // Build a lookup: (chapter, verseNum) -> { en, he }
+    // keyed as "ch:vn" string so matching is exact regardless of array positions
+    const rashiMap = {};
+    rashi.chunks.forEach(chunk => {
+      chunk.en.forEach((text, i) => {
+        if (text) rashiMap[chunk.chapter + ':' + (chunk.startVerse + i)] = { en: text, he: chunk.he[i] || '' };
+      });
+      chunk.he.forEach((text, i) => {
+        const key = chunk.chapter + ':' + (chunk.startVerse + i);
+        if (text && !rashiMap[key]) rashiMap[key] = { en: chunk.en[i] || '', he: text };
+      });
+    });
 
     // Update panel subtitle
     const subEl = document.getElementById('chabad-panel-sub');
     if (subEl) subEl.textContent = aliyahRef;
 
-    // Build a verse-number-keyed map for Rashi so verse 3's Rashi
-    // always appears under verse 3, regardless of array gaps (fix for
-    // Rashi showing under the wrong verse when Sefaria skips verses)
-    const rashiByVerse = {};
-    rashi.en.forEach((text, i) => {
-      if (text) rashiByVerse[startVerse + i] = { en: text, he: rashi.he[i] || '' };
-    });
-    // Also index by he array in case en is sparse but he is not
-    rashi.he.forEach((text, i) => {
-      if (text && !rashiByVerse[startVerse + i]) {
-        rashiByVerse[startVerse + i] = { en: rashi.en[i] || '', he: text };
-      }
-    });
-
-    window._chumashData = { torah, rashiByVerse, startVerse, ref: aliyahRef };
+    window._chumashData = { torahChunks: torah.chunks, rashiMap, ref: aliyahRef, versionTitle: torah.versionTitle };
     _renderChumashContent();
 
     if (loadEl) loadEl.style.display = 'none';
@@ -3207,7 +3224,6 @@ async function _loadChumashNative(sectionId) {
     return false;
   }
 }
-
 
 function _setChumashLang(lang) {
   localStorage.setItem('chitas_reader_lang', lang);
