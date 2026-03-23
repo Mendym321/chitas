@@ -3054,13 +3054,15 @@ async function _fetchSingleRef(ref, keyword){
     if (!Array.isArray(raw)) return [];
     return raw.map(item => {
       if (Array.isArray(item)) {
-        // Rashi: each verse is an array of comment segments — join them
-        const joined = item.map(s => typeof s === 'string' ? _cleanHtml(s) : '').filter(Boolean).join(' ');
-        return joined || null;
+        // Rashi: each element in the array is a SEPARATE comment on this verse.
+        // Keep them as an array so the renderer can show each as its own block.
+        const comments = item.map(s => typeof s === 'string' ? _cleanHtml(s) : '').filter(Boolean);
+        return comments.length ? comments : null;
       }
       if (typeof item === 'string') {
         const s = _cleanHtml(item);
-        return s || null;
+        // Torah verses come as plain strings — wrap in array for uniform shape
+        return s ? [s] : null;
       }
       return null;
     });
@@ -3146,49 +3148,51 @@ function _renderChumashContent() {
 
       v += '<div style="margin-bottom:2px;">';
 
-      // Bold the opening word(s) of Hebrew Rashi (dibbur hamatchil).
-      // Rashi always starts with the quoted Torah phrase in bold, then a dot/dash.
-      // If _cleanHtml already preserved <b> tags (it does), they render correctly.
-      // For cases where no <b> is present, bold the text up to the first period/colon.
+      // rashiComments is an array of {en, he} — one per distinct Rashi comment.
+      const rashiComments = (rashiMap && rashiMap[rashiKey]) || [];
+
+      // Bold the dibbur hamatchil (opening quote) of each Hebrew Rashi comment.
       function boldRashiHe(text) {
         if (!text) return '';
-        // Already has bold tags from Sefaria — trust them
         if (text.includes('<b>')) return text;
-        // Otherwise bold up to the first period, colon, or em-dash
         return text.replace(/^([^.:—׃]+[.:—׃]?)/, '<b>$1</b>');
       }
 
       if (lang === 'both') {
-        // Verse row — two columns
+        // Verse row
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + en + '</p>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + num + he + '</p>';
+        v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
-        // Rashi row — two columns, aligned with verse above, no label
-        if (ren || rhe) {
-          v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:12px 14px;">';
-          v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + ren + '</p>';
-          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t2);">' + boldRashiHe(rhe) + '</p>';
+        // One Rashi block per comment — each aligned in two columns
+        rashiComments.forEach(rc => {
+          v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
+          v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + rc.en + '</p>';
+          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t2);">' + boldRashiHe(rc.he) + '</p>';
           v += '</div>';
-        }
+        });
       } else if (lang === 'he') {
         v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.1;color:var(--t1);">' + num + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.1;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
-        if (rhe) {
-          v += '<div style="' + RBG + 'padding:12px 14px;">';
-          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t2);">' + boldRashiHe(rhe) + '</p>';
-          v += '</div>';
-        }
+        rashiComments.forEach(rc => {
+          if (rc.he) {
+            v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
+            v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t2);">' + boldRashiHe(rc.he) + '</p>';
+            v += '</div>';
+          }
+        });
       } else {
         v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + en + '</p>';
+        v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
         v += '</div>';
-        if (ren) {
-          v += '<div style="' + RBG + 'padding:12px 14px;">';
-          v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + ren + '</p>';
-          v += '</div>';
-        }
+        rashiComments.forEach(rc => {
+          if (rc.en) {
+            v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
+            v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + rc.en + '</p>';
+            v += '</div>';
+          }
+        });
       }
 
       v += '</div>';
@@ -3225,19 +3229,25 @@ async function _loadChumashNative(sectionId) {
     if (!torah.chunks.length) return false;
 
     // Build rashiMap keyed by "chapter:verseNum".
-    // chunk.en[i] is null when Sefaria has no Rashi for that verse — we rely on
-    // positional alignment (index 0 = startVerse, index 1 = startVerse+1, etc.)
-    // which is only correct because _fetchSingleRef now preserves empty slots.
+    // Each value is { en: string[], he: string[] } — one element per Rashi comment.
+    // Multiple comments on one verse each get their own rendered block.
     const rashiMap = {};
     rashi.chunks.forEach(chunk => {
       const maxLen = Math.max(chunk.en.length, chunk.he.length);
       for (let i = 0; i < maxLen; i++) {
-        const en = chunk.en[i] || null;
-        const he = chunk.he[i] || null;
-        if (en || he) {
-          rashiMap[chunk.chapter + ':' + (chunk.startVerse + i)] = { en: en || '', he: he || '' };
+        const enArr = chunk.en[i] || null;  // string[] or null
+        const heArr = chunk.he[i] || null;
+        if (enArr || heArr) {
+          const enComments = Array.isArray(enArr) ? enArr : (enArr ? [enArr] : []);
+          const heComments = Array.isArray(heArr) ? heArr : (heArr ? [heArr] : []);
+          // Pair up comments by index — if one side has more, pad with ''
+          const count = Math.max(enComments.length, heComments.length);
+          const comments = [];
+          for (let j = 0; j < count; j++) {
+            comments.push({ en: enComments[j] || '', he: heComments[j] || '' });
+          }
+          rashiMap[chunk.chapter + ':' + (chunk.startVerse + i)] = comments;
         }
-        // null/null = no Rashi for this verse — intentionally not added to map
       }
     });
 
