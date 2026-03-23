@@ -2994,9 +2994,7 @@ function _saveScrollPos(sectionId, pos) {
 
 function _getSavedScrollPos(sectionId) {
   try {
-    const key = _scrollKey(sectionId);
-    const val = localStorage.getItem(key);
-    console.log('[scroll] getSaved:', sectionId, '| key=', key, '| raw value=', val);
+    const val = localStorage.getItem(_scrollKey(sectionId));
     return val !== null ? parseInt(val) : 0;
   } catch(e) { return 0; }
 }
@@ -3929,9 +3927,6 @@ function closeChabadPanel() {
   if (reader && reader.scrollTop > 0) {
     if (sid && (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim')) {
       _saveScrollPos(sid, reader.scrollTop);
-      const savedKey = _scrollKey(sid);
-      const verify = localStorage.getItem(savedKey);
-      console.log('[scroll] saved', sid, '=', reader.scrollTop, '| key=', savedKey, '| verified from localStorage:', verify);
     }
   }
   // Cancel any pending throttled scroll save before resetting to 0
