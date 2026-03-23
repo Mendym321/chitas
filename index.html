@@ -3670,7 +3670,14 @@ async function _loadTehillimNative(sectionId) {
     const url = 'https://www.sefaria.org/api/texts/' + ref + '?context=0&ven=' + korenVen;
     const d = await fetch(url).then(r => r.json());
 
-    function cleanV(s) { return s ? s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() : ''; }
+    function cleanV(s) {
+      if (!s) return '';
+      return s
+        .replace(/<[^>]*>/g, '')           // strip HTML tags
+        .replace(/[\u0591-\u05AF]/g, '')   // strip cantillation (trop) marks only
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
 
     // Build psalm number list from ref
     const psalmNums = [];
@@ -3808,7 +3815,7 @@ function _renderTehillimContent() {
 
     // Flowing prose — all verses in one paragraph, verse number as superscript inline
     const paraStyle = isHe
-      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';font-size:19px;line-height:1.75;color:var(--t1);'
+      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';font-size:19px;line-height:1.75;font-weight:700;color:var(--t1);'
       : 'font-size:15px;line-height:1.75;color:var(--t1);text-align:justify;';
 
     const verseHTML = verses.map((vText, i) => {
