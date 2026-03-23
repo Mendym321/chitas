@@ -3432,6 +3432,8 @@ async function _fetchRambamChapter(ref) {
   const chapter = chMatch ? parseInt(chMatch[1]) : 1;
   const title = _rambamChapterTitle(ref);
 
+  // DEBUG — remove after confirming bold structure
+  if (enSegs[0]) console.log('RAMBAM RAW halacha 1:', JSON.stringify(enSegs[0]));
   return { ref, title, chapter, en: enSegs, he: heSegs };
 }
 
@@ -3492,10 +3494,10 @@ function _renderRambamContent() {
 
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
       // Rendered as a span before the text — stays inline with the paragraph
-      const enMark = '<span style="font-size:17px;font-weight:800;color:' + GREEN
-        + ';margin-right:8px;min-width:22px;display:inline-block;vertical-align:middle;">' + num + '</span>';
-      const heMark = '<span style="font-size:18px;font-weight:800;color:' + GREEN
-        + ';margin-left:8px;font-family:' + HE + ';vertical-align:middle;">' + heNum + '</span>';
+      const enMark = '<span style="font-size:22px;font-weight:800;color:' + GREEN
+        + ';margin-right:10px;min-width:26px;display:inline-block;vertical-align:middle;line-height:1;">' + num + '</span>';
+      const heMark = '<span style="font-size:23px;font-weight:800;color:' + GREEN
+        + ';margin-left:10px;font-family:' + HE + ';vertical-align:middle;line-height:1;">' + heNum + '</span>';
 
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
