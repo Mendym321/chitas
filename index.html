@@ -3337,10 +3337,12 @@ async function _loadChumashNative(sectionId) {
     // Restore saved scroll position for today
     const saved = _getSavedScrollPos('chumash');
     if (saved > 0) {
-      requestAnimationFrame(() => {
+      // Double rAF: first frame = browser processes new DOM,
+      // second frame = layout complete, scroll is reliable
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         const reader = document.getElementById('native-reader');
         if (reader) reader.scrollTop = saved;
-      });
+      }));
     }
     return true;
 
@@ -3418,10 +3420,10 @@ async function _loadRambamNative(sectionId) {
     // Restore saved scroll position for today
     const saved = _getSavedScrollPos('rambam');
     if (saved > 0) {
-      requestAnimationFrame(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         const reader = document.getElementById('native-reader');
         if (reader) reader.scrollTop = saved;
-      });
+      }));
     }
     return true;
 
@@ -3721,10 +3723,10 @@ async function _loadTehillimNative(sectionId) {
 
     const saved = _getSavedScrollPos('tehillim');
     if (saved > 0) {
-      requestAnimationFrame(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         const reader = document.getElementById('native-reader');
         if (reader) reader.scrollTop = saved;
-      });
+      }));
     }
     return true;
 
@@ -3910,9 +3912,15 @@ function openChabadPanel(sectionId) {
 }
 
 function closeChabadPanel() {
-  // Reset scroll to top when closing — position is already saved,
-  // so next open will restore it. This prevents stale scroll on re-open.
+  // Save scroll position explicitly on close — belt-and-suspenders alongside
+  // the throttled save in onReaderScroll
   const reader = document.getElementById('native-reader');
+  if (reader && reader.scrollTop > 0) {
+    const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+    if (sid && (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim')) {
+      _saveScrollPos(sid, reader.scrollTop);
+    }
+  }
   if (reader) reader.scrollTop = 0;
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
