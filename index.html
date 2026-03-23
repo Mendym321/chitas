@@ -1047,8 +1047,14 @@ function todayISO() {
 }
 
 async function fetchHebcal() {
-  const date = todayISO();
-  const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=${date}&end=${date}&lg=s`;
+  // Fetch the whole Sun→Sat week so the parashat item (with full leyning map)
+  // is always present regardless of what day of the week it is today.
+  const today = new Date();
+  const dow = today.getDay(); // 0=Sun
+  const sun = new Date(today); sun.setDate(today.getDate() - dow);
+  const sat = new Date(today); sat.setDate(today.getDate() + (6 - dow));
+  const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=${fmt(sun)}&end=${fmt(sat)}&lg=s`;
   const r = await fetch(url); if(!r.ok) throw new Error('Hebcal');
   return r.json();
 }
@@ -1193,6 +1199,9 @@ async function init() {
                     : `${base}/rambam.asp?rambamChapters=${user.rambamTrack==='3'?3:1}&tdate=${encodeURIComponent(tdate)}`,
                   sefariaRef: rambamRef },
     };
+
+    // Snapshot today's schedule so navDay(0) can restore it without re-fetching
+    window._todaySchedule = JSON.parse(JSON.stringify(schedule));
 
     renderSectionsForOffset(dateISO(new Date()));
   } catch(e) {
@@ -1412,7 +1421,11 @@ async function rebuildScheduleForOffset() {
   // If back to today — restore from snapshot, no need to re-fetch
   if (dayOffset === 0 && window._todaySchedule) {
     Object.entries(window._todaySchedule).forEach(([k,v]) => {
-      if (schedule[k]) { schedule[k].subtitle = v.subtitle; schedule[k].chabadUrl = v.chabadUrl; }
+      if (schedule[k]) {
+        schedule[k].subtitle    = v.subtitle;
+        schedule[k].chabadUrl   = v.chabadUrl;
+        schedule[k].sefariaRef  = v.sefariaRef; // restore so native reader gets correct ref
+      }
     });
     renderSectionsForOffset(iso);
     return;
@@ -1433,7 +1446,12 @@ async function rebuildScheduleForOffset() {
   const isoDate = iso;
   let p = null;
   try {
-    const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + isoDate + '&end=' + isoDate + '&lg=s');
+    // Fetch the whole Sun→Sat week containing 'd' so parashat leyning is always present
+    const rdow = d.getDay();
+    const rsun = new Date(d); rsun.setDate(d.getDate() - rdow);
+    const rsat = new Date(d); rsat.setDate(d.getDate() + (6 - rdow));
+    const rfmt = x => x.getFullYear() + '-' + String(x.getMonth()+1).padStart(2,'0') + '-' + String(x.getDate()).padStart(2,'0');
+    const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s');
     const cal = await r.json();
     p = parseHebcalForDate(cal, d);
   } catch(e) { p = null; }
