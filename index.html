@@ -2969,12 +2969,14 @@ function onReaderScroll() {
 
   // Save scroll position — throttled to once per 400ms so we don't hammer localStorage
   if (_scrollSaveTimer) clearTimeout(_scrollSaveTimer);
-  _scrollSaveTimer = setTimeout(() => {
-    const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-    if (sid && (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim')) {
-      _saveScrollPos(sid, scrollTop);
-    }
-  }, 400);
+  if (scrollTop > 0) { // never save position 0 — that's the reset-on-close firing
+    _scrollSaveTimer = setTimeout(() => {
+      const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+      if (sid && (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim')) {
+        _saveScrollPos(sid, scrollTop);
+      }
+    }, 400);
+  }
 }
 
 // ── SCROLL POSITION PERSISTENCE ───────────────────────────────────────────────
@@ -3338,13 +3340,10 @@ async function _loadChumashNative(sectionId) {
 
     // Restore saved scroll position for today
     const saved = _getSavedScrollPos('chumash');
-    console.log('[scroll] chumash restore: saved=', saved, '| key=', _scrollKey('chumash'));
     if (saved > 0) {
       setTimeout(() => {
         const reader = document.getElementById('native-reader');
-        console.log('[scroll] after 80ms: scrollHeight=', reader?.scrollHeight, 'setting scrollTop=', saved);
         if (reader) reader.scrollTop = saved;
-        setTimeout(() => console.log('[scroll] actual scrollTop after set:', reader?.scrollTop), 50);
       }, 80);
     }
     return true;
@@ -3927,7 +3926,6 @@ function openChabadPanel(sectionId) {
 function closeChabadPanel() {
   const reader = document.getElementById('native-reader');
   const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-  console.log('[scroll] close: sid=', sid, 'scrollTop=', reader?.scrollTop, 'scrollHeight=', reader?.scrollHeight);
   if (reader && reader.scrollTop > 0) {
     if (sid && (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim')) {
       _saveScrollPos(sid, reader.scrollTop);
@@ -3936,6 +3934,8 @@ function closeChabadPanel() {
       console.log('[scroll] saved', sid, '=', reader.scrollTop, '| key=', savedKey, '| verified from localStorage:', verify);
     }
   }
+  // Cancel any pending throttled scroll save before resetting to 0
+  if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
   if (reader) reader.scrollTop = 0;
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
