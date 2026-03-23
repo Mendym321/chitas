@@ -3307,16 +3307,20 @@ async function _loadRambamNative(sectionId) {
       // Sefer HaMitzvos — different pipeline, fall back to iframe
       return false;
     } else if (user.rambamTrack === '3') {
+      // 3-chapter track: calendar may return a range ref like "Mishneh Torah, Eruvin 3-5"
+      // OR an item.refs array when spanning books. Collect both cases.
       const r3s = items.filter(i => { const t=i.title?.en||''; return t.includes('3 Chapter')||t.includes('3 Chapters'); });
-      refs = [...new Set(r3s.flatMap(i => i.refs?.length ? i.refs : i.ref ? [i.ref] : []))];
+      const rawRefs = [...new Set(r3s.flatMap(i => i.refs?.length ? i.refs : i.ref ? [i.ref] : []))];
+      // Expand any range refs ("Book X-Y") into individual chapter refs ("Book X", "Book X+1", ...)
+      refs = _expandRambamRefs(rawRefs);
     } else {
       const r1 = items.find(i => { const t=i.title?.en||''; return t.toLowerCase().includes('rambam') && !t.includes('3 Chapter') && !t.includes('3 Chapters'); });
-      if (r1) refs = r1.refs?.length ? r1.refs : r1.ref ? [r1.ref] : [];
+      if (r1) refs = _expandRambamRefs(r1.refs?.length ? r1.refs : r1.ref ? [r1.ref] : []);
     }
 
     if (!refs.length) return false;
 
-    // Fetch each ref — English (Touger) via v3 API + Hebrew via standard API
+    // Fetch each individual chapter ref
     const chapters = await Promise.all(refs.map(ref => _fetchRambamChapter(ref)));
 
     // Filter out empty
@@ -3325,7 +3329,7 @@ async function _loadRambamNative(sectionId) {
 
     // Update panel subtitle
     const subEl = document.getElementById('chabad-panel-sub');
-    if (subEl) subEl.textContent = refs.map(r => _rambamChapterTitle(r)).join(' · ');
+    if (subEl) subEl.textContent = validChapters.map(c => c.title).join(' · ');
 
     window._rambamData = { chapters: validChapters };
     _renderRambamContent();
@@ -3340,9 +3344,28 @@ async function _loadRambamNative(sectionId) {
   }
 }
 
-// Extract a readable chapter title from a Sefaria Rambam ref
-// e.g. "Mishneh Torah, Sabbath 27" → "Laws of Shabbat 27"
-// e.g. "Mishneh Torah, Prayer and the Priestly Blessing 5" → "Prayer 5"
+// Expand range refs like "Mishneh Torah, Eruvin 3-5" into individual chapter refs
+// ["Mishneh Torah, Eruvin 3", "Mishneh Torah, Eruvin 4", "Mishneh Torah, Eruvin 5"]
+// Single-chapter refs pass through unchanged.
+function _expandRambamRefs(refs) {
+  const out = [];
+  refs.forEach(ref => {
+    // Range: "Mishneh Torah, Book Ch1-Ch2"
+    const rangeMatch = ref.match(/^(Mishneh Torah,?\s+.+?)\s+(\d+)-(\d+)$/);
+    if (rangeMatch) {
+      const base = rangeMatch[1];
+      const from = parseInt(rangeMatch[2]);
+      const to   = parseInt(rangeMatch[3]);
+      for (let ch = from; ch <= to; ch++) out.push(base + ' ' + ch);
+    } else {
+      out.push(ref);
+    }
+  });
+  return [...new Set(out)]; // deduplicate in case of overlap
+}
+
+// Extract a readable chapter title from a single-chapter Sefaria Rambam ref
+// e.g. "Mishneh Torah, Sabbath 27" → "Sabbath 27"
 function _rambamChapterTitle(ref) {
   const m = ref.match(/Mishneh Torah,?\s+(.+?)\s+(\d+)$/);
   if (m) return m[1] + ' ' + m[2];
@@ -3359,12 +3382,23 @@ async function _fetchRambamChapter(ref) {
       .then(r => r.json()).catch(() => null),
   ]);
 
-  // Extract English segments from v3 response
+  // Extract English halachot for a SINGLE chapter from v3 response.
+  // text is either a flat array of strings (one chapter fetch)
+  // or a nested array (range fetch — we take index 0 = first chapter).
+  // Since we now always fetch one chapter at a time via _expandRambamRefs,
+  // text should always be flat. But guard against nesting just in case.
   function flatV3(x) {
     if (!x) return [];
+    // Nested: first element is itself an array → this is a multi-chapter response
+    if (Array.isArray(x) && x.length && Array.isArray(x[0])) x = x[0];
     if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : [null]; }
     if (Array.isArray(x)) return x.map(item => {
       if (typeof item === 'string') { const s = _cleanHtml(item); return s || null; }
+      if (Array.isArray(item)) {
+        // Nested segment — flatten and join
+        const joined = item.map(s => typeof s === 'string' ? _cleanHtml(s) : '').filter(Boolean).join(' ');
+        return joined || null;
+      }
       return null;
     });
     return [];
@@ -3373,12 +3407,17 @@ async function _fetchRambamChapter(ref) {
   const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
   const enSegs = flatV3(engVersion?.text || []);
 
-  // Hebrew from standard API
+  // Hebrew from standard API — same nesting guard as flatV3
   function flatHe(x) {
     if (!x) return [];
+    if (Array.isArray(x) && x.length && Array.isArray(x[0])) x = x[0];
     if (typeof x === 'string') { const s = x.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); return [s||null]; }
     if (Array.isArray(x)) return x.map(item => {
       if (typeof item === 'string') { const s = item.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); return s || null; }
+      if (Array.isArray(item)) {
+        const joined = item.map(s => typeof s === 'string' ? s.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim() : '').filter(Boolean).join(' ');
+        return joined || null;
+      }
       return null;
     });
     return [];
