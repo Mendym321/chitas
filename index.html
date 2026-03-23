@@ -1108,6 +1108,8 @@ function parseHebcal(data) {
   const parshaName = parshaItem?.title?.replace(/Parashat |Parasha /,'') || null;
 
   const tehItem = items.find(i => i.category==='dailyLearning' && (i.title?.startsWith('Psalms')||i.title?.startsWith('Tehillim')));
+  console.log('[hebcal] tehItem:', JSON.stringify(tehItem));
+  console.log('[hebcal] all dailyLearning:', JSON.stringify(items.filter(i=>i.category==='dailyLearning').map(i=>({title:i.title,subcat:i.subcat}))));
   let tehChapters=[], tehTitle='';
   if (tehItem) {
     tehTitle = tehItem.title;
