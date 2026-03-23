@@ -3766,7 +3766,9 @@ function _renderTehillimContent() {
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
-  const HE = "'Noto Serif Hebrew',serif";
+  // Frank Ruhl Libre has superior nikud rendering for vowelized Tehillim text
+  // Noto Serif Hebrew misrenders certain vowel combos (tzere looks like kamatz)
+  const HE = "'Frank Ruhl Libre',serif";
   const BLUE = '#4A9EFF';
 
   // Lang toggle
