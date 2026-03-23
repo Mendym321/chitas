@@ -84,6 +84,7 @@
 
   /* Rambam reader — make bold text actually visible */
   #native-reader-content b { font-weight: 800; color: var(--t1); }
+  #native-reader-content p { color: var(--t2); }
 
   /* Sections */
   .screen { display: none; }
@@ -3432,8 +3433,6 @@ async function _fetchRambamChapter(ref) {
   const chapter = chMatch ? parseInt(chMatch[1]) : 1;
   const title = _rambamChapterTitle(ref);
 
-  // DEBUG — remove after confirming bold structure
-  if (enSegs[0]) console.log('RAMBAM RAW halacha 1:', JSON.stringify(enSegs[0]));
   return { ref, title, chapter, en: enSegs, he: heSegs };
 }
 
@@ -3457,8 +3456,9 @@ function _renderRambamContent() {
   // _cleanHtml already preserves <b> tags, so we just need to style the brackets.
   function styleBrackets(text) {
     if (!text) return '';
+    // Brackets are translator additions — keep them muted
     return text.replace(/\[([^\]]+)\]/g,
-      '<span style="font-weight:400;color:var(--t2);">$1</span>');
+      '<span style="color:var(--t2);">$1</span>');
   }
 
   // Lang toggle
@@ -3501,7 +3501,7 @@ function _renderRambamContent() {
 
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
-        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);font-weight:400;">' + enMark + en + '</p>';
+        v += '<p style="font-size:15px;line-height:1.85;">' + enMark + en + '</p>';
         v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
@@ -3510,7 +3510,7 @@ function _renderRambamContent() {
         v += '</div>';
       } else {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
-        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);font-weight:400;">' + enMark + en + '</p>';
+        v += '<p style="font-size:15px;line-height:1.85;">' + enMark + en + '</p>';
         v += '</div>';
       }
     }
