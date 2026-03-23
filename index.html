@@ -3046,7 +3046,26 @@ async function _fetchSingleRef(ref, keyword){
     :`${SEFARIA}/api/texts/${enc}?context=0&commentary=0`;
   const d=await fetch(url).then(r=>r.json());
   console.log(ref+' -> "'+d.versionTitle+'"');
-  return{en:_flatHtml(d.text||[]),he:_flatPlain(d.he||[]),versionTitle:d.versionTitle};
+  // _perVerse: preserve one entry per verse (null = no content for that verse).
+  // This is critical for Rashi — Sefaria returns sparse arrays where missing
+  // verses are empty strings or empty arrays, and we must NOT collapse them
+  // or every Rashi after a gap shifts onto the wrong verse.
+  function perVerse(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map(item => {
+      if (Array.isArray(item)) {
+        // Rashi: each verse is an array of comment segments — join them
+        const joined = item.map(s => typeof s === 'string' ? _cleanHtml(s) : '').filter(Boolean).join(' ');
+        return joined || null;
+      }
+      if (typeof item === 'string') {
+        const s = _cleanHtml(item);
+        return s || null;
+      }
+      return null;
+    });
+  }
+  return{en:perVerse(d.text||[]),he:perVerse(d.he||[]),versionTitle:d.versionTitle};
 }
 
 // Split spanning refs into per-chapter chunks so ven= works.
@@ -3194,16 +3213,21 @@ async function _loadChumashNative(sectionId) {
 
     if (!torah.chunks.length) return false;
 
-    // Build rashiMap keyed by "chapter:verseNum" for exact per-verse matching
+    // Build rashiMap keyed by "chapter:verseNum".
+    // chunk.en[i] is null when Sefaria has no Rashi for that verse — we rely on
+    // positional alignment (index 0 = startVerse, index 1 = startVerse+1, etc.)
+    // which is only correct because _fetchSingleRef now preserves empty slots.
     const rashiMap = {};
     rashi.chunks.forEach(chunk => {
-      chunk.en.forEach((text, i) => {
-        if (text) rashiMap[chunk.chapter + ':' + (chunk.startVerse + i)] = { en: text, he: chunk.he[i] || '' };
-      });
-      chunk.he.forEach((text, i) => {
-        const key = chunk.chapter + ':' + (chunk.startVerse + i);
-        if (text && !rashiMap[key]) rashiMap[key] = { en: chunk.en[i] || '', he: text };
-      });
+      const maxLen = Math.max(chunk.en.length, chunk.he.length);
+      for (let i = 0; i < maxLen; i++) {
+        const en = chunk.en[i] || null;
+        const he = chunk.he[i] || null;
+        if (en || he) {
+          rashiMap[chunk.chapter + ':' + (chunk.startVerse + i)] = { en: en || '', he: he || '' };
+        }
+        // null/null = no Rashi for this verse — intentionally not added to map
+      }
     });
 
     // Update panel subtitle to show the actual ref
