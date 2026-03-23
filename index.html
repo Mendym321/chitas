@@ -3664,9 +3664,51 @@ async function _loadTehillimNative(sectionId) {
   if (contEl) contEl.style.display = 'none';
 
   try {
-    // Get refs from schedule — already correct for viewed day
-    const refs = (schedule?.tehillim?.sefariaRef || '').split('|').filter(Boolean);
-    if (!refs.length) return false;
+    // Try schedule first (set by init/rebuildScheduleForOffset)
+    let refs = (schedule?.tehillim?.sefariaRef || '').split('|').filter(Boolean);
+
+    // Fallback: fetch from Sefaria calendar for the viewed day
+    if (!refs.length) {
+      const viewedDay = new Date();
+      viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
+      const cal = await fetch(
+        'https://www.sefaria.org/api/calendars?year=' + viewedDay.getFullYear() +
+        '&month=' + (viewedDay.getMonth()+1) + '&day=' + viewedDay.getDate()
+      ).then(r => r.json()).catch(() => null);
+      const tehItem = (cal?.calendar_items || []).find(i =>
+        (i.title?.en || '').toLowerCase().includes('psalm') ||
+        (i.title?.en || '').toLowerCase().includes('tehillim')
+      );
+      if (tehItem?.ref) {
+        // ref may be "Psalms 18-22" — expand to individual chapters
+        const rangeM = tehItem.ref.match(/Psalms\s+(\d+)(?:[-–](\d+))?/i);
+        if (rangeM) {
+          const from = parseInt(rangeM[1]), to = rangeM[2] ? parseInt(rangeM[2]) : from;
+          for (let c = from; c <= to; c++) refs.push('Psalms ' + c);
+        }
+      }
+    }
+
+    // Also try Hebcal as second fallback
+    if (!refs.length) {
+      const viewedDay = new Date();
+      viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
+      const dow = viewedDay.getDay();
+      const sun = new Date(viewedDay); sun.setDate(viewedDay.getDate() - dow);
+      const sat = new Date(viewedDay); sat.setDate(viewedDay.getDate() + (6 - dow));
+      const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      const hcal = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&d=on&start=' + fmt(sun) + '&end=' + fmt(sat) + '&lg=s').then(r => r.json()).catch(() => null);
+      const tehItem = (hcal?.items || []).find(i => i.category === 'dailyLearning' && (i.title?.startsWith('Psalms') || i.title?.startsWith('Tehillim')));
+      if (tehItem?.title) {
+        const m = tehItem.title.match(/(\d+)(?:[\s\-–]+(\d+))?/);
+        if (m) {
+          const from = parseInt(m[1]), to = m[2] ? parseInt(m[2]) : from;
+          for (let c = from; c <= to; c++) refs.push('Psalms ' + c);
+        }
+      }
+    }
+
+    if (!refs.length) { console.warn('Tehillim: no refs found'); return false; }
 
     // Fetch each chapter in parallel — Koren for English, standard for Hebrew
     const chapters = await Promise.all(refs.map(ref => _fetchTehillimChapter(ref)));
