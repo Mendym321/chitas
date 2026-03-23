@@ -3335,14 +3335,20 @@ async function _loadChumashNative(sectionId) {
     if (contEl) contEl.style.display = 'block';
 
     // Restore saved scroll position for today
+    // Restore scroll — use setTimeout(0) so the browser has fully painted
+    // before we set scrollTop. rAF alone isn't enough because scrollHeight
+    // isn't computed until after the first paint.
     const saved = _getSavedScrollPos('chumash');
     if (saved > 0) {
-      // Double rAF: first frame = browser processes new DOM,
-      // second frame = layout complete, scroll is reliable
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+      setTimeout(() => {
         const reader = document.getElementById('native-reader');
-        if (reader) reader.scrollTop = saved;
-      }));
+        if (reader && reader.scrollHeight > saved) {
+          reader.scrollTop = saved;
+        } else if (reader) {
+          // scrollHeight not ready yet — try once more after another paint
+          requestAnimationFrame(() => { reader.scrollTop = saved; });
+        }
+      }, 80);
     }
     return true;
 
@@ -3418,12 +3424,17 @@ async function _loadRambamNative(sectionId) {
     if (contEl) contEl.style.display = 'block';
 
     // Restore saved scroll position for today
+    // Restore scroll position
     const saved = _getSavedScrollPos('rambam');
     if (saved > 0) {
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+      setTimeout(() => {{
         const reader = document.getElementById('native-reader');
-        if (reader) reader.scrollTop = saved;
-      }));
+        if (reader && reader.scrollHeight > saved) {{
+          reader.scrollTop = saved;
+        }} else if (reader) {{
+          requestAnimationFrame(() => {{ reader.scrollTop = saved; }});
+        }}
+      }}, 80);
     }
     return true;
 
@@ -3721,12 +3732,17 @@ async function _loadTehillimNative(sectionId) {
     if (loadEl) loadEl.style.display = 'none';
     if (contEl) contEl.style.display = 'block';
 
+    // Restore scroll position
     const saved = _getSavedScrollPos('tehillim');
     if (saved > 0) {
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+      setTimeout(() => {{
         const reader = document.getElementById('native-reader');
-        if (reader) reader.scrollTop = saved;
-      }));
+        if (reader && reader.scrollHeight > saved) {{
+          reader.scrollTop = saved;
+        }} else if (reader) {{
+          requestAnimationFrame(() => {{ reader.scrollTop = saved; }});
+        }}
+      }}, 80);
     }
     return true;
 
