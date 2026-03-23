@@ -1172,9 +1172,11 @@ async function init() {
     // Rambam: "Daily Rambam (3 Chapters)" or "Daily Rambam (1 Chapter)"
     const rambam3Item = sefariaItems.find(i => i.title?.en === 'Daily Rambam (3 Chapters)');
     const rambam1Item = sefariaItems.find(i => i.title?.en === 'Daily Rambam');
-    const rambamRef = user.rambamTrack === '1'
-      ? (rambam1Item?.ref || rambam3Item?.ref || null)
-      : (rambam3Item?.ref || null);
+    // 3-chapter track can span book boundaries — collect ALL refs, deduplicated
+    const rambamRefs = user.rambamTrack === '1'
+      ? (() => { const it = rambam1Item || rambam3Item; return it ? [...new Set(it.refs?.length ? it.refs : it.ref ? [it.ref] : [])] : []; })()
+      : (() => { const r3s = sefariaItems.filter(i => { const t=i.title?.en||''; return t.includes('3 Chapter')||t.includes('3 Chapters'); }); return [...new Set(r3s.flatMap(i => i.refs?.length ? i.refs : i.ref ? [i.ref] : []))]; })();
+    const rambamRef = rambamRefs.join('|') || null; // pipe-separated for multi-ref
 
     schedule = {
       chumash:  { id:'chumash',  label:'Chumash',  icon:'scroll', color:'#F0A500', xp:25, quizzable:true,
@@ -1491,6 +1493,8 @@ async function rebuildScheduleForOffset() {
     }
     if (s.id === 'rambam') {
       s.subtitle = p?.rambamTitle || 'Daily Rambam';
+      // sefariaRef for rambam is rebuilt by _loadRambamNative from the calendar
+      // using the viewed day — no need to store it in the schedule for past days
     }
   });
 
@@ -3273,6 +3277,186 @@ function _setChumashLang(lang) {
   _renderChumashContent();
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 21b · RAMBAM NATIVE READER
+//   Fetches Touger translation from Sefaria v3 API.
+//   Handles multiple refs (3-chapter track can span book boundaries).
+//   Chapter title from ref, halachot numbered, Hebrew + English two-col.
+// ════════════════════════════════════════════════════════════════════
+
+async function _loadRambamNative(sectionId) {
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
+
+  try {
+    // Get refs for the viewed day from Sefaria calendar
+    const viewedDay = new Date();
+    viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
+
+    const cal = await fetch(
+      'https://www.sefaria.org/api/calendars?year=' + viewedDay.getFullYear() +
+      '&month=' + (viewedDay.getMonth()+1) + '&day=' + viewedDay.getDate()
+    ).then(r => r.json());
+
+    const items = cal.calendar_items || [];
+    let refs = [];
+
+    if (user.rambamTrack === 'm') {
+      // Sefer HaMitzvos — different pipeline, fall back to iframe
+      return false;
+    } else if (user.rambamTrack === '3') {
+      const r3s = items.filter(i => { const t=i.title?.en||''; return t.includes('3 Chapter')||t.includes('3 Chapters'); });
+      refs = [...new Set(r3s.flatMap(i => i.refs?.length ? i.refs : i.ref ? [i.ref] : []))];
+    } else {
+      const r1 = items.find(i => { const t=i.title?.en||''; return t.toLowerCase().includes('rambam') && !t.includes('3 Chapter') && !t.includes('3 Chapters'); });
+      if (r1) refs = r1.refs?.length ? r1.refs : r1.ref ? [r1.ref] : [];
+    }
+
+    if (!refs.length) return false;
+
+    // Fetch each ref — English (Touger) via v3 API + Hebrew via standard API
+    const chapters = await Promise.all(refs.map(ref => _fetchRambamChapter(ref)));
+
+    // Filter out empty
+    const validChapters = chapters.filter(c => c && (c.en.length || c.he.length));
+    if (!validChapters.length) return false;
+
+    // Update panel subtitle
+    const subEl = document.getElementById('chabad-panel-sub');
+    if (subEl) subEl.textContent = refs.map(r => _rambamChapterTitle(r)).join(' · ');
+
+    window._rambamData = { chapters: validChapters };
+    _renderRambamContent();
+
+    if (loadEl) loadEl.style.display = 'none';
+    if (contEl) contEl.style.display = 'block';
+    return true;
+
+  } catch(e) {
+    console.error('Rambam reader error:', e);
+    return false;
+  }
+}
+
+// Extract a readable chapter title from a Sefaria Rambam ref
+// e.g. "Mishneh Torah, Sabbath 27" → "Laws of Shabbat 27"
+// e.g. "Mishneh Torah, Prayer and the Priestly Blessing 5" → "Prayer 5"
+function _rambamChapterTitle(ref) {
+  const m = ref.match(/Mishneh Torah,?\s+(.+?)\s+(\d+)$/);
+  if (m) return m[1] + ' ' + m[2];
+  return ref;
+}
+
+async function _fetchRambamChapter(ref) {
+  const enc = encodeURIComponent(ref);
+  // v3 API for English (Touger translation)
+  const [enRes, heRes] = await Promise.all([
+    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1')
+      .then(r => r.json()).catch(() => null),
+    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0&lang=he')
+      .then(r => r.json()).catch(() => null),
+  ]);
+
+  // Extract English segments from v3 response
+  function flatV3(x) {
+    if (!x) return [];
+    if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : [null]; }
+    if (Array.isArray(x)) return x.map(item => {
+      if (typeof item === 'string') { const s = _cleanHtml(item); return s || null; }
+      return null;
+    });
+    return [];
+  }
+
+  const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+  const enSegs = flatV3(engVersion?.text || []);
+
+  // Hebrew from standard API
+  function flatHe(x) {
+    if (!x) return [];
+    if (typeof x === 'string') { const s = x.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); return [s||null]; }
+    if (Array.isArray(x)) return x.map(item => {
+      if (typeof item === 'string') { const s = item.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); return s || null; }
+      return null;
+    });
+    return [];
+  }
+  const heSegs = flatHe(heRes?.he || []);
+
+  // Parse chapter number and book title from ref
+  const chMatch = ref.match(/(\d+)$/);
+  const chapter = chMatch ? parseInt(chMatch[1]) : 1;
+  const title = _rambamChapterTitle(ref);
+
+  return { ref, title, chapter, en: enSegs, he: heSegs };
+}
+
+function _renderRambamContent() {
+  const { chapters } = window._rambamData || {};
+  if (!chapters || !chapters.length) return;
+  const lang = localStorage.getItem('chitas_reader_lang') || 'both';
+  const el = document.getElementById('native-reader-content');
+  if (!el) return;
+
+  const HE = "Noto Serif Hebrew,Frank Ruhl Libre,serif";
+  const GREEN = '#1DB954';
+
+  // Lang toggle (reuse same pattern as Chumash)
+  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
+  [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
+    const a = lang === l;
+    t += '<button onclick="_setRambamLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
+       + (a ? 'background:' + GREEN + ';color:#000;border-color:' + GREEN + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
+       + '">' + lb + '</button>';
+  });
+  t += '</div>';
+
+  let v = '';
+
+  chapters.forEach((chapter, chIdx) => {
+    // Chapter heading
+    v += '<div style="font-size:13px;font-weight:800;letter-spacing:.06em;color:' + GREEN + ';'
+       + 'padding:' + (chIdx > 0 ? '22px' : '4px') + ' 0 12px;'
+       + (chIdx > 0 ? 'border-top:1px solid var(--border);margin-top:6px;' : '') + '">'
+       + chapter.title + '</div>';
+
+    const maxLen = Math.max(chapter.en.length, chapter.he.length);
+    for (let i = 0; i < maxLen; i++) {
+      const en = chapter.en[i] || '';
+      const he = chapter.he[i] || '';
+      if (!en && !he) continue;
+      const hNum = '<span style="font-size:11px;font-weight:800;color:' + GREEN + ';margin-right:4px;">' + (i+1) + '.</span>';
+
+      if (lang === 'both') {
+        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);">';
+        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + hNum + en + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + hNum + he + '</p>';
+        v += '</div>';
+      } else if (lang === 'he') {
+        v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + hNum + he + '</p>';
+        v += '</div>';
+      } else {
+        v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
+        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + hNum + en + '</p>';
+        v += '</div>';
+      }
+    }
+  });
+
+  el.innerHTML = t + v
+    + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s Rambam —</p>'
+    + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
+function _setRambamLang(lang) {
+  localStorage.setItem('chitas_reader_lang', lang);
+  _renderRambamContent();
+}
+
+
 function openChabadPanel(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
@@ -3293,12 +3477,13 @@ function openChabadPanel(sectionId) {
   const nativeEl = document.getElementById('native-reader');
   const progWrap = document.getElementById('reader-progress-wrap');
 
-  if (sectionId === 'chumash') {
+  if (sectionId === 'chumash' || sectionId === 'rambam') {
     iframeEl.style.display = 'none'; iframeEl.src = '';
     nativeEl.style.display = 'flex';
     if (progWrap) progWrap.style.display = 'block';
     document.getElementById('chabad-panel-extlink').style.display = 'none';
-    _loadChumashNative(sectionId).then(ok => {
+    const loader = sectionId === 'chumash' ? _loadChumashNative : _loadRambamNative;
+    loader(sectionId).then(ok => {
       if (!ok) {
         nativeEl.style.display = 'none';
         iframeEl.style.display = 'flex'; iframeEl.src = s.chabadUrl;
