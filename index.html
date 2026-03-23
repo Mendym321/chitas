@@ -3691,43 +3691,57 @@ async function _loadTehillimNative(sectionId) {
     const url = 'https://www.sefaria.org/api/texts/' + ref + '?context=0&ven=' + korenVen;
     const d = await fetch(url).then(r => r.json());
 
-    // Flatten nested arrays — Sefaria nests by chapter then verse
-    const heFlat = Array.isArray(d.he)   ? d.he.flat(10)   : (d.he   ? [d.he]   : []);
-    let   enFlat = Array.isArray(d.text) ? d.text.flat(10) : (d.text ? [d.text] : []);
+    function cleanV(s) { return s ? s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() : ''; }
 
-    // Fallback if Koren not available for this range
-    if (!enFlat.length || !enFlat[0]) {
-      const fb = await fetch('https://www.sefaria.org/api/texts/' + ref + '?context=0').then(r => r.json());
-      enFlat = Array.isArray(fb.text) ? fb.text.flat(10) : [];
-    }
-
-    if (!heFlat.length && !enFlat.length) return false;
-
-    // Clean HTML from verses
-    function clean(s) { return s ? s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() : ''; }
-
-    // Build chapter-aware structure for the heading
-    // ref like "Psalms.18-22" → psalms 18,19,20,21,22
+    // Build psalm number list from ref
     const psalmNums = [];
     const rangeM = ref.match(/Psalms\.(\d+)(?:-(\d+))?/);
     if (rangeM) {
       const from = parseInt(rangeM[1]), to = rangeM[2] ? parseInt(rangeM[2]) : from;
       for (let p = from; p <= to; p++) psalmNums.push(p);
     }
+
+    // Keep chapter structure: d.he / d.text are arrays of chapters,
+    // each chapter is an array of verse strings.
+    // Normalise so chapters is always [[verse, verse,...], ...]
+    function toChapters(raw) {
+      if (!raw || !raw.length) return [];
+      // Already nested (range fetch): [[v1,v2,...],[v1,v2,...]]
+      if (Array.isArray(raw[0])) return raw.map(ch => ch.map(cleanV));
+      // Flat (single chapter): [v1, v2, ...]
+      return [raw.map(cleanV)];
+    }
+
+    const heChapters = toChapters(d.he);
+    let   enChapters = toChapters(d.text);
+
+    // Fallback if Koren not available
+    if (!enChapters.length || !enChapters[0]?.length) {
+      const fb = await fetch('https://www.sefaria.org/api/texts/' + ref + '?context=0').then(r => r.json());
+      enChapters = toChapters(fb.text);
+    }
+
+    if (!heChapters.length && !enChapters.length) return false;
+
+    // Build chapters array: [{psalmNum, he:[...], en:[...]}, ...]
+    const maxCh = Math.max(heChapters.length, enChapters.length, psalmNums.length);
+    const chapters = [];
+    for (let c = 0; c < maxCh; c++) {
+      chapters.push({
+        psalmNum: psalmNums[c] || (psalmNums[0] + c),
+        he: heChapters[c] || [],
+        en: enChapters[c] || [],
+      });
+    }
+
     const psalmLabel = psalmNums.length > 1
       ? 'Psalms ' + psalmNums[0] + '–' + psalmNums[psalmNums.length-1]
       : 'Psalm ' + (psalmNums[0] || dayNum);
 
-    // Update panel subtitle
     const subEl = document.getElementById('chabad-panel-sub');
     if (subEl) subEl.textContent = psalmLabel;
 
-    window._tehillimData = {
-      he: heFlat.map(clean),
-      en: enFlat.map(clean),
-      psalmLabel,
-      dayNum,
-    };
+    window._tehillimData = { chapters, psalmLabel, dayNum };
     _renderTehillimContent();
 
     if (loadEl) loadEl.style.display = 'none';
@@ -3749,8 +3763,8 @@ async function _loadTehillimNative(sectionId) {
 }
 
 function _renderTehillimContent() {
-  const { he, en, psalmLabel, dayNum } = window._tehillimData || {};
-  if (!he || !he.length) return;
+  const { chapters, psalmLabel, dayNum } = window._tehillimData || {};
+  if (!chapters || !chapters.length) return;
   const lang = localStorage.getItem('chitas_reader_lang') || 'he';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
@@ -3758,9 +3772,9 @@ function _renderTehillimContent() {
   const HE = "Noto Serif Hebrew,Frank Ruhl Libre,serif";
   const BLUE = '#4A9EFF';
 
-  // Hebrew / English toggle
+  // Lang toggle
   let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'], ['en','English']].forEach(([l, lb]) => {
+  [['he','עברית'], ['en','English']].forEach(([l, lb]) => {
     const a = lang === l;
     t += '<button onclick="_setTehillimLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
        + (a ? 'background:' + BLUE + ';color:#fff;border-color:' + BLUE + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
@@ -3768,35 +3782,44 @@ function _renderTehillimContent() {
   });
   t += '</div>';
 
-  // Psalm range heading
-  const heading = '<div style="margin-bottom:18px;padding:10px 14px;background:rgba(74,158,255,.07);'
+  // Top range heading
+  const topHeading = '<div style="margin-bottom:20px;padding:10px 14px;background:rgba(74,158,255,.07);'
     + 'border-left:3px solid ' + BLUE + ';border-radius:0 8px 8px 0;">'
     + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(74,158,255,.55);margin-bottom:3px;">Tehillim · Day ' + dayNum + '</p>'
     + '<p style="font-size:18px;font-weight:800;color:' + BLUE + ';line-height:1.2;">' + psalmLabel + '</p>'
     + '</div>';
 
-  const maxLen = Math.max(he.length, en.length);
   let v = '';
-  for (let i = 0; i < maxLen; i++) {
-    const heV = he[i] || '';
-    const enV = en[i] || '';
-    if (!heV && !enV) continue;
-    const vNum = i + 1;
-    const vMark = '<span style="font-size:11px;font-weight:800;color:' + BLUE + ';margin-right:6px;min-width:16px;display:inline-block;">' + vNum + '</span>';
+  const isHe = lang === 'he';
 
-    if (lang === 'he') {
-      v += '<div style="padding:12px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.1;color:var(--t1);">' + vMark + heV + '</p>';
-      v += '</div>';
-    } else {
-      v += '<div style="padding:12px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + vMark + enV + '</p>';
-      v += '</div>';
-    }
-  }
+  chapters.forEach((ch, chIdx) => {
+    const verses = isHe ? ch.he : ch.en;
 
-  el.innerHTML = t + heading + v
-    + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s Tehillim —</p>'
+    // Per-psalm heading
+    v += '<div style="' + (chIdx > 0 ? 'margin-top:30px;' : '') + 'margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">'
+       + '<span style="font-size:15px;font-weight:800;color:' + BLUE + ';">Psalm ' + ch.psalmNum + '</span>'
+       + '</div>';
+
+    if (!verses.length) return;
+
+    // Flowing prose — all verses in one paragraph, verse number as superscript inline
+    const paraStyle = isHe
+      ? 'direction:rtl;text-align:right;font-family:' + HE + ';font-size:20px;line-height:2.3;color:var(--t1);'
+      : 'font-size:15px;line-height:2.0;color:var(--t1);';
+
+    const verseHTML = verses.map((vText, i) => {
+      if (!vText) return '';
+      const vNum = i + 1;
+      const mark = '<sup style="font-size:10px;font-weight:800;color:' + BLUE + ';margin-' + (isHe ? 'left' : 'right') + ':3px;">' + vNum + '</sup>';
+      return mark + vText;
+    }).join(' '); // em-space between verses
+
+    v += '<p style="' + paraStyle + '">' + verseHTML + '</p>';
+  });
+
+  el.innerHTML = t + topHeading + v
+    + '<div style="margin-top:28px;border-top:1px solid var(--border);padding-bottom:4px;"></div>'
+    + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:12px;padding-bottom:8px;">— End of today's Tehillim —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
