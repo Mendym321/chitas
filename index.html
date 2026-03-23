@@ -3447,15 +3447,13 @@ function _renderRambamContent() {
                    'יא','יב','יג','יד','יה','יו',
                    'יז','יח','יט','כ','כא'];
 
-  // Touger translation: text outside brackets is the actual Rambam — bold.
-  // Text inside [brackets] is the translator's addition — normal weight, muted.
+  // Touger translation: Sefaria already wraps the actual Rambam words in <b> tags.
+  // [bracketed] text is the translator's addition — make it muted and lighter.
+  // _cleanHtml already preserves <b> tags, so we just need to style the brackets.
   function styleBrackets(text) {
     if (!text) return '';
-    // Split on bracket groups, bold the non-bracket parts
-    return text
-      .replace(/^([^\[]+)/, '<b>$1</b>')
-      .replace(/\[([^\]]+)\]/g, '<span style="font-weight:400;color:var(--t2);">$1</span>')
-      .replace(/\]([^\[]+)/g, '<b>$1</b>');
+    return text.replace(/\[([^\]]+)\]/g,
+      '<span style="font-weight:400;color:var(--t2);">$1</span>');
   }
 
   // Lang toggle
