@@ -3812,14 +3812,14 @@ function _renderTehillimContent() {
       const vNum = i + 1;
       const mark = '<sup style="font-size:10px;font-weight:800;color:' + BLUE + ';margin-' + (isHe ? 'left' : 'right') + ':3px;">' + vNum + '</sup>';
       return mark + vText;
-    }).join(' '); // em-space between verses
+    }).join('\u2003'); // em-space between verses
 
     v += '<p style="' + paraStyle + '">' + verseHTML + '</p>';
   });
 
   el.innerHTML = t + topHeading + v
     + '<div style="margin-top:28px;border-top:1px solid var(--border);padding-bottom:4px;"></div>'
-    + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:12px;padding-bottom:8px;">— End of today's Tehillim —</p>'
+    + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:12px;padding-bottom:8px;">— End of today\'s Tehillim —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
