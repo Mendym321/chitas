@@ -3136,11 +3136,15 @@ function _renderChumashContent() {
   // Render chapter by chapter — each chunk knows its own chapter number
   // and startVerse, so verse numbering is always correct
   torahChunks.forEach((chunk, chunkIdx) => {
-    // Chapter heading if multi-chapter
+    // Chapter heading if multi-chapter — same card style as Rambam but gold
     if (torahChunks.length > 1) {
-      v += '<div style="font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;'
-         + 'color:var(--t3);padding:18px 0 10px;' + (chunkIdx > 0 ? 'border-top:1px solid var(--border);margin-top:4px;' : '') + '">'
-         + 'Chapter ' + chunk.chapter + '</div>';
+      v += '<div style="' + (chunkIdx > 0 ? 'margin-top:28px;' : '') + 'margin-bottom:16px;'
+         + 'padding:10px 14px;background:rgba(240,165,0,.07);'
+         + 'border-left:3px solid var(--gold);border-radius:0 8px 8px 0;">'
+         + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;'
+         + 'color:rgba(240,165,0,.55);margin-bottom:3px;">Chumash</p>'
+         + '<p style="font-size:17px;font-weight:800;color:var(--gold);">Chapter ' + chunk.chapter + '</p>'
+         + '</div>';
     }
 
     chunk.en.forEach((en, i) => {
