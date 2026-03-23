@@ -3335,19 +3335,14 @@ async function _loadChumashNative(sectionId) {
     if (contEl) contEl.style.display = 'block';
 
     // Restore saved scroll position for today
-    // Restore scroll — use setTimeout(0) so the browser has fully painted
-    // before we set scrollTop. rAF alone isn't enough because scrollHeight
-    // isn't computed until after the first paint.
     const saved = _getSavedScrollPos('chumash');
+    console.log('[scroll] chumash restore: saved=', saved, '| key=', _scrollKey('chumash'));
     if (saved > 0) {
       setTimeout(() => {
         const reader = document.getElementById('native-reader');
-        if (reader && reader.scrollHeight > saved) {
-          reader.scrollTop = saved;
-        } else if (reader) {
-          // scrollHeight not ready yet — try once more after another paint
-          requestAnimationFrame(() => { reader.scrollTop = saved; });
-        }
+        console.log('[scroll] after 80ms: scrollHeight=', reader?.scrollHeight, 'setting scrollTop=', saved);
+        if (reader) reader.scrollTop = saved;
+        setTimeout(() => console.log('[scroll] actual scrollTop after set:', reader?.scrollTop), 50);
       }, 80);
     }
     return true;
@@ -3928,13 +3923,13 @@ function openChabadPanel(sectionId) {
 }
 
 function closeChabadPanel() {
-  // Save scroll position explicitly on close — belt-and-suspenders alongside
-  // the throttled save in onReaderScroll
   const reader = document.getElementById('native-reader');
+  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  console.log('[scroll] close: sid=', sid, 'scrollTop=', reader?.scrollTop, 'scrollHeight=', reader?.scrollHeight);
   if (reader && reader.scrollTop > 0) {
-    const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
     if (sid && (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim')) {
       _saveScrollPos(sid, reader.scrollTop);
+      console.log('[scroll] saved', sid, '=', reader.scrollTop, '| key=', _scrollKey(sid));
     }
   }
   if (reader) reader.scrollTop = 0;
