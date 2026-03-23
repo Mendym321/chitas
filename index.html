@@ -3173,12 +3173,12 @@ function _renderChumashContent() {
         });
       } else if (lang === 'he') {
         v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.1;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.he) {
             v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
-            v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t2);">' + boldRashiHe(rc.he) + '</p>';
+            v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t2);">' + boldRashiHe(rc.he) + '</p>';
             v += '</div>';
           }
         });
