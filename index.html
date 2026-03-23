@@ -1646,33 +1646,20 @@ let _confirmSectionId = null;
 let _confirmCallback = null;
 
 function showConfirm(sectionId, fromReader) {
+  // No confirmation modal — just mark done directly
   if (!schedule) return;
-  const s = schedule[sectionId];
-  _confirmSectionId = sectionId;
-
-  // Key fix: if we're on a past day, mark it as PAST — not today
   const isToday = dayOffset === 0;
   const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
   const iso = dateISO(d2);
-
   if (isToday) {
-    _confirmCallback = fromReader
-      ? () => { markDone(sectionId); closeChabadPanel(); renderSectionsForOffset(iso); }
-      : () => { markDone(sectionId); renderSectionsForOffset(iso); };
+    markDone(sectionId);
+    if (fromReader) closeChabadPanel();
+    renderSectionsForOffset(iso);
   } else {
-    _confirmCallback = fromReader
-      ? () => { markDonePast(sectionId, iso); closeChabadPanel(); renderSectionsForOffset(iso); }
-      : () => { markDonePast(sectionId, iso); renderSectionsForOffset(iso); };
+    markDonePast(sectionId, iso);
+    if (fromReader) closeChabadPanel();
+    renderSectionsForOffset(iso);
   }
-
-  const modal = document.getElementById('confirm-modal');
-  document.getElementById('confirm-title').textContent = `Mark ${s.label} done?`;
-  const verb = sectionId === 'tehillim' ? 'read' : 'learn';
-  document.getElementById('confirm-sub').textContent = `Did you ${verb} ${isToday ? 'today\'s' : 'yesterday\'s'} ${s.label}?\n${s.subtitle}`;
-  document.getElementById('confirm-yes').style.background = s.color;
-  document.getElementById('confirm-yes').style.color = '#000';
-  document.getElementById('confirm-yes').textContent = sectionId === 'tehillim' ? 'Yes, I read it ✓' : 'Yes, I learned it ✓';
-  modal.style.display = 'flex';
 }
 
 function confirmDone() {
@@ -1688,24 +1675,9 @@ function closeConfirm() {
 }
 
 function showConfirmPast(id, iso) {
-  if (!schedule) return;
-  const s = schedule[id];
-  _confirmSection = id;
-  _confirmFromReader = false;
-  _confirmCallback = () => markDonePast(id, iso);
-  // Populate confirm modal
-  const iconEl = document.getElementById('confirm-icon');
-  iconEl.style.background = s.color + '22';
-  iconEl.style.border = '1.5px solid ' + s.color + '44';
-  iconEl.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" style="color:' + s.color + '">' + SVG_ICONS[s.icon] + '</svg>';
-  document.getElementById('confirm-title').textContent = s.label;
-  document.getElementById('confirm-sub').textContent = s.subtitle;
-  const yesBtn = document.getElementById('confirm-yes');
-  yesBtn.style.background = s.color;
-  yesBtn.style.color = s.color === '#F0A500' ? '#000' : '#fff';
-  yesBtn.style.boxShadow = '0 4px 20px ' + s.color + '55';
-  yesBtn.textContent = id === 'tehillim' ? 'Yes, I read it' : 'Yes, I learned it';
-  document.getElementById('confirm-modal').style.display = 'flex';
+  // No confirmation modal — just mark done directly
+  markDonePast(id, iso);
+  renderSectionsForOffset(iso);
 }
 
 function unmarkDonePast(id, iso) {
