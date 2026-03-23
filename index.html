@@ -3734,6 +3734,19 @@ async function _loadTehillimNative(sectionId) {
   }
 }
 
+// Convert integer to Hebrew gematria string (1=א, 2=ב ... 150=קנ)
+function _toHebrewNumeral(n) {
+  const ones  = ['','\u05D0','\u05D1','\u05D2','\u05D3','\u05D4','\u05D5','\u05D6','\u05D7','\u05D8'];
+  const tens  = ['','\u05D9','\u05DB','\u05DC','\u05DE','\u05E0','\u05E1','\u05E2','\u05E4','\u05E6'];
+  const hunds = ['','\u05E7','\u05E8','\u05E9','\u05EA'];
+  if (n <= 0 || n > 999) return String(n);
+  let h = Math.floor(n/100), t = Math.floor((n%100)/10), o = n%10;
+  // Special cases: 15=טו, 16=טז
+  if (h===0 && t===1 && o===5) return '\u05D8\u05D5';
+  if (h===0 && t===1 && o===6) return '\u05D8\u05D6';
+  return (hunds[h]||'') + (tens[t]||'') + (ones[o]||'');
+}
+
 function _renderTehillimContent() {
   const { chapters, psalmLabel, dayNum } = window._tehillimData || {};
   if (!chapters || !chapters.length) return;
@@ -3767,9 +3780,14 @@ function _renderTehillimContent() {
   chapters.forEach((ch, chIdx) => {
     const verses = isHe ? ch.he : ch.en;
 
-    // Per-psalm heading
-    v += '<div style="' + (chIdx > 0 ? 'margin-top:30px;' : '') + 'margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">'
-       + '<span style="font-size:15px;font-weight:800;color:' + BLUE + ';">Psalm ' + ch.psalmNum + '</span>'
+    // Per-psalm heading — Hebrew: "פֶּרֶק ___" right-aligned in Hebrew view, "Psalm __" in English
+    const psalmHeadingText = isHe
+      ? '\u05E4\u05E8\u05E7 ' + _toHebrewNumeral(ch.psalmNum)   // פרק + hebrew numeral
+      : 'Psalm ' + ch.psalmNum;
+    const psalmHeadingAlign = isHe ? 'text-align:right;direction:rtl;' : '';
+    const psalmHeadingFont = isHe ? 'font-family:' + HE + ';' : '';
+    v += '<div style="' + (chIdx > 0 ? 'margin-top:28px;' : '') + 'margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);' + psalmHeadingAlign + '">'
+       + '<span style="font-size:16px;font-weight:700;color:' + BLUE + ';' + psalmHeadingFont + '">' + psalmHeadingText + '</span>'
        + '</div>';
 
     if (!verses.length) return;
