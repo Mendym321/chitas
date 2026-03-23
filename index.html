@@ -3664,8 +3664,13 @@ async function _loadTehillimNative(sectionId) {
   if (contEl) contEl.style.display = 'none';
 
   try {
+    console.log('[teh] schedule.tehillim:', JSON.stringify({
+      sefariaRef: schedule?.tehillim?.sefariaRef,
+      subtitle: schedule?.tehillim?.subtitle
+    }));
     // Try schedule first (already populated by init/rebuildScheduleForOffset)
     let refs = (schedule?.tehillim?.sefariaRef || '').split('|').filter(Boolean);
+    console.log('[teh] refs from schedule:', refs);
 
     // Fallback: fetch Hebcal for the viewed week — same params as fetchHebcal()
     // dps=on is the critical param that returns daily Psalm chapters
