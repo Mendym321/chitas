@@ -82,6 +82,9 @@
   .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
   .w100 { width: 100%; }
 
+  /* Rambam reader — make bold text actually visible */
+  #native-reader-content b { font-weight: 800; color: var(--t1); }
+
   /* Sections */
   .screen { display: none; }
   .screen.active { display: block; }
@@ -3489,14 +3492,14 @@ function _renderRambamContent() {
 
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
       // Rendered as a span before the text — stays inline with the paragraph
-      const enMark = '<span style="font-size:13px;font-weight:800;color:' + GREEN
-        + ';margin-right:6px;min-width:18px;display:inline-block;">' + num + '</span>';
-      const heMark = '<span style="font-size:14px;font-weight:800;color:' + GREEN
-        + ';margin-left:6px;font-family:' + HE + ';">' + heNum + '</span>';
+      const enMark = '<span style="font-size:17px;font-weight:800;color:' + GREEN
+        + ';margin-right:8px;min-width:22px;display:inline-block;vertical-align:middle;">' + num + '</span>';
+      const heMark = '<span style="font-size:18px;font-weight:800;color:' + GREEN
+        + ';margin-left:8px;font-family:' + HE + ';vertical-align:middle;">' + heNum + '</span>';
 
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
-        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + enMark + en + '</p>';
+        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);font-weight:400;">' + enMark + en + '</p>';
         v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
@@ -3505,7 +3508,7 @@ function _renderRambamContent() {
         v += '</div>';
       } else {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
-        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + enMark + en + '</p>';
+        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);font-weight:400;">' + enMark + en + '</p>';
         v += '</div>';
       }
     }
