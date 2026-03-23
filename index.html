@@ -3237,7 +3237,7 @@ function _renderChumashContent() {
         // Verse row
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);">';
         v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);font-weight:600;\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         // One Rashi block per comment — each aligned in two columns
         rashiComments.forEach(rc => {
@@ -3248,7 +3248,7 @@ function _renderChumashContent() {
         });
       } else if (lang === 'he') {
         v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);font-weight:600;\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.he) {
@@ -3604,11 +3604,11 @@ function _renderRambamContent() {
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p style="font-size:15px;line-height:1.85;">' + enMark + en + '</p>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;font-weight:600;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;font-weight:600;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
