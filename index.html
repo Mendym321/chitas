@@ -84,7 +84,6 @@
 
   /* Rambam reader — make bold text actually visible */
   #native-reader-content b { font-weight: 800; color: var(--t1); }
-  #native-reader-content p { color: var(--t2); }
 
   /* Sections */
   .screen { display: none; }
@@ -3456,9 +3455,21 @@ function _renderRambamContent() {
   // _cleanHtml already preserves <b> tags, so we just need to style the brackets.
   function styleBrackets(text) {
     if (!text) return '';
-    // Brackets are translator additions — keep them muted
-    return text.replace(/\[([^\]]+)\]/g,
-      '<span style="color:var(--t2);">$1</span>');
+    // Split the text on [bracket] groups.
+    // Everything outside brackets = bold (actual Rambam words).
+    // Everything inside brackets = normal weight, muted (translator additions).
+    const parts = text.split(/\[([^\]]+)\]/);
+    // parts alternates: outside, inside, outside, inside...
+    return parts.map((part, i) => {
+      if (!part) return '';
+      if (i % 2 === 0) {
+        // Outside bracket — bold, primary color
+        return '<b style="font-weight:700;color:var(--t1);">' + part + '</b>';
+      } else {
+        // Inside bracket — normal, muted
+        return '<span style="font-weight:400;color:var(--t2);">' + part + '</span>';
+      }
+    }).join('');
   }
 
   // Lang toggle
