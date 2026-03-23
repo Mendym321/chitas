@@ -777,7 +777,22 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
-let user = (() => { try { const s=localStorage.getItem('chitas_v78'); return s?JSON.parse(s):BLANK; } catch{return BLANK;} })();
+let user = (() => {
+  try {
+    // Try current key first
+    const s = localStorage.getItem('chitas_v78');
+    if (s) return JSON.parse(s);
+    // Migration: try old v77 key — if found, copy forward
+    const old = localStorage.getItem('chitas_v77');
+    if (old) {
+      const parsed = JSON.parse(old);
+      try { localStorage.setItem('chitas_v78', old); } catch{}
+      // Don't remove v77 yet — keep as backup
+      return parsed;
+    }
+    return BLANK;
+  } catch { return BLANK; }
+})();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
 const MAX_DAYS_BACK = 4;
@@ -1027,8 +1042,14 @@ function obNext2() {
 function obStart() {
   if (!selectedTrack) return;
   const city = document.getElementById('ob-city').value.trim();
-  // name comes from Google sign-in, uid already set
-  user = {...BLANK, uid: user.uid, name: user.name, photoURL: user.photoURL, city, rambamTrack: selectedTrack};
+  // SAFE: only set the fields that onboarding provides — never wipe existing data.
+  // If this is a genuine new user, user is already BLANK so no data is lost.
+  // If somehow an existing user hits this flow, their xp/streak/pastDone are preserved.
+  user.city         = city;
+  user.rambamTrack  = selectedTrack;
+  if (!user.name && window._fb?.getCurrentUser?.()?.displayName) {
+    user.name = window._fb.getCurrentUser().displayName;
+  }
   saveUser();
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
@@ -1111,13 +1132,17 @@ function parseHebcal(data) {
 async function init() {
   // FIX 2: day-rollover runs AFTER we've confirmed we have the latest data
   // (bootApp already loaded Firestore before calling init, so user is fresh)
-  const today = new Date().toDateString();
-  if (user.lastDate && user.lastDate !== today) {
-    const prev = new Date(user.lastDate);
+  const todayISO2 = dateISO(new Date()); // compare as ISO strings — reliable cross-browser
+  const todayLegacy = new Date().toDateString(); // handle old data saved as toDateString
+  const lastDateISO = user.lastDate
+    ? (user.lastDate.includes('-') ? user.lastDate : dateISO(new Date(user.lastDate)))
+    : null;
+  if (lastDateISO && lastDateISO !== todayISO2) {
+    const prev = new Date(lastDateISO);
     const yest = new Date(); yest.setDate(yest.getDate()-1);
     if (!user.pastDone) user.pastDone = {};
     if (!user.pastQuizDone) user.pastQuizDone = {};
-    const prevISO = prev.toISOString().slice(0,10);
+    const prevISO = dateISO(prev);
     // Only archive if not already archived (guard against double-init)
     if (!user.pastDone[prevISO]) {
       user.pastDone[prevISO] = { ...user.done };
@@ -1125,7 +1150,7 @@ async function init() {
     }
     user.done = {};
     user.quizDone = {};
-    if (prev.toDateString() !== yest.toDateString()) user.streak = 0;
+    if (dateISO(prev) !== dateISO(yest)) user.streak = 0;
     saveUser();
   }
 
@@ -1711,7 +1736,7 @@ function unmarkDone(id) {
     user.xp     = Math.max(0, user.xp - 50);
   }
   user.done[id] = false;
-  user.lastDate = new Date().toDateString();
+  user.lastDate = dateISO(new Date());
   saveUser();
   updateStats();
   updateHeader();
@@ -1760,7 +1785,7 @@ function markDone(id) {
   user.done[id] = true;
   const xpBefore = user.xp;
   user.xp += s.xp;
-  user.lastDate = new Date().toDateString();
+  user.lastDate = dateISO(new Date());
 
   const ids = ['chumash','tehillim','tanya','rambam'];
   const allNow = ids.every(x => user.done[x]);
@@ -4306,14 +4331,27 @@ function bootApp() {
     }
 
     // Always fetch from Firestore — this is the source of truth
+    console.log('[boot] Auth resolved, uid:', fbUser.uid, '| local lastDate:', user.lastDate, '| local xp:', user.xp);
     const remote = await window._fb.loadUser(fbUser.uid);
+    console.log('[boot] Firestore loaded:', remote ? ('xp:'+remote.xp+' lastDate:'+remote.lastDate) : 'NULL');
 
-    if (remote && remote.rambamTrack) {
+    if (remote) { // Firestore doc exists — restore regardless of rambamTrack
+      // If rambamTrack is missing from the remote doc, keep whatever local has
+      if (!remote.rambamTrack && user.rambamTrack) remote.rambamTrack = user.rambamTrack;
       // Merge strategy: Firestore wins on all fields EXCEPT fields where
       // local is clearly more recent (lastDate is today and remote is older)
+      // Normalize both dates to ISO for reliable comparison
+      const _toISO = d => {
+        if (!d) return null;
+        if (typeof d === 'string' && d.includes('-')) return d.slice(0,10);
+        const parsed = new Date(d);
+        return isNaN(parsed) ? null : dateISO(parsed);
+      };
+      const localLastISO  = _toISO(user.lastDate);
+      const remoteLastISO = _toISO(remote.lastDate);
       const localIsNewer = user.uid === fbUser.uid &&
-        user.lastDate && remote.lastDate &&
-        new Date(user.lastDate) > new Date(remote.lastDate);
+        localLastISO && remoteLastISO &&
+        localLastISO > remoteLastISO;
 
       if (localIsNewer) {
         // Local has activity from today that hasn't synced yet — keep it
@@ -4341,17 +4379,19 @@ function bootApp() {
       document.getElementById('main-app').style.display = 'block';
       if (typeof init === 'function') init();
 
-    } else if (!remote) {
-      // New user (no Firestore record) — if they already completed onboarding
-      // locally, honour that; otherwise show onboarding
+    } else {
+      // No Firestore record at all — brand new user
+      // If they completed onboarding locally (e.g. offline first-run), honour it
       if (user.uid === fbUser.uid && user.rambamTrack) {
         user.uid = fbUser.uid;
         user.photoURL = fbUser.photoURL || '';
+        // Save to Firestore now so next load finds it
+        saveUser();
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (typeof init === 'function') init();
       }
-      // else: new user with no local data — stay on onboarding
+      // else: genuinely new user — onboarding screen stays visible
     }
   };
 
