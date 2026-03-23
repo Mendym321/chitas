@@ -2930,6 +2930,7 @@ const NATIVE_READER_SECTIONS = ['chumash', 'tanya', 'rambam'];
 // extractChabadContent() removed — was never called (superseded by native readers)
 
 // Scroll handler — updates progress bar and unlocks Mark Done
+let _scrollSaveTimer = null;
 function onReaderScroll() {
   const reader = document.getElementById('native-reader');
   const sentinel = document.getElementById('reader-bottom-sentinel');
@@ -2947,6 +2948,49 @@ function onReaderScroll() {
   // Unlock when sentinel is visible (within 120px of viewport bottom)
   const nearBottom = sentinelRect.top <= readerRect.bottom + 120;
   if (nearBottom) unlockMarkDone();
+
+  // Save scroll position — throttled to once per 400ms so we don't hammer localStorage
+  if (_scrollSaveTimer) clearTimeout(_scrollSaveTimer);
+  _scrollSaveTimer = setTimeout(() => {
+    const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+    if (sid && (sid === 'chumash' || sid === 'rambam')) {
+      _saveScrollPos(sid, scrollTop);
+    }
+  }, 400);
+}
+
+// ── SCROLL POSITION PERSISTENCE ───────────────────────────────────────────────
+function _scrollKey(sectionId) {
+  // Keyed by section + today's date — yesterday's position never restores today
+  return 'scroll_' + sectionId + '_' + dateISO(new Date());
+}
+
+function _saveScrollPos(sectionId, pos) {
+  try {
+    localStorage.setItem(_scrollKey(sectionId), String(Math.round(pos)));
+    _pruneScrollKeys();
+  } catch(e) {}
+}
+
+function _getSavedScrollPos(sectionId) {
+  try {
+    const val = localStorage.getItem(_scrollKey(sectionId));
+    return val !== null ? parseInt(val) : 0;
+  } catch(e) { return 0; }
+}
+
+function _pruneScrollKeys() {
+  // Keep only the last 5 days of scroll keys — avoid localStorage bloat
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('scroll_')) keys.push(k);
+    }
+    if (keys.length <= 10) return; // chumash + rambam × 5 days = 10 max, prune if more
+    keys.sort(); // ISO date sorts chronologically
+    keys.slice(0, keys.length - 10).forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
 }
 
 let markDoneUnlocked = false;
@@ -3271,6 +3315,15 @@ async function _loadChumashNative(sectionId) {
 
     if (loadEl) loadEl.style.display = 'none';
     if (contEl) contEl.style.display = 'block';
+
+    // Restore saved scroll position for today
+    const saved = _getSavedScrollPos('chumash');
+    if (saved > 0) {
+      requestAnimationFrame(() => {
+        const reader = document.getElementById('native-reader');
+        if (reader) reader.scrollTop = saved;
+      });
+    }
     return true;
 
   } catch(e) {
@@ -3343,6 +3396,15 @@ async function _loadRambamNative(sectionId) {
 
     if (loadEl) loadEl.style.display = 'none';
     if (contEl) contEl.style.display = 'block';
+
+    // Restore saved scroll position for today
+    const saved = _getSavedScrollPos('rambam');
+    if (saved > 0) {
+      requestAnimationFrame(() => {
+        const reader = document.getElementById('native-reader');
+        if (reader) reader.scrollTop = saved;
+      });
+    }
     return true;
 
   } catch(e) {
@@ -3631,6 +3693,10 @@ function openChabadPanel(sectionId) {
 }
 
 function closeChabadPanel() {
+  // Reset scroll to top when closing — position is already saved,
+  // so next open will restore it. This prevents stale scroll on re-open.
+  const reader = document.getElementById('native-reader');
+  if (reader) reader.scrollTop = 0;
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
   markDoneUnlocked = false;
