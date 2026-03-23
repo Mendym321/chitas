@@ -3047,7 +3047,7 @@ async function _fetchChumashText(ref, keyword){
 
 
 function _renderChumashContent() {
-  const { torah, rashi, startVerse } = window._chumashData || {};
+  const { torah, startVerse } = window._chumashData || {};
   if (!torah) return;
   const lang = localStorage.getItem('chitas_reader_lang') || 'both';
   const el = document.getElementById('native-reader-content');
@@ -3066,12 +3066,20 @@ function _renderChumashContent() {
   });
   t += '</div>';
 
+  // rashiByVerse is a verse-number-keyed map built in _loadChumashNative.
+  // Falling back to the old rashi arrays (for backward compat if somehow
+  // _chumashData was set by older code without the map).
+  const rashiByVerse = window._chumashData.rashiByVerse || {};
+
   let v = '';
   torah.en.forEach((en, i) => {
     const vn = startVerse + i;
     const he = torah.he[i] || '';
-    const ren = rashi.en[i] || '';
-    const rhe = rashi.he[i] || '';
+    // Look up Rashi by verse number — this ensures Rashi for verse 3
+    // always appears under verse 3 even when Sefaria's array has gaps.
+    const rashiEntry = rashiByVerse[vn] || {};
+    const ren = rashiEntry.en || '';
+    const rhe = rashiEntry.he || '';
     const num = '<span style="font-size:11px;font-weight:800;color:var(--gold);margin-right:4px;">' + vn + '.</span>';
 
     v += '<div style="margin-bottom:2px;">';
@@ -3122,25 +3130,39 @@ async function _loadChumashNative(sectionId) {
   if (contEl) contEl.style.display = 'none';
 
   try {
-    // Get ref from Sefaria calendar — same as standalone reader
-    const today = new Date();
-    const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + today.getFullYear() + '&month=' + (today.getMonth()+1) + '&day=' + today.getDate()).then(r => r.json());
+    // Use the currently-viewed day (respects dayOffset for yesterday etc.)
+    const viewedDay = new Date();
+    viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
 
-    let aliyahRef = '';
-    const chumashItem = (cal.calendar_items || []).find(i => (i.title?.en || '').toLowerCase().includes('chumash'));
-    if (chumashItem?.ref) {
-      aliyahRef = chumashItem.ref;
-    } else {
-      // Fallback: Hebcal leyning
-      const dow = today.getDay();
-      const sat = new Date(today); sat.setDate(today.getDate() + (6 - dow));
-      const sun = new Date(sat); sun.setDate(sat.getDate() - 6);
-      const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-      const hd = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&start=' + fmt(sun) + '&end=' + fmt(sat) + '&lg=s').then(r => r.json());
-      const pItem = (hd.items || []).find(i => i.category === 'parashat' && i.leyning);
-      if (pItem) {
-        const aliyahNum = dow === 6 ? 7 : dow + 1;
-        aliyahRef = (pItem.leyning[String(aliyahNum)] || '').replace(/\s*-\s*/g, '-').trim();
+    // First try: use the ref already loaded into schedule (avoids extra API call)
+    let aliyahRef = schedule?.chumash?.sefariaRef || '';
+
+    // If schedule ref is stale (e.g. user navigated to a past day and schedule
+    // was rebuilt for that day), it will already be correct. But if somehow
+    // it is missing, fall back to fetching the calendar for the viewed day.
+    if (!aliyahRef) {
+      const cal = await fetch(
+        'https://www.sefaria.org/api/calendars?year=' + viewedDay.getFullYear() +
+        '&month=' + (viewedDay.getMonth()+1) + '&day=' + viewedDay.getDate()
+      ).then(r => r.json());
+
+      const chumashItem = (cal.calendar_items || []).find(i =>
+        (i.title?.en || '').toLowerCase().includes('chumash')
+      );
+      if (chumashItem?.ref) {
+        aliyahRef = chumashItem.ref;
+      } else {
+        // Fallback: Hebcal leyning for the viewed day
+        const dow = viewedDay.getDay();
+        const sat = new Date(viewedDay); sat.setDate(viewedDay.getDate() + (6 - dow));
+        const sun = new Date(sat); sun.setDate(sat.getDate() - 6);
+        const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        const hd = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&start=' + fmt(sun) + '&end=' + fmt(sat) + '&lg=s').then(r => r.json());
+        const pItem = (hd.items || []).find(i => i.category === 'parashat' && i.leyning);
+        if (pItem) {
+          const aliyahNum = dow === 6 ? 7 : dow + 1;
+          aliyahRef = (pItem.leyning[String(aliyahNum)] || '').replace(/\s*-\s*/g, '-').trim();
+        }
       }
     }
 
@@ -3159,7 +3181,21 @@ async function _loadChumashNative(sectionId) {
     const subEl = document.getElementById('chabad-panel-sub');
     if (subEl) subEl.textContent = aliyahRef;
 
-    window._chumashData = { torah, rashi, startVerse, ref: aliyahRef };
+    // Build a verse-number-keyed map for Rashi so verse 3's Rashi
+    // always appears under verse 3, regardless of array gaps (fix for
+    // Rashi showing under the wrong verse when Sefaria skips verses)
+    const rashiByVerse = {};
+    rashi.en.forEach((text, i) => {
+      if (text) rashiByVerse[startVerse + i] = { en: text, he: rashi.he[i] || '' };
+    });
+    // Also index by he array in case en is sparse but he is not
+    rashi.he.forEach((text, i) => {
+      if (text && !rashiByVerse[startVerse + i]) {
+        rashiByVerse[startVerse + i] = { en: rashi.en[i] || '', he: text };
+      }
+    });
+
+    window._chumashData = { torah, rashiByVerse, startVerse, ref: aliyahRef };
     _renderChumashContent();
 
     if (loadEl) loadEl.style.display = 'none';
