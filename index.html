@@ -6,7 +6,7 @@
 <title>Chitas Daily</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Noto+Serif+Hebrew:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Noto+Serif+Hebrew:wght@300;400;500;600&family=Alef:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -3180,7 +3180,7 @@ function _renderChumashContent() {
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
-  const HE = "Noto Serif Hebrew,Frank Ruhl Libre,serif";
+  const HE = "Alef,sans-serif";
   const RBG = 'background:rgba(240,165,0,.04);border-left:3px solid rgba(240,165,0,.25);';
 
   // Lang toggle
@@ -3526,7 +3526,7 @@ function _renderRambamContent() {
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
-  const HE = "Noto Serif Hebrew,Frank Ruhl Libre,serif";
+  const HE = "Alef,sans-serif";
   const GREEN = '#1DB954';
 
   // Hebrew letters for halacha numbering (alef, beis, gimmel...)
@@ -3741,7 +3741,7 @@ function _renderTehillimContent() {
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
-  const HE = "Noto Serif Hebrew,Frank Ruhl Libre,serif";
+  const HE = "Alef,sans-serif";
   const BLUE = '#4A9EFF';
 
   // Lang toggle
