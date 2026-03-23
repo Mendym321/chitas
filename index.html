@@ -3242,8 +3242,8 @@ function _renderChumashContent() {
         // One Rashi block per comment — each aligned in two columns
         rashiComments.forEach(rc => {
           v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
-          v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + rc.en + '</p>';
-          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t2);">' + boldRashiHe(rc.he) + '</p>';
+          v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
+          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
           v += '</div>';
         });
       } else if (lang === 'he') {
@@ -3253,7 +3253,7 @@ function _renderChumashContent() {
         rashiComments.forEach(rc => {
           if (rc.he) {
             v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
-            v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t2);">' + boldRashiHe(rc.he) + '</p>';
+            v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
             v += '</div>';
           }
         });
@@ -3264,7 +3264,7 @@ function _renderChumashContent() {
         rashiComments.forEach(rc => {
           if (rc.en) {
             v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
-            v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t2);">' + rc.en + '</p>';
+            v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
             v += '</div>';
           }
         });
