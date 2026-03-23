@@ -1513,6 +1513,16 @@ async function rebuildScheduleForOffset() {
     }
     if (s.id === 'tehillim') {
       s.subtitle = p?.tehTitle || 'Daily Psalms';
+      // Rebuild sefariaRef from tehTitle for past days
+      if (p?.tehTitle) {
+        const m = p.tehTitle.match(/(\d+)(?:[\s\-–]+?(\d+))?/);
+        if (m) {
+          const from = parseInt(m[1]), to = m[2] ? parseInt(m[2]) : from;
+          const chs = [];
+          for (let c = from; c <= to; c++) chs.push(c);
+          s.sefariaRef = chs.map(c => 'Psalms ' + c).join('|');
+        }
+      }
     }
     if (s.id === 'tanya') {
       // Hebrew date without the year e.g. "3 Tammuz"
@@ -2989,7 +2999,7 @@ function onReaderScroll() {
   if (_scrollSaveTimer) clearTimeout(_scrollSaveTimer);
   _scrollSaveTimer = setTimeout(() => {
     const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-    if (sid && (sid === 'chumash' || sid === 'rambam')) {
+    if (sid && (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim')) {
       _saveScrollPos(sid, scrollTop);
     }
   }, 400);
@@ -3639,6 +3649,162 @@ function _setRambamLang(lang) {
   _renderRambamContent();
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ZONE 21c · TEHILLIM NATIVE READER
+//   Fetches Koren Jerusalem Bible (same as Chumash) from Sefaria.
+//   Chapters listed in schedule.tehillim.sefariaRef as pipe-separated:
+//   "Psalms 18|Psalms 19|Psalms 20|Psalms 21|Psalms 22"
+//   Hebrew + English toggle (no Both — matches Chabad.org pattern).
+// ════════════════════════════════════════════════════════════════════
+
+async function _loadTehillimNative(sectionId) {
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
+
+  try {
+    // Get refs from schedule — already correct for viewed day
+    const refs = (schedule?.tehillim?.sefariaRef || '').split('|').filter(Boolean);
+    if (!refs.length) return false;
+
+    // Fetch each chapter in parallel — Koren for English, standard for Hebrew
+    const chapters = await Promise.all(refs.map(ref => _fetchTehillimChapter(ref)));
+    const valid = chapters.filter(c => c && (c.en.length || c.he.length));
+    if (!valid.length) return false;
+
+    // Update subtitle
+    const subEl = document.getElementById('chabad-panel-sub');
+    if (subEl) subEl.textContent = schedule.tehillim.subtitle || refs.join(', ');
+
+    window._tehillimData = { chapters: valid };
+    _renderTehillimContent();
+
+    if (loadEl) loadEl.style.display = 'none';
+    if (contEl) contEl.style.display = 'block';
+
+    // Restore scroll
+    const saved = _getSavedScrollPos('tehillim');
+    if (saved > 0) {
+      requestAnimationFrame(() => {
+        const reader = document.getElementById('native-reader');
+        if (reader) reader.scrollTop = saved;
+      });
+    }
+    return true;
+
+  } catch(e) {
+    console.error('Tehillim reader error:', e);
+    return false;
+  }
+}
+
+async function _fetchTehillimChapter(ref) {
+  const enc = encodeURIComponent(ref);
+  // Use same approach as Chumash — versions endpoint to find Koren, then fetch
+  const [versions, heRes] = await Promise.all([
+    fetch('https://www.sefaria.org/api/texts/versions/' + enc).then(r => r.json()).catch(() => []),
+    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+  ]);
+
+  const enVersions = Array.isArray(versions) ? versions.filter(v => v.language === 'en') : [];
+  const picked = enVersions.find(v => v.versionTitle.toLowerCase().includes('koren')) || enVersions[0];
+
+  const enRes = picked
+    ? await fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0&ven=' + encodeURIComponent(picked.versionTitle)).then(r => r.json()).catch(() => null)
+    : heRes;
+
+  // Parse psalm number from ref "Psalms 18" → 18
+  const psalmNum = parseInt((ref.match(/\d+/) || [0])[0]);
+
+  function flatArr(x) {
+    if (!x) return [];
+    if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : [null]; }
+    if (Array.isArray(x)) return x.map(item =>
+      typeof item === 'string' ? (_cleanHtml(item) || null) : null
+    );
+    return [];
+  }
+  function flatArrHe(x) {
+    if (!x) return [];
+    if (typeof x === 'string') { const s = x.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); return [s||null]; }
+    if (Array.isArray(x)) return x.map(item =>
+      typeof item === 'string' ? (item.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim() || null) : null
+    );
+    return [];
+  }
+
+  return {
+    ref,
+    psalmNum,
+    en: flatArr(enRes?.text || []),
+    he: flatArrHe(heRes?.he || []),
+  };
+}
+
+function _renderTehillimContent() {
+  const { chapters } = window._tehillimData || {};
+  if (!chapters || !chapters.length) return;
+  const lang = localStorage.getItem('chitas_reader_lang') || 'he';
+  const el = document.getElementById('native-reader-content');
+  if (!el) return;
+
+  const HE = "Noto Serif Hebrew,Frank Ruhl Libre,serif";
+  const BLUE = '#4A9EFF';
+
+  // Hebrew / English toggle only (no Both — Tehillim is read in one language at a time)
+  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
+  [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'], ['en','English']].forEach(([l, lb]) => {
+    const a = lang === l;
+    t += '<button onclick="_setTehillimLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
+       + (a ? 'background:' + BLUE + ';color:#fff;border-color:' + BLUE + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
+       + '">' + lb + '</button>';
+  });
+  t += '</div>';
+
+  let v = '';
+
+  chapters.forEach((chapter, chIdx) => {
+    // Psalm heading card — blue to match section color
+    v += '<div style="' + (chIdx > 0 ? 'margin-top:28px;' : '') + 'margin-bottom:16px;'
+       + 'padding:10px 14px;background:rgba(74,158,255,.07);'
+       + 'border-left:3px solid ' + BLUE + ';border-radius:0 8px 8px 0;">'
+       + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;'
+       + 'color:rgba(74,158,255,.55);margin-bottom:3px;">Tehillim</p>'
+       + '<p style="font-size:18px;font-weight:800;color:' + BLUE + ';line-height:1.2;">Psalm ' + chapter.psalmNum + '</p>'
+       + '</div>';
+
+    const maxLen = Math.max(chapter.en.length, chapter.he.length);
+    for (let i = 0; i < maxLen; i++) {
+      const en = chapter.en[i] || '';
+      const he = chapter.he[i] || '';
+      if (!en && !he) continue;
+      const vNum = i + 1;
+      const vMark = '<span style="font-size:11px;font-weight:800;color:' + BLUE
+        + ';margin-right:6px;min-width:16px;display:inline-block;">' + vNum + '</span>';
+
+      if (lang === 'he') {
+        v += '<div style="padding:12px 0;border-bottom:1px solid var(--border);">';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.1;color:var(--t1);">' + vMark + he + '</p>';
+        v += '</div>';
+      } else {
+        v += '<div style="padding:12px 0;border-bottom:1px solid var(--border);">';
+        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + vMark + en + '</p>';
+        v += '</div>';
+      }
+    }
+  });
+
+  el.innerHTML = t + v
+    + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s Tehillim —</p>'
+    + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
+function _setTehillimLang(lang) {
+  localStorage.setItem('chitas_reader_lang', lang);
+  _renderTehillimContent();
+}
+
 
 function openChabadPanel(sectionId) {
   const s = schedule[sectionId];
@@ -3660,12 +3826,14 @@ function openChabadPanel(sectionId) {
   const nativeEl = document.getElementById('native-reader');
   const progWrap = document.getElementById('reader-progress-wrap');
 
-  if (sectionId === 'chumash' || sectionId === 'rambam') {
+  if (sectionId === 'chumash' || sectionId === 'rambam' || sectionId === 'tehillim') {
     iframeEl.style.display = 'none'; iframeEl.src = '';
     nativeEl.style.display = 'flex';
     if (progWrap) progWrap.style.display = 'block';
     document.getElementById('chabad-panel-extlink').style.display = 'none';
-    const loader = sectionId === 'chumash' ? _loadChumashNative : _loadRambamNative;
+    const loader = sectionId === 'chumash' ? _loadChumashNative
+                  : sectionId === 'tehillim' ? _loadTehillimNative
+                  : _loadRambamNative;
     loader(sectionId).then(ok => {
       if (!ok) {
         nativeEl.style.display = 'none';
