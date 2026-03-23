@@ -1460,6 +1460,8 @@ async function rebuildScheduleForOffset() {
     const pastAliya = pastDow === 6 ? 'Shabbos' : 'Aliya ' + (pastDow === 0 ? 1 : pastDow + 1);
     if (s.id === 'chumash') {
       s.subtitle = p?.parshaName ? p.parshaName + (pastDow === 6 ? ' · Shabbos' : ' · Aliya ' + p.aliyaNum) : pastAliya;
+      // Update sefariaRef so the native reader loads the correct aliyah for this day
+      s.sefariaRef = p?.aliyaRef || null;
     }
     if (s.id === 'tehillim') {
       s.subtitle = p?.tehTitle || 'Daily Psalms';
@@ -1484,13 +1486,16 @@ function parseHebcalForDate(data, d) {
   const dow = d.getDay();
   const aliyaNum = dow === 6 ? 7 : dow + 1;
   const parshaName = parshaItem?.title?.replace(/Parashat |Parasha /, '') || null;
+  // Extract the correct aliyah ref for this day-of-week from Hebcal leyning data
+  const leyning = parshaItem?.leyning || {};
+  const aliyaRef = leyning[String(aliyaNum)] || null;
   const tehItem = items.find(i => i.category === 'dailyLearning' && (i.title?.startsWith('Psalms') || i.title?.startsWith('Tehillim')));
   const rt = user.rambamTrack;
   const rambamItem = rt === 'm'
     ? items.find(i => i.category === 'dailyLearning' && (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos')))
     : items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
   return {
-    parshaName, aliyaNum,
+    parshaName, aliyaNum, aliyaRef,
     tehTitle: tehItem?.title || null,
     rambamTitle: rambamItem?.title || null,
   };
@@ -3153,41 +3158,17 @@ async function _loadChumashNative(sectionId) {
   if (contEl) contEl.style.display = 'none';
 
   try {
-    // Use the currently-viewed day (respects dayOffset for yesterday etc.)
-    const viewedDay = new Date();
-    viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
-
-    // Primary: use the ref already in schedule (rebuilt per day by rebuildScheduleForOffset)
-    let aliyahRef = schedule?.chumash?.sefariaRef || '';
-
-    // Fallback: fetch calendar for the viewed day
+    // schedule.chumash.sefariaRef is always correct for the currently-viewed day:
+    // - init() sets it from Hebcal for today
+    // - rebuildScheduleForOffset() updates it when navigating to past days
+    // No re-fetching needed — trust the schedule.
+    const aliyahRef = schedule?.chumash?.sefariaRef || '';
     if (!aliyahRef) {
-      const cal = await fetch(
-        'https://www.sefaria.org/api/calendars?year=' + viewedDay.getFullYear() +
-        '&month=' + (viewedDay.getMonth()+1) + '&day=' + viewedDay.getDate()
-      ).then(r => r.json());
-      const chumashItem = (cal.calendar_items || []).find(i =>
-        (i.title?.en || '').toLowerCase().includes('chumash')
-      );
-      if (chumashItem?.ref) {
-        aliyahRef = chumashItem.ref;
-      } else {
-        const dow = viewedDay.getDay();
-        const sat = new Date(viewedDay); sat.setDate(viewedDay.getDate() + (6 - dow));
-        const sun = new Date(sat); sun.setDate(sat.getDate() - 6);
-        const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        const hd = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&start=' + fmt(sun) + '&end=' + fmt(sat) + '&lg=s').then(r => r.json());
-        const pItem = (hd.items || []).find(i => i.category === 'parashat' && i.leyning);
-        if (pItem) {
-          const aliyahNum = dow === 6 ? 7 : dow + 1;
-          aliyahRef = (pItem.leyning[String(aliyahNum)] || '').replace(/\s*-\s*/g, '-').trim();
-        }
-      }
+      console.warn('Chumash: no sefariaRef in schedule');
+      return false;
     }
 
-    if (!aliyahRef) return false;
-
-    // Fetch Torah and Rashi in parallel — both now return { chunks, versionTitle }
+    // Fetch Torah and Rashi in parallel
     const [torah, rashi] = await Promise.all([
       _fetchChumashText(aliyahRef, 'koren'),
       _fetchChumashText('Rashi on ' + aliyahRef, 'metsudah').catch(() => ({ chunks: [], versionTitle: '' })),
@@ -3195,8 +3176,7 @@ async function _loadChumashNative(sectionId) {
 
     if (!torah.chunks.length) return false;
 
-    // Build a lookup: (chapter, verseNum) -> { en, he }
-    // keyed as "ch:vn" string so matching is exact regardless of array positions
+    // Build rashiMap keyed by "chapter:verseNum" for exact per-verse matching
     const rashiMap = {};
     rashi.chunks.forEach(chunk => {
       chunk.en.forEach((text, i) => {
@@ -3208,7 +3188,7 @@ async function _loadChumashNative(sectionId) {
       });
     });
 
-    // Update panel subtitle
+    // Update panel subtitle to show the actual ref
     const subEl = document.getElementById('chabad-panel-sub');
     if (subEl) subEl.textContent = aliyahRef;
 
