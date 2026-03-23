@@ -3442,7 +3442,13 @@ function _renderRambamContent() {
   const HE = "Noto Serif Hebrew,Frank Ruhl Libre,serif";
   const GREEN = '#1DB954';
 
-  // Lang toggle (reuse same pattern as Chumash)
+  // Convert Touger's [bracketed additions] → <em>italic</em> (unbolded, readable)
+  function cleanBrackets(text) {
+    if (!text) return '';
+    return text.replace(/\[([^\]]+)\]/g, '<em style="font-style:normal;font-weight:400;color:var(--t2);">$1</em>');
+  }
+
+  // Lang toggle
   let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
   [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
     const a = lang === l;
@@ -3455,21 +3461,28 @@ function _renderRambamContent() {
   let v = '';
 
   chapters.forEach((chapter, chIdx) => {
-    // Chapter heading
-    v += '<div style="font-size:13px;font-weight:800;letter-spacing:.06em;color:' + GREEN + ';'
-       + 'padding:' + (chIdx > 0 ? '22px' : '4px') + ' 0 12px;'
-       + (chIdx > 0 ? 'border-top:1px solid var(--border);margin-top:6px;' : '') + '">'
-       + chapter.title + '</div>';
+    // Chapter heading — prominent, full-width, green bar
+    v += '<div style="margin:' + (chIdx > 0 ? '28px' : '0') + ' 0 16px;padding:12px 16px;'
+       + 'background:rgba(29,185,84,.08);border-left:3px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
+       + '<p style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(29,185,84,.6);margin-bottom:3px;">Mishneh Torah</p>'
+       + '<p style="font-size:17px;font-weight:800;color:' + GREEN + ';">' + chapter.title + '</p>'
+       + '</div>';
 
     const maxLen = Math.max(chapter.en.length, chapter.he.length);
     for (let i = 0; i < maxLen; i++) {
-      const en = chapter.en[i] || '';
+      const en = cleanBrackets(chapter.en[i] || '');
       const he = chapter.he[i] || '';
       if (!en && !he) continue;
-      const hNum = '<span style="font-size:11px;font-weight:800;color:' + GREEN + ';margin-right:4px;">' + (i+1) + '.</span>';
+
+      // Halacha number — large, prominent, sits above the text in its own row
+      const hNum = '<div style="display:inline-flex;align-items:center;justify-content:center;'
+        + 'width:26px;height:26px;border-radius:50%;background:rgba(29,185,84,.12);'
+        + 'border:1.5px solid rgba(29,185,84,.3);'
+        + 'font-size:12px;font-weight:800;color:' + GREEN + ';margin-right:10px;flex-shrink:0;vertical-align:middle;">'
+        + (i+1) + '</div>';
 
       if (lang === 'both') {
-        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);">';
+        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + hNum + en + '</p>';
         v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + hNum + he + '</p>';
         v += '</div>';
