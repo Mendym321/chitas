@@ -3855,30 +3855,76 @@ async function _loadTanyaNative(sectionId) {
   if (contEl) contEl.style.display = 'none';
 
   try {
-    // Build date string MM/DD/YYYY for the viewed day
-    const viewedDay = new Date();
-    viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
-    const mm = String(viewedDay.getMonth()+1).padStart(2,'0');
-    const dd = String(viewedDay.getDate()).padStart(2,'0');
-    const yyyy = viewedDay.getFullYear();
-    const dateStr = mm + '/' + dd + '/' + yyyy;
-
-    // Call our Vercel proxy — fetches + parses Chabad.org server-side
-    const apiUrl = '/api/tanya?date=' + encodeURIComponent(dateStr);
-    const d = await fetch(apiUrl).then(r => r.json()).catch(() => null);
-
-    if (!d || d.error || !d.blocks?.length) {
-      console.warn('Tanya proxy failed:', d?.error);
-      return false;
+    function parseTanyaRef(ref) {
+      if (!ref) return null;
+      const m = ref.match(/^(.*?)(\d+):(\d+)$/);
+      if (!m) return null;
+      return { base: m[1].replace(/:$/, '').trim(), chapter: parseInt(m[2]), seg: parseInt(m[3]) };
     }
 
-    const subEl = document.getElementById('chabad-panel-sub');
-    if (subEl) subEl.textContent = d.title || 'Tanya Yomi';
+    async function getCalTanya(date) {
+      const url = 'https://www.sefaria.org/api/calendars?year=' + date.getFullYear()
+        + '&month=' + (date.getMonth()+1) + '&day=' + date.getDate();
+      const d = await fetch(url).then(r => r.json()).catch(() => null);
+      return (d?.calendar_items || []).find(i =>
+        (i.title?.en || '').toLowerCase().includes('tanya') ||
+        (i.ref || '').toLowerCase().includes('tanya')
+      )?.ref || null;
+    }
 
-    window._tanyaData = {
-      blocks: d.blocks,       // [{he, en, lit}, ...]
-      chapterLabel: d.title,
-    };
+    const today = new Date(); today.setDate(today.getDate() + (dayOffset || 0));
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+
+    const todayRef = schedule?.tanya?.sefariaRef || await getCalTanya(today);
+    if (!todayRef) return false;
+
+    const tomorrowRef = await getCalTanya(tomorrow);
+    const tp = parseTanyaRef(todayRef);
+    const tn = tomorrowRef ? parseTanyaRef(tomorrowRef) : null;
+    if (!tp) return false;
+
+    const chapterRef = tp.base + ' ' + tp.chapter;
+    const enc = encodeURIComponent(chapterRef);
+
+    const [enRes, heRes] = await Promise.all([
+      fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1')
+        .then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0')
+        .then(r => r.json()).catch(() => null),
+    ]);
+
+    function flatSegs(x) {
+      if (!x) return [];
+      if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
+      if (Array.isArray(x)) return x.flatMap(flatSegs);
+      return [];
+    }
+
+    const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+    const allEn = flatSegs(engVersion?.text || heRes?.text || []);
+    const allHe = flatSegs(heRes?.he || []);
+
+    const segStart = tp.seg - 1;
+    const segEnd = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : allEn.length;
+
+    const enPortion = allEn.slice(segStart, segEnd);
+    const hePortion = allHe.slice(segStart, segEnd);
+
+    if (!enPortion.length && !hePortion.length) return false;
+
+    const chapterLabel = tp.base.replace(/^Tanya,?\s*/i, '').replace(/Part\s+[IVX]+;\s*/i, '') + ' · Chapter ' + tp.chapter;
+
+    const subEl = document.getElementById('chabad-panel-sub');
+    if (subEl) subEl.textContent = chapterLabel;
+
+    // Convert flat arrays to blocks format for _renderTanyaContent
+    const blocks = [];
+    const maxLen = Math.max(enPortion.length, hePortion.length);
+    for (let i = 0; i < maxLen; i++) {
+      blocks.push({ he: hePortion[i] || '', en: enPortion[i] || '', lit: '' });
+    }
+
+    window._tanyaData = { blocks, chapterLabel };
     _renderTanyaContent();
 
     if (loadEl) loadEl.style.display = 'none';
