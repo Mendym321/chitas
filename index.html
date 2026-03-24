@@ -229,6 +229,10 @@
   70%  { transform:translateX(0%);    }
   100% { transform:translateX(100%);  }
 }
+
+/* main-app is invisible until loader dismisses */
+#main-app { opacity: 0; transition: opacity .35s ease; }
+#main-app.ready { opacity: 1; }
 </style>
 <!-- Firebase SDK -->
 <script type="module">
@@ -1253,6 +1257,23 @@ async function _buildPersonalPsalms() {
 }
 
 // Render personal psalms section (called after main tehillim render)
+
+// ── Psalm text cache — avoid re-fetching the same psalm repeatedly ────────────
+window._psalmCache = {};
+async function _fetchPsalm(num) {
+  if (window._psalmCache[num]) return window._psalmCache[num];
+  const d = await fetch('https://www.sefaria.org/api/texts/Psalms.' + num + '?context=0&commentary=0').then(r => r.json());
+  function flat(x) {
+    if (!x) return [];
+    if (typeof x === 'string') return [_cleanHtml(x)].filter(Boolean);
+    if (Array.isArray(x)) return x.flatMap(flat);
+    return [];
+  }
+  const result = { heSegs: flat(d.he||[]), enSegs: flat(d.text||[]) };
+  window._psalmCache[num] = result;
+  return result;
+}
+
 // Generation counter — cancels stale renders when reader reopens
 let _personalPsalmsGen = 0;
 
@@ -1286,18 +1307,12 @@ async function _renderPersonalPsalms() {
   let h = '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">'
     + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + BLUE + ';opacity:.8;margin-bottom:18px;">Personal Tehillim</p>';
 
-  // Fetch all psalms in parallel
+  // Fetch all psalms using cache — no duplicate requests
   const psalmResults = await Promise.all(people.map(async p => {
     if (!p.chapter) return null;
     try {
-      const d = await fetch('https://www.sefaria.org/api/texts/Psalms.' + p.chapter + '?context=0&commentary=0').then(r => r.json());
-      function flat(x) {
-        if (!x) return [];
-        if (typeof x === 'string') return [_cleanHtml(x)].filter(Boolean);
-        if (Array.isArray(x)) return x.flatMap(flat);
-        return [];
-      }
-      return { ...p, heSegs: flat(d.he||[]), enSegs: flat(d.text||[]) };
+      const data = await _fetchPsalm(p.chapter);
+      return { ...p, ...data };
     } catch(e) { return { ...p, heSegs: [], enSegs: [] }; }
   }));
   if (myGen !== _personalPsalmsGen) return; // stale — reader was closed
@@ -1708,6 +1723,11 @@ async function init() {
     window._todaySchedule = JSON.parse(JSON.stringify(schedule));
 
     renderSectionsForOffset(dateISO(new Date()));
+
+    // Pre-fetch all four readers in background — silent, no UI changes
+    // Stores results so openChabadPanel renders instantly without a loading state
+    _prefetchAllReaders().catch(() => {});
+
     hideLoader();
   } catch(e) {
     hideLoader();
@@ -4207,6 +4227,11 @@ async function _loadTehillimNative(sectionId) {
     window._tehillimData = { chapters, psalmLabel, dayNum };
     _renderTehillimContent();
 
+    // Pre-warm personal psalm cache in background — so personal sections load instantly
+    _buildPersonalPsalms().then(people => {
+      Promise.all(people.filter(p => p.chapter).map(p => _fetchPsalm(p.chapter))).catch(() => {});
+    }).catch(() => {});
+
     if (loadEl) loadEl.style.display = 'none';
     if (contEl) contEl.style.display = 'block';
 
@@ -4537,18 +4562,40 @@ function openChabadPanel(sectionId) {
     nativeEl.style.display = 'flex';
     if (progWrap) progWrap.style.display = 'block';
     document.getElementById('chabad-panel-extlink').style.display = 'none';
-    const loader = sectionId === 'chumash' ? _loadChumashNative
-                  : sectionId === 'tehillim' ? _loadTehillimNative
-                  : sectionId === 'tanya'    ? _loadTanyaNative
-                  : _loadRambamNative;
-    loader(sectionId).then(ok => {
-      if (!ok) {
-        nativeEl.style.display = 'none';
-        iframeEl.style.display = 'flex'; iframeEl.src = s.chabadUrl;
-        if (progWrap) progWrap.style.display = 'none';
-        document.getElementById('chabad-panel-extlink').style.display = 'flex';
-      }
-    });
+
+    const dataKey = { chumash:'_chumashData', tehillim:'_tehillimData', tanya:'_tanyaData', rambam:'_rambamData' }[sectionId];
+    const renderFn = { chumash:_renderChumashContent, tehillim:_renderTehillimContent, tanya:_renderTanyaContent, rambam:_renderRambamContent }[sectionId];
+    const loaderFn = { chumash:_loadChumashNative, tehillim:_loadTehillimNative, tanya:_loadTanyaNative, rambam:_loadRambamNative }[sectionId];
+
+    if (window[dataKey] && window._prefetched?.[sectionId] !== false) {
+      // Data already pre-fetched — render immediately, no loading state
+      const loadEl = document.getElementById('native-reader-loading');
+      const contEl = document.getElementById('native-reader-content');
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) { contEl.style.display = 'block'; contEl.innerHTML = ''; }
+      renderFn();
+      if (contEl) contEl.style.display = 'block';
+      // Restore scroll
+      const saved = _getSavedScrollPos(sectionId);
+      if (saved > 0) setTimeout(() => {
+        const r = document.getElementById('native-reader');
+        if (r) r.scrollTop = saved;
+      }, 40);
+      // Tehillim: render personal psalms
+      if (sectionId === 'tehillim') _renderPersonalPsalms();
+    } else {
+      // Not pre-fetched yet — load normally
+      loaderFn(sectionId).then(ok => {
+        if (!ok) {
+          nativeEl.style.display = 'none';
+          iframeEl.style.display = 'flex'; iframeEl.src = s.chabadUrl;
+          if (progWrap) progWrap.style.display = 'none';
+          document.getElementById('chabad-panel-extlink').style.display = 'flex';
+        } else if (sectionId === 'tehillim') {
+          _renderPersonalPsalms();
+        }
+      });
+    }
   } else {
     nativeEl.style.display = 'none';
     if (progWrap) progWrap.style.display = 'none';
@@ -5191,6 +5238,46 @@ function switchTab(id) {
 // Wait for Firebase auth to be ready, then decide what to show
 
 
+
+// ── Background pre-fetch — loads all readers silently during app init ──────────
+// After schedule is built, we pre-fetch all four sections so clicking them
+// is instant. Each native loader already stores data in window._xxxData,
+// so openChabadPanel just calls _renderXxxContent() without re-fetching.
+async function _prefetchAllReaders() {
+  window._prefetched = {};
+
+  // Suppress the loading overlay during pre-fetch
+  const _origShow = HTMLElement.prototype.style;
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  const _loadShow = loadEl ? loadEl.style.display : null;
+
+  // Helper: run a loader with suppressed UI
+  async function silentLoad(fn, id) {
+    try {
+      // Temporarily redirect the loader's DOM writes to /dev/null
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'none';
+      const ok = await fn(id);
+      window._prefetched[id] = ok;
+    } catch(e) {
+      window._prefetched[id] = false;
+    }
+  }
+
+  // Run all four in parallel
+  await Promise.all([
+    silentLoad(_loadChumashNative, 'chumash'),
+    silentLoad(_loadTehillimNative, 'tehillim'),
+    silentLoad(_loadTanyaNative, 'tanya'),
+    silentLoad(_loadRambamNative, 'rambam'),
+  ]);
+
+  // Restore loader elements
+  if (loadEl) loadEl.style.display = 'none';
+  if (contEl) contEl.style.display = 'none';
+}
+
 // ── App loader ────────────────────────────────────────────────────────────────
 function showLoader() {
   const el = document.getElementById('app-loader');
@@ -5204,6 +5291,8 @@ function hideLoader() {
   el.classList.add('hiding');
   setTimeout(() => {
     el.classList.remove('visible', 'hiding');
+    // Reveal main-app now that content is loaded
+    document.getElementById('main-app')?.classList.add('ready');
   }, 580);
 }
 // Safety: never stuck
