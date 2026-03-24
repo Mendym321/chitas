@@ -14,6 +14,12 @@
   font-weight: 400;
   font-style: normal;
 }
+@font-face {
+  font-family: 'Taamey Frank CLM';
+  src: url('/fonts/TaameyFrankCLM-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
 </style>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -657,6 +663,17 @@ onAuthStateChanged(auth, user => {
         <span style="font-size:12px;color:var(--t3);" id="ps-track"></span>
       </button>
 
+      <!-- Tehillim personal chapters -->
+      <button onclick="_openTehillimPeopleManager()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;text-align:left;margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;border-radius:9px;background:rgba(74,158,255,.12);display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <span>Personal Tehillim chapters</span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
       <!-- Appearance -->
       <button onclick="toggleTheme()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <span style="display:flex;align-items:center;gap:10px;">
@@ -1054,31 +1071,38 @@ const HEB_MONTHS = ['Nissan','Iyar','Sivan','Tammuz','Av','Elul','Tishrei','Ches
 // Fixed people always shown
 const TEHILLIM_FIXED = [
   { label: 'Rebbe', heDay: 11, heMonth: 'Nissan', heYear: 5662 },
-  { label: 'Rebbetzin', heDay: 25, heMonth: 'Cheshvan', heYear: 5661 },
+  { label: 'Rebbetzin', heDay: 25, heMonth: 'Adar', heYear: 5661 },
 ];
 
 function _hebMonthNum(m) { return HEB_MONTHS.indexOf(m) + 1; }
 
 async function _calcTehillimChapter(person) {
-  // Fetch today's Hebrew date from Hebcal
-  const today = new Date();
-  const url = `https://www.hebcal.com/converter?cfg=json&gy=${today.getFullYear()}&gm=${today.getMonth()+1}&gd=${today.getDate()}&g2h=1`;
+  // Strategy: convert the person's Hebrew birthday to Gregorian using Hebcal,
+  // then compare with today's Gregorian date to get exact age.
+  // This is the most reliable method — avoids Hebrew month ordering complexity.
   try {
-    const d = await fetch(url).then(r => r.json());
-    const todayHebYear = d.hy;
-    const todayHebMonth = d.hm; // e.g. "Nissan"
-    const todayHebDay = d.hd;
+    const today = new Date();
+    const todayY = today.getFullYear();
 
-    // Age calculation: years since birth
+    // Get today's Hebrew year first
+    const todayHebUrl = `https://www.hebcal.com/converter?cfg=json&gy=${todayY}&gm=${today.getMonth()+1}&gd=${today.getDate()}&g2h=1`;
+    const todayHeb = await fetch(todayHebUrl).then(r => r.json());
+    const todayHebYear = todayHeb.hy;
+
+    // Convert this year's instance of the person's Hebrew birthday to Gregorian
+    const birthThisYearUrl = `https://www.hebcal.com/converter?cfg=json&hy=${todayHebYear}&hm=${encodeURIComponent(person.heMonth)}&hd=${person.heDay}&h2g=1`;
+    const birthThisYear = await fetch(birthThisYearUrl).then(r => r.json());
+
     let age = todayHebYear - person.heYear;
-    // Has birthday passed this Hebrew year?
-    const birthMonthNum = _hebMonthNum(person.heMonth);
-    const todayMonthNum = _hebMonthNum(todayHebMonth);
-    const birthdayPassedThisYear =
-      todayMonthNum > birthMonthNum ||
-      (todayMonthNum === birthMonthNum && todayHebDay >= person.heDay);
-    if (!birthdayPassedThisYear) age--;
-    // Chapter = current year of life = age + 1
+
+    // Check if this year's birthday has occurred yet
+    if (birthThisYear && birthThisYear.gy) {
+      const birthdayThisYear = new Date(birthThisYear.gy, birthThisYear.gm - 1, birthThisYear.gd);
+      // If birthday hasn't happened yet this Hebrew year, subtract 1
+      if (today < birthdayThisYear) age--;
+    }
+
+    // Chapter = year they are currently IN = age + 1
     const chapter = age + 1;
     return Math.max(1, Math.min(chapter, 150));
   } catch(e) {
@@ -1100,76 +1124,62 @@ async function _buildPersonalPsalms() {
 async function _renderPersonalPsalms() {
   const el = document.getElementById('tehillim-personal');
   if (!el) return;
-  el.innerHTML = '<p style="font-size:11px;color:var(--t3);text-align:center;padding:12px 0;">Calculating personal chapters…</p>';
+  el.innerHTML = '<p style="font-size:11px;color:var(--t3);text-align:center;padding:16px 0;">Loading personal chapters…</p>';
   const people = await _buildPersonalPsalms();
-  const BLUE = '#4A9EFF';
-  let h = `<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">`;
-  h += `<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${BLUE};opacity:.7;margin-bottom:14px;">Personal Chapters</p>`;
-  people.forEach(p => {
-    if (!p.chapter) return;
-    const safeLabel = p.label.replace(/'/g, '\u2019');
-    const safeDateLabel = p.heDay + ' ' + p.heMonth + ' ' + p.heYear;
-    h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">'
-      + '<span style="font-size:14px;font-weight:600;color:var(--t1);">' + p.label + '</span>'
-      + '<button onclick="_openPersonalChapter(' + p.chapter + ',\'' + safeLabel + '\',\'' + safeDateLabel + '\')"'
-      + ' style="padding:6px 14px;border-radius:8px;border:none;background:rgba(74,158,255,.12);color:' + BLUE + ';font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">'
-      + 'Psalm ' + p.chapter
-      + '</button>'
-      + '</div>';
-  });
-  // Add people button
-  h += `<button onclick="_openTehillimPeopleManager()"
-    style="width:100%;margin-top:14px;padding:10px;border-radius:10px;border:1.5px dashed var(--border);background:transparent;color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
-    + Manage personal chapters
-  </button>`;
-  h += '</div>';
-  el.innerHTML = h;
-}
-
-// Open a personal chapter in a mini reader
-async function _openPersonalChapter(chapterNum, label, dateLabel) {
   const BLUE = '#4A9EFF';
   const HEB_FONT = "'Taamey Frank CLM','Noto Serif Hebrew',serif";
 
-  const modal = document.createElement('div');
-  modal.id = 'personal-chapter-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
-  modal.innerHTML = `<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:85vh;display:flex;flex-direction:column;padding:0 0 env(safe-area-inset-bottom);">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;">
-      <div>
-        <p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${BLUE};opacity:.7;">${label}</p>
-        <p style="font-size:18px;font-weight:800;color:var(--t1);">Psalm ${chapterNum}</p>
-        <p style="font-size:11px;color:var(--t3);">${dateLabel}</p>
-      </div>
-      <button onclick="document.getElementById('personal-chapter-modal').remove()" style="background:var(--card);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;color:var(--t2);">×</button>
-    </div>
-    <div id="personal-chapter-content" style="overflow-y:auto;padding:0 20px 20px;flex:1;font-size:11px;color:var(--t3);text-align:center;">Loading…</div>
-  </div>`;
-  document.body.appendChild(modal);
+  let h = '<div style="margin-top:24px;">';
+  h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-top:18px;border-top:1px solid var(--border);">'
+     + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + BLUE + ';opacity:.8;">Personal Tehillim</p>'
+     + '</div>';
 
-  try {
-    const d = await fetch('https://www.sefaria.org/api/texts/Psalms.' + chapterNum + '?context=0&commentary=0').then(r => r.json());
-    function flatSegs(x) {
-      if (!x) return [];
-      if (typeof x === 'string') return [_cleanHtml(x)].filter(Boolean);
-      if (Array.isArray(x)) return x.flatMap(flatSegs);
-      return [];
-    }
-    const heSegs = flatSegs(d.he || []);
-    const enSegs = flatSegs(d.text || []);
-    let v = '';
-    const maxLen = Math.max(heSegs.length, enSegs.length);
+  // For each person, show their label + chapter number + load the psalm inline
+  const psalmResults = await Promise.all(people.map(async p => {
+    if (!p.chapter) return null;
+    try {
+      const d = await fetch('https://www.sefaria.org/api/texts/Psalms.' + p.chapter + '?context=0&commentary=0').then(r => r.json());
+      function flatSegs(x) {
+        if (!x) return [];
+        if (typeof x === 'string') return [_cleanHtml(x)].filter(Boolean);
+        if (Array.isArray(x)) return x.flatMap(flatSegs);
+        return [];
+      }
+      return { ...p, heSegs: flatSegs(d.he||[]), enSegs: flatSegs(d.text||[]) };
+    } catch(e) { return { ...p, heSegs: [], enSegs: [] }; }
+  }));
+
+  const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
+
+  psalmResults.forEach(p => {
+    if (!p) return;
+    // Chapter heading
+    h += '<div style="margin-bottom:20px;padding:12px 14px;background:rgba(74,158,255,.06);border-left:3px solid ' + BLUE + ';border-radius:0 10px 10px 0;">'
+       + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(74,158,255,.6);margin-bottom:2px;">' + p.label + '</p>'
+       + '<p style="font-size:16px;font-weight:800;color:' + BLUE + ';">Chapter ' + p.chapter + '</p>'
+       + '</div>';
+
+    const maxLen = Math.max(p.heSegs.length, p.enSegs.length);
     for (let i = 0; i < maxLen; i++) {
-      v += `<div style="padding:10px 0;border-bottom:1px solid var(--border);">
-        <p style="direction:rtl;text-align:right;font-family:${HEB_FONT};font-size:20px;line-height:2.1;color:var(--t1);margin-bottom:6px;">${heSegs[i]||''}</p>
-        <p style="font-size:13px;line-height:1.8;color:var(--t2);">${enSegs[i]||''}</p>
-      </div>`;
+      if (lang === 'both') {
+        h += '<div style="padding:12px 0;border-bottom:1px solid var(--border);">'
+           + '<p style="direction:rtl;text-align:right;font-family:' + HEB_FONT + ';font-size:20px;line-height:2.1;color:var(--t1);margin-bottom:6px;">' + (p.heSegs[i]||'') + '</p>'
+           + '<p style="font-size:14px;line-height:1.85;color:var(--t2);">' + (p.enSegs[i]||'') + '</p>'
+           + '</div>';
+      } else if (lang === 'he') {
+        h += '<div style="padding:10px 0;border-bottom:1px solid var(--border);">'
+           + '<p style="direction:rtl;text-align:right;font-family:' + HEB_FONT + ';font-size:20px;line-height:2.1;color:var(--t1);">' + (p.heSegs[i]||'') + '</p>'
+           + '</div>';
+      } else {
+        h += '<div style="padding:10px 0;border-bottom:1px solid var(--border);">'
+           + '<p style="font-size:14px;line-height:1.85;color:var(--t1);">' + (p.enSegs[i]||'') + '</p>'
+           + '</div>';
+      }
     }
-    document.getElementById('personal-chapter-content').innerHTML = v ||
-      '<p style="color:var(--t3);padding:20px 0;">Could not load psalm.</p>';
-  } catch(e) {
-    document.getElementById('personal-chapter-content').innerHTML = '<p style="color:var(--t3);padding:20px 0;">Could not load psalm.</p>';
-  }
+  });
+
+  h += '</div>';
+  el.innerHTML = h;
 }
 
 
@@ -3468,23 +3478,23 @@ function _renderChumashContent() {
         // Verse row
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);">';
         v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:22px;line-height:2.0;color:var(--t1);\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         // One Rashi block per comment — each aligned in two columns
         rashiComments.forEach(rc => {
           v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
           v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
-          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
+          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.1;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
           v += '</div>';
         });
       } else if (lang === 'he') {
         v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:22px;line-height:2.0;color:var(--t1);\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.he) {
             v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
-            v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:15px;line-height:1.9;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
+            v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.1;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
             v += '</div>';
           }
         });
@@ -3835,11 +3845,11 @@ function _renderRambamContent() {
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p style="font-size:15px;line-height:1.85;">' + enMark + en + '</p>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;font-weight:600;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:22px;line-height:2.0;font-weight:600;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;font-weight:600;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:22px;line-height:2.0;font-weight:600;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
@@ -4049,7 +4059,7 @@ function _renderTehillimContent() {
 
     // Flowing prose — all verses in one paragraph, verse number as superscript inline
     const paraStyle = isHe
-      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';font-size:19px;line-height:1.75;font-weight:700;color:var(--t1);'
+      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';font-size:22px;line-height:2.2;font-weight:700;color:var(--t1);'
       : 'font-size:15px;line-height:1.75;color:var(--t1);text-align:justify;';
 
     const verseHTML = verses.map((vText, i) => {
@@ -4227,16 +4237,16 @@ function _renderTanyaContent() {
 
     if (lang === 'both') {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
-      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + (en||'') + '</p>';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
+      v += '<p style="font-size:15px;line-height:2.1;color:var(--t1);">' + (en||'') + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else if (lang === 'he') {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + (en||'') + '</p>';
+      v += '<p style="font-size:15px;line-height:2.1;color:var(--t1);">' + (en||'') + '</p>';
       v += '</div>';
     }
 
