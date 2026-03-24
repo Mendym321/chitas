@@ -10,7 +10,7 @@
 <style>
 @font-face {
   font-family: 'Taamey Frank CLM';
-  src: url('https://cdn.jsdelivr.net/gh/aharonium/fonts@master/Fonts/Hebrew%20Letters%20with%20Vowels%20and%20Cantillation/Culmus%20%28GPL%29/Taamey-Frank%20CLM/TaameyFrankCLM-Medium.ttf') format('truetype');
+  src: url('/fonts/TaameyFrankCLM-Medium.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
 }
@@ -1107,13 +1107,15 @@ async function _renderPersonalPsalms() {
   h += `<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${BLUE};opacity:.7;margin-bottom:14px;">Personal Chapters</p>`;
   people.forEach(p => {
     if (!p.chapter) return;
-    h += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:14px;font-weight:600;color:var(--t1);">${p.label}</span>
-      <button onclick="_openPersonalChapter(${p.chapter},'${p.label.replace(/'/g,'\\'')}','${p.heDay} ${p.heMonth} ${p.heYear}')"
-        style="padding:6px 14px;border-radius:8px;border:none;background:rgba(74,158,255,.12);color:${BLUE};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">
-        Psalm ${p.chapter}
-      </button>
-    </div>`;
+    const safeLabel = p.label.replace(/'/g, '\u2019');
+    const safeDateLabel = p.heDay + ' ' + p.heMonth + ' ' + p.heYear;
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">'
+      + '<span style="font-size:14px;font-weight:600;color:var(--t1);">' + p.label + '</span>'
+      + '<button onclick="_openPersonalChapter(' + p.chapter + ',\'' + safeLabel + '\',\'' + safeDateLabel + '\')"'
+      + ' style="padding:6px 14px;border-radius:8px;border:none;background:rgba(74,158,255,.12);color:' + BLUE + ';font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">'
+      + 'Psalm ' + p.chapter
+      + '</button>'
+      + '</div>';
   });
   // Add people button
   h += `<button onclick="_openTehillimPeopleManager()"
