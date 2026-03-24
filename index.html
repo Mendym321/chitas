@@ -3855,76 +3855,30 @@ async function _loadTanyaNative(sectionId) {
   if (contEl) contEl.style.display = 'none';
 
   try {
-    // Parse ref like "Tanya, Part I; Likkutei Amarim 37:9"
-    function parseTanyaRef(ref) {
-      if (!ref) return null;
-      const m = ref.match(/^(.*?)(\d+):(\d+)$/);
-      if (!m) return null;
-      return { base: m[1].replace(/:$/, '').trim(), chapter: parseInt(m[2]), seg: parseInt(m[3]) };
+    // Build date string MM/DD/YYYY for the viewed day
+    const viewedDay = new Date();
+    viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
+    const mm = String(viewedDay.getMonth()+1).padStart(2,'0');
+    const dd = String(viewedDay.getDate()).padStart(2,'0');
+    const yyyy = viewedDay.getFullYear();
+    const dateStr = mm + '/' + dd + '/' + yyyy;
+
+    // Call our Vercel proxy — fetches + parses Chabad.org server-side
+    const apiUrl = '/api/tanya?date=' + encodeURIComponent(dateStr);
+    const d = await fetch(apiUrl).then(r => r.json()).catch(() => null);
+
+    if (!d || d.error || !d.blocks?.length) {
+      console.warn('Tanya proxy failed:', d?.error);
+      return false;
     }
-
-    async function getCalTanya(date) {
-      const url = 'https://www.sefaria.org/api/calendars?year=' + date.getFullYear()
-        + '&month=' + (date.getMonth()+1) + '&day=' + date.getDate();
-      const d = await fetch(url).then(r => r.json()).catch(() => null);
-      const item = (d?.calendar_items || []).find(i =>
-        (i.title?.en || '').toLowerCase().includes('tanya') ||
-        (i.ref || '').toLowerCase().includes('tanya')
-      );
-      return item?.ref || null;
-    }
-
-    // Use schedule ref if available, else fetch calendar
-    const today = new Date(); today.setDate(today.getDate() + (dayOffset || 0));
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-
-    const todayRef = schedule?.tanya?.sefariaRef || await getCalTanya(today);
-    if (!todayRef) return false;
-
-    const tomorrowRef = await getCalTanya(tomorrow);
-
-    const tp = parseTanyaRef(todayRef);
-    const tn = tomorrowRef ? parseTanyaRef(tomorrowRef) : null;
-    if (!tp) return false;
-
-    const chapterRef = tp.base + ' ' + tp.chapter;
-    const enc = encodeURIComponent(chapterRef);
-
-    // Fetch English (v3) and Hebrew in parallel
-    const [enRes, heRes] = await Promise.all([
-      fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1')
-        .then(r => r.json()).catch(() => null),
-      fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0')
-        .then(r => r.json()).catch(() => null),
-    ]);
-
-    function flatSegs(x) {
-      if (!x) return [];
-      if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
-      if (Array.isArray(x)) return x.flatMap(flatSegs);
-      return [];
-    }
-
-    const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-    const allEn = flatSegs(engVersion?.text || heRes?.text || []);
-    const allHe = flatSegs(heRes?.he || []);
-
-    // Slice to today's portion
-    const segStart = tp.seg - 1;
-    const segEnd = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : allEn.length;
-
-    const enPortion = allEn.slice(segStart, segEnd);
-    const hePortion = allHe.slice(segStart, segEnd);
-
-    if (!enPortion.length && !hePortion.length) return false;
-
-    // Build label e.g. "Likkutei Amarim · Chapter 37"
-    const chapterLabel = tp.base.replace(/^Tanya,?\s*/i, '').replace(/Part\s+[IVX]+;\s*/i, '') + ' · Chapter ' + tp.chapter;
 
     const subEl = document.getElementById('chabad-panel-sub');
-    if (subEl) subEl.textContent = chapterLabel;
+    if (subEl) subEl.textContent = d.title || 'Tanya Yomi';
 
-    window._tanyaData = { en: enPortion, he: hePortion, chapterLabel };
+    window._tanyaData = {
+      blocks: d.blocks,       // [{he, en, lit}, ...]
+      chapterLabel: d.title,
+    };
     _renderTanyaContent();
 
     if (loadEl) loadEl.style.display = 'none';
@@ -3946,17 +3900,19 @@ async function _loadTanyaNative(sectionId) {
 }
 
 function _renderTanyaContent() {
-  const { en, he, chapterLabel } = window._tanyaData || {};
-  if (!en || !en.length) return;
+  const { blocks, chapterLabel } = window._tanyaData || {};
+  if (!blocks || !blocks.length) return;
   const lang = localStorage.getItem('chitas_reader_lang') || 'both';
+  const litOn = localStorage.getItem('chitas_tanya_lit') !== 'off';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
   const HE = "'Noto Serif Hebrew',serif";
   const PURPLE = '#A855F7';
+  const hasLit = blocks.some(b => b.lit);
 
   // Lang toggle
-  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
+  let t = '<div style="display:flex;gap:6px;margin-bottom:12px;">';
   [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
     const a = lang === l;
     t += '<button onclick="_setTanyaLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
@@ -3965,40 +3921,59 @@ function _renderTanyaContent() {
   });
   t += '</div>';
 
+  // Lessons in Tanya toggle — only show if we have commentary
+  if (hasLit) {
+    t += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:8px 12px;background:rgba(168,85,247,.06);border-radius:10px;cursor:pointer;" onclick="_toggleTanyaLit()">'
+      + '<div style="width:32px;height:18px;border-radius:9px;background:' + (litOn ? PURPLE : 'var(--border)') + ';position:relative;transition:background .15s;flex-shrink:0;">'
+      + '<div style="width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;' + (litOn ? 'right:2px;' : 'left:2px;') + 'transition:all .15s;"></div></div>'
+      + '<span style="font-size:12px;font-weight:700;color:' + (litOn ? PURPLE : 'var(--t3)') + ';">Lessons in Tanya</span>'
+      + '</div>';
+  }
+
   // Chapter heading
-  const heading = '<div style="margin-bottom:20px;padding:10px 14px;background:rgba(168,85,247,.07);'
+  const heading = '<div style="margin-bottom:18px;padding:10px 14px;background:rgba(168,85,247,.07);'
     + 'border-left:3px solid ' + PURPLE + ';border-radius:0 8px 8px 0;">'
     + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(168,85,247,.55);margin-bottom:3px;">Tanya</p>'
     + '<p style="font-size:17px;font-weight:800;color:' + PURPLE + ';line-height:1.3;">' + chapterLabel + '</p>'
     + '</div>';
 
-  const maxLen = Math.max(en.length, he ? he.length : 0);
   let v = '';
+  blocks.forEach(({ he, en, lit }) => {
+    if (!he && !en) return;
 
-  for (let i = 0; i < maxLen; i++) {
-    const enT = en[i] || '';
-    const heT = he ? (he[i] || '') : '';
-
-    // Paragraph spacing — no numbers, just breathing room between paragraphs
     if (lang === 'both') {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
-      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + enT + '</p>';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + heT + '</p>';
+      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + (en||'') + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else if (lang === 'he') {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + heT + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + enT + '</p>';
+      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + (en||'') + '</p>';
       v += '</div>';
     }
-  }
+
+    // Lessons in Tanya commentary — shown below each paragraph
+    if (litOn && lit) {
+      v += '<div style="margin-bottom:6px;padding:10px 14px;background:rgba(168,85,247,.05);border-left:2px solid rgba(168,85,247,.3);border-radius:0 6px 6px 0;">'
+        + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:5px;">Lessons in Tanya</p>'
+        + '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + lit + '</p>'
+        + '</div>';
+    }
+  });
 
   el.innerHTML = t + heading + v
     + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s Tanya —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
+function _toggleTanyaLit() {
+  const on = localStorage.getItem('chitas_tanya_lit') !== 'off';
+  localStorage.setItem('chitas_tanya_lit', on ? 'off' : 'on');
+  _renderTanyaContent();
 }
 
 function _setTanyaLang(lang) {
