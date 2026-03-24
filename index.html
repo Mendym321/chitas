@@ -136,6 +136,99 @@
   /* Onboarding input */
   .ob-input { width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--t1);font-size:16px;caret-color:var(--gold);margin-bottom:12px; }
   .ob-input:focus { border-color:var(--gold); }
+
+
+/* ── App loader overlay ── */
+#app-loader {
+  position:fixed;inset:0;z-index:99999;
+  background:var(--bg);
+  display:none;
+  flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:0;
+}
+#app-loader.visible { display:flex; }
+#app-loader.hiding {
+  animation:loaderFadeOut .55s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes loaderFadeOut {
+  0%  { opacity:1; transform:none; }
+  60% { opacity:1; transform:none; }
+  100%{ opacity:0; transform:translateY(-8px); }
+}
+
+/* Hex ring — three concentric rotating arcs */
+.ldr-hex-wrap {
+  position:relative;
+  width:80px;height:80px;
+  margin-bottom:36px;
+}
+.ldr-arc {
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:2px solid transparent;
+}
+.ldr-arc1 {
+  border-top-color:#F0A500;
+  border-right-color:#F0A500;
+  animation:ldrSpin 1.1s linear infinite;
+}
+.ldr-arc2 {
+  inset:10px;
+  border-bottom-color:#A855F7;
+  border-left-color:#A855F7;
+  animation:ldrSpin 1.5s linear infinite reverse;
+}
+.ldr-arc3 {
+  inset:20px;
+  border-top-color:#4A9EFF;
+  animation:ldrSpin .9s linear infinite;
+}
+.ldr-center {
+  position:absolute;
+  inset:28px;
+  border-radius:50%;
+  background:var(--gold);
+  opacity:.15;
+  animation:ldrPulse 1.1s ease-in-out infinite;
+}
+@keyframes ldrSpin  { to { transform:rotate(360deg); } }
+@keyframes ldrPulse { 0%,100%{opacity:.1;} 50%{opacity:.3;} }
+
+/* Label */
+.ldr-label {
+  font-family:'DM Sans',sans-serif;
+  font-size:11px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;
+  color:var(--t3);
+  animation:ldrLabel 2.4s ease-in-out infinite;
+}
+@keyframes ldrLabel {
+  0%,100%{opacity:.4;}
+  50%{opacity:.9;}
+}
+
+/* Section pills animate in */
+.ldr-pills {
+  display:flex;gap:6px;margin-top:20px;
+}
+.ldr-pill {
+  height:3px;border-radius:99px;
+  background:var(--border);
+  overflow:hidden;
+}
+.ldr-pill span {
+  display:block;height:100%;border-radius:99px;
+  transform:translateX(-100%);
+}
+.ldr-pill.filling span { animation:ldrFill 1.8s ease-in-out infinite; }
+@keyframes ldrFill {
+  0%   { transform:translateX(-100%); }
+  40%  { transform:translateX(0%);    }
+  70%  { transform:translateX(0%);    }
+  100% { transform:translateX(100%);  }
+}
 </style>
 <!-- Firebase SDK -->
 <script type="module">
@@ -235,6 +328,23 @@ onAuthStateChanged(auth, user => {
 </script>
 </head>
 <body>
+<div id="app-loader" role="status" aria-label="Loading">
+  <div class="ldr-hex-wrap">
+    <div class="ldr-arc ldr-arc1"></div>
+    <div class="ldr-arc ldr-arc2"></div>
+    <div class="ldr-arc ldr-arc3"></div>
+    <div class="ldr-center"></div>
+  </div>
+  <p class="ldr-label">Loading</p>
+  <div class="ldr-pills">
+    <div class="ldr-pill filling" style="width:28px;"><span style="background:#F0A500;"></span></div>
+    <div class="ldr-pill filling" style="width:28px;animation-delay:.3s;"><span style="background:#4A9EFF;animation-delay:.3s;"></span></div>
+    <div class="ldr-pill filling" style="width:28px;animation-delay:.6s;"><span style="background:#A855F7;animation-delay:.6s;"></span></div>
+    <div class="ldr-pill filling" style="width:28px;animation-delay:.9s;"><span style="background:#1DB954;animation-delay:.9s;"></span></div>
+  </div>
+</div>
+
+
 <div id="app">
 <div class="ob-bg-glow" id="ob-bg-glow"></div>
 
@@ -1143,11 +1253,30 @@ async function _buildPersonalPsalms() {
 }
 
 // Render personal psalms section (called after main tehillim render)
+// Generation counter — cancels stale renders when reader reopens
+let _personalPsalmsGen = 0;
+
 async function _renderPersonalPsalms() {
-  const el = document.getElementById('tehillim-personal');
-  if (!el) return;
+  // Increment generation — any previous in-flight render will bail when it checks
+  const myGen = ++_personalPsalmsGen;
+
+  // Wait for the div to exist (renderTehillimContent must have run first)
+  let el = document.getElementById('tehillim-personal');
+  if (!el) {
+    // Poll briefly — it should appear within a frame or two
+    for (let i = 0; i < 20; i++) {
+      await new Promise(r => setTimeout(r, 50));
+      el = document.getElementById('tehillim-personal');
+      if (el) break;
+    }
+    if (!el) return;
+  }
+
+  if (myGen !== _personalPsalmsGen) return; // stale
   el.innerHTML = '<p style="font-size:11px;color:var(--t3);text-align:center;padding:16px 0;">Loading personal chapters…</p>';
+
   const people = await _buildPersonalPsalms();
+  if (myGen !== _personalPsalmsGen) return; // stale
   if (!people.length) { el.innerHTML = ''; return; }
 
   const BLUE = '#4A9EFF';
@@ -1171,15 +1300,20 @@ async function _renderPersonalPsalms() {
       return { ...p, heSegs: flat(d.he||[]), enSegs: flat(d.text||[]) };
     } catch(e) { return { ...p, heSegs: [], enSegs: [] }; }
   }));
+  if (myGen !== _personalPsalmsGen) return; // stale — reader was closed
 
   psalmResults.forEach(p => {
     if (!p) return;
     const isHe = lang === 'he';
 
-    // Chapter heading — same style as main Tehillim reader
-    h += '<div style="margin-bottom:14px;padding:10px 14px;background:rgba(74,158,255,.07);border-left:3px solid ' + BLUE + ';border-radius:0 8px 8px 0;">'
-       + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(74,158,255,.6);margin-bottom:2px;">' + p.label + '</p>'
-       + '<p style="font-size:17px;font-weight:800;color:' + BLUE + ';">Psalm ' + p.chapter + '</p>'
+    // Chapter heading — plain psalm heading, same as main Tehillim
+    const pHeadText = isHe
+      ? '\u05E4\u05E8\u05E7 ' + _toHebrewNumeral(p.chapter) + ' \u2013 ' + p.label
+      : 'Psalm ' + p.chapter + ' \u2013 ' + p.label;
+    const pHeadAlign = isHe ? 'text-align:right;direction:rtl;' : '';
+    const pHeadFont = isHe ? 'font-family:' + HE + ';' : '';
+    h += '<div style="margin-top:20px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);' + pHeadAlign + '">'
+       + '<span style="font-size:15px;font-weight:700;color:' + BLUE + ';' + pHeadFont + '">' + pHeadText + '</span>'
        + '</div>';
 
     // Psalm heading
@@ -1192,7 +1326,7 @@ async function _renderPersonalPsalms() {
     // Flowing prose — same style as main Tehillim
     const verses = isHe ? p.heSegs : p.enSegs;
     const paraStyle = isHe
-      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';font-size:22px;line-height:2.2;font-weight:700;color:var(--t1);'
+      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';font-size:18px;line-height:2.2;font-weight:400;color:var(--t1);'
       : 'font-size:15px;line-height:1.75;color:var(--t1);text-align:justify;';
 
     if (verses.length) {
@@ -1209,7 +1343,10 @@ async function _renderPersonalPsalms() {
   });
 
   h += '</div>';
-  el.innerHTML = h;
+  if (myGen !== _personalPsalmsGen) return; // final stale check
+  // Re-get el in case DOM was rebuilt
+  const freshEl = document.getElementById('tehillim-personal');
+  if (freshEl) freshEl.innerHTML = h;
 }
 
 // ── Tehillim people manager ───────────────────────────────────────────────────
@@ -1389,6 +1526,7 @@ function obStart() {
   saveUser();
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
+  showLoaderSafe();
   init();
 }
 
@@ -1570,7 +1708,10 @@ async function init() {
     window._todaySchedule = JSON.parse(JSON.stringify(schedule));
 
     renderSectionsForOffset(dateISO(new Date()));
+    hideLoader();
   } catch(e) {
+    hideLoader();
+    hideSplash();
     document.getElementById('skeletons').style.display = 'none';
     document.getElementById('api-error').style.display = 'flex';
     document.getElementById('progress-title').textContent = 'Schedule unavailable';
@@ -3573,23 +3714,23 @@ function _renderChumashContent() {
         // Verse row
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);">';
         v += '<p style="font-size:16px;line-height:1.85;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:22px;line-height:2.0;color:var(--t1);\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         // One Rashi block per comment — each aligned in two columns
         rashiComments.forEach(rc => {
           v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
           v += '<p style="font-size:13.5px;line-height:1.65;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
-          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.1;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
+          v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:2.1;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
           v += '</div>';
         });
       } else if (lang === 'he') {
         v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:22px;line-height:2.0;color:var(--t1);\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);\">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.he) {
             v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
-            v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.1;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
+            v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:2.1;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
             v += '</div>';
           }
         });
@@ -3940,11 +4081,11 @@ function _renderRambamContent() {
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p style="font-size:15px;line-height:1.85;">' + enMark + en + '</p>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:22px;line-height:2.0;font-weight:600;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:22px;line-height:2.0;font-weight:600;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
@@ -4154,7 +4295,7 @@ function _renderTehillimContent() {
 
     // Flowing prose — all verses in one paragraph, verse number as superscript inline
     const paraStyle = isHe
-      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';font-size:22px;line-height:2.2;font-weight:700;color:var(--t1);'
+      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';font-size:18px;line-height:2.2;font-weight:400;color:var(--t1);'
       : 'font-size:15px;line-height:1.75;color:var(--t1);text-align:justify;';
 
     const verseHTML = verses.map((vText, i) => {
@@ -4333,11 +4474,11 @@ function _renderTanyaContent() {
     if (lang === 'both') {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
       v += '<p style="font-size:15px;line-height:2.1;color:var(--t1);">' + (en||'') + '</p>';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else if (lang === 'he') {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
@@ -5048,6 +5189,30 @@ function switchTab(id) {
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 // Wait for Firebase auth to be ready, then decide what to show
+
+
+// ── App loader ────────────────────────────────────────────────────────────────
+function showLoader() {
+  const el = document.getElementById('app-loader');
+  if (!el) return;
+  el.classList.remove('hiding');
+  el.classList.add('visible');
+}
+function hideLoader() {
+  const el = document.getElementById('app-loader');
+  if (!el || !el.classList.contains('visible')) return;
+  el.classList.add('hiding');
+  setTimeout(() => {
+    el.classList.remove('visible', 'hiding');
+  }, 580);
+}
+// Safety: never stuck
+let _loaderSafetyTimer = null;
+function showLoaderSafe() {
+  showLoader();
+  clearTimeout(_loaderSafetyTimer);
+  _loaderSafetyTimer = setTimeout(hideLoader, 8000);
+}
 function bootApp() {
   // Show app immediately from localStorage if we have a local user.
   // This avoids a blank screen while Firebase auth resolves.
@@ -5117,6 +5282,7 @@ function bootApp() {
       try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
       document.getElementById('onboarding').style.display = 'none';
       document.getElementById('main-app').style.display = 'block';
+      showLoaderSafe();
       if (typeof init === 'function') init();
 
     } else {
@@ -5129,6 +5295,7 @@ function bootApp() {
         saveUser();
         document.getElementById('onboarding').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
+        showLoaderSafe();
         if (typeof init === 'function') init();
       }
       // else: genuinely new user — onboarding screen stays visible
@@ -5146,6 +5313,8 @@ function bootApp() {
   };
   tryRegister();
 }
+
+
 bootApp();
 </script>
 </body>
