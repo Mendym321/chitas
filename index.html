@@ -3875,7 +3875,11 @@ async function _loadTanyaNative(sectionId) {
     const today = new Date(); today.setDate(today.getDate() + (dayOffset || 0));
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
 
-    const todayRef = schedule?.tanya?.sefariaRef || await getCalTanya(today);
+    // For today (dayOffset === 0) use the cached schedule ref to avoid an extra fetch.
+    // For past days, always fetch from the calendar — schedule.sefariaRef holds today's ref.
+    const todayRef = (dayOffset === 0 && schedule?.tanya?.sefariaRef)
+      ? schedule.tanya.sefariaRef
+      : await getCalTanya(today);
     if (!todayRef) return false;
 
     const tomorrowRef = await getCalTanya(tomorrow);
