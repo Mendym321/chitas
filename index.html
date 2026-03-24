@@ -784,7 +784,7 @@ function letterAvatar(name, size=32, fontSize=14) {
     font-size:${fontSize}px;font-weight:800;color:${fg};flex-shrink:0;font-family:'DM Sans',sans-serif;">${letter}</div>`;
 }
 
-const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{}};
+const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{},tehillimPeople:[]};
 let user = (() => {
   try {
     // Try current key first
@@ -1045,6 +1045,227 @@ function obNext2() {
   document.getElementById('ob-step2').style.display = 'none';
   document.getElementById('ob-step3').style.display = 'block';
   buildTrackOptions();
+}
+
+
+// ── Tehillim personal chapter helpers ────────────────────────────────────────
+const HEB_MONTHS = ['Nissan','Iyar','Sivan','Tammuz','Av','Elul','Tishrei','Cheshvan','Kislev','Tevet','Shevat','Adar','Adar II'];
+
+// Fixed people always shown
+const TEHILLIM_FIXED = [
+  { label: 'Rebbe', heDay: 11, heMonth: 'Nissan', heYear: 5662 },
+  { label: 'Rebbetzin', heDay: 25, heMonth: 'Cheshvan', heYear: 5661 },
+];
+
+function _hebMonthNum(m) { return HEB_MONTHS.indexOf(m) + 1; }
+
+async function _calcTehillimChapter(person) {
+  // Fetch today's Hebrew date from Hebcal
+  const today = new Date();
+  const url = `https://www.hebcal.com/converter?cfg=json&gy=${today.getFullYear()}&gm=${today.getMonth()+1}&gd=${today.getDate()}&g2h=1`;
+  try {
+    const d = await fetch(url).then(r => r.json());
+    const todayHebYear = d.hy;
+    const todayHebMonth = d.hm; // e.g. "Nissan"
+    const todayHebDay = d.hd;
+
+    // Age calculation: years since birth
+    let age = todayHebYear - person.heYear;
+    // Has birthday passed this Hebrew year?
+    const birthMonthNum = _hebMonthNum(person.heMonth);
+    const todayMonthNum = _hebMonthNum(todayHebMonth);
+    const birthdayPassedThisYear =
+      todayMonthNum > birthMonthNum ||
+      (todayMonthNum === birthMonthNum && todayHebDay >= person.heDay);
+    if (!birthdayPassedThisYear) age--;
+    // Chapter = current year of life = age + 1
+    const chapter = age + 1;
+    return Math.max(1, Math.min(chapter, 150));
+  } catch(e) {
+    console.error('Tehillim chapter calc error:', e);
+    return null;
+  }
+}
+
+async function _buildPersonalPsalms() {
+  const people = [...TEHILLIM_FIXED, ...(user.tehillimPeople || [])];
+  const results = await Promise.all(people.map(async p => ({
+    ...p,
+    chapter: await _calcTehillimChapter(p)
+  })));
+  return results;
+}
+
+// Render personal psalms section (called after main tehillim render)
+async function _renderPersonalPsalms() {
+  const el = document.getElementById('tehillim-personal');
+  if (!el) return;
+  el.innerHTML = '<p style="font-size:11px;color:var(--t3);text-align:center;padding:12px 0;">Calculating personal chapters…</p>';
+  const people = await _buildPersonalPsalms();
+  const BLUE = '#4A9EFF';
+  let h = `<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">`;
+  h += `<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${BLUE};opacity:.7;margin-bottom:14px;">Personal Chapters</p>`;
+  people.forEach(p => {
+    if (!p.chapter) return;
+    h += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:14px;font-weight:600;color:var(--t1);">${p.label}</span>
+      <button onclick="_openPersonalChapter(${p.chapter},'${p.label.replace(/'/g,'\\'')}','${p.heDay} ${p.heMonth} ${p.heYear}')"
+        style="padding:6px 14px;border-radius:8px;border:none;background:rgba(74,158,255,.12);color:${BLUE};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">
+        Psalm ${p.chapter}
+      </button>
+    </div>`;
+  });
+  // Add people button
+  h += `<button onclick="_openTehillimPeopleManager()"
+    style="width:100%;margin-top:14px;padding:10px;border-radius:10px;border:1.5px dashed var(--border);background:transparent;color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+    + Manage personal chapters
+  </button>`;
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+// Open a personal chapter in a mini reader
+async function _openPersonalChapter(chapterNum, label, dateLabel) {
+  const BLUE = '#4A9EFF';
+  const HEB_FONT = "'Taamey Frank CLM','Noto Serif Hebrew',serif";
+
+  const modal = document.createElement('div');
+  modal.id = 'personal-chapter-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML = `<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:85vh;display:flex;flex-direction:column;padding:0 0 env(safe-area-inset-bottom);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;">
+      <div>
+        <p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${BLUE};opacity:.7;">${label}</p>
+        <p style="font-size:18px;font-weight:800;color:var(--t1);">Psalm ${chapterNum}</p>
+        <p style="font-size:11px;color:var(--t3);">${dateLabel}</p>
+      </div>
+      <button onclick="document.getElementById('personal-chapter-modal').remove()" style="background:var(--card);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;color:var(--t2);">×</button>
+    </div>
+    <div id="personal-chapter-content" style="overflow-y:auto;padding:0 20px 20px;flex:1;font-size:11px;color:var(--t3);text-align:center;">Loading…</div>
+  </div>`;
+  document.body.appendChild(modal);
+
+  try {
+    const d = await fetch('https://www.sefaria.org/api/texts/Psalms.' + chapterNum + '?context=0&commentary=0').then(r => r.json());
+    function flatSegs(x) {
+      if (!x) return [];
+      if (typeof x === 'string') return [_cleanHtml(x)].filter(Boolean);
+      if (Array.isArray(x)) return x.flatMap(flatSegs);
+      return [];
+    }
+    const heSegs = flatSegs(d.he || []);
+    const enSegs = flatSegs(d.text || []);
+    let v = '';
+    const maxLen = Math.max(heSegs.length, enSegs.length);
+    for (let i = 0; i < maxLen; i++) {
+      v += `<div style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <p style="direction:rtl;text-align:right;font-family:${HEB_FONT};font-size:20px;line-height:2.1;color:var(--t1);margin-bottom:6px;">${heSegs[i]||''}</p>
+        <p style="font-size:13px;line-height:1.8;color:var(--t2);">${enSegs[i]||''}</p>
+      </div>`;
+    }
+    document.getElementById('personal-chapter-content').innerHTML = v ||
+      '<p style="color:var(--t3);padding:20px 0;">Could not load psalm.</p>';
+  } catch(e) {
+    document.getElementById('personal-chapter-content').innerHTML = '<p style="color:var(--t3);padding:20px 0;">Could not load psalm.</p>';
+  }
+}
+
+
+// ── Tehillim people manager ───────────────────────────────────────────────────
+function _openTehillimPeopleManager() {
+  const existing = document.getElementById('tehillim-people-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'tehillim-people-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+
+  const BLUE = '#4A9EFF';
+  const people = user.tehillimPeople || [];
+
+  function renderList() {
+    const listEl = document.getElementById('tpm-list');
+    if (!listEl) return;
+    if (!people.length) {
+      listEl.innerHTML = '<p style="font-size:13px;color:var(--t3);text-align:center;padding:12px 0;">No people added yet.</p>';
+      return;
+    }
+    listEl.innerHTML = people.map((p, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <p style="font-size:14px;font-weight:600;color:var(--t1);">${p.label}</p>
+          <p style="font-size:11px;color:var(--t3);">${p.heDay} ${p.heMonth} ${p.heYear}</p>
+        </div>
+        <button onclick="_deleteTehillimPerson(${i})" style="background:rgba(255,71,87,.1);border:none;border-radius:8px;padding:6px 12px;color:#FF4757;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Remove</button>
+      </div>`).join('');
+  }
+
+  const monthOpts = ['Nissan','Iyar','Sivan','Tammuz','Av','Elul','Tishrei','Cheshvan','Kislev','Tevet','Shevat','Adar','Adar II']
+    .map(m => `<option value="${m}">${m}</option>`).join('');
+  const dayOpts = Array.from({length:30},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+  const curYear = new Date().getFullYear();
+  // Hebrew year range: ~5700 (1939) to today + 1
+  const hebYearStart = 5700;
+  const hebYearEnd = Math.round((curYear + 3761));
+  let yearOpts = '';
+  for (let y = hebYearEnd; y >= hebYearStart; y--) yearOpts += `<option value="${y}">${y}</option>`;
+
+  const sel = (id, opts, style='') =>
+    `<select id="${id}" style="flex:1;padding:8px 6px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--t1);font-family:inherit;font-size:13px;${style}">${opts}</select>`;
+
+  modal.innerHTML = `<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:88vh;display:flex;flex-direction:column;padding:0 0 env(safe-area-inset-bottom);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid var(--border);">
+      <p style="font-size:17px;font-weight:800;color:var(--t1);">Personal Tehillim</p>
+      <button onclick="document.getElementById('tehillim-people-modal').remove()" style="background:var(--card);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;color:var(--t2);">×</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:16px 20px;">
+      <p style="font-size:12px;color:var(--t3);margin-bottom:14px;">Add family members. Each person's daily Tehillim chapter is calculated from their Hebrew birthday (age + 1).</p>
+      <!-- Existing people -->
+      <div id="tpm-list"></div>
+      <!-- Add new person form -->
+      <div style="margin-top:18px;padding:16px;background:var(--card);border-radius:12px;border:1px solid var(--border);">
+        <p style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:12px;">Add person</p>
+        <input id="tpm-label" type="text" placeholder="Name or relationship (e.g. Devorah, Spouse)" maxlength="30"
+          style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:14px;margin-bottom:10px;">
+        <p style="font-size:11px;color:var(--t3);margin-bottom:6px;">Hebrew birthday</p>
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          ${sel('tpm-day', dayOpts)}
+          ${sel('tpm-month', monthOpts)}
+          ${sel('tpm-year', yearOpts)}
+        </div>
+        <button onclick="_addTehillimPerson()"
+          style="width:100%;padding:11px;border-radius:10px;border:none;background:${BLUE};color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;">
+          Add
+        </button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  renderList();
+}
+
+function _addTehillimPerson() {
+  const label = document.getElementById('tpm-label')?.value.trim();
+  const heDay = parseInt(document.getElementById('tpm-day')?.value);
+  const heMonth = document.getElementById('tpm-month')?.value;
+  const heYear = parseInt(document.getElementById('tpm-year')?.value);
+  if (!label) { alert('Please enter a name or label.'); return; }
+  if (!heDay || !heMonth || !heYear) { alert('Please select a complete Hebrew birthday.'); return; }
+  if (!user.tehillimPeople) user.tehillimPeople = [];
+  user.tehillimPeople.push({ label, heDay, heMonth, heYear });
+  saveUser();
+  document.getElementById('tehillim-people-modal')?.remove();
+  // Re-render personal psalms section
+  _renderPersonalPsalms();
+}
+
+function _deleteTehillimPerson(idx) {
+  if (!user.tehillimPeople) return;
+  user.tehillimPeople.splice(idx, 1);
+  saveUser();
+  // Re-render modal list
+  _openTehillimPeopleManager();
+  _renderPersonalPsalms();
 }
 
 function obStart() {
@@ -3741,6 +3962,9 @@ async function _loadTehillimNative(sectionId) {
     if (loadEl) loadEl.style.display = 'none';
     if (contEl) contEl.style.display = 'block';
 
+    // Render personal psalms section async (non-blocking)
+    _renderPersonalPsalms();
+
     // Restore scroll position
     const saved = _getSavedScrollPos('tehillim');
     if (saved > 0) {
@@ -3837,7 +4061,7 @@ function _renderTehillimContent() {
   });
 
   el.innerHTML = t + topHeading + v
-    + '<div style="margin-top:28px;border-top:1px solid var(--border);padding-bottom:4px;"></div>'
+    + '<div id="tehillim-personal"></div>'
     + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:12px;padding-bottom:8px;">— End of today\'s Tehillim —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
