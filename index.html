@@ -145,89 +145,68 @@
   display:none;
   flex-direction:column;
   align-items:center;justify-content:center;
-  gap:0;
 }
 #app-loader.visible { display:flex; }
-#app-loader.hiding {
-  animation:loaderFadeOut .55s cubic-bezier(.4,0,.2,1) forwards;
-}
-@keyframes loaderFadeOut {
-  0%  { opacity:1; transform:none; }
-  60% { opacity:1; transform:none; }
-  100%{ opacity:0; transform:translateY(-8px); }
+#app-loader.hiding  { animation:ldrOut .6s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes ldrOut {
+  0%   { opacity:1; transform:none; }
+  100% { opacity:0; transform:translateY(-10px); }
 }
 
-/* Hex ring — three concentric rotating arcs */
-.ldr-hex-wrap {
+/* Book SVG fill animation */
+.ldr-book-wrap {
   position:relative;
-  width:80px;height:80px;
-  margin-bottom:36px;
+  width:64px;height:64px;
+  margin-bottom:40px;
 }
-.ldr-arc {
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  border:2px solid transparent;
+.ldr-book-wrap svg { overflow:visible; }
+/* Clip path fills from bottom */
+.ldr-fill-rect {
+  animation: ldrBookFill 2.2s ease-in-out infinite;
+  transform-origin: bottom center;
 }
-.ldr-arc1 {
-  border-top-color:#F0A500;
-  border-right-color:#F0A500;
-  animation:ldrSpin 1.1s linear infinite;
-}
-.ldr-arc2 {
-  inset:10px;
-  border-bottom-color:#A855F7;
-  border-left-color:#A855F7;
-  animation:ldrSpin 1.5s linear infinite reverse;
-}
-.ldr-arc3 {
-  inset:20px;
-  border-top-color:#4A9EFF;
-  animation:ldrSpin .9s linear infinite;
-}
-.ldr-center {
-  position:absolute;
-  inset:28px;
-  border-radius:50%;
-  background:var(--gold);
-  opacity:.15;
-  animation:ldrPulse 1.1s ease-in-out infinite;
-}
-@keyframes ldrSpin  { to { transform:rotate(360deg); } }
-@keyframes ldrPulse { 0%,100%{opacity:.1;} 50%{opacity:.3;} }
-
-/* Label */
-.ldr-label {
-  font-family:'DM Sans',sans-serif;
-  font-size:11px;font-weight:700;
-  letter-spacing:.18em;text-transform:uppercase;
-  color:var(--t3);
-  animation:ldrLabel 2.4s ease-in-out infinite;
-}
-@keyframes ldrLabel {
-  0%,100%{opacity:.4;}
-  50%{opacity:.9;}
+@keyframes ldrBookFill {
+  0%   { transform:scaleY(0); opacity:.7; }
+  55%  { transform:scaleY(1); opacity:1;  }
+  85%  { transform:scaleY(1); opacity:1;  }
+  100% { transform:scaleY(0); opacity:.7; }
 }
 
-/* Section pills animate in */
-.ldr-pills {
-  display:flex;gap:6px;margin-top:20px;
-}
-.ldr-pill {
-  height:3px;border-radius:99px;
-  background:var(--border);
+/* Tagline rotator */
+.ldr-lines {
+  height:20px;
   overflow:hidden;
+  position:relative;
+  margin-bottom:0;
 }
-.ldr-pill span {
-  display:block;height:100%;border-radius:99px;
-  transform:translateX(-100%);
+.ldr-line {
+  position:absolute;left:0;right:0;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:600;
+  color:var(--t2);
+  text-align:center;
+  letter-spacing:.04em;
+  opacity:0;
+  transform:translateY(12px);
+  animation:ldrLine 8.4s ease-in-out infinite;
 }
-.ldr-pill.filling span { animation:ldrFill 1.8s ease-in-out infinite; }
-@keyframes ldrFill {
-  0%   { transform:translateX(-100%); }
-  40%  { transform:translateX(0%);    }
-  70%  { transform:translateX(0%);    }
-  100% { transform:translateX(100%);  }
+.ldr-line:nth-child(2) { animation-delay:2.8s; }
+.ldr-line:nth-child(3) { animation-delay:5.6s; }
+@keyframes ldrLine {
+  0%,100%      { opacity:0; transform:translateY(12px); }
+  8%,30%       { opacity:1; transform:translateY(0);    }
+  37%          { opacity:0; transform:translateY(-10px);}
+}
+
+/* Wordmark below */
+.ldr-wordmark {
+  font-family:'DM Sans',sans-serif;
+  font-size:11px;font-weight:800;
+  letter-spacing:.22em;text-transform:uppercase;
+  color:var(--t3);
+  position:absolute;
+  bottom:52px;left:0;right:0;
+  text-align:center;
 }
 
 /* main-app is invisible until loader dismisses */
@@ -333,19 +312,36 @@ onAuthStateChanged(auth, user => {
 </head>
 <body>
 <div id="app-loader" role="status" aria-label="Loading">
-  <div class="ldr-hex-wrap">
-    <div class="ldr-arc ldr-arc1"></div>
-    <div class="ldr-arc ldr-arc2"></div>
-    <div class="ldr-arc ldr-arc3"></div>
-    <div class="ldr-center"></div>
+  <!-- Book fills from bottom, then empties, loops -->
+  <div class="ldr-book-wrap">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+      <defs>
+        <clipPath id="ldr-clip">
+          <rect x="0" y="0" width="24" height="24"/>
+        </clipPath>
+      </defs>
+      <!-- Fill layer — gold, animates scaleY from bottom -->
+      <g clip-path="url(#ldr-clip)">
+        <rect class="ldr-fill-rect" x="3" y="2" width="18" height="22" rx="2"
+          fill="#F0A500" opacity=".18"/>
+      </g>
+      <!-- Book outline on top -->
+      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="#F0A500" stroke-width="1.6" fill="none"/>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="#F0A500" stroke-width="1.6" fill="none"/>
+      <!-- Lines inside book -->
+      <path d="M8 7h8M8 10.5h8M8 14h5" stroke="#F0A500" stroke-width="1.2" opacity=".5" stroke-linecap="round"/>
+    </svg>
   </div>
-  <p class="ldr-label">Loading</p>
-  <div class="ldr-pills">
-    <div class="ldr-pill filling" style="width:28px;"><span style="background:#F0A500;"></span></div>
-    <div class="ldr-pill filling" style="width:28px;animation-delay:.3s;"><span style="background:#4A9EFF;animation-delay:.3s;"></span></div>
-    <div class="ldr-pill filling" style="width:28px;animation-delay:.6s;"><span style="background:#A855F7;animation-delay:.6s;"></span></div>
-    <div class="ldr-pill filling" style="width:28px;animation-delay:.9s;"><span style="background:#1DB954;animation-delay:.9s;"></span></div>
+
+  <!-- Rotating taglines -->
+  <div class="ldr-lines">
+    <p class="ldr-line">Learning awaits</p>
+    <p class="ldr-line">Every day counts</p>
+    <p class="ldr-line">Your learning, your streak</p>
   </div>
+
+  <!-- Bottom wordmark -->
+  <p class="ldr-wordmark">Chitas Daily</p>
 </div>
 
 
@@ -4235,21 +4231,18 @@ async function _loadTehillimNative(sectionId) {
     if (loadEl) loadEl.style.display = 'none';
     if (contEl) contEl.style.display = 'block';
 
-    // Render personal psalms section async (non-blocking)
-    _renderPersonalPsalms();
-
-    // Restore scroll position
-    const saved = _getSavedScrollPos('tehillim');
-    if (saved > 0) {
-      setTimeout(() => {{
-        const reader = document.getElementById('native-reader');
-        if (reader && reader.scrollHeight > saved) {{
-          reader.scrollTop = saved;
-        }} else if (reader) {{
-          requestAnimationFrame(() => {{ reader.scrollTop = saved; }});
-        }}
-      }}, 80);
-    }
+    // Restore scroll position AFTER personal psalms have loaded
+    // so the saved position is reachable even if it's in the personal section
+    const _tehSaved = _getSavedScrollPos('tehillim');
+    _renderPersonalPsalms().then(() => {
+      if (_tehSaved > 0) {
+        // Small delay for DOM to settle after personal psalms render
+        setTimeout(() => {
+          const reader = document.getElementById('native-reader');
+          if (reader) reader.scrollTop = _tehSaved;
+        }, 80);
+      }
+    });
     return true;
 
   } catch(e) {
