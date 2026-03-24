@@ -10,7 +10,7 @@
 <style>
 @font-face {
   font-family: 'Taamey Frank CLM';
-  src: url('https://cdn.jsdelivr.net/gh/Sefaria/Sefaria-Project@master/static/fonts/Taamey-Frank/TTF/TaameyFrankCLM-Medium.ttf') format('truetype');
+  src: url('https://cdn.jsdelivr.net/gh/aharonium/fonts@master/Fonts/Hebrew%20Letters%20with%20Vowels%20and%20Cantillation/Culmus%20%28GPL%29/Taamey-Frank%20CLM/TaameyFrankCLM-Medium.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
 }
@@ -3186,7 +3186,7 @@ async function _fetchChumashText(ref, keyword){
 function _renderChumashContent() {
   const { torahChunks, rashiMap } = window._chumashData || {};
   if (!torahChunks || !torahChunks.length) return;
-  const lang = localStorage.getItem('chitas_reader_lang') || 'both';
+  const lang = localStorage.getItem('chitas_lang_chumash') || 'both';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
@@ -3361,7 +3361,7 @@ async function _loadChumashNative(sectionId) {
 }
 
 function _setChumashLang(lang) {
-  localStorage.setItem('chitas_reader_lang', lang);
+  localStorage.setItem('chitas_lang_chumash', lang);
   _renderChumashContent();
 }
 
@@ -3537,7 +3537,7 @@ async function _fetchRambamChapter(ref) {
 function _renderRambamContent() {
   const { chapters } = window._rambamData || {};
   if (!chapters || !chapters.length) return;
-  const lang = localStorage.getItem('chitas_reader_lang') || 'both';
+  const lang = localStorage.getItem('chitas_lang_rambam') || 'both';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
@@ -3632,7 +3632,7 @@ function _renderRambamContent() {
 }
 
 function _setRambamLang(lang) {
-  localStorage.setItem('chitas_reader_lang', lang);
+  localStorage.setItem('chitas_lang_rambam', lang);
   _renderRambamContent();
 }
 
@@ -3777,7 +3777,7 @@ function _toHebrewNumeral(n) {
 function _renderTehillimContent() {
   const { chapters, psalmLabel, dayNum } = window._tehillimData || {};
   if (!chapters || !chapters.length) return;
-  const lang = localStorage.getItem('chitas_reader_lang') || 'he';
+  const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
@@ -3843,7 +3843,7 @@ function _renderTehillimContent() {
 }
 
 function _setTehillimLang(lang) {
-  localStorage.setItem('chitas_reader_lang', lang);
+  localStorage.setItem('chitas_lang_tehillim', lang);
   _renderTehillimContent();
 }
 
@@ -3960,7 +3960,7 @@ async function _loadTanyaNative(sectionId) {
 function _renderTanyaContent() {
   const { blocks, chapterLabel } = window._tanyaData || {};
   if (!blocks || !blocks.length) return;
-  const lang = localStorage.getItem('chitas_reader_lang') || 'both';
+  const lang = localStorage.getItem('chitas_lang_tanya') || 'both';
   const litOn = localStorage.getItem('chitas_tanya_lit') !== 'off';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
@@ -4035,7 +4035,7 @@ function _toggleTanyaLit() {
 }
 
 function _setTanyaLang(lang) {
-  localStorage.setItem('chitas_reader_lang', lang);
+  localStorage.setItem('chitas_lang_tanya', lang);
   _renderTanyaContent();
 }
 
