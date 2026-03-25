@@ -1,25 +1,80 @@
 /**
  * Vercel Serverless Function: /api/tanya-enhance
  *
- * Fetches a Tanya chapter from Sefaria, slices to today's portion,
- * then uses Claude Haiku to re-segment Hebrew + English into properly
- * aligned paragraph pairs.
+ * Permanent cache strategy:
+ * 1. Check Firestore for cached aligned blocks (key: ref|segStart|segEnd)
+ * 2. If found → return immediately (zero latency, zero cost)
+ * 3. If not → fetch from Sefaria, align with Claude Haiku, store in Firestore, return
+ *
+ * This builds a permanent library over time. ~150 total portions in the annual
+ * Tanya cycle. Once all generated (~$1.50 total), every request is free forever.
+ *
+ * Setup required in Vercel environment variables:
+ *   ANTHROPIC_API_KEY     — your Anthropic key
+ *   FIREBASE_PROJECT_ID   — "chitas-daily"
+ *   FIREBASE_CLIENT_EMAIL — from Firebase service account JSON
+ *   FIREBASE_PRIVATE_KEY  — from Firebase service account JSON (with \n preserved)
+ *
+ * To get service account: Firebase Console → Project Settings → Service Accounts
+ * → Generate new private key → download JSON → copy the three fields above
  *
  * GET /api/tanya-enhance?ref=Tanya%2C+Part+I%3B+Likkutei+Amarim+1&segStart=0&segEnd=3
- *
- * - ref:      Full Sefaria chapter ref (e.g. "Tanya, Part I; Likkutei Amarim 1")
- * - segStart: 0-based index of first segment (tp.seg - 1)
- * - segEnd:   0-based index end exclusive (tn.seg - 1), omit = end of chapter
- *
- * Returns: { ref, segStart, segEnd, blocks: [{ he, en }] }
- *
- * Cached at Vercel edge for 30 days.
- * Cost: ~$0.003–0.01 per unique daily portion via Claude Haiku.
  */
 
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const SEFARIA = 'https://www.sefaria.org';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore }                  from 'firebase-admin/firestore';
 
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+const SEFARIA       = 'https://www.sefaria.org';
+
+// ── Firebase Admin init (singleton) ───────────────────────────────────────────
+function getDb() {
+  if (!getApps().length) {
+    initializeApp({
+      credential: cert({
+        projectId:   process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey:  (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+      }),
+    });
+  }
+  return getFirestore();
+}
+
+// ── Cache helpers ──────────────────────────────────────────────────────────────
+function cacheKey(ref, segStart, segEnd) {
+  // Stable key — same portion always maps to same key
+  return `${ref}|${segStart}|${segEnd ?? 'end'}`;
+}
+
+async function getCached(db, key) {
+  try {
+    const doc = await db.collection('tanya_enhanced').doc(
+      // Firestore doc IDs can't contain / — encode it
+      Buffer.from(key).toString('base64url')
+    ).get();
+    if (doc.exists) return doc.data().blocks;
+  } catch (e) {
+    console.warn('Cache read error:', e.message);
+  }
+  return null;
+}
+
+async function setCached(db, key, blocks) {
+  try {
+    await db.collection('tanya_enhanced').doc(
+      Buffer.from(key).toString('base64url')
+    ).set({
+      key,
+      blocks,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('Cache write error:', e.message);
+  }
+}
+
+// ── Text helpers ───────────────────────────────────────────────────────────────
 function cleanHtml(s) {
   if (!s) return '';
   let out = '', i = 0;
@@ -52,6 +107,7 @@ function flatten(x) {
   return [];
 }
 
+// ── Fetch chapter from Sefaria ─────────────────────────────────────────────────
 async function fetchChapter(ref) {
   const enc = encodeURIComponent(ref);
   const [enRes, heRes] = await Promise.all([
@@ -67,6 +123,7 @@ async function fetchChapter(ref) {
   return { allEn, allHe };
 }
 
+// ── Claude alignment ───────────────────────────────────────────────────────────
 async function alignWithClaude(ref, enSegs, heSegs) {
   const chapterNum = (ref.match(/(\d+)$/) || [])[1] || '?';
 
@@ -77,7 +134,7 @@ Re-segment both languages into aligned paragraph pairs where each {he, en} pair 
 CRITICAL RULES:
 1. Reproduce every word exactly — no omissions, changes, or paraphrasing
 2. Each pair must express the same content in both languages
-3. Output ONLY a valid JSON array of {he, en} objects — no other text
+3. Output ONLY a valid JSON array of {he, en} objects — no other text, no markdown
 
 HEBREW (${heSegs.length} segment${heSegs.length !== 1 ? 's' : ''}):
 ${heSegs.map((s, i) => `[${i + 1}] ${s}`).join('\n\n')}
@@ -102,6 +159,7 @@ JSON:`;
   });
 
   if (!res.ok) throw new Error(`Claude ${res.status}`);
+
   const data = await res.json();
   const raw = (data.content?.[0]?.text || '').trim()
     .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
@@ -109,9 +167,9 @@ JSON:`;
   let blocks;
   try {
     blocks = JSON.parse(raw);
-  } catch (e) {
+  } catch {
     const match = raw.match(/\[[\s\S]*\]/);
-    if (!match) throw new Error(`Could not parse Claude response as JSON`);
+    if (!match) throw new Error('Could not parse Claude response as JSON');
     blocks = JSON.parse(match[0]);
   }
 
@@ -122,12 +180,13 @@ JSON:`;
     .filter(b => b.he || b.en);
 }
 
+// ── Handler ────────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Cache 30 days at Vercel edge — same portion never changes
+  // Also keep Vercel edge cache as first layer (instant, free)
   res.setHeader('Cache-Control', 's-maxage=2592000, stale-while-revalidate=86400');
 
   const { ref, segStart, segEnd } = req.query;
@@ -136,24 +195,41 @@ export default async function handler(req, res) {
   const start = segStart !== undefined ? parseInt(segStart) : 0;
   const end   = segEnd   !== undefined ? parseInt(segEnd)   : undefined;
 
+  const key = cacheKey(ref, start, end);
+
   try {
+    const db = getDb();
+
+    // ── Layer 1: Firestore permanent cache ────────────────────────────────────
+    const cached = await getCached(db, key);
+    if (cached) {
+      return res.status(200).json({
+        ref, segStart: start, segEnd: end,
+        blocks: cached,
+        source: 'cache',
+      });
+    }
+
+    // ── Layer 2: Generate with Claude ─────────────────────────────────────────
     const { allEn, allHe } = await fetchChapter(ref);
 
     const enPortion = end !== undefined ? allEn.slice(start, end) : allEn.slice(start);
     const hePortion = end !== undefined ? allHe.slice(start, end) : allHe.slice(start);
 
     if (!enPortion.length && !hePortion.length) {
-      return res.status(404).json({ error: `No segments in range [${start},${end}] for "${ref}"` });
+      return res.status(404).json({ error: `No segments in [${start}, ${end}] for "${ref}"` });
     }
 
     const blocks = await alignWithClaude(ref, enPortion, hePortion);
 
+    // ── Store permanently ─────────────────────────────────────────────────────
+    await setCached(db, key, blocks);
+
     return res.status(200).json({
-      ref,
-      segStart: start,
-      segEnd: end ?? allEn.length,
+      ref, segStart: start, segEnd: end,
       totalChapterSegs: allEn.length,
       blocks,
+      source: 'generated',
     });
 
   } catch (err) {
