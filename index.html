@@ -1721,8 +1721,16 @@ async function init() {
     renderSectionsForOffset(dateISO(new Date()));
 
     // Pre-fetch all four readers in background — silent, no UI changes
-    // Stores results so openChabadPanel renders instantly without a loading state
-    _prefetchAllReaders().catch(() => {});
+    _prefetchAllReaders().then(() => {
+      // Backup today's data so navDay(0) can restore without re-fetching
+      window._todayDataBackup = {
+        chumash:   window._chumashData  || null,
+        tehillim:  window._tehillimData || null,
+        tanya:     window._tanyaData    || null,
+        rambam:    window._rambamData   || null,
+        prefetched: { ...window._prefetched },
+      };
+    }).catch(() => {});
 
     hideLoader();
   } catch(e) {
@@ -1894,6 +1902,22 @@ function navDay(delta) {
   if (newOffset > 0) return;
   if (newOffset < -MAX_DAYS_BACK) return;
   dayOffset = newOffset;
+  // Clear section data caches — past days need fresh fetches
+  // (pre-fetched data is always for today only)
+  if (dayOffset !== 0) {
+    window._chumashData  = null;
+    window._tehillimData = null;
+    window._tanyaData    = null;
+    window._rambamData   = null;
+    window._prefetched   = {};
+  } else if (window._todayDataBackup) {
+    // Restore today's data when navigating back
+    window._chumashData  = window._todayDataBackup.chumash  || null;
+    window._tehillimData = window._todayDataBackup.tehillim || null;
+    window._tanyaData    = window._todayDataBackup.tanya    || null;
+    window._rambamData   = window._todayDataBackup.rambam   || null;
+    window._prefetched   = window._todayDataBackup.prefetched || {};
+  }
   updateDayNav();
   rebuildScheduleForOffset();
 }
@@ -4383,9 +4407,9 @@ const TANYA_CHAPTER_INTROS = {
   34: "The concept of a 'dwelling for G-d in the lower worlds' — the ultimate purpose of creation. G-d desired that this lowest, most concealed world become His actual home. Every mitzvah builds that home.",
   35: "The particular importance of mitzvot of action. Although thought is generally higher than action, G-d specifically commanded physical deeds — because it is through the physical body that the world is transformed.",
   36: "The vital soul and the body are elevated specifically through active mitzvot. The divine soul already stands before G-d — it is the animal soul and body that need elevation, and this happens through the physical performance of mitzvot.",
-  37: "The reward of a mitzvah is the mitzvah itself — performing it draws down infinite divine light onto the physical object and the person. This applies to mitzvot of speech too: speech requires the vital soul's organs, so speaking Torah elevates the vital soul.",
-  38: "The law that meditation cannot substitute for verbal articulation — explained in light of the previous chapters. Kavanah (intention) is the soul of a mitzvah, without which the act is like a body without a soul. Two levels of kavanah are described.",
-  39: "Continuing the discussion of kavanah: the person who cannot generate intellectual love and awe can still fulfill mitzvot properly by awakening the hidden natural love in their heart. This is the basic level of intention required.",
+  37: "Physical mitzvot are the highest form of divine service because they transform actual matter. The Alter Rebbe explains that the body performing a mitzvah — and even the physical object involved (tzitzit, tefillin, matzah) — becomes a vessel for infinite divine light. The mitzvah and its reward are one and the same thing.",
+  38: "The Alter Rebbe explains why Torah must be spoken aloud, not just thought. Speech requires the vital soul's breath and vocal organs — so verbal Torah study elevates the vital soul itself. Two levels of kavanah are then described: the minimum required (not intending another deity), and the higher level of intending to fulfill G-d's command.",
+  39: "The Alter Rebbe addresses someone who worries they cannot achieve proper kavanah. The minimum required — and fully sufficient — is the natural, innate love of G-d present in every Jewish heart. This hidden love, awakened briefly before performing a mitzvah, is what makes the act truly intentional.",
   40: "Fear of G-d in its highest form: the awe that comes from contemplating G-d's infinite greatness and one's own smallness before Him. This bittul (self-nullification) is the beginning of genuine divine service.",
   41: "How to cultivate love of G-d through contemplating His greatness. The Alter Rebbe provides a meditation on G-d's immanence and transcendence — practical guidance for generating genuine love during prayer.",
   42: "The concept of ahavah rabbah — the great love — which transcends the ordinary love generated through contemplation. This love flows from the soul's deepest root and is awakened through intense Torah study and mitzvah performance.",
@@ -5392,16 +5416,11 @@ function switchTab(id) {
 async function _prefetchAllReaders() {
   window._prefetched = {};
 
-  // Suppress the loading overlay during pre-fetch
-  const _origShow = HTMLElement.prototype.style;
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  const _loadShow = loadEl ? loadEl.style.display : null;
 
-  // Helper: run a loader with suppressed UI
   async function silentLoad(fn, id) {
     try {
-      // Temporarily redirect the loader's DOM writes to /dev/null
       if (loadEl) loadEl.style.display = 'none';
       if (contEl) contEl.style.display = 'none';
       const ok = await fn(id);
@@ -5411,7 +5430,7 @@ async function _prefetchAllReaders() {
     }
   }
 
-  // Run all four in parallel
+  // Run all four readers in parallel
   await Promise.all([
     silentLoad(_loadChumashNative, 'chumash'),
     silentLoad(_loadTehillimNative, 'tehillim'),
@@ -5419,7 +5438,6 @@ async function _prefetchAllReaders() {
     silentLoad(_loadRambamNative, 'rambam'),
   ]);
 
-  // Restore loader elements
   if (loadEl) loadEl.style.display = 'none';
   if (contEl) contEl.style.display = 'none';
 }
