@@ -4346,6 +4346,127 @@ function _setTehillimLang(lang) {
 //   4. Render as flowing prose paragraphs — no verse numbers (arbitrary)
 // ════════════════════════════════════════════════════════════════════
 
+const TANYA_CHAPTER_INTROS = {
+  1:  "The Alter Rebbe opens by raising a question from the Talmud: before birth, every soul is sworn to be righteous. But another teaching says not to consider yourself righteous. This apparent contradiction leads to the Tanya's central framework — the five levels of the soul, and the crucial distinction between the tzaddik, the rasha, and the beinoni.",
+  2:  "Having introduced the five soul-types, the Alter Rebbe now focuses on the beinoni — the intermediate person. He explains that the beinoni is not simply someone with equal merits and sins. The beinoni's defining quality is something far more precise and attainable.",
+  3:  "The Alter Rebbe introduces the two souls within every Jew: the divine soul (nefesh ha'elokit) and the vital animal soul (nefesh habehamit). Each soul has its own intellect, emotions, and garments of thought, speech, and action. Their relationship defines the inner life of every person.",
+  4:  "The divine soul — its origin, its nature, and its ten faculties (sefirot). The Alter Rebbe explains that the divine soul is literally a part of G-d above, clothed in the body. Its three intellectual faculties (chabad) and seven emotional faculties are each a vehicle for G-dliness.",
+  5:  "The vital animal soul — where it comes from and what drives it. Unlike the divine soul, the animal soul draws its vitality from the realm of kelipah (the forces that conceal G-dliness). Yet in Jews, this soul comes specifically from kelipat nogah — the intermediate realm that can be elevated.",
+  6:  "The garments of the soul: thought, speech, and action. The Alter Rebbe explains how the soul expresses itself through these three garments — and how mitzvot, which are performed through these garments, create a bond between the person and G-d.",
+  7:  "The seat of the two souls in the body — the divine soul in the brain, the animal soul in the heart. Their ongoing struggle is the inner drama of every Jew's life. The city metaphor: two kings vying to rule the same city.",
+  8:  "The Alter Rebbe explains that every Jew has the ability to control their actions, speech, and thought — even if they cannot yet transform their emotions. This is the foundation of the beinoni: not that they feel no evil inclination, but that they never yield to it.",
+  9:  "The nature of the evil inclination and how it operates through the left side of the heart. The Alter Rebbe distinguishes between the hidden love of G-d (ahavah mesuteret) — present in every Jewish soul as an inheritance — and the revealed love that must be cultivated.",
+  10: "The tzaddik gamur — the perfect tzaddik — has actually transformed their evil inclination into good. The Alter Rebbe explains two levels of tzaddik and why the beinoni, though they never sin, is distinct from both. This clarifies Rabbah's statement that he considered himself a beinoni.",
+  11: "Who is the beinoni exactly? The Alter Rebbe gives a precise definition: one who has never transgressed in thought, speech, or deed — not because they have no evil inclination, but because they never yield to it. This is a level every Jew can reach.",
+  12: "The beinoni in prayer and daily life. At times, particularly during prayer, the divine soul surges and the animal soul falls silent. But this is temporary. The Alter Rebbe explores the rhythm of the beinoni's inner life.",
+  13: "The love of G-d — its different levels and expressions. The Alter Rebbe introduces the concept of ahavat olam (world-love) versus ahavah rabbah (great love), and how the hidden love in every Jewish heart can be accessed.",
+  14: "Awe of G-d as the foundation of service. The Alter Rebbe explains that even a basic level of awe — not wanting to rebel against one's Creator — is sufficient for proper fulfillment of Torah and mitzvot. This is accessible to everyone.",
+  15: "The Alter Rebbe addresses a practical question: if the beinoni struggles every day, what has been accomplished? He explains that the very act of fighting and overcoming the inclination is itself the purpose — it elevates the animal soul and creates a dwelling for G-d.",
+  16: "The nature of the ongoing inner battle. The evil inclination is not something foreign — it is part of the self. The Alter Rebbe draws on the Zohar to explain why the struggle never fully ends in this world, and why that is not a failure.",
+  17: "How to strengthen the divine soul in its battle. Specific practical guidance: contemplation of G-d's greatness, the joy of serving G-d, and the recognition that one's divine soul is literally a part of G-d — which makes despairing over sins into a form of ingratitude.",
+  18: "The hidden love (ahavah mesuteret) present in every Jewish heart, inherited from the Patriarchs. Even someone who cannot generate conscious love through contemplation still possesses this hidden spark — and it is the fuel for sincere intention in mitzvot.",
+  19: "The Alter Rebbe explains why a Jew never truly loses their essential connection to G-d, even when they sin. The divine soul's bond with G-d cannot be severed. Yet this awareness should inspire teshuvah, not complacency.",
+  20: "Contemplating G-d's immanence as a path to love and awe. The Alter Rebbe explains the concept of memale kol almin — G-d filling all worlds — and how meditating on this reality awakens genuine love.",
+  21: "The second path to love and awe: contemplating G-d's transcendence (sovev kol almin). The infinite G-d who is beyond all worlds also chooses to be intimately present. This paradox is the source of deepest awe.",
+  22: "Torah study as the highest form of connection. When a person studies Torah, their intellect grasps G-d's will directly — an unparalleled form of unity. The Alter Rebbe explains why Torah study is unique among all mitzvot.",
+  23: "Fear of G-d as a prerequisite for Torah study to be effective. The Alter Rebbe explains the relationship between awe and learning, drawing on the verse 'the beginning of wisdom is fear of G-d.'",
+  24: "The mitzvot as G-d's garments and the limbs of the King. Each mitzvah corresponds to a limb of the divine structure (partzuf). Performing mitzvot with one's physical body creates actual unification in the supernal worlds.",
+  25: "The equal weight of all mitzvot — and why one should never feel that a small sin doesn't matter. The Alter Rebbe explains the gravity of any separation from G-d, even slight, and the inner logic of keeping every commandment.",
+  26: "Joy as a fundamental requirement for divine service. The Alter Rebbe begins his extended discussion of simchah — not forced cheerfulness, but the deep contentment of one who knows they are connected to G-d.",
+  27: "Sadness (atzvut) and its proper context. The Alter Rebbe distinguishes between legitimate remorse for sins — which should be brief, focused, and lead to resolution — and the counterproductive depression that the evil inclination uses to drag a person down.",
+  28: "How to escape depression: by immediately shifting to joy after genuine remorse. The Alter Rebbe provides practical guidance for the person who finds themselves weighed down by awareness of their failings.",
+  29: "Distracting thoughts during prayer — their source and how to deal with them. The Alter Rebbe explains that foreign thoughts entering prayer are actually an opportunity: they come to be elevated, and wrestling with them is itself divine service.",
+  30: "The strategic thinking of the evil inclination: it tells a person they are too low to truly connect with G-d. The Alter Rebbe refutes this thoroughly — the very feeling of distance is what calls one to cry out from the depths.",
+  31: "Continuing the theme of dejection: the Alter Rebbe explains that excessive focus on one's sins can itself be a subtle form of arrogance — as if one expected to be perfectly righteous. Humility means knowing your place and serving from there.",
+  32: "Love of fellow Jews — ahavat Yisrael — as flowing directly from the shared divine soul. All Jewish souls are one at their root. Therefore love of another Jew is not a social virtue but a metaphysical reality.",
+  33: "The elevation of the world through Torah and mitzvot. Every act of holiness draws down divine light and elevates the sparks of G-dliness embedded in the physical world — advancing the purpose of creation.",
+  34: "The concept of a 'dwelling for G-d in the lower worlds' — the ultimate purpose of creation. G-d desired that this lowest, most concealed world become His actual home. Every mitzvah builds that home.",
+  35: "The particular importance of mitzvot of action. Although thought is generally higher than action, G-d specifically commanded physical deeds — because it is through the physical body that the world is transformed.",
+  36: "The vital soul and the body are elevated specifically through active mitzvot. The divine soul already stands before G-d — it is the animal soul and body that need elevation, and this happens through the physical performance of mitzvot.",
+  37: "The reward of a mitzvah is the mitzvah itself — performing it draws down infinite divine light onto the physical object and the person. This applies to mitzvot of speech too: speech requires the vital soul's organs, so speaking Torah elevates the vital soul.",
+  38: "The law that meditation cannot substitute for verbal articulation — explained in light of the previous chapters. Kavanah (intention) is the soul of a mitzvah, without which the act is like a body without a soul. Two levels of kavanah are described.",
+  39: "Continuing the discussion of kavanah: the person who cannot generate intellectual love and awe can still fulfill mitzvot properly by awakening the hidden natural love in their heart. This is the basic level of intention required.",
+  40: "Fear of G-d in its highest form: the awe that comes from contemplating G-d's infinite greatness and one's own smallness before Him. This bittul (self-nullification) is the beginning of genuine divine service.",
+  41: "How to cultivate love of G-d through contemplating His greatness. The Alter Rebbe provides a meditation on G-d's immanence and transcendence — practical guidance for generating genuine love during prayer.",
+  42: "The concept of ahavah rabbah — the great love — which transcends the ordinary love generated through contemplation. This love flows from the soul's deepest root and is awakened through intense Torah study and mitzvah performance.",
+  43: "Summary of the path of divine service laid out in this work: study, prayer, and mitzvot done with proper intention. The Alter Rebbe ties together the themes of the book into a practical daily program.",
+  44: "Shaar HaYichud VehaEmunah begins. The Alter Rebbe turns to the intellectual foundations of faith: the unity of G-d. The verse 'Hear O Israel, G-d is our L-rd, G-d is One' — what does true divine unity actually mean?",
+  45: "The meaning of the first verse of Shema — 'G-d is our L-rd' — as a statement about G-d's ongoing creative power. Everything that exists does so only because G-d continuously speaks it into existence.",
+  46: "The concept that G-d's speech is not like human speech. When G-d says 'Let there be light,' that utterance is not a past event — it is the ongoing force sustaining light's existence at every moment.",
+  47: "The Alter Rebbe draws on Lurianic Kabbalah to explain the tzimtzum (contraction) — the 'withdrawal' of infinite light that allowed space for creation. This is not literal, but refers to the concealment of G-dliness that enables finite existence.",
+  48: "The difference between G-d's knowledge and human knowledge. Human knowledge is separate from the knower. G-d's knowledge is identical with His being. This unity of Knower, Known, and Knowledge is the basis of divine unity.",
+  49: "Continuing the explanation of divine unity: everything that exists is literally nullified in G-d's being, like sunlight in the sun. The apparent existence of the world is a product of divine concealment — from our perspective, not G-d's.",
+  50: "The practical implication of divine unity for divine service: since G-d is everywhere and everything, no place, time, or circumstance can be a barrier to serving Him. This is the foundation of constant connection.",
+  51: "Iggeret HaTeshuvah begins — the Letter on Repentance. The Alter Rebbe addresses how to properly do teshuvah for different categories of sin, with precise halachic and kabbalistic guidance.",
+  52: "The role of fasting in teshuvah — and when it is appropriate versus counterproductive. The Alter Rebbe explains that in our times, the emphasis should be on broken-heartedness rather than physical affliction.",
+  53: "Concluding thoughts on teshuvah: the importance of making a firm resolution going forward, and the profound truth that teshuvah reaches the very root of the soul, effecting a transformation that elevates all previous actions.",
+};
+
+
+// ── Tanya paragraph splitter ──────────────────────────────────────────────────
+// Splits a long Sefaria segment into smaller readable chunks.
+// Breaks at sentence boundaries, targeting ~60-80 words per chunk.
+function _splitTanyaSegment(text, maxWords = 75) {
+  if (!text) return [];
+  const words = text.split(' ');
+  if (words.length <= maxWords) return [text];
+
+  // Find sentence boundaries: '. ' or '." ' or '! ' or '? ' followed by capital
+  const chunks = [];
+  let current = '';
+  let wordCount = 0;
+
+  // Split into sentences first
+  const sentenceBreaks = [];
+  let pos = 0;
+  while (pos < text.length) {
+    const match = text.slice(pos).search(/[.!?][\"\']?\s+[A-Zא-ת]/);
+    if (match === -1) break;
+    sentenceBreaks.push(pos + match + 1); // position after the punctuation
+    pos = pos + match + 2;
+  }
+  sentenceBreaks.push(text.length);
+
+  let start = 0;
+  let chunkWords = 0;
+  let lastBreak = 0;
+
+  sentenceBreaks.forEach(breakPos => {
+    const segment = text.slice(start, breakPos).trim();
+    const segWords = segment.split(' ').length;
+    chunkWords += segWords;
+
+    if (chunkWords >= maxWords && lastBreak > start) {
+      // Emit chunk up to last break
+      chunks.push(text.slice(start, lastBreak).trim());
+      start = lastBreak;
+      chunkWords = text.slice(start, breakPos).split(' ').length;
+    }
+    lastBreak = breakPos;
+  });
+
+  // Push remainder
+  const remainder = text.slice(start).trim();
+  if (remainder) chunks.push(remainder);
+
+  return chunks.length ? chunks : [text];
+}
+
+
+// Split Hebrew text into N equal-word chunks (proportional to English splits)
+function _splitHebrewProportional(text, n) {
+  if (!text || n <= 1) return [text];
+  const words = text.split(' ');
+  if (words.length < n * 3) return [text]; // too short to split meaningfully
+  const chunkSize = Math.ceil(words.length / n);
+  const chunks = [];
+  for (let i = 0; i < n; i++) {
+    const chunk = words.slice(i * chunkSize, (i + 1) * chunkSize).join(' ');
+    if (chunk) chunks.push(chunk);
+  }
+  return chunks;
+}
+
 async function _loadTanyaNative(sectionId) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
@@ -4386,44 +4507,66 @@ async function _loadTanyaNative(sectionId) {
     if (!tp) return false;
 
     const chapterRef = tp.base + ' ' + tp.chapter;
+    const chapterLabel = tp.base.replace(/^Tanya,?\s*/i, '').replace(/Part\s+[IVX]+;\s*/i, '') + ' \u00b7 Chapter ' + tp.chapter;
     const enc = encodeURIComponent(chapterRef);
-
-    const [enRes, heRes] = await Promise.all([
-      fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1')
-        .then(r => r.json()).catch(() => null),
-      fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0')
-        .then(r => r.json()).catch(() => null),
-    ]);
-
-    function flatSegs(x) {
-      if (!x) return [];
-      if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
-      if (Array.isArray(x)) return x.flatMap(flatSegs);
-      return [];
-    }
-
-    const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-    const allEn = flatSegs(engVersion?.text || heRes?.text || []);
-    const allHe = flatSegs(heRes?.he || []);
-
-    const segStart = tp.seg - 1;
-    const segEnd = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : allEn.length;
-
-    const enPortion = allEn.slice(segStart, segEnd);
-    const hePortion = allHe.slice(segStart, segEnd);
-
-    if (!enPortion.length && !hePortion.length) return false;
-
-    const chapterLabel = tp.base.replace(/^Tanya,?\s*/i, '').replace(/Part\s+[IVX]+;\s*/i, '') + ' · Chapter ' + tp.chapter;
 
     const subEl = document.getElementById('chabad-panel-sub');
     if (subEl) subEl.textContent = chapterLabel;
 
-    // Convert flat arrays to blocks format for _renderTanyaContent
+    const chNum = tp.chapter;
     const blocks = [];
-    const maxLen = Math.max(enPortion.length, hePortion.length);
-    for (let i = 0; i < maxLen; i++) {
-      blocks.push({ he: hePortion[i] || '', en: enPortion[i] || '', lit: '' });
+
+    // Intro block always first
+    const intro = TANYA_CHAPTER_INTROS[chNum];
+    if (intro) blocks.push({ type: 'intro', text: intro });
+
+    // Try enhanced API — Claude aligns only today's portion, cached 30 days at edge
+    let enhancedOk = false;
+    try {
+      const segStart = tp.seg - 1;
+      const segEnd   = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : undefined;
+      const apiUrl   = '/api/tanya-enhance?ref=' + enc
+        + '&segStart=' + segStart
+        + (segEnd !== undefined ? '&segEnd=' + segEnd : '');
+      const enhRes = await fetch(apiUrl)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null);
+      if (enhRes?.blocks?.length) {
+        enhRes.blocks.forEach(b => blocks.push({ he: b.he || '', en: b.en || '', lit: '' }));
+        enhancedOk = true;
+      }
+    } catch(e) {
+      console.warn('tanya-enhance API unavailable, using Sefaria fallback');
+    }
+
+    // Fallback: raw Sefaria segments sliced to today's portion
+    if (!enhancedOk) {
+      const [enRes, heRes] = await Promise.all([
+        fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1')
+          .then(r => r.json()).catch(() => null),
+        fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0')
+          .then(r => r.json()).catch(() => null),
+      ]);
+
+      function flatSegs(x) {
+        if (!x) return [];
+        if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
+        if (Array.isArray(x)) return x.flatMap(flatSegs);
+        return [];
+      }
+
+      const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+      const allEn = flatSegs(engVersion?.text || heRes?.text || []);
+      const allHe = flatSegs(heRes?.he || []);
+      const segStart = tp.seg - 1;
+      const segEnd = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : allEn.length;
+      const enPortion = allEn.slice(segStart, segEnd);
+      const hePortion = allHe.slice(segStart, segEnd);
+      if (!enPortion.length && !hePortion.length) return false;
+      const maxLen = Math.max(enPortion.length, hePortion.length);
+      for (let i = 0; i < maxLen; i++) {
+        blocks.push({ he: hePortion[i] || '', en: enPortion[i] || '', lit: '' });
+      }
     }
 
     window._tanyaData = { blocks, chapterLabel };
@@ -4486,21 +4629,31 @@ function _renderTanyaContent() {
     + '</div>';
 
   let v = '';
-  blocks.forEach(({ he, en, lit }) => {
+  blocks.forEach((block) => {
+    // Intro block
+    if (block.type === 'intro') {
+      v += '<div style="margin-bottom:18px;padding:11px 15px;background:rgba(168,85,247,.05);border-left:2px solid rgba(168,85,247,.3);border-radius:0 7px 7px 0;">'
+         + '<p style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:5px;">Context</p>'
+         + '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;">' + block.text + '</p>'
+         + '</div>';
+      return;
+    }
+
+    const { he, en, lit } = block;
     if (!he && !en) return;
 
     if (lang === 'both') {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
-      v += '<p style="font-size:15px;line-height:2.1;color:var(--t1);">' + (en||'') + '</p>';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
+      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + (en||'') + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else if (lang === 'he') {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:18px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="font-size:15px;line-height:2.1;color:var(--t1);">' + (en||'') + '</p>';
+      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + (en||'') + '</p>';
       v += '</div>';
     }
 
