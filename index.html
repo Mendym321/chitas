@@ -4588,10 +4588,9 @@ async function _loadTanyaNative(sectionId) {
         }
       });
 
-    // Don't set enhancedOk — fall through to plain Sefaria immediately
-
-    // Fallback: raw Sefaria segments sliced to today's portion
-    if (!enhancedOk) {
+    // Always load plain Sefaria immediately — enhance API upgrades in background
+    // (progressive enhancement — no blocking wait)
+    {
       const [enRes, heRes] = await Promise.all([
         fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1')
           .then(r => r.json()).catch(() => null),
