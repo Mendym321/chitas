@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#F0A500"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Chitas"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-180.png"/>
 <title>Chitas Daily</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
@@ -4518,14 +4525,15 @@ async function _loadTanyaNative(sectionId) {
     const today = new Date(); today.setDate(today.getDate() + (dayOffset || 0));
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
 
-    // For today (dayOffset === 0) use the cached schedule ref to avoid an extra fetch.
-    // For past days, always fetch from the calendar — schedule.sefariaRef holds today's ref.
-    const todayRef = (dayOffset === 0 && schedule?.tanya?.sefariaRef)
-      ? schedule.tanya.sefariaRef
-      : await getCalTanya(today);
+    // Fetch today + tomorrow calendar refs in parallel (not sequential)
+    // For today: use cached schedule ref if available
+    const [todayRef, tomorrowRef] = await Promise.all([
+      (dayOffset === 0 && schedule?.tanya?.sefariaRef)
+        ? Promise.resolve(schedule.tanya.sefariaRef)
+        : getCalTanya(today),
+      getCalTanya(tomorrow),
+    ]);
     if (!todayRef) return false;
-
-    const tomorrowRef = await getCalTanya(tomorrow);
     const tp = parseTanyaRef(todayRef);
     const tn = tomorrowRef ? parseTanyaRef(tomorrowRef) : null;
     if (!tp) return false;
@@ -4544,24 +4552,43 @@ async function _loadTanyaNative(sectionId) {
     const intro = TANYA_CHAPTER_INTROS[chNum];
     if (intro) blocks.push({ type: 'intro', text: intro });
 
-    // Try enhanced API — Claude aligns only today's portion, cached 30 days at edge
-    let enhancedOk = false;
-    try {
-      const segStart = tp.seg - 1;
-      const segEnd   = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : undefined;
-      const apiUrl   = '/api/tanya-enhance?ref=' + enc
-        + '&segStart=' + segStart
-        + (segEnd !== undefined ? '&segEnd=' + segEnd : '');
-      const enhRes = await fetch(apiUrl)
-        .then(r => r.ok ? r.json() : null)
-        .catch(() => null);
-      if (enhRes?.blocks?.length) {
-        enhRes.blocks.forEach(b => blocks.push({ he: b.he || '', en: b.en || '', lit: '' }));
-        enhancedOk = true;
-      }
-    } catch(e) {
-      console.warn('tanya-enhance API unavailable, using Sefaria fallback');
-    }
+    // Enhanced API strategy: progressive enhancement.
+    // Always fire the enhance API — but don't block on it.
+    // Show plain Sefaria immediately, then silently upgrade when API responds.
+    // After the first call for a given portion, Vercel caches it 30 days —
+    // so repeat visits (including history navigation) are instant from cache.
+    const _enhSegStart = tp.seg - 1;
+    const _enhSegEnd   = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : undefined;
+    const _enhApiUrl   = '/api/tanya-enhance?ref=' + enc
+      + '&segStart=' + _enhSegStart
+      + (_enhSegEnd !== undefined ? '&segEnd=' + _enhSegEnd : '');
+
+    // Capture the viewed day offset at call time — guard against nav changes
+    const _enhDayOffset = dayOffset;
+
+    // Fire API in background — non-blocking
+    fetch(_enhApiUrl)
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null)
+      .then(enhRes => {
+        if (!enhRes?.blocks?.length) return;
+        // Only apply if user is still viewing the same day
+        if (dayOffset !== _enhDayOffset) return;
+        // Rebuild blocks with aligned paragraphs
+        const enhBlocks = [];
+        const chIntro = TANYA_CHAPTER_INTROS[chNum];
+        if (chIntro) enhBlocks.push({ type: 'intro', text: chIntro });
+        enhRes.blocks.forEach(b => enhBlocks.push({ he: b.he || '', en: b.en || '', lit: '' }));
+        window._tanyaData = { ...window._tanyaData, blocks: enhBlocks };
+        // Re-render silently — only if the Tanya panel is currently open
+        const panel = document.getElementById('chabad-panel');
+        const markBtn = document.getElementById('chabad-mark-btn');
+        if (panel?.style.display !== 'none' && markBtn?.dataset?.sectionId === 'tanya') {
+          _renderTanyaContent();
+        }
+      });
+
+    // Don't set enhancedOk — fall through to plain Sefaria immediately
 
     // Fallback: raw Sefaria segments sliced to today's portion
     if (!enhancedOk) {
@@ -5569,6 +5596,16 @@ function bootApp() {
 
 
 bootApp();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
 </script>
 </body>
 </html>
