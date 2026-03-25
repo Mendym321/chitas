@@ -803,6 +803,14 @@ onAuthStateChanged(auth, user => {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
       </button>
 
+      <!-- Tanya cache tools — for regenerating specific days -->
+      <button onclick="_bustTanyaCache()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;text-align:left;margin-top:10px;display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:9px;background:rgba(255,71,87,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FF4757" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </div>
+        <span>Regenerate Tanya context</span>
+      </button>
+
       <!-- Appearance -->
       <button onclick="toggleTheme()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <span style="display:flex;align-items:center;gap:10px;">
@@ -5493,6 +5501,68 @@ async function _prefetchAllReaders() {
 
   if (loadEl) loadEl.style.display = 'none';
   if (contEl) contEl.style.display = 'none';
+}
+
+
+// ── Tanya cache buster — regenerates today's and yesterday's cached entries ────
+async function _bustTanyaCache() {
+  const btn = document.querySelector('[onclick="_bustTanyaCache()"]');
+  if (btn) { btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
+
+  const results = [];
+
+  for (const offset of [0, -1]) {
+    try {
+      const d = new Date(); d.setDate(d.getDate() + offset);
+      const tomorrow = new Date(d); tomorrow.setDate(d.getDate() + 1);
+
+      const calUrl = 'https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
+        + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate();
+      const calData = await fetch(calUrl).then(r => r.json()).catch(() => null);
+      const tanyaItem = (calData?.calendar_items || []).find(i =>
+        (i.title?.en || '').toLowerCase().includes('tanya') || (i.ref || '').toLowerCase().includes('tanya')
+      );
+      if (!tanyaItem?.ref) { results.push('Day ' + offset + ': no ref found'); continue; }
+
+      const m = tanyaItem.ref.match(/^(.*?)(\d+):(\d+)$/);
+      if (!m) { results.push('Day ' + offset + ': could not parse ' + tanyaItem.ref); continue; }
+      const base = m[1].replace(/:$/, '').trim();
+      const chapter = parseInt(m[2]);
+      const seg = parseInt(m[3]);
+      const chapterRef = base + ' ' + chapter;
+
+      // Get tomorrow to know segEnd
+      const tomUrl = 'https://www.sefaria.org/api/calendars?year=' + tomorrow.getFullYear()
+        + '&month=' + (tomorrow.getMonth()+1) + '&day=' + tomorrow.getDate();
+      const tomData = await fetch(tomUrl).then(r => r.json()).catch(() => null);
+      const tomItem = (tomData?.calendar_items || []).find(i =>
+        (i.title?.en || '').toLowerCase().includes('tanya') || (i.ref || '').toLowerCase().includes('tanya')
+      );
+      const tm = tomItem?.ref?.match(/^(.*?)(\d+):(\d+)$/);
+      const segStart = seg - 1;
+      const segEnd = (tm && parseInt(tm[2]) === chapter) ? parseInt(tm[3]) - 1 : undefined;
+
+      const apiUrl = '/api/tanya-enhance?ref=' + encodeURIComponent(chapterRef)
+        + '&segStart=' + segStart
+        + (segEnd !== undefined ? '&segEnd=' + segEnd : '')
+        + '&bust=1';
+
+      const result = await fetch(apiUrl).then(r => r.json()).catch(e => ({ error: e.message }));
+      const label = offset === 0 ? 'Today' : 'Yesterday';
+      results.push(label + ' (' + chapterRef + '): ' + (result.source || result.error || 'done'));
+    } catch(e) {
+      results.push('Day ' + offset + ' error: ' + e.message);
+    }
+  }
+
+  if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+  fire(results.join(' | '), 'gold');
+  // Reload Tanya data if panel is open
+  if (window._tanyaData) {
+    window._tanyaData = null;
+    window._prefetched = {};
+    _prefetchAllReaders().catch(() => {});
+  }
 }
 
 // ── App loader ────────────────────────────────────────────────────────────────
