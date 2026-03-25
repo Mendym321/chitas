@@ -1,19 +1,18 @@
 /**
  * Vercel Serverless Function: /api/tanya-enhance
  *
+ * Fetches today's Tanya portion, optionally yesterday's portion,
+ * then uses Claude Haiku to:
+ *   1. Write an accurate 2-3 sentence context intro based on actual text
+ *   2. Re-segment Hebrew + English into aligned paragraph pairs
+ *
  * Permanent Firestore cache — generated once per portion, served forever.
+ * bust=1 param overwrites a specific cached entry.
  *
- * GET /api/tanya-enhance?ref=...&segStart=0&segEnd=3
- * GET /api/tanya-enhance?ref=...&segStart=0&segEnd=3&bust=1  ← force overwrite
- *
- * bust=1 overwrites existing cache entry then resumes normal caching.
- * Use to refresh specific stale entries without affecting others.
- *
- * Setup — Vercel environment variables:
- *   ANTHROPIC_API_KEY
- *   FIREBASE_PROJECT_ID    = "chitas-daily"
- *   FIREBASE_CLIENT_EMAIL  = from service account JSON
- *   FIREBASE_PRIVATE_KEY   = from service account JSON
+ * GET /api/tanya-enhance
+ *   ?ref=...&segStart=0&segEnd=3
+ *   &prevRef=...&prevSegStart=0&prevSegEnd=3   (optional — for context generation)
+ *   &bust=1                                     (optional — force regenerate)
  */
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
@@ -44,16 +43,16 @@ function docId(ref, segStart, segEnd) {
 async function getCached(db, ref, segStart, segEnd) {
   try {
     const doc = await db.collection('tanya_enhanced').doc(docId(ref, segStart, segEnd)).get();
-    if (doc.exists) return doc.data().blocks;
+    if (doc.exists) return doc.data();
   } catch(e) { console.warn('Cache read:', e.message); }
   return null;
 }
 
-async function setCached(db, ref, segStart, segEnd, blocks) {
+async function setCached(db, ref, segStart, segEnd, payload) {
   try {
     await db.collection('tanya_enhanced').doc(docId(ref, segStart, segEnd)).set({
       ref, segStart, segEnd: segEnd ?? 'end',
-      blocks,
+      ...payload,
       generatedAt: new Date().toISOString(),
     });
   } catch(e) { console.warn('Cache write:', e.message); }
@@ -90,7 +89,7 @@ function flatten(x) {
 }
 
 // ── Sefaria fetch ──────────────────────────────────────────────────────────────
-async function fetchChapter(ref) {
+async function fetchPortion(ref, segStart, segEnd) {
   const enc = encodeURIComponent(ref);
   const [enRes, heRes] = await Promise.all([
     fetch(`${SEFARIA}/api/v3/texts/${enc}?version=english&fill_in_missing_segments=1`).then(r => r.json()).catch(() => null),
@@ -100,36 +99,53 @@ async function fetchChapter(ref) {
   const allEn = flatten(engVersion?.text || heRes?.text || []);
   const allHe = flatten(heRes?.he || []);
   if (!allEn.length && !allHe.length) throw new Error(`No text for "${ref}"`);
-  return { allEn, allHe };
+  const end = segEnd !== undefined ? segEnd : allEn.length;
+  return {
+    en: allEn.slice(segStart, end),
+    he: allHe.slice(segStart, end),
+    totalSegs: allEn.length,
+  };
 }
 
-// ── Claude alignment ───────────────────────────────────────────────────────────
-async function alignWithClaude(ref, enSegs, heSegs) {
+// ── Claude: align + generate context ──────────────────────────────────────────
+async function processWithClaude(ref, enSegs, heSegs, prevEnSegs) {
   const chapterNum = (ref.match(/(\d+)$/) || [])[1] || '?';
+
+  const prevSection = prevEnSegs?.length
+    ? `PREVIOUS PORTION (for context only — do not include in output):
+${prevEnSegs.map((s, i) => `[${i+1}] ${s}`).join('\n\n')}`
+    : '';
 
   const prompt = `You are formatting a bilingual Tanya reader for daily study. Below is today's portion from Tanya Chapter ${chapterNum}.
 
-Your job: re-segment both Hebrew and English into aligned paragraph pairs — where each {he, en} pair expresses the exact same idea in both languages.
+Your output must be a single JSON object with two fields:
+1. "context": a 2-3 sentence factual introduction written in the style of "Lessons in Tanya"
+2. "blocks": aligned Hebrew-English paragraph pairs for today's portion
 
-SPLITTING GUIDELINES:
-- Split at genuine thought boundaries — where the Alter Rebbe finishes one idea and begins another
-- Each English block should be 1-3 sentences, roughly 30-70 words
-- Prefer splitting AFTER a complete sentence, not mid-sentence
-- If a segment is already short (under 40 words English), keep it as one block
-- The goal is that a reader can tap between Hebrew and English and see the matching thought — not just matching words
+CONTEXT RULES:
+- Write in the style of Lessons in Tanya: factual, precise, no evaluative language
+- If a previous portion is provided, begin with what it established ("In the previous portion, the Alter Rebbe explained...")
+- Then state what today's portion covers, based only on what actually appears in today's text
+- Do NOT mention concepts that appear in later parts of the chapter but not in today's text
+- 2-3 sentences maximum
+- If no previous portion: start directly with what today's portion discusses
 
-HARD RULES:
-1. Every single word must appear in the output — reproduce the text exactly, do not omit or change anything
-2. Hebrew and English in each pair must cover the same semantic content
-3. Return ONLY a valid JSON array of {he, en} objects — no markdown, no explanation
+BLOCKS RULES:
+- Split at genuine thought boundaries — where one idea ends and another begins
+- Each English block: 1-3 sentences, ~30-70 words
+- Reproduce every word exactly — no omissions or changes
+- Each {he, en} pair must cover the same semantic content
 
-HEBREW (${heSegs.length} segment${heSegs.length !== 1 ? 's' : ''}):
-${heSegs.map((s, i) => `[${i + 1}] ${s}`).join('\n\n')}
+${prevSection}
 
-ENGLISH (${enSegs.length} segment${enSegs.length !== 1 ? 's' : ''}):
-${enSegs.map((s, i) => `[${i + 1}] ${s}`).join('\n\n')}
+TODAY'S HEBREW (${heSegs.length} segment${heSegs.length !== 1 ? 's' : ''}):
+${heSegs.map((s, i) => `[${i+1}] ${s}`).join('\n\n')}
 
-JSON array:`;
+TODAY'S ENGLISH (${enSegs.length} segment${enSegs.length !== 1 ? 's' : ''}):
+${enSegs.map((s, i) => `[${i+1}] ${s}`).join('\n\n')}
+
+Return ONLY valid JSON, no markdown:
+{"context": "...", "blocks": [{"he": "...", "en": "..."}, ...]}`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -150,19 +166,23 @@ JSON array:`;
   const raw = (data.content?.[0]?.text || '').trim()
     .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
 
-  let blocks;
-  try { blocks = JSON.parse(raw); }
+  let parsed;
+  try { parsed = JSON.parse(raw); }
   catch {
-    const m = raw.match(/\[[\s\S]*\]/);
+    // Try to extract JSON object
+    const m = raw.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('JSON parse failed');
-    blocks = JSON.parse(m[0]);
+    parsed = JSON.parse(m[0]);
   }
 
-  if (!Array.isArray(blocks) || !blocks.length) throw new Error('Empty blocks');
+  if (!parsed.blocks?.length) throw new Error('Empty blocks');
 
-  return blocks
-    .map(b => ({ he: (b.he || '').trim(), en: (b.en || '').trim() }))
-    .filter(b => b.he || b.en);
+  return {
+    context: (parsed.context || '').trim(),
+    blocks: parsed.blocks
+      .map(b => ({ he: (b.he || '').trim(), en: (b.en || '').trim() }))
+      .filter(b => b.he || b.en),
+  };
 }
 
 // ── Handler ────────────────────────────────────────────────────────────────────
@@ -171,46 +191,56 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // bust=1: overwrite this specific cache entry, then cache the fresh result normally
   const bust = req.query.bust === '1';
-
-  // Always set Vercel edge cache (even for busted — fresh result gets cached)
   res.setHeader('Cache-Control', 's-maxage=2592000, stale-while-revalidate=86400');
 
-  const { ref, segStart, segEnd } = req.query;
+  const { ref, segStart, segEnd, prevRef, prevSegStart, prevSegEnd } = req.query;
   if (!ref) return res.status(400).json({ error: 'ref required' });
 
-  const start = segStart !== undefined ? parseInt(segStart) : 0;
-  const end   = segEnd   !== undefined ? parseInt(segEnd)   : undefined;
+  const start    = parseInt(segStart    ?? '0');
+  const end      = segEnd      !== undefined ? parseInt(segEnd)      : undefined;
+  const prevStart = parseInt(prevSegStart ?? '0');
+  const prevEnd   = prevSegEnd  !== undefined ? parseInt(prevSegEnd)  : undefined;
 
   try {
     const db = getDb();
 
-    // Check Firestore — skip only if bust=1
+    // Check Firestore cache
     if (!bust) {
       const cached = await getCached(db, ref, start, end);
-      if (cached) {
-        return res.status(200).json({ ref, segStart: start, segEnd: end, blocks: cached, source: 'cache' });
+      if (cached?.blocks?.length) {
+        return res.status(200).json({
+          ref, segStart: start, segEnd: end,
+          context: cached.context || '',
+          blocks: cached.blocks,
+          source: 'cache',
+        });
       }
     }
 
-    // Generate with Claude
-    const { allEn, allHe } = await fetchChapter(ref);
-    const enPortion = end !== undefined ? allEn.slice(start, end) : allEn.slice(start);
-    const hePortion = end !== undefined ? allHe.slice(start, end) : allHe.slice(start);
+    // Fetch today's portion + optionally yesterday's in parallel
+    const [todayPortion, prevPortion] = await Promise.all([
+      fetchPortion(ref, start, end),
+      prevRef ? fetchPortion(prevRef, prevStart, prevEnd).catch(() => null) : Promise.resolve(null),
+    ]);
 
-    if (!enPortion.length && !hePortion.length) {
+    const { en: enSegs, he: heSegs, totalSegs } = todayPortion;
+    const prevEnSegs = prevPortion?.en || null;
+
+    if (!enSegs.length && !heSegs.length) {
       return res.status(404).json({ error: `No segments in [${start}, ${end}] for "${ref}"` });
     }
 
-    const blocks = await alignWithClaude(ref, enPortion, hePortion);
+    // Process with Claude — align blocks + generate context
+    const { context, blocks } = await processWithClaude(ref, enSegs, heSegs, prevEnSegs);
 
-    // Store in Firestore — overwrites if bust=1, creates if new
-    await setCached(db, ref, start, end, blocks);
+    // Store permanently
+    await setCached(db, ref, start, end, { context, blocks });
 
     return res.status(200).json({
       ref, segStart: start, segEnd: end,
-      totalChapterSegs: allEn.length,
+      totalChapterSegs: totalSegs,
+      context,
       blocks,
       source: bust ? 'regenerated' : 'generated',
     });
