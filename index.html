@@ -4597,13 +4597,14 @@ async function _loadTanyaNative(sectionId) {
         if (dayOffset !== _enhDayOffset) return;
         // Rebuild blocks — use API context if available, else keep static intro
         const enhBlocks = [];
-        if (enhRes.context) {
-          // API generated accurate context based on actual text — use it
-          enhBlocks.push({ type: 'intro', text: enhRes.context });
-        } else {
-          // Fallback to static chapter intro
-          const chIntro = TANYA_CHAPTER_INTROS[chNum];
-          if (chIntro) enhBlocks.push({ type: 'intro', text: chIntro });
+        // Only show context on first day of a new chapter
+        if (isFirstSegment) {
+          if (enhRes.context) {
+            enhBlocks.push({ type: 'intro', text: enhRes.context });
+          } else {
+            const chIntro = TANYA_CHAPTER_INTROS[chNum];
+            if (chIntro) enhBlocks.push({ type: 'intro', text: chIntro });
+          }
         }
         enhRes.blocks.forEach(b => enhBlocks.push({ he: b.he || '', en: b.en || '', lit: '' }));
         window._tanyaData = { ...window._tanyaData, blocks: enhBlocks };
