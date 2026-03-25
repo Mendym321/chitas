@@ -4549,22 +4549,11 @@ async function _loadTanyaNative(sectionId) {
     const isFirstSegment = tp.seg === 1;
     const blocks = [];
 
-    // Show chapter intro only on first day of a new chapter
-    // Mid-chapter days get a shorter continuation note instead
+    // Show chapter intro only on the first day of a chapter
+    // Mid-chapter days: no context block — just the text
     if (isFirstSegment) {
       const intro = TANYA_CHAPTER_INTROS[chNum];
       if (intro) blocks.push({ type: 'intro', text: intro });
-    } else {
-      // Mid-chapter — show brief continuation note
-      const intro = TANYA_CHAPTER_INTROS[chNum];
-      if (intro) {
-        // Extract just the "Today..." sentence from the intro for mid-chapter context
-        const todaySentence = intro.split('. ').filter(s => s.toLowerCase().includes('today') || s.toLowerCase().includes('the alter rebbe')).slice(-1)[0];
-        const contText = todaySentence
-          ? 'Continuing Chapter ' + chNum + '. ' + todaySentence + '.'
-          : 'Continuing Chapter ' + chNum + ' — ' + intro.split('. ').slice(-2).join('. ');
-        blocks.push({ type: 'intro', text: contText });
-      }
     }
 
     // Enhanced API strategy: progressive enhancement.
