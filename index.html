@@ -5625,17 +5625,19 @@ async function _bustTanyaCache() {
     // Show hint on the side the user is swiping toward
     const leftHint  = hintEl('left');
     const rightHint = hintEl('right');
-    if (dx < -20 && dayOffset > -MAX_DAYS_BACK) {
-      leftHint.classList.add('show');
-      leftHint.textContent = Math.abs(dx) >= THRESHOLD ? '← Go back' : 'Yesterday →';
-    } else {
-      leftHint.classList.remove('show');
-    }
-    if (dx > 20 && dayOffset < 0) {
+    if (dx > 20 && dayOffset > -MAX_DAYS_BACK) {
+      // Swiping right = going to previous day
       rightHint.classList.add('show');
-      rightHint.textContent = dx >= THRESHOLD ? 'Go forward →' : '← Tomorrow';
+      rightHint.textContent = dx >= THRESHOLD ? 'Previous day ✓' : '← Previous day';
     } else {
       rightHint.classList.remove('show');
+    }
+    if (dx < -20 && dayOffset < 0) {
+      // Swiping left = going toward today
+      leftHint.classList.add('show');
+      leftHint.textContent = Math.abs(dx) >= THRESHOLD ? 'Next day ✓' : 'Next day →';
+    } else {
+      leftHint.classList.remove('show');
     }
   }
 
@@ -5688,33 +5690,47 @@ async function _bustTanyaCache() {
     swiping = false;
 
     // Check threshold and direction
-    if (dx < -THRESHOLD && dayOffset > -MAX_DAYS_BACK) {
-      // Swiped left — go to previous day
-      swipeTransition(reader, 'left', () => navDay(-1));
-    } else if (dx > THRESHOLD && dayOffset < 0) {
-      // Swiped right — go to next day
-      swipeTransition(reader, 'right', () => navDay(1));
+    if (dx > THRESHOLD && dayOffset > -MAX_DAYS_BACK) {
+      // Swiped right (finger moves right) — go to previous day
+      swipeTransition(reader, 'right', () => navDay(-1));
+    } else if (dx < -THRESHOLD && dayOffset < 0) {
+      // Swiped left (finger moves left) — go to next day (toward today)
+      swipeTransition(reader, 'left', () => navDay(1));
     }
   }, { passive: true });
 
   function swipeTransition(reader, dir, action) {
+    // Get current section before nav changes anything
+    const currentSection = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+    if (!currentSection) { action(); return; }
+
     // Exit animation
     reader.classList.add(dir === 'left' ? 'swipe-exit-left' : 'swipe-exit-right');
+
     setTimeout(() => {
       reader.classList.remove('swipe-exit-left', 'swipe-exit-right');
-      // Reset transform so new content enters from opposite side
-      reader.style.transform = dir === 'left' ? 'translateX(120%)' : 'translateX(-120%)';
+      // Position off-screen on the opposite side ready to enter
+      reader.style.transition = 'none';
+      reader.style.transform = dir === 'left' ? 'translateX(100%)' : 'translateX(-100%)';
       reader.style.opacity = '0';
-      // Execute nav
+
+      // Execute nav (changes dayOffset, clears cache, rebuilds schedule)
       action();
-      // Enter animation after nav triggers re-render
+
+      // Re-open the same section for the new day — this triggers a fresh fetch
       setTimeout(() => {
-        reader.style.transform = '';
-        reader.style.opacity = '';
-        reader.style.transition = 'transform .28s cubic-bezier(.22,1,.36,1), opacity .2s ease';
-        setTimeout(() => { reader.style.transition = ''; }, 300);
-      }, 80);
-    }, 260);
+        openChabadPanel(currentSection);
+        // Enter animation
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            reader.style.transition = 'transform .3s cubic-bezier(.22,1,.36,1), opacity .2s ease';
+            reader.style.transform = '';
+            reader.style.opacity = '';
+            setTimeout(() => { reader.style.transition = ''; }, 320);
+          });
+        });
+      }, 60);
+    }, 240);
   }
 })();
 
