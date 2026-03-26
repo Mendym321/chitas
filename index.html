@@ -219,6 +219,35 @@
 /* main-app is invisible until loader dismisses */
 #main-app { opacity: 0; transition: opacity .35s ease; }
 #main-app.ready { opacity: 1; }
+
+/* ── Reader swipe navigation ── */
+.swipe-hint {
+  position:fixed;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-radius:10px;
+  padding:8px 14px;
+  font-size:12px;font-weight:700;
+  color:#fff;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .15s ease;
+  z-index:9000;
+  white-space:nowrap;
+}
+.swipe-hint.left  { right:12px; }
+.swipe-hint.right { left:12px; }
+.swipe-hint.show  { opacity:1; }
+
+/* Reader slides during swipe */
+#native-reader.swiping-left  { transform:translateX(-40px); transition:transform .25s ease; }
+#native-reader.swiping-right { transform:translateX(40px);  transition:transform .25s ease; }
+#native-reader.swipe-exit-left  { transform:translateX(-120%); transition:transform .28s cubic-bezier(.4,0,.2,1); opacity:0; }
+#native-reader.swipe-exit-right { transform:translateX(120%);  transition:transform .28s cubic-bezier(.4,0,.2,1); opacity:0; }
+#native-reader.swipe-enter { transform:none; transition:transform .28s cubic-bezier(.22,1,.36,1); opacity:1; }
 </style>
 <!-- Firebase SDK -->
 <script type="module">
@@ -957,7 +986,7 @@ let user = (() => {
 })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
-const MAX_DAYS_BACK = 4;
+const MAX_DAYS_BACK = 7;
 let toastTimer = null;
 
 const RAMBAM_TRACKS = {
@@ -5565,6 +5594,129 @@ async function _bustTanyaCache() {
     _prefetchAllReaders().catch(() => {});
   }
 }
+
+
+// ── Reader horizontal swipe navigation ───────────────────────────────────────
+// Swipe left = previous day, swipe right = next day
+// Only triggers on clear horizontal intent (dx > dy * 1.5, dx > 60px)
+// Vertical scrolling is unaffected
+(function() {
+  let touchStartX = 0, touchStartY = 0;
+  let touchCurX = 0;
+  let swiping = false;
+  let swipeDir = 0; // -1 = left (prev), +1 = right (next)
+  const THRESHOLD = 65;   // px needed to trigger
+  const RATIO     = 1.8;  // horizontal must be this times vertical
+
+  function getReader() { return document.getElementById('native-reader'); }
+  function hintEl(cls) {
+    let el = document.getElementById('swipe-hint-' + cls);
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'swipe-hint-' + cls;
+      el.className = 'swipe-hint ' + cls;
+      el.textContent = cls === 'left' ? 'Yesterday →' : '← Tomorrow';
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+
+  function updateHints(dx) {
+    // Show hint on the side the user is swiping toward
+    const leftHint  = hintEl('left');
+    const rightHint = hintEl('right');
+    if (dx < -20 && dayOffset > -MAX_DAYS_BACK) {
+      leftHint.classList.add('show');
+      leftHint.textContent = Math.abs(dx) >= THRESHOLD ? '← Go back' : 'Yesterday →';
+    } else {
+      leftHint.classList.remove('show');
+    }
+    if (dx > 20 && dayOffset < 0) {
+      rightHint.classList.add('show');
+      rightHint.textContent = dx >= THRESHOLD ? 'Go forward →' : '← Tomorrow';
+    } else {
+      rightHint.classList.remove('show');
+    }
+  }
+
+  function clearHints() {
+    hintEl('left').classList.remove('show');
+    hintEl('right').classList.remove('show');
+  }
+
+  document.addEventListener('touchstart', e => {
+    const reader = getReader();
+    if (!reader || reader.style.display === 'none') return;
+    // Only handle touches that start on or within the reader
+    if (!reader.contains(e.target)) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchCurX   = touchStartX;
+    swiping     = false;
+    swipeDir    = 0;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    const reader = getReader();
+    if (!reader || reader.style.display === 'none') return;
+    if (!reader.contains(e.target)) return;
+
+    const dx = e.touches[0].clientX - touchStartX;
+    const dy = e.touches[0].clientY - touchStartY;
+    touchCurX = e.touches[0].clientX;
+
+    // Determine if this is a horizontal swipe
+    if (!swiping && Math.abs(dx) > 10) {
+      if (Math.abs(dx) > Math.abs(dy) * RATIO) {
+        swiping = true;
+      } else {
+        // Clearly vertical — don't interfere
+        return;
+      }
+    }
+    if (!swiping) return;
+
+    updateHints(dx);
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    const reader = getReader();
+    if (!reader || !swiping) { clearHints(); swiping = false; return; }
+
+    const dx = touchCurX - touchStartX;
+    clearHints();
+    swiping = false;
+
+    // Check threshold and direction
+    if (dx < -THRESHOLD && dayOffset > -MAX_DAYS_BACK) {
+      // Swiped left — go to previous day
+      swipeTransition(reader, 'left', () => navDay(-1));
+    } else if (dx > THRESHOLD && dayOffset < 0) {
+      // Swiped right — go to next day
+      swipeTransition(reader, 'right', () => navDay(1));
+    }
+  }, { passive: true });
+
+  function swipeTransition(reader, dir, action) {
+    // Exit animation
+    reader.classList.add(dir === 'left' ? 'swipe-exit-left' : 'swipe-exit-right');
+    setTimeout(() => {
+      reader.classList.remove('swipe-exit-left', 'swipe-exit-right');
+      // Reset transform so new content enters from opposite side
+      reader.style.transform = dir === 'left' ? 'translateX(120%)' : 'translateX(-120%)';
+      reader.style.opacity = '0';
+      // Execute nav
+      action();
+      // Enter animation after nav triggers re-render
+      setTimeout(() => {
+        reader.style.transform = '';
+        reader.style.opacity = '';
+        reader.style.transition = 'transform .28s cubic-bezier(.22,1,.36,1), opacity .2s ease';
+        setTimeout(() => { reader.style.transition = ''; }, 300);
+      }, 80);
+    }, 260);
+  }
+})();
 
 // ── App loader ────────────────────────────────────────────────────────────────
 function showLoader() {
