@@ -812,51 +812,63 @@ onAuthStateChanged(auth, user => {
         </div>
       </div>
 
-      <!-- Rambam track -->
-      <button id="change-track-btn" onclick="changeTrack()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <span style="display:flex;align-items:center;gap:10px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
-          Rambam track
-        </span>
-        <span style="font-size:12px;color:var(--t3);" id="ps-track"></span>
-      </button>
+      <!-- Settings groups -->
+      <div style="display:flex;flex-direction:column;gap:6px;">
 
-      <!-- Tehillim personal chapters -->
-      <button onclick="_openTehillimPeopleManager()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;text-align:left;margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:32px;height:32px;border-radius:9px;background:rgba(74,158,255,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <span>Personal Tehillim chapters</span>
+        <!-- Group: Learning -->
+        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:2px;padding:0 4px;">Learning</p>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+          <!-- Rambam track -->
+          <button id="change-track-btn" onclick="changeTrack()" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+            <span style="display:flex;align-items:center;gap:12px;">
+              <span style="width:28px;height:28px;border-radius:8px;background:rgba(29,185,84,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+              </span>
+              Rambam track
+            </span>
+            <span style="display:flex;align-items:center;gap:6px;">
+              <span id="ps-track" style="font-size:12px;color:var(--t3);"></span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+            </span>
+          </button>
+          <!-- Personal Tehillim -->
+          <button onclick="_openTehillimPeopleManager()" style="width:100%;padding:14px 16px;background:transparent;border:none;color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+            <span style="display:flex;align-items:center;gap:12px;">
+              <span style="width:28px;height:28px;border-radius:8px;background:rgba(74,158,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              Personal Tehillim
+            </span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
         </div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-      </button>
 
-      <!-- Tanya cache tools — for regenerating specific days -->
-      <button onclick="_bustTanyaCache()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;text-align:left;margin-top:10px;display:flex;align-items:center;gap:10px;">
-        <div style="width:32px;height:32px;border-radius:9px;background:rgba(255,71,87,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FF4757" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <!-- Group: App -->
+        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:2px;margin-top:10px;padding:0 4px;">App</p>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+          <!-- Theme -->
+          <button onclick="toggleTheme()" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+            <span style="display:flex;align-items:center;gap:12px;">
+              <span style="width:28px;height:28px;border-radius:8px;background:rgba(240,165,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span id="theme-icon" style="font-size:13px;">🌙</span>
+              </span>
+              Appearance
+            </span>
+            <span id="theme-label" style="font-size:12px;color:var(--t3);">Dark</span>
+          </button>
+          <!-- Share -->
+          <button onclick="shareApp()" style="width:100%;padding:14px 16px;background:transparent;border:none;color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+            <span style="display:flex;align-items:center;gap:12px;">
+              <span style="width:28px;height:28px;border-radius:8px;background:rgba(168,85,247,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+              </span>
+              Share app
+            </span>
+            <span style="font-size:12px;color:var(--t3);">Invite a friend</span>
+          </button>
         </div>
-        <span>Regenerate Tanya context</span>
-      </button>
 
-      <!-- Appearance -->
-      <button onclick="toggleTheme()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <span style="display:flex;align-items:center;gap:10px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-          Appearance
-        </span>
-        <span id="ps-theme-label" style="font-size:12px;color:var(--t3);">Dark</span>
-      </button>
-
-      <!-- Share -->
-      <button onclick="shareApp()" style="width:100%;padding:13px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t1);font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <span style="display:flex;align-items:center;gap:10px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-          Share app
-        </span>
-        <span style="font-size:12px;color:var(--t3);">Invite a friend</span>
-      </button>
+      </div>
     </div>
 
     <!-- Danger zone -->
@@ -1411,49 +1423,86 @@ function _openTehillimPeopleManager() {
 
   const modal = document.createElement('div');
   modal.id = 'tehillim-people-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
 
   const BLUE = '#4A9EFF';
   const opts = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
 
-  const monthOpts = ['Nissan','Iyar','Sivan','Tammuz','Av','Elul','Tishrei','Cheshvan','Kislev','Tevet','Shevat','Adar','Adar II']
-    .map(m => '<option value="' + m + '">' + m + '</option>').join('');
-  const dayOpts = Array.from({length:30},(_,i) => '<option value="' + (i+1) + '">' + (i+1) + '</option>').join('');
+  // Hebrew months for the picker — cleaner segmented control style
+  const MONTHS = ['Nissan','Iyar','Sivan','Tammuz','Av','Elul','Tishrei','Cheshvan','Kislev','Tevet','Shevat','Adar','Adar II'];
   const hebYearEnd = new Date().getFullYear() + 3761;
-  let yearOpts = '';
-  for (let y = hebYearEnd; y >= 5700; y--) yearOpts += '<option value="' + y + '">' + y + '</option>';
+
+  // Month grid — 4 columns, tap to select
+  function monthGrid(selectedMonth) {
+    return '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">'
+      + MONTHS.map(m =>
+          '<button type="button" onclick="_tpmSelectMonth(\'' + m + '\')" id="tpm-m-' + m.replace(' ','_') + '" style="padding:7px 4px;border-radius:8px;border:1.5px solid '
+          + (m === selectedMonth ? BLUE + ';background:rgba(74,158,255,.12);color:' + BLUE + ';font-weight:700;' : 'var(--border);background:var(--card);color:var(--t2);font-weight:500;')
+          + 'font-size:12px;cursor:pointer;font-family:inherit;text-align:center;">' + m + '</button>'
+        ).join('')
+      + '</div>';
+  }
+
+  // Day row — 1-30
+  function dayRow(selectedDay) {
+    return '<div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none;">'
+      + Array.from({length:30},(_,i) => {
+          const d = i+1;
+          const active = d === selectedDay;
+          return '<button type="button" onclick="_tpmSelectDay(' + d + ')" id="tpm-d-' + d + '" style="min-width:34px;height:34px;border-radius:8px;border:1.5px solid '
+            + (active ? BLUE + ';background:rgba(74,158,255,.12);color:' + BLUE + ';font-weight:700;' : 'var(--border);background:var(--card);color:var(--t2);font-weight:500;')
+            + 'font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0;">' + d + '</button>';
+        }).join('')
+      + '</div>';
+  }
+
+  // Year selector — simple number input with +/- buttons
+  function yearRow(selectedYear) {
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">'
+      + '<p style="font-size:12px;color:var(--t3);margin-right:4px;">Year</p>'
+      + '<button type="button" onclick="_tpmAdjYear(-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--t1);font-size:18px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;">−</button>'
+      + '<p id="tpm-year-display" style="font-size:17px;font-weight:700;color:var(--t1);min-width:52px;text-align:center;">' + selectedYear + '</p>'
+      + '<button type="button" onclick="_tpmAdjYear(1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--t1);font-size:18px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;">+</button>'
+      + '</div>';
+  }
+
+  // Store current picker state
+  window._tpmState = {
+    day: 1,
+    month: 'Tishrei',
+    year: hebYearEnd - 25, // default ~25 years ago
+    editIdx: -1,
+  };
 
   modal.innerHTML = '<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:90vh;display:flex;flex-direction:column;padding:0 0 env(safe-area-inset-bottom);">'
-    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">'
     +   '<p style="font-size:17px;font-weight:800;color:var(--t1);">Personal Tehillim</p>'
     +   '<button onclick="document.getElementById(\'tehillim-people-modal\').remove()" style="background:var(--card);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;color:var(--t2);">×</button>'
     + '</div>'
     + '<div style="overflow-y:auto;flex:1;padding:16px 20px;">'
-    +   '<p style="font-size:12px;color:var(--t3);margin-bottom:16px;">Each person\'s daily Tehillim chapter is calculated from their Hebrew birthday (current age + 1).</p>'
 
-    // Fixed people — toggle on/off
+    // Fixed people toggles
     +   '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Always included</p>'
-    +   '<div id="tpm-fixed-list">'
+    +   '<div id="tpm-fixed-list" style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">'
     +     _fixedPersonRow('Rebbe', opts.rebbe !== false, BLUE)
     +     _fixedPersonRow('Rebbetzin', opts.rebbetzin !== false, BLUE)
     +   '</div>'
 
-    // User people
-    +   '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:16px 0 8px;">My people</p>'
-    +   '<div id="tpm-list"></div>'
+    // User people — with drag handles
+    +   '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">My people</p>'
+    +   '<div id="tpm-list" style="margin-bottom:16px;"></div>'
 
-    // Add form
-    +   '<div style="margin-top:14px;padding:14px;background:var(--card);border-radius:12px;border:1px solid var(--border);" id="tpm-add-form">'
-    +     '<p style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:10px;">Add person</p>'
+    // Add / edit form
+    +   '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;" id="tpm-form">'
+    +     '<p id="tpm-form-title" style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:10px;">Add person</p>'
     +     '<input id="tpm-label" type="text" placeholder="Name (e.g. Devorah, Husband)" maxlength="30"'
-    +       ' style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:14px;margin-bottom:10px;box-sizing:border-box;">'
-    +     '<p style="font-size:11px;color:var(--t3);margin-bottom:6px;">Hebrew birthday</p>'
-    +     '<div style="display:flex;gap:6px;margin-bottom:10px;">'
-    +       '<select id="tpm-day" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--t1);font-family:inherit;font-size:13px;">' + dayOpts + '</select>'
-    +       '<select id="tpm-month" style="flex:2;padding:8px 4px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--t1);font-family:inherit;font-size:13px;">' + monthOpts + '</select>'
-    +       '<select id="tpm-year" style="flex:2;padding:8px 4px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--t1);font-family:inherit;font-size:13px;">' + yearOpts + '</select>'
-    +     '</div>'
-    +     '<button onclick="_addTehillimPerson()" style="width:100%;padding:11px;border-radius:10px;border:none;background:' + BLUE + ';color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;">Add</button>'
+    +       ' style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:14px;margin-bottom:12px;box-sizing:border-box;">'
+    +     '<p style="font-size:11px;color:var(--t3);margin-bottom:6px;">Hebrew birthday — Day</p>'
+    +     dayRow(window._tpmState.day)
+    +     '<p style="font-size:11px;color:var(--t3);margin-bottom:6px;">Month</p>'
+    +     monthGrid(window._tpmState.month)
+    +     yearRow(window._tpmState.year)
+    +     '<button id="tpm-submit-btn" onclick="_addTehillimPerson()" style="width:100%;padding:12px;border-radius:10px;border:none;background:' + BLUE + ';color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;">Add</button>'
     +   '</div>'
     + '</div>'
     + '</div>';
@@ -1462,27 +1511,43 @@ function _openTehillimPeopleManager() {
   _renderTpmList();
 }
 
+// Picker state helpers
+window._tpmSelectDay = function(d) {
+  window._tpmState.day = d;
+  document.querySelectorAll('[id^="tpm-d-"]').forEach(btn => {
+    const active = btn.id === 'tpm-d-' + d;
+    btn.style.borderColor = active ? '#4A9EFF' : 'var(--border)';
+    btn.style.background  = active ? 'rgba(74,158,255,.12)' : 'var(--card)';
+    btn.style.color       = active ? '#4A9EFF' : 'var(--t2)';
+    btn.style.fontWeight  = active ? '700' : '500';
+  });
+};
+
+window._tpmSelectMonth = function(m) {
+  window._tpmState.month = m;
+  document.querySelectorAll('[id^="tpm-m-"]').forEach(btn => {
+    const active = btn.id === 'tpm-m-' + m.replace(' ','_');
+    btn.style.borderColor = active ? '#4A9EFF' : 'var(--border)';
+    btn.style.background  = active ? 'rgba(74,158,255,.12)' : 'var(--card)';
+    btn.style.color       = active ? '#4A9EFF' : 'var(--t2)';
+    btn.style.fontWeight  = active ? '700' : '500';
+  });
+};
+
+window._tpmAdjYear = function(delta) {
+  const hebYearEnd = new Date().getFullYear() + 3761;
+  window._tpmState.year = Math.max(5700, Math.min(hebYearEnd, window._tpmState.year + delta));
+  const el = document.getElementById('tpm-year-display');
+  if (el) el.textContent = window._tpmState.year;
+};
+
 function _fixedPersonRow(label, active, color) {
-  const id = 'tpm-toggle-' + label.toLowerCase();
-  return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'
+  return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);">'
     + '<span style="font-size:14px;font-weight:600;color:var(--t1);">' + label + '</span>'
-    + '<button id="' + id + '" onclick="_toggleTehillimFixed(\'' + label + '\')" style="width:44px;height:26px;border-radius:13px;border:none;background:' + (active ? color : 'var(--border)') + ';position:relative;cursor:pointer;transition:background .15s;">'
+    + '<button id="tpm-toggle-' + label.toLowerCase() + '" onclick="_toggleTehillimFixed(\'' + label + '\')" style="width:44px;height:26px;border-radius:13px;border:none;background:' + (active ? color : 'var(--border)') + ';position:relative;cursor:pointer;transition:background .15s;">'
     +   '<div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;' + (active ? 'right:3px;' : 'left:3px;') + 'transition:all .15s;"></div>'
     + '</button>'
     + '</div>';
-}
-
-function _toggleTehillimFixed(label) {
-  if (!user.tehillimFixedOpts) user.tehillimFixedOpts = { rebbe: true, rebbetzin: true };
-  const key = label.toLowerCase();
-  user.tehillimFixedOpts[key] = !user.tehillimFixedOpts[key];
-  saveUser();
-  // Re-render the fixed list in the modal
-  const el = document.getElementById('tpm-fixed-list');
-  const BLUE = '#4A9EFF';
-  const opts = user.tehillimFixedOpts;
-  if (el) el.innerHTML = _fixedPersonRow('Rebbe', opts.rebbe !== false, BLUE) + _fixedPersonRow('Rebbetzin', opts.rebbetzin !== false, BLUE);
-  _renderPersonalPsalms();
 }
 
 function _renderTpmList() {
@@ -1490,72 +1555,81 @@ function _renderTpmList() {
   if (!el) return;
   const people = user.tehillimPeople || [];
   if (!people.length) {
-    el.innerHTML = '<p style="font-size:13px;color:var(--t3);padding:8px 0 4px;">No people added yet.</p>';
+    el.innerHTML = '<p style="font-size:13px;color:var(--t3);padding:4px 0 8px;">No people added yet.</p>';
     return;
   }
-  el.innerHTML = people.map((p, i) =>
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'
-    + '<div>'
-    +   '<p style="font-size:14px;font-weight:600;color:var(--t1);">' + p.label + '</p>'
-    +   '<p style="font-size:11px;color:var(--t3);">' + p.heDay + ' ' + p.heMonth + ' ' + p.heYear + '</p>'
-    + '</div>'
-    + '<div style="display:flex;gap:8px;">'
-    +   '<button onclick="_editTehillimPerson(' + i + ')" style="background:rgba(74,158,255,.1);border:none;border-radius:8px;padding:6px 10px;color:#4A9EFF;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Edit</button>'
-    +   '<button onclick="_deleteTehillimPerson(' + i + ')" style="background:rgba(255,71,87,.1);border:none;border-radius:8px;padding:6px 10px;color:#FF4757;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Remove</button>'
-    + '</div>'
-    + '</div>'
-  ).join('');
+  el.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">'
+    + people.map((p, i) =>
+        '<div id="tpm-row-' + i + '" draggable="true" ondragstart="_tpmDragStart(event,' + i + ')" ondragover="_tpmDragOver(event,' + i + ')" ondrop="_tpmDrop(event,' + i + ')" style="display:flex;align-items:center;padding:11px 14px;border-bottom:' + (i < people.length-1 ? '1px solid var(--border)' : 'none') + ';gap:10px;cursor:default;">'
+          + '<div style="cursor:grab;color:var(--t3);padding:2px 4px;" title="Drag to reorder">'
+          +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
+          + '</div>'
+          + '<div style="flex:1;min-width:0;">'
+          +   '<p style="font-size:14px;font-weight:600;color:var(--t1);">' + p.label + '</p>'
+          +   '<p style="font-size:11px;color:var(--t3);">' + p.heDay + ' ' + p.heMonth + ' ' + p.heYear + '</p>'
+          + '</div>'
+          + '<div style="display:flex;gap:6px;">'
+          +   '<button onclick="_editTehillimPerson(' + i + ')" style="padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Edit</button>'
+          +   '<button onclick="_deleteTehillimPerson(' + i + ')" style="padding:5px 10px;border-radius:7px;border:1px solid rgba(255,71,87,.2);background:rgba(255,71,87,.06);color:#FF4757;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Remove</button>'
+          + '</div>'
+        + '</div>'
+      ).join('')
+    + '</div>';
+}
+
+// Drag to reorder
+let _tpmDragIdx = -1;
+window._tpmDragStart = function(e, idx) { _tpmDragIdx = idx; e.dataTransfer.effectAllowed = 'move'; };
+window._tpmDragOver  = function(e, idx) { e.preventDefault(); };
+window._tpmDrop      = function(e, idx) {
+  e.preventDefault();
+  if (_tpmDragIdx === -1 || _tpmDragIdx === idx) return;
+  const people = user.tehillimPeople || [];
+  const item = people.splice(_tpmDragIdx, 1)[0];
+  people.splice(idx, 0, item);
+  user.tehillimPeople = people;
+  saveUser();
+  _tpmDragIdx = -1;
+  _renderTpmList();
+  _renderPersonalPsalms();
+};
+
+
+function _addTehillimPerson() {
+  const label = document.getElementById('tpm-label')?.value.trim();
+  const { day: heDay, month: heMonth, year: heYear, editIdx } = window._tpmState || {};
+  if (!label) { alert('Please enter a name.'); return; }
+  if (!user.tehillimPeople) user.tehillimPeople = [];
+
+  const person = { label, heDay, heMonth, heYear };
+  if (editIdx >= 0 && editIdx < user.tehillimPeople.length) {
+    // Editing existing
+    user.tehillimPeople[editIdx] = person;
+  } else {
+    // Adding new
+    user.tehillimPeople.push(person);
+  }
+  saveUser();
+  vibrate([30, 20, 60]);
+  document.getElementById('tehillim-people-modal')?.remove();
+  _renderPersonalPsalms();
 }
 
 function _editTehillimPerson(idx) {
-  const p = user.tehillimPeople[idx];
+  const p = user.tehillimPeople?.[idx];
   if (!p) return;
-  // Populate the add form with this person's data and switch to edit mode
-  const label = document.getElementById('tpm-label');
-  const day = document.getElementById('tpm-day');
-  const month = document.getElementById('tpm-month');
-  const year = document.getElementById('tpm-year');
-  if (label) label.value = p.label;
-  if (day) day.value = p.heDay;
-  if (month) month.value = p.heMonth;
-  if (year) year.value = p.heYear;
-  // Change add button to save edit
-  const form = document.getElementById('tpm-add-form');
-  if (form) {
-    const btn = form.querySelector('button');
-    if (btn) {
-      btn.textContent = 'Save changes';
-      btn.onclick = () => _saveEditTehillimPerson(idx);
-    }
-    const title = form.querySelector('p');
-    if (title) title.textContent = 'Edit person';
-  }
-  form.scrollIntoView({ behavior: 'smooth' });
-}
-
-function _saveEditTehillimPerson(idx) {
-  const label = document.getElementById('tpm-label')?.value.trim();
-  const heDay = parseInt(document.getElementById('tpm-day')?.value);
-  const heMonth = document.getElementById('tpm-month')?.value;
-  const heYear = parseInt(document.getElementById('tpm-year')?.value);
-  if (!label) { alert('Please enter a name.'); return; }
-  user.tehillimPeople[idx] = { label, heDay, heMonth, heYear };
-  saveUser();
-  document.getElementById('tehillim-people-modal')?.remove();
-  _renderPersonalPsalms();
-}
-function _addTehillimPerson() {
-  const label = document.getElementById('tpm-label')?.value.trim();
-  const heDay = parseInt(document.getElementById('tpm-day')?.value);
-  const heMonth = document.getElementById('tpm-month')?.value;
-  const heYear = parseInt(document.getElementById('tpm-year')?.value);
-  if (!label) { alert('Please enter a name.'); return; }
-  if (!heDay || !heMonth || !heYear) { alert('Please select a Hebrew birthday.'); return; }
-  if (!user.tehillimPeople) user.tehillimPeople = [];
-  user.tehillimPeople.push({ label, heDay, heMonth, heYear });
-  saveUser();
-  document.getElementById('tehillim-people-modal')?.remove();
-  _renderPersonalPsalms();
+  window._tpmState = { day: p.heDay, month: p.heMonth, year: p.heYear, editIdx: idx };
+  const labelEl = document.getElementById('tpm-label');
+  if (labelEl) labelEl.value = p.label;
+  const titleEl = document.getElementById('tpm-form-title');
+  if (titleEl) titleEl.textContent = 'Edit person';
+  const btnEl = document.getElementById('tpm-submit-btn');
+  if (btnEl) btnEl.textContent = 'Save changes';
+  window._tpmSelectDay(p.heDay);
+  window._tpmSelectMonth(p.heMonth);
+  const yearEl = document.getElementById('tpm-year-display');
+  if (yearEl) yearEl.textContent = p.heYear;
+  document.getElementById('tpm-form')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 function _deleteTehillimPerson(idx) {
@@ -2637,7 +2711,12 @@ function selectWeeklyAnswer(idx) {
   const q = questions[current];
   const correct = q.answer;
   const isRight = idx === correct;
-  if (isRight) weeklyQuizState.score++;
+  if (isRight) {
+    weeklyQuizState.score++;
+    vibrate([30, 20, 60]);
+  } else {
+    vibrate([80]);
+  }
 
   // Color options
   q.options.forEach((_,i) => {
@@ -3046,7 +3125,7 @@ function vibrate(pattern) {
 }
 
 function celebrateSection(sectionId) {
-  vibrate(50); // single short pulse on mark done
+  vibrate([40, 30, 80]); // double tap — satisfying confirmation
   // Quick satisfying pop on the card
   const card = document.getElementById('card-' + sectionId);
   if (card) {
@@ -3144,6 +3223,11 @@ function celebrateStreakMilestone(streak) {
   const m = milestones[streak];
   if (!m) return;
   launchConfetti(streak >= 30 ? 150 : 100);
+  // Haptic pattern scales with milestone size
+  if      (streak >= 100) vibrate([100, 50, 100, 50, 200]); // epic
+  else if (streak >= 30)  vibrate([80, 40, 80, 40, 160]);   // major
+  else if (streak >= 7)   vibrate([60, 30, 120]);            // weekly
+  else                    vibrate([40, 20, 80]);              // 3-day
   // Bonus XP for big milestones
   if (streak === 30)  { user.xp += 500;  saveUser(); }
   if (streak === 100) { user.xp += 2000; saveUser(); }
@@ -3152,7 +3236,7 @@ function celebrateStreakMilestone(streak) {
 
 // ── 2. PERFECT DAY ───────────────────────────────────────────────────────────
 function celebrateAllDone() {
-  vibrate([50, 50, 100]); // double pulse on completing all 4
+  vibrate([60, 40, 60, 40, 120]); // triple pulse — day complete celebration
   launchConfetti(80);
   const isFirstPerfect = (user.perfectDays || 0) === 1;
   // Streak burst on header
@@ -3173,6 +3257,7 @@ function checkLevelUp(xpBefore, xpAfter) {
   const levelAfter  = levelFromXp(xpAfter);
   if (levelAfter <= levelBefore) return;
   launchConfetti(60);
+  vibrate([50, 30, 50, 30, 150]); // level up — rising pattern
   setTimeout(() => {
     // Show level up modal with number ticker
     showMoment({
@@ -3371,7 +3456,12 @@ function selectAnswer(idx) {
   const correct = q.answer;
   const isRight = idx === correct;
 
-  if (isRight) quizState.score++;
+  if (isRight) {
+    quizState.score++;
+    vibrate([30, 20, 60]); // correct — rising double tap
+  } else {
+    vibrate([80]);          // wrong — single buzz
+  }
 
   // Color the buttons
   q.options.forEach((_, i) => {
@@ -3578,6 +3668,7 @@ let markDoneUnlocked = false;
 function unlockMarkDone() {
   if (markDoneUnlocked) return;
   markDoneUnlocked = true;
+  vibrate(20); // subtle — signals you've reached the end
   const hint = document.getElementById('scroll-hint');
   if (hint) hint.style.display = 'none';
   // Re-style the mark done button to show it's active
@@ -5692,9 +5783,11 @@ async function _bustTanyaCache() {
     // Check threshold and direction
     if (dx > THRESHOLD && dayOffset > -MAX_DAYS_BACK) {
       // Swiped right (finger moves right) — go to previous day
+      vibrate(25); // light tap confirms gesture
       swipeTransition(reader, 'right', () => navDay(-1));
     } else if (dx < -THRESHOLD && dayOffset < 0) {
       // Swiped left (finger moves left) — go to next day (toward today)
+      vibrate(25); // light tap confirms gesture
       swipeTransition(reader, 'left', () => navDay(1));
     }
   }, { passive: true });
