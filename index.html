@@ -252,43 +252,39 @@
 /* ── Drum / wheel date picker ── */
 .drum-picker {
   display:flex;
-  gap:0;
+  position:relative;
+  height:180px;
+  border-radius:14px;
+  overflow:hidden;
   background:var(--card);
   border:1px solid var(--border);
-  border-radius:12px;
-  overflow:hidden;
-  position:relative;
-  height:160px;
   margin-bottom:14px;
 }
-/* Highlight band in center */
-.drum-picker::before {
+.drum-picker::before,.drum-picker::after {
   content:'';
   position:absolute;
   left:0;right:0;
-  top:50%;
-  transform:translateY(-50%);
-  height:40px;
-  background:rgba(74,158,255,.08);
-  border-top:1.5px solid rgba(74,158,255,.25);
-  border-bottom:1.5px solid rgba(74,158,255,.25);
+  z-index:4;
   pointer-events:none;
-  z-index:2;
 }
-/* Fade top and bottom */
+.drum-picker::before {
+  top:0;height:66px;
+  background:linear-gradient(to bottom,var(--card) 20%,transparent 100%);
+}
 .drum-picker::after {
-  content:'';
+  bottom:0;height:66px;
+  background:linear-gradient(to top,var(--card) 20%,transparent 100%);
+}
+.drum-sel {
   position:absolute;
-  inset:0;
-  background:linear-gradient(
-    to bottom,
-    var(--card) 0%,
-    transparent 30%,
-    transparent 70%,
-    var(--card) 100%
-  );
+  left:0;right:0;top:50%;
+  transform:translateY(-50%);
+  height:36px;
   pointer-events:none;
   z-index:3;
+  border-top:1px solid rgba(74,158,255,.3);
+  border-bottom:1px solid rgba(74,158,255,.3);
+  background:rgba(74,158,255,.05);
 }
 .drum-col {
   flex:1;
@@ -296,33 +292,29 @@
   scroll-snap-type:y mandatory;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
-  padding:60px 0; /* top+bottom padding = 1.5 items so selected is centered */
+  padding:72px 0;
 }
-.drum-col::-webkit-scrollbar { display:none; }
-.drum-col + .drum-col {
-  border-left:1px solid var(--border);
-}
+.drum-col::-webkit-scrollbar{display:none;}
+.drum-col+.drum-col{border-left:1px solid var(--border);}
 .drum-item {
-  height:40px;
+  height:36px;
   display:flex;
   align-items:center;
   justify-content:center;
   scroll-snap-align:center;
   font-size:15px;
-  font-weight:500;
-  color:var(--t2);
-  cursor:pointer;
+  font-weight:400;
+  color:var(--t3);
   user-select:none;
   -webkit-user-select:none;
 }
 .drum-col-label {
   font-size:10px;
   font-weight:700;
-  letter-spacing:.1em;
+  letter-spacing:.12em;
   text-transform:uppercase;
   color:var(--t3);
   text-align:center;
-  margin-bottom:4px;
 }
 </style>
 <!-- Firebase SDK -->
@@ -1523,24 +1515,21 @@ function _openTehillimPeopleManager() {
 
   function drumPicker(state) {
     const DAYS = Array.from({length:30},(_,i)=>i+1);
-    function col(id, items, selectedVal, fmt) {
-      const idx = items.indexOf(selectedVal);
-      const safeIdx = idx === -1 ? 0 : idx;
-      return '<div class="drum-col" id="' + id + '" onscroll="_tpmDrumScroll(this)">'
-        + items.map((v,i) =>
-            '<div class="drum-item" data-val="' + v + '">' + (fmt ? fmt(v) : v) + '</div>'
-          ).join('')
+    function col(id, flex, items) {
+      return '<div class="drum-col" id="' + id + '" style="flex:' + flex + ';" onscroll="_tpmDrumScroll(this)">'
+        + items.map(v => '<div class="drum-item" data-val="' + v + '">' + v + '</div>').join('')
         + '</div>';
     }
-    return '<div style="margin-bottom:4px;display:flex;gap:0;">'
-        + '<p class="drum-col-label" style="flex:1;">Day</p>'
-        + '<p class="drum-col-label" style="flex:2;">Month</p>'
-        + '<p class="drum-col-label" style="flex:1.5;">Year</p>'
+    return '<div style="display:flex;margin-bottom:5px;">'
+        + '<div class="drum-col-label" style="flex:1;">Day</div>'
+        + '<div class="drum-col-label" style="flex:2;">Month</div>'
+        + '<div class="drum-col-label" style="flex:1.3;">Year</div>'
       + '</div>'
       + '<div class="drum-picker" id="tpm-drum">'
-        + col('drum-day',   DAYS,   state.day,   null)
-        + col('drum-month', MONTHS, state.month, null)
-        + col('drum-year',  YEARS,  state.year,  null)
+        + '<div class="drum-sel"></div>'
+        + col('drum-day',   1,   DAYS)
+        + col('drum-month', 2,   MONTHS)
+        + col('drum-year',  1.3, YEARS)
       + '</div>';
   }
 
@@ -1589,16 +1578,25 @@ function _openTehillimPeopleManager() {
     window._tpmScrollTo('drum-day',   window._tpmState.day);
     window._tpmScrollTo('drum-month', window._tpmState.month);
     window._tpmScrollTo('drum-year',  window._tpmState.year);
-  }, 60);
+    // Init visual styles for all columns
+    ['drum-day','drum-month','drum-year'].forEach(id => {
+      const col = document.getElementById(id);
+      if (col) window._tpmUpdateDrumStyle(col);
+    });
+  }, 80);
 }
 
-// Drum scroll handler — reads center item after scroll settles
+// Drum scroll handler — visual update + state update
 window._tpmDrumScroll = function(col) {
+  // Update visual styles immediately during scroll
+  _tpmUpdateDrumStyle(col);
+  // Update state after scroll settles
   clearTimeout(col._scrollTimer);
   col._scrollTimer = setTimeout(() => {
-    const itemH = 40;
+    const itemH = 36;
     const idx = Math.round(col.scrollTop / itemH);
-    const item = col.querySelectorAll('.drum-item')[idx];
+    const items = col.querySelectorAll('.drum-item');
+    const item = items[idx];
     if (!item) return;
     const val = item.dataset.val;
     const id = col.id;
@@ -1608,6 +1606,36 @@ window._tpmDrumScroll = function(col) {
   }, 80);
 };
 
+// Update item opacity/size based on distance from center
+window._tpmUpdateDrumStyle = function(col) {
+  const itemH = 36;
+  const centerIdx = col.scrollTop / itemH;
+  col.querySelectorAll('.drum-item').forEach((item, i) => {
+    const dist = Math.abs(i - centerIdx);
+    if (dist < 0.5) {
+      item.style.opacity = '1';
+      item.style.fontSize = '16px';
+      item.style.fontWeight = '600';
+      item.style.color = 'var(--t1)';
+    } else if (dist < 1.5) {
+      item.style.opacity = '0.55';
+      item.style.fontSize = '14px';
+      item.style.fontWeight = '400';
+      item.style.color = 'var(--t2)';
+    } else if (dist < 2.5) {
+      item.style.opacity = '0.25';
+      item.style.fontSize = '13px';
+      item.style.fontWeight = '400';
+      item.style.color = 'var(--t3)';
+    } else {
+      item.style.opacity = '0.1';
+      item.style.fontSize = '12px';
+      item.style.fontWeight = '400';
+      item.style.color = 'var(--t3)';
+    }
+  });
+};
+
 // Scroll a drum column to a specific value
 window._tpmScrollTo = function(colId, val) {
   const col = document.getElementById(colId);
@@ -1615,7 +1643,8 @@ window._tpmScrollTo = function(colId, val) {
   const items = col.querySelectorAll('.drum-item');
   for (let i = 0; i < items.length; i++) {
     if (String(items[i].dataset.val) === String(val)) {
-      col.scrollTop = i * 40;
+      col.scrollTop = i * 36;
+      setTimeout(() => window._tpmUpdateDrumStyle(col), 20);
       break;
     }
   }
