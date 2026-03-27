@@ -253,12 +253,12 @@
 .drum-picker {
   display:flex;
   position:relative;
-  height:180px;
-  border-radius:14px;
+  height:132px;
+  border-radius:12px;
   overflow:hidden;
   background:var(--card);
   border:1px solid var(--border);
-  margin-bottom:14px;
+  margin-bottom:12px;
 }
 .drum-picker::before,.drum-picker::after {
   content:'';
@@ -268,18 +268,18 @@
   pointer-events:none;
 }
 .drum-picker::before {
-  top:0;height:66px;
-  background:linear-gradient(to bottom,var(--card) 20%,transparent 100%);
+  top:0;height:44px;
+  background:linear-gradient(to bottom,var(--card) 15%,transparent 100%);
 }
 .drum-picker::after {
-  bottom:0;height:66px;
-  background:linear-gradient(to top,var(--card) 20%,transparent 100%);
+  bottom:0;height:44px;
+  background:linear-gradient(to top,var(--card) 15%,transparent 100%);
 }
 .drum-sel {
   position:absolute;
   left:0;right:0;top:50%;
   transform:translateY(-50%);
-  height:36px;
+  height:32px;
   pointer-events:none;
   z-index:3;
   border-top:1px solid rgba(74,158,255,.3);
@@ -292,17 +292,17 @@
   scroll-snap-type:y mandatory;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
-  padding:72px 0;
+  padding:50px 0;
 }
 .drum-col::-webkit-scrollbar{display:none;}
 .drum-col+.drum-col{border-left:1px solid var(--border);}
 .drum-item {
-  height:36px;
+  height:32px;
   display:flex;
   align-items:center;
   justify-content:center;
   scroll-snap-align:center;
-  font-size:15px;
+  font-size:14px;
   font-weight:400;
   color:var(--t3);
   user-select:none;
@@ -315,6 +315,29 @@
   text-transform:uppercase;
   color:var(--t3);
   text-align:center;
+}
+
+/* ── Extra track card swipe-to-delete ── */
+.extra-card-wrap {
+  position:relative;
+  overflow:hidden;
+  border-radius:16px;
+  margin-bottom:10px;
+}
+.extra-card-delete-bg {
+  position:absolute;
+  right:0;top:0;bottom:0;
+  width:80px;
+  background:#FF4757;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:0 16px 16px 0;
+  pointer-events:none;
+}
+.extra-card-inner {
+  position:relative;
+  transition:transform .2s ease;
+  border-radius:16px;
+  will-change:transform;
 }
 </style>
 <!-- Firebase SDK -->
@@ -667,6 +690,11 @@ onAuthStateChanged(auth, user => {
       <div id="tanya-note" style="display:none;"></div>
 
       <!-- Extra learning tracks -->
+      <div id="extra-tracks-separator" style="display:none;margin:10px 0 8px;display:flex;align-items:center;gap:10px;">
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);white-space:nowrap;">Extra learning</p>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
       <div id="extra-tracks-list" style="display:none;margin-top:0;"></div>
 
       <!-- Add learning button -->
@@ -1606,7 +1634,7 @@ window._tpmDrumScroll = function(col) {
   // Update state after scroll settles
   clearTimeout(col._scrollTimer);
   col._scrollTimer = setTimeout(() => {
-    const itemH = 36;
+    const itemH = 32;
     const idx = Math.round(col.scrollTop / itemH);
     const items = col.querySelectorAll('.drum-item');
     const item = items[idx];
@@ -1621,7 +1649,7 @@ window._tpmDrumScroll = function(col) {
 
 // Update item opacity/size based on distance from center
 window._tpmUpdateDrumStyle = function(col) {
-  const itemH = 36;
+  const itemH = 32;
   const centerIdx = col.scrollTop / itemH;
   col.querySelectorAll('.drum-item').forEach((item, i) => {
     const dist = Math.abs(i - centerIdx);
@@ -1656,7 +1684,7 @@ window._tpmScrollTo = function(colId, val) {
   const items = col.querySelectorAll('.drum-item');
   for (let i = 0; i < items.length; i++) {
     if (String(items[i].dataset.val) === String(val)) {
-      col.scrollTop = i * 36;
+      col.scrollTop = i * 32;
       setTimeout(() => window._tpmUpdateDrumStyle(col), 20);
       break;
     }
@@ -1682,8 +1710,8 @@ function _renderTpmList() {
   }
   el.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">'
     + people.map((p, i) =>
-        '<div id="tpm-row-' + i + '" draggable="true" ondragstart="_tpmDragStart(event,' + i + ')" ondragover="_tpmDragOver(event,' + i + ')" ondrop="_tpmDrop(event,' + i + ')" style="display:flex;align-items:center;padding:11px 14px;border-bottom:' + (i < people.length-1 ? '1px solid var(--border)' : 'none') + ';gap:10px;cursor:default;">'
-          + '<div style="cursor:grab;color:var(--t3);padding:2px 4px;" title="Drag to reorder">'
+        '<div id="tpm-row-' + i + '" data-idx="' + i + '" style="display:flex;align-items:center;padding:11px 14px;border-bottom:' + (i < people.length-1 ? '1px solid var(--border)' : 'none') + ';gap:10px;cursor:default;">'
+          + '<div id="tpm-handle-' + i + '" ontouchstart="_tpmTouchStart(event,' + i + ')" ontouchmove="_tpmTouchMove(event)" ontouchend="_tpmTouchEnd(event)" style="cursor:grab;touch-action:none;color:var(--t3);padding:6px 4px;" title="Drag to reorder">'
           +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
           + '</div>'
           + '<div style="flex:1;min-width:0;">'
@@ -1699,21 +1727,58 @@ function _renderTpmList() {
     + '</div>';
 }
 
-// Drag to reorder
-let _tpmDragIdx = -1;
-window._tpmDragStart = function(e, idx) { _tpmDragIdx = idx; e.dataTransfer.effectAllowed = 'move'; };
-window._tpmDragOver  = function(e, idx) { e.preventDefault(); };
-window._tpmDrop      = function(e, idx) {
+// Touch-based reorder for Tehillim people (works on iOS + Android)
+let _tpmTouchIdx = -1, _tpmTouchStartY = 0, _tpmTouchCurY = 0;
+
+window._tpmTouchStart = function(e, idx) {
+  _tpmTouchIdx = idx;
+  _tpmTouchStartY = e.touches[0].clientY;
+  _tpmTouchCurY   = _tpmTouchStartY;
+  const row = document.getElementById('tpm-row-' + idx);
+  if (row) row.style.background = 'var(--hi)';
   e.preventDefault();
-  if (_tpmDragIdx === -1 || _tpmDragIdx === idx) return;
-  const people = user.tehillimPeople || [];
-  const item = people.splice(_tpmDragIdx, 1)[0];
-  people.splice(idx, 0, item);
-  user.tehillimPeople = people;
-  saveUser();
-  _tpmDragIdx = -1;
-  _renderTpmList();
-  _renderPersonalPsalms();
+};
+
+window._tpmTouchMove = function(e) {
+  if (_tpmTouchIdx === -1) return;
+  _tpmTouchCurY = e.touches[0].clientY;
+  e.preventDefault();
+  // Find which row we're hovering over
+  const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  const row = el?.closest('[id^="tpm-row-"]');
+  // Highlight target row
+  document.querySelectorAll('[id^="tpm-row-"]').forEach(r => r.style.opacity = '1');
+  if (row && row.id !== 'tpm-row-' + _tpmTouchIdx) {
+    row.style.opacity = '0.5';
+  }
+};
+
+window._tpmTouchEnd = function(e) {
+  if (_tpmTouchIdx === -1) return;
+  // Find drop target
+  const el = document.elementFromPoint(
+    e.changedTouches[0].clientX, e.changedTouches[0].clientY
+  );
+  const targetRow = el?.closest('[id^="tpm-row-"]');
+  const targetIdx = targetRow ? parseInt(targetRow.dataset.idx) : -1;
+
+  // Reset styles
+  document.querySelectorAll('[id^="tpm-row-"]').forEach(r => {
+    r.style.background = '';
+    r.style.opacity = '1';
+  });
+
+  if (targetIdx !== -1 && targetIdx !== _tpmTouchIdx) {
+    const people = user.tehillimPeople || [];
+    const item = people.splice(_tpmTouchIdx, 1)[0];
+    people.splice(targetIdx, 0, item);
+    user.tehillimPeople = people;
+    saveUser();
+    vibrate(25);
+    _renderTpmList();
+    _renderPersonalPsalms();
+  }
+  _tpmTouchIdx = -1;
 };
 
 
@@ -2375,7 +2440,10 @@ function renderSectionsForOffset(iso) {
 
   updateProgressRing();
 
-  // Show extra tracks
+  // Show extra tracks + separator
+  const hasTracks = (user.extraTracks || []).length > 0;
+  const sep = document.getElementById('extra-tracks-separator');
+  if (sep) sep.style.display = hasTracks ? 'flex' : 'none';
   _renderExtraTrackCards(iso, isToday);
 
   // Show + button
@@ -5996,11 +6064,15 @@ function _renderExtraTrackCards(iso, isToday) {
       ? (isToday ? 'unmarkExtraDone(\'' + id + '\')' : 'unmarkExtraDonePast(\'' + id + '\',\'' + iso + '\')')
       : (isToday ? 'markExtraDone(\'' + id + '\')' : 'markExtraDonePast(\'' + id + '\',\'' + iso + '\')');
 
-    return '<div id="extra-card-' + id + '" onclick="openExtraReader(\'' + id + '\')" '
+    return '<div class="extra-card-wrap" id="extra-wrap-' + id + '">'
+      + '<div class="extra-card-delete-bg" id="extra-del-bg-' + id + '" style="opacity:0;">'
+      +   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'
+      + '</div>'
+      + '<div id="extra-card-' + id + '" onclick="openExtraReader('' + id + '')" '
       + 'style="' + cardStyle + '" '
-      + 'onmouseenter="this.style.background=\'var(--hi)\'" onmouseleave="this.style.background=\'var(--card)\'" '
-      + 'onmousedown="this.style.transform=\'scale(.985)\'" onmouseup="this.style.transform=\'\'" '
-      + 'ontouchstart="this.style.background=\'var(--hi)\'" ontouchend="this.style.background=\'var(--card)\';this.style.transform=\'\'">'
+      + 'onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='var(--card)'" '
+      + 'onmousedown="this.style.transform='scale(.985)'" onmouseup="this.style.transform=''" '
+      + 'ontouchstart="this.style.background='var(--hi)'" ontouchend="this.style.background='var(--card)';this.style.transform=''">'
       + '<div style="display:flex;align-items:center;gap:14px;">'
       +   '<div style="width:44px;height:44px;border-radius:13px;background:' + def.color + '18;border:1px solid ' + def.color + '35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + def.color + ';">'
       +     '<svg width="21" height="21" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
@@ -6019,8 +6091,12 @@ function _renderExtraTrackCards(iso, isToday) {
       +     '</button>'
       +   '</div>'
       + '</div>'
-      + '</div>';
+      + '</div>'
+      + '</div>'; // card-wrap
   }).join('');
+
+  // Attach swipe-to-delete listeners after render
+  setTimeout(() => _attachExtraSwipeDelete(), 30);
 
   // Load subtitles async
   tracks.forEach(id => _loadExtraSubtitle(id));
@@ -6304,14 +6380,28 @@ async function _loadDafYomi() {
 async function _loadHayomYom() {
   const def = EXTRA_TRACK_DEFS.hayomYom;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
-    + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json());
-  const item = (cal.calendar_items || []).find(i => (i.title?.en || '').includes('Hayom Yom'));
-  if (!item?.ref) throw new Error('No Hayom Yom ref');
 
-  document.getElementById('chabad-panel-sub').textContent = item.displayValue?.en || item.ref;
+  // Get Hebrew date from Hebcal
+  const hebUrl = 'https://www.hebcal.com/converter?cfg=json&gy=' + d.getFullYear()
+    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1';
+  const heb = await fetch(hebUrl).then(r => r.json()).catch(() => null);
+  if (!heb?.hm || !heb?.hd) throw new Error('Could not get Hebrew date');
 
-  const enc = encodeURIComponent(item.ref);
+  // Sefaria Hayom Yom ref: "Hayom Yom.15 Nissan"
+  // Hebcal returns hm as e.g. "Nisan" — map to Sefaria spelling
+  const MONTH_MAP = {
+    'Nisan':'Nissan','Iyyar':'Iyar','Sivan':'Sivan','Tamuz':'Tammuz',
+    'Av':'Av','Elul':'Elul','Tishrei':'Tishrei','Cheshvan':'Cheshvan',
+    'Kislev':'Kislev','Tevet':'Tevet','Shvat':'Shvat','Adar':'Adar',
+    'Adar I':'Adar I','Adar II':'Adar II'
+  };
+  const monthName = MONTH_MAP[heb.hm] || heb.hm;
+  const ref = 'Hayom Yom.' + heb.hd + ' ' + monthName;
+  const subtitle = heb.hd + ' ' + monthName;
+
+  document.getElementById('chabad-panel-sub').textContent = subtitle;
+
+  const enc = encodeURIComponent(ref);
   const [enRes, heRes] = await Promise.all([
     fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
     fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
@@ -6321,7 +6411,9 @@ async function _loadHayomYom() {
   const allEn = _flatHtml(engVersion?.text || enRes?.text || []);
   const allHe = _flatHtml(heRes?.he || []);
 
-  _renderBilingualReader('hayomYom', item.displayValue?.en || 'Hayom Yom', allHe, allEn, def.color, 'Hayom Yom');
+  if (!allHe.length && !allEn.length) throw new Error('No Hayom Yom text for ' + ref);
+
+  _renderBilingualReader('hayomYom', subtitle, allHe, allEn, def.color, 'Hayom Yom');
   _restoreExtraScroll('hayomYom');
 }
 
@@ -6532,6 +6624,69 @@ function _parshaToLikkuteiTorah(parshaName) {
   return LT[parshaName] || TO[parshaName]
     || Object.entries({...LT,...TO}).find(([k]) => parshaName.includes(k) || k.includes(parshaName))?.[1]
     || null;
+}
+
+
+// ── Extra track card swipe-to-delete ──────────────────────────────────────────
+function _attachExtraSwipeDelete() {
+  (user.extraTracks || []).forEach(id => {
+    const wrap = document.getElementById('extra-wrap-' + id);
+    const card = document.getElementById('extra-card-' + id);
+    const bg   = document.getElementById('extra-del-bg-' + id);
+    if (!wrap || !card || !bg) return;
+
+    let startX = 0, curX = 0, dragging = false;
+    const THRESHOLD = 70; // px to trigger delete
+
+    function onStart(e) {
+      startX = e.touches ? e.touches[0].clientX : e.clientX;
+      curX = startX;
+      dragging = true;
+    }
+    function onMove(e) {
+      if (!dragging) return;
+      curX = e.touches ? e.touches[0].clientX : e.clientX;
+      const dx = curX - startX;
+      if (dx >= 0) { card.style.transform = ''; bg.style.opacity = '0'; return; }
+      const pull = Math.min(Math.abs(dx), 90);
+      card.style.transform = 'translateX(-' + pull + 'px)';
+      bg.style.opacity = String(Math.min(pull / THRESHOLD, 1));
+      if (e.cancelable) e.preventDefault();
+    }
+    function onEnd() {
+      if (!dragging) return;
+      dragging = false;
+      const dx = startX - curX;
+      if (dx >= THRESHOLD) {
+        // Animate out and remove
+        card.style.transition = 'transform .25s ease, opacity .2s ease';
+        card.style.transform = 'translateX(-110%)';
+        card.style.opacity = '0';
+        vibrate([40, 30, 80]);
+        setTimeout(() => _removeExtraTrack(id), 220);
+      } else {
+        card.style.transition = 'transform .2s ease';
+        card.style.transform = '';
+        bg.style.opacity = '0';
+        setTimeout(() => { card.style.transition = ''; }, 220);
+      }
+    }
+
+    wrap.addEventListener('touchstart', onStart, { passive: true });
+    wrap.addEventListener('touchmove',  onMove,  { passive: false });
+    wrap.addEventListener('touchend',   onEnd,   { passive: true });
+  });
+}
+
+function _removeExtraTrack(id) {
+  if (!user.extraTracks) return;
+  user.extraTracks = user.extraTracks.filter(t => t !== id);
+  saveUser();
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const sep = document.getElementById('extra-tracks-separator');
+  if (sep) sep.style.display = user.extraTracks.length ? 'flex' : 'none';
+  _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+  fire(EXTRA_TRACK_DEFS[id]?.label + ' removed', 'gray');
 }
 
 // ── App loader ────────────────────────────────────────────────────────────────
