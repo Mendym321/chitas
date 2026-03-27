@@ -666,6 +666,17 @@ onAuthStateChanged(auth, user => {
       <!-- tanya-note removed -->
       <div id="tanya-note" style="display:none;"></div>
 
+      <!-- Extra learning tracks -->
+      <div id="extra-tracks-list" style="display:none;margin-top:0;"></div>
+
+      <!-- Add learning button -->
+      <div id="add-learning-btn" style="display:none;margin-top:6px;margin-bottom:2px;">
+        <button onclick="_openExtraTracksMenu()" style="width:100%;padding:11px 16px;border-radius:14px;background:transparent;border:1.5px dashed var(--border);color:var(--t3);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add daily learning
+        </button>
+      </div>
+
       <!-- Weekly quiz card -->
       <div id="weekly-quiz-card" style="display:none;margin-top:6px;margin-bottom:4px;"></div>
 
@@ -1058,7 +1069,7 @@ function letterAvatar(name, size=32, fontSize=14) {
     font-size:${fontSize}px;font-weight:800;color:${fg};flex-shrink:0;font-family:'DM Sans',sans-serif;">${letter}</div>`;
 }
 
-const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{},tehillimPeople:[],tehillimFixedOpts:{rebbe:true,rebbetzin:true}};
+const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{},tehillimPeople:[],tehillimFixedOpts:{rebbe:true,rebbetzin:true},extraTracks:[]};
 let user = (() => {
   try {
     // Try current key first
@@ -1187,6 +1198,7 @@ function saveUser() {
       weeklyQuizDone: user.weeklyQuizDone || {},
       tehillimPeople: user.tehillimPeople || [],
       tehillimFixedOpts: user.tehillimFixedOpts || {},
+      extraTracks: user.extraTracks || [],
     });
   }
 }
@@ -1216,6 +1228,7 @@ async function saveUserCritical() {
       weeklyQuizDone: user.weeklyQuizDone || {},
       tehillimPeople: user.tehillimPeople || [],
       tehillimFixedOpts: user.tehillimFixedOpts || {},
+      extraTracks: user.extraTracks || [],
     });
   }
 }
@@ -2361,6 +2374,13 @@ function renderSectionsForOffset(iso) {
   }).join('');
 
   updateProgressRing();
+
+  // Show extra tracks
+  _renderExtraTrackCards(iso, isToday);
+
+  // Show + button
+  const addBtn = document.getElementById('add-learning-btn');
+  if (addBtn) addBtn.style.display = 'block';
 }
 
 function updateProgressRing() {
@@ -3743,7 +3763,15 @@ function onReaderScroll() {
 
 // ── SCROLL POSITION PERSISTENCE ───────────────────────────────────────────────
 function _scrollKey(sectionId) {
-  // Keyed by section + today's date — yesterday's position never restores today
+  // Likkutei Torah: key by week so scroll persists Mon-Sat on the same maamer
+  if (sectionId === 'extra_likkuteiTorah') {
+    const d = new Date();
+    const day = d.getDay(); // 0=Sun
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+    return 'scroll_extra_likkuteiTorah_week_' + monday.toISOString().slice(0, 10);
+  }
+  // All others: keyed by section + today's date — yesterday's position never restores today
   return 'scroll_' + sectionId + '_' + dateISO(new Date());
 }
 
@@ -5117,8 +5145,12 @@ function closeChabadPanel() {
   const reader = document.getElementById('native-reader');
   const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
   if (reader && reader.scrollTop > 0) {
-    if (sid && (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya')) {
-      _saveScrollPos(sid, reader.scrollTop);
+    if (sid) {
+      if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
+        _saveScrollPos(sid, reader.scrollTop);
+      } else if (EXTRA_TRACK_DEFS[sid]) {
+        _saveScrollPos('extra_' + sid, reader.scrollTop);
+      }
     }
   }
   // Cancel any pending throttled scroll save before resetting to 0
@@ -5939,6 +5971,568 @@ async function _bustTanyaCache() {
     }, 240);
   }
 })();
+
+
+
+// ── Extra track card rendering ────────────────────────────────────────────────
+function _renderExtraTrackCards(iso, isToday) {
+  const list = document.getElementById('extra-tracks-list');
+  if (!list) return;
+  const tracks = user.extraTracks || [];
+  if (!tracks.length) { list.style.display = 'none'; return; }
+  list.style.display = 'block';
+
+  const dayDone = isToday ? user.done : (user.pastDone?.[iso] || {});
+
+  list.innerHTML = tracks.map((id, i) => {
+    const def = EXTRA_TRACK_DEFS[id];
+    if (!def) return '';
+    const done = !!dayDone[id];
+    const cardStyle = 'background:var(--card);border:1.5px solid '
+      + (done ? def.color + '70' : 'var(--border)')
+      + ';border-radius:16px;padding:15px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;';
+
+    const tickAction = done
+      ? (isToday ? 'unmarkExtraDone(\'' + id + '\')' : 'unmarkExtraDonePast(\'' + id + '\',\'' + iso + '\')')
+      : (isToday ? 'markExtraDone(\'' + id + '\')' : 'markExtraDonePast(\'' + id + '\',\'' + iso + '\')');
+
+    return '<div id="extra-card-' + id + '" onclick="openExtraReader(\'' + id + '\')" '
+      + 'style="' + cardStyle + '" '
+      + 'onmouseenter="this.style.background=\'var(--hi)\'" onmouseleave="this.style.background=\'var(--card)\'" '
+      + 'onmousedown="this.style.transform=\'scale(.985)\'" onmouseup="this.style.transform=\'\'" '
+      + 'ontouchstart="this.style.background=\'var(--hi)\'" ontouchend="this.style.background=\'var(--card)\';this.style.transform=\'\'">'
+      + '<div style="display:flex;align-items:center;gap:14px;">'
+      +   '<div style="width:44px;height:44px;border-radius:13px;background:' + def.color + '18;border:1px solid ' + def.color + '35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + def.color + ';">'
+      +     '<svg width="21" height="21" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
+      +   '</div>'
+      +   '<div style="flex:1;min-width:0;pointer-events:none;">'
+      +     '<p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">' + def.label + '</p>'
+      +     '<p id="extra-sub-' + id + '" style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Loading…</p>'
+      +   '</div>'
+      +   '<svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);pointer-events:none;margin-right:2px;" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
+      +   '<div style="display:flex;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">'
+      +     '<button onclick="' + tickAction + '" style="width:36px;height:36px;border-radius:10px;background:'
+      +       (done ? 'rgba(29,185,84,.12)' : 'var(--surface)')
+      +       ';border:1px solid ' + (done ? 'rgba(29,185,84,.35)' : 'var(--border)')
+      +       ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (done ? '#1DB954' : 'var(--t3)') + ';transition:all .15s;">'
+      +       icon('check', 18)
+      +     '</button>'
+      +   '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Load subtitles async
+  tracks.forEach(id => _loadExtraSubtitle(id));
+}
+
+// Load subtitle for an extra track card
+async function _loadExtraSubtitle(id) {
+  const el = document.getElementById('extra-sub-' + id);
+  if (!el) return;
+  try {
+    const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+    const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
+      + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json()).catch(() => null);
+    const items = cal?.calendar_items || [];
+
+    if (id === 'dafYomi') {
+      const item = items.find(i => i.title?.en === 'Daf Yomi');
+      el.textContent = item?.displayValue?.en || item?.ref || 'Daf Yomi';
+    } else if (id === 'hayomYom') {
+      const item = items.find(i => (i.title?.en || '').includes('Hayom Yom'));
+      el.textContent = item?.displayValue?.en || 'Hayom Yom';
+    } else if (id === 'likkuteiTorah') {
+      const parshaItem = items.find(i => i.title?.en === 'Parashat Hashavua');
+      const parshaName = parshaItem?.displayValue?.en || '';
+      el.textContent = parshaName ? 'Parshas ' + parshaName : 'Likkutei Torah';
+    } else if (id === 'mishnahYomi') {
+      const item = items.find(i => i.title?.en === 'Mishnah Yomit');
+      el.textContent = item?.displayValue?.en || item?.ref || 'Mishnah Yomi';
+    }
+  } catch(e) {
+    const def = EXTRA_TRACK_DEFS[id];
+    if (el && def) el.textContent = def.desc;
+  }
+}
+
+// Mark done / unmark for extra tracks (no XP)
+function markExtraDone(id) {
+  if (!user.done) user.done = {};
+  user.done[id] = true;
+  user.lastDate = dateISO(new Date());
+  saveUser();
+  vibrate([40, 30, 80]);
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+  // Animate card
+  const card = document.getElementById('extra-card-' + id);
+  if (card) {
+    const def = EXTRA_TRACK_DEFS[id];
+    card.style.transition = 'transform .15s ease, box-shadow .3s ease';
+    card.style.transform = 'scale(1.02)';
+    card.style.boxShadow = '0 0 20px ' + (def?.color || '#F0A500') + '55';
+    card.style.borderColor = (def?.color || '#F0A500') + '70';
+    setTimeout(() => { card.style.transform = ''; card.style.boxShadow = ''; }, 400);
+  }
+}
+
+function unmarkExtraDone(id) {
+  if (!user.done) return;
+  user.done[id] = false;
+  saveUser();
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+}
+
+function markExtraDonePast(id, iso) {
+  if (!user.pastDone) user.pastDone = {};
+  if (!user.pastDone[iso]) user.pastDone[iso] = {};
+  user.pastDone[iso][id] = true;
+  saveUser();
+  _renderExtraTrackCards(iso, false);
+}
+
+function unmarkExtraDonePast(id, iso) {
+  if (!user.pastDone?.[iso]) return;
+  user.pastDone[iso][id] = false;
+  saveUser();
+  _renderExtraTrackCards(iso, false);
+}
+
+// ── Extra daily learning tracks ───────────────────────────────────────────────
+const EXTRA_TRACK_DEFS = {
+  dafYomi: {
+    id: 'dafYomi',
+    label: 'Daf Yomi',
+    desc: 'Daily page of Talmud Bavli',
+    duration: '~45 min',
+    color: '#E8A020',
+    iconPath: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  },
+  hayomYom: {
+    id: 'hayomYom',
+    label: 'Hayom Yom',
+    desc: 'Daily Chassidic teaching',
+    duration: '~2 min',
+    color: '#B85C38',
+    iconPath: '<path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  },
+  likkuteiTorah: {
+    id: 'likkuteiTorah',
+    label: 'Likkutei Torah',
+    desc: "Weekly Chassidic discourse on the parsha",
+    duration: '~20 min',
+    color: '#5B6FE8',
+    iconPath: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  },
+  mishnahYomi: {
+    id: 'mishnahYomi',
+    label: 'Mishnah Yomi',
+    desc: 'Two mishnayot per day',
+    duration: '~5 min',
+    color: '#2A9D8F',
+    iconPath: '<rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  },
+};
+
+
+// ── Extra tracks selection menu ────────────────────────────────────────────────
+function _openExtraTracksMenu() {
+  const existing = document.getElementById('extra-tracks-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'extra-tracks-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+
+  const enabled = user.extraTracks || [];
+
+  function trackCard(def) {
+    const on = enabled.includes(def.id);
+    return '<div onclick="_toggleExtraTrack(\'' + def.id + '\')" '
+      + 'style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;">'
+      + '<div style="width:40px;height:40px;border-radius:12px;background:' + def.color + '18;border:1px solid ' + def.color + '35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + def.color + ';">'
+      +   '<svg width="20" height="20" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
+      + '</div>'
+      + '<div style="flex:1;min-width:0;">'
+      +   '<p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:2px;">' + def.label + '</p>'
+      +   '<p style="font-size:12px;color:var(--t3);">' + def.desc + ' · ' + def.duration + '</p>'
+      + '</div>'
+      + '<div id="et-toggle-' + def.id + '" style="width:44px;height:26px;border-radius:13px;border:none;background:' + (on ? def.color : 'var(--border)') + ';position:relative;flex-shrink:0;transition:background .15s;">'
+      +   '<div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;' + (on ? 'right:3px;' : 'left:3px;') + 'transition:all .15s;"></div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  modal.innerHTML = '<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:80vh;display:flex;flex-direction:column;padding:0 0 env(safe-area-inset-bottom);">'
+    + '<div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">'
+    +   '<p style="font-size:17px;font-weight:800;color:var(--t1);margin-bottom:2px;">Daily learning</p>'
+    +   '<p style="font-size:13px;color:var(--t3);">Add to your daily feed. No points — just learning.</p>'
+    + '</div>'
+    + '<div style="overflow-y:auto;flex:1;">'
+    +   '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:16px 20px;">'
+    +     Object.values(EXTRA_TRACK_DEFS).map(trackCard).join('')
+    +   '</div>'
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(modal);
+}
+
+function _toggleExtraTrack(id) {
+  if (!user.extraTracks) user.extraTracks = [];
+  const idx = user.extraTracks.indexOf(id);
+  const def = EXTRA_TRACK_DEFS[id];
+  if (idx === -1) {
+    user.extraTracks.push(id);
+  } else {
+    user.extraTracks.splice(idx, 1);
+  }
+  saveUser();
+  vibrate(25);
+
+  // Update toggle visual in modal
+  const on = user.extraTracks.includes(id);
+  const toggle = document.getElementById('et-toggle-' + id);
+  if (toggle) {
+    toggle.style.background = on ? def.color : 'var(--border)';
+    const knob = toggle.querySelector('div');
+    if (knob) { knob.style.right = on ? '3px' : ''; knob.style.left = on ? '' : '3px'; }
+  }
+
+  // Re-render feed cards
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+}
+
+// ── Extra track reader ─────────────────────────────────────────────────────────
+async function openExtraReader(id) {
+  const def = EXTRA_TRACK_DEFS[id];
+  if (!def) return;
+
+  // Use the same panel as regular sections
+  markDoneUnlocked = false;
+  document.getElementById('chabad-panel-title').textContent = def.label;
+  document.getElementById('chabad-panel-sub').textContent = 'Loading…';
+  document.getElementById('chabad-panel-extlink').style.display = 'none';
+
+  const panel = document.getElementById('chabad-panel');
+  panel.style.display = 'flex';
+
+  const iframeEl = document.getElementById('chabad-iframe');
+  const nativeEl = document.getElementById('native-reader');
+  const progWrap = document.getElementById('reader-progress-wrap');
+  iframeEl.style.display = 'none'; iframeEl.src = '';
+  nativeEl.style.display = 'flex';
+  if (progWrap) progWrap.style.display = 'block';
+
+  // Mark done button — no XP for extra tracks
+  const markBtn = document.getElementById('chabad-mark-btn');
+  const markLabel = document.getElementById('chabad-mark-label');
+  const markXp = document.getElementById('chabad-mark-xp');
+  markBtn.dataset.sectionId = id;
+
+  const isDone = !!user.done[id];
+  if (isDone) {
+    markBtn.style.background = 'rgba(29,185,84,.15)';
+    markBtn.style.border = '1px solid rgba(29,185,84,.4)';
+    markBtn.style.color = '#1DB954';
+    markBtn.style.cursor = 'default';
+    if (markLabel) markLabel.textContent = '✓ Done';
+    if (markXp) markXp.textContent = '';
+    markBtn.onclick = null;
+  } else {
+    markBtn.style.background = def.color;
+    markBtn.style.border = 'none';
+    markBtn.style.color = '#fff';
+    markBtn.style.cursor = 'pointer';
+    if (markLabel) markLabel.textContent = 'Mark Read';
+    if (markXp) markXp.textContent = '';
+    markBtn.onclick = () => { markExtraDone(id); closeChabadPanel(); };
+  }
+
+  // Hide quiz button
+  const quizBtn = document.getElementById('chabad-quiz-btn');
+  if (quizBtn) quizBtn.style.display = 'none';
+
+  // Load content
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
+
+  try {
+    if (id === 'dafYomi')       await _loadDafYomi();
+    else if (id === 'hayomYom') await _loadHayomYom();
+    else if (id === 'likkuteiTorah') await _loadLikkuteiTorah();
+    else if (id === 'mishnahYomi')   await _loadMishnahYomi();
+  } catch(e) {
+    console.error('Extra reader error:', e);
+    if (contEl) { contEl.innerHTML = '<p style="padding:20px;color:var(--t3);text-align:center;">Could not load content. Please try again.</p>'; contEl.style.display = 'block'; }
+    if (loadEl) loadEl.style.display = 'none';
+  }
+}
+
+// ── Individual track loaders ───────────────────────────────────────────────────
+
+async function _loadDafYomi() {
+  const def = EXTRA_TRACK_DEFS.dafYomi;
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
+    + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json());
+  const item = (cal.calendar_items || []).find(i => i.title?.en === 'Daf Yomi');
+  if (!item?.ref) throw new Error('No Daf Yomi ref');
+
+  document.getElementById('chabad-panel-sub').textContent = item.displayValue?.en || item.ref;
+
+  const enc = encodeURIComponent(item.ref);
+  const [enRes, heRes] = await Promise.all([
+    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
+    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+  ]);
+
+  const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+  const allEn = _flatHtml(engVersion?.text || []);
+  const allHe = _flatHtml(heRes?.he || []);
+
+  _renderBilingualReader('dafYomi', item.displayValue?.en || item.ref, allHe, allEn, def.color, 'Talmud Bavli');
+  _restoreExtraScroll('dafYomi');
+}
+
+async function _loadHayomYom() {
+  const def = EXTRA_TRACK_DEFS.hayomYom;
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
+    + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json());
+  const item = (cal.calendar_items || []).find(i => (i.title?.en || '').includes('Hayom Yom'));
+  if (!item?.ref) throw new Error('No Hayom Yom ref');
+
+  document.getElementById('chabad-panel-sub').textContent = item.displayValue?.en || item.ref;
+
+  const enc = encodeURIComponent(item.ref);
+  const [enRes, heRes] = await Promise.all([
+    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
+    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+  ]);
+
+  const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+  const allEn = _flatHtml(engVersion?.text || enRes?.text || []);
+  const allHe = _flatHtml(heRes?.he || []);
+
+  _renderBilingualReader('hayomYom', item.displayValue?.en || 'Hayom Yom', allHe, allEn, def.color, 'Hayom Yom');
+  _restoreExtraScroll('hayomYom');
+}
+
+async function _loadLikkuteiTorah() {
+  const def = EXTRA_TRACK_DEFS.likkuteiTorah;
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
+    + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json());
+  const parshaItem = (cal.calendar_items || []).find(i => i.title?.en === 'Parashat Hashavua');
+  if (!parshaItem) throw new Error('No parsha found');
+
+  const parshaName = parshaItem.displayValue?.en || parshaItem.ref;
+  // Map parsha name to Likkutei Torah ref
+  const ltRef = _parshaToLikkuteiTorah(parshaName);
+  if (!ltRef) {
+    // Fallback: link to Chabad.org
+    document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaName;
+    const contEl = document.getElementById('native-reader-content');
+    const loadEl = document.getElementById('native-reader-loading');
+    if (contEl) {
+      contEl.innerHTML = '<div style="padding:20px;text-align:center;">'
+        + '<p style="color:var(--t2);margin-bottom:16px;">Likkutei Torah for Parshas ' + parshaName + '</p>'
+        + '<a href="https://www.chabad.org/search/keyword_cdo/kid/1582/jewish/Likkutei-Torah.htm" target="_blank" style="color:' + def.color + ';font-weight:600;">Open on Chabad.org</a>'
+        + '</div>';
+      contEl.style.display = 'block';
+    }
+    if (loadEl) loadEl.style.display = 'none';
+    return;
+  }
+
+  document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaName;
+
+  const enc = encodeURIComponent(ltRef);
+  const heRes = await fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null);
+  const allHe = _flatHtml(heRes?.he || []);
+
+  _renderBilingualReader('likkuteiTorah', 'Parshas ' + parshaName, allHe, [], def.color, 'Likkutei Torah');
+  _restoreExtraScroll('likkuteiTorah');
+}
+
+async function _loadMishnahYomi() {
+  const def = EXTRA_TRACK_DEFS.mishnahYomi;
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
+    + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json());
+  const item = (cal.calendar_items || []).find(i =>
+    i.title?.en === 'Mishnah Yomit' || (i.title?.en || '').includes('Mishnah')
+  );
+  if (!item?.ref) throw new Error('No Mishnah Yomi ref');
+
+  document.getElementById('chabad-panel-sub').textContent = item.displayValue?.en || item.ref;
+
+  const enc = encodeURIComponent(item.ref);
+  const [enRes, heRes] = await Promise.all([
+    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
+    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+  ]);
+
+  const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+  const allEn = _flatHtml(engVersion?.text || []);
+  const allHe = _flatHtml(heRes?.he || []);
+
+  _renderBilingualReader('mishnahYomi', item.displayValue?.en || item.ref, allHe, allEn, def.color, 'Mishnah');
+  _restoreExtraScroll('mishnahYomi');
+}
+
+// ── Shared bilingual reader renderer ──────────────────────────────────────────
+function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) {
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'none';
+  if (!contEl) return;
+  contEl.style.display = 'block';
+
+  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+  const langKey = 'chitas_lang_extra_' + id;
+  const lang = localStorage.getItem(langKey) || (enSegs.length ? 'both' : 'he');
+
+  // Lang toggle — only show if we have English
+  let t = '';
+  if (enSegs.length) {
+    t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
+    [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
+      const a = lang === l;
+      t += '<button onclick="localStorage.setItem(\'chitas_lang_extra_' + id + '\',\'' + l + '\');openExtraReader(\'' + id + '\')"'
+        + ' style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
+        + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
+        + '">' + lb + '</button>';
+    });
+    t += '</div>';
+  }
+
+  // Heading
+  const heading = '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '0E;border-left:3px solid ' + color + ';border-radius:0 8px 8px 0;">'
+    + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + color + '80;margin-bottom:3px;">' + sectionLabel + '</p>'
+    + '<p style="font-size:17px;font-weight:800;color:' + color + ';line-height:1.3;">' + title + '</p>'
+    + '</div>';
+
+  let v = '';
+  const maxLen = Math.max(heSegs.length, enSegs.length);
+  for (let i = 0; i < maxLen; i++) {
+    const he = heSegs[i] || '';
+    const en = enSegs[i] || '';
+    if (!he && !en) continue;
+
+    if (lang === 'both' && he && en) {
+      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
+      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
+      v += '</div>';
+    } else if (lang === 'he' || !en) {
+      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
+      v += '</div>';
+    } else {
+      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
+      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
+      v += '</div>';
+    }
+  }
+
+  contEl.innerHTML = t + heading + v
+    + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
+// ── HTML flattener (reuse _cleanHtml logic) ────────────────────────────────────
+function _flatHtml(x) {
+  if (!x) return [];
+  if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
+  if (Array.isArray(x)) return x.flatMap(_flatHtml);
+  return [];
+}
+
+// ── Scroll position for extra tracks (persisted by section + date) ─────────────
+function _restoreExtraScroll(id) {
+  const saved = _getSavedScrollPos('extra_' + id);
+  if (saved > 0) {
+    setTimeout(() => {
+      const reader = document.getElementById('native-reader');
+      if (reader) reader.scrollTop = saved;
+    }, 80);
+  }
+  unlockMarkDone(); // extra tracks unlock immediately
+}
+
+// ── Parsha → Likkutei Torah ref map ───────────────────────────────────────────
+function _parshaToLikkuteiTorah(parshaName) {
+  // Likkutei Torah covers Vayikra, Bamidbar, Devarim + Shir HaShirim, Rosh Hashana etc.
+  // Torah Or covers Bereishit, Shemot
+  const LT = {
+    'Vayikra':      'Likkutei Torah, Vayikra.1',
+    'Tzav':         'Likkutei Torah, Tzav.1',
+    'Shemini':      'Likkutei Torah, Shemini.1',
+    'Tazria':       'Likkutei Torah, Tazria.1',
+    'Metzora':      'Likkutei Torah, Metzora.1',
+    'Acharei':      'Likkutei Torah, Acharei.1',
+    'Kedoshim':     'Likkutei Torah, Kedoshim.1',
+    'Emor':         'Likkutei Torah, Emor.1',
+    'Behar':        'Likkutei Torah, Behar.1',
+    'Bechukotai':   'Likkutei Torah, Bechukotai.1',
+    'Bamidbar':     'Likkutei Torah, Bamidbar.1',
+    'Nasso':        'Likkutei Torah, Nasso.1',
+    "Beha'alotcha": 'Likkutei Torah, Beha\'alotcha.1',
+    'Shelach':      'Likkutei Torah, Shelach.1',
+    'Korach':       'Likkutei Torah, Korach.1',
+    'Chukat':       'Likkutei Torah, Chukat.1',
+    'Balak':        'Likkutei Torah, Balak.1',
+    'Pinchas':      'Likkutei Torah, Pinchas.1',
+    'Matot':        'Likkutei Torah, Matot.1',
+    'Masei':        'Likkutei Torah, Masei.1',
+    'Devarim':      'Likkutei Torah, Devarim.1',
+    "Va'etchanan":  "Likkutei Torah, Va'etchanan.1",
+    'Eikev':        'Likkutei Torah, Eikev.1',
+    "Re'eh":        "Likkutei Torah, Re'eh.1",
+    'Shoftim':      'Likkutei Torah, Shoftim.1',
+    'Ki Teitzei':   'Likkutei Torah, Ki Teitzei.1',
+    'Ki Tavo':      'Likkutei Torah, Ki Tavo.1',
+    'Nitzavim':     'Likkutei Torah, Nitzavim.1',
+    'Vayeilech':    'Likkutei Torah, Nitzavim.1',
+  };
+  // Torah Or for Bereishit/Shemot parshiyot
+  const TO = {
+    'Bereishit':    'Torah Ohr, Bereishit.1',
+    'Noach':        'Torah Ohr, Noach.1',
+    'Lech Lecha':   'Torah Ohr, Lech Lecha.1',
+    'Vayera':       'Torah Ohr, Vayera.1',
+    'Chayei Sara':  'Torah Ohr, Chayei Sarah.1',
+    'Toldot':       'Torah Ohr, Toldot.1',
+    'Vayetzei':     'Torah Ohr, Vayetzei.1',
+    'Vayishlach':   'Torah Ohr, Vayishlach.1',
+    'Vayeshev':     'Torah Ohr, Vayeshev.1',
+    'Miketz':       'Torah Ohr, Miketz.1',
+    'Vayigash':     'Torah Ohr, Vayigash.1',
+    'Vayechi':      'Torah Ohr, Vayechi.1',
+    'Shemot':       'Torah Ohr, Shemot.1',
+    'Vaera':        "Torah Ohr, Va'era.1",
+    'Bo':           'Torah Ohr, Bo.1',
+    'Beshalach':    'Torah Ohr, Beshalach.1',
+    'Yitro':        'Torah Ohr, Yitro.1',
+    'Mishpatim':    'Torah Ohr, Mishpatim.1',
+    'Terumah':      'Torah Ohr, Terumah.1',
+    'Tetzaveh':     'Torah Ohr, Tetzaveh.1',
+    'Ki Tisa':      'Torah Ohr, Ki Tisa.1',
+    'Vayakhel':     'Torah Ohr, Vayakhel.1',
+    'Pekudei':      'Torah Ohr, Pekudei.1',
+  };
+  // Try exact match, then partial
+  return LT[parshaName] || TO[parshaName]
+    || Object.entries({...LT,...TO}).find(([k]) => parshaName.includes(k) || k.includes(parshaName))?.[1]
+    || null;
+}
 
 // ── App loader ────────────────────────────────────────────────────────────────
 function showLoader() {
