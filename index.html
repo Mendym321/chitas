@@ -2198,7 +2198,9 @@ async function init() {
     }
     user.done = {};
     user.quizDone = {};
-    if (dateISO(prev) !== dateISO(yest)) user.streak = 0;
+    // Recalc streak based on actual completion history
+    // (don't blindly zero — yesterday might have been completed)
+    recalcStreak();
     saveUser();
   }
 
@@ -2858,17 +2860,26 @@ function markDonePast(id, iso) {
   if (allNow) {
     user.total++;
     user.xp += 50;
-    fire('Day complete · +' + (s.xp + 150) + ' XP', 'gold');
+    // Recalc streak — this past day may repair a broken chain
+    const newStreak = recalcStreak();
+    saveUser();
+    updateStats();
+    updateHeader();
+    updateProgressRing();
+    renderMedals();
+    renderStats();
+    // Show a moment if streak jumped meaningfully
+    const streakMsg = newStreak > 1 ? newStreak + '-day streak' : 'Day complete';
+    fire(streakMsg + ' · +' + (s.xp + 50) + ' XP', 'gold');
   } else {
     fire('+' + s.xp + ' XP', 'xp');
+    saveUser();
+    updateStats();
+    updateHeader();
+    updateProgressRing();
+    renderMedals();
+    renderStats();
   }
-
-  saveUser();
-  updateStats();
-  updateHeader();
-  updateProgressRing();
-  renderMedals();
-  renderStats();
   const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
   renderSectionsForOffset(dateISO(d2));
 }
@@ -2884,8 +2895,7 @@ function markDone(id) {
   const ids = ['chumash','tehillim','tanya','rambam'];
   const allNow = ids.every(x => user.done[x]);
   if (allNow) {
-    user.streak++;
-    if (user.streak > (user.longestStreak||0)) user.longestStreak = user.streak;
+    recalcStreak(); // recalc instead of blind increment — handles retroactive repairs
     user.total++;
     user.xp += 50;
     user.perfectDays = (user.perfectDays || 0) + 1;
@@ -7209,6 +7219,42 @@ function _renderPsExtraTracks() {
 
   el.innerHTML = rows
     + '<button onclick="_openExtraTracksMenu()" class="ps-add-btn">' + PLUS + (tracks.length ? 'Add more' : 'Add extra learning') + '</button>';
+}
+
+
+// ── Streak recalculation ─────────────────────────────────────────────────────
+// Walk backwards from today counting consecutive days where all 4 sections done.
+// Checks: today's user.done, then pastDone[iso] for each prior day.
+// Called after any completion (today or past) so streak always reflects reality.
+function recalcStreak() {
+  const ids = ['chumash','tehillim','tanya','rambam'];
+  const today = new Date();
+  let streak = 0;
+
+  for (let offset = 0; offset <= MAX_DAYS_BACK + 1; offset++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - offset);
+    const iso = dateISO(d);
+
+    let allDone;
+    if (offset === 0) {
+      // Today
+      allDone = ids.every(x => user.done?.[x]);
+    } else {
+      // Past day
+      allDone = ids.every(x => user.pastDone?.[iso]?.[x]);
+    }
+
+    if (allDone) {
+      streak++;
+    } else {
+      break; // chain broken — stop counting
+    }
+  }
+
+  user.streak = streak;
+  if (streak > (user.longestStreak || 0)) user.longestStreak = streak;
+  return streak;
 }
 
 // ── App loader ────────────────────────────────────────────────────────────────
