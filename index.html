@@ -2007,9 +2007,28 @@ async function init() {
     // Pull Sefaria refs from calendar
     const sefariaItems = sefariaCalRaw?.calendar_items || [];
 
-    // Chumash: aliya ref from Hebcal (already holiday-safe via parseHebcal)
-    // Sefaria Parashat Hashavua may also return a holiday reading — use Hebcal's ref
-    const chumashRef = p.aliyaRef || null;
+    // Chumash: get today's aliyah ref
+    // Strategy: try Sefaria first (has full aliyot array), then Hebcal
+    // During holiday weeks Hebcal may not have leyning for the regular parsha
+    const dow = new Date().getDay(); // 0=Sun
+    const aliyaIdx = dow === 6 ? 6 : dow; // 0-based index into aliyot array
+    
+    // Find the regular parsha in Sefaria calendar (skip holiday readings)
+    const sefariaAllParsha = sefariaItems.filter(i => 
+      i.title?.en === 'Parashat Hashavua' || i.category === 'parashat'
+    );
+    const sefariaParsha = sefariaAllParsha.find(i => {
+      const name = (i.displayValue?.en || i.title?.en || '').replace(/Parashat |Parasha /, '');
+      return REGULAR_PARSHIOT.has(name);
+    }) || sefariaAllParsha[0];
+    
+    const sefariaAliyot = sefariaParsha?.extraDetails?.aliyot || [];
+    const chumashRef = sefariaAliyot[aliyaIdx] || p.aliyaRef || sefariaParsha?.ref || null;
+    
+    // Log for debugging
+    console.log('Chumash: parsha=' + sefariaParsha?.displayValue?.en + 
+                ' dow=' + dow + ' aliyaIdx=' + aliyaIdx + 
+                ' ref=' + chumashRef);
 
     // Tehillim: build ref from Hebcal chapter list
     // If multiple chapters, fetch them individually and combine
@@ -2373,8 +2392,30 @@ async function rebuildScheduleForOffset() {
     const pastAliya = pastDow === 6 ? 'Shabbos' : 'Aliya ' + (pastDow === 0 ? 1 : pastDow + 1);
     if (s.id === 'chumash') {
       s.subtitle = p?.parshaName ? p.parshaName + (pastDow === 6 ? ' · Shabbos' : ' · Aliya ' + p.aliyaNum) : pastAliya;
-      // Update sefariaRef so the native reader loads the correct aliyah for this day
-      s.sefariaRef = p?.aliyaRef || null;
+      // For past days, also try Sefaria calendar for the aliyah ref
+      // If Hebcal has leyning use it; otherwise fall back to Sefaria
+      if (!p?.aliyaRef) {
+        // Fetch Sefaria calendar for this past date to get aliyot
+        const pastD = d; // d is the past date being viewed
+        fetch('https://www.sefaria.org/api/calendars?year=' + pastD.getFullYear()
+          + '&month=' + (pastD.getMonth()+1) + '&day=' + pastD.getDate())
+          .then(r => r.json())
+          .then(pastCal => {
+            const pastItems = pastCal?.calendar_items || [];
+            const pastParsha = pastItems.find(i => {
+              const name = (i.displayValue?.en || i.title?.en || '').replace(/Parashat |Parasha /, '');
+              return REGULAR_PARSHIOT.has(name);
+            });
+            const pastAliyot = pastParsha?.extraDetails?.aliyot || [];
+            const pastAliyaIdx = pastDow === 6 ? 6 : pastDow;
+            if (pastAliyot[pastAliyaIdx]) {
+              s.sefariaRef = pastAliyot[pastAliyaIdx];
+              renderSectionsForOffset(dateISO(pastD));
+            }
+          }).catch(() => {});
+      } else {
+        s.sefariaRef = p.aliyaRef;
+      }
     }
     if (s.id === 'tehillim') {
       s.subtitle = p?.tehTitle || 'Daily Psalms';
