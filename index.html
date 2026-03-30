@@ -1027,12 +1027,20 @@ onAuthStateChanged(auth, user => {
           </button>
         </div>
 
-        <!-- My People (Tehillim) -->
-        <div class="ps-label">
-          <span>My People · Tehillim</span>
-          <button onclick="_openTehillimPeopleManager()" style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;">Edit all</button>
+        <!-- My People (Tehillim) — tappable row that opens manager -->
+        <div class="ps-label">My People · Tehillim</div>
+        <div class="ps-card" style="margin-bottom:20px;">
+          <button onclick="_openTehillimPeopleManager()" class="ps-row" style="width:100%;background:transparent;border:none;border-bottom:none;cursor:pointer;font-family:inherit;text-align:left;">
+            <span class="ps-icon" style="background:rgba(74,158,255,.1);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
+            <div style="flex:1;min-width:0;">
+              <p class="ps-row-label">My People</p>
+              <p id="ps-tehillim-sub" class="ps-row-sub">Loading…</p>
+            </div>
+            <svg class="ps-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
         </div>
-        <div id="ps-tehillim-people" class="ps-card"></div>
 
         <!-- Extra learning -->
         <div class="ps-label">
@@ -1557,7 +1565,13 @@ async function _renderPersonalPsalms() {
   const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
 
   let h = '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">'
-    + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + BLUE + ';opacity:.8;margin-bottom:18px;">Personal Tehillim</p>';
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + BLUE + ';opacity:.8;">Personal Tehillim</p>'
+    +   '<button onclick="_openTehillimPeopleManager()" style="font-size:12px;font-weight:700;color:' + BLUE + ';background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 0;display:flex;align-items:center;gap:4px;">'
+    +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+    +     'Add person'
+    +   '</button>'
+    + '</div>';
 
   // Fetch all psalms using cache — no duplicate requests
   const psalmResults = await Promise.all(people.map(async p => {
@@ -5948,9 +5962,8 @@ function renderProfileSheetContent() {
 }
 
 function changeTrack() {
-  // Show inline track picker inside profile sheet — no onboarding, no data wipe
-  const existing = document.getElementById('inline-track-picker');
-  if (existing) { existing.remove(); return; } // toggle off if already open
+  const existing = document.getElementById('rambam-track-modal');
+  if (existing) { existing.remove(); return; }
 
   const TRACKS = {
     '3': { label: '3 Chapters / Day', sub: 'Completes Mishneh Torah yearly' },
@@ -5958,29 +5971,45 @@ function changeTrack() {
     'm': { label: 'Sefer HaMitzvos',  sub: '613 mitzvos, runs with 3-ch cycle' },
   };
 
-  const picker = document.createElement('div');
-  picker.id = 'inline-track-picker';
-  picker.style.cssText = 'margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;';
+  const modal = document.createElement('div');
+  modal.id = 'rambam-track-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
 
-  picker.innerHTML = Object.entries(TRACKS).map(([id, t]) => {
+  const CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+  const rows = Object.entries(TRACKS).map(([id, t], i) => {
     const active = user.rambamTrack === id;
-    return '<button onclick="selectTrackInline(\'' + id + '\')" style="width:100%;display:flex;align-items:center;gap:12px;padding:13px 16px;background:' +
-      (active ? 'rgba(29,185,84,.1)' : 'var(--surface)') +
-      ';border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;text-align:left;">' +
-      '<div style="width:18px;height:18px;border-radius:50%;border:2px solid ' + (active ? '#1DB954' : 'var(--t3)') + ';background:' + (active ? '#1DB954' : 'transparent') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
-      (active ? '<div style="width:7px;height:7px;border-radius:50%;background:#fff;"></div>' : '') +
-      '</div>' +
-      '<div><p style="font-size:13px;font-weight:700;color:' + (active ? '#1DB954' : 'var(--t1)') + ';">' + t.label + '</p>' +
-      '<p style="font-size:11px;color:var(--t3);margin-top:1px;">' + t.sub + '</p></div>' +
-      '</button>';
+    const border = i < 2 ? 'border-bottom:1px solid var(--border);' : '';
+    return '<button onclick="selectTrackInline(\'' + id + '\')" '
+      + 'style="width:100%;padding:14px 16px;background:transparent;border:none;' + border
+      + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
+      + '<div style="text-align:left;">'
+      +   '<p style="font-size:14px;font-weight:700;color:' + (active ? '#1DB954' : 'var(--t1)') + ';margin-bottom:2px;">' + t.label + '</p>'
+      +   '<p style="font-size:12px;color:var(--t3);">' + t.sub + '</p>'
+      + '</div>'
+      + (active ? CHECK : '')
+      + '</button>';
   }).join('');
 
-  // Insert after the Change Track button
-  const btn = document.getElementById('change-track-btn');
-  if (btn) btn.parentNode.insertBefore(picker, btn.nextSibling);
+  modal.innerHTML = '<div class="ps-modal-sheet">'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
+    +   '<div><p class="ps-modal-title">Rambam track</p><p class="ps-modal-sub">Daily Mishneh Torah learning</p></div>'
+    +   '<button onclick="document.getElementById(\'rambam-track-modal\').remove()" class="ps-modal-close">×</button>'
+    + '</div>'
+    + '<div style="padding:12px 20px 20px;">'
+    +   '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
+    +     rows
+    +   '</div>'
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(modal);
 }
 
 function selectTrackInline(newTrack) {
+  document.getElementById('rambam-track-modal')?.remove();
+  document.getElementById('inline-track-picker')?.remove();
   if (newTrack === user.rambamTrack) {
     // Already on this track — just close the picker
     document.getElementById('inline-track-picker')?.remove();
@@ -6565,8 +6594,10 @@ function _toggleExtraTrack(id) {
     if (knob) { knob.style.right = on ? '3px' : ''; knob.style.left = on ? '' : '3px'; }
   }
 
-  // Re-render feed cards
+  // Re-render feed cards + separator
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const sep = document.getElementById('extra-tracks-separator');
+  if (sep) sep.style.display = user.extraTracks.length ? 'flex' : 'none';
   _renderExtraTrackCards(dateISO(d), dayOffset === 0);
 }
 
@@ -7092,7 +7123,17 @@ function _setChumashTranslation(id) {
 
 // ── Update profile dynamic sections ─────────────────────────────────────────
 function _updateProfileExtras() {
-  _renderPsTehillim();
+  // Update Tehillim row subtitle (summary count instead of full list)
+  const tehSub = document.getElementById('ps-tehillim-sub');
+  if (tehSub) {
+    const opts = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
+    const fixed = (opts.rebbe !== false ? 1 : 0) + (opts.rebbetzin !== false ? 1 : 0);
+    const custom = (user.tehillimPeople || []).length;
+    const total = fixed + custom;
+    tehSub.textContent = total === 0 ? 'No people added yet'
+      : total === 1 ? '1 person'
+      : total + ' people';
+  }
   _renderPsExtraTracks();
 }
 
