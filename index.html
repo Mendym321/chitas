@@ -924,7 +924,7 @@ onAuthStateChanged(auth, user => {
 
         <!-- Group: Learning -->
         <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:2px;padding:0 4px;">Learning</p>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:6px;">
           <!-- Rambam track -->
           <button id="change-track-btn" onclick="changeTrack()" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
             <span style="display:flex;align-items:center;gap:12px;">
@@ -944,13 +944,25 @@ onAuthStateChanged(auth, user => {
               <span style="width:28px;height:28px;border-radius:8px;background:rgba(74,158,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </span>
-              Personal Tehillim
+              <span>
+                Personal Tehillim
+                <span id="ps-tehillim-count" style="font-size:11px;color:var(--t3);margin-left:4px;"></span>
+              </span>
             </span>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
 
-        <!-- Group: App -->
+        <!-- Extra learning tracks — shown only when active -->
+        <div id="ps-extra-tracks" style="display:none;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;padding:0 4px;">
+            <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);">Extra learning</p>
+            <button onclick="_openExtraTracksMenu()" style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 4px;">+ Add</button>
+          </div>
+          <div id="ps-extra-list" style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;"></div>
+        </div>
+
+<!-- Group: App -->
         <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:2px;margin-top:10px;padding:0 4px;">App</p>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
           <!-- Theme -->
@@ -1870,7 +1882,13 @@ async function fetchHebcal() {
   const sun = new Date(today); sun.setDate(today.getDate() - dow);
   const sat = new Date(today); sat.setDate(today.getDate() + (6 - dow));
   const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=${fmt(sun)}&end=${fmt(sat)}&lg=s`;
+  // Add timezone so dates are correct for users outside UTC
+  const tzOffset = -new Date().getTimezoneOffset(); // minutes, positive = east
+  const tzSign = tzOffset >= 0 ? '+' : '-';
+  const tzHH = String(Math.floor(Math.abs(tzOffset)/60)).padStart(2,'0');
+  const tzMM = String(Math.abs(tzOffset)%60).padStart(2,'0');
+  const tzParam = encodeURIComponent('UTC' + tzSign + tzHH + ':' + tzMM);
+  const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=${fmt(sun)}&end=${fmt(sat)}&lg=s&tzid=${tzParam}`;
   const r = await fetch(url); if(!r.ok) throw new Error('Hebcal');
   return r.json();
 }
@@ -1890,14 +1908,34 @@ async function fetchHebDate() {
 // ZONE 8 · SCHEDULE BUILDER  (turn API data into section objects)
 // ════════════════════════════════════════════════════════════════════
 // ── BUILD SCHEDULE ────────────────────────────────────────────────────────────
+const REGULAR_PARSHIOT = new Set([
+  'Bereishit','Noach','Lech Lecha','Vayera','Chayei Sara','Toldot','Vayetzei',
+  'Vayishlach','Vayeshev','Miketz','Vayigash','Vayechi',
+  'Shemot','Vaera','Bo','Beshalach','Yitro','Mishpatim','Terumah','Tetzaveh',
+  'Ki Tisa','Vayakhel','Pekudei','Vayakhel-Pekudei',
+  'Vayikra','Tzav','Shemini','Tazria','Metzora','Tazria-Metzora',
+  'Acharei Mot','Kedoshim','Acharei Mot-Kedoshim','Emor','Behar','Bechukotai',
+  'Behar-Bechukotai','Bamidbar','Nasso','Beha'alotcha','Shelach','Korach',
+  'Chukat','Balak','Chukat-Balak','Pinchas','Matot','Masei','Matot-Masei',
+  'Devarim','Vaetchanan','Eikev','Re'eh','Shoftim','Ki Teitzei','Ki Tavo',
+  'Nitzavim','Vayeilech','Nitzavim-Vayeilech','Haazinu','Vezot Haberakhah',
+]);
+
 function parseHebcal(data) {
   const items = data.items || [];
-  const parshaItem = items.find(i => i.category==='parashat');
+  // Find the regular weekly parsha — skip holiday/special readings
+  // When a holiday falls on Shabbos, Hebcal returns that holiday as the parashat item
+  // but Chabad Chumash always follows the regular 54-parsha cycle
+  const allParshaItems = items.filter(i => i.category === 'parashat');
+  const parshaItem = allParshaItems.find(i => {
+    const name = (i.title || '').replace(/Parashat |Parasha /, '');
+    return REGULAR_PARSHIOT.has(name);
+  }) || allParshaItems[0]; // fallback to first if none match (shouldn't happen)
   const dow = new Date().getDay();
   const aliyaNum = dow===6 ? 7 : dow+1;
   const leyning = parshaItem?.leyning || {};
   const aliyaRef = leyning[String(aliyaNum)] || null;
-  const parshaName = parshaItem?.title?.replace(/Parashat |Parasha /,'') || null;
+  const parshaName = parshaItem?.title?.replace(/Parashat |Parasha /, '') || null;
 
   const tehItem = items.find(i => i.category==='dailyLearning' && (i.title?.startsWith('Psalms')||i.title?.startsWith('Tehillim')));
   let tehChapters=[], tehTitle='';
@@ -1969,9 +2007,9 @@ async function init() {
     // Pull Sefaria refs from calendar
     const sefariaItems = sefariaCalRaw?.calendar_items || [];
 
-    // Chumash: aliya ref from Hebcal, or full parasha from Sefaria calendar
-    const parshaItem = sefariaItems.find(i => i.title?.en === 'Parashat Hashavua');
-    const chumashRef = p.aliyaRef || parshaItem?.ref || null;
+    // Chumash: aliya ref from Hebcal (already holiday-safe via parseHebcal)
+    // Sefaria Parashat Hashavua may also return a holiday reading — use Hebcal's ref
+    const chumashRef = p.aliyaRef || null;
 
     // Tehillim: build ref from Hebcal chapter list
     // If multiple chapters, fetch them individually and combine
@@ -2305,7 +2343,10 @@ async function rebuildScheduleForOffset() {
     const rsun = new Date(d); rsun.setDate(d.getDate() - rdow);
     const rsat = new Date(d); rsat.setDate(d.getDate() + (6 - rdow));
     const rfmt = x => x.getFullYear() + '-' + String(x.getMonth()+1).padStart(2,'0') + '-' + String(x.getDate()).padStart(2,'0');
-    const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s');
+    const rTzOffset = -d.getTimezoneOffset();
+    const rTzSign = rTzOffset >= 0 ? '+' : '-';
+    const rTzParam = encodeURIComponent('UTC' + rTzSign + String(Math.floor(Math.abs(rTzOffset)/60)).padStart(2,'0') + ':' + String(Math.abs(rTzOffset)%60).padStart(2,'0'));
+    const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s&tzid=' + rTzParam);
     const cal = await r.json();
     p = parseHebcalForDate(cal, d);
   } catch(e) { p = null; }
@@ -2366,7 +2407,12 @@ async function rebuildScheduleForOffset() {
 
 function parseHebcalForDate(data, d) {
   const items = data.items || [];
-  const parshaItem = items.find(i => i.category === 'parashat');
+  // Skip holiday Shabbos readings — use the regular weekly parsha
+  const allParshaItems = items.filter(i => i.category === 'parashat');
+  const parshaItem = allParshaItems.find(i => {
+    const name = (i.title || '').replace(/Parashat |Parasha /, '');
+    return REGULAR_PARSHIOT.has(name);
+  }) || allParshaItems[0];
   const dow = d.getDay();
   const aliyaNum = dow === 6 ? 7 : dow + 1;
   const parshaName = parshaItem?.title?.replace(/Parashat |Parasha /, '') || null;
@@ -6387,30 +6433,36 @@ async function _loadHayomYom() {
   const heb = await fetch(hebUrl).then(r => r.json()).catch(() => null);
   if (!heb?.hm || !heb?.hd) throw new Error('Could not get Hebrew date');
 
-  // Sefaria Hayom Yom ref: "Hayom Yom.15 Nissan"
-  // Hebcal returns hm as e.g. "Nisan" — map to Sefaria spelling
+  // Sefaria Hayom Yom ref format: "Hayom Yom, 8 Nisan"
+  // Hebcal hm values map directly to Sefaria month names (mostly)
   const MONTH_MAP = {
-    'Nisan':'Nissan','Iyyar':'Iyar','Sivan':'Sivan','Tamuz':'Tammuz',
+    'Nisan':'Nisan','Iyyar':'Iyyar','Sivan':'Sivan','Tamuz':'Tamuz',
     'Av':'Av','Elul':'Elul','Tishrei':'Tishrei','Cheshvan':'Cheshvan',
     'Kislev':'Kislev','Tevet':'Tevet','Shvat':'Shvat','Adar':'Adar',
     'Adar I':'Adar I','Adar II':'Adar II'
   };
   const monthName = MONTH_MAP[heb.hm] || heb.hm;
-  const ref = 'Hayom Yom.' + heb.hd + ' ' + monthName;
+  // Try both ref formats — Sefaria is inconsistent
+  const ref = 'Hayom Yom, ' + heb.hd + ' ' + monthName;
+  const refAlt = 'Hayom Yom.' + heb.hd + ' ' + monthName;
   const subtitle = heb.hd + ' ' + monthName;
 
   document.getElementById('chabad-panel-sub').textContent = subtitle;
 
-  const enc = encodeURIComponent(ref);
-  const [enRes, heRes] = await Promise.all([
-    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
-    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
-  ]);
-
-  const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-  const allEn = _flatHtml(engVersion?.text || enRes?.text || []);
-  const allHe = _flatHtml(heRes?.he || []);
-
+  // Try primary ref, then alternate format
+  let allHe = [], allEn = [];
+  for (const tryRef of [ref, refAlt]) {
+    const enc = encodeURIComponent(tryRef);
+    const [enRes, heRes] = await Promise.all([
+      fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+    ]);
+    const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+    allEn = _flatHtml(engVersion?.text || enRes?.text || []);
+    allHe = _flatHtml(heRes?.he || []);
+    if (allHe.length || allEn.length) break;
+    console.log('Hayom Yom: ref not found:', tryRef, '- trying alternate');
+  }
   if (!allHe.length && !allEn.length) throw new Error('No Hayom Yom text for ' + ref);
 
   _renderBilingualReader('hayomYom', subtitle, allHe, allEn, def.color, 'Hayom Yom');
@@ -6422,25 +6474,39 @@ async function _loadLikkuteiTorah() {
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
   const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
     + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json());
-  const parshaItem = (cal.calendar_items || []).find(i => i.title?.en === 'Parashat Hashavua');
-  if (!parshaItem) throw new Error('No parsha found');
+  // Try multiple title variants — Sefaria sometimes returns 'Parasha' vs 'Parashat Hashavua'
+  const parshaItem = (cal.calendar_items || []).find(i =>
+    i.title?.en === 'Parashat Hashavua' ||
+    i.title?.en === 'Parasha' ||
+    (i.title?.en || '').toLowerCase().includes('parasha') ||
+    (i.title?.en || '').toLowerCase().includes('parashat')
+  );
+  if (!parshaItem) {
+    console.log('LT: no parsha in calendar. Items:', (cal.calendar_items || []).map(i => i.title?.en));
+    throw new Error('No parsha found');
+  }
 
   const parshaName = parshaItem.displayValue?.en || parshaItem.ref;
+  console.log('LT: parshaName =', parshaName);
   // Map parsha name to Likkutei Torah ref
   const ltRef = _parshaToLikkuteiTorah(parshaName);
+  console.log('LT: ltRef =', ltRef);
   if (!ltRef) {
-    // Fallback: link to Chabad.org
+    // Try fetching directly from Sefaria with the parsha name as-is
+    console.log('LT: no ref for parsha', parshaName, '— trying Sefaria search');
     document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaName;
-    const contEl = document.getElementById('native-reader-content');
     const loadEl = document.getElementById('native-reader-loading');
+    const contEl = document.getElementById('native-reader-content');
+    if (loadEl) loadEl.style.display = 'none';
     if (contEl) {
-      contEl.innerHTML = '<div style="padding:20px;text-align:center;">'
-        + '<p style="color:var(--t2);margin-bottom:16px;">Likkutei Torah for Parshas ' + parshaName + '</p>'
-        + '<a href="https://www.chabad.org/search/keyword_cdo/kid/1582/jewish/Likkutei-Torah.htm" target="_blank" style="color:' + def.color + ';font-weight:600;">Open on Chabad.org</a>'
+      contEl.innerHTML = '<div style="padding:24px 20px;text-align:center;">'
+        + '<p style="color:var(--t2);font-size:15px;margin-bottom:8px;">Parshas ' + parshaName + '</p>'
+        + '<p style="color:var(--t3);font-size:13px;margin-bottom:20px;">Likkutei Torah / Torah Or for this parsha is not yet in our library.</p>'
+        + '<a href="https://www.chabad.org/kabbalah/article_cdo/aid/1046914/jewish/Likkutei-Torah.htm" onclick="event.stopPropagation()" target="_blank" '
+        + 'style="display:inline-block;padding:10px 20px;border-radius:10px;background:' + def.color + '18;border:1px solid ' + def.color + '35;color:' + def.color + ';font-weight:700;font-size:14px;text-decoration:none;">Open on Chabad.org</a>'
         + '</div>';
       contEl.style.display = 'block';
     }
-    if (loadEl) loadEl.style.display = 'none';
     return;
   }
 
@@ -6621,9 +6687,22 @@ function _parshaToLikkuteiTorah(parshaName) {
     'Pekudei':      'Torah Ohr, Pekudei.1',
   };
   // Try exact match, then partial
-  return LT[parshaName] || TO[parshaName]
-    || Object.entries({...LT,...TO}).find(([k]) => parshaName.includes(k) || k.includes(parshaName))?.[1]
-    || null;
+  // Normalize: remove diacritics, extra spaces, common prefixes
+  const norm = s => s.trim()
+    .replace(/^Parshat?\s+/i, '')
+    .replace(/^Parasha\s+/i, '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const n = norm(parshaName);
+  // Exact match first
+  if (LT[n]) return LT[n];
+  if (TO[n]) return TO[n];
+  // Partial match
+  const all = {...LT,...TO};
+  const found = Object.entries(all).find(([k]) => {
+    const nk = norm(k);
+    return n === nk || n.includes(nk) || nk.includes(n);
+  });
+  return found?.[1] || null;
 }
 
 
