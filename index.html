@@ -7064,12 +7064,29 @@ function _openChumashTranslationPicker() {
 
 function _setChumashTranslation(id) {
   localStorage.setItem('chitas_chumash_translation', id);
-  const el = document.getElementById('ps-chumash-trans');
-  if (el) el.textContent = _getChumashTransLabel();
-  window._chumashData = null;
+  // Update profile label if visible
+  const psEl = document.getElementById('ps-chumash-trans');
+  if (psEl) psEl.textContent = _getChumashTransLabel();
+  // Close the picker
   document.getElementById('chumash-trans-modal')?.remove();
+  // If the Chumash reader is currently open, reload it in place
+  const markBtn = document.getElementById('chabad-mark-btn');
+  const panel = document.getElementById('chabad-panel');
+  const readerOpen = panel?.style.display !== 'none' && markBtn?.dataset?.sectionId === 'chumash';
+  if (readerOpen) {
+    // Show loading state immediately
+    const contEl = document.getElementById('native-reader-content');
+    const loadEl = document.getElementById('native-reader-loading');
+    if (contEl) contEl.style.display = 'none';
+    if (loadEl) loadEl.style.display = 'block';
+    // Clear cache and reload
+    window._chumashData = null;
+    _loadChumashNative('chumash').catch(() => {});
+  } else {
+    window._chumashData = null;
+  }
   const label = CHUMASH_TRANSLATIONS.find(t => t.id === id)?.label || id;
-  fire(label + ' translation selected', 'gold');
+  fire(label + ' translation', 'gold');
 }
 
 
