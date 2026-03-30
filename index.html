@@ -339,6 +339,91 @@
   border-radius:16px;
   will-change:transform;
 }
+
+/* ── Profile sheet design system ── */
+/* All profile rows, modals, and customization sheets share these tokens */
+:root {
+  --ps-row-pad: 13px 16px;
+  --ps-icon-size: 30px;
+  --ps-icon-radius: 9px;
+  --ps-section-label: 10px;
+  --ps-row-font: 14px;
+  --ps-sub-font: 12px;
+  --ps-modal-header-pad: 18px 20px 15px;
+  --ps-section-gap: 20px;
+}
+/* Section label */
+.ps-label {
+  font-size:10px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--t3);
+  margin-bottom:6px;padding:0 4px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+/* Grouped card */
+.ps-card {
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;margin-bottom:20px;
+}
+/* Row inside card */
+.ps-row {
+  display:flex;align-items:center;padding:13px 16px;gap:12px;
+  border-bottom:1px solid var(--border);
+}
+.ps-row:last-child { border-bottom:none; }
+/* Icon in row */
+.ps-icon {
+  width:30px;height:30px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+/* Row label */
+.ps-row-label {
+  flex:1;font-size:14px;font-weight:600;color:var(--t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Row sublabel */
+.ps-row-sub { font-size:11px;color:var(--t3);margin-top:1px; }
+/* Row value (right side) */
+.ps-row-val { font-size:12px;color:var(--t3);flex-shrink:0; }
+/* Chevron */
+.ps-chevron { flex-shrink:0;color:var(--t3); }
+/* Add button at bottom of card */
+.ps-add-btn {
+  width:100%;padding:11px 16px;background:transparent;border:none;
+  border-top:1px solid var(--border);color:var(--accent);
+  font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;gap:6px;
+}
+/* Remove (trash) button */
+.ps-remove-btn {
+  width:28px;height:28px;border-radius:8px;border:none;
+  background:rgba(255,71,87,.08);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;color:#FF4757;
+}
+/* Drag handle */
+.ps-drag-handle {
+  color:var(--t3);cursor:grab;touch-action:none;
+  padding:4px 2px;display:flex;align-items:center;flex-shrink:0;
+}
+/* Modal sheet container */
+.ps-modal-sheet {
+  background:var(--bg);border-radius:20px 20px 0 0;
+  width:100%;max-width:430px;
+  display:flex;flex-direction:column;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+/* Modal header */
+.ps-modal-header {
+  padding:18px 20px 15px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.ps-modal-title { font-size:17px;font-weight:800;color:var(--t1);margin-bottom:2px; }
+.ps-modal-sub   { font-size:13px;color:var(--t3); }
+/* Modal close button */
+.ps-modal-close {
+  width:30px;height:30px;border-radius:50%;background:var(--surface);
+  border:none;font-size:18px;cursor:pointer;color:var(--t2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
 </style>
 <!-- Firebase SDK -->
 <script type="module">
@@ -922,92 +1007,76 @@ onAuthStateChanged(auth, user => {
       <div style="display:flex;flex-direction:column;gap:6px;">
 
         <!-- Group: Learning -->
-        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;padding:0 4px;">Learning</p>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
-          <!-- Rambam track -->
-          <button id="change-track-btn" onclick="changeTrack()" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
-            <span style="display:flex;align-items:center;gap:12px;">
-              <span style="width:28px;height:28px;border-radius:8px;background:rgba(29,185,84,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
-              </span>
-              Rambam track
+        <div class="ps-label">Learning</div>
+        <div class="ps-card">
+          <button id="change-track-btn" onclick="changeTrack()" class="ps-row" style="width:100%;background:transparent;border:none;cursor:pointer;font-family:inherit;text-align:left;">
+            <span class="ps-icon" style="background:rgba(29,185,84,.1);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
             </span>
-            <span style="display:flex;align-items:center;gap:6px;">
-              <span id="ps-track" style="font-size:12px;color:var(--t3);"></span>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-            </span>
+            <span class="ps-row-label">Rambam track</span>
+            <span id="ps-track" class="ps-row-val"></span>
+            <svg class="ps-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
-          <!-- Chumash translation -->
-          <button onclick="_openChumashTranslationPicker()" style="width:100%;padding:14px 16px;background:transparent;border:none;color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
-            <span style="display:flex;align-items:center;gap:12px;">
-              <span style="width:28px;height:28px;border-radius:8px;background:rgba(240,165,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-              </span>
-              Chumash translation
+          <button onclick="_openChumashTranslationPicker()" class="ps-row" style="width:100%;background:transparent;border:none;border-bottom:none;cursor:pointer;font-family:inherit;text-align:left;">
+            <span class="ps-icon" style="background:rgba(240,165,0,.1);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
             </span>
-            <span style="display:flex;align-items:center;gap:6px;">
-              <span id="ps-chumash-trans" style="font-size:12px;color:var(--t3);">Metsudah</span>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-            </span>
+            <span class="ps-row-label">Chumash translation</span>
+            <span id="ps-chumash-trans" class="ps-row-val">Metsudah</span>
+            <svg class="ps-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
 
         <!-- My People (Tehillim) -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding:0 4px;">
-          <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);">My People · Tehillim</p>
-          <button onclick="_openTehillimPeopleManager()" style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 0;">Manage</button>
+        <div class="ps-label">
+          <span>My People · Tehillim</span>
+          <button onclick="_openTehillimPeopleManager()" style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;">Edit all</button>
         </div>
-        <div id="ps-tehillim-people" style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;"></div>
+        <div id="ps-tehillim-people" class="ps-card"></div>
 
         <!-- Extra learning -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding:0 4px;">
-          <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);">Extra learning</p>
-          <button onclick="_openExtraTracksMenu()" style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 0;">Add / Remove</button>
+        <div class="ps-label">
+          <span>Extra learning</span>
         </div>
-        <div id="ps-extra-tracks-list" style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;"></div>
+        <div id="ps-extra-tracks-list" class="ps-card"></div>
 
         <!-- App -->
-        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;margin-top:4px;padding:0 4px;">App</p>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
-          <!-- Theme -->
-          <button onclick="toggleTheme()" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
-            <span style="display:flex;align-items:center;gap:12px;">
-              <span style="width:28px;height:28px;border-radius:8px;background:rgba(240,165,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <span id="theme-icon">
-                  <svg id="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                  <svg id="theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                </span>
+        <div class="ps-label" style="margin-top:4px;">App</div>
+        <div class="ps-card">
+          <button onclick="toggleTheme()" class="ps-row" style="width:100%;background:transparent;border:none;cursor:pointer;font-family:inherit;text-align:left;">
+            <span class="ps-icon" style="background:rgba(240,165,0,.1);">
+              <span id="theme-icon">
+                <svg id="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg id="theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
               </span>
-              Appearance
             </span>
-            <span id="theme-label" style="font-size:12px;color:var(--t3);">Dark</span>
+            <span class="ps-row-label">Appearance</span>
+            <span id="theme-label" class="ps-row-val">Dark</span>
           </button>
-          <!-- Share -->
-          <button onclick="shareApp()" style="width:100%;padding:14px 16px;background:transparent;border:none;color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
-            <span style="display:flex;align-items:center;gap:12px;">
-              <span style="width:28px;height:28px;border-radius:8px;background:rgba(168,85,247,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-              </span>
-              Share app
+          <button onclick="shareApp()" class="ps-row" style="width:100%;background:transparent;border:none;border-bottom:none;cursor:pointer;font-family:inherit;text-align:left;">
+            <span class="ps-icon" style="background:rgba(168,85,247,.1);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
             </span>
-            <span style="font-size:12px;color:var(--t3);">Invite a friend</span>
+            <span class="ps-row-label">Share app</span>
+            <span class="ps-row-val">Invite a friend</span>
           </button>
         </div>
 
 <!-- Danger zone -->
-    <div style="padding:0 24px 48px;display:flex;flex-direction:column;gap:6px;">
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
-        <button onclick="signOut();closeProfileSheet();" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t2);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:12px;text-align:left;">
-          <span style="width:28px;height:28px;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    <div style="padding:0 24px 48px;">
+      <div class="ps-label">Account</div>
+      <div class="ps-card">
+        <button onclick="signOut();closeProfileSheet();" class="ps-row" style="width:100%;background:transparent;border:none;cursor:pointer;font-family:inherit;text-align:left;">
+          <span class="ps-icon" style="background:var(--surface);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </span>
-          Sign out
+          <span class="ps-row-label" style="color:var(--t2);">Sign out</span>
         </button>
-        <button onclick="resetProgress();closeProfileSheet();" style="width:100%;padding:14px 16px;background:transparent;border:none;color:#FF4757;font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:12px;text-align:left;">
-          <span style="width:28px;height:28px;border-radius:8px;background:rgba(255,71,87,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF4757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        <button onclick="resetProgress();closeProfileSheet();" class="ps-row" style="width:100%;background:transparent;border:none;border-bottom:none;cursor:pointer;font-family:inherit;text-align:left;">
+          <span class="ps-icon" style="background:rgba(255,71,87,.08);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF4757" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
           </span>
-          Reset progress
+          <span class="ps-row-label" style="color:#FF4757;">Reset progress</span>
         </button>
       </div>
     </div>
@@ -1594,9 +1663,9 @@ function _openTehillimPeopleManager() {
   };
 
   modal.innerHTML = '<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:90vh;display:flex;flex-direction:column;padding:0 0 env(safe-area-inset-bottom);">'
-    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">'
-    +   '<p style="font-size:17px;font-weight:800;color:var(--t1);">Personal Tehillim</p>'
-    +   '<button onclick="document.getElementById(\'tehillim-people-modal\').remove()" style="background:var(--card);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;color:var(--t2);">×</button>'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
+    +   '<div><p class="ps-modal-title">Personal Tehillim</p><p class="ps-modal-sub">Chapters for the people in your life</p></div>'
+    +   '<button onclick="document.getElementById(\'tehillim-people-modal\').remove()" class="ps-modal-close">×</button>'
     + '</div>'
     + '<div style="overflow-y:auto;flex:1;padding:16px 20px;">'
 
@@ -6460,10 +6529,10 @@ function _openExtraTracksMenu() {
       + '</div>';
   }
 
-  modal.innerHTML = '<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:80vh;display:flex;flex-direction:column;padding:0 0 env(safe-area-inset-bottom);">'
-    + '<div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">'
-    +   '<p style="font-size:17px;font-weight:800;color:var(--t1);margin-bottom:2px;">Daily learning</p>'
-    +   '<p style="font-size:13px;color:var(--t3);">Add to your daily feed. No points — just learning.</p>'
+  modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:80vh;">'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
+    +   '<div><p class="ps-modal-title">Add daily learning</p><p class="ps-modal-sub">Tap to toggle · no points, just learning</p></div>'
+    +   '<button onclick="document.getElementById(\'extra-tracks-modal\').remove()" class="ps-modal-close">×</button>'
     + '</div>'
     + '<div style="overflow-y:auto;flex:1;">'
     +   '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:16px 20px;">'
@@ -6979,9 +7048,9 @@ function _openChumashTranslationPicker() {
   }).join('');
 
   modal.innerHTML = '<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:0 0 env(safe-area-inset-bottom);">'
-    + '<div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);">'
-    +   '<p style="font-size:17px;font-weight:800;color:var(--t1);margin-bottom:2px;">Chumash translation</p>'
-    +   '<p style="font-size:13px;color:var(--t3);">Choose the English Torah translation</p>'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
+    +   '<div><p class="ps-modal-title">Chumash translation</p><p class="ps-modal-sub">English Torah translation</p></div>'
+    +   '<button onclick="document.getElementById(\'chumash-trans-modal\').remove()" class="ps-modal-close">×</button>'
     + '</div>'
     + '<div style="padding:12px 20px 20px;">'
     +   '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
@@ -7016,91 +7085,72 @@ function _renderPsTehillim() {
   const opts = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
   const people = user.tehillimPeople || [];
 
-  // Build rows: fixed people + user people
-  const rows = [];
+  const GRIP = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>';
+  const TRASH = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>';
+  const PLUS  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
-  // Fixed: Rebbe + Rebbetzin
-  [['rebbe','Rebbe'],['rebbetzin','Rebbetzin']].forEach(([key, label]) => {
+  let html = '';
+
+  // Fixed people
+  [['rebbe','Rebbe','11 Nissan'],['rebbetzin','Rebbetzin','25 Adar']].forEach(([key,label,dates]) => {
     const on = opts[key] !== false;
-    rows.push({ label, sub: on ? 'Included' : 'Not included', fixed: true, key, on });
-  });
-
-  // User people
-  people.forEach((p, i) => {
-    rows.push({ label: p.label, sub: p.heDay + ' ' + p.heMonth + ' ' + p.heYear, idx: i });
-  });
-
-  if (!rows.length) {
-    el.innerHTML = '<p style="font-size:13px;color:var(--t3);padding:14px 16px;">No people added yet.</p>';
-    return;
-  }
-
-  el.innerHTML = rows.map((row, i) => {
-    const border = i < rows.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
-    if (row.fixed) {
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;' + border + '">'
-        + '<div>'
-        +   '<p style="font-size:14px;font-weight:600;color:var(--t1);">' + row.label + '</p>'
-        +   '<p style="font-size:11px;color:var(--t3);">' + (row.on ? 'Always included' : 'Off — tap to enable') + '</p>'
-        + '</div>'
-        + '<button onclick="_toggleTehillimFixed(\'' + row.key + '\')" style="width:40px;height:24px;border-radius:12px;border:none;background:' + (row.on ? '#4A9EFF' : 'var(--border)') + ';position:relative;cursor:pointer;transition:background .15s;flex-shrink:0;">'
-        +   '<div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;' + (row.on ? 'right:3px' : 'left:3px') + ';transition:all .15s;"></div>'
-        + '</button>'
-        + '</div>';
-    }
-    // User person — with drag handle for reorder
-    return '<div id="ps-person-row-' + row.idx + '" data-idx="' + row.idx + '" style="display:flex;align-items:center;gap:10px;padding:10px 16px;' + border + '">'
-      + '<div id="ps-person-handle-' + row.idx + '" ontouchstart="_tpmTouchStart(event,' + row.idx + ')" ontouchmove="_tpmTouchMove(event)" ontouchend="_tpmTouchEnd(event)" style="color:var(--t3);cursor:grab;touch-action:none;padding:4px 2px;display:flex;align-items:center;">'
-      +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
+    html += '<div class="ps-row">'
+      + '<div class="ps-icon" style="background:rgba(74,158,255,.08);color:#4A9EFF;">'
+      +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>'
       + '</div>'
       + '<div style="flex:1;min-width:0;">'
-      +   '<p style="font-size:14px;font-weight:600;color:var(--t1);">' + row.label + '</p>'
-      +   '<p style="font-size:11px;color:var(--t3);">' + row.sub + '</p>'
+      +   '<p class="ps-row-label">' + label + '</p>'
+      +   '<p class="ps-row-sub">' + (on ? 'Included in Tehillim' : 'Not included') + '</p>'
       + '</div>'
-      + '<button onclick="_deleteTehillimPerson(' + row.idx + ');_updateProfileExtras();" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,71,87,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#FF4757;">'
-      +   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+      + '<button onclick="_toggleTehillimFixed(\'' + key + '\');_updateProfileExtras();" style="width:40px;height:24px;border-radius:12px;border:none;background:' + (on ? '#4A9EFF' : 'var(--border)') + ';position:relative;cursor:pointer;transition:background .15s;flex-shrink:0;">'
+      +   '<div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;' + (on ? 'right:3px' : 'left:3px') + ';transition:all .15s;"></div>'
       + '</button>'
       + '</div>';
-  }).join('');
+  });
 
-  // Add + button at bottom
-  el.innerHTML += '<button onclick="_openTehillimPeopleManager()" style="width:100%;padding:11px 16px;background:transparent;border:none;border-top:1px solid var(--border);color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">'
-    + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-    + 'Add person'
-    + '</button>';
+  // User people with drag handles
+  people.forEach((p, i) => {
+    html += '<div id="ps-person-row-' + i + '" data-idx="' + i + '" class="ps-row">'
+      + '<div class="ps-drag-handle" id="ps-person-handle-' + i + '" ontouchstart="_tpmTouchStart(event,' + i + ')" ontouchmove="_tpmTouchMove(event)" ontouchend="_tpmTouchEnd(event)">' + GRIP + '</div>'
+      + '<div class="ps-icon" style="background:rgba(74,158,255,.08);color:#4A9EFF;">'
+      +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'
+      + '</div>'
+      + '<div style="flex:1;min-width:0;">'
+      +   '<p class="ps-row-label">' + p.label + '</p>'
+      +   '<p class="ps-row-sub">' + p.heDay + ' ' + p.heMonth + ' ' + p.heYear + '</p>'
+      + '</div>'
+      + '<button onclick="_deleteTehillimPerson(' + i + ');_updateProfileExtras();_renderPersonalPsalms();" class="ps-remove-btn">' + TRASH + '</button>'
+      + '</div>';
+  });
+
+  el.innerHTML = html
+    + '<button onclick="_openTehillimPeopleManager()" class="ps-add-btn">' + PLUS + 'Add person</button>';
 }
 
 function _renderPsExtraTracks() {
   const el = document.getElementById('ps-extra-tracks-list');
   if (!el) return;
   const tracks = user.extraTracks || [];
+  const TRASH = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>';
+  const PLUS  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
-  if (!tracks.length) {
-    el.innerHTML = '<button onclick="_openExtraTracksMenu()" style="width:100%;padding:13px 16px;background:transparent;border:none;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">'
-      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-      + 'Add extra learning'
-      + '</button>';
-    return;
-  }
-
-  el.innerHTML = tracks.map((id, i) => {
+  const rows = tracks.map((id) => {
     const def = EXTRA_TRACK_DEFS[id];
     if (!def) return '';
-    const border = i < tracks.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
-    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;' + border + '">'
-      + '<div style="width:28px;height:28px;border-radius:8px;background:' + def.color + '18;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + def.color + ';">'
+    return '<div class="ps-row">'
+      + '<div class="ps-icon" style="background:' + def.color + '18;color:' + def.color + ';">'
       +   '<svg width="14" height="14" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
       + '</div>'
-      + '<p style="font-size:14px;font-weight:600;color:var(--t1);flex:1;">' + def.label + '</p>'
-      + '<button onclick="_removeExtraTrack(\'' + id + '\');_updateProfileExtras();" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,71,87,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#FF4757;">'
-      +   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
-      + '</button>'
+      + '<div style="flex:1;min-width:0;">'
+      +   '<p class="ps-row-label">' + def.label + '</p>'
+      +   '<p class="ps-row-sub">' + def.desc + '</p>'
+      + '</div>'
+      + '<button onclick="_removeExtraTrack(\'' + id + '\');_updateProfileExtras();" class="ps-remove-btn">' + TRASH + '</button>'
       + '</div>';
-  }).join('')
-  + '<button onclick="_openExtraTracksMenu()" style="width:100%;padding:11px 16px;background:transparent;border:none;border-top:1px solid var(--border);color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">'
-  +   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-  + 'Add more'
-  + '</button>';
+  }).join('');
+
+  el.innerHTML = rows
+    + '<button onclick="_openExtraTracksMenu()" class="ps-add-btn">' + PLUS + (tracks.length ? 'Add more' : 'Add extra learning') + '</button>';
 }
 
 // ── App loader ────────────────────────────────────────────────────────────────
