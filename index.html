@@ -938,6 +938,19 @@ onAuthStateChanged(auth, user => {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
             </span>
           </button>
+          <!-- Chumash translation -->
+          <button onclick="_openChumashTranslationPicker()" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+            <span style="display:flex;align-items:center;gap:12px;">
+              <span style="width:28px;height:28px;border-radius:8px;background:rgba(240,165,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+              </span>
+              Chumash translation
+            </span>
+            <span style="display:flex;align-items:center;gap:6px;">
+              <span id="ps-chumash-trans" style="font-size:12px;color:var(--t3);">Koren</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+            </span>
+          </button>
           <!-- Personal Tehillim -->
           <button onclick="_openTehillimPeopleManager()" style="width:100%;padding:14px 16px;background:transparent;border:none;color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
             <span style="display:flex;align-items:center;gap:12px;">
@@ -4255,8 +4268,8 @@ function _renderChumashContent() {
   // Render chapter by chapter — each chunk knows its own chapter number
   // and startVerse, so verse numbering is always correct
   torahChunks.forEach((chunk, chunkIdx) => {
-    // Chapter heading if multi-chapter — same card style as Rambam but gold
-    if (torahChunks.length > 1) {
+    // Chapter heading — always shown, style matches Tanya/Rambam
+    {
       v += '<div style="' + (chunkIdx > 0 ? 'margin-top:28px;' : '') + 'margin-bottom:16px;'
          + 'padding:10px 14px;background:rgba(240,165,0,.07);'
          + 'border-left:3px solid var(--gold);border-radius:0 8px 8px 0;">'
@@ -4352,7 +4365,7 @@ async function _loadChumashNative(sectionId) {
 
     // Fetch Torah and Rashi in parallel
     const [torah, rashi] = await Promise.all([
-      _fetchChumashText(aliyahRef, 'koren'),
+      _fetchChumashText(aliyahRef, (CHUMASH_TRANSLATIONS.find(t => t.id === (localStorage.getItem('chitas_chumash_translation') || 'metsudah')) || CHUMASH_TRANSLATIONS[0]).keyword),
       _fetchChumashText('Rashi on ' + aliyahRef, 'metsudah').catch(() => ({ chunks: [], versionTitle: '' })),
     ]);
 
@@ -5752,6 +5765,8 @@ function openProfileSheet() {
   document.getElementById('profile-sheet-city').textContent = user.city || '';
   document.getElementById('ps-streak').textContent = user.streak;
   document.getElementById('ps-xp').textContent = user.xp;
+  const transEl = document.getElementById('ps-chumash-trans');
+  if (transEl) transEl.textContent = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Koren';
   document.getElementById('ps-track').textContent = RAMBAM_TRACKS[user.rambamTrack]?.label || '';
   // City row
   const cityLabel = document.getElementById('ps-city-label');
@@ -6916,6 +6931,69 @@ function _removeExtraTrack(id) {
   if (sep) sep.style.display = user.extraTracks.length ? 'flex' : 'none';
   _renderExtraTrackCards(dateISO(d), dayOffset === 0);
   fire(EXTRA_TRACK_DEFS[id]?.label + ' removed', 'gray');
+}
+
+
+// ── Chumash translation picker ────────────────────────────────────────────────
+const CHUMASH_TRANSLATIONS = [
+  { id: 'metsudah',  label: 'Metsudah',         sub: 'Metsudah Publications, 2009',               keyword: 'Metsudah Chumash'         },
+  { id: 'silverstein', label: 'Rabbi Silverstein', sub: 'The Torah — Rabbi Shraga Silverstein',   keyword: 'Silverstein'               },
+  { id: 'koren',     label: 'Koren',             sub: 'The Koren Jerusalem Bible',                 keyword: 'Koren Jerusalem'           },
+  { id: 'kehot',     label: 'Kehot',             sub: 'Kehot Chumash, Chabad House Publications', keyword: 'Kehot'                     },
+];
+
+function _getChumashTransLabel() {
+  const id = localStorage.getItem('chitas_chumash_translation') || 'metsudah';
+  return CHUMASH_TRANSLATIONS.find(t => t.id === id)?.label || 'Metsudah';
+}
+
+function _openChumashTranslationPicker() {
+  const existing = document.getElementById('chumash-trans-modal');
+  if (existing) existing.remove();
+
+  const current = localStorage.getItem('chitas_chumash_translation') || 'metsudah';
+  const modal = document.createElement('div');
+  modal.id = 'chumash-trans-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+
+  const rows = CHUMASH_TRANSLATIONS.map((t, i) => {
+    const active = t.id === current;
+    const border = i < CHUMASH_TRANSLATIONS.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
+    return '<button onclick="_setChumashTranslation(\'' + t.id + '\')" '
+      + 'style="width:100%;padding:14px 16px;background:transparent;border:none;' + border
+      + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
+      + '<div style="text-align:left;">'
+      +   '<p style="font-size:14px;font-weight:700;color:' + (active ? 'var(--gold)' : 'var(--t1)') + ';margin-bottom:2px;">' + t.label + '</p>'
+      +   '<p style="font-size:12px;color:var(--t3);">' + t.sub + '</p>'
+      + '</div>'
+      + (active ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
+      + '</button>';
+  }).join('');
+
+  modal.innerHTML = '<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:0 0 env(safe-area-inset-bottom);">'
+    + '<div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);">'
+    +   '<p style="font-size:17px;font-weight:800;color:var(--t1);margin-bottom:2px;">Chumash translation</p>'
+    +   '<p style="font-size:13px;color:var(--t3);">Choose the English Torah translation</p>'
+    + '</div>'
+    + '<div style="padding:12px 20px 20px;">'
+    +   '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
+    +     rows
+    +   '</div>'
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(modal);
+}
+
+function _setChumashTranslation(id) {
+  localStorage.setItem('chitas_chumash_translation', id);
+  const el = document.getElementById('ps-chumash-trans');
+  if (el) el.textContent = _getChumashTransLabel();
+  window._chumashData = null;
+  document.getElementById('chumash-trans-modal')?.remove();
+  const label = CHUMASH_TRANSLATIONS.find(t => t.id === id)?.label || id;
+  fire(label + ' translation selected', 'gold');
 }
 
 // ── App loader ────────────────────────────────────────────────────────────────
