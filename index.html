@@ -698,10 +698,9 @@ onAuthStateChanged(auth, user => {
       <div id="extra-tracks-list" style="display:none;margin-top:0;"></div>
 
       <!-- Add learning button -->
-      <div id="add-learning-btn" style="display:none;margin-top:6px;margin-bottom:2px;">
-        <button onclick="_openExtraTracksMenu()" style="width:100%;padding:11px 16px;border-radius:14px;background:transparent;border:1.5px dashed var(--border);color:var(--t3);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add daily learning
+      <div id="add-learning-btn" style="display:none;margin-top:2px;margin-bottom:2px;text-align:center;">
+        <button onclick="_openExtraTracksMenu()" style="background:none;border:none;color:var(--t3);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:8px 16px;opacity:0.7;">
+          + more learning
         </button>
       </div>
 
@@ -923,8 +922,8 @@ onAuthStateChanged(auth, user => {
       <div style="display:flex;flex-direction:column;gap:6px;">
 
         <!-- Group: Learning -->
-        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:2px;padding:0 4px;">Learning</p>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:6px;">
+        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;padding:0 4px;">Learning</p>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
           <!-- Rambam track -->
           <button id="change-track-btn" onclick="changeTrack()" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
             <span style="display:flex;align-items:center;gap:12px;">
@@ -939,7 +938,7 @@ onAuthStateChanged(auth, user => {
             </span>
           </button>
           <!-- Chumash translation -->
-          <button onclick="_openChumashTranslationPicker()" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+          <button onclick="_openChumashTranslationPicker()" style="width:100%;padding:14px 16px;background:transparent;border:none;color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
             <span style="display:flex;align-items:center;gap:12px;">
               <span style="width:28px;height:28px;border-radius:8px;background:rgba(240,165,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -947,45 +946,35 @@ onAuthStateChanged(auth, user => {
               Chumash translation
             </span>
             <span style="display:flex;align-items:center;gap:6px;">
-              <span id="ps-chumash-trans" style="font-size:12px;color:var(--t3);">Koren</span>
+              <span id="ps-chumash-trans" style="font-size:12px;color:var(--t3);">Metsudah</span>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
             </span>
           </button>
-          <!-- Personal Tehillim -->
-          <button onclick="_openTehillimPeopleManager()" style="width:100%;padding:14px 16px;background:transparent;border:none;color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
-            <span style="display:flex;align-items:center;gap:12px;">
-              <span style="width:28px;height:28px;border-radius:8px;background:rgba(74,158,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </span>
-              <span>
-                Personal Tehillim
-                <span id="ps-tehillim-count" style="font-size:11px;color:var(--t3);margin-left:4px;"></span>
-              </span>
-            </span>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
         </div>
 
-        <!-- Extra learning tracks — shown only when active -->
-        <div id="ps-extra-tracks" style="display:none;margin-bottom:6px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;padding:0 4px;">
-            <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);">Extra learning</p>
-            <button onclick="_openExtraTracksMenu()" style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 4px;">+ Add</button>
-          </div>
-          <div id="ps-extra-list" style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;"></div>
+        <!-- My People (Tehillim) -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding:0 4px;">
+          <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);">My People · Tehillim</p>
+          <button onclick="_openTehillimPeopleManager()" style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 0;">Manage</button>
         </div>
+        <div id="ps-tehillim-people" style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;"></div>
 
-<!-- Group: App -->
-        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:2px;margin-top:10px;padding:0 4px;">App</p>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <!-- Extra learning -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding:0 4px;">
+          <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);">Extra learning</p>
+          <button onclick="_openExtraTracksMenu()" style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 0;">Add / Remove</button>
+        </div>
+        <div id="ps-extra-tracks-list" style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;"></div>
+
+        <!-- App -->
+        <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;margin-top:4px;padding:0 4px;">App</p>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
           <!-- Theme -->
           <button onclick="toggleTheme()" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
             <span style="display:flex;align-items:center;gap:12px;">
               <span style="width:28px;height:28px;border-radius:8px;background:rgba(240,165,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <span id="theme-icon">
-                  <!-- Moon (dark mode default) -->
                   <svg id="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                  <!-- Sun (light mode) -->
                   <svg id="theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 </span>
               </span>
@@ -1005,10 +994,7 @@ onAuthStateChanged(auth, user => {
           </button>
         </div>
 
-      </div>
-    </div>
-
-    <!-- Danger zone -->
+<!-- Danger zone -->
     <div style="padding:0 24px 48px;display:flex;flex-direction:column;gap:6px;">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <button onclick="signOut();closeProfileSheet();" style="width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t2);font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:12px;text-align:left;">
@@ -4263,6 +4249,15 @@ function _renderChumashContent() {
   });
   t += '</div>';
 
+  // Subtle translation label — tap to change
+  const _curTransLabel = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : '';
+  if (_curTransLabel) {
+    t += '<div style="text-align:center;margin-bottom:16px;">'
+      + '<button onclick="_openChumashTranslationPicker()" style="background:none;border:none;font-size:11px;color:var(--t3);cursor:pointer;font-family:inherit;padding:2px 8px;border-radius:6px;">'
+      + _curTransLabel + ' translation · change'
+      + '</button></div>';
+  }
+
   let v = '';
 
   // Render chapter by chapter — each chunk knows its own chapter number
@@ -4640,6 +4635,15 @@ function _renderRambamContent() {
        + '">' + lb + '</button>';
   });
   t += '</div>';
+
+  // Subtle translation label — tap to change
+  const _curTransLabel = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : '';
+  if (_curTransLabel) {
+    t += '<div style="text-align:center;margin-bottom:16px;">'
+      + '<button onclick="_openChumashTranslationPicker()" style="background:none;border:none;font-size:11px;color:var(--t3);cursor:pointer;font-family:inherit;padding:2px 8px;border-radius:6px;">'
+      + _curTransLabel + ' translation · change'
+      + '</button></div>';
+  }
 
   let v = '';
 
@@ -5766,8 +5770,11 @@ function openProfileSheet() {
   document.getElementById('ps-streak').textContent = user.streak;
   document.getElementById('ps-xp').textContent = user.xp;
   const transEl = document.getElementById('ps-chumash-trans');
-  if (transEl) transEl.textContent = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Koren';
+  if (transEl) transEl.textContent = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Metsudah';
   document.getElementById('ps-track').textContent = RAMBAM_TRACKS[user.rambamTrack]?.label || '';
+  const psChumash = document.getElementById('ps-chumash-trans');
+  if (psChumash) psChumash.textContent = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Metsudah';
+  _updateProfileExtras();
   // City row
   const cityLabel = document.getElementById('ps-city-label');
   if (cityLabel) cityLabel.textContent = user.city || 'Add your city';
@@ -6994,6 +7001,106 @@ function _setChumashTranslation(id) {
   document.getElementById('chumash-trans-modal')?.remove();
   const label = CHUMASH_TRANSLATIONS.find(t => t.id === id)?.label || id;
   fire(label + ' translation selected', 'gold');
+}
+
+
+// ── Update profile dynamic sections ─────────────────────────────────────────
+function _updateProfileExtras() {
+  _renderPsTehillim();
+  _renderPsExtraTracks();
+}
+
+function _renderPsTehillim() {
+  const el = document.getElementById('ps-tehillim-people');
+  if (!el) return;
+  const opts = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
+  const people = user.tehillimPeople || [];
+
+  // Build rows: fixed people + user people
+  const rows = [];
+
+  // Fixed: Rebbe + Rebbetzin
+  [['rebbe','Rebbe'],['rebbetzin','Rebbetzin']].forEach(([key, label]) => {
+    const on = opts[key] !== false;
+    rows.push({ label, sub: on ? 'Included' : 'Not included', fixed: true, key, on });
+  });
+
+  // User people
+  people.forEach((p, i) => {
+    rows.push({ label: p.label, sub: p.heDay + ' ' + p.heMonth + ' ' + p.heYear, idx: i });
+  });
+
+  if (!rows.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--t3);padding:14px 16px;">No people added yet.</p>';
+    return;
+  }
+
+  el.innerHTML = rows.map((row, i) => {
+    const border = i < rows.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
+    if (row.fixed) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;' + border + '">'
+        + '<div>'
+        +   '<p style="font-size:14px;font-weight:600;color:var(--t1);">' + row.label + '</p>'
+        +   '<p style="font-size:11px;color:var(--t3);">' + (row.on ? 'Always included' : 'Off — tap to enable') + '</p>'
+        + '</div>'
+        + '<button onclick="_toggleTehillimFixed(\'' + row.key + '\')" style="width:40px;height:24px;border-radius:12px;border:none;background:' + (row.on ? '#4A9EFF' : 'var(--border)') + ';position:relative;cursor:pointer;transition:background .15s;flex-shrink:0;">'
+        +   '<div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;' + (row.on ? 'right:3px' : 'left:3px') + ';transition:all .15s;"></div>'
+        + '</button>'
+        + '</div>';
+    }
+    // User person — with drag handle for reorder
+    return '<div id="ps-person-row-' + row.idx + '" data-idx="' + row.idx + '" style="display:flex;align-items:center;gap:10px;padding:10px 16px;' + border + '">'
+      + '<div id="ps-person-handle-' + row.idx + '" ontouchstart="_tpmTouchStart(event,' + row.idx + ')" ontouchmove="_tpmTouchMove(event)" ontouchend="_tpmTouchEnd(event)" style="color:var(--t3);cursor:grab;touch-action:none;padding:4px 2px;display:flex;align-items:center;">'
+      +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
+      + '</div>'
+      + '<div style="flex:1;min-width:0;">'
+      +   '<p style="font-size:14px;font-weight:600;color:var(--t1);">' + row.label + '</p>'
+      +   '<p style="font-size:11px;color:var(--t3);">' + row.sub + '</p>'
+      + '</div>'
+      + '<button onclick="_deleteTehillimPerson(' + row.idx + ');_updateProfileExtras();" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,71,87,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#FF4757;">'
+      +   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+      + '</button>'
+      + '</div>';
+  }).join('');
+
+  // Add + button at bottom
+  el.innerHTML += '<button onclick="_openTehillimPeopleManager()" style="width:100%;padding:11px 16px;background:transparent;border:none;border-top:1px solid var(--border);color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">'
+    + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+    + 'Add person'
+    + '</button>';
+}
+
+function _renderPsExtraTracks() {
+  const el = document.getElementById('ps-extra-tracks-list');
+  if (!el) return;
+  const tracks = user.extraTracks || [];
+
+  if (!tracks.length) {
+    el.innerHTML = '<button onclick="_openExtraTracksMenu()" style="width:100%;padding:13px 16px;background:transparent;border:none;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+      + 'Add extra learning'
+      + '</button>';
+    return;
+  }
+
+  el.innerHTML = tracks.map((id, i) => {
+    const def = EXTRA_TRACK_DEFS[id];
+    if (!def) return '';
+    const border = i < tracks.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;' + border + '">'
+      + '<div style="width:28px;height:28px;border-radius:8px;background:' + def.color + '18;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + def.color + ';">'
+      +   '<svg width="14" height="14" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
+      + '</div>'
+      + '<p style="font-size:14px;font-weight:600;color:var(--t1);flex:1;">' + def.label + '</p>'
+      + '<button onclick="_removeExtraTrack(\'' + id + '\');_updateProfileExtras();" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,71,87,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#FF4757;">'
+      +   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+      + '</button>'
+      + '</div>';
+  }).join('')
+  + '<button onclick="_openExtraTracksMenu()" style="width:100%;padding:11px 16px;background:transparent;border:none;border-top:1px solid var(--border);color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">'
+  +   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+  + 'Add more'
+  + '</button>';
 }
 
 // ── App loader ────────────────────────────────────────────────────────────────
