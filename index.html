@@ -6691,10 +6691,11 @@ async function _loadDafYomi() {
   const rashiRef = 'Rashi on ' + item.ref;
   const tosafotRef = 'Tosafot on ' + item.ref;
 
-  const [enRes, heRes, rashiRes, tosafotRes] = await Promise.all([
+  const [enRes, heRes, rashiRes, rashiEnRes, tosafotRes] = await Promise.all([
     fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
     fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
     fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(rashiRef) + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+    fetch('https://www.sefaria.org/api/v3/texts/' + encodeURIComponent(rashiRef) + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
     fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(tosafotRef) + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
   ]);
 
@@ -6702,25 +6703,27 @@ async function _loadDafYomi() {
   const allEn = _flatHtml(engVersion?.text || []);
   const allHe = _flatHtml(heRes?.he || []);
   const rashiHe = _flatHtml(rashiRes?.he || []);
+  const rashiEngVersion = rashiEnRes?.versions?.find(v => v.language === 'en') || rashiEnRes?.versions?.[0];
+  const rashiEn = _flatHtml(rashiEngVersion?.text || []);
   const tosafotHe = _flatHtml(tosafotRes?.he || []);
+  // Tosafot rarely has English on Sefaria, but try anyway
+  const tosafotEn = [];
 
-  // Store commentary for toggle
-  window._dafCommentary = { rashi: rashiHe, tosafot: tosafotHe, ref: item.ref, title: item.displayValue?.en || item.ref };
-
-  _renderDafYomi(item.displayValue?.en || item.ref, allHe, allEn, rashiHe, tosafotHe, def.color);
+  window._dafCommentary = { rashi: rashiHe, rashiEn, tosafot: tosafotHe, tosafotEn, ref: item.ref, title: item.displayValue?.en || item.ref };
+  _renderDafYomi(item.displayValue?.en || item.ref, allHe, allEn, rashiHe, rashiEn, tosafotHe, tosafotEn, def.color);
   _restoreExtraScroll('dafYomi');
 }
 
-function _renderDafYomi(title, allHe, allEn, rashiHe, tosafotHe, color) {
-  // Cache everything so toggle buttons can re-render without passing arrays through onclick
-  window._dafData = { title, allHe, allEn, rashiHe, tosafotHe, color };
+function _renderDafYomi(title, allHe, allEn, rashiHe, rashiEn, tosafotHe, tosafotEn, color) {
+  // Cache everything — toggle buttons just call _rerenderDaf()
+  window._dafData = { title, allHe, allEn, rashiHe, rashiEn: rashiEn||[], tosafotHe, tosafotEn: tosafotEn||[], color };
   _rerenderDaf();
 }
 
 function _rerenderDaf() {
   const dat = window._dafData;
   if (!dat) return;
-  const { title, allHe, allEn, rashiHe, tosafotHe, color } = dat;
+  const { title, allHe, allEn, rashiHe, rashiEn, tosafotHe, tosafotEn, color } = dat;
 
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
@@ -6730,7 +6733,14 @@ function _rerenderDaf() {
 
   const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
   const lang = localStorage.getItem('chitas_lang_extra_dafYomi') || (allEn.length ? 'both' : 'he');
-  const comm = localStorage.getItem('chitas_daf_commentary') || 'none';
+  // Multi-select: stored as comma-separated e.g. 'rashi,tosafot'
+  const commStr = localStorage.getItem('chitas_daf_commentary') || '';
+  const commSet = new Set(commStr.split(',').filter(Boolean));
+  const showRashi = commSet.has('rashi');
+  const showTosafot = commSet.has('tosafot');
+
+  const hasRashi = rashiHe && rashiHe.length > 0;
+  const hasTosafot = tosafotHe && tosafotHe.length > 0;
 
   // Lang toggle
   let t = '';
@@ -6746,20 +6756,21 @@ function _rerenderDaf() {
     t += '</div>';
   }
 
-  // Commentary toggle
-  const hasRashi = rashiHe && rashiHe.length > 0;
-  const hasTosafot = tosafotHe && tosafotHe.length > 0;
+  // Commentary multi-select toggles
   if (hasRashi || hasTosafot) {
     t += '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-    const commOpts = [['none','Gemara']];
-    if (hasRashi) commOpts.push(['rashi','+ Rashi']);
-    if (hasTosafot) commOpts.push(['tosafot','+ Tosafot']);
-    commOpts.forEach(([val, lbl]) => {
-      const a = comm === val;
-      t += '<button onclick="localStorage.setItem(\'chitas_daf_commentary\',\'' + val + '\');_rerenderDaf()"'
-        + ' style="flex:1;padding:7px 4px;border-radius:10px;border:1.5px solid;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;'
-        + (a ? 'background:rgba(251,191,36,.15);color:#F59E0B;border-color:#F59E0B;' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-        + '">' + lbl + '</button>';
+    const commOpts = [];
+    if (hasRashi) commOpts.push(['rashi','Rashi','#10B981']);
+    if (hasTosafot) commOpts.push(['tosafot','Tosafot','#8B5CF6']);
+    commOpts.forEach(([val, lbl, col]) => {
+      const on = commSet.has(val);
+      // Toggle: add or remove from set
+      t += '<button onclick="_toggleDafComm(\''+val+'\')"'
+        + ' style="flex:1;padding:7px 8px;border-radius:10px;border:1.5px solid;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;'
+        + (on ? 'background:' + col + '20;color:' + col + ';border-color:' + col + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
+        + '">'
+        + (on ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
+        + lbl + '</button>';
     });
     t += '</div>';
   }
@@ -6778,8 +6789,6 @@ function _rerenderDaf() {
     const en = allEn[i] || '';
     if (!he && !en) continue;
 
-    const commHe = comm === 'rashi' ? (rashiHe[i] || '') : comm === 'tosafot' ? (tosafotHe[i] || '') : '';
-
     if (lang === 'both' && he && en) {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">'
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">'
@@ -6794,18 +6803,46 @@ function _rerenderDaf() {
         + '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
     }
 
-    if (commHe) {
-      const commColor = comm === 'rashi' ? '#10B981' : '#8B5CF6';
-      const commLabel = comm === 'rashi' ? 'Rashi' : 'Tosafot';
-      v += '<div style="margin-top:10px;padding:10px 12px;background:' + commColor + '0A;border-left:3px solid ' + commColor + '50;border-radius:0 6px 6px 0;">'
-        + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:' + commColor + ';margin-bottom:6px;">' + commLabel + '</p>'
-        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);">' + commHe + '</p>'
+    // Rashi block
+    if (showRashi && rashiHe && rashiHe[i]) {
+      const rHe = rashiHe[i] || '';
+      const rEn = (lang !== 'he' && rashiEn && rashiEn[i]) ? rashiEn[i] : '';
+      v += '<div style="margin-top:10px;padding:10px 12px;background:#10B98108;border-left:3px solid #10B98140;border-radius:0 6px 6px 0;">'
+        + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#10B981;margin-bottom:6px;">Rashi</p>';
+      if (lang === 'both' && rEn && rHe) {
+        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">'
+          + '<p style="font-size:13px;line-height:1.75;color:var(--t1);">' + rEn + '</p>'
+          + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);">' + rHe + '</p>'
+          + '</div>';
+      } else if (lang === 'en' && rEn) {
+        v += '<p style="font-size:13px;line-height:1.75;color:var(--t1);">' + rEn + '</p>';
+      } else if (rHe) {
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);">' + rHe + '</p>';
+      }
+      v += '</div>';
+    }
+
+    // Tosafot block
+    if (showTosafot && tosafotHe && tosafotHe[i]) {
+      v += '<div style="margin-top:6px;padding:10px 12px;background:#8B5CF608;border-left:3px solid #8B5CF640;border-radius:0 6px 6px 0;">'
+        + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8B5CF6;margin-bottom:6px;">Tosafot</p>'
+        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);">' + tosafotHe[i] + '</p>'
         + '</div>';
     }
+
     v += '</div>';
   }
 
   contEl.innerHTML = t + v + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
+function _toggleDafComm(val) {
+  const commStr = localStorage.getItem('chitas_daf_commentary') || '';
+  const commSet = new Set(commStr.split(',').filter(Boolean));
+  if (commSet.has(val)) commSet.delete(val);
+  else commSet.add(val);
+  localStorage.setItem('chitas_daf_commentary', [...commSet].join(','));
+  _rerenderDaf();
 }
 
 
@@ -6948,25 +6985,44 @@ async function _loadSeferHamitzvos(sectionId) {
   try {
     const viewedDay = new Date();
     viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
+    const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 
-    // Get Sefaria calendar for the viewed day
-    const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + viewedDay.getFullYear()
-      + '&month=' + (viewedDay.getMonth()+1) + '&day=' + viewedDay.getDate())
+    // Use Hebcal — it has Sefer HaMitzvos in dailyLearning; Sefaria calendar does not
+    const dow = viewedDay.getDay();
+    const sun = new Date(viewedDay); sun.setDate(viewedDay.getDate() - dow);
+    const sat = new Date(viewedDay); sat.setDate(viewedDay.getDate() + (6 - dow));
+    const hebcal = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + fmt(sun) + '&end=' + fmt(sat) + '&lg=s')
       .then(r => r.json()).catch(() => null);
 
-    const items = cal?.calendar_items || [];
+    const items = hebcal?.items || [];
+    // Sefer HaMitzvos appears as dailyLearning with title containing Mitzvot/Mitzvos/Sefer
+    const smItem = items.find(i =>
+      i.category === 'dailyLearning' &&
+      (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos') || i.title?.includes('Mitzvah') || i.title?.startsWith('Sefer'))
+    );
+    // Also get 3-chapter Rambam for context
+    const rambam3 = items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam') && !i.title?.includes('1 Chapter'));
 
-    // Find Sefer HaMitzvos item — try multiple title variants
-    const smItem = items.find(i => {
-      const t = i.title?.en || '';
-      return t.includes('Mitzvot') || t.includes('Mitzvos') || t.includes('Mitzvah') || t.startsWith('Sefer');
-    });
+    // Parse Hebcal title → Sefaria ref
+    // Hebcal: "Sefer HaMitzvot: Positive Mitzvah 3" or "Sefer HaMitzvot: Negative Mitzvah 5"
+    // Sefaria: "Sefer HaMitzvot, Positive Commandments 3" or "Sefer HaMitzvot, Negative Commandments 5"
+    let ref = null;
+    let displayVal = smItem?.title || 'Sefer HaMitzvos';
+    if (smItem?.title) {
+      const posMatch = smItem.title.match(/Positive[^\d]*(\d+)/i);
+      const negMatch = smItem.title.match(/Negative[^\d]*(\d+)/i);
+      if (posMatch) ref = 'Sefer HaMitzvot, Positive Commandments ' + posMatch[1];
+      else if (negMatch) ref = 'Sefer HaMitzvot, Negative Commandments ' + negMatch[1];
+      // Strip "Sefer HaMitzvot: " prefix for display
+      displayVal = smItem.title.replace(/^Sefer HaMitzvot:\s*/i, '').replace(/^Sefer HaMitzvos:\s*/i, '');
+    }
 
-    // Also get the 3-chapter Rambam item for the day number context
-    const rambam3 = items.find(i => (i.title?.en || '').includes('3 Chapter'));
-
-    const ref = smItem?.ref || smItem?.refs?.[0] || null;
-    const displayVal = smItem?.displayValue?.en || ref || 'Sefer HaMitzvos';
+    // Also try: sefariaRef on the item if Hebcal provides it
+    if (!ref && smItem?.url) {
+      // Hebcal sometimes puts sefaria slug in url
+      const slug = smItem.url.match(/sefaria\.org\/([^?]+)/)?.[1];
+      if (slug) ref = decodeURIComponent(slug);
+    }
 
     document.getElementById('chabad-panel-sub').textContent = displayVal;
 
