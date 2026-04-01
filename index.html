@@ -4729,14 +4729,7 @@ function _renderRambamContent() {
   });
   t += '</div>';
 
-  // Subtle translation label — tap to change
-  const _curTransLabel = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : '';
-  if (_curTransLabel) {
-    t += '<div style="text-align:center;margin-bottom:16px;">'
-      + '<button onclick="_openChumashTranslationPicker()" style="background:none;border:none;font-size:11px;color:var(--t3);cursor:pointer;font-family:inherit;padding:2px 8px;border-radius:6px;">'
-      + _curTransLabel + ' translation · change'
-      + '</button></div>';
-  }
+  
 
   let v = '';
 
@@ -6719,6 +6712,16 @@ async function _loadDafYomi() {
 }
 
 function _renderDafYomi(title, allHe, allEn, rashiHe, tosafotHe, color) {
+  // Cache everything so toggle buttons can re-render without passing arrays through onclick
+  window._dafData = { title, allHe, allEn, rashiHe, tosafotHe, color };
+  _rerenderDaf();
+}
+
+function _rerenderDaf() {
+  const dat = window._dafData;
+  if (!dat) return;
+  const { title, allHe, allEn, rashiHe, tosafotHe, color } = dat;
+
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
   if (loadEl) loadEl.style.display = 'none';
@@ -6726,10 +6729,8 @@ function _renderDafYomi(title, allHe, allEn, rashiHe, tosafotHe, color) {
   contEl.style.display = 'block';
 
   const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
-  const langKey = 'chitas_lang_extra_dafYomi';
-  const commKey = 'chitas_daf_commentary';
-  const lang = localStorage.getItem(langKey) || (allEn.length ? 'both' : 'he');
-  const comm = localStorage.getItem(commKey) || 'none'; // 'none' | 'rashi' | 'tosafot'
+  const lang = localStorage.getItem('chitas_lang_extra_dafYomi') || (allEn.length ? 'both' : 'he');
+  const comm = localStorage.getItem('chitas_daf_commentary') || 'none';
 
   // Lang toggle
   let t = '';
@@ -6737,7 +6738,7 @@ function _renderDafYomi(title, allHe, allEn, rashiHe, tosafotHe, color) {
     t += '<div style="display:flex;gap:6px;margin-bottom:12px;">';
     [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
       const a = lang === l;
-      t += '<button onclick="localStorage.setItem(\'chitas_lang_extra_dafYomi\',\'' + l + '\');_renderDafYomi(window._dafCommentary?.title||\'\',[...(_dafCache?.he||[])],[...(_dafCache?.en||[])],window._dafCommentary?.rashi||[],window._dafCommentary?.tosafot||[],' + JSON.stringify(color) + ')"'
+      t += '<button onclick="localStorage.setItem(\'chitas_lang_extra_dafYomi\',\'' + l + '\');_rerenderDaf()"'
         + ' style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
         + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
         + '">' + lb + '</button>';
@@ -6745,17 +6746,17 @@ function _renderDafYomi(title, allHe, allEn, rashiHe, tosafotHe, color) {
     t += '</div>';
   }
 
-  // Commentary toggle — only if we have rashi/tosafot
-  const hasRashi = rashiHe.length > 0;
-  const hasTosafot = tosafotHe.length > 0;
+  // Commentary toggle
+  const hasRashi = rashiHe && rashiHe.length > 0;
+  const hasTosafot = tosafotHe && tosafotHe.length > 0;
   if (hasRashi || hasTosafot) {
     t += '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-    const commOpts = [['none','Gemara only']];
+    const commOpts = [['none','Gemara']];
     if (hasRashi) commOpts.push(['rashi','+ Rashi']);
     if (hasTosafot) commOpts.push(['tosafot','+ Tosafot']);
     commOpts.forEach(([val, lbl]) => {
       const a = comm === val;
-      t += '<button onclick="localStorage.setItem(\'chitas_daf_commentary\',\'' + val + '\');_renderDafYomi(window._dafCommentary?.title||\'\',[...(_dafCache?.he||[])],[...(_dafCache?.en||[])],window._dafCommentary?.rashi||[],window._dafCommentary?.tosafot||[],' + JSON.stringify(color) + ')"'
+      t += '<button onclick="localStorage.setItem(\'chitas_daf_commentary\',\'' + val + '\');_rerenderDaf()"'
         + ' style="flex:1;padding:7px 4px;border-radius:10px;border:1.5px solid;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;'
         + (a ? 'background:rgba(251,191,36,.15);color:#F59E0B;border-color:#F59E0B;' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
         + '">' + lbl + '</button>';
@@ -6769,10 +6770,7 @@ function _renderDafYomi(title, allHe, allEn, rashiHe, tosafotHe, color) {
     + '<p style="font-size:17px;font-weight:800;color:' + color + ';line-height:1.3;">' + title + '</p>'
     + '</div>';
 
-  // Cache raw segs for re-render on toggle
-  window._dafCache = { he: allHe, en: allEn };
-
-  // Render main text
+  // Render segments
   let v = '';
   const maxLen = Math.max(allHe.length, allEn.length);
   for (let i = 0; i < maxLen; i++) {
@@ -6780,7 +6778,6 @@ function _renderDafYomi(title, allHe, allEn, rashiHe, tosafotHe, color) {
     const en = allEn[i] || '';
     if (!he && !en) continue;
 
-    // Commentary for this segment
     const commHe = comm === 'rashi' ? (rashiHe[i] || '') : comm === 'tosafot' ? (tosafotHe[i] || '') : '';
 
     if (lang === 'both' && he && en) {
@@ -6797,7 +6794,6 @@ function _renderDafYomi(title, allHe, allEn, rashiHe, tosafotHe, color) {
         + '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
     }
 
-    // Commentary block
     if (commHe) {
       const commColor = comm === 'rashi' ? '#10B981' : '#8B5CF6';
       const commLabel = comm === 'rashi' ? 'Rashi' : 'Tosafot';
@@ -6811,6 +6807,7 @@ function _renderDafYomi(title, allHe, allEn, rashiHe, tosafotHe, color) {
 
   contEl.innerHTML = t + v + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
+
 
 async function _loadHayomYom() {
   const def = EXTRA_TRACK_DEFS.hayomYom;
