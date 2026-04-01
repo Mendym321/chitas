@@ -6985,103 +6985,88 @@ async function _loadSeferHamitzvos(sectionId) {
   try {
     const viewedDay = new Date();
     viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
-    const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const iso = viewedDay.getFullYear() + '-'
+      + String(viewedDay.getMonth()+1).padStart(2,'0') + '-'
+      + String(viewedDay.getDate()).padStart(2,'0');
 
-    // Use Hebcal — it has Sefer HaMitzvos in dailyLearning; Sefaria calendar does not
-    const dow = viewedDay.getDay();
-    const sun = new Date(viewedDay); sun.setDate(viewedDay.getDate() - dow);
-    const sat = new Date(viewedDay); sat.setDate(viewedDay.getDate() + (6 - dow));
-    const hebcal = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + fmt(sun) + '&end=' + fmt(sat) + '&lg=s')
-      .then(r => r.json()).catch(() => null);
+    // Hebcal has Sefer HaMitzvos under category 'seferHaMitzvot'
+    // Title format: "Day 46: P155" or "Day 46: N23" or "Day 46: P3, N180"
+    const hebcal = await fetch(
+      'https://www.hebcal.com/hebcal?v=1&cfg=json&dsm=on&d=on&start=' + iso + '&end=' + iso + '&lg=s'
+    ).then(r => r.json()).catch(() => null);
 
     const items = hebcal?.items || [];
-    // Sefer HaMitzvos appears as dailyLearning with title containing Mitzvot/Mitzvos/Sefer
-    const smItem = items.find(i =>
-      i.category === 'dailyLearning' &&
-      (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos') || i.title?.includes('Mitzvah') || i.title?.startsWith('Sefer'))
+    const mItem = items.find(i =>
+      i.category === 'seferHaMitzvot' ||
+      (i.title || '').match(/P\d+|N\d+/)
     );
-    // Also get 3-chapter Rambam for context
-    const rambam3 = items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam') && !i.title?.includes('1 Chapter'));
 
-    // Parse Hebcal title → Sefaria ref
-    // Hebcal: "Sefer HaMitzvot: Positive Mitzvah 3" or "Sefer HaMitzvot: Negative Mitzvah 5"
-    // Sefaria: "Sefer HaMitzvot, Positive Commandments 3" or "Sefer HaMitzvot, Negative Commandments 5"
-    let ref = null;
-    let displayVal = smItem?.title || 'Sefer HaMitzvos';
-    if (smItem?.title) {
-      const posMatch = smItem.title.match(/Positive[^\d]*(\d+)/i);
-      const negMatch = smItem.title.match(/Negative[^\d]*(\d+)/i);
-      if (posMatch) ref = 'Sefer HaMitzvot, Positive Commandments ' + posMatch[1];
-      else if (negMatch) ref = 'Sefer HaMitzvot, Negative Commandments ' + negMatch[1];
-      // Strip "Sefer HaMitzvot: " prefix for display
-      displayVal = smItem.title.replace(/^Sefer HaMitzvot:\s*/i, '').replace(/^Sefer HaMitzvos:\s*/i, '');
+    if (!mItem) {
+      throw new Error('Sefer HaMitzvos not found in Hebcal. Categories: '
+        + [...new Set(items.map(i => i.category))].join(', '));
     }
 
-    // Also try: sefariaRef on the item if Hebcal provides it
-    if (!ref && smItem?.url) {
-      // Hebcal sometimes puts sefaria slug in url
-      const slug = smItem.url.match(/sefaria\.org\/([^?]+)/)?.[1];
-      if (slug) ref = decodeURIComponent(slug);
-    }
+    const title = mItem.title || '';
+    document.getElementById('chabad-panel-sub').textContent = title;
 
-    document.getElementById('chabad-panel-sub').textContent = displayVal;
+    // Parse all P/N numbers from the title
+    const allPos = [...title.matchAll(/P(\d+)/g)].map(m =>
+      'Sefer HaMitzvot, Positive Commandments ' + m[1]);
+    const allNeg = [...title.matchAll(/N(\d+)/g)].map(m =>
+      'Sefer HaMitzvot, Negative Commandments ' + m[1]);
+    const refs = [...allPos, ...allNeg];
 
-    if (!ref) {
-      // No calendar ref — show a helpful fallback
-      if (contEl) {
-        contEl.innerHTML = '<div style="padding:32px 20px;text-align:center;">'
-          + '<p style="font-size:15px;color:var(--t2);margin-bottom:8px;">Today\'s Sefer HaMitzvos</p>'
-          + '<p style="font-size:13px;color:var(--t3);margin-bottom:24px;">' + displayVal + '</p>'
-          + '<a href="https://www.chabad.org/dailystudy/seferHamitzvos.asp" target="_blank" '
-          + 'style="display:inline-block;padding:12px 24px;border-radius:12px;background:rgba(29,185,84,.1);'
-          + 'border:1px solid rgba(29,185,84,.3);color:#1DB954;font-weight:700;font-size:14px;text-decoration:none;">'
-          + 'Open on Chabad.org ↗</a></div>';
-        contEl.style.display = 'block';
-      }
-      if (loadEl) loadEl.style.display = 'none';
-      return true;
-    }
+    if (!refs.length) throw new Error('Could not parse mitzvah refs from: ' + title);
 
-    // Fetch the text — try Touger translation (same as Rambam)
-    const refs = smItem?.refs?.length ? smItem.refs : [ref];
-    const results = await Promise.all(refs.map(async r => {
-      const enc = encodeURIComponent(r);
-      // Get available versions
+    // Fetch each ref from Sefaria (same pattern as Rambam)
+    const results = await Promise.all(refs.map(async ref => {
+      const enc = encodeURIComponent(ref);
+      // Get versions first to pick best English
       const versions = await fetch('https://www.sefaria.org/api/texts/versions/' + enc)
-        .then(res => res.json()).catch(() => []);
+        .then(r => r.json()).catch(() => []);
       const enVersions = Array.isArray(versions) ? versions.filter(v => v.language === 'en') : [];
-      const picked = enVersions.find(v => v.versionTitle?.toLowerCase().includes('touger'))
-        || enVersions.find(v => v.versionTitle?.toLowerCase().includes('moznaim'))
+      const picked = enVersions.find(v => (v.versionTitle || '').toLowerCase().includes('touger'))
+        || enVersions.find(v => (v.versionTitle || '').toLowerCase().includes('moznaim'))
         || enVersions[0];
 
       const url = picked
         ? 'https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0&ven=' + encodeURIComponent(picked.versionTitle)
         : 'https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0';
 
-      const d = await fetch(url).then(res => res.json()).catch(() => null);
+      const d = await fetch(url).then(r => r.json()).catch(() => null);
       return {
-        ref: r,
-        title: d?.sectionNames ? (d.sectionNames[d.sectionNames.length-2] || '') : r,
+        ref,
         en: _flatHtml(d?.text || []),
         he: _flatHtml(d?.he || []),
         versionTitle: d?.versionTitle || '',
       };
     }));
 
-    _renderSeferHamitzvos(displayVal, results, rambam3?.displayValue?.en || '');
+    // Also get 3-chapter Rambam for context label
+    const rambam3 = items.find(i =>
+      i.category === 'dailyLearning' && (i.title || '').includes('Rambam') && !(i.title || '').includes('1 Chapter')
+    );
+
+    _renderSeferHamitzvos(title, results, rambam3?.title || '');
     return true;
+
   } catch(e) {
     console.error('Sefer HaMitzvos error:', e);
-    const contEl = document.getElementById('native-reader-content');
     if (contEl) {
-      contEl.innerHTML = '<p style="padding:20px;color:var(--t3);text-align:center;">Could not load Sefer HaMitzvos. Please try again.</p>';
+      contEl.innerHTML = '<div style="padding:32px 20px;text-align:center;">'
+        + '<p style="font-size:15px;color:var(--t2);margin-bottom:8px;">Sefer HaMitzvos</p>'
+        + '<p style="font-size:12px;color:var(--t3);margin-bottom:24px;">' + (e.message || '') + '</p>'
+        + '<a href="https://www.chabad.org/dailystudy/seferHamitzvos.asp" target="_blank" '
+        + 'style="display:inline-block;padding:12px 24px;border-radius:12px;background:rgba(29,185,84,.1);'
+        + 'border:1px solid rgba(29,185,84,.3);color:#1DB954;font-weight:700;font-size:14px;text-decoration:none;">'
+        + 'Open on Chabad.org ↗</a></div>';
       contEl.style.display = 'block';
     }
-    const loadEl = document.getElementById('native-reader-loading');
     if (loadEl) loadEl.style.display = 'none';
     return false;
   }
 }
+
 
 function _renderSeferHamitzvos(displayVal, results, rambamContext) {
   const loadEl = document.getElementById('native-reader-loading');
