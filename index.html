@@ -4537,8 +4537,8 @@ async function _loadRambamNative(sectionId) {
     viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
 
     const cal = await fetch(
-      'https://www.sefaria.org/api/calendars?year=' + viewedDay.getFullYear() +
-      '&month=' + (viewedDay.getMonth()+1) + '&day=' + viewedDay.getDate()
+      'https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + viewedDay.getFullYear() +
+      '&gm=' + (viewedDay.getMonth()+1) + '&gd=' + viewedDay.getDate()
     ).then(r => r.json());
 
     const items = cal.calendar_items || [];
@@ -5152,8 +5152,8 @@ async function _loadTanyaNative(sectionId) {
     }
 
     async function getCalTanya(date) {
-      const url = 'https://www.sefaria.org/api/calendars?year=' + date.getFullYear()
-        + '&month=' + (date.getMonth()+1) + '&day=' + date.getDate();
+      const url = 'https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + date.getFullYear()
+        + '&gm=' + (date.getMonth()+1) + '&gd=' + date.getDate();
       const d = await fetch(url).then(r => r.json()).catch(() => null);
       return (d?.calendar_items || []).find(i =>
         (i.title?.en || '').toLowerCase().includes('tanya') ||
@@ -6177,8 +6177,8 @@ async function _bustTanyaCache() {
       const d = new Date(); d.setDate(d.getDate() + offset);
       const tomorrow = new Date(d); tomorrow.setDate(d.getDate() + 1);
 
-      const calUrl = 'https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
-        + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate();
+      const calUrl = 'https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+        + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate();
       const calData = await fetch(calUrl).then(r => r.json()).catch(() => null);
       const tanyaItem = (calData?.calendar_items || []).find(i =>
         (i.title?.en || '').toLowerCase().includes('tanya') || (i.ref || '').toLowerCase().includes('tanya')
@@ -6193,8 +6193,8 @@ async function _bustTanyaCache() {
       const chapterRef = base + ' ' + chapter;
 
       // Get tomorrow to know segEnd
-      const tomUrl = 'https://www.sefaria.org/api/calendars?year=' + tomorrow.getFullYear()
-        + '&month=' + (tomorrow.getMonth()+1) + '&day=' + tomorrow.getDate();
+      const tomUrl = 'https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + tomorrow.getFullYear()
+        + '&gm=' + (tomorrow.getMonth()+1) + '&gd=' + tomorrow.getDate();
       const tomData = await fetch(tomUrl).then(r => r.json()).catch(() => null);
       const tomItem = (tomData?.calendar_items || []).find(i =>
         (i.title?.en || '').toLowerCase().includes('tanya') || (i.ref || '').toLowerCase().includes('tanya')
@@ -6441,8 +6441,8 @@ async function _loadExtraSubtitle(id) {
   if (!el) return;
   try {
     const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-    const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
-      + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json()).catch(() => null);
+    const cal = await fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+      + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json()).catch(() => null);
     const items = cal?.calendar_items || [];
 
     if (id === 'dafYomi') {
@@ -6550,7 +6550,7 @@ const EXTRA_TRACK_DEFS = {
     duration: '~20 min',
     color: '#6366F1',
     autoOmer: true, // appears automatically during Omer, no opt-in
-    iconPath: '<line x1="12" y1="20" x2="12" y2="8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 8 C12 8 9 6 8 3 C10 3 12 5 12 8Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8 C12 8 15 6 16 3 C14 3 12 5 12 8Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 12 C12 12 9 10 8 7 C10 7 12 9 12 12Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 12 C12 12 15 10 16 7 C14 7 12 9 12 12Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    iconPath: '<line x1="12" y1="22" x2="12" y2="4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 6 Q9 4 8 1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M12 6 Q15 4 16 1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M12 10 Q8 8 7 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M12 10 Q16 8 17 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M12 14 Q8 12 7 9" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M12 14 Q16 12 17 9" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
   },
   mishnahYomi: {
     id: 'mishnahYomi',
@@ -6709,8 +6709,8 @@ async function openExtraReader(id) {
 async function _loadDafYomi() {
   const def = EXTRA_TRACK_DEFS.dafYomi;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
-    + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json());
+  const cal = await fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json());
   const item = (cal.calendar_items || []).find(i => i.title?.en === 'Daf Yomi');
   if (!item?.ref) throw new Error('No Daf Yomi ref');
 
@@ -6924,8 +6924,8 @@ async function _loadHayomYom() {
 async function _loadLikkuteiTorah() {
   const def = EXTRA_TRACK_DEFS.likkuteiTorah;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
-    + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json());
+  const cal = await fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json());
   // Try multiple title variants — Sefaria sometimes returns 'Parasha' vs 'Parashat Hashavua'
   const parshaItem = (cal.calendar_items || []).find(i =>
     i.title?.en === 'Parashat Hashavua' ||
@@ -6975,8 +6975,8 @@ async function _loadLikkuteiTorah() {
 async function _loadMishnahYomi() {
   const def = EXTRA_TRACK_DEFS.mishnahYomi;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('https://www.sefaria.org/api/calendars?year=' + d.getFullYear()
-    + '&month=' + (d.getMonth()+1) + '&day=' + d.getDate()).then(r => r.json());
+  const cal = await fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json());
   const item = (cal.calendar_items || []).find(i =>
     i.title?.en === 'Mishnah Yomit' || (i.title?.en || '').includes('Mishnah')
   );
