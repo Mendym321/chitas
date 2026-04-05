@@ -2214,7 +2214,7 @@ async function init() {
     const [cal, hd, sefariaCalRaw] = await Promise.all([
       fetchHebcal(),
       fetchHebDate(),
-      fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York').then(r=>r.json()).catch(()=>null),
+      fetch('/api/sefaria-calendar').then(r=>r.json()).catch(()=>null),
     ]);
     const p = parseHebcal(cal);
     const tdate = `${hd.hm} ${hd.hd}, ${hd.hy}`;
@@ -4537,7 +4537,7 @@ async function _loadRambamNative(sectionId) {
     viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
 
     const cal = await fetch(
-      'https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + viewedDay.getFullYear() +
+      '/api/sefaria-calendar?gy=' + viewedDay.getFullYear() +
       '&gm=' + (viewedDay.getMonth()+1) + '&gd=' + viewedDay.getDate()
     ).then(r => r.json());
 
@@ -5152,7 +5152,7 @@ async function _loadTanyaNative(sectionId) {
     }
 
     async function getCalTanya(date) {
-      const url = 'https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + date.getFullYear()
+      const url = '/api/sefaria-calendar?gy=' + date.getFullYear()
         + '&gm=' + (date.getMonth()+1) + '&gd=' + date.getDate();
       const d = await fetch(url).then(r => r.json()).catch(() => null);
       return (d?.calendar_items || []).find(i =>
@@ -5175,7 +5175,11 @@ async function _loadTanyaNative(sectionId) {
       getCalTanya(tomorrow),
       getCalTanya(yesterday),
     ]);
-    if (!todayRef) return false;
+    // Fall back to schedule ref if calendar unavailable (e.g. proxy not yet deployed)
+    if (!todayRef) {
+      todayRef = schedule?.tanya?.sefariaRef || null;
+      if (!todayRef) return false;
+    }
     const tp = parseTanyaRef(todayRef);
     const tn = tomorrowRef ? parseTanyaRef(tomorrowRef) : null;
     if (!tp) return false;
@@ -6177,7 +6181,7 @@ async function _bustTanyaCache() {
       const d = new Date(); d.setDate(d.getDate() + offset);
       const tomorrow = new Date(d); tomorrow.setDate(d.getDate() + 1);
 
-      const calUrl = 'https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+      const calUrl = '/api/sefaria-calendar?gy=' + d.getFullYear()
         + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate();
       const calData = await fetch(calUrl).then(r => r.json()).catch(() => null);
       const tanyaItem = (calData?.calendar_items || []).find(i =>
@@ -6193,7 +6197,7 @@ async function _bustTanyaCache() {
       const chapterRef = base + ' ' + chapter;
 
       // Get tomorrow to know segEnd
-      const tomUrl = 'https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + tomorrow.getFullYear()
+      const tomUrl = '/api/sefaria-calendar?gy=' + tomorrow.getFullYear()
         + '&gm=' + (tomorrow.getMonth()+1) + '&gd=' + tomorrow.getDate();
       const tomData = await fetch(tomUrl).then(r => r.json()).catch(() => null);
       const tomItem = (tomData?.calendar_items || []).find(i =>
@@ -6441,7 +6445,7 @@ async function _loadExtraSubtitle(id) {
   if (!el) return;
   try {
     const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-    const cal = await fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+    const cal = await fetch('/api/sefaria-calendar?gy=' + d.getFullYear()
       + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json()).catch(() => null);
     const items = cal?.calendar_items || [];
 
@@ -6459,13 +6463,10 @@ async function _loadExtraSubtitle(id) {
       const item = items.find(i => i.title?.en === 'Mishnah Yomit');
       el.textContent = item?.displayValue?.en || item?.ref || 'Mishnah Yomi';
     } else if (id === 'sotah') {
-      // Use cached sotah daf info if available
-      const info = window._sotahDaf || await getSotahDafForDate(d).catch(() => null);
-      if (info) {
-        el.textContent = 'Daf ' + info.daf + ' · Day ' + info.omerDay + ' of the Omer';
-      } else {
-        el.textContent = 'Masechet Sotah · Omer';
-      }
+      // Always recalculate — don't rely on cached value being ready
+      const info = await getSotahDafForDate(d).catch(() => null);
+      window._sotahDaf = info; // update cache
+      el.textContent = info ? 'Daf ' + info.daf : 'Masechet Sotah';
     }
   } catch(e) {
     const def = EXTRA_TRACK_DEFS[id];
@@ -6709,7 +6710,7 @@ async function openExtraReader(id) {
 async function _loadDafYomi() {
   const def = EXTRA_TRACK_DEFS.dafYomi;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+  const cal = await fetch('/api/sefaria-calendar?gy=' + d.getFullYear()
     + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json());
   const item = (cal.calendar_items || []).find(i => i.title?.en === 'Daf Yomi');
   if (!item?.ref) throw new Error('No Daf Yomi ref');
@@ -6924,7 +6925,7 @@ async function _loadHayomYom() {
 async function _loadLikkuteiTorah() {
   const def = EXTRA_TRACK_DEFS.likkuteiTorah;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+  const cal = await fetch('/api/sefaria-calendar?gy=' + d.getFullYear()
     + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json());
   // Try multiple title variants — Sefaria sometimes returns 'Parasha' vs 'Parashat Hashavua'
   const parshaItem = (cal.calendar_items || []).find(i =>
@@ -6975,7 +6976,7 @@ async function _loadLikkuteiTorah() {
 async function _loadMishnahYomi() {
   const def = EXTRA_TRACK_DEFS.mishnahYomi;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('https://www.sefaria.org/api/calendars?timezone=America/New_York&gy=' + d.getFullYear()
+  const cal = await fetch('/api/sefaria-calendar?gy=' + d.getFullYear()
     + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json());
   const item = (cal.calendar_items || []).find(i =>
     i.title?.en === 'Mishnah Yomit' || (i.title?.en || '').includes('Mishnah')
