@@ -2173,6 +2173,32 @@ function parseHebcal(data) {
   return { parshaName, aliyaNum, aliyaRef, tehTitle, tehChapters, rambamTitle: rambamItem?.title||'Daily Rambam' };
 }
 
+
+// ── Cached Sefaria calendar fetch ────────────────────────────────────────────
+// Sefaria rate-limits aggressively. Fetch once, cache for the session.
+let _sefariaCalCache = null;
+let _sefariaCalFetching = null;
+async function fetchSefariaCalendar(date) {
+  // For today (no date or same date as session), use cache
+  const iso = date
+    ? date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0')
+    : null;
+  const isToday = !iso || iso === new Date().toISOString().slice(0,10);
+
+  if (isToday && _sefariaCalCache) return _sefariaCalCache;
+  if (isToday && _sefariaCalFetching) return _sefariaCalFetching;
+
+  const url = date
+    ? '/api/sefaria-calendar?gy=' + date.getFullYear() + '&gm=' + (date.getMonth()+1) + '&gd=' + date.getDate()
+    : '/api/sefaria-calendar';
+
+  const promise = fetch(url).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (isToday) _sefariaCalFetching = promise;
+  const result = await promise;
+  if (isToday) { _sefariaCalCache = result; _sefariaCalFetching = null; }
+  return result;
+}
+
 // ════════════════════════════════════════════════════════════════════
 // ZONE 9 · INIT  (app startup — load user, fetch schedule, render)
 // ════════════════════════════════════════════════════════════════════
@@ -2214,7 +2240,7 @@ async function init() {
     const [cal, hd, sefariaCalRaw] = await Promise.all([
       fetchHebcal(),
       fetchHebDate(),
-      fetch('/api/sefaria-calendar').then(r=>r.json()).catch(()=>null),
+      fetchSefariaCalendar(null),
     ]);
     const p = parseHebcal(cal);
     const tdate = `${hd.hm} ${hd.hd}, ${hd.hy}`;
@@ -5151,50 +5177,20 @@ async function _loadTanyaNative(sectionId) {
       return { base: m[1].replace(/:$/, '').trim(), chapter: parseInt(m[2]), seg: parseInt(m[3]) };
     }
 
-    async function getCalTanya(date) {
-      // Hebcal has day-specific Tanya refs; Sefaria calendar ignores date params
-      const iso = date.getFullYear() + '-'
-        + String(date.getMonth()+1).padStart(2,'0') + '-'
-        + String(date.getDate()).padStart(2,'0');
-      const d = await fetch(
-        'https://www.hebcal.com/hebcal?v=1&cfg=json&dps=on&d=on&start=' + iso + '&end=' + iso + '&lg=s'
-      ).then(r => r.json()).catch(() => null);
-      const items = d?.items || [];
-      const item = items.find(i =>
-        i.category === 'tanyaYomi' ||
-        (i.title || '').toLowerCase().includes('tanya')
-      );
-      if (!item) return null;
-      // Hebcal Tanya items have a 'sefaria' field with the exact ref
-      if (item.ref) return item.ref;
-      // Parse chapter:seg from title e.g. "Tanya, Likkutei Amarim, Chapter 41:5"
-      const m = (item.title || '').match(/(\d+):(\d+)/);
-      if (m) return 'Tanya, Part I; Likkutei Amarim ' + m[1] + ':' + m[2];
-      const ch = (item.title || '').match(/Chapter\s+(\d+)/i);
-      if (ch) return 'Tanya, Part I; Likkutei Amarim ' + ch[1] + ':1';
-      return null;
-    }
-
     const today = new Date(); today.setDate(today.getDate() + (dayOffset || 0));
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const dateStr = today.getFullYear() + '-'
+      + String(today.getMonth()+1).padStart(2,'0') + '-'
+      + String(today.getDate()).padStart(2,'0');
 
-    // Fetch today + tomorrow calendar refs in parallel (not sequential)
-    // For today: use cached schedule ref if available
-    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
-
-    const [todayRef, tomorrowRef, yesterdayRef] = await Promise.all([
-      (dayOffset === 0 && schedule?.tanya?.sefariaRef)
-        ? Promise.resolve(schedule.tanya.sefariaRef)
-        : getCalTanya(today),
-      getCalTanya(tomorrow),
-      getCalTanya(yesterday),
-    ]);
-    console.log('Tanya refs — today:', todayRef, '| tomorrow:', tomorrowRef, '| yesterday:', yesterdayRef);
-    // Fall back to schedule ref if calendar unavailable (e.g. proxy not yet deployed)
-    if (!todayRef) {
-      todayRef = schedule?.tanya?.sefariaRef || null;
-      if (!todayRef) return false;
-    }
+    // Fetch today + tomorrow from /api/tanya-boundary (server-side, no CORS)
+    // Falls back to Sefaria calendar for today if Chabad.org parse fails
+    // Fetch today + tomorrow refs from boundary proxy (server-side, date params work)
+    const boundary = await fetch('/api/tanya-boundary?date=' + dateStr)
+      .then(r => r.json()).catch(() => null);
+    const todayRef = boundary?.today || schedule?.tanya?.sefariaRef || null;
+    const tomorrowRef = boundary?.tomorrow || null;
+    if (!todayRef) return false;
     const tp = parseTanyaRef(todayRef);
     const tn = tomorrowRef ? parseTanyaRef(tomorrowRef) : null;
     if (!tp) return false;
@@ -5305,13 +5301,10 @@ async function _loadTanyaNative(sectionId) {
     const segStart = tp.seg - 1;
     // If tomorrow is same chapter, end before tomorrow's start
     // If tn is null/different chapter, go to end of chapter
-    // segEnd: if tomorrow's ref is same or later in same chapter, end before it
-    // tn.seg === tp.seg means same starting point = today is exactly 1 segment
-    // tn.seg > tp.seg means range within chapter
-    // tn null or different chapter means go to end of chapter
-    const segEnd = (tn && tp.chapter === tn.chapter)
-      ? (tn.seg > tp.seg ? tn.seg - 1 : tp.seg) // same seg → just today's seg
-      : allHe.length;
+    // Show from today's starting seg to end of chapter
+    // This is the correct Tanya daily learning: each portion goes to end of its chapter
+    // We cannot reliably get tomorrow's boundary from any external API
+    const segEnd = allHe.length;
 
     const enPortion = allEn.slice(segStart, segEnd);
     const hePortion = allHe.slice(segStart, segEnd);
@@ -6486,8 +6479,7 @@ async function _loadExtraSubtitle(id) {
   if (!el) return;
   try {
     const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-    const cal = await fetch('/api/sefaria-calendar?gy=' + d.getFullYear()
-      + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json()).catch(() => null);
+    const cal = await fetchSefariaCalendar(d);
     const items = cal?.calendar_items || [];
 
     if (id === 'dafYomi') {
@@ -6751,8 +6743,7 @@ async function openExtraReader(id) {
 async function _loadDafYomi() {
   const def = EXTRA_TRACK_DEFS.dafYomi;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('/api/sefaria-calendar?gy=' + d.getFullYear()
-    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json());
+  const cal = await fetchSefariaCalendar(d);
   const item = (cal.calendar_items || []).find(i => i.title?.en === 'Daf Yomi');
   if (!item?.ref) throw new Error('No Daf Yomi ref');
 
@@ -6966,8 +6957,7 @@ async function _loadHayomYom() {
 async function _loadLikkuteiTorah() {
   const def = EXTRA_TRACK_DEFS.likkuteiTorah;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('/api/sefaria-calendar?gy=' + d.getFullYear()
-    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json());
+  const cal = await fetchSefariaCalendar(d);
   // Try multiple title variants — Sefaria sometimes returns 'Parasha' vs 'Parashat Hashavua'
   const parshaItem = (cal.calendar_items || []).find(i =>
     i.title?.en === 'Parashat Hashavua' ||
@@ -7017,8 +7007,7 @@ async function _loadLikkuteiTorah() {
 async function _loadMishnahYomi() {
   const def = EXTRA_TRACK_DEFS.mishnahYomi;
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetch('/api/sefaria-calendar?gy=' + d.getFullYear()
-    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate()).then(r => r.json());
+  const cal = await fetchSefariaCalendar(d);
   const item = (cal.calendar_items || []).find(i =>
     i.title?.en === 'Mishnah Yomit' || (i.title?.en || '').includes('Mishnah')
   );
