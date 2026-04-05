@@ -5221,14 +5221,9 @@ async function _loadTanyaNative(sectionId) {
     const _enhSegStart = tp.seg - 1;
     const _enhSegEnd   = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : undefined;
 
-    // Parse yesterday's ref so API can fetch previous portion for context
-    const ty = yesterdayRef ? parseTanyaRef(yesterdayRef) : null;
     const _enhApiUrl   = '/api/tanya-enhance?ref=' + enc
       + '&segStart=' + _enhSegStart
-      + (_enhSegEnd !== undefined ? '&segEnd=' + _enhSegEnd : '')
-      + (ty ? '&prevRef=' + encodeURIComponent(ty.base + ' ' + ty.chapter)
-            + '&prevSegStart=' + (ty.seg - 1)
-            + (tp.chapter === ty.chapter ? '&prevSegEnd=' + _enhSegStart : '') : '');
+      + (_enhSegEnd !== undefined ? '&segEnd=' + _enhSegEnd : '');
 
     // Capture the viewed day offset at call time — guard against nav changes
     const _enhDayOffset = dayOffset;
@@ -5301,10 +5296,12 @@ async function _loadTanyaNative(sectionId) {
     const segStart = tp.seg - 1;
     // If tomorrow is same chapter, end before tomorrow's start
     // If tn is null/different chapter, go to end of chapter
-    // Show from today's starting seg to end of chapter
-    // This is the correct Tanya daily learning: each portion goes to end of its chapter
-    // We cannot reliably get tomorrow's boundary from any external API
-    const segEnd = allHe.length;
+    // Determine today's end segment
+    const segEnd = (tomorrowRef && tn && tp.chapter === tn.chapter && tn.seg > tp.seg)
+      ? tn.seg - 1          // same chapter, known boundary
+      : (tomorrowRef && tn && tp.chapter !== tn.chapter)
+        ? allHe.length      // tomorrow is a new chapter → today goes to end
+        : Math.min(tp.seg + 6, allHe.length); // no tomorrow → show ~7 segs max
 
     const enPortion = allEn.slice(segStart, segEnd);
     const hePortion = allHe.slice(segStart, segEnd);
