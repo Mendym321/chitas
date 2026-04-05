@@ -5152,13 +5152,27 @@ async function _loadTanyaNative(sectionId) {
     }
 
     async function getCalTanya(date) {
-      const url = '/api/sefaria-calendar?gy=' + date.getFullYear()
-        + '&gm=' + (date.getMonth()+1) + '&gd=' + date.getDate();
-      const d = await fetch(url).then(r => r.json()).catch(() => null);
-      return (d?.calendar_items || []).find(i =>
-        (i.title?.en || '').toLowerCase().includes('tanya') ||
-        (i.ref || '').toLowerCase().includes('tanya')
-      )?.ref || null;
+      // Hebcal has day-specific Tanya refs; Sefaria calendar ignores date params
+      const iso = date.getFullYear() + '-'
+        + String(date.getMonth()+1).padStart(2,'0') + '-'
+        + String(date.getDate()).padStart(2,'0');
+      const d = await fetch(
+        'https://www.hebcal.com/hebcal?v=1&cfg=json&dps=on&d=on&start=' + iso + '&end=' + iso + '&lg=s'
+      ).then(r => r.json()).catch(() => null);
+      const items = d?.items || [];
+      const item = items.find(i =>
+        i.category === 'tanyaYomi' ||
+        (i.title || '').toLowerCase().includes('tanya')
+      );
+      if (!item) return null;
+      // Hebcal Tanya items have a 'sefaria' field with the exact ref
+      if (item.ref) return item.ref;
+      // Parse chapter:seg from title e.g. "Tanya, Likkutei Amarim, Chapter 41:5"
+      const m = (item.title || '').match(/(\d+):(\d+)/);
+      if (m) return 'Tanya, Part I; Likkutei Amarim ' + m[1] + ':' + m[2];
+      const ch = (item.title || '').match(/Chapter\s+(\d+)/i);
+      if (ch) return 'Tanya, Part I; Likkutei Amarim ' + ch[1] + ':1';
+      return null;
     }
 
     const today = new Date(); today.setDate(today.getDate() + (dayOffset || 0));
