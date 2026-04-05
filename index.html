@@ -5175,6 +5175,7 @@ async function _loadTanyaNative(sectionId) {
       getCalTanya(tomorrow),
       getCalTanya(yesterday),
     ]);
+    console.log('Tanya refs — today:', todayRef, '| tomorrow:', tomorrowRef, '| yesterday:', yesterdayRef);
     // Fall back to schedule ref if calendar unavailable (e.g. proxy not yet deployed)
     if (!todayRef) {
       todayRef = schedule?.tanya?.sefariaRef || null;
