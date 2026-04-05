@@ -5251,35 +5251,45 @@ async function _loadTanyaNative(sectionId) {
         }
       });
 
-    // Always load plain Sefaria immediately — enhance API upgrades in background
-    // (progressive enhancement — no blocking wait)
-    {
-      const [enRes, heRes] = await Promise.all([
-        fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1')
-          .then(r => r.json()).catch(() => null),
-        fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0')
-          .then(r => r.json()).catch(() => null),
-      ]);
+    // Build the exact range ref for today's portion
+    // Today: tp.chapter:tp.seg, Tomorrow: tn.chapter:tn.seg
+    // If same chapter: range is tp.seg to (tn.seg - 1)
+    // If different chapter: today goes to end of its chapter
+    let rangeRef;
+    if (tn && tp.chapter === tn.chapter && tn.seg > tp.seg) {
+      // Same chapter, specific segment range e.g. "...41:4-6"
+      rangeRef = tp.base + ' ' + tp.chapter + ':' + tp.seg + '-' + (tn.seg - 1);
+    } else {
+      // End of chapter — fetch from tp.seg to end using open range
+      rangeRef = tp.base + ' ' + tp.chapter + ':' + tp.seg + '-200';
+    }
+    const rangeEnc = encodeURIComponent(rangeRef);
+    console.log('Tanya: fetching range', rangeRef);
 
-      function flatSegs(x) {
-        if (!x) return [];
-        if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
-        if (Array.isArray(x)) return x.flatMap(flatSegs);
-        return [];
-      }
+    // Fetch the exact daily portion using range ref
+    const [enRes, heRes] = await Promise.all([
+      fetch('https://www.sefaria.org/api/v3/texts/' + rangeEnc + '?version=english&fill_in_missing_segments=1')
+        .then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + rangeEnc + '?context=0&commentary=0')
+        .then(r => r.json()).catch(() => null),
+    ]);
 
-      const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-      const allEn = flatSegs(engVersion?.text || heRes?.text || []);
-      const allHe = flatSegs(heRes?.he || []);
-      const segStart = tp.seg - 1;
-      const segEnd = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : allEn.length;
-      const enPortion = allEn.slice(segStart, segEnd);
-      const hePortion = allHe.slice(segStart, segEnd);
-      if (!enPortion.length && !hePortion.length) return false;
-      const maxLen = Math.max(enPortion.length, hePortion.length);
-      for (let i = 0; i < maxLen; i++) {
-        blocks.push({ he: hePortion[i] || '', en: enPortion[i] || '', lit: '' });
-      }
+    function flatSegs(x) {
+      if (!x) return [];
+      if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
+      if (Array.isArray(x)) return x.flatMap(flatSegs);
+      return [];
+    }
+
+    const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+    const allEn = flatSegs(engVersion?.text || []);
+    const allHe = flatSegs(heRes?.he || []);
+    console.log('Tanya: got', allEn.length, 'en segs,', allHe.length, 'he segs from range', rangeRef);
+
+    if (!allEn.length && !allHe.length) return false;
+    const maxLen = Math.max(allEn.length, allHe.length);
+    for (let i = 0; i < maxLen; i++) {
+      blocks.push({ he: allHe[i] || '', en: allEn[i] || '', lit: '' });
     }
 
     window._tanyaData = { blocks, chapterLabel, isFirstSegment };
@@ -6435,8 +6445,8 @@ function _renderExtraTrackCards(iso, isToday) {
   // Attach swipe-to-delete listeners after render
   setTimeout(() => _attachExtraSwipeDelete(), 30);
 
-  // Load subtitles async
-  tracks.forEach(id => _loadExtraSubtitle(id));
+  // Load subtitles async — use allTracks so auto-injected Sotah is included
+  allTracks.forEach(id => _loadExtraSubtitle(id));
 }
 
 // Load subtitle for an extra track card
