@@ -6458,6 +6458,14 @@ async function _loadExtraSubtitle(id) {
     } else if (id === 'mishnahYomi') {
       const item = items.find(i => i.title?.en === 'Mishnah Yomit');
       el.textContent = item?.displayValue?.en || item?.ref || 'Mishnah Yomi';
+    } else if (id === 'sotah') {
+      // Use cached sotah daf info if available
+      const info = window._sotahDaf || await getSotahDafForDate(d).catch(() => null);
+      if (info) {
+        el.textContent = 'Daf ' + info.daf + ' · Day ' + info.omerDay + ' of the Omer';
+      } else {
+        el.textContent = 'Masechet Sotah · Omer';
+      }
     }
   } catch(e) {
     const def = EXTRA_TRACK_DEFS[id];
@@ -6542,7 +6550,7 @@ const EXTRA_TRACK_DEFS = {
     duration: '~20 min',
     color: '#6366F1',
     autoOmer: true, // appears automatically during Omer, no opt-in
-    iconPath: '<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    iconPath: '<line x1="12" y1="20" x2="12" y2="8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 8 C12 8 9 6 8 3 C10 3 12 5 12 8Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8 C12 8 15 6 16 3 C14 3 12 5 12 8Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 12 C12 12 9 10 8 7 C10 7 12 9 12 12Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 12 C12 12 15 10 16 7 C14 7 12 9 12 12Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   },
   mishnahYomi: {
     id: 'mishnahYomi',
