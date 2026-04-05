@@ -5251,45 +5251,46 @@ async function _loadTanyaNative(sectionId) {
         }
       });
 
-    // Build the exact range ref for today's portion
-    // Today: tp.chapter:tp.seg, Tomorrow: tn.chapter:tn.seg
-    // If same chapter: range is tp.seg to (tn.seg - 1)
-    // If different chapter: today goes to end of its chapter
-    let rangeRef;
-    if (tn && tp.chapter === tn.chapter && tn.seg > tp.seg) {
-      // Same chapter, specific segment range e.g. "...41:4-6"
-      rangeRef = tp.base + ' ' + tp.chapter + ':' + tp.seg + '-' + (tn.seg - 1);
-    } else {
-      // End of chapter — fetch from tp.seg to end using open range
-      rangeRef = tp.base + ' ' + tp.chapter + ':' + tp.seg + '-200';
-    }
-    const rangeEnc = encodeURIComponent(rangeRef);
-    console.log('Tanya: fetching range', rangeRef);
-
-    // Fetch the exact daily portion using range ref
-    const [enRes, heRes] = await Promise.all([
-      fetch('https://www.sefaria.org/api/v3/texts/' + rangeEnc + '?version=english&fill_in_missing_segments=1')
+    // Fetch the whole chapter then slice to today's portion
+    // This is reliable — chapter refs always work on Sefaria
+    const chapterEnc = encodeURIComponent(chapterRef);
+    const [chEnRes, chHeRes] = await Promise.all([
+      fetch('https://www.sefaria.org/api/texts/' + chapterEnc + '?context=0&commentary=0&ven=Kehot+Publication+Society')
         .then(r => r.json()).catch(() => null),
-      fetch('https://www.sefaria.org/api/texts/' + rangeEnc + '?context=0&commentary=0')
+      fetch('https://www.sefaria.org/api/texts/' + chapterEnc + '?context=0&commentary=0')
         .then(r => r.json()).catch(() => null),
     ]);
 
     function flatSegs(x) {
       if (!x) return [];
       if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
-      if (Array.isArray(x)) return x.flatMap(flatSegs);
+      if (Array.isArray(x)) {
+        // Tanya segments are strings — if first item is array, it's doubly nested
+        if (x.length && Array.isArray(x[0])) return x.map(sub => flatSegs(sub).join(' ')).filter(Boolean);
+        return x.flatMap(flatSegs);
+      }
       return [];
     }
 
-    const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-    const allEn = flatSegs(engVersion?.text || []);
-    const allHe = flatSegs(heRes?.he || []);
-    console.log('Tanya: got', allEn.length, 'en segs,', allHe.length, 'he segs from range', rangeRef);
+    const allEn = flatSegs(chEnRes?.text || []);
+    const allHe = flatSegs(chHeRes?.he || []);
 
-    if (!allEn.length && !allHe.length) return false;
-    const maxLen = Math.max(allEn.length, allHe.length);
+    // Slice to today's portion: segStart (0-indexed) to segEnd
+    const segStart = tp.seg - 1;
+    // If tomorrow is same chapter, end before tomorrow's start
+    // If tn is null/different chapter, go to end of chapter
+    const segEnd = (tn && tp.chapter === tn.chapter && tn.seg > tp.seg)
+      ? tn.seg - 1
+      : allHe.length; // use he length as ground truth (English may be missing some segs)
+
+    const enPortion = allEn.slice(segStart, segEnd);
+    const hePortion = allHe.slice(segStart, segEnd);
+    console.log('Tanya: ch' + tp.chapter + ' segs ' + segStart + '-' + segEnd + ' of ' + allHe.length + ' | got en=' + enPortion.length + ' he=' + hePortion.length + (tn ? ' | tomorrow ch' + tn.chapter + ':' + tn.seg : ' | no tomorrow'));
+
+    if (!enPortion.length && !hePortion.length) return false;
+    const maxLen = Math.max(enPortion.length, hePortion.length);
     for (let i = 0; i < maxLen; i++) {
-      blocks.push({ he: allHe[i] || '', en: allEn[i] || '', lit: '' });
+      blocks.push({ he: hePortion[i] || '', en: enPortion[i] || '', lit: '' });
     }
 
     window._tanyaData = { blocks, chapterLabel, isFirstSegment };
