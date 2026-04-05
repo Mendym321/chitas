@@ -2305,6 +2305,11 @@ async function init() {
     }).catch(() => {});
 
     hideLoader();
+    // Check if we're in Omer period → auto-show Sotah
+    _checkSotahOmer().then(() => {
+      const d = new Date();
+      _renderExtraTrackCards(dateISO(d), true);
+    }).catch(() => {});
   } catch(e) {
     hideLoader();
     hideSplash();
@@ -6369,12 +6374,18 @@ function _renderExtraTrackCards(iso, isToday) {
   const list = document.getElementById('extra-tracks-list');
   if (!list) return;
   const tracks = user.extraTracks || [];
-  if (!tracks.length) { list.style.display = 'none'; return; }
+
+  // Auto-inject Sotah during Omer (not opt-in)
+  // We check window._sotahDaf which is set by _checkSotahOmer()
+  const sotahDaf = window._sotahDaf;
+  const allTracks = sotahDaf ? ['sotah', ...tracks.filter(t => t !== 'sotah')] : tracks;
+
+  if (!allTracks.length) { list.style.display = 'none'; return; }
   list.style.display = 'block';
 
   const dayDone = isToday ? user.done : (user.pastDone?.[iso] || {});
 
-  list.innerHTML = tracks.map((id, i) => {
+  list.innerHTML = allTracks.map((id, i) => {
     const def = EXTRA_TRACK_DEFS[id];
     if (!def) return '';
     const done = !!dayDone[id];
@@ -6524,6 +6535,15 @@ const EXTRA_TRACK_DEFS = {
     color: '#5B6FE8',
     iconPath: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
   },
+  sotah: {
+    id: 'sotah',
+    label: 'Sotah',
+    desc: 'Masechet Sotah · Omer learning',
+    duration: '~20 min',
+    color: '#6366F1',
+    autoOmer: true, // appears automatically during Omer, no opt-in
+    iconPath: '<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  },
   mishnahYomi: {
     id: 'mishnahYomi',
     label: 'Mishnah Yomi',
@@ -6664,8 +6684,9 @@ async function openExtraReader(id) {
   if (contEl) contEl.style.display = 'none';
 
   try {
-    if (id === 'dafYomi')       await _loadDafYomi();
-    else if (id === 'hayomYom') await _loadHayomYom();
+    if (id === 'dafYomi')            await _loadDafYomi();
+    else if (id === 'sotah')         await _loadSotah();
+    else if (id === 'hayomYom')      await _loadHayomYom();
     else if (id === 'likkuteiTorah') await _loadLikkuteiTorah();
     else if (id === 'mishnahYomi')   await _loadMishnahYomi();
   } catch(e) {
@@ -7140,6 +7161,82 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
   contEl.innerHTML = t + v + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
+
+// ════════════════════════════════════════════════════════════════════
+// SOTAH READER  (Omer learning — Masechet Sotah, daf per omer day)
+// Uses same bilingual reader + Rashi/Tosafot as Daf Yomi
+// ════════════════════════════════════════════════════════════════════
+async function _loadSotah() {
+  const def = EXTRA_TRACK_DEFS.sotah;
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
+
+  try {
+    const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+
+    // Use cached daf info if available and for today, else recalculate
+    let info = (dayOffset === 0) ? window._sotahDaf : null;
+    if (!info) info = await getSotahDafForDate(d).catch(() => null);
+    if (!info) throw new Error('Not currently in the Omer period');
+
+    const { daf, omerDay } = info;
+    // Each daf has two sides: a and b — load both
+    const refA = 'Sotah.' + daf + 'a';
+    const refB = 'Sotah.' + daf + 'b';
+    const subtitle = 'Daf ' + daf + ' · Day ' + omerDay + ' of the Omer';
+    document.getElementById('chabad-panel-sub').textContent = subtitle;
+
+    const encA = encodeURIComponent(refA);
+    const encB = encodeURIComponent(refB);
+    const rashiRef   = encodeURIComponent('Rashi on ' + refA);
+    const tosafotRef = encodeURIComponent('Tosafot on ' + refA);
+
+    // Fetch daf + rashi + tosafot in parallel
+    const [enA, heA, enB, heB, rashiRes, rashiEnRes, tosafotRes] = await Promise.all([
+      fetch('https://www.sefaria.org/api/v3/texts/' + encA + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + encA + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/v3/texts/' + encB + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + encB + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + rashiRef + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/v3/texts/' + rashiRef + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + tosafotRef + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+    ]);
+
+    // Combine both sides of the daf
+    const engA = enA?.versions?.find(v => v.language === 'en') || enA?.versions?.[0];
+    const engB = enB?.versions?.find(v => v.language === 'en') || enB?.versions?.[0];
+    const allHe = [..._flatHtml(heA?.he || []), ..._flatHtml(heB?.he || [])];
+    const allEn = [..._flatHtml(engA?.text || []), ..._flatHtml(engB?.text || [])];
+
+    const rashiHe = _flatHtml(rashiRes?.he || []);
+    const rashiEngVer = rashiEnRes?.versions?.find(v => v.language === 'en') || rashiEnRes?.versions?.[0];
+    const rashiEn = _flatHtml(rashiEngVer?.text || []);
+    const tosafotHe = _flatHtml(tosafotRes?.he || []);
+
+    // Reuse the Daf Yomi renderer — same layout, same toggles
+    window._dafData = {
+      title: subtitle,
+      allHe, allEn,
+      rashiHe, rashiEn,
+      tosafotHe, tosafotEn: [],
+      color: def.color,
+    };
+    _rerenderDaf();
+    _restoreExtraScroll('sotah');
+
+  } catch(e) {
+    console.error('Sotah loader error:', e);
+    if (contEl) {
+      contEl.innerHTML = '<p style="padding:20px;color:var(--t3);text-align:center;">'
+        + (e.message || 'Could not load Sotah') + '</p>';
+      contEl.style.display = 'block';
+    }
+    if (loadEl) loadEl.style.display = 'none';
+  }
+}
+
 function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
@@ -7566,6 +7663,59 @@ function recalcStreak() {
   user.streak = streak;
   if (streak > (user.longestStreak || 0)) user.longestStreak = streak;
   return streak;
+}
+
+
+// ── Sotah / Sefirat HaOmer ────────────────────────────────────────────────────
+// Chabad minhag: learn Masechet Sotah during the Omer (49 days)
+// Day 1 of Omer (16 Nissan) = Daf 2, Day 2 = Daf 3 ... Day 49 = Daf 50
+// Formula: daf = omerDay + 1
+// Learning begins 17 Nissan (Day 2 Omer = Daf 3) — first day you'd actually learn
+// Wait: 16 Nissan is Pesach II (Yom Tov), so learning starts 17 Nissan
+// But daf count starts from 16 Nissan Day 1 = Daf 2 to keep alignment
+// Returns { daf, omerDay, inOmer } for a given Gregorian date
+// Uses Hebcal Hebrew date converter
+
+async function getSotahDafForDate(d) {
+  const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  const heb = await fetch('https://www.hebcal.com/converter?cfg=json&gy=' + d.getFullYear()
+    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1')
+    .then(r => r.json()).catch(() => null);
+  if (!heb) return null;
+
+  const { hm, hd, hy } = heb;
+
+  // Omer runs 16 Nissan → 5 Sivan (Diaspora: day 1 = 16 Nissan, day 49 = 4 Sivan)
+  // Sotah daf = omerDay + 1  (day 1 → daf 2, day 49 → daf 50)
+  let omerDay = null;
+
+  if (hm === 'Nisan' && hd >= 16) {
+    omerDay = hd - 15; // 16 Nissan = day 1
+  } else if (hm === 'Iyyar') {
+    omerDay = 15 + hd; // Iyyar 1 = day 16
+  } else if (hm === 'Sivan' && hd <= 5) {
+    omerDay = 44 + hd; // Sivan 1 = day 45, Sivan 5 = day 49
+  }
+
+  // Learning: day 2 (daf 2) through day 49 (daf 49)
+  // Day 1 (16 Nissan) has no corresponding daf
+  if (!omerDay || omerDay < 2 || omerDay > 49) return null;
+
+  const daf = omerDay; // daf = omer day directly
+  return { daf, omerDay, hm, hd };
+}
+
+
+// ── Auto-show Sotah during Omer ───────────────────────────────────────────────
+async function _checkSotahOmer() {
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const info = await getSotahDafForDate(d).catch(() => null);
+  window._sotahDaf = info; // null = not in Omer
+  if (info) {
+    // Update the separator visibility
+    const sep = document.getElementById('extra-tracks-separator');
+    if (sep) sep.style.display = 'flex';
+  }
 }
 
 // ── App loader ────────────────────────────────────────────────────────────────
