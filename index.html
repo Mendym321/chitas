@@ -5254,12 +5254,22 @@ async function _loadTanyaNative(sectionId) {
     // Fetch the whole chapter then slice to today's portion
     // This is reliable — chapter refs always work on Sefaria
     const chapterEnc = encodeURIComponent(chapterRef);
-    const [chEnRes, chHeRes] = await Promise.all([
-      fetch('https://www.sefaria.org/api/texts/' + chapterEnc + '?context=0&commentary=0&ven=Kehot+Publication+Society')
-        .then(r => r.json()).catch(() => null),
+    // Fetch Hebrew (primary) + English via versions endpoint
+    const [chHeRes, versionsRes] = await Promise.all([
       fetch('https://www.sefaria.org/api/texts/' + chapterEnc + '?context=0&commentary=0')
         .then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/versions/' + chapterEnc)
+        .then(r => r.json()).catch(() => []),
     ]);
+    // Pick best English version
+    const enVersions = Array.isArray(versionsRes) ? versionsRes.filter(v => v.language === 'en') : [];
+    const pickedEn = enVersions.find(v => (v.versionTitle||'').toLowerCase().includes('kehot'))
+      || enVersions.find(v => (v.versionTitle||'').toLowerCase().includes('english'))
+      || enVersions[0];
+    const chEnRes = pickedEn
+      ? await fetch('https://www.sefaria.org/api/texts/' + chapterEnc + '?context=0&commentary=0&ven=' + encodeURIComponent(pickedEn.versionTitle))
+          .then(r => r.json()).catch(() => null)
+      : null;
 
     function flatSegs(x) {
       if (!x) return [];
@@ -5272,16 +5282,21 @@ async function _loadTanyaNative(sectionId) {
       return [];
     }
 
-    const allEn = flatSegs(chEnRes?.text || []);
     const allHe = flatSegs(chHeRes?.he || []);
+    const allEn = flatSegs(chEnRes?.text || []);
+    console.log('Tanya versions available:', (Array.isArray(versionsRes) ? versionsRes.map(v=>v.versionTitle) : []).join(', '));
 
     // Slice to today's portion: segStart (0-indexed) to segEnd
     const segStart = tp.seg - 1;
     // If tomorrow is same chapter, end before tomorrow's start
     // If tn is null/different chapter, go to end of chapter
-    const segEnd = (tn && tp.chapter === tn.chapter && tn.seg > tp.seg)
-      ? tn.seg - 1
-      : allHe.length; // use he length as ground truth (English may be missing some segs)
+    // segEnd: if tomorrow's ref is same or later in same chapter, end before it
+    // tn.seg === tp.seg means same starting point = today is exactly 1 segment
+    // tn.seg > tp.seg means range within chapter
+    // tn null or different chapter means go to end of chapter
+    const segEnd = (tn && tp.chapter === tn.chapter)
+      ? (tn.seg > tp.seg ? tn.seg - 1 : tp.seg) // same seg → just today's seg
+      : allHe.length;
 
     const enPortion = allEn.slice(segStart, segEnd);
     const hePortion = allHe.slice(segStart, segEnd);
