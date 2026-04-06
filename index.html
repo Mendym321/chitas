@@ -5190,6 +5190,8 @@ async function _loadTanyaNative(sectionId) {
       .then(r => r.json()).catch(() => null);
     const todayRef = boundary?.today || schedule?.tanya?.sefariaRef || null;
     const tomorrowRef = boundary?.tomorrow || null;
+    const isApproximate = boundary?.isApproximate ?? true;
+    console.log('Tanya: today=' + todayRef + ' tomorrow=' + tomorrowRef + ' approximate=' + isApproximate);
     if (!todayRef) return false;
     const tp = parseTanyaRef(todayRef);
     const tn = tomorrowRef ? parseTanyaRef(tomorrowRef) : null;
@@ -5257,63 +5259,84 @@ async function _loadTanyaNative(sectionId) {
         }
       });
 
-    // Fetch the whole chapter then slice to today's portion
-    // This is reliable — chapter refs always work on Sefaria
-    const chapterEnc = encodeURIComponent(chapterRef);
-    // Fetch Hebrew (primary) + English via versions endpoint
-    const [chHeRes, versionsRes] = await Promise.all([
-      fetch('https://www.sefaria.org/api/texts/' + chapterEnc + '?context=0&commentary=0')
-        .then(r => r.json()).catch(() => null),
-      fetch('https://www.sefaria.org/api/texts/versions/' + chapterEnc)
-        .then(r => r.json()).catch(() => []),
-    ]);
-    // Pick best English version
-    const enVersions = Array.isArray(versionsRes) ? versionsRes.filter(v => v.language === 'en') : [];
-    const pickedEn = enVersions.find(v => (v.versionTitle||'').toLowerCase().includes('kehot'))
-      || enVersions.find(v => (v.versionTitle||'').toLowerCase().includes('english'))
-      || enVersions[0];
-    const chEnRes = pickedEn
-      ? await fetch('https://www.sefaria.org/api/texts/' + chapterEnc + '?context=0&commentary=0&ven=' + encodeURIComponent(pickedEn.versionTitle))
+    // ── Tomorrow-slice method (from working reference implementation) ──────────
+    // Use item.url (dot-separated) which works reliably with Sefaria date params
+    // todayUrl: "Tanya,_Part_I;_Likkutei_Amarim.41.5"
+    // tomorrowUrl: "Tanya,_Part_I;_Likkutei_Amarim.41.9"  → today ends at 41:8
+
+    function parseTanyaUrlSlug(url) {
+      if (!url) return null;
+      const match = url.match(/\.([0-9]+)\.([0-9]+)$/);
+      if (!match) return null;
+      return {
+        base: url.substring(0, url.lastIndexOf('.')).substring(0, url.lastIndexOf('.')),
+        chapterSlug: url.substring(0, url.lastIndexOf('.')), // e.g. "Tanya,_Part_I;_Likkutei_Amarim.41"
+        chapter: parseInt(match[1]),
+        verse: parseInt(match[2])
+      };
+    }
+
+    const todayUrl    = boundary?.todayUrl    || null;
+    const tomorrowUrl = boundary?.tomorrowUrl || null;
+    const t = parseTanyaUrlSlug(todayUrl);
+    const n = parseTanyaUrlSlug(tomorrowUrl);
+
+    // Fetch the chapter using the slug from url field
+    const chapterSlug = t ? t.chapterSlug : chapterRef.replace(/ /g, '_');
+    const chRes = await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(chapterSlug) + '?lang=bi&context=0&commentary=0')
+      .then(r => r.json()).catch(() => null);
+
+    // Also try the standard chapterRef if slug fails
+    const chRes2 = (!chRes?.he?.length && !chRes?.text?.length)
+      ? await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(chapterRef) + '?lang=bi&context=0&commentary=0')
           .then(r => r.json()).catch(() => null)
       : null;
 
-    function flatSegs(x) {
+    const chData = (chRes?.he?.length || chRes?.text?.length) ? chRes : chRes2;
+
+    function flatRaw(x) {
       if (!x) return [];
-      if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
-      if (Array.isArray(x)) {
-        // Tanya segments are strings — if first item is array, it's doubly nested
-        if (x.length && Array.isArray(x[0])) return x.map(sub => flatSegs(sub).join(' ')).filter(Boolean);
-        return x.flatMap(flatSegs);
-      }
+      if (typeof x === 'string') return x ? [x] : [];
+      if (Array.isArray(x)) return x.flatMap(flatRaw);
       return [];
     }
 
-    const allHe = flatSegs(chHeRes?.he || []);
-    const allEn = flatSegs(chEnRes?.text || []);
-    console.log('Tanya versions available:', (Array.isArray(versionsRes) ? versionsRes.map(v=>v.versionTitle) : []).join(', '));
+    const allHe = flatRaw(chData?.he   || []);
+    const allEn = flatRaw(chData?.text || []);
 
-    // Slice to today's portion: segStart (0-indexed) to segEnd
-    const segStart = tp.seg - 1;
-    // If tomorrow is same chapter, end before tomorrow's start
-    // If tn is null/different chapter, go to end of chapter
-    // Determine today's end segment
-    const segEnd = (tomorrowRef && tn && tp.chapter === tn.chapter && tn.seg > tp.seg)
-      ? tn.seg - 1          // same chapter, known boundary
-      : (tomorrowRef && tn && tp.chapter !== tn.chapter)
-        ? allHe.length      // tomorrow is a new chapter → today goes to end
-        : Math.min(tp.seg + 6, allHe.length); // no tomorrow → show ~7 segs max
-
-    const enPortion = allEn.slice(segStart, segEnd);
-    const hePortion = allHe.slice(segStart, segEnd);
-    console.log('Tanya: ch' + tp.chapter + ' segs ' + segStart + '-' + segEnd + ' of ' + allHe.length + ' | got en=' + enPortion.length + ' he=' + hePortion.length + (tn ? ' | tomorrow ch' + tn.chapter + ':' + tn.seg : ' | no tomorrow'));
-
-    if (!enPortion.length && !hePortion.length) return false;
-    const maxLen = Math.max(enPortion.length, hePortion.length);
-    for (let i = 0; i < maxLen; i++) {
-      blocks.push({ he: hePortion[i] || '', en: enPortion[i] || '', lit: '' });
+    // Exact slice using tomorrow-slice method
+    const startV = t ? t.verse : tp.seg;
+    let endV;
+    const sameSection = n && t && t.chapterSlug === n.chapterSlug;
+    if (sameSection && n.verse > startV) {
+      endV = n.verse - 1;  // today ends just before tomorrow starts
+    } else if (n && !sameSection) {
+      endV = allHe.length; // crosses chapter → go to end
+    } else {
+      endV = allHe.length; // no tomorrow (approx) → full chapter
     }
 
-    window._tanyaData = { blocks, chapterLabel, isFirstSegment };
+    const hePortion = allHe.slice(startV - 1, endV);
+    const enPortion = allEn.slice(startV - 1, endV);
+    console.log('Tanya: ch' + (t?.chapter || tp.chapter) + ' v' + startV + '-' + endV
+      + ' of ' + allHe.length + ' | he=' + hePortion.length + ' en=' + enPortion.length
+      + (n ? ' | tomorrow ' + n.chapter + ':' + n.verse : ' | no tomorrow'));
+
+    if (!hePortion.length && !enPortion.length) return false;
+
+    const maxLen = Math.max(hePortion.length, enPortion.length);
+    for (let i = 0; i < maxLen; i++) {
+      const heRaw = _cleanHtml(hePortion[i] || '');
+      const enRaw = _cleanHtml(enPortion[i] || '');
+      // Hagahot: Alter Rebbe's own notes — marked in Tanya text with הגה. prefix
+      // or square brackets, or <small> tags in Sefaria's HTML
+      const isHagahah = /^הגה\./.test(heRaw) || // הגה.
+                        /^\[/.test(heRaw) ||
+                        /^<small>/i.test(hePortion[i] || '') ||
+                        /^<small>/i.test(enPortion[i] || '');
+      blocks.push({ he: heRaw, en: enRaw, lit: '', isHagahah });
+    }
+    window._tanyaData = { blocks, chapterLabel, isFirstSegment, isApproximate };
     _renderTanyaContent();
 
     if (loadEl) loadEl.style.display = 'none';
@@ -5391,8 +5414,23 @@ function _renderTanyaContent() {
       return;
     }
 
-    const { he, en, lit } = block;
+    const { he, en, lit, isHagahah } = block;
     if (!he && !en) return;
+
+    // Hagahot (notes) — styled like Rashi in Chumash: smaller, indented, distinct border
+    if (isHagahah) {
+      const HE_SMALL = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+      v += '<div style="margin:6px 0;padding:10px 14px;border-left:2.5px solid rgba(168,85,247,.35);background:rgba(168,85,247,.04);border-radius:0 8px 8px 0;">'
+        + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:6px;">הגהה · Note</p>';
+      if (lang === 'both' || lang === 'en') {
+        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;margin-bottom:' + (lang==='both'?'8px':'0') + ';">' + en + '</p>';
+      }
+      if (lang === 'both' || lang === 'he') {
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';font-size:15px;line-height:1.9;color:var(--t2);font-style:italic;">' + he + '</p>';
+      }
+      v += '</div>';
+      return;
+    }
 
     if (lang === 'both') {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
@@ -5420,6 +5458,7 @@ function _renderTanyaContent() {
 
   el.innerHTML = t + heading + v
     + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s Tanya —</p>'
+    + (window._tanyaData?.isApproximate ? '<p style="font-size:11px;color:var(--t3);text-align:center;padding:12px 0 4px;opacity:.6;">Today\'s portion shown approximately</p>' : '')
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
