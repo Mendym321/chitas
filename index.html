@@ -6880,9 +6880,30 @@ function _rerenderDaf() {
     + '</div>';
 
   // Render segments
+  const amudBetStart       = dat.amudBetStart;
+  const rashiAmudBetStart  = dat.rashiAmudBetStart;
+  const tosafotAmudBetStart = dat.tosafotAmudBetStart;
+  const dafNum             = dat.daf;
+
+  function amudSeparator(daf, side) {
+    const label = daf + (side === 'a' ? 'a · עמוד א' : 'b · עמוד ב');
+    return '<div style="display:flex;align-items:center;gap:10px;margin:20px 0 12px;">'
+      + '<div style="flex:1;height:1px;background:var(--border);"></div>'
+      + '<span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);padding:3px 10px;border:1px solid var(--border);border-radius:20px;">' + label + '</span>'
+      + '<div style="flex:1;height:1px;background:var(--border);"></div>'
+      + '</div>';
+  }
+
   let v = '';
+  // Show amud aleph separator at start if we have amud info
+  if (dafNum && amudBetStart !== undefined) v += amudSeparator(dafNum, 'a');
+
   const maxLen = Math.max(allHe.length, allEn.length);
   for (let i = 0; i < maxLen; i++) {
+    // Amud bet separator
+    if (dafNum && amudBetStart !== undefined && i === amudBetStart) {
+      v += amudSeparator(dafNum, 'b');
+    }
     const he = allHe[i] || '';
     const en = allEn[i] || '';
     if (!he && !en) continue;
@@ -6901,7 +6922,15 @@ function _rerenderDaf() {
         + '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
     }
 
-    // Rashi block
+    // Rashi block — with amud separator at the right index
+    if (showRashi && rashiHe) {
+      if (dafNum && rashiAmudBetStart !== undefined && i === rashiAmudBetStart) {
+        v += '<div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">'
+          + '<div style="flex:1;height:1px;background:rgba(16,185,129,.2);"></div>'
+          + '<span style="font-size:9px;font-weight:700;color:#10B981;opacity:.6;">' + dafNum + 'b · Rashi</span>'
+          + '<div style="flex:1;height:1px;background:rgba(16,185,129,.2);"></div></div>';
+      }
+    }
     if (showRashi && rashiHe && rashiHe[i]) {
       const rHe = rashiHe[i] || '';
       const rEn = (lang !== 'he' && rashiEn && rashiEn[i]) ? rashiEn[i] : '';
@@ -6920,7 +6949,15 @@ function _rerenderDaf() {
       v += '</div>';
     }
 
-    // Tosafot block
+    // Tosafot block — with amud separator at the right index
+    if (showTosafot && tosafotHe) {
+      if (dafNum && tosafotAmudBetStart !== undefined && i === tosafotAmudBetStart) {
+        v += '<div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">'
+          + '<div style="flex:1;height:1px;background:rgba(139,92,246,.2);"></div>'
+          + '<span style="font-size:9px;font-weight:700;color:#8B5CF6;opacity:.6;">' + dafNum + 'b · Tosafot</span>'
+          + '<div style="flex:1;height:1px;background:rgba(139,92,246,.2);"></div></div>';
+      }
+    }
     if (showTosafot && tosafotHe && tosafotHe[i]) {
       v += '<div style="margin-top:6px;padding:10px 12px;background:#8B5CF608;border-left:3px solid #8B5CF640;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8B5CF6;margin-bottom:6px;">Tosafot</p>'
@@ -7265,30 +7302,50 @@ async function _loadSotah() {
 
     const encA = encodeURIComponent(refA);
     const encB = encodeURIComponent(refB);
-    const rashiRef   = encodeURIComponent('Rashi on ' + refA);
-    const tosafotRef = encodeURIComponent('Tosafot on ' + refA);
+    const rashiRefA   = encodeURIComponent('Rashi on ' + refA);
+    const rashiRefB   = encodeURIComponent('Rashi on ' + refB);
+    const tosafotRefA = encodeURIComponent('Tosafot on ' + refA);
+    const tosafotRefB = encodeURIComponent('Tosafot on ' + refB);
 
-    // Fetch daf + rashi + tosafot in parallel
-    const [enA, heA, enB, heB, rashiRes, rashiEnRes, tosafotRes] = await Promise.all([
+    // Fetch daf + rashi + tosafot for BOTH sides (a and b)
+    const [enA, heA, enB, heB,
+           rashiResA, rashiEnResA, tosafotResA,
+           rashiResB, rashiEnResB, tosafotResB] = await Promise.all([
       fetch('https://www.sefaria.org/api/v3/texts/' + encA + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
       fetch('https://www.sefaria.org/api/texts/' + encA + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
       fetch('https://www.sefaria.org/api/v3/texts/' + encB + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
       fetch('https://www.sefaria.org/api/texts/' + encB + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
-      fetch('https://www.sefaria.org/api/texts/' + rashiRef + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
-      fetch('https://www.sefaria.org/api/v3/texts/' + rashiRef + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
-      fetch('https://www.sefaria.org/api/texts/' + tosafotRef + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + rashiRefA + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/v3/texts/' + rashiRefA + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + tosafotRefA + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + rashiRefB + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/v3/texts/' + rashiRefB + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
+      fetch('https://www.sefaria.org/api/texts/' + tosafotRefB + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
     ]);
 
-    // Combine both sides of the daf
+    // Combine both sides — track where amud aleph ends for the separator
     const engA = enA?.versions?.find(v => v.language === 'en') || enA?.versions?.[0];
     const engB = enB?.versions?.find(v => v.language === 'en') || enB?.versions?.[0];
-    const allHe = [..._flatHtml(heA?.he || []), ..._flatHtml(heB?.he || [])];
+    const heASegs = _flatHtml(heA?.he || []);
+    const heBSegs = _flatHtml(heB?.he || []);
+    const allHe = [...heASegs, ...heBSegs];
     const allEn = [..._flatHtml(engA?.text || []), ..._flatHtml(engB?.text || [])];
+    const amudBetStart = heASegs.length; // index where amud bet begins
 
-    const rashiHe = _flatHtml(rashiRes?.he || []);
-    const rashiEngVer = rashiEnRes?.versions?.find(v => v.language === 'en') || rashiEnRes?.versions?.[0];
-    const rashiEn = _flatHtml(rashiEngVer?.text || []);
-    const tosafotHe = _flatHtml(tosafotRes?.he || []);
+    // Rashi: combine both sides
+    const rashiEngVerA = rashiEnResA?.versions?.find(v => v.language === 'en') || rashiEnResA?.versions?.[0];
+    const rashiEngVerB = rashiEnResB?.versions?.find(v => v.language === 'en') || rashiEnResB?.versions?.[0];
+    const rashiHeA = _flatHtml(rashiResA?.he || []);
+    const rashiHeB = _flatHtml(rashiResB?.he || []);
+    const rashiHe = [...rashiHeA, ...rashiHeB];
+    const rashiEn = [..._flatHtml(rashiEngVerA?.text || []), ..._flatHtml(rashiEngVerB?.text || [])];
+    const rashiAmudBetStart = rashiHeA.length;
+
+    // Tosafot: combine both sides
+    const tosafotHeA = _flatHtml(tosafotResA?.he || []);
+    const tosafotHeB = _flatHtml(tosafotResB?.he || []);
+    const tosafotHe = [...tosafotHeA, ...tosafotHeB];
+    const tosafotAmudBetStart = tosafotHeA.length;
 
     // Reuse the Daf Yomi renderer — same layout, same toggles
     window._dafData = {
@@ -7297,6 +7354,10 @@ async function _loadSotah() {
       rashiHe, rashiEn,
       tosafotHe, tosafotEn: [],
       color: def.color,
+      amudBetStart,        // index in main text where amud bet starts
+      rashiAmudBetStart,   // index in rashi where amud bet starts
+      tosafotAmudBetStart, // index in tosafot where amud bet starts
+      daf,                 // daf number for labels e.g. "3a" / "3b"
     };
     _rerenderDaf();
     _restoreExtraScroll('sotah');
