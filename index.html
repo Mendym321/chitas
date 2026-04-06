@@ -7300,66 +7300,76 @@ async function _loadSotah() {
     if (!info) throw new Error('Not currently in the Omer period');
 
     const { daf, omerDay } = info;
-    const subtitle = 'Daf ' + daf + '\u00b7 Day ' + omerDay + ' of the Omer';
+    const subtitle = 'Daf ' + daf + ' · Day ' + omerDay + ' of the Omer';
     document.getElementById('chabad-panel-sub').textContent = subtitle;
 
     const refA = 'Sotah.' + daf + 'a';
     const refB = 'Sotah.' + daf + 'b';
+    const encA = encodeURIComponent(refA);
+    const encB = encodeURIComponent(refB);
 
-    // Fetch Gemara text for both amudim + links (which include Rashi/Tosafot with anchorRef)
-    const [dataA, dataB, linksA, linksB] = await Promise.all([
-      fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(refA) + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
-      fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(refB) + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
-      fetch('https://www.sefaria.org/api/links/' + encodeURIComponent(refA) + '?with_text=1').then(r=>r.json()).catch(()=>[]),
-      fetch('https://www.sefaria.org/api/links/' + encodeURIComponent(refB) + '?with_text=1').then(r=>r.json()).catch(()=>[]),
+    // Fetch Gemara text (both amudim) + links (with anchorRef for exact alignment)
+    const [heA, enA, heB, enB, linksA, linksB] = await Promise.all([
+      fetch('https://www.sefaria.org/api/texts/' + encA + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
+      fetch('https://www.sefaria.org/api/v3/texts/' + encA + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
+      fetch('https://www.sefaria.org/api/texts/' + encB + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
+      fetch('https://www.sefaria.org/api/v3/texts/' + encB + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
+      fetch('https://www.sefaria.org/api/links/' + encA + '?with_text=1').then(r=>r.json()).catch(()=>[]),
+      fetch('https://www.sefaria.org/api/links/' + encB + '?with_text=1').then(r=>r.json()).catch(()=>[]),
     ]);
 
-    // Build per-segment commentary maps using anchorRef
-    // anchorRef format: "Sotah 3a:5" — segment number is after the colon
-    function buildCommMap(links, commentator) {
-      const map = {}; // segNum -> [he texts]
+    // Build per-segment map from links using anchorRef
+    // anchorRef: "Sotah 3a:5" → segment index 4 (0-based)
+    // collectiveTitle.en identifies the commentator
+    function buildMap(links, name) {
+      const map = {};
       (Array.isArray(links) ? links : []).forEach(lnk => {
-        if (!lnk.commentator || !lnk.commentator.includes(commentator)) return;
+        const title = lnk.collectiveTitle?.en || lnk.commentator || '';
+        if (!title.includes(name)) return;
         if (!lnk.he) return;
-        // anchorRef e.g. "Sotah 3a:5" or "Sotah 3a:5-6"
         const m = (lnk.anchorRef || '').match(/:(\d+)/);
         if (!m) return;
-        const seg = parseInt(m[1]) - 1; // 0-indexed
-        if (!map[seg]) map[seg] = [];
-        map[seg].push(_cleanHtml(lnk.he));
+        const seg = parseInt(m[1]) - 1; // 0-based
+        if (!map[seg]) map[seg] = { he: [], en: [] };
+        map[seg].he.push(_cleanHtml(lnk.he));
+        if (lnk.text) map[seg].en.push(_cleanHtml(typeof lnk.text === 'string' ? lnk.text : (lnk.text[0] || '')));
       });
       return map;
     }
 
-    const aRashiMap   = buildCommMap(linksA, 'Rashi');
-    const aTosMap     = buildCommMap(linksA, 'Tosafot');
-    const bRashiMap   = buildCommMap(linksB, 'Rashi');
-    const bTosMap     = buildCommMap(linksB, 'Tosafot');
-
-    // Convert maps to arrays aligned to Gemara segments
-    function mapToArr(heSegs, commMap) {
-      return heSegs.map((_, i) => (commMap[i] || []).join(' '));
+    function mapToArr(len, map, lang) {
+      return Array.from({length: len}, (_, i) => (map[i]?.[lang] || []).join(' '));
     }
 
-    const aHe = _flatHtml(dataA?.he || []);
-    const bHe = _flatHtml(dataB?.he || []);
+    const aHeSegs = _flatHtml(heA?.he || []);
+    const bHeSegs = _flatHtml(heB?.he || []);
+    const engA = enA?.versions?.find(v => v.language === 'en') || enA?.versions?.[0];
+    const engB = enB?.versions?.find(v => v.language === 'en') || enB?.versions?.[0];
+    const aEnSegs = _flatHtml(engA?.text || []);
+    const bEnSegs = _flatHtml(engB?.text || []);
+
+    const aRashiMap = buildMap(linksA, 'Rashi');
+    const aTosMap   = buildMap(linksA, 'Tosafot');
+    const bRashiMap = buildMap(linksB, 'Rashi');
+    const bTosMap   = buildMap(linksB, 'Tosafot');
+
+    const aLen = Math.max(aHeSegs.length, aEnSegs.length);
+    const bLen = Math.max(bHeSegs.length, bEnSegs.length);
 
     window._dafData = {
-      title: subtitle,
-      color: def.color,
-      daf,
-      aHe,      aEn: [],
-      aRashiHe: mapToArr(aHe, aRashiMap),
-      aRashiEn: [],
-      aTosHe:   mapToArr(aHe, aTosMap),
-      bHe,      bEn: [],
-      bRashiHe: mapToArr(bHe, bRashiMap),
-      bRashiEn: [],
-      bTosHe:   mapToArr(bHe, bTosMap),
-      // Legacy flat fields for hasRashi/hasTosafot detection
-      allHe: [...aHe, ...bHe], allEn: [],
-      rashiHe:   [...mapToArr(aHe, aRashiMap), ...mapToArr(bHe, bRashiMap)],
-      rashiEn:   [], tosafotHe: [...mapToArr(aHe, aTosMap), ...mapToArr(bHe, bTosMap)],
+      title: subtitle, color: def.color, daf,
+      aHe: aHeSegs, aEn: aEnSegs,
+      aRashiHe: mapToArr(aLen, aRashiMap, 'he'),
+      aRashiEn: mapToArr(aLen, aRashiMap, 'en'),
+      aTosHe:   mapToArr(aLen, aTosMap, 'he'),
+      bHe: bHeSegs, bEn: bEnSegs,
+      bRashiHe: mapToArr(bLen, bRashiMap, 'he'),
+      bRashiEn: mapToArr(bLen, bRashiMap, 'en'),
+      bTosHe:   mapToArr(bLen, bTosMap, 'he'),
+      allHe: [...aHeSegs, ...bHeSegs], allEn: [...aEnSegs, ...bEnSegs],
+      rashiHe:   [...mapToArr(aLen, aRashiMap, 'he'), ...mapToArr(bLen, bRashiMap, 'he')],
+      rashiEn:   [...mapToArr(aLen, aRashiMap, 'en'), ...mapToArr(bLen, bRashiMap, 'en')],
+      tosafotHe: [...mapToArr(aLen, aTosMap, 'he'),   ...mapToArr(bLen, bTosMap, 'he')],
     };
     _rerenderDaf();
     _restoreExtraScroll('sotah');
