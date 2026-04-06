@@ -6821,7 +6821,8 @@ function _renderDafYomi(title, allHe, allEn, rashiHe, rashiEn, tosafotHe, tosafo
 function _rerenderDaf() {
   const dat = window._dafData;
   if (!dat) return;
-  const { title, allHe, allEn, rashiHe, rashiEn, tosafotHe, tosafotEn, color } = dat;
+  const { title, allHe, allEn, rashiHe, rashiEn, tosafotHe, color,
+          amudBetStart, daf } = dat;
 
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
@@ -6831,12 +6832,10 @@ function _rerenderDaf() {
 
   const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
   const lang = localStorage.getItem('chitas_lang_extra_dafYomi') || (allEn.length ? 'both' : 'he');
-  // Multi-select: stored as comma-separated e.g. 'rashi,tosafot'
   const commStr = localStorage.getItem('chitas_daf_commentary') || '';
   const commSet = new Set(commStr.split(',').filter(Boolean));
   const showRashi = commSet.has('rashi');
   const showTosafot = commSet.has('tosafot');
-
   const hasRashi = rashiHe && rashiHe.length > 0;
   const hasTosafot = tosafotHe && tosafotHe.length > 0;
 
@@ -6846,7 +6845,7 @@ function _rerenderDaf() {
     t += '<div style="display:flex;gap:6px;margin-bottom:12px;">';
     [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
       const a = lang === l;
-      t += '<button onclick="localStorage.setItem(\'chitas_lang_extra_dafYomi\',\'' + l + '\');_rerenderDaf()"'
+      t += '<button onclick="_setDafLang(\''+l+'\')"'
         + ' style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
         + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
         + '">' + lb + '</button>';
@@ -6854,22 +6853,23 @@ function _rerenderDaf() {
     t += '</div>';
   }
 
-  // Commentary multi-select toggles
+  // Commentary toggles
   if (hasRashi || hasTosafot) {
     t += '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-    const commOpts = [];
-    if (hasRashi) commOpts.push(['rashi','Rashi','#10B981']);
-    if (hasTosafot) commOpts.push(['tosafot','Tosafot','#8B5CF6']);
-    commOpts.forEach(([val, lbl, col]) => {
-      const on = commSet.has(val);
-      // Toggle: add or remove from set
-      t += '<button onclick="_toggleDafComm(\''+val+'\')"'
-        + ' style="flex:1;padding:7px 8px;border-radius:10px;border:1.5px solid;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;'
-        + (on ? 'background:' + col + '20;color:' + col + ';border-color:' + col + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-        + '">'
-        + (on ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
-        + lbl + '</button>';
-    });
+    if (hasRashi) {
+      const on = commSet.has('rashi');
+      t += '<button onclick="_toggleDafComm(\'rashi\')"'
+        + ' style="flex:1;padding:7px 8px;border-radius:10px;border:1.5px solid;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;'
+        + (on ? 'background:#10B98120;color:#10B981;border-color:#10B981;' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
+        + '">Rashi</button>';
+    }
+    if (hasTosafot) {
+      const on = commSet.has('tosafot');
+      t += '<button onclick="_toggleDafComm(\'tosafot\')"'
+        + ' style="flex:1;padding:7px 8px;border-radius:10px;border:1.5px solid;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;'
+        + (on ? 'background:#8B5CF620;color:#8B5CF6;border-color:#8B5CF6;' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
+        + '">Tosafot</button>';
+    }
     t += '</div>';
   }
 
@@ -6879,88 +6879,67 @@ function _rerenderDaf() {
     + '<p style="font-size:17px;font-weight:800;color:' + color + ';line-height:1.3;">' + title + '</p>'
     + '</div>';
 
-  // Render segments
-  const amudBetStart       = dat.amudBetStart;
-  const rashiAmudBetStart  = dat.rashiAmudBetStart;
-  const tosafotAmudBetStart = dat.tosafotAmudBetStart;
-  const dafNum             = dat.daf;
-
-  function amudSeparator(daf, side) {
+  // Amud bet separator
+  function amudSep(side) {
+    if (!daf) return '';
     const label = daf + (side === 'a' ? 'a · עמוד א' : 'b · עמוד ב');
     return '<div style="display:flex;align-items:center;gap:10px;margin:20px 0 12px;">'
       + '<div style="flex:1;height:1px;background:var(--border);"></div>'
-      + '<span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);padding:3px 10px;border:1px solid var(--border);border-radius:20px;">' + label + '</span>'
+      + '<span style="font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--t3);padding:3px 12px;border:1px solid var(--border);border-radius:20px;">' + label + '</span>'
       + '<div style="flex:1;height:1px;background:var(--border);"></div>'
       + '</div>';
   }
 
   let v = '';
-  // Show amud aleph separator at start if we have amud info
-  if (dafNum && amudBetStart !== undefined) v += amudSeparator(dafNum, 'a');
+  if (daf) v += amudSep('a');
 
   const maxLen = Math.max(allHe.length, allEn.length);
   for (let i = 0; i < maxLen; i++) {
-    // Amud bet separator
-    if (dafNum && amudBetStart !== undefined && i === amudBetStart) {
-      v += amudSeparator(dafNum, 'b');
+    // Amud bet separator at the right spot
+    if (daf && amudBetStart !== undefined && i === amudBetStart) {
+      v += amudSep('b');
     }
+
     const he = allHe[i] || '';
     const en = allEn[i] || '';
     if (!he && !en) continue;
 
+    // Gemara segment
+    v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
     if (lang === 'both' && he && en) {
-      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">'
-        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">'
+      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">'
         + '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>'
         + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>'
         + '</div>';
     } else if (lang === 'he' || !en) {
-      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">'
-        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
     } else {
-      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">'
-        + '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
+      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
     }
 
-    // Rashi block — with amud separator at the right index
-    if (showRashi && rashiHe) {
-      if (dafNum && rashiAmudBetStart !== undefined && i === rashiAmudBetStart) {
-        v += '<div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">'
-          + '<div style="flex:1;height:1px;background:rgba(16,185,129,.2);"></div>'
-          + '<span style="font-size:9px;font-weight:700;color:#10B981;opacity:.6;">' + dafNum + 'b · Rashi</span>'
-          + '<div style="flex:1;height:1px;background:rgba(16,185,129,.2);"></div></div>';
-      }
-    }
+    // Rashi on this segment
     if (showRashi && rashiHe && rashiHe[i]) {
-      const rHe = rashiHe[i] || '';
-      const rEn = (lang !== 'he' && rashiEn && rashiEn[i]) ? rashiEn[i] : '';
-      v += '<div style="margin-top:10px;padding:10px 12px;background:#10B98108;border-left:3px solid #10B98140;border-radius:0 6px 6px 0;">'
-        + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#10B981;margin-bottom:6px;">Rashi</p>';
-      if (lang === 'both' && rEn && rHe) {
-        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">'
-          + '<p style="font-size:13px;line-height:1.75;color:var(--t1);">' + rEn + '</p>'
+      const rHe = rashiHe[i];
+      const rEn = rashiEn && rashiEn[i] ? rashiEn[i] : '';
+      v += '<div style="margin-top:8px;padding:9px 12px;background:#10B98108;border-left:2.5px solid #10B98150;border-radius:0 6px 6px 0;">'
+        + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#10B981;margin-bottom:5px;">רש"י</p>';
+      if (lang === 'both' && rEn) {
+        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">'
+          + '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + rEn + '</p>'
           + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);">' + rHe + '</p>'
           + '</div>';
       } else if (lang === 'en' && rEn) {
-        v += '<p style="font-size:13px;line-height:1.75;color:var(--t1);">' + rEn + '</p>';
-      } else if (rHe) {
+        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + rEn + '</p>';
+      } else {
         v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);">' + rHe + '</p>';
       }
       v += '</div>';
     }
 
-    // Tosafot block — with amud separator at the right index
-    if (showTosafot && tosafotHe) {
-      if (dafNum && tosafotAmudBetStart !== undefined && i === tosafotAmudBetStart) {
-        v += '<div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">'
-          + '<div style="flex:1;height:1px;background:rgba(139,92,246,.2);"></div>'
-          + '<span style="font-size:9px;font-weight:700;color:#8B5CF6;opacity:.6;">' + dafNum + 'b · Tosafot</span>'
-          + '<div style="flex:1;height:1px;background:rgba(139,92,246,.2);"></div></div>';
-      }
-    }
+    // Tosafot on this segment
     if (showTosafot && tosafotHe && tosafotHe[i]) {
-      v += '<div style="margin-top:6px;padding:10px 12px;background:#8B5CF608;border-left:3px solid #8B5CF640;border-radius:0 6px 6px 0;">'
-        + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8B5CF6;margin-bottom:6px;">Tosafot</p>'
+      v += '<div style="margin-top:6px;padding:9px 12px;background:#8B5CF608;border-left:2.5px solid #8B5CF650;border-radius:0 6px 6px 0;">'
+        + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8B5CF6;margin-bottom:5px;">תוספות</p>'
         + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);">' + tosafotHe[i] + '</p>'
         + '</div>';
     }
@@ -6969,6 +6948,12 @@ function _rerenderDaf() {
   }
 
   contEl.innerHTML = t + v + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
+
+function _setDafLang(l) {
+  localStorage.setItem('chitas_lang_extra_dafYomi', l);
+  _rerenderDaf();
 }
 
 function _toggleDafComm(val) {
