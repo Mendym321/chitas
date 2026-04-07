@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v1';
+const VERSION     = 'v2';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
@@ -67,9 +67,15 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // App shell files — cache first, update in background
+  // App shell files — network first for HTML (get latest), cache first for static assets
   if (isShellRequest(url)) {
-    event.respondWith(cacheFirstWithRefresh(request));
+    // HTML: always try network first so deployments propagate immediately
+    if (url.pathname === '/') {
+      event.respondWith(networkFirstWithCache(request, SHELL_CACHE, 60 * 60 * 24));
+    } else {
+      // Fonts/icons: cache first (they never change)
+      event.respondWith(cacheFirstWithRefresh(request));
+    }
     return;
   }
 
