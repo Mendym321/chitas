@@ -4612,32 +4612,49 @@ async function _loadRambamNative(sectionId) {
     const items = cal.calendar_items || [];
     let refs = [];
 
+    // Sefaria returns multiple Rambam calendar items:
+    //   - "Daily Rambam (3 Chapters)" with item.refs = [ch1, ch2, ch3]  ← want this for 3-ch track
+    //   - "Daily Rambam" (1 chapter) with item.ref = single chapter     ← want this for 1-ch track
+    // Strategy: for 3-ch, prefer items whose refs array has 2-3 entries.
+    // For 1-ch, prefer items whose ref is a single chapter (no range dash).
+
     if (user.rambamTrack === '3') {
-      // 3-chapter track — find ALL Rambam items (sometimes split across 2 items near book boundaries)
-      // Match any item whose title contains 'Rambam' or ref contains 'Mishneh Torah'
-      // Prefer items with '3 Chapter' in title, but fall back to any Rambam item
-      const r3s = items.filter(i => {
+      // Priority 1: item explicitly titled "3 Chapter"
+      let r3s = items.filter(i => {
         const t = i.title?.en || '';
-        const r = i.ref || '';
-        return t.includes('3 Chapter') || t.includes('3 Chapters') ||
-               (t.toLowerCase().includes('rambam') && !t.includes('1 Chapter')) ||
-               r.startsWith('Mishneh Torah');
+        return t.includes('3 Chapter') || t.includes('3 Chapters');
       });
-      // Collect all refs from all matching items
-      const rawRefs = [...new Set(r3s.flatMap(i => {
-        // item.refs is an array of individual chapter refs (most reliable)
-        if (i.refs?.length) return i.refs;
-        // item.ref may be a range like "Mishneh Torah, Laws of Shabbat 4-6"
-        if (i.ref) return [i.ref];
-        return [];
-      }))];
+
+      // Priority 2: any Rambam item with a refs array of 2+ entries (multi-chapter)
+      if (!r3s.length) {
+        r3s = items.filter(i => {
+          const t = i.title?.en || '';
+          return (t.toLowerCase().includes('rambam') || (i.ref || '').startsWith('Mishneh Torah'))
+            && (i.refs?.length >= 2);
+        });
+      }
+
+      // Priority 3: fallback — any Rambam item that isn't the 1-chapter one
+      if (!r3s.length) {
+        r3s = items.filter(i => {
+          const t = i.title?.en || '';
+          return (t.toLowerCase().includes('rambam') || (i.ref || '').startsWith('Mishneh Torah'))
+            && !t.includes('1 Chapter');
+        });
+      }
+
+      const rawRefs = [...new Set(r3s.flatMap(i =>
+        i.refs?.length ? i.refs : i.ref ? [i.ref] : []
+      ))];
       refs = _expandRambamRefs(rawRefs);
     } else {
-      // 1-chapter track
+      // 1-chapter track: prefer item titled "1 Chapter", else shortest ref array
       const r1 = items.find(i => {
         const t = i.title?.en || '';
-        return t.includes('1 Chapter') ||
-               (t.toLowerCase().includes('rambam') && !t.includes('3 Chapter') && !t.includes('3 Chapters'));
+        return t.includes('1 Chapter');
+      }) || items.find(i => {
+        const t = i.title?.en || '';
+        return t.toLowerCase().includes('rambam') && !t.includes('3 Chapter') && !t.includes('3 Chapters');
       });
       if (r1) refs = _expandRambamRefs(r1.refs?.length ? r1.refs : r1.ref ? [r1.ref] : []);
     }
@@ -6296,7 +6313,9 @@ async function _prefetchAllReaders() {
   // Others load on-demand when user taps — feels faster
   await silentLoad(_loadChumashNative, 'chumash');
   // Prefetch the rest after a short delay so UI is responsive first
+  // Guard: don't prefetch if user has navigated to a past day by the time this fires
   setTimeout(() => {
+    if (dayOffset !== 0) return; // user navigated away — skip, they'll load on demand
     Promise.all([
       silentLoad(_loadTehillimNative, 'tehillim'),
       silentLoad(_loadTanyaNative, 'tanya'),
