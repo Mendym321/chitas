@@ -4670,27 +4670,42 @@ async function _loadRambamNative(sectionId) {
     const dateStr = viewedDay.getFullYear() + '-'
       + String(viewedDay.getMonth()+1).padStart(2,'0') + '-'
       + String(viewedDay.getDate()).padStart(2,'0');
+    const track = user.rambamTrack || '3';
 
-    // Use sefariaRef from schedule if available.
-    // For today: set in init() from Sefaria calendar (pipe-joined refs).
-    // For past days: set in rebuildScheduleForOffset() from Hebcal URL (date-accurate).
-    // Sefaria's calendar API ignores date params so we can't re-fetch it here.
-    let refs = [];
-    const scheduleRef = schedule?.rambam?.sefariaRef;
+    // Fetch Hebcal for this specific day — Hebcal respects dates correctly
+    const hebUrl = 'https://www.hebcal.com/hebcal?v=1&cfg=json&dr3=on&dr1=on&d=on'
+      + '&start=' + dateStr + '&end=' + dateStr + '&lg=s';
+    const hebData = await fetch(hebUrl).then(r => r.json()).catch(() => null);
+    const hebItems = hebData?.items || [];
 
-    if (scheduleRef) {
-      const rawRefs = scheduleRef.split('|').filter(Boolean);
-      refs = _expandRambamRefs(rawRefs);
-      console.log('Rambam refs from schedule for', dateStr, ':', refs);
+    // Find the right Rambam item based on track
+    let rambamItem;
+    if (track === '1') {
+      rambamItem = hebItems.find(i => i.category === 'dailyLearning' && i.title?.includes('1 Chapter'))
+        || hebItems.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
     } else {
-      // Fallback: server-side proxy (works for today, not for past days)
-      const track = user.rambamTrack === '1' ? '1' : '3';
-      const rambamData = await fetch('/api/rambam-refs?date=' + dateStr + '&track=' + track)
-        .then(r => r.json()).catch(() => null);
-      refs = rambamData?.refs || [];
-      console.log('Rambam refs from API for', dateStr, ':', refs);
+      rambamItem = hebItems.find(i => i.category === 'dailyLearning'
+        && (i.title?.includes('3 Chapter') || i.title?.includes('3 Chapters')))
+        || hebItems.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam')
+          && !i.title?.includes('1 Chapter'));
     }
 
+    // Get refs from item — prefer refs array, fall back to parsing url or ref field
+    let refs = [];
+    if (rambamItem?.refs?.length) {
+      refs = rambamItem.refs;
+    } else if (rambamItem?.ref) {
+      refs = _expandRambamRefs([rambamItem.ref]);
+    } else if (rambamItem?.url?.includes('sefaria.org/')) {
+      // Parse Sefaria URL: "https://www.sefaria.org/Mishneh_Torah%2C_Book.12-14"
+      const path = decodeURIComponent(rambamItem.url.split('sefaria.org/').pop().split('?')[0]);
+      const clean = path.replace(/_/g, ' ');
+      const dotIdx = clean.lastIndexOf('.');
+      const parsed = dotIdx === -1 ? clean : clean.slice(0, dotIdx) + ' ' + clean.slice(dotIdx + 1);
+      refs = _expandRambamRefs([parsed]);
+    }
+
+    console.log('Rambam', dateStr, 'item:', rambamItem?.title, 'refs:', refs);
     if (!refs.length) return false;
 
     // Fetch each individual chapter ref
