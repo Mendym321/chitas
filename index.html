@@ -4672,8 +4672,8 @@ async function _loadRambamNative(sectionId) {
       + String(viewedDay.getDate()).padStart(2,'0');
     const track = user.rambamTrack || '3';
 
-    // Fetch Hebcal for this specific day — Hebcal respects dates correctly
-    const hebUrl = 'https://www.hebcal.com/hebcal?v=1&cfg=json&dr3=on&dr1=on&d=on'
+    // Fetch Hebcal for this specific day — same params as the working weekly fetch
+    const hebUrl = 'https://www.hebcal.com/hebcal?v=1&cfg=json&dps=on&dr3=on&dr1=on&d=on'
       + '&start=' + dateStr + '&end=' + dateStr + '&lg=s';
     const hebData = await fetch(hebUrl).then(r => r.json()).catch(() => null);
     const hebItems = hebData?.items || [];
@@ -4705,6 +4705,7 @@ async function _loadRambamNative(sectionId) {
       refs = _expandRambamRefs([parsed]);
     }
 
+    console.log('Rambam', dateStr, 'all items:', hebItems.map(i=>({cat:i.category,title:i.title})));
     console.log('Rambam', dateStr, 'item:', rambamItem?.title, 'refs:', refs);
     if (!refs.length) return false;
 
