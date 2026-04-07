@@ -449,6 +449,21 @@ const gProvider = new GoogleAuthProvider();
 
 // Expose to global scope so regular scripts can call them
 window._fb = {
+  // Load pre-cached daily data (written by cron at midnight)
+  async loadDailyCache(iso) {
+    try {
+      const snap = await getDoc(doc(db, 'cache', iso));
+      if (!snap.exists()) return null;
+      const data = snap.data();
+      // Only use if it was generated for today (not stale)
+      if (data.date !== iso) return null;
+      return data;
+    } catch(e) {
+      console.warn('Cache read failed:', e);
+      return null;
+    }
+  },
+
   // Sign in with Google
   async signInGoogle() {
     try {
@@ -2237,11 +2252,34 @@ async function init() {
   renderStats();
 
   try {
-    const [cal, hd, sefariaCalRaw] = await Promise.all([
-      fetchHebcal(),
-      fetchHebDate(),
-      fetchSefariaCalendar(null),
-    ]);
+    // Try Firestore daily cache first (written by cron at midnight)
+    // Falls back to direct API calls if cache miss
+    const todayISO = new Date().toISOString().slice(0, 10);
+    let _cachedData = null;
+    if (window._fb?.loadDailyCache) {
+      _cachedData = await window._fb.loadDailyCache(todayISO).catch(() => null);
+    }
+
+    let cal, hd, sefariaCalRaw;
+    if (_cachedData) {
+      // Use cached data — near-instant
+      console.log('Using daily cache from Firestore ✓');
+      cal         = _cachedData.hebcalWeek;
+      hd          = _cachedData.hebdate;
+      sefariaCalRaw = { calendar_items: _cachedData.sefariaCalendar };
+      // Seed the Sefaria calendar cache so all subsequent calls use it too
+      _sefariaCalCache = sefariaCalRaw;
+      // Also seed tanya-boundary so _loadTanyaNative doesn't re-fetch
+      if (_cachedData.tanya) window._cachedTanyaBoundary = _cachedData.tanya;
+    } else {
+      // No cache — fetch everything in parallel (normal path)
+      console.log('No daily cache — fetching APIs directly');
+      [cal, hd, sefariaCalRaw] = await Promise.all([
+        fetchHebcal(),
+        fetchHebDate(),
+        fetchSefariaCalendar(null),
+      ]);
+    }
     const p = parseHebcal(cal);
     const tdate = `${hd.hm} ${hd.hd}, ${hd.hy}`;
     const civDate = `${new Date().getMonth()+1}/${new Date().getDate()}/${new Date().getFullYear()}`;
@@ -4558,7 +4596,11 @@ async function _loadRambamNative(sectionId) {
   if (contEl) contEl.style.display = 'none';
 
   try {
-    // Get refs for the viewed day from Sefaria calendar
+    if (user.rambamTrack === 'm') {
+      return await _loadSeferHamitzvos(sectionId);
+    }
+
+    // Fetch Sefaria calendar for the viewed day (server-side proxy = date params work)
     const viewedDay = new Date();
     viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
 
@@ -4570,20 +4612,37 @@ async function _loadRambamNative(sectionId) {
     const items = cal.calendar_items || [];
     let refs = [];
 
-    if (user.rambamTrack === 'm') {
-      // Sefer HaMitzvos — native reader
-      return await _loadSeferHamitzvos(sectionId);
-    } else if (user.rambamTrack === '3') {
-      // 3-chapter track: calendar may return a range ref like "Mishneh Torah, Eruvin 3-5"
-      // OR an item.refs array when spanning books. Collect both cases.
-      const r3s = items.filter(i => { const t=i.title?.en||''; return t.includes('3 Chapter')||t.includes('3 Chapters'); });
-      const rawRefs = [...new Set(r3s.flatMap(i => i.refs?.length ? i.refs : i.ref ? [i.ref] : []))];
-      // Expand any range refs ("Book X-Y") into individual chapter refs ("Book X", "Book X+1", ...)
+    if (user.rambamTrack === '3') {
+      // 3-chapter track — find ALL Rambam items (sometimes split across 2 items near book boundaries)
+      // Match any item whose title contains 'Rambam' or ref contains 'Mishneh Torah'
+      // Prefer items with '3 Chapter' in title, but fall back to any Rambam item
+      const r3s = items.filter(i => {
+        const t = i.title?.en || '';
+        const r = i.ref || '';
+        return t.includes('3 Chapter') || t.includes('3 Chapters') ||
+               (t.toLowerCase().includes('rambam') && !t.includes('1 Chapter')) ||
+               r.startsWith('Mishneh Torah');
+      });
+      // Collect all refs from all matching items
+      const rawRefs = [...new Set(r3s.flatMap(i => {
+        // item.refs is an array of individual chapter refs (most reliable)
+        if (i.refs?.length) return i.refs;
+        // item.ref may be a range like "Mishneh Torah, Laws of Shabbat 4-6"
+        if (i.ref) return [i.ref];
+        return [];
+      }))];
       refs = _expandRambamRefs(rawRefs);
     } else {
-      const r1 = items.find(i => { const t=i.title?.en||''; return t.toLowerCase().includes('rambam') && !t.includes('3 Chapter') && !t.includes('3 Chapters'); });
+      // 1-chapter track
+      const r1 = items.find(i => {
+        const t = i.title?.en || '';
+        return t.includes('1 Chapter') ||
+               (t.toLowerCase().includes('rambam') && !t.includes('3 Chapter') && !t.includes('3 Chapters'));
+      });
       if (r1) refs = _expandRambamRefs(r1.refs?.length ? r1.refs : r1.ref ? [r1.ref] : []);
     }
+
+    console.log('Rambam refs for', viewedDay.toISOString().slice(0,10), ':', refs);
 
     if (!refs.length) return false;
 
@@ -4631,8 +4690,10 @@ async function _loadRambamNative(sectionId) {
 function _expandRambamRefs(refs) {
   const out = [];
   refs.forEach(ref => {
-    // Range: "Mishneh Torah, Book Ch1-Ch2"
-    const rangeMatch = ref.match(/^(Mishneh Torah,?\s+.+?)\s+(\d+)-(\d+)$/);
+    if (!ref) return;
+    // Range ref: "Mishneh Torah, Laws of Sabbath 4-6" → 3 individual chapter refs
+    // Also handles refs without "Mishneh Torah" prefix (just in case)
+    const rangeMatch = ref.match(/^(.+?)\s+(\d+)-(\d+)$/);
     if (rangeMatch) {
       const base = rangeMatch[1];
       const from = parseInt(rangeMatch[2]);
@@ -4642,7 +4703,9 @@ function _expandRambamRefs(refs) {
       out.push(ref);
     }
   });
-  return [...new Set(out)]; // deduplicate in case of overlap
+  const result = [...new Set(out)];
+  console.log('Rambam expanded:', refs, '→', result);
+  return result;
 }
 
 // Extract a readable chapter title from a single-chapter Sefaria Rambam ref
@@ -5186,8 +5249,11 @@ async function _loadTanyaNative(sectionId) {
     // Fetch today + tomorrow from /api/tanya-boundary (server-side, no CORS)
     // Falls back to Sefaria calendar for today if Chabad.org parse fails
     // Fetch today + tomorrow refs from boundary proxy (server-side, date params work)
-    const boundary = await fetch('/api/tanya-boundary?date=' + dateStr)
-      .then(r => r.json()).catch(() => null);
+    // Use cached boundary from Firestore daily cache if available
+    const boundary = (dayOffset === 0 && window._cachedTanyaBoundary)
+      ? window._cachedTanyaBoundary
+      : await fetch('/api/tanya-boundary?date=' + dateStr)
+          .then(r => r.json()).catch(() => null);
     const todayRef = boundary?.today || schedule?.tanya?.sefariaRef || null;
     const tomorrowRef = boundary?.tomorrow || null;
     const isApproximate = boundary?.isApproximate ?? true;
@@ -6226,13 +6292,17 @@ async function _prefetchAllReaders() {
     }
   }
 
-  // Run all four readers in parallel
-  await Promise.all([
-    silentLoad(_loadChumashNative, 'chumash'),
-    silentLoad(_loadTehillimNative, 'tehillim'),
-    silentLoad(_loadTanyaNative, 'tanya'),
-    silentLoad(_loadRambamNative, 'rambam'),
-  ]);
+  // Only prefetch Chumash immediately (shown first)
+  // Others load on-demand when user taps — feels faster
+  await silentLoad(_loadChumashNative, 'chumash');
+  // Prefetch the rest after a short delay so UI is responsive first
+  setTimeout(() => {
+    Promise.all([
+      silentLoad(_loadTehillimNative, 'tehillim'),
+      silentLoad(_loadTanyaNative, 'tanya'),
+      silentLoad(_loadRambamNative, 'rambam'),
+    ]).catch(() => {});
+  }, 1500);
 
   if (loadEl) loadEl.style.display = 'none';
   if (contEl) contEl.style.display = 'none';
@@ -6786,31 +6856,55 @@ async function _loadDafYomi() {
   document.getElementById('chabad-panel-sub').textContent = item.displayValue?.en || item.ref;
 
   const enc = encodeURIComponent(item.ref);
-  const rashiRef = 'Rashi on ' + item.ref;
-  const tosafotRef = 'Tosafot on ' + item.ref;
 
-  const [enRes, heRes, rashiRes, rashiEnRes, tosafotRes] = await Promise.all([
-    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
-    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
-    fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(rashiRef) + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
-    fetch('https://www.sefaria.org/api/v3/texts/' + encodeURIComponent(rashiRef) + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
-    fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(tosafotRef) + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
+  // Fetch Gemara text + links (for exact Rashi/Tosafot alignment via anchorRef)
+  const [enRes, heRes, links] = await Promise.all([
+    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
+    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
+    fetch('https://www.sefaria.org/api/links/' + enc + '?with_text=1').then(r=>r.json()).catch(()=>[]),
   ]);
 
   const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
   const allEn = _flatHtml(engVersion?.text || []);
   const allHe = _flatHtml(heRes?.he || []);
-  const rashiHe = _flatHtml(rashiRes?.he || []);
-  const rashiEngVersion = rashiEnRes?.versions?.find(v => v.language === 'en') || rashiEnRes?.versions?.[0];
-  const rashiEn = _flatHtml(rashiEngVersion?.text || []);
-  const tosafotHe = _flatHtml(tosafotRes?.he || []);
-  // Tosafot rarely has English on Sefaria, but try anyway
-  const tosafotEn = [];
 
-  window._dafCommentary = { rashi: rashiHe, rashiEn, tosafot: tosafotHe, tosafotEn, ref: item.ref, title: item.displayValue?.en || item.ref };
-  _renderDafYomi(item.displayValue?.en || item.ref, allHe, allEn, rashiHe, rashiEn, tosafotHe, tosafotEn, def.color);
+  // Build per-segment maps from links using anchorRef
+  function buildMap(links, name) {
+    const map = {};
+    (Array.isArray(links) ? links : []).forEach(lnk => {
+      const title = lnk.collectiveTitle?.en || lnk.commentator || '';
+      if (!title.includes(name)) return;
+      if (!lnk.he) return;
+      const m = (lnk.anchorRef || '').match(/:(\d+)/);
+      if (!m) return;
+      const seg = parseInt(m[1]) - 1;
+      if (!map[seg]) map[seg] = { he: [], en: [] };
+      map[seg].he.push(_cleanHtml(lnk.he));
+      if (lnk.text) map[seg].en.push(_cleanHtml(typeof lnk.text === 'string' ? lnk.text : (lnk.text[0] || '')));
+    });
+    return map;
+  }
+
+  function mapToArr(len, map, lang) {
+    return Array.from({length: len}, (_, i) => (map[i]?.[lang] || []).join(' '));
+  }
+
+  const rashiMap  = buildMap(links, 'Rashi');
+  const tosMap    = buildMap(links, 'Tosafot');
+  const len = Math.max(allHe.length, allEn.length);
+
+  window._dafData = {
+    title: item.displayValue?.en || item.ref,
+    color: def.color,
+    allHe, allEn,
+    rashiHe:   mapToArr(len, rashiMap, 'he'),
+    rashiEn:   mapToArr(len, rashiMap, 'en'),
+    tosafotHe: mapToArr(len, tosMap, 'he'),
+  };
+  _rerenderDaf();
   _restoreExtraScroll('dafYomi');
 }
+
 
 function _renderDafYomi(title, allHe, allEn, rashiHe, rashiEn, tosafotHe, tosafotEn, color) {
   // Cache everything — toggle buttons just call _rerenderDaf()
