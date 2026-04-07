@@ -2699,8 +2699,8 @@ async function rebuildScheduleForOffset() {
     }
     if (s.id === 'rambam') {
       s.subtitle = p?.rambamTitle || 'Daily Rambam';
-      // sefariaRef for rambam is rebuilt by _loadRambamNative from the calendar
-      // using the viewed day — no need to store it in the schedule for past days
+      // Store the Sefaria ref from Hebcal so _loadRambamNative uses the correct date's chapters
+      if (p?.rambamRef) s.sefariaRef = p.rambamRef;
     }
   });
 
@@ -2727,10 +2727,36 @@ function parseHebcalForDate(data, d) {
   const rambamItem = rt === 'm'
     ? items.find(i => i.category === 'dailyLearning' && (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos')))
     : items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
+
+  // Parse Sefaria ref from Hebcal's url field
+  // e.g. "https://www.sefaria.org/Mishneh_Torah%2C_Sanctification_of_the_New_Month.12-14"
+  // → "Mishneh Torah, Sanctification of the New Month 12-14"
+  function hebcalUrlToRef(url) {
+    if (!url || !url.includes('sefaria.org/')) return null;
+    const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
+    const parts = path.replace(/_/g, ' ').rsplit ? path.replace(/_/g, ' ').split('.') : path.replace(/_/g, ' ').split('.');
+    if (parts.length >= 2) return parts.slice(0, -1).join('.') + ' ' + parts[parts.length - 1];
+    return path.replace(/_/g, ' ');
+  }
+  // Simple version without rsplit
+  function urlToRef(url) {
+    if (!url || !url.includes('sefaria.org/')) return null;
+    try {
+      const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
+      const clean = path.replace(/_/g, ' ');
+      const dotIdx = clean.lastIndexOf('.');
+      if (dotIdx === -1) return clean;
+      return clean.slice(0, dotIdx) + ' ' + clean.slice(dotIdx + 1);
+    } catch(e) { return null; }
+  }
+
+  const rambamRef = urlToRef(rambamItem?.url) || null;
+
   return {
     parshaName, aliyaNum, aliyaRef,
     tehTitle: tehItem?.title || null,
     rambamTitle: rambamItem?.title || null,
+    rambamRef,
   };
 }
 
@@ -4506,8 +4532,11 @@ function _renderChumashContent() {
 async function _loadChumashNative(sectionId) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  const _isSilent = !!window._silentPrefetch;
+  if (!_isSilent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     // schedule.chumash.sefariaRef is always correct for the currently-viewed day:
@@ -4558,8 +4587,10 @@ async function _loadChumashNative(sectionId) {
     window._chumashData = { torahChunks: torah.chunks, rashiMap, ref: aliyahRef, versionTitle: torah.versionTitle };
     _renderChumashContent();
 
-    if (loadEl) loadEl.style.display = 'none';
-    if (contEl) contEl.style.display = 'block';
+    if (!_isSilent) {
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'block';
+    }
 
     // Restore saved scroll position for today
     const saved = _getSavedScrollPos('chumash');
@@ -4592,28 +4623,42 @@ function _setChumashLang(lang) {
 async function _loadRambamNative(sectionId) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  const _isSilent = !!window._silentPrefetch;
+  if (!_isSilent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     if (user.rambamTrack === 'm') {
       return await _loadSeferHamitzvos(sectionId);
     }
 
-    // Use dedicated server-side proxy — same pattern as tanya-boundary.js
-    // /api/rambam-refs respects date params correctly (unlike the calendar proxy)
     const viewedDay = new Date();
     viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
     const dateStr = viewedDay.getFullYear() + '-'
       + String(viewedDay.getMonth()+1).padStart(2,'0') + '-'
       + String(viewedDay.getDate()).padStart(2,'0');
 
-    const track = user.rambamTrack === '1' ? '1' : '3';
-    const rambamData = await fetch('/api/rambam-refs?date=' + dateStr + '&track=' + track)
-      .then(r => r.json()).catch(() => null);
+    // Use sefariaRef from schedule if available.
+    // For today: set in init() from Sefaria calendar (pipe-joined refs).
+    // For past days: set in rebuildScheduleForOffset() from Hebcal URL (date-accurate).
+    // Sefaria's calendar API ignores date params so we can't re-fetch it here.
+    let refs = [];
+    const scheduleRef = schedule?.rambam?.sefariaRef;
 
-    const refs = rambamData?.refs || [];
-    console.log('Rambam refs for', dateStr, ':', refs);
+    if (scheduleRef) {
+      const rawRefs = scheduleRef.split('|').filter(Boolean);
+      refs = _expandRambamRefs(rawRefs);
+      console.log('Rambam refs from schedule for', dateStr, ':', refs);
+    } else {
+      // Fallback: server-side proxy (works for today, not for past days)
+      const track = user.rambamTrack === '1' ? '1' : '3';
+      const rambamData = await fetch('/api/rambam-refs?date=' + dateStr + '&track=' + track)
+        .then(r => r.json()).catch(() => null);
+      refs = rambamData?.refs || [];
+      console.log('Rambam refs from API for', dateStr, ':', refs);
+    }
 
     if (!refs.length) return false;
 
@@ -4624,15 +4669,17 @@ async function _loadRambamNative(sectionId) {
     const validChapters = chapters.filter(c => c && (c.en.length || c.he.length));
     if (!validChapters.length) return false;
 
-    // Update panel subtitle — prefer the API display name, fallback to chapter titles
+    // Update panel subtitle
     const subEl = document.getElementById('chabad-panel-sub');
-    if (subEl) subEl.textContent = rambamData?.display || validChapters.map(c => c.title).join(' · ');
+    if (subEl) subEl.textContent = validChapters.map(ch => ch.title).join(' · ');
 
     window._rambamData = { chapters: validChapters };
     _renderRambamContent();
 
-    if (loadEl) loadEl.style.display = 'none';
-    if (contEl) contEl.style.display = 'block';
+    if (!_isSilent) {
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'block';
+    }
 
     // Restore saved scroll position for today
     // Restore scroll position
@@ -4862,8 +4909,11 @@ function _setRambamLang(lang) {
 async function _loadTehillimNative(sectionId) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  const _isSilent = !!window._silentPrefetch;
+  if (!_isSilent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     // 30-day Tehillim cycle keyed by Hebrew calendar day number
@@ -4958,8 +5008,10 @@ async function _loadTehillimNative(sectionId) {
       Promise.all(people.filter(p => p.chapter).map(p => _fetchPsalm(p.chapter))).catch(() => {});
     }).catch(() => {});
 
-    if (loadEl) loadEl.style.display = 'none';
-    if (contEl) contEl.style.display = 'block';
+    if (!_isSilent) {
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'block';
+    }
 
     // Restore scroll position AFTER personal psalms have loaded
     // so the saved position is reachable even if it's in the personal section
@@ -5200,8 +5252,11 @@ function _splitHebrewProportional(text, n) {
 async function _loadTanyaNative(sectionId) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  const _isSilent = !!window._silentPrefetch;
+  if (!_isSilent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     function parseTanyaRef(ref) {
@@ -5376,8 +5431,10 @@ async function _loadTanyaNative(sectionId) {
     window._tanyaData = { blocks, chapterLabel, isFirstSegment, isApproximate };
     _renderTanyaContent();
 
-    if (loadEl) loadEl.style.display = 'none';
-    if (contEl) contEl.style.display = 'block';
+    if (!_isSilent) {
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'block';
+    }
 
     const saved = _getSavedScrollPos('tanya');
     if (saved > 0) {
@@ -6254,12 +6311,17 @@ async function _prefetchAllReaders() {
 
   async function silentLoad(fn, id) {
     try {
-      if (loadEl) loadEl.style.display = 'none';
-      if (contEl) contEl.style.display = 'none';
+      // Mark as silent so loaders don't touch DOM visibility
+      window._silentPrefetch = true;
       const ok = await fn(id);
       window._prefetched[id] = ok;
     } catch(e) {
       window._prefetched[id] = false;
+    } finally {
+      window._silentPrefetch = false;
+      // Always re-hide after background load — never show prefetch content
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'none';
     }
   }
 
@@ -6801,8 +6863,11 @@ async function openExtraReader(id) {
   // Load content
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  const _isSilent = !!window._silentPrefetch;
+  if (!_isSilent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     if (id === 'dafYomi')            await _loadDafYomi();
@@ -7187,8 +7252,11 @@ async function _loadMishnahYomi() {
 async function _loadSeferHamitzvos(sectionId) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  const _isSilent = !!window._silentPrefetch;
+  if (!_isSilent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     const viewedDay = new Date();
@@ -7357,8 +7425,11 @@ async function _loadSotah() {
   const def = EXTRA_TRACK_DEFS.sotah;
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  const _isSilent = !!window._silentPrefetch;
+  if (!_isSilent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
