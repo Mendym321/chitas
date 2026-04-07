@@ -4678,17 +4678,15 @@ async function _loadRambamNative(sectionId) {
     const hebData = await fetch(hebUrl).then(r => r.json()).catch(() => null);
     const hebItems = hebData?.items || [];
 
-    // Find the right Rambam item based on track
-    let rambamItem;
-    if (track === '1') {
-      rambamItem = hebItems.find(i => i.category === 'dailyLearning' && i.title?.includes('1 Chapter'))
-        || hebItems.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
-    } else {
-      rambamItem = hebItems.find(i => i.category === 'dailyLearning'
-        && (i.title?.includes('3 Chapter') || i.title?.includes('3 Chapters')))
-        || hebItems.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam')
-          && !i.title?.includes('1 Chapter'));
-    }
+    console.log('Rambam', dateStr, 'all items:', JSON.stringify(hebItems.map(i=>({cat:i.category,title:i.title,url:i.url,ref:i.ref,refs:i.refs}))));
+
+    // Find Rambam item — try every possible structure Hebcal might use
+    // Hebcal uses category 'dailyRambam1' and 'dailyRambam3'
+    const rambamItem = track === '1'
+      ? hebItems.find(i => i.category === 'dailyRambam1')
+      : hebItems.find(i => i.category === 'dailyRambam3');
+
+    console.log('Rambam', dateStr, ':', rambamItem?.title, '->', rambamItem?.refs || rambamItem?.url || rambamItem?.ref);
 
     // Get refs from item — prefer refs array, fall back to parsing url or ref field
     let refs = [];
@@ -4696,7 +4694,7 @@ async function _loadRambamNative(sectionId) {
       refs = rambamItem.refs;
     } else if (rambamItem?.ref) {
       refs = _expandRambamRefs([rambamItem.ref]);
-    } else if (rambamItem?.url?.includes('sefaria.org/')) {
+    } else if (rambamItem?.url?.includes('Mishneh_Torah')) {
       // Parse Sefaria URL: "https://www.sefaria.org/Mishneh_Torah%2C_Book.12-14"
       const path = decodeURIComponent(rambamItem.url.split('sefaria.org/').pop().split('?')[0]);
       const clean = path.replace(/_/g, ' ');
@@ -4705,8 +4703,7 @@ async function _loadRambamNative(sectionId) {
       refs = _expandRambamRefs([parsed]);
     }
 
-    console.log('Rambam', dateStr, 'all items:', hebItems.map(i=>({cat:i.category,title:i.title})));
-    console.log('Rambam', dateStr, 'item:', rambamItem?.title, 'refs:', refs);
+    console.log('Rambam', dateStr, 'refs:', refs);
     if (!refs.length) return false;
 
     // Fetch each individual chapter ref
@@ -4717,7 +4714,8 @@ async function _loadRambamNative(sectionId) {
     if (!validChapters.length) return false;
 
     // Update panel subtitle
-    const subEl = document.getElementById('chabad-panel-sub');
+    const rambamPanelSection = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+    const subEl = rambamPanelSection === 'rambam' ? document.getElementById('chabad-panel-sub') : null;
     if (subEl) subEl.textContent = validChapters.map(ch => ch.title).join(' · ');
 
     window._rambamData = { chapters: validChapters };
@@ -5330,7 +5328,8 @@ async function _loadTanyaNative(sectionId) {
     const chapterLabel = tp.base.replace(/^Tanya,?\s*/i, '').replace(/Part\s+[IVX]+;\s*/i, '') + ' \u00b7 Chapter ' + tp.chapter;
     const enc = encodeURIComponent(chapterRef);
 
-    const subEl = document.getElementById('chabad-panel-sub');
+    const panelSection = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+    const subEl = panelSection === 'tanya' ? document.getElementById('chabad-panel-sub') : null;
     if (subEl) subEl.textContent = chapterLabel;
 
     const chNum = tp.chapter;
