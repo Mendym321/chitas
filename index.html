@@ -2642,48 +2642,9 @@ async function rebuildScheduleForOffset() {
     const rTzOffset = -d.getTimezoneOffset();
     const rTzSign = rTzOffset >= 0 ? '+' : '-';
     const rTzParam = encodeURIComponent('UTC' + rTzSign + String(Math.floor(Math.abs(rTzOffset)/60)).padStart(2,'0') + ':' + String(Math.abs(rTzOffset)%60).padStart(2,'0'));
-    const dayIso = rfmt(d);
-    // Fetch weekly (for parsha/tehillim) AND single-day (for per-day Rambam ref) in parallel
-    const [weekCal, dayCal] = await Promise.all([
-      fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s&tzid=' + rTzParam).then(r => r.json()),
-      fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&dps=on&dr3=on&dr1=on&d=on&start=' + dayIso + '&end=' + dayIso + '&lg=s').then(r => r.json()),
-    ]);
-    p = parseHebcalForDate(weekCal, d);
-    // Override rambamRef with per-day fetch (more accurate than weekly range)
-    // Try multiple Rambam items (3-ch has refs array; 1-ch has single ref)
-    const allRambamItems = (dayCal.items || []).filter(i =>
-      i.category === 'dailyLearning' && i.title?.startsWith('Rambam')
-    );
-    const dayRambamItem3 = allRambamItems.find(i =>
-      (i.title?.includes('3 Chapter') || i.title?.includes('3 Chapters')) && i.refs?.length
-    ) || allRambamItems.find(i => i.refs?.length >= 2)
-      || allRambamItems.find(i => i.url);
-    const dayRambamItem = dayRambamItem3 || allRambamItems[0];
-
-    console.log('Day Hebcal Rambam items:', allRambamItems.map(i => ({title:i.title, refs:i.refs, url:i.url})));
-
-    function urlToRef(url) {
-      try {
-        const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
-        const clean = path.replace(/_/g, ' ');
-        const dotIdx = clean.lastIndexOf('.');
-        return dotIdx === -1 ? clean : clean.slice(0, dotIdx) + ' ' + clean.slice(dotIdx + 1);
-      } catch(e) { return null; }
-    }
-
-    // Build ref from refs array (most reliable) or url
-    let dayRambamRef = null;
-    if (dayRambamItem?.refs?.length) {
-      dayRambamRef = dayRambamItem.refs.join('|');
-    } else if (dayRambamItem?.url) {
-      dayRambamRef = urlToRef(dayRambamItem.url);
-    }
-
-    console.log('Day Rambam ref:', dayRambamRef);
-    if (dayRambamRef) {
-      if (p) p.rambamRef = dayRambamRef;
-      else p = { rambamRef: dayRambamRef };
-    }
+    const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s&tzid=' + rTzParam);
+    const cal = await r.json();
+    p = parseHebcalForDate(cal, d);
   } catch(e) { p = null; }
 
   // Update Chabad URLs for this date
@@ -2738,8 +2699,6 @@ async function rebuildScheduleForOffset() {
     }
     if (s.id === 'rambam') {
       s.subtitle = p?.rambamTitle || 'Daily Rambam';
-      // Store the Sefaria ref from Hebcal so _loadRambamNative uses the correct date's chapters
-      if (p?.rambamRef) s.sefariaRef = p.rambamRef;
     }
   });
 
@@ -2767,35 +2726,10 @@ function parseHebcalForDate(data, d) {
     ? items.find(i => i.category === 'dailyLearning' && (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos')))
     : items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
 
-  // Parse Sefaria ref from Hebcal's url field
-  // e.g. "https://www.sefaria.org/Mishneh_Torah%2C_Sanctification_of_the_New_Month.12-14"
-  // → "Mishneh Torah, Sanctification of the New Month 12-14"
-  function hebcalUrlToRef(url) {
-    if (!url || !url.includes('sefaria.org/')) return null;
-    const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
-    const parts = path.replace(/_/g, ' ').rsplit ? path.replace(/_/g, ' ').split('.') : path.replace(/_/g, ' ').split('.');
-    if (parts.length >= 2) return parts.slice(0, -1).join('.') + ' ' + parts[parts.length - 1];
-    return path.replace(/_/g, ' ');
-  }
-  // Simple version without rsplit
-  function urlToRef(url) {
-    if (!url || !url.includes('sefaria.org/')) return null;
-    try {
-      const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
-      const clean = path.replace(/_/g, ' ');
-      const dotIdx = clean.lastIndexOf('.');
-      if (dotIdx === -1) return clean;
-      return clean.slice(0, dotIdx) + ' ' + clean.slice(dotIdx + 1);
-    } catch(e) { return null; }
-  }
-
-  const rambamRef = urlToRef(rambamItem?.url) || null;
-
   return {
     parshaName, aliyaNum, aliyaRef,
     tehTitle: tehItem?.title || null,
     rambamTitle: rambamItem?.title || null,
-    rambamRef,
   };
 }
 
@@ -4670,52 +4604,47 @@ async function _loadRambamNative(sectionId) {
     const dateStr = viewedDay.getFullYear() + '-'
       + String(viewedDay.getMonth()+1).padStart(2,'0') + '-'
       + String(viewedDay.getDate()).padStart(2,'0');
-    const track = user.rambamTrack || '3';
+    const track = user.rambamTrack === '1' ? '1' : '3';
 
-    // Fetch Hebcal for this specific day — same params as the working weekly fetch
+    // Fetch Hebcal for this exact day — categories dailyRambam1 / dailyRambam3
+    // Hebcal correctly returns per-day refs unlike Sefaria calendar
     const hebUrl = 'https://www.hebcal.com/hebcal?v=1&cfg=json&dps=on&dr3=on&dr1=on&d=on'
       + '&start=' + dateStr + '&end=' + dateStr + '&lg=s';
     const hebData = await fetch(hebUrl).then(r => r.json()).catch(() => null);
     const hebItems = hebData?.items || [];
 
-    console.log('Rambam', dateStr, 'all items:', JSON.stringify(hebItems.map(i=>({cat:i.category,title:i.title,url:i.url,ref:i.ref,refs:i.refs}))));
+    const cat = track === '1' ? 'dailyRambam1' : 'dailyRambam3';
+    const rambamItem = hebItems.find(i => i.category === cat);
 
-    // Find Rambam item — try every possible structure Hebcal might use
-    // Hebcal uses category 'dailyRambam1' and 'dailyRambam3'
-    const rambamItem = track === '1'
-      ? hebItems.find(i => i.category === 'dailyRambam1')
-      : hebItems.find(i => i.category === 'dailyRambam3');
+    console.log('Rambam', dateStr, track + 'ch:', rambamItem?.title, rambamItem?.refs);
 
-    console.log('Rambam', dateStr, ':', rambamItem?.title, '->', rambamItem?.refs || rambamItem?.url || rambamItem?.ref);
-
-    // Get refs from item — prefer refs array, fall back to parsing url or ref field
     let refs = [];
     if (rambamItem?.refs?.length) {
       refs = rambamItem.refs;
-    } else if (rambamItem?.ref) {
-      refs = _expandRambamRefs([rambamItem.ref]);
-    } else if (rambamItem?.url?.includes('Mishneh_Torah')) {
-      // Parse Sefaria URL: "https://www.sefaria.org/Mishneh_Torah%2C_Book.12-14"
+    } else if (rambamItem?.url?.includes('sefaria.org/')) {
       const path = decodeURIComponent(rambamItem.url.split('sefaria.org/').pop().split('?')[0]);
       const clean = path.replace(/_/g, ' ');
       const dotIdx = clean.lastIndexOf('.');
       const parsed = dotIdx === -1 ? clean : clean.slice(0, dotIdx) + ' ' + clean.slice(dotIdx + 1);
       refs = _expandRambamRefs([parsed]);
+    } else if (rambamItem?.ref) {
+      refs = _expandRambamRefs([rambamItem.ref]);
     }
 
-    console.log('Rambam', dateStr, 'refs:', refs);
+    if (!refs.length) {
+      console.warn('Rambam: no refs found for', dateStr, '- falling back to /api/rambam-refs');
+      const apiData = await fetch('/api/rambam-refs?date=' + dateStr + '&track=' + track)
+        .then(r => r.json()).catch(() => null);
+      refs = apiData?.refs || [];
+    }
+
     if (!refs.length) return false;
 
-    // Fetch each individual chapter ref
     const chapters = await Promise.all(refs.map(ref => _fetchRambamChapter(ref)));
-
-    // Filter out empty
-    const validChapters = chapters.filter(c => c && (c.en.length || c.he.length));
+    const validChapters = chapters.filter(ch => ch && (ch.en.length || ch.he.length));
     if (!validChapters.length) return false;
 
-    // Update panel subtitle
-    const rambamPanelSection = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-    const subEl = rambamPanelSection === 'rambam' ? document.getElementById('chabad-panel-sub') : null;
+    const subEl = document.getElementById('chabad-panel-sub');
     if (subEl) subEl.textContent = validChapters.map(ch => ch.title).join(' · ');
 
     window._rambamData = { chapters: validChapters };
@@ -4724,18 +4653,12 @@ async function _loadRambamNative(sectionId) {
     if (loadEl) loadEl.style.display = 'none';
     if (contEl) contEl.style.display = 'block';
 
-    // Restore saved scroll position for today
-    // Restore scroll position
     const saved = _getSavedScrollPos('rambam');
     if (saved > 0) {
-      setTimeout(() => {{
+      setTimeout(() => {
         const reader = document.getElementById('native-reader');
-        if (reader && reader.scrollHeight > saved) {{
-          reader.scrollTop = saved;
-        }} else if (reader) {{
-          requestAnimationFrame(() => {{ reader.scrollTop = saved; }});
-        }}
-      }}, 80);
+        if (reader) reader.scrollTop = saved;
+      }, 80);
     }
     return true;
 
@@ -4744,6 +4667,7 @@ async function _loadRambamNative(sectionId) {
     return false;
   }
 }
+
 
 // Expand range refs like "Mishneh Torah, Eruvin 3-5" into individual chapter refs
 // ["Mishneh Torah, Eruvin 3", "Mishneh Torah, Eruvin 4", "Mishneh Torah, Eruvin 5"]
