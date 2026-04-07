@@ -4600,66 +4600,20 @@ async function _loadRambamNative(sectionId) {
       return await _loadSeferHamitzvos(sectionId);
     }
 
-    // Fetch Sefaria calendar for the viewed day (server-side proxy = date params work)
+    // Use dedicated server-side proxy — same pattern as tanya-boundary.js
+    // /api/rambam-refs respects date params correctly (unlike the calendar proxy)
     const viewedDay = new Date();
     viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
+    const dateStr = viewedDay.getFullYear() + '-'
+      + String(viewedDay.getMonth()+1).padStart(2,'0') + '-'
+      + String(viewedDay.getDate()).padStart(2,'0');
 
-    const cal = await fetch(
-      '/api/sefaria-calendar?gy=' + viewedDay.getFullYear() +
-      '&gm=' + (viewedDay.getMonth()+1) + '&gd=' + viewedDay.getDate()
-    ).then(r => r.json());
+    const track = user.rambamTrack === '1' ? '1' : '3';
+    const rambamData = await fetch('/api/rambam-refs?date=' + dateStr + '&track=' + track)
+      .then(r => r.json()).catch(() => null);
 
-    const items = cal.calendar_items || [];
-    let refs = [];
-
-    // Sefaria returns multiple Rambam calendar items:
-    //   - "Daily Rambam (3 Chapters)" with item.refs = [ch1, ch2, ch3]  ← want this for 3-ch track
-    //   - "Daily Rambam" (1 chapter) with item.ref = single chapter     ← want this for 1-ch track
-    // Strategy: for 3-ch, prefer items whose refs array has 2-3 entries.
-    // For 1-ch, prefer items whose ref is a single chapter (no range dash).
-
-    if (user.rambamTrack === '3') {
-      // Priority 1: item explicitly titled "3 Chapter"
-      let r3s = items.filter(i => {
-        const t = i.title?.en || '';
-        return t.includes('3 Chapter') || t.includes('3 Chapters');
-      });
-
-      // Priority 2: any Rambam item with a refs array of 2+ entries (multi-chapter)
-      if (!r3s.length) {
-        r3s = items.filter(i => {
-          const t = i.title?.en || '';
-          return (t.toLowerCase().includes('rambam') || (i.ref || '').startsWith('Mishneh Torah'))
-            && (i.refs?.length >= 2);
-        });
-      }
-
-      // Priority 3: fallback — any Rambam item that isn't the 1-chapter one
-      if (!r3s.length) {
-        r3s = items.filter(i => {
-          const t = i.title?.en || '';
-          return (t.toLowerCase().includes('rambam') || (i.ref || '').startsWith('Mishneh Torah'))
-            && !t.includes('1 Chapter');
-        });
-      }
-
-      const rawRefs = [...new Set(r3s.flatMap(i =>
-        i.refs?.length ? i.refs : i.ref ? [i.ref] : []
-      ))];
-      refs = _expandRambamRefs(rawRefs);
-    } else {
-      // 1-chapter track: prefer item titled "1 Chapter", else shortest ref array
-      const r1 = items.find(i => {
-        const t = i.title?.en || '';
-        return t.includes('1 Chapter');
-      }) || items.find(i => {
-        const t = i.title?.en || '';
-        return t.toLowerCase().includes('rambam') && !t.includes('3 Chapter') && !t.includes('3 Chapters');
-      });
-      if (r1) refs = _expandRambamRefs(r1.refs?.length ? r1.refs : r1.ref ? [r1.ref] : []);
-    }
-
-    console.log('Rambam refs for', viewedDay.toISOString().slice(0,10), ':', refs);
+    const refs = rambamData?.refs || [];
+    console.log('Rambam refs for', dateStr, ':', refs);
 
     if (!refs.length) return false;
 
@@ -4670,9 +4624,9 @@ async function _loadRambamNative(sectionId) {
     const validChapters = chapters.filter(c => c && (c.en.length || c.he.length));
     if (!validChapters.length) return false;
 
-    // Update panel subtitle
+    // Update panel subtitle — prefer the API display name, fallback to chapter titles
     const subEl = document.getElementById('chabad-panel-sub');
-    if (subEl) subEl.textContent = validChapters.map(c => c.title).join(' · ');
+    if (subEl) subEl.textContent = rambamData?.display || validChapters.map(c => c.title).join(' · ');
 
     window._rambamData = { chapters: validChapters };
     _renderRambamContent();
