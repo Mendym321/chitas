@@ -2642,9 +2642,29 @@ async function rebuildScheduleForOffset() {
     const rTzOffset = -d.getTimezoneOffset();
     const rTzSign = rTzOffset >= 0 ? '+' : '-';
     const rTzParam = encodeURIComponent('UTC' + rTzSign + String(Math.floor(Math.abs(rTzOffset)/60)).padStart(2,'0') + ':' + String(Math.abs(rTzOffset)%60).padStart(2,'0'));
-    const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s&tzid=' + rTzParam);
-    const cal = await r.json();
-    p = parseHebcalForDate(cal, d);
+    const dayIso = rfmt(d);
+    // Fetch weekly (for parsha/tehillim) AND single-day (for per-day Rambam ref) in parallel
+    const [weekCal, dayCal] = await Promise.all([
+      fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s&tzid=' + rTzParam).then(r => r.json()),
+      fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&dps=on&dr3=on&dr1=on&d=on&start=' + dayIso + '&end=' + dayIso + '&lg=s').then(r => r.json()),
+    ]);
+    p = parseHebcalForDate(weekCal, d);
+    // Override rambamRef with per-day fetch (more accurate than weekly range)
+    const dayRambamItem = (dayCal.items || []).find(i =>
+      i.category === 'dailyLearning' && i.title?.startsWith('Rambam') && i.url
+    );
+    if (dayRambamItem?.url) {
+      function urlToRef(url) {
+        try {
+          const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
+          const clean = path.replace(/_/g, ' ');
+          const dotIdx = clean.lastIndexOf('.');
+          return dotIdx === -1 ? clean : clean.slice(0, dotIdx) + ' ' + clean.slice(dotIdx + 1);
+        } catch(e) { return null; }
+      }
+      if (p) p.rambamRef = urlToRef(dayRambamItem.url);
+      else p = { rambamRef: urlToRef(dayRambamItem.url) };
+    }
   } catch(e) { p = null; }
 
   // Update Chabad URLs for this date
