@@ -4613,27 +4613,37 @@ async function _loadRambamNative(sectionId) {
     const hebData = await fetch(hebUrl).then(r => r.json()).catch(() => null);
     const item = (hebData?.items || []).find(i => i.category === cat);
 
-    // Extract refs: prefer refs array, else parse url, else build from title
+    // Parse a Sefaria URL to a ref string
+    // "https://www.sefaria.org/Mishneh_Torah%2C_Fasts.2-4?..." → "Mishneh Torah, Fasts 2-4"
+    function sefariaUrlToRef(url) {
+      try {
+        const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
+        const clean = path.replace(/_/g, ' ');
+        const dot = clean.lastIndexOf('.');
+        return dot === -1 ? clean : clean.slice(0, dot) + ' ' + clean.slice(dot + 1);
+      } catch(e) { return null; }
+    }
+
     let refs = [];
     if (item?.refs?.length) {
+      // Best case: refs array already has individual chapter refs
       refs = item.refs;
-    } else if (item?.url?.includes('sefaria.org/')) {
-      // e.g. "https://www.sefaria.org/Mishneh_Torah%2C_Fasts.2-4"
-      // → "Mishneh Torah, Fasts 2-4" → expand to ["..2","..3","..4"]
-      const path = decodeURIComponent(item.url.split('sefaria.org/').pop().split('?')[0]);
-      const clean = path.replace(/_/g, ' ');
-      const dot = clean.lastIndexOf('.');
-      refs = _expandRambamRefs([dot === -1 ? clean : clean.slice(0, dot) + ' ' + clean.slice(dot + 1)]);
-    } else if (item?.ref) {
-      refs = _expandRambamRefs([item.ref]);
+    } else if (item?.memo?.includes('sefaria.org/')) {
+      // Cross-book day: memo field has multiple URLs, one per book segment
+      // e.g. "Sanctification 18-19\nhttps://...\n\nFasts 1\nhttps://..."
+      const urls = item.memo.match(/https:\/\/www\.sefaria\.org\/[^\s]+/g) || [];
+      const parsed = urls.map(sefariaUrlToRef).filter(Boolean);
+      refs = parsed.flatMap(r => _expandRambamRefs([r]));
+    } else if (item?.link?.includes('sefaria.org/')) {
+      // Single-book day: link field has the Sefaria URL
+      const parsed = sefariaUrlToRef(item.link);
+      if (parsed) refs = _expandRambamRefs([parsed]);
     } else if (item?.title) {
-      // Last resort: build from short title e.g. "Fasts 2-4" → "Mishneh Torah, Fasts 2-4"
-      // Hebcal title format is always "Book Chapter" or "Book Ch1-Ch2"
+      // Fallback: "Fasts 2-4" → "Mishneh Torah, Fasts 2-4"
       refs = _expandRambamRefs(['Mishneh Torah, ' + item.title]);
     }
 
-    console.log('Rambam', dateStr, JSON.stringify(item));
-    console.log('Rambam refs:', refs);
+    console.log('Rambam', dateStr, item?.title, '->', refs);
     if (!refs.length) return false;
 
     // Fetch each chapter from Sefaria
