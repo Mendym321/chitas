@@ -4502,11 +4502,13 @@ function _renderChumashContent() {
     + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s portion —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
-async function _loadChumashNative(sectionId) {
+async function _loadChumashNative(sectionId, silent) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  if (!silent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     // schedule.chumash.sefariaRef is always correct for the currently-viewed day:
@@ -4552,13 +4554,14 @@ async function _loadChumashNative(sectionId) {
 
     // Update panel subtitle to show the actual ref
     const subEl = document.getElementById('chabad-panel-sub');
-    if (subEl) subEl.textContent = aliyahRef;
+    if (!silent && subEl) subEl.textContent = aliyahRef;
 
     window._chumashData = { torahChunks: torah.chunks, rashiMap, ref: aliyahRef, versionTitle: torah.versionTitle };
-    _renderChumashContent();
-
-    if (loadEl) loadEl.style.display = 'none';
-    if (contEl) contEl.style.display = 'block';
+    if (!silent) {
+      _renderChumashContent();
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'block';
+    }
 
     // Restore saved scroll position for today
     const saved = _getSavedScrollPos('chumash');
@@ -4588,11 +4591,13 @@ function _setChumashLang(lang) {
 //   Chapter title from ref, halachot numbered, Hebrew + English two-col.
 // ════════════════════════════════════════════════════════════════════
 
-async function _loadRambamNative(sectionId) {
+async function _loadRambamNative(sectionId, silent) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  if (!silent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     if (user.rambamTrack === 'm') {
@@ -4652,19 +4657,16 @@ async function _loadRambamNative(sectionId) {
     if (!valid.length) return false;
 
     const subEl = document.getElementById('chabad-panel-sub');
-    if (subEl) subEl.textContent = valid.map(ch => ch.title).join(' · ');
+    if (!silent && subEl) subEl.textContent = valid.map(ch => ch.title).join(' · ');
 
     window._rambamData = { chapters: valid };
-    _renderRambamContent();
+    if (!silent) {
+      _renderRambamContent();
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'block';
+    }
 
-    if (loadEl) loadEl.style.display = 'none';
-    if (contEl) contEl.style.display = 'block';
-
-    const saved = _getSavedScrollPos('rambam');
-    if (saved > 0) setTimeout(() => {
-      const r = document.getElementById('native-reader');
-      if (r) r.scrollTop = saved;
-    }, 80);
+    if (!silent) { const saved = _getSavedScrollPos('rambam'); if (saved > 0) setTimeout(() => { const r = document.getElementById('native-reader'); if (r) r.scrollTop = saved; }, 80); }
 
     return true;
 
@@ -4879,11 +4881,13 @@ function _setRambamLang(lang) {
 //   Hebrew + English toggle (no Both — matches Chabad.org pattern).
 // ════════════════════════════════════════════════════════════════════
 
-async function _loadTehillimNative(sectionId) {
+async function _loadTehillimNative(sectionId, silent) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  if (!silent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     // 30-day Tehillim cycle keyed by Hebrew calendar day number
@@ -4971,15 +4975,17 @@ async function _loadTehillimNative(sectionId) {
     if (subEl) subEl.textContent = psalmLabel;
 
     window._tehillimData = { chapters, psalmLabel, dayNum };
-    _renderTehillimContent();
+    if (!silent) _renderTehillimContent();
 
     // Pre-warm personal psalm cache in background — so personal sections load instantly
     _buildPersonalPsalms().then(people => {
       Promise.all(people.filter(p => p.chapter).map(p => _fetchPsalm(p.chapter))).catch(() => {});
     }).catch(() => {});
 
-    if (loadEl) loadEl.style.display = 'none';
-    if (contEl) contEl.style.display = 'block';
+    if (!silent) {
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'block';
+    }
 
     // Restore scroll position AFTER personal psalms have loaded
     // so the saved position is reachable even if it's in the personal section
@@ -5217,11 +5223,13 @@ function _splitHebrewProportional(text, n) {
   return chunks;
 }
 
-async function _loadTanyaNative(sectionId) {
+async function _loadTanyaNative(sectionId, silent) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  if (!silent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     function parseTanyaRef(ref) {
@@ -5395,10 +5403,11 @@ async function _loadTanyaNative(sectionId) {
       blocks.push({ he: heRaw, en: enRaw, lit: '', isHagahah });
     }
     window._tanyaData = { blocks, chapterLabel, isFirstSegment, isApproximate };
-    _renderTanyaContent();
-
-    if (loadEl) loadEl.style.display = 'none';
-    if (contEl) contEl.style.display = 'block';
+    if (!silent) {
+      _renderTanyaContent();
+      if (loadEl) loadEl.style.display = 'none';
+      if (contEl) contEl.style.display = 'block';
+    }
 
     const saved = _getSavedScrollPos('tanya');
     if (saved > 0) {
@@ -6274,14 +6283,15 @@ async function _prefetchAllReaders() {
   const contEl = document.getElementById('native-reader-content');
 
   async function silentLoad(fn, id) {
-    // Run the loader purely to populate window._xxxData caches.
-    // The loader will write to the DOM but openChabadPanel clears it before rendering.
-    // We do NOT touch DOM visibility here — that's openChabadPanel's job.
+    // Run loader in silent mode — fetches and caches data but skips all DOM writes
+    window._prefetchingId = id;
     try {
-      const ok = await fn(id);
+      const ok = await fn(id, true); // true = silent
       window._prefetched[id] = ok;
     } catch(e) {
       window._prefetched[id] = false;
+    } finally {
+      window._prefetchingId = null;
     }
   }
 
@@ -6823,8 +6833,10 @@ async function openExtraReader(id) {
   // Load content
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  if (!silent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     if (id === 'dafYomi')            await _loadDafYomi();
@@ -7209,8 +7221,10 @@ async function _loadMishnahYomi() {
 async function _loadSeferHamitzvos(sectionId) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  if (!silent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     const viewedDay = new Date();
@@ -7379,8 +7393,10 @@ async function _loadSotah() {
   const def = EXTRA_TRACK_DEFS.sotah;
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
+  if (!silent) {
+    if (loadEl) loadEl.style.display = 'block';
+    if (contEl) contEl.style.display = 'none';
+  }
 
   try {
     const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
