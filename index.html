@@ -4613,20 +4613,27 @@ async function _loadRambamNative(sectionId) {
     const hebData = await fetch(hebUrl).then(r => r.json()).catch(() => null);
     const item = (hebData?.items || []).find(i => i.category === cat);
 
-    // Extract refs: prefer refs array, else parse url, else parse ref field
+    // Extract refs: prefer refs array, else parse url, else build from title
     let refs = [];
     if (item?.refs?.length) {
       refs = item.refs;
     } else if (item?.url?.includes('sefaria.org/')) {
+      // e.g. "https://www.sefaria.org/Mishneh_Torah%2C_Fasts.2-4"
+      // → "Mishneh Torah, Fasts 2-4" → expand to ["..2","..3","..4"]
       const path = decodeURIComponent(item.url.split('sefaria.org/').pop().split('?')[0]);
       const clean = path.replace(/_/g, ' ');
       const dot = clean.lastIndexOf('.');
       refs = _expandRambamRefs([dot === -1 ? clean : clean.slice(0, dot) + ' ' + clean.slice(dot + 1)]);
     } else if (item?.ref) {
       refs = _expandRambamRefs([item.ref]);
+    } else if (item?.title) {
+      // Last resort: build from short title e.g. "Fasts 2-4" → "Mishneh Torah, Fasts 2-4"
+      // Hebcal title format is always "Book Chapter" or "Book Ch1-Ch2"
+      refs = _expandRambamRefs(['Mishneh Torah, ' + item.title]);
     }
 
-    console.log('Rambam', dateStr, cat + ':', item?.title, '->', refs);
+    console.log('Rambam', dateStr, JSON.stringify(item));
+    console.log('Rambam refs:', refs);
     if (!refs.length) return false;
 
     // Fetch each chapter from Sefaria
