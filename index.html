@@ -1438,9 +1438,26 @@ async function onSignedIn(fbUser) {
   // Try to load existing data from Firestore
   const remote = await window._fb.loadUser(fbUser.uid);
   if (remote && remote.rambamTrack) {
-    // Returning user — restore their data
-    user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
+    // Merge: take the higher value for streak/xp/total in case local is ahead of Firestore
+    // Check both current and previous localStorage key — users may have data under old key
+    const local = (() => {
+      try {
+        const s = localStorage.getItem('chitas_v78') || localStorage.getItem('chitas_v77');
+        return s ? JSON.parse(s) : null;
+      } catch { return null; }
+    })();
+    const merged = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
+    if (local && local.uid === fbUser.uid) {
+      // If local data is more recent/higher, prefer it for key stats
+      if ((local.streak || 0) > (merged.streak || 0)) merged.streak = local.streak;
+      if ((local.xp || 0) > (merged.xp || 0)) merged.xp = local.xp;
+      if ((local.total || 0) > (merged.total || 0)) merged.total = local.total;
+      if ((local.longestStreak || 0) > (merged.longestStreak || 0)) merged.longestStreak = local.longestStreak;
+    }
+    user = merged;
     try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
+    // Write merged data back to Firestore so leaderboard reflects current streak
+    saveUser();
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
@@ -8058,11 +8075,24 @@ function bootApp() {
           lastDate: user.lastDate,
         };
       } else {
-        // Remote is equal or newer — use it wholesale
-        user = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
+        // Remote is equal or newer — use it, but always take max for key stats
+        // (protects against Firestore having stale streak:0 for existing users)
+        user = {
+          ...BLANK,
+          ...remote,
+          uid: fbUser.uid,
+          photoURL: fbUser.photoURL || '',
+          streak: Math.max(remote.streak || 0, user.uid === fbUser.uid ? (user.streak || 0) : 0),
+          xp: Math.max(remote.xp || 0, user.uid === fbUser.uid ? (user.xp || 0) : 0),
+          total: Math.max(remote.total || 0, user.uid === fbUser.uid ? (user.total || 0) : 0),
+          longestStreak: Math.max(remote.longestStreak || 0, user.uid === fbUser.uid ? (user.longestStreak || 0) : 0),
+        };
       }
 
       try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
+      // Write back to Firestore so leaderboard reflects current streak
+      // (fire-and-forget — don't block app startup)
+      if (user.uid) saveUser();
       document.getElementById('onboarding').style.display = 'none';
       document.getElementById('main-app').style.display = 'block';
       showLoaderSafe();
