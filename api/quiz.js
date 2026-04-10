@@ -222,180 +222,179 @@ async function fetchMitzvos(dateObj) {
 
 // ── Prompt philosophy ─────────────────────────────────────────────────────────
 // Goal: make the person feel like they got something from today's learning.
-// NOT an exam. NOT "according to the text...". 
+// NOT an exam. NOT "according to the text...".
 // A knowledgeable friend asking: "so what did you learn today?"
 //
 // Format: short scenario or direct question → 4 short answer choices
 // The correct answer rewards careful reading.
 // The wrong answers are things a careless reader might actually choose.
-//
-// Length: question ≤ 15 words. Each answer ≤ 8 words.
 
 const SHARED_STYLE = `
-DIFFICULTY TARGET: Someone who read today's section once, paying reasonable attention, should get about 3 out of 4 right.
+FORMAT (non-negotiable):
+- Question: 12 words max. Answer choices: 7 words max. Cut ruthlessly.
+- 4 answer choices per question. Exactly one is correct.
+- Never start a question with "According to", "Based on", or "Which of the following"
+- Write answers in plain conversational English — never copy phrasing from the source text
+- Use everyday words: "sin offering" not "purgation offering", "permitted" not "halachically valid"
 
-STYLE (mandatory):
-- Question max 12 words. Each answer max 8 words. If longer, cut it.
-- Scenario questions: name the person, state ONE condition, ask what happens.
-- Never start with "According to", "Based on", "Which of the following"
-- REWRITE answers in plain English — do NOT quote the source text. Sefaria translations are dense. Simplify.
-- Use plain words: "sin offering" not "purgation offering", "soul" not "neshamah" unless testing that term, "permitted" not "halachically valid"
-- Wrong answers: plausible to a careless reader, clearly wrong to someone who read carefully. Never obviously absurd.
-- Never test verse numbers or peripheral details
+WRONG ANSWERS must be:
+- Plausible to someone who skimmed — not obviously absurd
+- Things a real learner might genuinely mix up
+- Never a trick of wording — wrong in substance, not grammar
 
-SPECIFICITY — the most common failure:
-- Do NOT ask generic questions about the topic that someone could answer without reading today's text
-- DO ask about the specific thing this section says, the specific analogy used, the specific case covered
-- If this section uses an analogy or comparison, ask about it directly
-- If this section makes a specific ruling or distinction, ask about that specific one
-- Bad: "What does the Alter Rebbe say about kavanah?" (could apply to 50 chapters)
-- Good: "A mitzvah without kavanah is compared to what?" (specific to this section's analogy)
-- Bad: "What is important about fulfilling mitzvos?" (generic)
-- Good: "Which gives more light — the mitzvah itself or the kavanah?" (tests this section's specific claim)
+SPECIFICITY (the #1 failure mode):
+- Every question must be answerable ONLY by someone who read THIS specific section today
+- If a learner could answer it from general knowledge, rewrite it
+- Anchor to: the specific analogy used, the specific case covered, the specific condition stated
+- ✗ "What does Rashi say about this mitzvah?" (too vague)
+- ✓ "Rashi compares Shimon's case to — what?" (specific to this text)
 
-THE GOAL: Getting it right = "yes, I learned that today." Getting it wrong = "I should have caught that."
-
-REWRITING ANSWERS:
-BAD: "The neshamah draws forth light to perfect the nefesh and body by means of the letters of speech"
-GOOD: "Speech draws divine light into the body"
-BAD: "G-d wants us to cleave to Him through both action and intention"
-GOOD: "Both action and kavanah together"
-`
+TARGET READER: Paid reasonable attention. Gets 3 of 4 right. Misses one because they weren't careful enough.
+GOAL: Correct answer = "yes, I remember learning that." Wrong answer = "I should have caught that."
+`;
 
 function chumashPrompt(c, diff) {
-  return `You are writing quiz questions for a daily Chumash learning app. The user just read this aliyah with Rashi.
+  return `You write quiz questions for a daily Chumash app. The learner just read this aliyah and Rashi.
 
 CONTENT — ${c.sectionLabel}:
 ${c.text}
 
-Generate exactly 4 questions covering DIFFERENT aspects of the aliyah:
-- Q1: The main law or event — use a scenario with a name to make it concrete. "Reuven did X. What does he bring?" "What happens if the animal has Y?"
-- Q2: A detail or condition in the law — a case where the rule changes, an exception, or a specific requirement
-- Q3: A specific Rashi — pick the Rashi that adds the most insight. Ask WHY Rashi says this, or what it teaches. Not "what does Rashi say on verse N" but "Rashi compares X to Y — why?"
-- Q4: Another law or case from a different part of this aliyah — the aliyah covers multiple cases, test one more
+Write exactly 4 questions. Each must come from a DIFFERENT verse or case — no two questions about the same halacha.
 
-Pick questions from DIFFERENT verses/cases. Don't ask 2 questions about the same halacha.
+Q1 — Main ruling or event: Frame as a scenario with a name. "Reuven does X — what must he bring?" "The animal has Y — what's the law?"
+Q2 — A condition or exception: When does the rule change? What specific detail shifts the outcome?
+Q3 — A Rashi: Pick the Rashi that adds the most. Don't ask "what does Rashi say on verse N." Ask about its content: "Rashi says the word X means — what?" or "Rashi compares this to — what?"
+Q4 — A second law or case: Something from a different part of the aliyah. The aliyah covers multiple situations — test another one.
+
+ACCURACY: Every correct answer must be explicitly stated in the text above. No outside knowledge, no inference.
 
 ${SHARED_STYLE}
 
-LEGITIMACY: Every correct answer must be explicitly in the text. No outside knowledge.
-
-Respond ONLY with JSON array, no markdown:
+Respond ONLY with a JSON array, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
 }
 
 function tanyaPrompt(c, diff) {
-  return `You are writing quiz questions for a daily Tanya learning app. The user just read this section of Chassidus.
+  return `You write quiz questions for a daily Tanya app. The learner just read this section of Chassidus.
 
 CONTENT — ${c.sectionLabel}:
 ${c.text}
 
-Tanya is a book of Chassidus — it explores the soul, G-d's relationship to the world, the inner meaning of mitzvos, and the path of avodah. It is NOT a halacha book. Do not frame questions as rulings or legal consequences.
+Tanya teaches about the soul, avodah, and the inner life — not halacha. Frame questions around ideas, not rulings.
 
-First, read this section and identify what it's actually doing:
-- Is it developing one central idea or concept?
-- Is it drawing a distinction between two things (e.g. two types of love, two levels of soul)?
-- Is it giving a reason or deeper explanation for something?
-- Is it using a mashul (parable or analogy) to illuminate something?
-- Is it making a psychological or spiritual observation about a person's inner life?
+Before writing, identify what this section is doing:
+- One sustained idea being developed?
+- A distinction between two things (two types, two levels, two paths)?
+- An analogy or mashal?
+- A psychological or spiritual insight about a person's inner life?
 
-Then write 3 questions that together capture what matters in this section:
-- Q1: The central idea or teaching — what is the Alter Rebbe saying? Make it concrete and direct.
-- Q2: The reason, mechanism, or distinction — WHY is this true? What is the inner logic?
-- Q3: If there's a second idea or nuance, test that. If it's one sustained idea, ask about an implication or the key term the Alter Rebbe uses.
+Write exactly 3 questions:
+Q1 — The central teaching: What is the Alter Rebbe saying? Make it concrete and direct.
+Q2 — The reason or logic: WHY is this true? What's the mechanism or inner distinction?
+Q3 — If there's a second idea, test that. If it's one sustained idea, ask about a key term or the analogy used.
+
+ACCURACY: Every correct answer must appear in the text above. Tanya's concepts are precise — paraphrasing that shifts the meaning is an error.
+WRONG ANSWERS: Use real Chassidus/Kabbalistic concepts that sound plausible but are NOT what this specific section teaches.
 
 ${SHARED_STYLE}
 
-Wrong answers for Tanya: use real Chassidus/Kabbalistic concepts that sound plausible but are NOT what this specific section teaches.
-
-LEGITIMACY: Every correct answer must be in this text. Tanya concepts are precise — do not paraphrase in ways that shift the meaning.
-
-Respond ONLY with JSON array, no markdown:
+Respond ONLY with a JSON array, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
 }
 
 function rambamPrompt(c, diff) {
-  return `You are writing quiz questions for a daily Rambam learning app. The user just read these halachos.
+  return `You write quiz questions for a daily Rambam app. The learner just read these halachos.
 
 CONTENT — ${c.sectionLabel}:
 ${c.text}
 
-This text likely covers multiple distinct halachos. Your job: identify the 5 most interesting rulings and write one question per ruling.
+Write exactly 5 questions — one per distinct halacha or ruling. No two questions about the same case.
 
-Generate exactly 5 questions, each from a DIFFERENT halacha or case:
-- Each question should cover a distinct ruling, case, or condition from the text
-- Do NOT ask 2 questions about the same halacha
-- Mix the question types naturally: some scenarios ("Reuven does X — permitted?"), some conditions ("What changes if Y?"), some reasons ("Why does the Rambam require Z?")
-- Pick rulings that would genuinely surprise someone who didn't read carefully — the interesting distinctions, the unexpected exceptions, the specific conditions
+How to pick what to ask:
+- The ruling that would surprise someone who didn't read carefully
+- The unexpected exception or specific condition
+- The case where the outcome flips based on one detail
 
-Use scenarios with names where the ruling involves a person doing something.
-Skip questions that just restate the obvious.
+Mix question types naturally:
+- Scenario: "Reuven does X — is it permitted?"
+- Condition: "What changes if Y is present?"
+- Reason: "Why does the Rambam require Z?"
+
+Skip anything obvious. The wrong answers should be things a person might genuinely think is correct.
+
+ACCURACY: Halacha is exact. Every correct answer must match precisely what the Rambam writes above. Wrong answers must be halachically plausible — rulings from adjacent cases or common misunderstandings.
 
 ${SHARED_STYLE}
 
-LEGITIMACY: Halacha is exact. Every correct answer must match precisely what the Rambam writes above. Wrong answers must be halachically plausible — things someone might genuinely think.
-
-Respond ONLY with JSON array, no markdown:
+Respond ONLY with a JSON array, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
 }
 
 function mitzvosPrompt(c, diff) {
-  return `You are writing quiz questions for a daily Sefer HaMitzvos learning app. The user just learned today's mitzvah.
+  return `You write quiz questions for a daily Sefer HaMitzvos app. The learner just read today's mitzvah.
 
 CONTENT — ${c.sectionLabel}:
 ${c.text}
 
-Sefer HaMitzvos entries are often brief — one mitzvah, its source verse, and a short explanation. Don't over-engineer this.
+Sefer HaMitzvos entries are short: one mitzvah, its Torah source, and a brief explanation. Keep questions tight.
 
-Generate exactly 2 questions:
-- Q1: What this mitzvah requires or prohibits — make it concrete and direct
-- Q2: Either the Torah source (which verse/book), a condition of when it applies, or the most interesting specific detail in the text
+Write exactly 2 questions:
+Q1 — What this mitzvah requires or prohibits. Be concrete and direct.
+Q2 — One of: the Torah source (which verse or book), when it applies, or the most interesting specific detail in this entry.
+
+ACCURACY: Base every answer on the text above. Wrong answers should be adjacent mitzvos or things commonly confused with this one.
 
 ${SHARED_STYLE}
 
-LEGITIMACY: Base on the text above. Wrong answers should be adjacent mitzvos or things someone might confuse with this one.
-
-Respond ONLY with JSON array, no markdown:
+Respond ONLY with a JSON array, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
 }
 
 function weeklyPrompt(sections, diff) {
   const content = sections.map(s => `=== ${s.label} ===\n${s.text}`).join('\n\n');
-  return `You are writing a weekly review quiz for a Jewish learning app. End-of-week, lively, rewarding.
+  return `You write end-of-week review quiz questions for a Jewish learning app.
 
 THIS WEEK'S LEARNING:
 ${content}
 
-Generate exactly 10 questions: 3-4 Chumash, 3 Tanya, 3-4 Rambam.
-Tag each: "subject": "Chumash" / "Tanya" / "Rambam"
+Write exactly 10 questions: 3–4 from Chumash, 3 from Tanya, 3–4 from Rambam.
+Tag each question with "subject": "Chumash", "Tanya", or "Rambam".
 
-Use scenarios with names where possible. Pick the most memorable or surprising thing from each section.
+Pick the most memorable or surprising thing from each section — the detail that sticks, the ruling that surprised, the analogy that clicked.
+
+Use scenario questions with names where the content involves a person doing something.
+
+ACCURACY: Every correct answer must come from the content above. No outside knowledge.
 
 ${SHARED_STYLE}
 
-LEGITIMACY: Every correct answer must be in the content above.
-
-Respond ONLY with JSON array, no markdown:
+Respond ONLY with a JSON array, no markdown:
 [{"q":"...","options":["...","...","...","..."],"answer":0,"subject":"Chumash"},...]`;
 }
 
 // ── Verifier ───────────────────────────────────────────────────────────────────
 
 async function verifyQuestions(questions, text) {
-  const prompt = `You are a Jewish learning content verifier. Check these quiz questions against the source text.
+  const prompt = `You are a Jewish learning content verifier. Your job: check that every quiz question is grounded in the source text.
 
 SOURCE TEXT:
 ${text.slice(0, 4000)}
 
-QUESTIONS:
+QUESTIONS TO CHECK:
 ${JSON.stringify(questions, null, 2)}
 
-For each question: is the correct answer (index given by "answer") explicitly supported by the source text?
-- If yes, keep it unchanged.
-- If no, fix the question or correct answer so it IS grounded in the text.
-- Do not change the count or structure.
+For each question, check: is the correct answer (the index in "answer") explicitly stated or clearly shown in the source text above?
 
-Respond ONLY with the corrected JSON array, no markdown.`;
+If YES — keep the question exactly as-is.
+If NO — fix it. You may:
+  - Change the correct answer to one that IS in the text (and update the "answer" index)
+  - Rewrite the question entirely to ask about something that IS in the text
+  - Rewrite wrong answers if they are too similar to the correct one
+
+Do not change the number of questions. Do not change the JSON structure.
+Do not add explanations — output only the corrected JSON array.
+
+Respond ONLY with the JSON array, no markdown.`;
 
   try {
     const verified = await callClaude(prompt, 1200);
