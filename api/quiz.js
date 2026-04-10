@@ -249,13 +249,43 @@ FORMAT (non-negotiable):
 - Question: 12 words max. Answer choices: 7 words max. Cut ruthlessly.
 - 4 answer choices per question. Exactly one is correct.
 - Never start a question with "According to", "Based on", or "Which of the following"
-- Write answers in plain conversational English — never copy phrasing from the source text
-- Use everyday words: "sin offering" not "purgation offering", "permitted" not "halachically valid"
+
+PLAIN LANGUAGE — this is critical:
+- Write like you're texting a friend who just learned this, not like an academic
+- Questions and answers must sound natural when read out loud
+- Never copy phrasing from the source text — Sefaria translations are stiff and formal, always rewrite
+- Forbidden words/phrases: "halachically", "obligated", "incumbent upon", "one who", "thereof", "thereby", "sanctified", "designated", "in the case of", "with regard to"
+- Use instead: "has to", "needs to", "counts as", "if someone", "about", "for"
+- Technical terms: only keep them if the question is specifically testing that term. Otherwise swap for plain English.
+  - "atonement offering" → "offering to make things right"
+  - "transgressed" → "broke the rule" or "did something wrong"
+  - "liable" → "has to bring" or "is responsible"
+  - "blemished" → "has a defect"
+  - "divine soul" → "G-dly soul"
+  - "intellectual faculty" → "mind" or "thinking"
+
+REWRITING EXAMPLES — question wording:
+✗ "What is one who transgresses this prohibition obligated to bring?"
+✓ "Shimon broke this rule — what does he have to bring?"
+✗ "With regard to which case does the ruling change?"
+✓ "When does the rule flip?"
+✗ "What does the Alter Rebbe say regarding the nature of the soul?"
+✓ "What does the Alter Rebbe say the soul is like?"
+
+REWRITING EXAMPLES — answer wording:
+✗ "A guilt offering brought on the altar"
+✓ "A guilt offering"
+✗ "The animal must be without blemish and designated for that purpose"
+✓ "It has to be perfect and set aside for this"
+✗ "The neshamah illuminates the body through speech and action"
+✓ "The soul shines through what you say and do"
+✗ "Both intellectual and emotional faculties must be engaged"
+✓ "Your mind and heart both need to be in it"
 
 WRONG ANSWERS must be:
 - Plausible to someone who skimmed — not obviously absurd
 - Things a real learner might genuinely mix up
-- Never a trick of wording — wrong in substance, not grammar
+- Wrong in substance, not just wording
 
 SPECIFICITY (the #1 failure mode):
 - Every question must be answerable ONLY by someone who read THIS specific section today
@@ -274,12 +304,14 @@ ${c.text}
 
 Write exactly 4 questions. Each must come from a DIFFERENT verse or case.
 
-Q1 — Main ruling or event: Frame as a scenario with a name. "Reuven does X — what must he bring?"
-Q2 — A condition or exception: When does the rule change?
-Q3 — A Rashi: Ask about its content, not "what does Rashi say on verse N."
+Q1 — Main ruling or event: Frame as a scenario with a name. "Reuven does X — what does he have to do?"
+Q2 — A condition or exception: When does the rule change? What one detail flips the outcome?
+Q3 — A Rashi: Ask about what it actually says or teaches — not "what does Rashi say on verse N." Example: "Rashi says the word X here means — what?"
 Q4 — A second law or case from a different part of the aliyah.
 
 ACCURACY: Every correct answer must be explicitly stated in the text above.
+
+VOICE CHECK before finalizing: Read each question and answer out loud. If it sounds stiff, academic, or like a legal document — rewrite it in plain spoken English.
 
 ${SHARED_STYLE}
 
@@ -296,12 +328,14 @@ ${c.text}
 Tanya teaches about the soul, avodah, and the inner life — not halacha. Frame questions around ideas, not rulings.
 
 Write exactly 3 questions:
-Q1 — The central teaching: What is the Alter Rebbe saying?
-Q2 — The reason or logic: WHY is this true?
-Q3 — If there's a second idea, test that. If one sustained idea, ask about a key term or analogy.
+Q1 — The central teaching: What is the main point the Alter Rebbe is making here?
+Q2 — The reason or logic: WHY does the Alter Rebbe say this is true? What's the inner logic?
+Q3 — If there's a second idea, test that. If one sustained idea, ask about a key term or the analogy used.
 
 ACCURACY: Every correct answer must appear in the text above.
 WRONG ANSWERS: Use real Chassidus/Kabbalistic concepts that sound plausible but are NOT what this specific section teaches.
+
+VOICE CHECK before finalizing: Tanya uses complex philosophical language — your job is to translate the idea into plain English that anyone can understand. Read each question and answer out loud. If it sounds like a philosophy textbook, rewrite it. "The soul's animating principle interfaces with the body's faculties" → "The soul connects to the body through..."
 
 ${SHARED_STYLE}
 
