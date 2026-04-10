@@ -6850,10 +6850,8 @@ async function openExtraReader(id) {
   // Load content
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (!silent) {
-    if (loadEl) loadEl.style.display = 'block';
-    if (contEl) contEl.style.display = 'none';
-  }
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
 
   try {
     if (id === 'dafYomi')            await _loadDafYomi();
@@ -7238,10 +7236,8 @@ async function _loadMishnahYomi() {
 async function _loadSeferHamitzvos(sectionId) {
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (!silent) {
-    if (loadEl) loadEl.style.display = 'block';
-    if (contEl) contEl.style.display = 'none';
-  }
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
 
   try {
     const viewedDay = new Date();
@@ -7410,10 +7406,8 @@ async function _loadSotah() {
   const def = EXTRA_TRACK_DEFS.sotah;
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (!silent) {
-    if (loadEl) loadEl.style.display = 'block';
-    if (contEl) contEl.style.display = 'none';
-  }
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
 
   try {
     const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
