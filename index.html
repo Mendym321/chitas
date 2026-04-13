@@ -1785,6 +1785,19 @@ function _openTehillimPeopleManager() {
   const YEARS = [];
   for (let y = hebYearEnd; y >= 5700; y--) YEARS.push(y);
 
+  const ENG_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const currentYear = new Date().getFullYear();
+  const ENG_YEARS = [];
+  for (let y = currentYear; y >= currentYear - 100; y--) ENG_YEARS.push(y);
+
+  function engDrumPicker() {
+    const DAYS = Array.from({length:31},(_,i)=>i+1);
+    function col(id, flex, items) {
+      return '<div class="drum-col" id="' + id + '" style="flex:' + flex + ';" onscroll="_tpmEngDrumScroll(this)">'        + items.map(v => '<div class="drum-item" data-val="' + v + '">' + v + '</div>').join('')        + '</div>';
+    }
+    return '<div style="display:flex;margin-bottom:5px;">'        + '<div class="drum-col-label" style="flex:1;">Day</div>'        + '<div class="drum-col-label" style="flex:2;">Month</div>'        + '<div class="drum-col-label" style="flex:1.3;">Year</div>'      + '</div>'      + '<div class="drum-picker" id="tpm-eng-drum">'        + '<div class="drum-sel"></div>'        + col('eng-drum-day',   1,   DAYS)        + col('eng-drum-month', 2,   ENG_MONTHS)        + col('eng-drum-year',  1.3, ENG_YEARS)      + '</div>';
+  }
+
   function drumPicker(state) {
     const DAYS = Array.from({length:30},(_,i)=>i+1);
     function col(id, flex, items) {
@@ -1846,7 +1859,7 @@ function _openTehillimPeopleManager() {
     +     '</div>'
     +     '<div id="tpm-eng-picker" style="display:none;">'
     +     '<p style="font-size:11px;color:var(--t3);margin-bottom:8px;">English birthday</p>'
-    +     '<input id="tpm-eng-date" type="date" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:14px;margin-bottom:8px;box-sizing:border-box;">'
+    +     engDrumPicker()
     +     '<p id="tpm-eng-converted" style="font-size:11px;color:var(--t3);margin-bottom:8px;min-height:16px;"></p>'
     +     '</div>'
     +     '<button id="tpm-submit-btn" onclick="_addTehillimPerson()" style="width:100%;padding:12px;border-radius:10px;border:none;background:' + BLUE + ';color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;">Add</button>'
@@ -1889,35 +1902,19 @@ window._tpmSetTab = function(tab) {
     if (engBtn) { engBtn.style.background = 'var(--card)'; engBtn.style.color = 'var(--t1)'; engBtn.style.fontWeight = '700'; }
     if (hebBtn) { hebBtn.style.background = 'transparent'; hebBtn.style.color = 'var(--t3)'; hebBtn.style.fontWeight = '600'; }
     // Wire up date input to auto-convert
-    const dateInput = document.getElementById('tpm-eng-date');
-    if (dateInput && !dateInput._wired) {
-      dateInput._wired = true;
-      dateInput.addEventListener('change', async () => {
-        const val = dateInput.value; // YYYY-MM-DD
-        if (!val) return;
-        const [y, m, d] = val.split('-').map(Number);
-        const convEl = document.getElementById('tpm-eng-converted');
-        if (convEl) convEl.textContent = 'Converting…';
-        try {
-          const heb = await fetch(
-            'https://www.hebcal.com/converter?cfg=json&gy=' + y + '&gm=' + m + '&gd=' + d + '&g2h=1'
-          ).then(r => r.json());
-          if (heb?.hd && heb?.hm && heb?.hy) {
-            // Normalize month name to our format
-            const MONTH_NORM = { 'Nisan':'Nissan','Iyyar':'Iyar','Tamuz':'Tammuz','Shvat':'Shevat' };
-            const month = MONTH_NORM[heb.hm] || heb.hm;
-            window._tpmState.day   = heb.hd;
-            window._tpmState.month = month;
-            window._tpmState.year  = heb.hy;
-            if (convEl) convEl.textContent = '→ ' + heb.hd + ' ' + month + ' ' + heb.hy;
-          } else {
-            if (convEl) convEl.textContent = 'Could not convert date';
-          }
-        } catch(e) {
-          if (convEl) convEl.textContent = 'Connection error';
-        }
+    // Init English drums
+    setTimeout(() => {
+      const ENG_MONTHS_LOCAL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const engNow = new Date();
+      window._tpmEngState = { day: engNow.getDate(), month: ENG_MONTHS_LOCAL[engNow.getMonth()], year: engNow.getFullYear() };
+      window._tpmScrollTo('eng-drum-day',   window._tpmEngState.day);
+      window._tpmScrollTo('eng-drum-month', window._tpmEngState.month);
+      window._tpmScrollTo('eng-drum-year',  window._tpmEngState.year);
+      ['eng-drum-day','eng-drum-month','eng-drum-year'].forEach(id => {
+        const col = document.getElementById(id);
+        if (col) window._tpmUpdateDrumStyle(col);
       });
-    }
+    }, 80);
   }
 };
 
@@ -1941,6 +1938,55 @@ window._tpmDrumScroll = function(col) {
 };
 
 // Update item opacity/size based on distance from center
+window._tpmEngDrumScroll = function(col) {
+  _tpmUpdateDrumStyle(col);
+  clearTimeout(col._scrollTimer);
+  col._scrollTimer = setTimeout(() => {
+    const itemH = 32;
+    const idx = Math.round(col.scrollTop / itemH);
+    const items = col.querySelectorAll('.drum-item');
+    const item = items[idx];
+    if (!item) return;
+    const val = item.dataset.val;
+    const id = col.id;
+    if (!window._tpmEngState) window._tpmEngState = {};
+    if (id === 'eng-drum-day')   window._tpmEngState.day   = parseInt(val);
+    if (id === 'eng-drum-month') window._tpmEngState.month = val;
+    if (id === 'eng-drum-year')  window._tpmEngState.year  = parseInt(val);
+    // Auto-convert and show result
+    _tpmConvertEngToHeb();
+  }, 150);
+};
+
+window._tpmConvertEngToHeb = async function() {
+  if (!window._tpmEngState) return;
+  const ENG_MONTHS_IDX = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const m = ENG_MONTHS_IDX.indexOf(window._tpmEngState.month) + 1;
+  const d = window._tpmEngState.day;
+  const y = window._tpmEngState.year;
+  if (!m || !d || !y) return;
+  const convEl = document.getElementById('tpm-eng-converted');
+  if (convEl) convEl.textContent = 'Converting…';
+  try {
+    const heb = await fetch(
+      'https://www.hebcal.com/converter?cfg=json&gy=' + y + '&gm=' + m + '&gd=' + d + '&g2h=1'
+    ).then(r => r.json());
+    if (heb?.hd && heb?.hm && heb?.hy) {
+      const MONTH_NORM = { 'Nisan':'Nissan','Iyyar':'Iyar','Tamuz':'Tammuz','Shvat':'Shevat' };
+      const month = MONTH_NORM[heb.hm] || heb.hm;
+      // Store converted Hebrew date in tpmState so _addTehillimPerson picks it up
+      window._tpmState.day   = heb.hd;
+      window._tpmState.month = month;
+      window._tpmState.year  = heb.hy;
+      if (convEl) convEl.textContent = '→ ' + heb.hd + ' ' + month + ' ' + heb.hy;
+    } else {
+      if (convEl) convEl.textContent = 'Could not convert — check date';
+    }
+  } catch(e) {
+    if (convEl) convEl.textContent = 'Connection error';
+  }
+};
+
 window._tpmUpdateDrumStyle = function(col) {
   const itemH = 32;
   const centerIdx = col.scrollTop / itemH;
