@@ -6951,38 +6951,41 @@ function _openExtraTracksMenu() {
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
 
   const enabled = user.extraTracks || [];
+  const sotahActive = !!window._sotahDaf; // hide Sotah if already auto-showing
 
-  function trackCard(def) {
+  function trackTile(def) {
+    if (def.id === 'sotah' && sotahActive) return '';
     const on = enabled.includes(def.id);
     return '<div onclick="_toggleExtraTrack(\'' + def.id + '\')" '
-      + 'style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;">'
-      + '<div style="width:40px;height:40px;border-radius:12px;background:' + def.color + '18;border:1px solid ' + def.color + '35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + def.color + ';">'
-      +   '<svg width="20" height="20" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
+      + 'style="position:relative;background:' + (on ? def.color + '18' : 'var(--card)') + ';border:1.5px solid ' + (on ? def.color : 'var(--border)') + ';border-radius:16px;padding:16px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;">'
+      + (on ? '<div style="position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:' + def.color + ';display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg></div>' : '')
+      + '<div style="width:44px;height:44px;border-radius:13px;background:' + def.color + '18;border:1px solid ' + def.color + '30;display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:' + def.color + ';">'
+      +   '<svg width="22" height="22" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
       + '</div>'
-      + '<div style="flex:1;min-width:0;">'
-      +   '<p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:2px;">' + def.label + '</p>'
-      +   '<p style="font-size:12px;color:var(--t3);">' + def.desc + ' · ' + def.duration + '</p>'
-      + '</div>'
-      + '<div id="et-toggle-' + def.id + '" style="width:44px;height:26px;border-radius:13px;border:none;background:' + (on ? def.color : 'var(--border)') + ';position:relative;flex-shrink:0;transition:background .15s;">'
-      +   '<div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;' + (on ? 'right:3px;' : 'left:3px;') + 'transition:all .15s;"></div>'
-      + '</div>'
+      + '<p style="font-size:14px;font-weight:800;color:' + (on ? def.color : 'var(--t1)') + ';margin-bottom:3px;">' + def.label + '</p>'
+      + '<p style="font-size:11px;color:var(--t3);line-height:1.4;">' + def.desc + '</p>'
+      + '<p style="font-size:10px;color:' + def.color + ';font-weight:600;margin-top:6px;opacity:.8;">' + def.duration + '</p>'
       + '</div>';
   }
 
-  modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:80vh;">'
+  const tiles = Object.values(EXTRA_TRACK_DEFS).map(trackTile).filter(Boolean);
+
+  modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:85vh;">'
     + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
-    +   '<div><p class="ps-modal-title">Add daily learning</p><p class="ps-modal-sub">Tap to toggle · no points, just learning</p></div>'
-    +   '<button onclick="document.getElementById(\'extra-tracks-modal\').remove()" class="ps-modal-close">×</button>'
+    +   '<div><p class="ps-modal-title">More learning</p><p class="ps-modal-sub">Tap to add · no points, just learning</p></div>'
+    +   '<button onclick="_closeExtraMenu()" class="ps-modal-close">×</button>'
     + '</div>'
-    + '<div style="overflow-y:auto;flex:1;">'
-    +   '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:16px 20px;">'
-    +     Object.values(EXTRA_TRACK_DEFS).map(trackCard).join('')
+    + '<div style="overflow-y:auto;flex:1;padding:12px 20px 24px;">'
+    +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+    +     tiles.join('')
     +   '</div>'
     + '</div>'
     + '</div>';
 
   document.body.appendChild(modal);
 }
+
+function _closeExtraMenu() { document.getElementById('extra-tracks-modal')?.remove(); }
 
 function _toggleExtraTrack(id) {
   if (!user.extraTracks) user.extraTracks = [];
@@ -7336,7 +7339,7 @@ function _loadHayomYomIframe() {
 
   // Chabad.org Hayom Yom URL uses Gregorian date
   const tdate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
-  const url = 'https://www.chabad.org/calendar/hayomyom/default_cdo/tdate/' + tdate;
+  const url = 'https://www.chabad.org/living/article_cdo/aid/6226/jewish/Hayom-Yom.htm?tdate=' + tdate;
 
   document.getElementById('chabad-panel-sub').textContent = 'Hayom Yom';
   document.getElementById('chabad-panel-extlink').href = url;
