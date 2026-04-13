@@ -6856,7 +6856,7 @@ async function openExtraReader(id) {
   try {
     if (id === 'dafYomi')            await _loadDafYomi();
     else if (id === 'sotah')         await _loadSotah();
-    else if (id === 'hayomYom')      await _loadHayomYom();
+    else if (id === 'hayomYom')      _loadHayomYomIframe();
     else if (id === 'likkuteiTorah') await _loadLikkuteiTorah();
     else if (id === 'mishnahYomi')   await _loadMishnahYomi();
   } catch(e) {
@@ -7105,59 +7105,30 @@ function _toggleDafComm(val) {
 }
 
 
-async function _loadHayomYom() {
-  const def = EXTRA_TRACK_DEFS.hayomYom;
+function _loadHayomYomIframe() {
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const iframeEl = document.getElementById('chabad-iframe');
+  const nativeEl = document.getElementById('native-reader');
+  const loadEl   = document.getElementById('native-reader-loading');
+  const contEl   = document.getElementById('native-reader-content');
+  const progWrap = document.getElementById('reader-progress-wrap');
 
-  // Get Hebrew date from Hebcal
-  const heb = await fetch(
-    'https://www.hebcal.com/converter?cfg=json&gy=' + d.getFullYear()
-    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1'
-  ).then(r => r.json()).catch(() => null);
-  if (!heb?.hm || !heb?.hd) throw new Error('Could not get Hebrew date');
+  // Switch to iframe mode
+  if (nativeEl) nativeEl.style.display = 'none';
+  if (loadEl)   loadEl.style.display = 'none';
+  if (contEl)   contEl.style.display = 'none';
+  if (progWrap) progWrap.style.display = 'none';
 
-  // Normalize Hebcal month name to match Sefaria's Hayom Yom refs
-  // Key difference: Hebcal says "Shvat", Sefaria says "Shevat"
-  const MONTH_MAP = {
-    'Nisan':'Nisan','Iyyar':'Iyyar','Sivan':'Sivan','Tamuz':'Tamuz',
-    'Av':'Av','Elul':'Elul','Tishrei':'Tishrei','Cheshvan':'Cheshvan',
-    'Kislev':'Kislev','Tevet':'Tevet',
-    'Shvat':'Shevat','Shevat':'Shevat',   // Hebcal="Shvat", Sefaria="Shevat"
-    'Adar':'Adar','Adar I':'Adar I','Adar II':'Adar II',
-  };
-  const month = MONTH_MAP[heb.hm] || heb.hm;
-  const day   = heb.hd;
-  const subtitle = day + ' ' + month;
+  // Chabad.org Hayom Yom URL uses Gregorian date
+  const tdate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+  const url = 'https://www.chabad.org/calendar/hayomyom/default_cdo/tdate/' + tdate;
 
-  document.getElementById('chabad-panel-sub').textContent = subtitle;
+  document.getElementById('chabad-panel-sub').textContent = 'Hayom Yom';
+  document.getElementById('chabad-panel-extlink').href = url;
+  document.getElementById('chabad-panel-extlink').style.display = 'flex';
 
-  // Sefaria Hayom Yom ref: "Hayom Yom, {day} {month}"
-  // e.g. "Hayom Yom, 8 Nisan" or "Hayom Yom, 1 Tishrei"
-  // Try multiple formats since Sefaria's API can be inconsistent
-  const refsToTry = [
-    'Hayom Yom, ' + day + ' ' + month,
-    'Hayom Yom.' + day + ' ' + month,
-    'Hayom Yom ' + day + ' ' + month,
-  ];
-
-  let allHe = [], allEn = [];
-  for (const ref of refsToTry) {
-    const enc = encodeURIComponent(ref);
-    const [enRes, heRes] = await Promise.all([
-      fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
-      fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
-    ]);
-    const engVer = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-    allEn = _flatHtml(engVer?.text || []);
-    allHe = _flatHtml(heRes?.he || []);
-    console.log('Hayom Yom ref:', ref, '→ he:', allHe.length, 'en:', allEn.length);
-    if (allHe.length || allEn.length) break;
-  }
-
-  if (!allHe.length && !allEn.length) throw new Error('No Hayom Yom text for ' + day + ' ' + month);
-
-  _renderBilingualReader('hayomYom', subtitle, allHe, allEn, def.color, 'Hayom Yom');
-  _restoreExtraScroll('hayomYom');
+  iframeEl.style.display = 'flex';
+  iframeEl.src = url;
 }
 
 async function _loadLikkuteiTorah() {
