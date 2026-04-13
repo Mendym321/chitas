@@ -7110,42 +7110,51 @@ async function _loadHayomYom() {
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
 
   // Get Hebrew date from Hebcal
-  const hebUrl = 'https://www.hebcal.com/converter?cfg=json&gy=' + d.getFullYear()
-    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1';
-  const heb = await fetch(hebUrl).then(r => r.json()).catch(() => null);
+  const heb = await fetch(
+    'https://www.hebcal.com/converter?cfg=json&gy=' + d.getFullYear()
+    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1'
+  ).then(r => r.json()).catch(() => null);
   if (!heb?.hm || !heb?.hd) throw new Error('Could not get Hebrew date');
 
-  // Sefaria Hayom Yom ref format: "Hayom Yom, 8 Nisan"
-  // Hebcal hm values map directly to Sefaria month names (mostly)
+  // Normalize Hebcal month name to match Sefaria's Hayom Yom refs
+  // Key difference: Hebcal says "Shvat", Sefaria says "Shevat"
   const MONTH_MAP = {
     'Nisan':'Nisan','Iyyar':'Iyyar','Sivan':'Sivan','Tamuz':'Tamuz',
     'Av':'Av','Elul':'Elul','Tishrei':'Tishrei','Cheshvan':'Cheshvan',
-    'Kislev':'Kislev','Tevet':'Tevet','Shvat':'Shvat','Adar':'Adar',
-    'Adar I':'Adar I','Adar II':'Adar II'
+    'Kislev':'Kislev','Tevet':'Tevet',
+    'Shvat':'Shevat','Shevat':'Shevat',   // Hebcal="Shvat", Sefaria="Shevat"
+    'Adar':'Adar','Adar I':'Adar I','Adar II':'Adar II',
   };
-  const monthName = MONTH_MAP[heb.hm] || heb.hm;
-  // Try both ref formats — Sefaria is inconsistent
-  const ref = 'Hayom Yom, ' + heb.hd + ' ' + monthName;
-  const refAlt = 'Hayom Yom.' + heb.hd + ' ' + monthName;
-  const subtitle = heb.hd + ' ' + monthName;
+  const month = MONTH_MAP[heb.hm] || heb.hm;
+  const day   = heb.hd;
+  const subtitle = day + ' ' + month;
 
   document.getElementById('chabad-panel-sub').textContent = subtitle;
 
-  // Try primary ref, then alternate format
+  // Sefaria Hayom Yom ref: "Hayom Yom, {day} {month}"
+  // e.g. "Hayom Yom, 8 Nisan" or "Hayom Yom, 1 Tishrei"
+  // Try multiple formats since Sefaria's API can be inconsistent
+  const refsToTry = [
+    'Hayom Yom, ' + day + ' ' + month,
+    'Hayom Yom.' + day + ' ' + month,
+    'Hayom Yom ' + day + ' ' + month,
+  ];
+
   let allHe = [], allEn = [];
-  for (const tryRef of [ref, refAlt]) {
-    const enc = encodeURIComponent(tryRef);
+  for (const ref of refsToTry) {
+    const enc = encodeURIComponent(ref);
     const [enRes, heRes] = await Promise.all([
       fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r => r.json()).catch(() => null),
       fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null),
     ]);
-    const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-    allEn = _flatHtml(engVersion?.text || enRes?.text || []);
+    const engVer = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+    allEn = _flatHtml(engVer?.text || []);
     allHe = _flatHtml(heRes?.he || []);
+    console.log('Hayom Yom ref:', ref, '→ he:', allHe.length, 'en:', allEn.length);
     if (allHe.length || allEn.length) break;
-    console.log('Hayom Yom: ref not found:', tryRef, '- trying alternate');
   }
-  if (!allHe.length && !allEn.length) throw new Error('No Hayom Yom text for ' + ref);
+
+  if (!allHe.length && !allEn.length) throw new Error('No Hayom Yom text for ' + day + ' ' + month);
 
   _renderBilingualReader('hayomYom', subtitle, allHe, allEn, def.color, 'Hayom Yom');
   _restoreExtraScroll('hayomYom');
