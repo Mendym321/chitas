@@ -6956,7 +6956,7 @@ function _openExtraTracksMenu() {
   function trackTile(def) {
     if (def.id === 'sotah' && sotahActive) return '';
     const on = enabled.includes(def.id);
-    return '<div onclick="_toggleExtraTrack(\'' + def.id + '\')" '
+    return '<div id="et-tile-' + def.id + '" onclick="_toggleExtraTrack(\'' + def.id + '\')" '
       + 'style="position:relative;background:' + (on ? def.color + '18' : 'var(--card)') + ';border:1.5px solid ' + (on ? def.color : 'var(--border)') + ';border-radius:16px;padding:16px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;">'
       + (on ? '<div style="position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:' + def.color + ';display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg></div>' : '')
       + '<div style="width:44px;height:44px;border-radius:13px;background:' + def.color + '18;border:1px solid ' + def.color + '30;display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:' + def.color + ';">'
@@ -6999,13 +6999,26 @@ function _toggleExtraTrack(id) {
   saveUser();
   vibrate(25);
 
-  // Update toggle visual in modal
+  // Update tile visual immediately in modal
   const on = user.extraTracks.includes(id);
-  const toggle = document.getElementById('et-toggle-' + id);
-  if (toggle) {
-    toggle.style.background = on ? def.color : 'var(--border)';
-    const knob = toggle.querySelector('div');
-    if (knob) { knob.style.right = on ? '3px' : ''; knob.style.left = on ? '' : '3px'; }
+  const tile = document.getElementById('et-tile-' + id);
+  if (tile && def) {
+    tile.style.background = on ? def.color + '18' : 'var(--card)';
+    tile.style.borderColor = on ? def.color : 'var(--border)';
+    // Update label color
+    const label = tile.querySelector('p');
+    if (label) label.style.color = on ? def.color : 'var(--t1)';
+    // Show/hide checkmark
+    let check = tile.querySelector('.et-check');
+    if (on && !check) {
+      check = document.createElement('div');
+      check.className = 'et-check';
+      check.style.cssText = 'position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:' + def.color + ';display:flex;align-items:center;justify-content:center;';
+      check.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>';
+      tile.appendChild(check);
+    } else if (!on && check) {
+      check.remove();
+    }
   }
 
   // Re-render feed cards + separator
