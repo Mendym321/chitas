@@ -116,6 +116,7 @@
   .w100 { width: 100%; }
 
   /* Rambam reader — make bold text actually visible */
+  #native-reader-content { font-size: var(--reader-font-scale, 16px); }
   #native-reader-content b { font-weight: 800; color: var(--t1); }
 
   /* Sections */
@@ -576,8 +577,8 @@ onAuthStateChanged(auth, user => {
 <div class="ob-bg-glow" id="ob-bg-glow"></div>
 
   <!-- ── ONBOARDING ── -->
-  <div id="onboarding" style="min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto;">
-    <div style="max-width:360px;width:100%;">
+  <div id="onboarding" style="min-height:100vh;display:block;padding:24px;overflow-y:auto;">
+    <div style="max-width:360px;width:100%;margin:0 auto;">
 
       <!-- Step 0: Animated landing page -->
       <div id="ob-step0" style="position:relative;z-index:1;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
@@ -706,10 +707,11 @@ onAuthStateChanged(auth, user => {
     </div>
 
     <!-- Add people — opens the same modal used in profile -->
-    <button onclick="_openTehillimPeopleManager()" style="width:100%;padding:13px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;">
+    <button onclick="_openObTehillimManager()" style="width:100%;padding:13px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add family &amp; friends
     </button>
+    <div id="ob-added-people" style="margin-bottom:20px;display:flex;flex-direction:column;gap:6px;"></div>
 
     <button onclick="obStart()" style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:10px;">Start Learning →</button>
     <button onclick="obStart()" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer;font-family:inherit;">Skip for now</button>
@@ -926,24 +928,20 @@ onAuthStateChanged(auth, user => {
 <div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;">
 
   <!-- Sticky header -->
-  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
-    <butto<!-- Font size control: only visible in native reader -->
-  <div id="reader-font-controls" style="display:none;flex-direction:row;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
-    <button onclick="changeReaderFont(-1)" style="width:34px;height:38px;background:none;border:none;color:var(--t2);cursor:pointer;font-size:13px;font-weight:900;font-family:inherit;display:flex;align-items:center;justify-content:center;">a</button>
-    <div style="width:1px;height:20px;background:var(--border);"></div>
-    <button onclick="changeReaderFont(1)" style="width:34px;height:38px;background:none;border:none;color:var(--t2);cursor:pointer;font-size:17px;font-weight:900;font-family:inherit;display:flex;align-items:center;justify-content:center;">A</button>
-  </div>
-  n onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
+  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
+    <button onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);cursor:pointer;flex-shrink:0;">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;min-width:0;">
       <p id="chabad-panel-title" style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
       <p id="chabad-panel-sub" style="font-size:11px;color:var(--t3);">via Chabad.org</p>
     </div>
-    <button id="reader-font-btn" onclick="cycleReaderFont()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:none;align-items:center;justify-content:center;color:var(--t2);cursor:pointer;font-size:12px;font-weight:800;font-family:inherit;" title="Font size">
-      <span id="reader-font-label">A</span>
-    </button>
-    <a id="chabad-panel-extlink" href="#" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);text-decoration:none;" title="Open in browser">
+    <!-- Font size: A smaller | A larger — only shows in native reader -->
+    <div id="reader-font-controls" style="display:none;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0;">
+      <button onclick="changeReaderFont(-1)" title="Smaller" style="width:32px;height:36px;background:none;border:none;border-right:1px solid var(--border);color:var(--t2);cursor:pointer;font-size:12px;font-weight:800;font-family:inherit;display:flex;align-items:center;justify-content:center;letter-spacing:0;">A</button>
+      <button onclick="changeReaderFont(1)" title="Larger" style="width:32px;height:36px;background:none;border:none;color:var(--t2);cursor:pointer;font-size:17px;font-weight:800;font-family:inherit;display:flex;align-items:center;justify-content:center;letter-spacing:0;">A</button>
+    </div>
+    <a id="chabad-panel-extlink" href="#" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);text-decoration:none;flex-shrink:0;" title="Open in browser">
       <svg width="16" height="16" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" fill="none"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8"/></svg>
     </a>
   </div>
@@ -4659,7 +4657,7 @@ function _renderChumashContent() {
   if (!el) return;
 
   const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
-  const RBG = 'background:rgba(240,165,0,.04);border-left:3px solid rgba(240,165,0,.25);';
+  const RBG = 'background:rgba(240,165,0,.15);border-left:3px solid rgba(240,165,0,.7);';
 
   // Lang toggle
   let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
@@ -7021,6 +7019,33 @@ function _openExtraTracksMenu() {
 
 function _closeExtraMenu() { document.getElementById('extra-tracks-modal')?.remove(); }
 
+function _openObTehillimManager() {
+  // Open the full modal, then refresh the onboarding preview list after it closes
+  _openTehillimPeopleManager();
+  // Watch for modal removal to refresh the preview
+  const observer = new MutationObserver(() => {
+    if (!document.getElementById('tehillim-people-modal')) {
+      observer.disconnect();
+      _refreshObPeopleList();
+    }
+  });
+  observer.observe(document.body, { childList: true });
+}
+
+function _refreshObPeopleList() {
+  const el = document.getElementById('ob-added-people');
+  if (!el) return;
+  const people = user.tehillimPeople || [];
+  if (!people.length) { el.innerHTML = ''; return; }
+  el.innerHTML = people.map(p =>
+    '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(74,158,255,.08);border-radius:10px;">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>'
+    + '<span style="font-size:13px;color:var(--t1);font-weight:600;">' + p.label + '</span>'
+    + (p.heDay ? '<span style="font-size:11px;color:var(--t3);margin-left:auto;">' + p.heDay + ' ' + p.heMonth + '</span>' : '')
+    + '</div>'
+  ).join('');
+}
+
 function _toggleExtraTrack(id) {
   if (!user.extraTracks) user.extraTracks = [];
   const idx = user.extraTracks.indexOf(id);
@@ -8258,11 +8283,11 @@ function showLoaderSafe() {
 let _readerFontOffset = parseInt(localStorage.getItem('chitas_font_px') || '0');
 
 function _applyReaderFont() {
-  const content = document.getElementById('native-reader-content');
-  if (!content) return;
-  // Apply as em scaling on the content wrapper
-  const scale = 1 + (_readerFontOffset * 0.15);
-  content.style.fontSize = scale + 'em';
+  const reader = document.getElementById('native-reader');
+  if (!reader) return;
+  const sizes = [14, 16, 18, 20, 22]; // px sizes for offsets -1,0,1,2,3
+  const idx = Math.max(0, Math.min(4, _readerFontOffset + 1));
+  reader.style.setProperty('--reader-font-scale', sizes[idx] + 'px');
 }
 
 function changeReaderFont(dir) {
