@@ -683,23 +683,29 @@ onAuthStateChanged(auth, user => {
     <h2 style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;color:var(--t1);margin-bottom:6px;">Your Tehillim</h2>
     <p style="color:var(--t2);font-size:13px;margin-bottom:22px;line-height:1.6;">After each day's Tehillim, personal chapters for the people in your life will appear automatically.</p>
 
-    <!-- Rebbe & Rebbetzin toggles -->
+    <!-- Rebbe & Rebbetzin toggles — matches app profile style -->
     <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;">
       <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);">
-        <div style="flex:1;">
-          <p style="font-size:14px;font-weight:700;color:var(--t1);">The Rebbe</p>
-          <p style="font-size:11px;color:var(--t3);">11 Nissan · 3 Tammuz</p>
+        <div style="width:32px;height:32px;border-radius:10px;background:rgba(74,158,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4A9EFF;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         </div>
-        <button id="ob-rebbe-toggle" onclick="obToggleRebbe()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;">
+        <div style="flex:1;">
+          <p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px;">The Rebbe</p>
+          <p id="ob-rebbe-sub" style="font-size:12px;color:var(--t3);">Included in Tehillim</p>
+        </div>
+        <button id="ob-rebbe-toggle" onclick="obToggleRebbe()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;">
           <div id="ob-rebbe-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
         </button>
       </div>
       <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;">
-        <div style="flex:1;">
-          <p style="font-size:14px;font-weight:700;color:var(--t1);">The Rebbetzin</p>
-          <p style="font-size:11px;color:var(--t3);">25 Adar</p>
+        <div style="width:32px;height:32px;border-radius:10px;background:rgba(74,158,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4A9EFF;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         </div>
-        <button id="ob-rebbetzin-toggle" onclick="obToggleRebbetzin()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;">
+        <div style="flex:1;">
+          <p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px;">The Rebbetzin</p>
+          <p id="ob-rebbetzin-sub" style="font-size:12px;color:var(--t3);">Included in Tehillim</p>
+        </div>
+        <button id="ob-rebbetzin-toggle" onclick="obToggleRebbetzin()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;">
           <div id="ob-rebbetzin-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
         </button>
       </div>
@@ -1542,25 +1548,34 @@ function obToggleRebbe() {
   _obRebbeOn = !_obRebbeOn;
   const btn = document.getElementById('ob-rebbe-toggle');
   const knob = document.getElementById('ob-rebbe-knob');
+  const sub = document.getElementById('ob-rebbe-sub');
   btn.style.background = _obRebbeOn ? '#4A9EFF' : 'var(--border)';
   knob.style.right = _obRebbeOn ? '3px' : '';
   knob.style.left  = _obRebbeOn ? '' : '3px';
+  if (sub) sub.textContent = _obRebbeOn ? 'Included in Tehillim' : 'Not included';
 }
 
 function obToggleRebbetzin() {
   _obRebbetzinOn = !_obRebbetzinOn;
   const btn = document.getElementById('ob-rebbetzin-toggle');
   const knob = document.getElementById('ob-rebbetzin-knob');
+  const sub = document.getElementById('ob-rebbetzin-sub');
   btn.style.background = _obRebbetzinOn ? '#4A9EFF' : 'var(--border)';
   knob.style.right = _obRebbetzinOn ? '3px' : '';
   knob.style.left  = _obRebbetzinOn ? '' : '3px';
+  if (sub) sub.textContent = _obRebbetzinOn ? 'Included in Tehillim' : 'Not included';
 }
 
 function obAddTehillimPerson() {
   const input = document.getElementById('ob-teh-name');
   const name = input.value.trim();
   if (!name) return;
-  _obTehPeople.push({ label: name, heDay: '', heMonth: '', heYear: '' });
+  const person = { label: name, heDay: '', heMonth: '', heYear: '' };
+  _obTehPeople.push(person);
+  // Save to user immediately so modal shows the entry right away
+  if (!user.tehillimPeople) user.tehillimPeople = [];
+  user.tehillimPeople.push(person);
+  saveUser();
   input.value = '';
   const list = document.getElementById('ob-teh-people');
   list.innerHTML = _obTehPeople.map((p, j) =>
@@ -1568,13 +1583,15 @@ function obAddTehillimPerson() {
     '<span style="font-size:13px;color:var(--t1);">' + p.label + '</span>' +
     '<button onclick="obRemoveTehPerson(' + j + ')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 4px;">×</button>' +
     '</div>'
-  ).join('');;
+  ).join('');
   input.focus();
 }
 
 function obRemoveTehPerson(i) {
   _obTehPeople.splice(i, 1);
-  // Re-render list
+  // Stay in sync with user object
+  if (user.tehillimPeople) user.tehillimPeople.splice(i, 1);
+  saveUser();
   const list = document.getElementById('ob-teh-people');
   if (!list) return;
   list.innerHTML = _obTehPeople.map((p, j) =>
@@ -1791,11 +1808,27 @@ function _openTehillimPeopleManager() {
   for (let y = currentYear; y >= currentYear - 100; y--) ENG_YEARS.push(y);
 
   function engDrumPicker() {
-    const DAYS = Array.from({length:31},(_,i)=>i+1);
-    function col(id, flex, items) {
-      return '<div class="drum-col" id="' + id + '" style="flex:' + flex + ';" onscroll="_tpmEngDrumScroll(this)">'        + items.map(v => '<div class="drum-item" data-val="' + v + '">' + v + '</div>').join('')        + '</div>';
-    }
-    return '<div style="display:flex;margin-bottom:5px;">'        + '<div class="drum-col-label" style="flex:1;">Day</div>'        + '<div class="drum-col-label" style="flex:2;">Month</div>'        + '<div class="drum-col-label" style="flex:1.3;">Year</div>'      + '</div>'      + '<div class="drum-picker" id="tpm-eng-drum">'        + '<div class="drum-sel"></div>'        + col('eng-drum-day',   1,   DAYS)        + col('eng-drum-month', 2,   ENG_MONTHS)        + col('eng-drum-year',  1.3, ENG_YEARS)      + '</div>';
+    const MONTHS_ENG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const nowY = new Date().getFullYear();
+    const SEL_STYLE = 'width:100%;padding:9px 28px 9px 10px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:14px;appearance:none;-webkit-appearance:none;background-image:url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="%23888" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>\');background-repeat:no-repeat;background-position:right 10px center;cursor:pointer;';
+    const LABEL_STYLE = 'font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:4px;display:block;';
+    const monthOpts = MONTHS_ENG.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+    const dayOpts   = Array.from({length:31}, (_,i) => '<option value="'+(i+1)+'">'+(i+1)+'</option>').join('');
+    const yearOpts  = Array.from({length:101}, (_,i) => { const y = nowY-i; return '<option value="'+y+'">'+y+'</option>'; }).join('');
+    return '<div style="display:flex;gap:8px;margin-bottom:12px;">'
+      + '<div style="flex:1.3;display:flex;flex-direction:column;">'
+      +   '<label style="' + LABEL_STYLE + '">Month</label>'
+      +   '<select id="eng-sel-month" onchange="window._tpmEngSelChange()" style="' + SEL_STYLE + '">' + monthOpts + '</select>'
+      + '</div>'
+      + '<div style="flex:.65;display:flex;flex-direction:column;">'
+      +   '<label style="' + LABEL_STYLE + '">Day</label>'
+      +   '<select id="eng-sel-day" onchange="window._tpmEngSelChange()" style="' + SEL_STYLE + '">' + dayOpts + '</select>'
+      + '</div>'
+      + '<div style="flex:.85;display:flex;flex-direction:column;">'
+      +   '<label style="' + LABEL_STYLE + '">Year</label>'
+      +   '<select id="eng-sel-year" onchange="window._tpmEngSelChange()" style="' + SEL_STYLE + '">' + yearOpts + '</select>'
+      + '</div>'
+      + '</div>';
   }
 
   function drumPicker(state) {
@@ -1901,19 +1934,17 @@ window._tpmSetTab = function(tab) {
     if (engPicker) engPicker.style.display = '';
     if (engBtn) { engBtn.style.background = 'var(--card)'; engBtn.style.color = 'var(--t1)'; engBtn.style.fontWeight = '700'; }
     if (hebBtn) { hebBtn.style.background = 'transparent'; hebBtn.style.color = 'var(--t3)'; hebBtn.style.fontWeight = '600'; }
-    // Wire up date input to auto-convert
-    // Init English drums
+    // Init English selects to today's date
     setTimeout(() => {
       const ENG_MONTHS_LOCAL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
       const engNow = new Date();
       window._tpmEngState = { day: engNow.getDate(), month: ENG_MONTHS_LOCAL[engNow.getMonth()], year: engNow.getFullYear() };
-      window._tpmScrollTo('eng-drum-day',   window._tpmEngState.day);
-      window._tpmScrollTo('eng-drum-month', window._tpmEngState.month);
-      window._tpmScrollTo('eng-drum-year',  window._tpmEngState.year);
-      ['eng-drum-day','eng-drum-month','eng-drum-year'].forEach(id => {
-        const col = document.getElementById(id);
-        if (col) window._tpmUpdateDrumStyle(col);
-      });
+      const ms = document.getElementById('eng-sel-month');
+      const ds = document.getElementById('eng-sel-day');
+      const ys = document.getElementById('eng-sel-year');
+      if (ms) ms.value = window._tpmEngState.month;
+      if (ds) ds.value = String(window._tpmEngState.day);
+      if (ys) ys.value = String(window._tpmEngState.year);
     }, 80);
   }
 };
@@ -1938,24 +1969,17 @@ window._tpmDrumScroll = function(col) {
 };
 
 // Update item opacity/size based on distance from center
-window._tpmEngDrumScroll = function(col) {
-  _tpmUpdateDrumStyle(col);
-  clearTimeout(col._scrollTimer);
-  col._scrollTimer = setTimeout(() => {
-    const itemH = 32;
-    const idx = Math.round(col.scrollTop / itemH);
-    const items = col.querySelectorAll('.drum-item');
-    const item = items[idx];
-    if (!item) return;
-    const val = item.dataset.val;
-    const id = col.id;
-    if (!window._tpmEngState) window._tpmEngState = {};
-    if (id === 'eng-drum-day')   window._tpmEngState.day   = parseInt(val);
-    if (id === 'eng-drum-month') window._tpmEngState.month = val;
-    if (id === 'eng-drum-year')  window._tpmEngState.year  = parseInt(val);
-    // Auto-convert and show result
-    _tpmConvertEngToHeb();
-  }, 150);
+// English date select change handler — replaces the old drum scroll handler
+window._tpmEngSelChange = function() {
+  const ms = document.getElementById('eng-sel-month');
+  const ds = document.getElementById('eng-sel-day');
+  const ys = document.getElementById('eng-sel-year');
+  if (!ms || !ds || !ys) return;
+  if (!window._tpmEngState) window._tpmEngState = {};
+  window._tpmEngState.month = ms.value;
+  window._tpmEngState.day   = parseInt(ds.value);
+  window._tpmEngState.year  = parseInt(ys.value);
+  _tpmConvertEngToHeb();
 };
 
 window._tpmConvertEngToHeb = async function() {
