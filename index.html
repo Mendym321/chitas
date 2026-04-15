@@ -116,15 +116,6 @@
   .w100 { width: 100%; }
 
   /* Rambam reader — make bold text actually visible */
-  #native-reader-content.fs-sm p { font-size: 13px !important; }
-  #native-reader-content.fs-sm p[style*="19px"] { font-size: 16px !important; }
-  #native-reader-content.fs-sm p[style*="16px"] { font-size: 14px !important; }
-  #native-reader-content.fs-lg p { font-size: 17px !important; }
-  #native-reader-content.fs-lg p[style*="19px"] { font-size: 22px !important; }
-  #native-reader-content.fs-lg p[style*="16px"] { font-size: 18px !important; }
-  #native-reader-content.fs-xl p { font-size: 19px !important; }
-  #native-reader-content.fs-xl p[style*="19px"] { font-size: 24px !important; }
-  #native-reader-content.fs-xl p[style*="16px"] { font-size: 20px !important; }
   #native-reader-content b { font-weight: 800; color: var(--t1); }
 
   /* Sections */
@@ -585,11 +576,11 @@ onAuthStateChanged(auth, user => {
 <div class="ob-bg-glow" id="ob-bg-glow"></div>
 
   <!-- ── ONBOARDING ── -->
-  <div id="onboarding" style="min-height:100vh;overflow-y:auto;background:var(--bg);">
-  <!-- Single centered column for all steps -->
-  <div style="max-width:380px;width:100%;margin:0 auto;padding:24px 24px 40px;">
+  <div id="onboarding" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;">
+    <div style="max-width:360px;width:100%;">
 
-    <div id="ob-step0" style="position:relative;z-index:1;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
+      <!-- Step 0: Animated landing page -->
+      <div id="ob-step0" style="position:relative;z-index:1;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
 
         <!-- Logo -->
         <div style="width:88px;height:88px;margin:0 auto 32px;position:relative;animation:logoReveal .7s cubic-bezier(.22,1,.36,1) both;">
@@ -697,7 +688,7 @@ onAuthStateChanged(auth, user => {
       <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);">
         <div style="flex:1;">
           <p style="font-size:14px;font-weight:700;color:var(--t1);">The Rebbe</p>
-          <p style="font-size:11px;color:var(--t3);">11 Nissan</p>
+          <p style="font-size:11px;color:var(--t3);">11 Nissan · 3 Tammuz</p>
         </div>
         <button id="ob-rebbe-toggle" onclick="obToggleRebbe()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;">
           <div id="ob-rebbe-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
@@ -715,105 +706,14 @@ onAuthStateChanged(auth, user => {
     </div>
 
     <!-- Add people — opens the same modal used in profile -->
-    <button onclick="_openObTehillimManager()" style="width:100%;padding:13px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">
+    <button onclick="_openTehillimPeopleManager()" style="width:100%;padding:13px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add family &amp; friends
     </button>
-    <div id="ob-added-people" style="margin-bottom:20px;display:flex;flex-direction:column;gap:6px;"></div>
 
     <button onclick="obStart()" style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:10px;">Start Learning →</button>
     <button onclick="obStart()" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer;font-family:inherit;">Skip for now</button>
-  </div
-
-    <!-- ── Step 1: Sign in ── -->
-    <div id="ob-step1" style="display:none;">
-      <div style="display:flex;gap:6px;margin-bottom:24px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);margin-top:1px;"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);margin-top:1px;"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);margin-top:1px;"></div>
-      </div>
-      <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Sign in to save progress</h2>
-      <p style="color:var(--t2);font-size:13px;margin-bottom:32px;line-height:1.6;">Your streak, XP and history sync across all your devices.</p>
-      <button id="ob-google-btn" onclick="signInWithGoogle()" style="width:100%;padding:15px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;">
-        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>
-        Continue with Google
-      </button>
-      <p id="ob-signin-error" style="display:none;color:var(--red);font-size:12px;text-align:center;margin-top:8px;"></p>
-      <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:16px;">Your progress syncs across all your devices</p>
-    </div>
-
-    <!-- ── Step 2: City ── -->
-    <div id="ob-step2" style="display:none;">
-      <button onclick="document.getElementById('ob-step1').style.display='';document.getElementById('ob-step2').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 16px;font-family:inherit;cursor:pointer;">← Back</button>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:24px;">
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-        <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-      </div>
-      <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Where are you learning from?</h2>
-      <p style="color:var(--t2);font-size:13px;margin-bottom:28px;line-height:1.6;">Shows on the leaderboard next to your name.<br><span style="color:var(--t3);">Skip if you prefer.</span></p>
-      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">City</label>
-      <input id="ob-city" class="ob-input" placeholder="e.g. Crown Heights" style="width:100%;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--t1);font-size:16px;caret-color:var(--gold);margin-bottom:12px;padding:13px 14px;font-family:inherit;box-sizing:border-box;" />
-      <button onclick="obNext2()" style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:10px;">Continue →</button>
-      <button onclick="obNext2()" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer;font-family:inherit;">Skip →</button>
-    </div>
-
-    <!-- ── Step 3: Rambam track ── -->
-    <div id="ob-step3" style="display:none;">
-      <button onclick="document.getElementById('ob-step2').style.display='';document.getElementById('ob-step3').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 16px;font-family:inherit;cursor:pointer;">← Back</button>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:24px;">
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-        <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-      </div>
-      <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Rambam Track</h2>
-      <p style="color:var(--t2);font-size:13px;margin-bottom:24px;line-height:1.6;">Choose your daily Rambam learning cycle.</p>
-      <div id="track-options"></div>
-      <button id="ob-start" onclick="obNext3()" style="width:100%;padding:14px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--t3);font-size:15px;font-weight:800;margin-top:8px;transition:all .2s;cursor:pointer;font-family:inherit;">Continue →</button>
-    </div>
-
-    <!-- ── Step 4: Tehillim ── -->
-    <div id="ob-step4" style="display:none;">
-      <button onclick="document.getElementById('ob-step3').style.display='';document.getElementById('ob-step4').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 16px;font-family:inherit;cursor:pointer;">← Back</button>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:24px;">
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-        <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
-      </div>
-      <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Your Tehillim</h2>
-      <p style="color:var(--t2);font-size:13px;margin-bottom:22px;line-height:1.6;">After each day's Tehillim, personal chapters for the people in your life appear automatically.</p>
-
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);">
-          <div style="flex:1;"><p style="font-size:14px;font-weight:700;color:var(--t1);">The Rebbe</p><p style="font-size:11px;color:var(--t3);">11 Nissan</p></div>
-          <button id="ob-rebbe-toggle" onclick="obToggleRebbe()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;">
-            <div id="ob-rebbe-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
-          </button>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;">
-          <div style="flex:1;"><p style="font-size:14px;font-weight:700;color:var(--t1);">The Rebbetzin</p><p style="font-size:11px;color:var(--t3);">25 Adar</p></div>
-          <button id="ob-rebbetzin-toggle" onclick="obToggleRebbetzin()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;">
-            <div id="ob-rebbetzin-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
-          </button>
-        </div>
-      </div>
-
-      <button onclick="_openObTehillimManager()" style="width:100%;padding:13px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add family &amp; friends
-      </button>
-      <div id="ob-added-people" style="margin-bottom:20px;display:flex;flex-direction:column;gap:6px;"></div>
-
-      <button onclick="obStart()" style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:10px;">Start Learning →</button>
-      <button onclick="obStart()" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer;font-family:inherit;">Skip for now</button>
-    </div>
-
   </div>
-</div>
   <!-- ── MAIN APP ── -->
   <div id="main-app" style="display:none;">
 
@@ -1026,20 +926,15 @@ onAuthStateChanged(auth, user => {
 <div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;">
 
   <!-- Sticky header -->
-  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
-    <button onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);cursor:pointer;flex-shrink:0;">
+  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
+    <button onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;min-width:0;">
       <p id="chabad-panel-title" style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
       <p id="chabad-panel-sub" style="font-size:11px;color:var(--t3);">via Chabad.org</p>
     </div>
-    <!-- Font size: A smaller | A larger — only shows in native reader -->
-    <div id="reader-font-controls" style="display:none;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0;">
-      <button onclick="changeReaderFont(-1)" title="Smaller" style="width:32px;height:36px;background:none;border:none;border-right:1px solid var(--border);color:var(--t2);cursor:pointer;font-size:12px;font-weight:800;font-family:inherit;display:flex;align-items:center;justify-content:center;letter-spacing:0;">A</button>
-      <button onclick="changeReaderFont(1)" title="Larger" style="width:32px;height:36px;background:none;border:none;color:var(--t2);cursor:pointer;font-size:17px;font-weight:800;font-family:inherit;display:flex;align-items:center;justify-content:center;letter-spacing:0;">A</button>
-    </div>
-    <a id="chabad-panel-extlink" href="#" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);text-decoration:none;flex-shrink:0;" title="Open in browser">
+    <a id="chabad-panel-extlink" href="#" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);text-decoration:none;" title="Open in browser">
       <svg width="16" height="16" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" fill="none"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8"/></svg>
     </a>
   </div>
@@ -1897,35 +1792,29 @@ function _openTehillimPeopleManager() {
 
   function engDrumPicker() {
     const DAYS = Array.from({length:31},(_,i)=>i+1);
-    const selStyle = 'flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:14px;font-weight:600;appearance:none;-webkit-appearance:none;text-align:center;';
-    const labelStyle = 'font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:5px;';
-    return '<div style="display:flex;gap:8px;margin-bottom:12px;">'
-      + '<div style="flex:1.6;display:flex;flex-direction:column;"><p style="' + labelStyle + '">Month</p>'
-      +   '<select id="eng-drum-month" style="' + selStyle + '" onchange="_tpmEngSelectChange()">'
-      +   ENG_MONTHS.map(m => '<option value="' + m + '">' + m + '</option>').join('') + '</select></div>'
-      + '<div style="flex:0.7;display:flex;flex-direction:column;"><p style="' + labelStyle + '">Day</p>'
-      +   '<select id="eng-drum-day" style="' + selStyle + '" onchange="_tpmEngSelectChange()">'
-      +   DAYS.map(d => '<option value="' + d + '">' + d + '</option>').join('') + '</select></div>'
-      + '<div style="flex:1;display:flex;flex-direction:column;"><p style="' + labelStyle + '">Year</p>'
-      +   '<select id="eng-drum-year" style="' + selStyle + '" onchange="_tpmEngSelectChange()">'
-      +   ENG_YEARS.map(y => '<option value="' + y + '">' + y + '</option>').join('') + '</select></div>'
-      + '</div>';
+    function col(id, flex, items) {
+      return '<div class="drum-col" id="' + id + '" style="flex:' + flex + ';" onscroll="_tpmEngDrumScroll(this)">'        + items.map(v => '<div class="drum-item" data-val="' + v + '">' + v + '</div>').join('')        + '</div>';
+    }
+    return '<div style="display:flex;margin-bottom:5px;">'        + '<div class="drum-col-label" style="flex:1;">Day</div>'        + '<div class="drum-col-label" style="flex:2;">Month</div>'        + '<div class="drum-col-label" style="flex:1.3;">Year</div>'      + '</div>'      + '<div class="drum-picker" id="tpm-eng-drum">'        + '<div class="drum-sel"></div>'        + col('eng-drum-day',   1,   DAYS)        + col('eng-drum-month', 2,   ENG_MONTHS)        + col('eng-drum-year',  1.3, ENG_YEARS)      + '</div>';
   }
 
   function drumPicker(state) {
     const DAYS = Array.from({length:30},(_,i)=>i+1);
-    const selStyle = 'flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:14px;font-weight:600;appearance:none;-webkit-appearance:none;text-align:center;';
-    const labelStyle = 'font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:5px;';
-    return '<div style="display:flex;gap:8px;margin-bottom:12px;">'
-      + '<div style="flex:0.7;display:flex;flex-direction:column;"><p style="' + labelStyle + '">Day</p>'
-      +   '<select id="drum-day" style="' + selStyle + '" onchange="_tpmSelectChange()">'
-      +   DAYS.map(d => '<option value="' + d + '">' + d + '</option>').join('') + '</select></div>'
-      + '<div style="flex:1.6;display:flex;flex-direction:column;"><p style="' + labelStyle + '">Month</p>'
-      +   '<select id="drum-month" style="' + selStyle + '" onchange="_tpmSelectChange()">'
-      +   MONTHS.map(m => '<option value="' + m + '">' + m + '</option>').join('') + '</select></div>'
-      + '<div style="flex:1;display:flex;flex-direction:column;"><p style="' + labelStyle + '">Year</p>'
-      +   '<select id="drum-year" style="' + selStyle + '" onchange="_tpmSelectChange()">'
-      +   YEARS.map(y => '<option value="' + y + '">' + y + '</option>').join('') + '</select></div>'
+    function col(id, flex, items) {
+      return '<div class="drum-col" id="' + id + '" style="flex:' + flex + ';" onscroll="_tpmDrumScroll(this)">'
+        + items.map(v => '<div class="drum-item" data-val="' + v + '">' + v + '</div>').join('')
+        + '</div>';
+    }
+    return '<div style="display:flex;margin-bottom:5px;">'
+        + '<div class="drum-col-label" style="flex:1;">Day</div>'
+        + '<div class="drum-col-label" style="flex:2;">Month</div>'
+        + '<div class="drum-col-label" style="flex:1.3;">Year</div>'
+      + '</div>'
+      + '<div class="drum-picker" id="tpm-drum">'
+        + '<div class="drum-sel"></div>'
+        + col('drum-day',   1,   DAYS)
+        + col('drum-month', 2,   MONTHS)
+        + col('drum-year',  1.3, YEARS)
       + '</div>';
   }
 
@@ -2029,25 +1918,6 @@ window._tpmSetTab = function(tab) {
   }
 };
 
-window._tpmSelectChange = function() {
-  const day = document.getElementById('drum-day');
-  const month = document.getElementById('drum-month');
-  const year = document.getElementById('drum-year');
-  if (day) window._tpmState.day = parseInt(day.value);
-  if (month) window._tpmState.month = month.value;
-  if (year) window._tpmState.year = parseInt(year.value);
-};
-
-window._tpmEngSelectChange = function() {
-  const day = document.getElementById('eng-drum-day');
-  const month = document.getElementById('eng-drum-month');
-  const year = document.getElementById('eng-drum-year');
-  if (!day || !month || !year) return;
-  const ENG_M = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  window._tpmEngState = { day: parseInt(day.value), month: month.value, year: parseInt(year.value) };
-  _tpmConvertEngToHeb();
-};
-
 window._tpmDrumScroll = function(col) {
   // Update visual styles immediately during scroll
   _tpmUpdateDrumStyle(col);
@@ -2148,10 +2018,15 @@ window._tpmUpdateDrumStyle = function(col) {
 
 // Scroll a drum column to a specific value
 window._tpmScrollTo = function(colId, val) {
-  // Now using selects — just set the value
-  const el = document.getElementById(colId);
-  if (el && el.tagName === 'SELECT') {
-    el.value = String(val);
+  const col = document.getElementById(colId);
+  if (!col) return;
+  const items = col.querySelectorAll('.drum-item');
+  for (let i = 0; i < items.length; i++) {
+    if (String(items[i].dataset.val) === String(val)) {
+      col.scrollTop = i * 32;
+      setTimeout(() => window._tpmUpdateDrumStyle(col), 20);
+      break;
+    }
   }
 };
 
@@ -3083,7 +2958,6 @@ function parseHebcalForDate(data, d) {
     ? items.find(i => i.category === 'dailyLearning' && (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos')))
     : items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
 
-  console.log('Chumash leyning:', parshaItem?.title, 'aliyaNum:', aliyaNum, 'ref:', aliyaRef, 'all:', JSON.stringify(leyning));
   return {
     parshaName, aliyaNum, aliyaRef,
     tehTitle: tehItem?.title || null,
@@ -4756,7 +4630,7 @@ function _renderChumashContent() {
   if (!el) return;
 
   const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
-  const RBG = 'background:rgba(240,165,0,.15);border-left:3px solid rgba(240,165,0,.7);';
+  const RBG = 'background:rgba(240,165,0,.04);border-left:3px solid rgba(240,165,0,.25);';
 
   // Lang toggle
   let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
@@ -5860,11 +5734,11 @@ function _renderTanyaContent() {
     if (lang === 'both') {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
       v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + (en||'') + '</p>';
-      v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else if (lang === 'he') {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
@@ -5927,7 +5801,6 @@ function openChabadPanel(sectionId) {
     nativeEl.style.display = 'flex';
     if (progWrap) progWrap.style.display = 'block';
     document.getElementById('chabad-panel-extlink').style.display = 'none';
-    _showReaderFontBtn(true);
 
     const dataKey = { chumash:'_chumashData', tehillim:'_tehillimData', tanya:'_tanyaData', rambam:'_rambamData' }[sectionId];
     const renderFn = { chumash:_renderChumashContent, tehillim:_renderTehillimContent, tanya:_renderTanyaContent, rambam:_renderRambamContent }[sectionId];
@@ -5941,14 +5814,12 @@ function openChabadPanel(sectionId) {
       if (contEl) { contEl.style.display = 'block'; contEl.innerHTML = ''; }
       renderFn();
       if (contEl) contEl.style.display = 'block';
-      // Restore scroll — wait for layout to settle after renderFn
+      // Restore scroll
       const saved = _getSavedScrollPos(sectionId);
-      if (saved > 0) {
-        setTimeout(() => {
-          const r = document.getElementById('native-reader');
-          if (r && r.scrollHeight > saved) r.scrollTop = saved;
-        }, 120);
-      }
+      if (saved > 0) setTimeout(() => {
+        const r = document.getElementById('native-reader');
+        if (r) r.scrollTop = saved;
+      }, 40);
       // Tehillim: render personal psalms
       if (sectionId === 'tehillim') _renderPersonalPsalms();
     } else {
@@ -5969,7 +5840,6 @@ function openChabadPanel(sectionId) {
     if (progWrap) progWrap.style.display = 'none';
     iframeEl.style.display = 'flex'; iframeEl.src = s.chabadUrl;
     document.getElementById('chabad-panel-extlink').style.display = 'flex';
-    _showReaderFontBtn(false);
   }
 
 
@@ -6034,7 +5904,6 @@ function closeChabadPanel() {
   // Cancel any pending throttled scroll save before resetting to 0
   if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
   if (reader) reader.scrollTop = 0;
-  _showReaderFontBtn(false);
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
   markDoneUnlocked = false;
@@ -7118,33 +6987,6 @@ function _openExtraTracksMenu() {
 
 function _closeExtraMenu() { document.getElementById('extra-tracks-modal')?.remove(); }
 
-function _openObTehillimManager() {
-  // Open the full modal, then refresh the onboarding preview list after it closes
-  _openTehillimPeopleManager();
-  // Watch for modal removal to refresh the preview
-  const observer = new MutationObserver(() => {
-    if (!document.getElementById('tehillim-people-modal')) {
-      observer.disconnect();
-      _refreshObPeopleList();
-    }
-  });
-  observer.observe(document.body, { childList: true });
-}
-
-function _refreshObPeopleList() {
-  const el = document.getElementById('ob-added-people');
-  if (!el) return;
-  const people = user.tehillimPeople || [];
-  if (!people.length) { el.innerHTML = ''; return; }
-  el.innerHTML = people.map(p =>
-    '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(74,158,255,.08);border-radius:10px;">'
-    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>'
-    + '<span style="font-size:13px;color:var(--t1);font-weight:600;">' + p.label + '</span>'
-    + (p.heDay ? '<span style="font-size:11px;color:var(--t3);margin-left:auto;">' + p.heDay + ' ' + p.heMonth + '</span>' : '')
-    + '</div>'
-  ).join('');
-}
-
 function _toggleExtraTrack(id) {
   if (!user.extraTracks) user.extraTracks = [];
   const idx = user.extraTracks.indexOf(id);
@@ -7406,12 +7248,12 @@ function _rerenderDaf() {
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">'
         + '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>'
-        + '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>'
+        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>'
         + '</div>';
     } else if (lang === 'en' && en) {
       v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
     } else if (he) {
-      v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
     }
     if (showRashi && rHe) {
       v += '<div style="margin-top:8px;padding:9px 12px;background:#10B98108;border-left:2.5px solid #10B98150;border-radius:0 6px 6px 0;">'
@@ -7424,7 +7266,7 @@ function _rerenderDaf() {
       } else if (lang === 'en' && rEn) {
         v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + rEn + '</p>';
       } else {
-        v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);width:100%;display:block;">' + rHe + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);width:100%;display:block;">' + rHe + '</p>';
       }
       v += '</div>';
     }
@@ -7745,11 +7587,11 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
       if (lang === 'both' && he && en) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
-        v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
         v += '</div>';
       } else if (lang === 'he' || !en) {
         v += '<div style="padding:16px 0;border-bottom:1px solid var(--border);">';
-        v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
         v += '</div>';
       } else {
         v += '<div style="padding:16px 0;border-bottom:1px solid var(--border);">';
@@ -7912,11 +7754,11 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
       v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
-      v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
       v += '</div>';
     } else if (lang === 'he' || !en) {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
       v += '</div>';
     } else {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
@@ -8376,50 +8218,6 @@ function showLoaderSafe() {
   clearTimeout(_loaderSafetyTimer);
   _loaderSafetyTimer = setTimeout(hideLoader, 8000);
 }
-// ── READER FONT SIZE ──────────────────────────────────────────────────────────
-// Stored as % offset from base: 0 = default, steps of 15%
-// Min = -15% (85%), Max = +45% (145%)
-let _readerFontOffset = parseInt(localStorage.getItem('chitas_font_px') || '0');
-
-function _applyReaderFont() {
-  const content = document.getElementById('native-reader-content');
-  if (!content) return;
-  content.classList.remove('fs-sm', 'fs-lg', 'fs-xl');
-  if (_readerFontOffset < 0) content.classList.add('fs-sm');
-  else if (_readerFontOffset === 1) content.classList.add('fs-lg');
-  else if (_readerFontOffset >= 2) content.classList.add('fs-xl');
-  // Update button opacity
-  const controls = document.getElementById('reader-font-controls');
-  if (controls) {
-    const btns = controls.querySelectorAll('button');
-    if (btns[0]) btns[0].style.opacity = _readerFontOffset <= -1 ? '0.3' : '1';
-    if (btns[1]) btns[1].style.opacity = _readerFontOffset >= 2  ? '0.3' : '1';
-  }
-}
-
-function changeReaderFont(dir) {
-  const newOffset = Math.max(-1, Math.min(3, _readerFontOffset + dir));
-  if (newOffset === _readerFontOffset) return;
-  _readerFontOffset = newOffset;
-  localStorage.setItem('chitas_font_px', _readerFontOffset);
-  _applyReaderFont();
-  vibrate(15);
-  // Dim A- button at min, A+ at max
-  const controls = document.getElementById('reader-font-controls');
-  if (controls) {
-    const [smaller, , larger] = controls.querySelectorAll('button');
-    if (smaller) smaller.style.opacity = _readerFontOffset <= -1 ? '0.3' : '1';
-    if (larger)  larger.style.opacity  = _readerFontOffset >= 3  ? '0.3' : '1';
-  }
-}
-
-function _showReaderFontBtn(show) {
-  const el = document.getElementById('reader-font-controls');
-  if (el) el.style.display = show ? 'flex' : 'none';
-  if (show) _applyReaderFont();
-}
-
-
 function bootApp() {
   // Show app immediately from localStorage if we have a local user.
   // This avoids a blank screen while Firebase auth resolves.
