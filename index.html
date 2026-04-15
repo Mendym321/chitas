@@ -116,7 +116,15 @@
   .w100 { width: 100%; }
 
   /* Rambam reader — make bold text actually visible */
-  #native-reader-content { font-size: var(--reader-font-scale, 16px); }
+  #native-reader-content.fs-sm p { font-size: 13px !important; }
+  #native-reader-content.fs-sm p[style*="19px"] { font-size: 16px !important; }
+  #native-reader-content.fs-sm p[style*="16px"] { font-size: 14px !important; }
+  #native-reader-content.fs-lg p { font-size: 17px !important; }
+  #native-reader-content.fs-lg p[style*="19px"] { font-size: 22px !important; }
+  #native-reader-content.fs-lg p[style*="16px"] { font-size: 18px !important; }
+  #native-reader-content.fs-xl p { font-size: 19px !important; }
+  #native-reader-content.fs-xl p[style*="19px"] { font-size: 24px !important; }
+  #native-reader-content.fs-xl p[style*="16px"] { font-size: 20px !important; }
   #native-reader-content b { font-weight: 800; color: var(--t1); }
 
   /* Sections */
@@ -577,11 +585,11 @@ onAuthStateChanged(auth, user => {
 <div class="ob-bg-glow" id="ob-bg-glow"></div>
 
   <!-- ── ONBOARDING ── -->
-  <div id="onboarding" style="min-height:100vh;display:block;padding:24px;overflow-y:auto;">
-    <div style="max-width:360px;width:100%;margin:0 auto;">
+  <div id="onboarding" style="min-height:100vh;overflow-y:auto;background:var(--bg);">
+  <!-- Single centered column for all steps -->
+  <div style="max-width:380px;width:100%;margin:0 auto;padding:24px 24px 40px;">
 
-      <!-- Step 0: Animated landing page -->
-      <div id="ob-step0" style="position:relative;z-index:1;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
+    <div id="ob-step0" style="position:relative;z-index:1;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
 
         <!-- Logo -->
         <div style="width:88px;height:88px;margin:0 auto 32px;position:relative;animation:logoReveal .7s cubic-bezier(.22,1,.36,1) both;">
@@ -715,7 +723,97 @@ onAuthStateChanged(auth, user => {
 
     <button onclick="obStart()" style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:10px;">Start Learning →</button>
     <button onclick="obStart()" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer;font-family:inherit;">Skip for now</button>
+  </div
+
+    <!-- ── Step 1: Sign in ── -->
+    <div id="ob-step1" style="display:none;">
+      <div style="display:flex;gap:6px;margin-bottom:24px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);margin-top:1px;"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);margin-top:1px;"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);margin-top:1px;"></div>
+      </div>
+      <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Sign in to save progress</h2>
+      <p style="color:var(--t2);font-size:13px;margin-bottom:32px;line-height:1.6;">Your streak, XP and history sync across all your devices.</p>
+      <button id="ob-google-btn" onclick="signInWithGoogle()" style="width:100%;padding:15px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>
+        Continue with Google
+      </button>
+      <p id="ob-signin-error" style="display:none;color:var(--red);font-size:12px;text-align:center;margin-top:8px;"></p>
+      <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:16px;">Your progress syncs across all your devices</p>
+    </div>
+
+    <!-- ── Step 2: City ── -->
+    <div id="ob-step2" style="display:none;">
+      <button onclick="document.getElementById('ob-step1').style.display='';document.getElementById('ob-step2').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 16px;font-family:inherit;cursor:pointer;">← Back</button>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:24px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
+      </div>
+      <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Where are you learning from?</h2>
+      <p style="color:var(--t2);font-size:13px;margin-bottom:28px;line-height:1.6;">Shows on the leaderboard next to your name.<br><span style="color:var(--t3);">Skip if you prefer.</span></p>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">City</label>
+      <input id="ob-city" class="ob-input" placeholder="e.g. Crown Heights" style="width:100%;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--t1);font-size:16px;caret-color:var(--gold);margin-bottom:12px;padding:13px 14px;font-family:inherit;box-sizing:border-box;" />
+      <button onclick="obNext2()" style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:10px;">Continue →</button>
+      <button onclick="obNext2()" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer;font-family:inherit;">Skip →</button>
+    </div>
+
+    <!-- ── Step 3: Rambam track ── -->
+    <div id="ob-step3" style="display:none;">
+      <button onclick="document.getElementById('ob-step2').style.display='';document.getElementById('ob-step3').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 16px;font-family:inherit;cursor:pointer;">← Back</button>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:24px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
+      </div>
+      <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Rambam Track</h2>
+      <p style="color:var(--t2);font-size:13px;margin-bottom:24px;line-height:1.6;">Choose your daily Rambam learning cycle.</p>
+      <div id="track-options"></div>
+      <button id="ob-start" onclick="obNext3()" style="width:100%;padding:14px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--t3);font-size:15px;font-weight:800;margin-top:8px;transition:all .2s;cursor:pointer;font-family:inherit;">Continue →</button>
+    </div>
+
+    <!-- ── Step 4: Tehillim ── -->
+    <div id="ob-step4" style="display:none;">
+      <button onclick="document.getElementById('ob-step3').style.display='';document.getElementById('ob-step4').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 16px;font-family:inherit;cursor:pointer;">← Back</button>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:24px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
+      </div>
+      <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Your Tehillim</h2>
+      <p style="color:var(--t2);font-size:13px;margin-bottom:22px;line-height:1.6;">After each day's Tehillim, personal chapters for the people in your life appear automatically.</p>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);">
+          <div style="flex:1;"><p style="font-size:14px;font-weight:700;color:var(--t1);">The Rebbe</p><p style="font-size:11px;color:var(--t3);">11 Nissan</p></div>
+          <button id="ob-rebbe-toggle" onclick="obToggleRebbe()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;">
+            <div id="ob-rebbe-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
+          </button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;">
+          <div style="flex:1;"><p style="font-size:14px;font-weight:700;color:var(--t1);">The Rebbetzin</p><p style="font-size:11px;color:var(--t3);">25 Adar</p></div>
+          <button id="ob-rebbetzin-toggle" onclick="obToggleRebbetzin()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;">
+            <div id="ob-rebbetzin-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
+          </button>
+        </div>
+      </div>
+
+      <button onclick="_openObTehillimManager()" style="width:100%;padding:13px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add family &amp; friends
+      </button>
+      <div id="ob-added-people" style="margin-bottom:20px;display:flex;flex-direction:column;gap:6px;"></div>
+
+      <button onclick="obStart()" style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:10px;">Start Learning →</button>
+      <button onclick="obStart()" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer;font-family:inherit;">Skip for now</button>
+    </div>
+
   </div>
+</div>
   <!-- ── MAIN APP ── -->
   <div id="main-app" style="display:none;">
 
@@ -2985,6 +3083,7 @@ function parseHebcalForDate(data, d) {
     ? items.find(i => i.category === 'dailyLearning' && (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos')))
     : items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
 
+  console.log('Chumash leyning:', parshaItem?.title, 'aliyaNum:', aliyaNum, 'ref:', aliyaRef, 'all:', JSON.stringify(leyning));
   return {
     parshaName, aliyaNum, aliyaRef,
     tehTitle: tehItem?.title || null,
@@ -8283,11 +8382,19 @@ function showLoaderSafe() {
 let _readerFontOffset = parseInt(localStorage.getItem('chitas_font_px') || '0');
 
 function _applyReaderFont() {
-  const reader = document.getElementById('native-reader');
-  if (!reader) return;
-  const sizes = [14, 16, 18, 20, 22]; // px sizes for offsets -1,0,1,2,3
-  const idx = Math.max(0, Math.min(4, _readerFontOffset + 1));
-  reader.style.setProperty('--reader-font-scale', sizes[idx] + 'px');
+  const content = document.getElementById('native-reader-content');
+  if (!content) return;
+  content.classList.remove('fs-sm', 'fs-lg', 'fs-xl');
+  if (_readerFontOffset < 0) content.classList.add('fs-sm');
+  else if (_readerFontOffset === 1) content.classList.add('fs-lg');
+  else if (_readerFontOffset >= 2) content.classList.add('fs-xl');
+  // Update button opacity
+  const controls = document.getElementById('reader-font-controls');
+  if (controls) {
+    const btns = controls.querySelectorAll('button');
+    if (btns[0]) btns[0].style.opacity = _readerFontOffset <= -1 ? '0.3' : '1';
+    if (btns[1]) btns[1].style.opacity = _readerFontOffset >= 2  ? '0.3' : '1';
+  }
 }
 
 function changeReaderFont(dir) {
