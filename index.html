@@ -576,7 +576,7 @@ onAuthStateChanged(auth, user => {
 <div class="ob-bg-glow" id="ob-bg-glow"></div>
 
   <!-- ── ONBOARDING ── -->
-  <div id="onboarding" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;">
+  <div id="onboarding" style="min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto;">
     <div style="max-width:360px;width:100%;">
 
       <!-- Step 0: Animated landing page -->
@@ -673,7 +673,7 @@ onAuthStateChanged(auth, user => {
   </div>
 
   <!-- ── ONBOARDING STEP 4: Tehillim ── -->
-  <div id="ob-step4" style="display:none;overflow-y:auto;max-height:80vh;padding-bottom:20px;">
+  <div id="ob-step4" style="display:none;">
     <button onclick="document.getElementById('ob-step3').style.display='';document.getElementById('ob-step4').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 16px;font-family:inherit;">← Back</button>
     <div style="display:flex;gap:6px;align-items:center;margin-bottom:20px;">
       <div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div>
@@ -927,7 +927,13 @@ onAuthStateChanged(auth, user => {
 
   <!-- Sticky header -->
   <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
-    <button onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
+    <butto<!-- Font size control: only visible in native reader -->
+  <div id="reader-font-controls" style="display:none;flex-direction:row;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+    <button onclick="changeReaderFont(-1)" style="width:34px;height:38px;background:none;border:none;color:var(--t2);cursor:pointer;font-size:13px;font-weight:900;font-family:inherit;display:flex;align-items:center;justify-content:center;">a</button>
+    <div style="width:1px;height:20px;background:var(--border);"></div>
+    <button onclick="changeReaderFont(1)" style="width:34px;height:38px;background:none;border:none;color:var(--t2);cursor:pointer;font-size:17px;font-weight:900;font-family:inherit;display:flex;align-items:center;justify-content:center;">A</button>
+  </div>
+  n onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;min-width:0;">
@@ -5773,7 +5779,7 @@ function _renderTanyaContent() {
     if (litOn && lit) {
       v += '<div style="margin-bottom:6px;padding:10px 14px;background:rgba(168,85,247,.05);border-left:2px solid rgba(168,85,247,.3);border-radius:0 6px 6px 0;">'
         + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:5px;">Lessons in Tanya</p>'
-        + '<p style="font-size:13px;line-height:1.75;color:var(--t2);text-align:justify;">' + lit + '</p>'
+        + '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + lit + '</p>'
         + '</div>';
     }
   });
@@ -5838,13 +5844,13 @@ function openChabadPanel(sectionId) {
       if (contEl) { contEl.style.display = 'block'; contEl.innerHTML = ''; }
       renderFn();
       if (contEl) contEl.style.display = 'block';
-      // Restore scroll — rAF ensures content is painted before scrolling
+      // Restore scroll — wait for layout to settle after renderFn
       const saved = _getSavedScrollPos(sectionId);
       if (saved > 0) {
-        requestAnimationFrame(() => requestAnimationFrame(() => {
+        setTimeout(() => {
           const r = document.getElementById('native-reader');
-          if (r) r.scrollTop = saved;
-        }));
+          if (r && r.scrollHeight > saved) r.scrollTop = saved;
+        }, 120);
       }
       // Tehillim: render personal psalms
       if (sectionId === 'tehillim') _renderPersonalPsalms();
@@ -7275,11 +7281,11 @@ function _rerenderDaf() {
     let v = '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">'
-        + '<p style="font-size:15px;line-height:1.85;color:var(--t1);text-align:justify;">' + en + '</p>'
+        + '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>'
         + '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>'
         + '</div>';
     } else if (lang === 'en' && en) {
-      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);text-align:justify;">' + en + '</p>';
+      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
     } else if (he) {
       v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
     }
@@ -7288,11 +7294,11 @@ function _rerenderDaf() {
         + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#10B981;margin-bottom:5px;">\u05E8\u05E9\"\u05D9</p>';
       if (lang === 'both' && rEn) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">'
-          + '<p style="font-size:13px;line-height:1.75;color:var(--t2);text-align:justify;">' + rEn + '</p>'
+          + '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + rEn + '</p>'
           + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);">' + rHe + '</p>'
           + '</div>';
       } else if (lang === 'en' && rEn) {
-        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);text-align:justify;">' + rEn + '</p>';
+        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + rEn + '</p>';
       } else {
         v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);width:100%;display:block;">' + rHe + '</p>';
       }
@@ -7614,7 +7620,7 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
 
       if (lang === 'both' && he && en) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0;border-bottom:1px solid var(--border);align-items:start;">';
-        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);text-align:justify;">' + en + '</p>';
+        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
         v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
         v += '</div>';
       } else if (lang === 'he' || !en) {
@@ -7623,7 +7629,7 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
         v += '</div>';
       } else {
         v += '<div style="padding:16px 0;border-bottom:1px solid var(--border);">';
-        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);text-align:justify;">' + en + '</p>';
+        v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
         v += '</div>';
       }
     }
@@ -7781,7 +7787,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
 
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
-      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);text-align:justify;">' + en + '</p>';
+      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
       v += '<p style="direction:rtl;text-align:justify;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
       v += '</div>';
     } else if (lang === 'he' || !en) {
@@ -7790,7 +7796,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
       v += '</div>';
     } else {
       v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);text-align:justify;">' + en + '</p>';
+      v += '<p style="font-size:15px;line-height:1.85;color:var(--t1);">' + en + '</p>';
       v += '</div>';
     }
   }
@@ -8247,31 +8253,37 @@ function showLoaderSafe() {
   _loaderSafetyTimer = setTimeout(hideLoader, 8000);
 }
 // ── READER FONT SIZE ──────────────────────────────────────────────────────────
-const FONT_SIZES = [
-  { label: 'A',  scale: 1.0  },
-  { label: 'A+', scale: 1.18 },
-  { label: 'A++',scale: 1.38 },
-];
-let _fontSizeIdx = parseInt(localStorage.getItem('chitas_font_size') || '0');
+// Stored as % offset from base: 0 = default, steps of 15%
+// Min = -15% (85%), Max = +45% (145%)
+let _readerFontOffset = parseInt(localStorage.getItem('chitas_font_px') || '0');
 
 function _applyReaderFont() {
-  const scale = FONT_SIZES[_fontSizeIdx].scale;
   const content = document.getElementById('native-reader-content');
-  if (content) content.style.fontSize = scale + 'rem';
-  const label = document.getElementById('reader-font-label');
-  if (label) label.textContent = FONT_SIZES[_fontSizeIdx].label;
+  if (!content) return;
+  // Apply as em scaling on the content wrapper
+  const scale = 1 + (_readerFontOffset * 0.15);
+  content.style.fontSize = scale + 'em';
 }
 
-function cycleReaderFont() {
-  _fontSizeIdx = (_fontSizeIdx + 1) % FONT_SIZES.length;
-  localStorage.setItem('chitas_font_size', _fontSizeIdx);
+function changeReaderFont(dir) {
+  const newOffset = Math.max(-1, Math.min(3, _readerFontOffset + dir));
+  if (newOffset === _readerFontOffset) return;
+  _readerFontOffset = newOffset;
+  localStorage.setItem('chitas_font_px', _readerFontOffset);
   _applyReaderFont();
   vibrate(15);
+  // Dim A- button at min, A+ at max
+  const controls = document.getElementById('reader-font-controls');
+  if (controls) {
+    const [smaller, , larger] = controls.querySelectorAll('button');
+    if (smaller) smaller.style.opacity = _readerFontOffset <= -1 ? '0.3' : '1';
+    if (larger)  larger.style.opacity  = _readerFontOffset >= 3  ? '0.3' : '1';
+  }
 }
 
 function _showReaderFontBtn(show) {
-  const btn = document.getElementById('reader-font-btn');
-  if (btn) btn.style.display = show ? 'flex' : 'none';
+  const el = document.getElementById('reader-font-controls');
+  if (el) el.style.display = show ? 'flex' : 'none';
   if (show) _applyReaderFont();
 }
 
