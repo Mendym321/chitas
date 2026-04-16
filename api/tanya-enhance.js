@@ -1,18 +1,21 @@
 /**
- * Vercel Serverless Function: /api/tanya-enhance
+ * /api/tanya-enhance
  *
- * Fetches today's Tanya portion, optionally yesterday's portion,
- * then uses Claude Haiku to:
- *   1. Write an accurate 2-3 sentence context intro based on actual text
- *   2. Re-segment Hebrew + English into aligned paragraph pairs
+ * Mirrors the client's exact Sefaria fetch pattern — uses the url slug
+ * (e.g. "Tanya,_Part_I;_Likkutei_Amarim.41") so verse indices align
+ * perfectly with what the reader already has on screen.
  *
- * Permanent Firestore cache — generated once per portion, served forever.
- * bust=1 param overwrites a specific cached entry.
+ * Claude sentence-splits and Hebrew/English aligns the portion,
+ * detects hagahot, returns blocks. Cached permanently in Firestore.
  *
  * GET /api/tanya-enhance
- *   ?ref=...&segStart=0&segEnd=3
- *   &prevRef=...&prevSegStart=0&prevSegEnd=3   (optional — for context generation)
- *   &bust=1                                     (optional — force regenerate)
+ *   ?chapterSlug=Tanya,_Part_I;_Likkutei_Amarim.41
+ *   &startVerse=5        (1-based, same as Sefaria url verse)
+ *   &endVerse=9          (1-based inclusive, omit = end of chapter)
+ *   &bust=1              (optional — force regenerate)
+ *
+ * The client also still supports the old ?ref=&segStart=&segEnd= params
+ * for backward compat — this handler accepts both.
  */
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
@@ -21,44 +24,43 @@ import { getFirestore }                  from 'firebase-admin/firestore';
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const SEFARIA       = 'https://www.sefaria.org';
 
-// ── Firebase ───────────────────────────────────────────────────────────────────
+// ── Firebase ──────────────────────────────────────────────────────────────────
 function getDb() {
   if (!getApps().length) {
-    initializeApp({
-      credential: cert({
-        projectId:   process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey:  (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-      }),
-    });
+    initializeApp({ credential: cert({
+      projectId:   process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey:  (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+    })});
   }
   return getFirestore();
 }
 
-function docId(ref, segStart, segEnd) {
-  const key = `${ref}|${segStart}|${segEnd ?? 'end'}`;
+// Cache key: slug + verse range + version so old entries don't conflict
+function docId(slug, startVerse, endVerse) {
+  const key = `slug:${slug}|${startVerse}|${endVerse ?? 'end'}|v3`;
   return Buffer.from(key).toString('base64url');
 }
 
-async function getCached(db, ref, segStart, segEnd) {
+async function getCached(db, slug, startVerse, endVerse) {
   try {
-    const doc = await db.collection('tanya_enhanced').doc(docId(ref, segStart, segEnd)).get();
+    const doc = await db.collection('tanya_enhanced').doc(docId(slug, startVerse, endVerse)).get();
     if (doc.exists) return doc.data();
   } catch(e) { console.warn('Cache read:', e.message); }
   return null;
 }
 
-async function setCached(db, ref, segStart, segEnd, payload) {
+async function setCached(db, slug, startVerse, endVerse, payload) {
   try {
-    await db.collection('tanya_enhanced').doc(docId(ref, segStart, segEnd)).set({
-      ref, segStart, segEnd: segEnd ?? 'end',
+    await db.collection('tanya_enhanced').doc(docId(slug, startVerse, endVerse)).set({
+      slug, startVerse, endVerse: endVerse ?? 'end',
       ...payload,
       generatedAt: new Date().toISOString(),
     });
   } catch(e) { console.warn('Cache write:', e.message); }
 }
 
-// ── Text helpers ───────────────────────────────────────────────────────────────
+// ── HTML cleaning (identical to client's _cleanHtml) ─────────────────────────
 function cleanHtml(s) {
   if (!s) return '';
   let out = '', i = 0;
@@ -81,71 +83,78 @@ function cleanHtml(s) {
   return out.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 }
 
-function flatten(x) {
+// Flatten nested Sefaria array into flat string array — same as client's flatRaw
+function flatRaw(x) {
   if (!x) return [];
-  if (typeof x === 'string') { const s = cleanHtml(x); return s ? [s] : []; }
-  if (Array.isArray(x)) return x.flatMap(flatten);
+  if (typeof x === 'string') return x ? [x] : [];  // keep raw HTML for hagahah detection
+  if (Array.isArray(x)) return x.flatMap(flatRaw);
   return [];
 }
 
-// ── Sefaria fetch ──────────────────────────────────────────────────────────────
-async function fetchPortion(ref, segStart, segEnd) {
-  const enc = encodeURIComponent(ref);
-  const [enRes, heRes] = await Promise.all([
-    fetch(`${SEFARIA}/api/v3/texts/${enc}?version=english&fill_in_missing_segments=1`).then(r => r.json()).catch(() => null),
-    fetch(`${SEFARIA}/api/texts/${enc}?context=0&commentary=0`).then(r => r.json()).catch(() => null),
-  ]);
-  const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-  const allEn = flatten(engVersion?.text || heRes?.text || []);
-  const allHe = flatten(heRes?.he || []);
-  if (!allEn.length && !allHe.length) throw new Error(`No text for "${ref}"`);
-  const end = segEnd !== undefined ? segEnd : allEn.length;
+// ── Sefaria fetch — mirrors client exactly ────────────────────────────────────
+async function fetchChapter(chapterSlug) {
+  // Primary: url slug (what the client uses)
+  const slugRes = await fetch(
+    `${SEFARIA}/api/texts/${encodeURIComponent(chapterSlug)}?lang=bi&context=0&commentary=0`,
+    { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; chitas-daily/1.0)' } }
+  ).then(r => r.json()).catch(() => null);
+
+  if (slugRes?.he?.length || slugRes?.text?.length) {
+    return { allHe: flatRaw(slugRes.he || []), allEn: flatRaw(slugRes.text || []) };
+  }
+
+  // Fallback: standard ref format (replace underscores and dots)
+  const stdRef = chapterSlug.replace(/_/g, ' ').replace(/\.(\d+)$/, ' $1');
+  const stdRes = await fetch(
+    `${SEFARIA}/api/texts/${encodeURIComponent(stdRef)}?lang=bi&context=0&commentary=0`,
+    { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; chitas-daily/1.0)' } }
+  ).then(r => r.json()).catch(() => null);
+
   return {
-    en: allEn.slice(segStart, end),
-    he: allHe.slice(segStart, end),
-    totalSegs: allEn.length,
+    allHe: flatRaw(stdRes?.he   || []),
+    allEn: flatRaw(stdRes?.text || []),
   };
 }
 
-// ── Claude: align + generate context ──────────────────────────────────────────
-async function processWithClaude(ref, enSegs, heSegs, prevEnSegs) {
-  const chapterNum = (ref.match(/(\d+)$/) || [])[1] || '?';
+// Detect hagahah BEFORE stripping HTML (same logic as client)
+function isHagahahRaw(rawHe, rawEn) {
+  return /^<small>/i.test((rawHe || '').trim())
+      || /^<small>/i.test((rawEn || '').trim())
+      || /^הגה\./.test(cleanHtml(rawHe || ''))
+      || /^\[/.test(cleanHtml(rawHe || ''));
+}
 
-  const prevSection = prevEnSegs?.length
-    ? `PREVIOUS PORTION (for context only — do not include in output):
-${prevEnSegs.map((s, i) => `[${i+1}] ${s}`).join('\n\n')}`
-    : '';
+// ── Claude: sentence-level split + alignment ──────────────────────────────────
+async function processWithClaude(chapterNum, enSegs, heSegs, hagahahFlags) {
+  // Tag hagahot so Claude preserves them
+  const enTagged = enSegs.map((s, i) => hagahahFlags[i] ? `[HAGAHAH] ${s}` : s);
+  const heTagged = heSegs.map((s, i) => hagahahFlags[i] ? `[HAGAHAH] ${s}` : s);
 
-  const prompt = `You are formatting a bilingual Tanya reader for daily study. Below is today's portion from Tanya Chapter ${chapterNum}.
+  const prompt = `You are preparing a bilingual Tanya reader for daily Torah study (Tanya Yomi). Today's portion is from Chapter ${chapterNum}.
 
-Your output must be a single JSON object with two fields:
-1. "context": a 2-3 sentence factual introduction written in the style of "Lessons in Tanya"
-2. "blocks": aligned Hebrew-English paragraph pairs for today's portion
+Return ONLY a JSON object — no markdown, no explanation:
+{"context": "...", "blocks": [{"he": "...", "en": "...", "isHagahah": false}, ...]}
 
-CONTEXT RULES:
-- Write in the style of Lessons in Tanya: factual, precise, no evaluative language
-- If a previous portion is provided, begin with what it established ("In the previous portion, the Alter Rebbe explained...")
-- Then state what today's portion covers, based only on what actually appears in today's text
-- Do NOT mention concepts that appear in later parts of the chapter but not in today's text
-- 2-3 sentences maximum
-- If no previous portion: start directly with what today's portion discusses
+═══ CONTEXT (2-3 sentences) ═══
+Write a factual intro in the style of Lessons in Tanya.
+- If this is mid-chapter (not the first segment), begin: "The Alter Rebbe continues..."
+- State only what appears in today's text. No forward references.
+- Precise and brief.
 
-BLOCKS RULES:
-- Split at genuine thought boundaries — where one idea ends and another begins
-- Each English block: 1-3 sentences, ~30-70 words
-- Reproduce every word exactly — no omissions or changes
-- Each {he, en} pair must cover the same semantic content
+═══ BLOCKS — CRITICAL RULES ═══
+1. ONE block per SENTENCE. Split aggressively — never merge two sentences into one block.
+2. If a Hebrew segment contains two clauses separated by a comma or semicolon that correspond to two English sentences, split them into two blocks.
+3. Each block: one Hebrew sentence paired with its corresponding English sentence.
+4. Copy every word EXACTLY. No paraphrasing, no omissions, no changes.
+5. Lines marked [HAGAHAH]: set "isHagahah": true. Remove the [HAGAHAH] tag from the text.
+6. All other lines: "isHagahah": false.
+7. Target 10-35 words per English block.
 
-${prevSection}
+HEBREW (${heSegs.length} lines):
+${heTagged.map((s, i) => `${i + 1}. ${s}`).join('\n')}
 
-TODAY'S HEBREW (${heSegs.length} segment${heSegs.length !== 1 ? 's' : ''}):
-${heSegs.map((s, i) => `[${i+1}] ${s}`).join('\n\n')}
-
-TODAY'S ENGLISH (${enSegs.length} segment${enSegs.length !== 1 ? 's' : ''}):
-${enSegs.map((s, i) => `[${i+1}] ${s}`).join('\n\n')}
-
-Return ONLY valid JSON, no markdown:
-{"context": "...", "blocks": [{"he": "...", "en": "..."}, ...]}`;
+ENGLISH (${enSegs.length} lines):
+${enTagged.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -156,12 +165,12 @@ Return ONLY valid JSON, no markdown:
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4096,
+      max_tokens: 8000,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
 
-  if (!res.ok) throw new Error(`Claude ${res.status}`);
+  if (!res.ok) throw new Error(`Claude ${res.status}: ${await res.text()}`);
   const data = await res.json();
   const raw = (data.content?.[0]?.text || '').trim()
     .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
@@ -169,7 +178,6 @@ Return ONLY valid JSON, no markdown:
   let parsed;
   try { parsed = JSON.parse(raw); }
   catch {
-    // Try to extract JSON object
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('JSON parse failed');
     parsed = JSON.parse(m[0]);
@@ -180,68 +188,98 @@ Return ONLY valid JSON, no markdown:
   return {
     context: (parsed.context || '').trim(),
     blocks: parsed.blocks
-      .map(b => ({ he: (b.he || '').trim(), en: (b.en || '').trim() }))
+      .map(b => ({
+        he:        (b.he || '').replace(/^\[HAGAHAH\]\s*/i, '').trim(),
+        en:        (b.en || '').replace(/^\[HAGAHAH\]\s*/i, '').trim(),
+        isHagahah: Boolean(b.isHagahah),
+      }))
       .filter(b => b.he || b.en),
   };
 }
 
-// ── Handler ────────────────────────────────────────────────────────────────────
+// ── Handler ───────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const bust = req.query.bust === '1';
   res.setHeader('Cache-Control', 's-maxage=2592000, stale-while-revalidate=86400');
+  const bust = req.query.bust === '1';
 
-  const { ref, segStart, segEnd, prevRef, prevSegStart, prevSegEnd } = req.query;
-  if (!ref) return res.status(400).json({ error: 'ref required' });
+  // Accept new params (chapterSlug + verse range) OR old params (ref + segStart/End)
+  let chapterSlug = req.query.chapterSlug || null;
+  let startVerse  = req.query.startVerse  !== undefined ? parseInt(req.query.startVerse)  : null;
+  let endVerse    = req.query.endVerse    !== undefined ? parseInt(req.query.endVerse)    : null;
 
-  const start    = parseInt(segStart    ?? '0');
-  const end      = segEnd      !== undefined ? parseInt(segEnd)      : undefined;
-  const prevStart = parseInt(prevSegStart ?? '0');
-  const prevEnd   = prevSegEnd  !== undefined ? parseInt(prevSegEnd)  : undefined;
+  // Back-compat: old ?ref=...&segStart=...&segEnd=... → derive chapterSlug
+  if (!chapterSlug && req.query.ref) {
+    // ref is like "Tanya, Part I; Likkutei Amarim 41"
+    // Convert to slug: "Tanya,_Part_I;_Likkutei_Amarim.41"
+    const refMatch = req.query.ref.match(/^(.*?)\s+(\d+)$/);
+    if (refMatch) {
+      chapterSlug = refMatch[1].replace(/\s+/g, '_') + '.' + refMatch[2];
+      // segStart is 0-based index → startVerse is 1-based
+      startVerse = req.query.segStart !== undefined ? parseInt(req.query.segStart) + 1 : 1;
+      endVerse   = req.query.segEnd   !== undefined ? parseInt(req.query.segEnd)       : null;
+    }
+  }
+
+  if (!chapterSlug) return res.status(400).json({ error: 'chapterSlug (or ref) required' });
 
   try {
     const db = getDb();
 
-    // Check Firestore cache
+    // Cache check
     if (!bust) {
-      const cached = await getCached(db, ref, start, end);
+      const cached = await getCached(db, chapterSlug, startVerse, endVerse);
       if (cached?.blocks?.length) {
-        return res.status(200).json({
-          ref, segStart: start, segEnd: end,
-          context: cached.context || '',
-          blocks: cached.blocks,
-          source: 'cache',
-        });
+        return res.status(200).json({ chapterSlug, startVerse, endVerse, context: cached.context || '', blocks: cached.blocks, source: 'cache' });
       }
     }
 
-    // Fetch today's portion + optionally yesterday's in parallel
-    const [todayPortion, prevPortion] = await Promise.all([
-      fetchPortion(ref, start, end),
-      prevRef ? fetchPortion(prevRef, prevStart, prevEnd).catch(() => null) : Promise.resolve(null),
-    ]);
-
-    const { en: enSegs, he: heSegs, totalSegs } = todayPortion;
-    const prevEnSegs = prevPortion?.en || null;
-
-    if (!enSegs.length && !heSegs.length) {
-      return res.status(404).json({ error: `No segments in [${start}, ${end}] for "${ref}"` });
+    // Fetch chapter from Sefaria (same way client does)
+    const { allHe, allEn } = await fetchChapter(chapterSlug);
+    if (!allHe.length && !allEn.length) {
+      return res.status(404).json({ error: `No text found for "${chapterSlug}"` });
     }
 
-    // Process with Claude — align blocks + generate context
-    const { context, blocks } = await processWithClaude(ref, enSegs, heSegs, prevEnSegs);
+    // Slice to today's portion (1-based verse numbers, same as client)
+    const s = (startVerse || 1) - 1;           // convert to 0-based
+    const e = endVerse !== null ? endVerse : Math.max(allHe.length, allEn.length);
+    const rawHePortion = allHe.slice(s, e);
+    const rawEnPortion = allEn.slice(s, e);
 
-    // Store permanently
-    await setCached(db, ref, start, end, { context, blocks });
+    if (!rawHePortion.length && !rawEnPortion.length) {
+      return res.status(404).json({ error: `Empty slice [${s},${e}] for "${chapterSlug}"` });
+    }
+
+    // Detect hagahot from raw HTML, then clean
+    const maxLen = Math.max(rawHePortion.length, rawEnPortion.length);
+    const heSegs      = [];
+    const enSegs      = [];
+    const hagahahFlags = [];
+    for (let i = 0; i < maxLen; i++) {
+      const rawHe = rawHePortion[i] || '';
+      const rawEn = rawEnPortion[i] || '';
+      hagahahFlags.push(isHagahahRaw(rawHe, rawEn));
+      heSegs.push(cleanHtml(rawHe));
+      enSegs.push(cleanHtml(rawEn));
+    }
+
+    // Extract chapter number for Claude prompt
+    const chNumMatch = chapterSlug.match(/\.(\d+)$/);
+    const chapterNum = chNumMatch ? chNumMatch[1] : '?';
+
+    // Call Claude
+    const { context, blocks } = await processWithClaude(chapterNum, enSegs, heSegs, hagahahFlags);
+
+    // Cache permanently
+    await setCached(db, chapterSlug, startVerse, endVerse, { context, blocks });
 
     return res.status(200).json({
-      ref, segStart: start, segEnd: end,
-      totalChapterSegs: totalSegs,
-      context,
-      blocks,
+      chapterSlug, startVerse, endVerse,
+      totalChapterSegs: Math.max(allHe.length, allEn.length),
+      context, blocks,
       source: bust ? 'regenerated' : 'generated',
     });
 
