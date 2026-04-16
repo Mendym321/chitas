@@ -5543,49 +5543,7 @@ async function _loadTanyaNative(sectionId, silent) {
     // Show plain Sefaria immediately, then silently upgrade when API responds.
     // After the first call for a given portion, Vercel caches it 30 days —
     // so repeat visits (including history navigation) are instant from cache.
-    const _enhSegStart = tp.seg - 1;
-    const _enhSegEnd   = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : undefined;
-
-    const _enhApiUrl   = '/api/tanya-enhance?ref=' + enc
-      + '&segStart=' + _enhSegStart
-      + (_enhSegEnd !== undefined ? '&segEnd=' + _enhSegEnd : '');
-
-    // Capture the viewed day offset at call time — guard against nav changes
-    const _enhDayOffset = dayOffset;
-
-    // Fire API in background — non-blocking
-    fetch(_enhApiUrl)
-      .then(r => r.ok ? r.json() : null)
-      .catch(() => null)
-      .then(enhRes => {
-        if (!enhRes?.blocks?.length) return;
-        // Only apply if user is still viewing the same day
-        if (dayOffset !== _enhDayOffset) return;
-        // Rebuild blocks — use API context if available, else keep static intro
-        const enhBlocks = [];
-        // Only show context on first day of a new chapter
-        if (isFirstSegment) {
-          if (enhRes.context) {
-            enhBlocks.push({ type: 'intro', text: enhRes.context });
-          } else {
-            const chIntro = TANYA_CHAPTER_INTROS[chNum];
-            if (chIntro) enhBlocks.push({ type: 'intro', text: chIntro });
-          }
-        }
-        enhRes.blocks.forEach(b => {
-          const he = b.he || '';
-          const en = b.en || '';
-          const isHagahah = /^הגה\./.test(he) || /^\[/.test(he) || /^<small>/i.test(he) || /^<small>/i.test(en);
-          enhBlocks.push({ he, en, lit: '', isHagahah });
-        });
-        window._tanyaData = { ...window._tanyaData, blocks: enhBlocks };
-        // Re-render silently — only if the Tanya panel is currently open
-        const panel = document.getElementById('chabad-panel');
-        const markBtn = document.getElementById('chabad-mark-btn');
-        if (panel?.style.display !== 'none' && markBtn?.dataset?.sectionId === 'tanya') {
-          _renderTanyaContent();
-        }
-      });
+    // NOTE: enhance API is fired after chapterSlug/startV/endV are resolved below.
 
     // ── Tomorrow-slice method (from working reference implementation) ──────────
     // Use item.url (dot-separated) which works reliably with Sefaria date params
@@ -5670,6 +5628,45 @@ async function _loadTanyaNative(sectionId, silent) {
       if (loadEl) loadEl.style.display = 'none';
       if (contEl) contEl.style.display = 'block';
     }
+
+    // Fire enhance API in background — same chapterSlug + verse range the client used
+    // This guarantees the cache key matches perfectly (same coordinates, same Sefaria fetch)
+    const _enhDayOffset = dayOffset;
+    const _enhUrl = '/api/tanya-enhance'
+      + '?chapterSlug=' + encodeURIComponent(chapterSlug)
+      + '&startVerse=' + startV
+      + (endV !== allHe.length ? '&endVerse=' + endV : '');
+
+    fetch(_enhUrl)
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null)
+      .then(enhRes => {
+        if (!enhRes?.blocks?.length) return;
+        if (dayOffset !== _enhDayOffset) return; // user navigated away
+        const enhBlocks = [];
+        if (isFirstSegment) {
+          if (enhRes.context) {
+            enhBlocks.push({ type: 'intro', text: enhRes.context });
+          } else {
+            const chIntro = TANYA_CHAPTER_INTROS[chNum];
+            if (chIntro) enhBlocks.push({ type: 'intro', text: chIntro });
+          }
+        }
+        enhRes.blocks.forEach(b => {
+          const he = b.he || '';
+          const en = b.en || '';
+          const isHagahah = b.isHagahah === true
+            || /^הגה\./.test(he) || /^\[/.test(he)
+            || /^<small>/i.test(he) || /^<small>/i.test(en);
+          enhBlocks.push({ he, en, lit: '', isHagahah });
+        });
+        window._tanyaData = { ...window._tanyaData, blocks: enhBlocks };
+        const panel = document.getElementById('chabad-panel');
+        const markBtn = document.getElementById('chabad-mark-btn');
+        if (panel?.style.display !== 'none' && markBtn?.dataset?.sectionId === 'tanya') {
+          _renderTanyaContent();
+        }
+      });
 
     const saved = _getSavedScrollPos('tanya');
     if (saved > 0) {
