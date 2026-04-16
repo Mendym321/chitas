@@ -940,6 +940,12 @@ onAuthStateChanged(auth, user => {
       <p id="chabad-panel-title" style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
       <p id="chabad-panel-sub" style="font-size:11px;color:var(--t3);">via Chabad.org</p>
     </div>
+    <!-- Font size controls — only shown for native reader sections -->
+    <div id="reader-font-controls" style="display:none;align-items:center;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0;">
+      <button onclick="_readerFontStep(-1)" title="Smaller text" style="width:34px;height:38px;border:none;background:transparent;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:800;transition:background .12s;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='transparent'">A</button>
+      <div style="width:1px;height:20px;background:var(--border);flex-shrink:0;"></div>
+      <button onclick="_readerFontStep(1)" title="Larger text" style="width:38px;height:38px;border:none;background:transparent;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:800;transition:background .12s;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='transparent'">A</button>
+    </div>
     <a id="chabad-panel-extlink" href="#" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);text-decoration:none;" title="Open in browser">
       <svg width="16" height="16" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" fill="none"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8"/></svg>
     </a>
@@ -5820,6 +5826,10 @@ function openChabadPanel(sectionId) {
     nativeEl.style.display = 'flex';
     if (progWrap) progWrap.style.display = 'block';
     document.getElementById('chabad-panel-extlink').style.display = 'none';
+    // Show font size controls and apply saved size for this section
+    const fontCtrl = document.getElementById('reader-font-controls');
+    if (fontCtrl) fontCtrl.style.display = 'flex';
+    _applyReaderFontSize(sectionId);
 
     const dataKey = { chumash:'_chumashData', tehillim:'_tehillimData', tanya:'_tanyaData', rambam:'_rambamData' }[sectionId];
     const renderFn = { chumash:_renderChumashContent, tehillim:_renderTehillimContent, tanya:_renderTanyaContent, rambam:_renderRambamContent }[sectionId];
@@ -5859,6 +5869,8 @@ function openChabadPanel(sectionId) {
     if (progWrap) progWrap.style.display = 'none';
     iframeEl.style.display = 'flex'; iframeEl.src = s.chabadUrl;
     document.getElementById('chabad-panel-extlink').style.display = 'flex';
+    const fontCtrl = document.getElementById('reader-font-controls');
+    if (fontCtrl) fontCtrl.style.display = 'none';
   }
 
 
@@ -5908,6 +5920,71 @@ function openChabadPanel(sectionId) {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// FONT SIZE SYSTEM  — per-section, 5 steps, persisted in localStorage
+// ════════════════════════════════════════════════════════════════════
+// Scale multipliers for each step (0=smallest … 4=largest)
+const _FONT_SCALES = [0.82, 0.91, 1.0, 1.11, 1.24];
+const _FONT_STEPS  = _FONT_SCALES.length;
+
+function _readerFontKey(sectionId) {
+  return 'chitas_fontsize_' + sectionId;
+}
+
+function _getReaderFontStep(sectionId) {
+  const saved = localStorage.getItem(_readerFontKey(sectionId));
+  const n = parseInt(saved);
+  return (!isNaN(n) && n >= 0 && n < _FONT_STEPS) ? n : 2; // default = middle (100%)
+}
+
+function _applyReaderFontSize(sectionId) {
+  const step  = _getReaderFontStep(sectionId);
+  const scale = _FONT_SCALES[step];
+
+  // Inject (or update) a single <style> tag that scales all reader text
+  let styleEl = document.getElementById('reader-font-style');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'reader-font-style';
+    document.head.appendChild(styleEl);
+  }
+  // Scale the main body text sizes. Hebrew text scales the same way.
+  // Line-height is set to 'normal' so CSS inherits naturally.
+  styleEl.textContent = `
+    #native-reader-content p,
+    #native-reader-content div > p { font-size: calc(var(--rf-base, 15px) * ${scale}) !important; }
+    #native-reader-content [style*="font-size:15px"],
+    #native-reader-content [style*="font-size: 15px"] { font-size: ${Math.round(15 * scale)}px !important; }
+    #native-reader-content [style*="font-size:16px"],
+    #native-reader-content [style*="font-size: 16px"] { font-size: ${Math.round(16 * scale)}px !important; }
+    #native-reader-content [style*="font-size:18px"],
+    #native-reader-content [style*="font-size: 18px"] { font-size: ${Math.round(18 * scale)}px !important; }
+    #native-reader-content [style*="font-size:19px"],
+    #native-reader-content [style*="font-size: 19px"] { font-size: ${Math.round(19 * scale)}px !important; }
+  `;
+
+  // Update button opacity to signal min/max reached
+  const ctrl = document.getElementById('reader-font-controls');
+  if (ctrl) {
+    const [decBtn, , incBtn] = ctrl.querySelectorAll('button');
+    if (decBtn) decBtn.style.opacity = step === 0 ? '0.3' : '1';
+    if (incBtn) incBtn.style.opacity = step === _FONT_STEPS - 1 ? '0.3' : '1';
+  }
+}
+
+function _readerFontStep(delta) {
+  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  if (!sid) return;
+  const cur  = _getReaderFontStep(sid);
+  const next = Math.max(0, Math.min(_FONT_STEPS - 1, cur + delta));
+  if (next === cur) return;
+  localStorage.setItem(_readerFontKey(sid), String(next));
+  _applyReaderFontSize(sid);
+  // Subtle toast feedback
+  const pct = Math.round(_FONT_SCALES[next] * 100);
+  fire('Text size ' + pct + '%', 'xp');
+}
+
 function closeChabadPanel() {
   const reader = document.getElementById('native-reader');
   const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
@@ -5925,6 +6002,8 @@ function closeChabadPanel() {
   if (reader) reader.scrollTop = 0;
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
+  const fontCtrl = document.getElementById('reader-font-controls');
+  if (fontCtrl) fontCtrl.style.display = 'none';
   markDoneUnlocked = false;
 }
 
@@ -7067,6 +7146,10 @@ async function openExtraReader(id) {
   iframeEl.style.display = 'none'; iframeEl.src = '';
   nativeEl.style.display = 'flex';
   if (progWrap) progWrap.style.display = 'block';
+  // Show font size controls for extra tracks
+  const fontCtrlExtra = document.getElementById('reader-font-controls');
+  if (fontCtrlExtra) fontCtrlExtra.style.display = 'flex';
+  _applyReaderFontSize(id);
 
   // Mark done button — no XP for extra tracks
   const markBtn = document.getElementById('chabad-mark-btn');
