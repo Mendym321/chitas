@@ -5745,11 +5745,15 @@ function _renderTanyaContent() {
     if (isHagahah) {
       const HE_SMALL = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
       v += '<div style="margin:6px 0;padding:10px 14px;border-left:4px solid rgba(168,85,247,.6);background:rgba(168,85,247,.10);border-radius:0 8px 8px 0;">'
-        + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:6px;">הגהה · Note</p>';
-      if (lang === 'both' || lang === 'en') {
-        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;margin-bottom:' + (lang==='both'?'8px':'0') + ';">' + en + '</p>';
-      }
-      if (lang === 'both' || lang === 'he') {
+        + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:8px;">הגהה · Note</p>';
+      if (lang === 'both' && en && he) {
+        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">';
+        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;">' + en + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';font-size:15px;line-height:1.9;color:var(--t2);font-style:italic;">' + he + '</p>';
+        v += '</div>';
+      } else if (lang === 'en' || (lang === 'both' && !he)) {
+        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;">' + en + '</p>';
+      } else {
         v += '<p style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';font-size:15px;line-height:1.9;color:var(--t2);font-style:italic;">' + he + '</p>';
       }
       v += '</div>';
@@ -5922,10 +5926,11 @@ function openChabadPanel(sectionId) {
 
 // ════════════════════════════════════════════════════════════════════
 // FONT SIZE SYSTEM  — per-section, 5 steps, persisted in localStorage
+// Steps: 0=smallest … 2=default … 4=largest
 // ════════════════════════════════════════════════════════════════════
-// Scale multipliers for each step (0=smallest … 4=largest)
-const _FONT_SCALES = [0.82, 0.91, 1.0, 1.11, 1.24];
+const _FONT_SCALES = [0.78, 0.89, 1.0, 1.13, 1.28];
 const _FONT_STEPS  = _FONT_SCALES.length;
+const _FONT_DEFAULT = 2; // index of the "no change" step
 
 function _readerFontKey(sectionId) {
   return 'chitas_fontsize_' + sectionId;
@@ -5934,7 +5939,7 @@ function _readerFontKey(sectionId) {
 function _getReaderFontStep(sectionId) {
   const saved = localStorage.getItem(_readerFontKey(sectionId));
   const n = parseInt(saved);
-  return (!isNaN(n) && n >= 0 && n < _FONT_STEPS) ? n : 2; // default = middle (100%)
+  return (!isNaN(n) && n >= 0 && n < _FONT_STEPS) ? n : _FONT_DEFAULT; // default = middle (100%)
 }
 
 function _applyReaderFontSize(sectionId) {
@@ -5963,12 +5968,22 @@ function _applyReaderFontSize(sectionId) {
     #native-reader-content [style*="font-size: 19px"] { font-size: ${Math.round(19 * scale)}px !important; }
   `;
 
-  // Update button opacity to signal min/max reached
+  // Update button state to signal min/max reached
   const ctrl = document.getElementById('reader-font-controls');
   if (ctrl) {
-    const [decBtn, , incBtn] = ctrl.querySelectorAll('button');
-    if (decBtn) decBtn.style.opacity = step === 0 ? '0.3' : '1';
-    if (incBtn) incBtn.style.opacity = step === _FONT_STEPS - 1 ? '0.3' : '1';
+    const btns = ctrl.querySelectorAll('button');
+    const decBtn = btns[0];
+    const incBtn = btns[1];
+    if (decBtn) {
+      decBtn.style.opacity = step === 0 ? '0.35' : '1';
+      decBtn.style.color   = step === 0 ? 'var(--t3)' : 'var(--t2)';
+      decBtn.style.cursor  = step === 0 ? 'default' : 'pointer';
+    }
+    if (incBtn) {
+      incBtn.style.opacity = step === _FONT_STEPS - 1 ? '0.35' : '1';
+      incBtn.style.color   = step === _FONT_STEPS - 1 ? 'var(--t3)' : 'var(--t2)';
+      incBtn.style.cursor  = step === _FONT_STEPS - 1 ? 'default' : 'pointer';
+    }
   }
 }
 
