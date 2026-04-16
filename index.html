@@ -5743,42 +5743,53 @@ function _renderTanyaContent() {
     const { he, en, lit, isHagahah } = block;
     if (!he && !en) return;
 
-    // Hagahot (notes) — styled like Rashi in Chumash: smaller, indented, distinct border
+    // Hagahot — group consecutive hagahah sentences into ONE box (no repeated headers)
     if (isHagahah) {
       const HE_SMALL = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
-      v += '<div class="tanya-hagahah" style="margin:10px 0 14px;border-left:4px solid rgba(168,85,247,.6);background:rgba(168,85,247,.10);border-radius:0 10px 10px 0;overflow:hidden;">'
-        + '<div style="padding:8px 14px 6px;border-bottom:1px solid rgba(168,85,247,.18);display:flex;align-items:center;gap:6px;">'
-        + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.7)" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
-        + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,85,247,.65);">הגהה · Note</p>'
-        + '</div>'
-        + '<div style="padding:10px 14px 12px;">';
+      const prevBlock = blocks[blocks.indexOf(block) - 1];
+      const nextBlock = blocks[blocks.indexOf(block) + 1];
+      const isFirst = !prevBlock || !prevBlock.isHagahah;
+      const isLast  = !nextBlock || !nextBlock.isHagahah;
+
+      // Open the container only on the first sentence of a hagahah run
+      if (isFirst) {
+        v += '<div class="tanya-hagahah" style="margin:10px 0 14px;border-left:4px solid rgba(168,85,247,.6);background:rgba(168,85,247,.10);border-radius:0 10px 10px 0;overflow:hidden;">'
+          + '<div style="padding:8px 14px 6px;border-bottom:1px solid rgba(168,85,247,.18);display:flex;align-items:center;gap:6px;">'
+          + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.7)" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
+          + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,85,247,.65);">הגהה · Note</p>'
+          + '</div>'
+          + '<div style="padding:10px 14px 12px;display:flex;flex-direction:column;gap:8px;">';
+      }
+
+      // Each sentence — side by side in both mode, no italics
       if (lang === 'both' && en && he) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">';
-        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;">' + en + '</p>';
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';font-size:15px;line-height:1.9;color:var(--t2);font-style:italic;">' + he + '</p>';
+        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + en + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';font-size:15px;line-height:1.9;color:var(--t2);">' + he + '</p>';
         v += '</div>';
       } else if (lang === 'en' || (lang === 'both' && !he)) {
-        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;">' + en + '</p>';
+        v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + en + '</p>';
       } else {
-        v += '<p style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';font-size:15px;line-height:1.9;color:var(--t2);font-style:italic;">' + he + '</p>';
+        v += '<p style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';font-size:15px;line-height:1.9;color:var(--t2);">' + he + '</p>';
       }
-      v += '</div></div>';
+
+      // Close the container only after the last sentence of the run
+      if (isLast) {
+        v += '</div></div>';
+      }
       return;
     }
 
+    // Regular body — no dividing line, just paragraph spacing
     if (lang === 'both') {
-      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
+      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:6px 0 10px;align-items:start;">';
       v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + (en||'') + '</p>';
       v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else if (lang === 'he') {
-      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + (he||'') + '</p>';
-      v += '</div>';
+      v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);padding:4px 0 8px;">' + (he||'') + '</p>';
     } else {
-      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);">' + (en||'') + '</p>';
-      v += '</div>';
+      v += '<p style="font-size:15px;line-height:1.95;color:var(--t1);padding:4px 0 8px;">' + (en||'') + '</p>';
     }
 
     // Lessons in Tanya commentary — shown below each paragraph
