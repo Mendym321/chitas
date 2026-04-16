@@ -5572,7 +5572,12 @@ async function _loadTanyaNative(sectionId, silent) {
             if (chIntro) enhBlocks.push({ type: 'intro', text: chIntro });
           }
         }
-        enhRes.blocks.forEach(b => enhBlocks.push({ he: b.he || '', en: b.en || '', lit: '' }));
+        enhRes.blocks.forEach(b => {
+          const he = b.he || '';
+          const en = b.en || '';
+          const isHagahah = /^הגה\./.test(he) || /^\[/.test(he) || /^<small>/i.test(he) || /^<small>/i.test(en);
+          enhBlocks.push({ he, en, lit: '', isHagahah });
+        });
         window._tanyaData = { ...window._tanyaData, blocks: enhBlocks };
         // Re-render silently — only if the Tanya panel is currently open
         const panel = document.getElementById('chabad-panel');
