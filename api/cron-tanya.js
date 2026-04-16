@@ -1,143 +1,126 @@
 /**
- * Vercel Cron Job: /api/cron-tanya
+ * /api/cron-tanya
  *
- * Runs daily at 5:01am UTC (midnight EST / 1am EDT).
- * Fetches today's Tanya portion from Sefaria calendar,
- * then calls /api/tanya-enhance to generate + cache aligned blocks.
- * By the time users open the app, the cache is warm — zero wait.
+ * Runs daily at 5:01am UTC. Warms the tanya-enhance cache for today + tomorrow
+ * using the EXACT same chapterSlug + verse range the client uses — so cache
+ * keys always match and users get instant cached responses.
  *
- * Also pre-fetches tomorrow's portion so late-night users are covered.
- *
- * Schedule set in vercel.json:
+ * Schedule in vercel.json:
  *   { "path": "/api/cron-tanya", "schedule": "1 5 * * *" }
- *
- * Vercel cron docs: https://vercel.com/docs/cron-jobs
- * Note: cron jobs are only available on Vercel Pro plan and above.
  */
 
 const SEFARIA = 'https://www.sefaria.org';
 
-// ── Parse a Tanya calendar ref into components ─────────────────────────────────
-// e.g. "Tanya, Part I; Likkutei Amarim 38:9" → { base, chapter, seg }
-function parseTanyaRef(ref) {
-  if (!ref) return null;
-  const m = ref.match(/^(.*?)(\d+):(\d+)$/);
+// Parse Sefaria url slug: "Tanya,_Part_I;_Likkutei_Amarim.41.5"
+// → { chapterSlug: "Tanya,_Part_I;_Likkutei_Amarim.41", chapter: 41, verse: 5 }
+function parseUrlSlug(url) {
+  if (!url) return null;
+  const m = url.match(/\.([0-9]+)\.([0-9]+)$/);
   if (!m) return null;
   return {
-    base:    m[1].replace(/:$/, '').trim(),
-    chapter: parseInt(m[2]),
-    seg:     parseInt(m[3]),
+    chapterSlug: url.substring(0, url.lastIndexOf('.')), // everything before last dot
+    chapter: parseInt(m[1]),
+    verse:   parseInt(m[2]),
   };
 }
 
-// ── Get today's Tanya ref from Sefaria calendar ────────────────────────────────
-async function getCalTanya(date) {
-  const url = `${SEFARIA}/api/calendars?year=${date.getFullYear()}&month=${date.getMonth()+1}&day=${date.getDate()}`;
-  const d = await fetch(url).then(r => r.json()).catch(() => null);
-  return (d?.calendar_items || []).find(i =>
-    (i.title?.en || '').toLowerCase().includes('tanya') ||
-    (i.ref || '').toLowerCase().includes('tanya')
-  )?.ref || null;
+// Fetch today's Tanya item from Sefaria calendar (returns item with url + ref)
+async function getCalTanyaItem(date) {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth() + 1;
+  const d = date.getUTCDate();
+  const url = `${SEFARIA}/api/calendars?year=${y}&month=${m}&day=${d}`;
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; chitas-daily/1.0)' }
+    });
+    const data = await res.json();
+    return (data?.calendar_items || []).find(i => i.title?.en === 'Tanya Yomi') || null;
+  } catch(e) {
+    console.error('Calendar fetch error:', e.message);
+    return null;
+  }
 }
 
-// ── Trigger the enhance API for a given date ───────────────────────────────────
+// Warm the enhance cache for a given date — mirrors client's exact fetch
 async function warmCacheForDate(date, baseUrl) {
   const tomorrow = new Date(date);
-  tomorrow.setDate(date.getDate() + 1);
+  tomorrow.setUTCDate(date.getUTCDate() + 1);
 
-  // Fetch today + tomorrow refs in parallel (need tomorrow to know segment end)
-  const [todayRef, tomorrowRef] = await Promise.all([
-    getCalTanya(date),
-    getCalTanya(tomorrow),
+  const [todayItem, tomorrowItem] = await Promise.all([
+    getCalTanyaItem(date),
+    getCalTanyaItem(tomorrow),
   ]);
 
-  if (!todayRef) {
-    console.log(`No Tanya ref found for ${date.toISOString().slice(0, 10)}`);
+  if (!todayItem?.url) {
     return { date: date.toISOString().slice(0, 10), status: 'no_ref' };
   }
 
-  const tp = parseTanyaRef(todayRef);
-  const tn = tomorrowRef ? parseTanyaRef(tomorrowRef) : null;
+  const t = parseUrlSlug(todayItem.url);
+  const n = tomorrowItem?.url ? parseUrlSlug(tomorrowItem.url) : null;
 
-  if (!tp) {
-    console.log(`Could not parse ref: ${todayRef}`);
-    return { date: date.toISOString().slice(0, 10), status: 'parse_error', ref: todayRef };
+  if (!t) {
+    return { date: date.toISOString().slice(0, 10), status: 'parse_error', url: todayItem.url };
   }
 
-  const chapterRef = `${tp.base} ${tp.chapter}`;
-  const segStart   = tp.seg - 1;
-  const segEnd     = (tn && tp.chapter === tn.chapter) ? tn.seg - 1 : undefined;
+  const startVerse = t.verse;
+  let endVerse;
+  const sameChapter = n && t.chapterSlug === n.chapterSlug;
+  if (sameChapter && n.verse > startVerse) {
+    endVerse = n.verse - 1; // today ends one verse before tomorrow starts
+  } else {
+    endVerse = null; // end of chapter — no endVerse param
+  }
 
   const apiUrl = `${baseUrl}/api/tanya-enhance`
-    + `?ref=${encodeURIComponent(chapterRef)}`
-    + `&segStart=${segStart}`
-    + (segEnd !== undefined ? `&segEnd=${segEnd}` : '');
+    + `?chapterSlug=${encodeURIComponent(t.chapterSlug)}`
+    + `&startVerse=${startVerse}`
+    + (endVerse !== null ? `&endVerse=${endVerse}` : '');
 
-  console.log(`Warming cache: ${chapterRef} [${segStart}${segEnd !== undefined ? `-${segEnd}` : '+'}]`);
+  console.log(`Warming: ${t.chapterSlug} v${startVerse}${endVerse ? '-' + endVerse : '+'}`);
 
-  const res = await fetch(apiUrl).catch(e => ({ ok: false, error: e.message }));
+  const res = await fetch(apiUrl).catch(e => ({ ok: false, statusText: e.message }));
 
   if (!res.ok) {
     const text = await res.text?.().catch(() => '');
-    console.error(`Enhance API error: ${res.status} ${text.slice(0, 200)}`);
-    return {
-      date: date.toISOString().slice(0, 10),
-      status: 'api_error',
-      ref: chapterRef,
-      segStart,
-      segEnd,
-    };
+    console.error(`Enhance error ${res.status}: ${text.slice(0, 200)}`);
+    return { date: date.toISOString().slice(0, 10), status: 'api_error', chapterSlug: t.chapterSlug };
   }
 
   const data = await res.json().catch(() => null);
-  const source = data?.source || 'unknown';
-
-  console.log(`Cache warmed: ${chapterRef} — source: ${source} (${data?.blocks?.length || 0} blocks)`);
+  console.log(`Warmed: ${t.chapterSlug} — source: ${data?.source} (${data?.blocks?.length || 0} blocks)`);
 
   return {
-    date:     date.toISOString().slice(0, 10),
-    status:   'ok',
-    source,
-    ref:      chapterRef,
-    segStart,
-    segEnd,
-    blocks:   data?.blocks?.length || 0,
+    date:         date.toISOString().slice(0, 10),
+    status:       'ok',
+    source:       data?.source,
+    chapterSlug:  t.chapterSlug,
+    startVerse,
+    endVerse,
+    blocks:       data?.blocks?.length || 0,
   };
 }
 
-// ── Handler ────────────────────────────────────────────────────────────────────
+// ── Handler ───────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  // Vercel verifies cron requests — only allow from Vercel or internal
   const isVercelCron = req.headers['x-vercel-cron'] === '1';
   const isInternal   = req.headers['x-internal-token'] === process.env.CRON_SECRET;
+  if (!isVercelCron && !isInternal) return res.status(401).json({ error: 'Unauthorized' });
 
-  if (!isVercelCron && !isInternal) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  // Get the base URL from the request (works in both preview and production)
   const proto   = req.headers['x-forwarded-proto'] || 'https';
   const host    = req.headers['x-forwarded-host'] || req.headers.host;
   const baseUrl = `${proto}://${host}`;
 
   const today    = new Date();
-  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const tomorrow = new Date(today); tomorrow.setUTCDate(today.getUTCDate() + 1);
 
   try {
-    // Warm today + tomorrow in parallel
-    // Tomorrow is pre-warmed so late-night users (after midnight) are covered
     const [todayResult, tomorrowResult] = await Promise.all([
-      warmCacheForDate(today, baseUrl),
+      warmCacheForDate(today,    baseUrl),
       warmCacheForDate(tomorrow, baseUrl),
     ]);
-
-    return res.status(200).json({
-      success: true,
-      results: [todayResult, tomorrowResult],
-      ranAt:   new Date().toISOString(),
-    });
-
-  } catch (err) {
+    return res.status(200).json({ success: true, results: [todayResult, tomorrowResult], ranAt: new Date().toISOString() });
+  } catch(err) {
     console.error('Cron error:', err.message);
     return res.status(500).json({ error: err.message });
   }
