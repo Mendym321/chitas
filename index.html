@@ -4655,7 +4655,7 @@ function _renderChumashContent() {
   if (!el) return;
 
   const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
-  const RBG = 'background:rgba(240,165,0,.04);border-left:3px solid rgba(240,165,0,.25);';
+  const RBG = 'background:rgba(240,165,0,.09);border-left:4px solid rgba(240,165,0,.55);';
 
   // Lang toggle
   let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
@@ -4684,8 +4684,8 @@ function _renderChumashContent() {
     // Chapter heading — always shown, style matches Tanya/Rambam
     {
       v += '<div style="' + (chunkIdx > 0 ? 'margin-top:28px;' : '') + 'margin-bottom:16px;'
-         + 'padding:10px 14px;background:rgba(240,165,0,.07);'
-         + 'border-left:3px solid var(--gold);border-radius:0 8px 8px 0;">'
+         + 'padding:10px 14px;background:rgba(240,165,0,.13);'
+         + 'border-left:4px solid var(--gold);border-radius:0 8px 8px 0;">'
          + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;'
          + 'color:rgba(240,165,0,.55);margin-bottom:3px;">Chumash</p>'
          + '<p style="font-size:17px;font-weight:800;color:var(--gold);">Chapter ' + chunk.chapter + '</p>'
@@ -5080,8 +5080,8 @@ function _renderRambamContent() {
   chapters.forEach((chapter, chIdx) => {
     // Chapter heading — green left-border card, prominent spacing before (except first)
     v += '<div style="' + (chIdx > 0 ? 'margin-top:32px;' : '') + 'margin-bottom:18px;'
-       + 'padding:12px 16px;background:rgba(29,185,84,.07);'
-       + 'border-left:3px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
+       + 'padding:12px 16px;background:rgba(29,185,84,.13);'
+       + 'border-left:4px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
        + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;'
        + 'color:rgba(29,185,84,.55);margin-bottom:4px;">Mishneh Torah</p>'
        + '<p style="font-size:18px;font-weight:800;color:' + GREEN + ';line-height:1.2;">' + chapter.title + '</p>'
@@ -5705,7 +5705,7 @@ function _renderTanyaContent() {
 
   // Lessons in Tanya toggle — only show if we have commentary
   if (hasLit) {
-    t += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:8px 12px;background:rgba(168,85,247,.06);border-radius:10px;cursor:pointer;" onclick="_toggleTanyaLit()">'
+    t += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:8px 12px;background:rgba(168,85,247,.11);border-radius:10px;cursor:pointer;" onclick="_toggleTanyaLit()">'
       + '<div style="width:32px;height:18px;border-radius:9px;background:' + (litOn ? PURPLE : 'var(--border)') + ';position:relative;transition:background .15s;flex-shrink:0;">'
       + '<div style="width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;' + (litOn ? 'right:2px;' : 'left:2px;') + 'transition:all .15s;"></div></div>'
       + '<span style="font-size:12px;font-weight:700;color:' + (litOn ? PURPLE : 'var(--t3)') + ';">Lessons in Tanya</span>'
@@ -5719,7 +5719,7 @@ function _renderTanyaContent() {
 
   const heading = isFirstSegment
     // First day of chapter — colored purple banner
-    ? '<div style="margin-bottom:18px;padding:10px 14px;background:rgba(168,85,247,.07);'
+    ? '<div style="margin-bottom:18px;padding:10px 14px;background:rgba(168,85,247,.13);'
         + 'border-left:3px solid ' + PURPLE + ';border-radius:0 8px 8px 0;">'
         + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(168,85,247,.55);margin-bottom:3px;">Tanya</p>'
         + '<p style="font-size:17px;font-weight:800;color:' + PURPLE + ';line-height:1.3;">' + chapterLabel + '</p>'
@@ -5731,7 +5731,7 @@ function _renderTanyaContent() {
   blocks.forEach((block) => {
     // Intro block
     if (block.type === 'intro') {
-      v += '<div style="margin-bottom:18px;padding:11px 15px;background:rgba(168,85,247,.05);border-left:2px solid rgba(168,85,247,.3);border-radius:0 7px 7px 0;">'
+      v += '<div style="margin-bottom:18px;padding:11px 15px;background:rgba(168,85,247,.11);border-left:4px solid rgba(168,85,247,.6);border-radius:0 7px 7px 0;">'
          + '<p style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:5px;">Context</p>'
          + '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;">' + block.text + '</p>'
          + '</div>';
@@ -5744,7 +5744,7 @@ function _renderTanyaContent() {
     // Hagahot (notes) — styled like Rashi in Chumash: smaller, indented, distinct border
     if (isHagahah) {
       const HE_SMALL = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
-      v += '<div style="margin:6px 0;padding:10px 14px;border-left:2.5px solid rgba(168,85,247,.35);background:rgba(168,85,247,.04);border-radius:0 8px 8px 0;">'
+      v += '<div style="margin:6px 0;padding:10px 14px;border-left:4px solid rgba(168,85,247,.6);background:rgba(168,85,247,.10);border-radius:0 8px 8px 0;">'
         + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:6px;">הגהה · Note</p>';
       if (lang === 'both' || lang === 'en') {
         v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;margin-bottom:' + (lang==='both'?'8px':'0') + ';">' + en + '</p>';
@@ -5773,7 +5773,7 @@ function _renderTanyaContent() {
 
     // Lessons in Tanya commentary — shown below each paragraph
     if (litOn && lit) {
-      v += '<div style="margin-bottom:6px;padding:10px 14px;background:rgba(168,85,247,.05);border-left:2px solid rgba(168,85,247,.3);border-radius:0 6px 6px 0;">'
+      v += '<div style="margin-bottom:6px;padding:10px 14px;background:rgba(168,85,247,.11);border-left:4px solid rgba(168,85,247,.6);border-radius:0 6px 6px 0;">'
         + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:5px;">Lessons in Tanya</p>'
         + '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + lit + '</p>'
         + '</div>';
@@ -7329,7 +7329,7 @@ function _rerenderDaf() {
   }
 
   // Heading
-  t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '0E;border-left:3px solid ' + color + ';border-radius:0 8px 8px 0;">'
+  t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'
     + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + color + '80;margin-bottom:3px;">Talmud Bavli</p>'
     + '<p style="font-size:17px;font-weight:800;color:' + color + ';line-height:1.3;">' + title + '</p>'
     + '</div>';
@@ -7358,7 +7358,7 @@ function _rerenderDaf() {
       v += '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:19px;line-height:2.0;color:var(--t1);">' + he + '</p>';
     }
     if (showRashi && rHe) {
-      v += '<div style="margin-top:8px;padding:9px 12px;background:#10B98108;border-left:2.5px solid #10B98150;border-radius:0 6px 6px 0;">'
+      v += '<div style="margin-top:8px;padding:9px 12px;background:#10B98118;border-left:4px solid #10B981AA;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#10B981;margin-bottom:5px;">\u05E8\u05E9\"\u05D9</p>';
       if (lang === 'both' && rEn) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">'
@@ -7373,7 +7373,7 @@ function _rerenderDaf() {
       v += '</div>';
     }
     if (showTosafot && tosHe) {
-      v += '<div style="margin-top:6px;padding:9px 12px;background:#8B5CF608;border-left:2.5px solid #8B5CF650;border-radius:0 6px 6px 0;">'
+      v += '<div style="margin-top:6px;padding:9px 12px;background:#8B5CF618;border-left:4px solid #8B5CF6AA;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8B5CF6;margin-bottom:5px;">\u05EA\u05D5\u05E1\u05E4\u05D5\u05EA</p>'
         + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:16px;line-height:1.9;color:var(--t1);">' + tosHe + '</p>'
         + '</div>';
@@ -7662,7 +7662,7 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
   t += '</div>';
 
   // Main heading
-  t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + GREEN + '08;border-left:3px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
+  t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + GREEN + '1F;border-left:4px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
     + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + GREEN + '80;margin-bottom:3px;">Sefer HaMitzvos</p>'
     + '<p style="font-size:17px;font-weight:800;color:' + GREEN + ';line-height:1.3;">' + displayVal + '</p>'
     + (rambamContext ? '<p style="font-size:11px;color:var(--t3);margin-top:4px;">With ' + rambamContext + '</p>' : '')
@@ -7675,7 +7675,7 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
   results.forEach(res => {
     // Section heading if multiple refs
     if (results.length > 1) {
-      v += '<div style="margin:20px 0 10px;padding:8px 12px;background:' + GREEN + '08;border-left:3px solid ' + GREEN + '35;border-radius:0 6px 6px 0;">'
+      v += '<div style="margin:20px 0 10px;padding:8px 12px;background:' + GREEN + '14;border-left:4px solid ' + GREEN + '99;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:13px;font-weight:700;color:' + GREEN + ';">' + res.title + '</p>'
         + '</div>';
     }
@@ -7841,7 +7841,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
   }
 
   // Heading
-  const heading = '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '0E;border-left:3px solid ' + color + ';border-radius:0 8px 8px 0;">'
+  const heading = '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'
     + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + color + '80;margin-bottom:3px;">' + sectionLabel + '</p>'
     + '<p style="font-size:17px;font-weight:800;color:' + color + ';line-height:1.3;">' + title + '</p>'
     + '</div>';
