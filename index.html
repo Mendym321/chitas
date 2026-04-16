@@ -5744,8 +5744,12 @@ function _renderTanyaContent() {
     // Hagahot (notes) — styled like Rashi in Chumash: smaller, indented, distinct border
     if (isHagahah) {
       const HE_SMALL = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
-      v += '<div style="margin:6px 0;padding:10px 14px;border-left:4px solid rgba(168,85,247,.6);background:rgba(168,85,247,.10);border-radius:0 8px 8px 0;">'
-        + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:8px;">הגהה · Note</p>';
+      v += '<div class="tanya-hagahah" style="margin:10px 0 14px;border-left:4px solid rgba(168,85,247,.6);background:rgba(168,85,247,.10);border-radius:0 10px 10px 0;overflow:hidden;">'
+        + '<div style="padding:8px 14px 6px;border-bottom:1px solid rgba(168,85,247,.18);display:flex;align-items:center;gap:6px;">'
+        + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.7)" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
+        + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,85,247,.65);">הגהה · Note</p>'
+        + '</div>'
+        + '<div style="padding:10px 14px 12px;">';
       if (lang === 'both' && en && he) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">';
         v += '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;">' + en + '</p>';
@@ -5756,7 +5760,7 @@ function _renderTanyaContent() {
       } else {
         v += '<p style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';font-size:15px;line-height:1.9;color:var(--t2);font-style:italic;">' + he + '</p>';
       }
-      v += '</div>';
+      v += '</div></div>';
       return;
     }
 
@@ -5953,19 +5957,21 @@ function _applyReaderFontSize(sectionId) {
     styleEl.id = 'reader-font-style';
     document.head.appendChild(styleEl);
   }
-  // Scale the main body text sizes. Hebrew text scales the same way.
-  // Line-height is set to 'normal' so CSS inherits naturally.
+  // Scale body text. Hagahah (.tanya-hagahah) is excluded from the main rules
+  // and scaled at a smaller base so it stays visually distinct from body text.
   styleEl.textContent = `
-    #native-reader-content p,
-    #native-reader-content div > p { font-size: calc(var(--rf-base, 15px) * ${scale}) !important; }
-    #native-reader-content [style*="font-size:15px"],
-    #native-reader-content [style*="font-size: 15px"] { font-size: ${Math.round(15 * scale)}px !important; }
-    #native-reader-content [style*="font-size:16px"],
-    #native-reader-content [style*="font-size: 16px"] { font-size: ${Math.round(16 * scale)}px !important; }
-    #native-reader-content [style*="font-size:18px"],
-    #native-reader-content [style*="font-size: 18px"] { font-size: ${Math.round(18 * scale)}px !important; }
-    #native-reader-content [style*="font-size:19px"],
-    #native-reader-content [style*="font-size: 19px"] { font-size: ${Math.round(19 * scale)}px !important; }
+    #native-reader-content p:not(.hagahah-text),
+    #native-reader-content div:not(.tanya-hagahah) > p { font-size: calc(var(--rf-base, 15px) * ${scale}) !important; }
+    #native-reader-content :not(.tanya-hagahah) > [style*="font-size:15px"],
+    #native-reader-content :not(.tanya-hagahah) > [style*="font-size: 15px"] { font-size: ${Math.round(15 * scale)}px !important; }
+    #native-reader-content :not(.tanya-hagahah) > [style*="font-size:16px"],
+    #native-reader-content :not(.tanya-hagahah) > [style*="font-size: 16px"] { font-size: ${Math.round(16 * scale)}px !important; }
+    #native-reader-content :not(.tanya-hagahah) > [style*="font-size:18px"],
+    #native-reader-content :not(.tanya-hagahah) > [style*="font-size: 18px"] { font-size: ${Math.round(18 * scale)}px !important; }
+    #native-reader-content :not(.tanya-hagahah) > [style*="font-size:19px"],
+    #native-reader-content :not(.tanya-hagahah) > [style*="font-size: 19px"] { font-size: ${Math.round(19 * scale)}px !important; }
+    .tanya-hagahah p { font-size: ${Math.round(13 * scale)}px !important; }
+    .tanya-hagahah [style*="font-size:15px"] { font-size: ${Math.round(15 * scale * 0.87)}px !important; }
   `;
 
   // Update button state to signal min/max reached
