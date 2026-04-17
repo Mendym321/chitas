@@ -5907,8 +5907,9 @@ function openChabadPanel(sectionId) {
       const contEl = document.getElementById('native-reader-content');
       if (loadEl) loadEl.style.display = 'none';
       if (contEl) contEl.style.display = 'block';
+      // Reset to top before rendering so we start clean, then restore saved pos
+      if (nativeEl) nativeEl.scrollTop = 0;
       renderFn();
-      // Restore scroll after browser has processed the new layout
       const savedPos = _getSavedScrollPos(sectionId);
       _restoreScrollAfterRender(sectionId, savedPos);
       if (sectionId === 'tehillim') _renderPersonalPsalms();
@@ -6062,6 +6063,7 @@ function _readerFontStep(delta) {
 function closeChabadPanel() {
   const reader = document.getElementById('native-reader');
   const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  // Save position before hiding
   if (reader && reader.scrollTop > 0) {
     if (sid) {
       if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
@@ -6071,11 +6073,10 @@ function closeChabadPanel() {
       }
     }
   }
-  // Cancel any pending throttled scroll save before resetting to 0
   if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
-  // Clear any pending rAF restore — panel is closing, we don't want it to fire
   window._pendingScrollRestore = {};
-  if (reader) reader.scrollTop = 0;
+  // Do NOT reset scrollTop here — it triggers onReaderScroll and can interfere
+  // with the save. The restore on next open handles positioning correctly.
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
   const fontCtrl = document.getElementById('reader-font-controls');
