@@ -4430,19 +4430,19 @@ function onReaderScroll() {
   const nearBottom = sentinelRect.top <= readerRect.bottom + 120;
   if (nearBottom) unlockMarkDone();
 
-  // Save scroll position — throttled to once per 400ms so we don't hammer localStorage
+  // Save scroll position — debounced 300ms
   if (_scrollSaveTimer) clearTimeout(_scrollSaveTimer);
-  if (scrollTop > 0) { // never save position 0 — that's the reset-on-close firing
-    _scrollSaveTimer = setTimeout(() => {
-      const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-      if (!sid) return;
-      if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
-        _saveScrollPos(sid, scrollTop);
-      } else if (typeof EXTRA_TRACK_DEFS !== 'undefined' && EXTRA_TRACK_DEFS[sid]) {
-        _saveScrollPos('extra_' + sid, scrollTop);
-      }
-    }, 400);
-  }
+  _scrollSaveTimer = setTimeout(() => {
+    const curScrollTop = reader.scrollTop;
+    if (curScrollTop <= 0) return; // don't overwrite a good position with 0
+    const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+    if (!sid) return;
+    if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
+      _saveScrollPos(sid, curScrollTop);
+    } else if (typeof EXTRA_TRACK_DEFS !== 'undefined' && EXTRA_TRACK_DEFS[sid]) {
+      _saveScrollPos('extra_' + sid, curScrollTop);
+    }
+  }, 300);
 }
 
 // ── SCROLL POSITION PERSISTENCE — robust, re-render safe ─────────────────────
@@ -4505,38 +4505,29 @@ function _pruneScrollKeys() {
 function _restoreScrollAfterRender(sectionId, targetPos) {
   if (!targetPos || targetPos <= 0) return;
 
-  // Register (overwrite any previous pending restore for this section)
+  // Register — supersedes any prior pending restore for this section
   window._pendingScrollRestore[sectionId] = targetPos;
 
-  const MAX_ATTEMPTS = 25; // ~1.5s at 60fps
+  // Two-step: one rAF to let the browser process the new innerHTML layout,
+  // then immediately set scrollTop. If the content isn't tall enough yet
+  // (rare — only on very slow devices), retry a few more times.
   let attempts = 0;
+  const MAX = 30;
 
   function attempt() {
-    // If a newer restore for a different section superseded us, stop
-    if (window._pendingScrollRestore[sectionId] !== targetPos) return;
+    if (window._pendingScrollRestore[sectionId] !== targetPos) return; // superseded
+    if (document.getElementById('chabad-panel')?.style.display === 'none') return; // panel closed
 
     const reader = document.getElementById('native-reader');
     if (!reader) return;
 
-    // Check the panel is actually showing this section
-    const activeSid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-    // For extra tracks the sectionId is like 'extra_sotah'
-    const panelOpen = document.getElementById('chabad-panel')?.style.display !== 'none';
-    if (!panelOpen) return; // panel closed — abandon
+    // Set it unconditionally — browser will clamp to scrollHeight if needed.
+    // If it doesn't land (content still painting), retry.
+    reader.scrollTop = targetPos;
 
-    const scrollHeight = reader.scrollHeight - reader.clientHeight;
-
-    if (scrollHeight >= targetPos || attempts >= MAX_ATTEMPTS) {
-      // Content is tall enough — apply the scroll
-      reader.scrollTop = targetPos;
-      // Verify it actually landed (browser may clamp) and clear the pending
-      setTimeout(() => {
-        if (Math.abs(reader.scrollTop - targetPos) < 5) {
-          delete window._pendingScrollRestore[sectionId];
-        }
-        // If it didn't land (content still growing?), the loop already stopped —
-        // that's acceptable, we tried our best.
-      }, 50);
+    if (Math.abs(reader.scrollTop - targetPos) < 2 || attempts >= MAX) {
+      // Landed or gave up
+      delete window._pendingScrollRestore[sectionId];
     } else {
       attempts++;
       requestAnimationFrame(attempt);
@@ -5911,16 +5902,15 @@ function openChabadPanel(sectionId) {
     const loaderFn = { chumash:_loadChumashNative, tehillim:_loadTehillimNative, tanya:_loadTanyaNative, rambam:_loadRambamNative }[sectionId];
 
     if (window[dataKey] && window._prefetched?.[sectionId] !== false) {
-      // Data already pre-fetched — render immediately, no loading state
+      // Data already pre-fetched — render immediately
       const loadEl = document.getElementById('native-reader-loading');
       const contEl = document.getElementById('native-reader-content');
       if (loadEl) loadEl.style.display = 'none';
-      if (contEl) { contEl.style.display = 'block'; contEl.innerHTML = ''; }
-      renderFn();
       if (contEl) contEl.style.display = 'block';
-      // Restore scroll — rAF loop handles slow paints
-      _restoreScrollAfterRender(sectionId, _getSavedScrollPos(sectionId));
-      // Tehillim: render personal psalms
+      renderFn();
+      // Restore scroll after browser has processed the new layout
+      const savedPos = _getSavedScrollPos(sectionId);
+      _restoreScrollAfterRender(sectionId, savedPos);
       if (sectionId === 'tehillim') _renderPersonalPsalms();
     } else {
       // Not pre-fetched yet — load normally
