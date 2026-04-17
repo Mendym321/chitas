@@ -4505,32 +4505,36 @@ function _pruneScrollKeys() {
 function _restoreScrollAfterRender(sectionId, targetPos) {
   if (!targetPos || targetPos <= 0) return;
 
-  // Register — supersedes any prior pending restore for this section
   window._pendingScrollRestore[sectionId] = targetPos;
 
-  // Two-step: one rAF to let the browser process the new innerHTML layout,
-  // then immediately set scrollTop. If the content isn't tall enough yet
-  // (rare — only on very slow devices), retry a few more times.
   let attempts = 0;
-  const MAX = 30;
+  const MAX = 60; // up to ~1s at 60fps
 
   function attempt() {
     if (window._pendingScrollRestore[sectionId] !== targetPos) return; // superseded
-    if (document.getElementById('chabad-panel')?.style.display === 'none') return; // panel closed
+    if (document.getElementById('chabad-panel')?.style.display === 'none') return; // closed
 
     const reader = document.getElementById('native-reader');
     if (!reader) return;
 
-    // Set it unconditionally — browser will clamp to scrollHeight if needed.
-    // If it doesn't land (content still painting), retry.
+    // Wait until the reader has actual layout (panel display:flex may not
+    // have been processed by the browser yet on first rAF)
+    if (reader.clientHeight === 0) {
+      attempts++;
+      if (attempts < MAX) requestAnimationFrame(attempt);
+      return;
+    }
+
     reader.scrollTop = targetPos;
 
-    if (Math.abs(reader.scrollTop - targetPos) < 2 || attempts >= MAX) {
-      // Landed or gave up
+    // Check if it landed — if scrollHeight is too small the browser clamps it
+    if (Math.abs(reader.scrollTop - targetPos) < 2) {
       delete window._pendingScrollRestore[sectionId];
-    } else {
+    } else if (attempts < MAX) {
       attempts++;
       requestAnimationFrame(attempt);
+    } else {
+      delete window._pendingScrollRestore[sectionId];
     }
   }
 
@@ -5907,11 +5911,12 @@ function openChabadPanel(sectionId) {
       const contEl = document.getElementById('native-reader-content');
       if (loadEl) loadEl.style.display = 'none';
       if (contEl) contEl.style.display = 'block';
-      // Reset to top before rendering so we start clean, then restore saved pos
       if (nativeEl) nativeEl.scrollTop = 0;
       renderFn();
+      // Use setTimeout(0) to push past the current sync frame so the browser
+      // has committed the panel's display:flex to layout before we try to scroll
       const savedPos = _getSavedScrollPos(sectionId);
-      _restoreScrollAfterRender(sectionId, savedPos);
+      setTimeout(() => _restoreScrollAfterRender(sectionId, savedPos), 0);
       if (sectionId === 'tehillim') _renderPersonalPsalms();
     } else {
       // Not pre-fetched yet — load normally
