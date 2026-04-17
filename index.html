@@ -4435,24 +4435,29 @@ function onReaderScroll() {
   if (scrollTop > 0) { // never save position 0 — that's the reset-on-close firing
     _scrollSaveTimer = setTimeout(() => {
       const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-      if (sid && (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya')) {
+      if (!sid) return;
+      if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
         _saveScrollPos(sid, scrollTop);
+      } else if (typeof EXTRA_TRACK_DEFS !== 'undefined' && EXTRA_TRACK_DEFS[sid]) {
+        _saveScrollPos('extra_' + sid, scrollTop);
       }
     }, 400);
   }
 }
 
-// ── SCROLL POSITION PERSISTENCE ───────────────────────────────────────────────
+// ── SCROLL POSITION PERSISTENCE — robust, re-render safe ─────────────────────
+// Central registry: any render that replaces innerHTML registers here so
+// the restore fires AFTER the new content has full height.
+window._pendingScrollRestore = {}; // { sectionId: targetPixels }
+
 function _scrollKey(sectionId) {
-  // Likkutei Torah: key by week so scroll persists Mon-Sat on the same maamer
   if (sectionId === 'extra_likkuteiTorah') {
     const d = new Date();
-    const day = d.getDay(); // 0=Sun
+    const day = d.getDay();
     const monday = new Date(d);
     monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
     return 'scroll_extra_likkuteiTorah_week_' + monday.toISOString().slice(0, 10);
   }
-  // All others: keyed by section + today's date — yesterday's position never restores today
   return 'scroll_' + sectionId + '_' + dateISO(new Date());
 }
 
@@ -4471,17 +4476,74 @@ function _getSavedScrollPos(sectionId) {
 }
 
 function _pruneScrollKeys() {
-  // Keep only the last 5 days of scroll keys — avoid localStorage bloat
   try {
     const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (k && k.startsWith('scroll_')) keys.push(k);
     }
-    if (keys.length <= 10) return; // chumash + rambam × 5 days = 10 max, prune if more
-    keys.sort(); // ISO date sorts chronologically
+    if (keys.length <= 10) return;
+    keys.sort();
     keys.slice(0, keys.length - 10).forEach(k => localStorage.removeItem(k));
   } catch(e) {}
+}
+
+/**
+ * Restore scroll after ANY innerHTML replacement.
+ *
+ * Problems with simple setTimeout:
+ *  - Content may not have its full height yet when the timer fires
+ *  - A subsequent re-render (e.g. enhance API) wipes the position
+ *
+ * Solution:
+ *  1. Register the target in window._pendingScrollRestore[sectionId]
+ *  2. Poll with rAF until scrollHeight is big enough to reach the target,
+ *     up to ~1.5s. Retry loop means it self-heals after re-renders too.
+ *  3. Any re-render calls this again, which just updates the target and
+ *     the loop re-runs — so enhance upgrades never leave us at position 0.
+ */
+function _restoreScrollAfterRender(sectionId, targetPos) {
+  if (!targetPos || targetPos <= 0) return;
+
+  // Register (overwrite any previous pending restore for this section)
+  window._pendingScrollRestore[sectionId] = targetPos;
+
+  const MAX_ATTEMPTS = 25; // ~1.5s at 60fps
+  let attempts = 0;
+
+  function attempt() {
+    // If a newer restore for a different section superseded us, stop
+    if (window._pendingScrollRestore[sectionId] !== targetPos) return;
+
+    const reader = document.getElementById('native-reader');
+    if (!reader) return;
+
+    // Check the panel is actually showing this section
+    const activeSid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+    // For extra tracks the sectionId is like 'extra_sotah'
+    const panelOpen = document.getElementById('chabad-panel')?.style.display !== 'none';
+    if (!panelOpen) return; // panel closed — abandon
+
+    const scrollHeight = reader.scrollHeight - reader.clientHeight;
+
+    if (scrollHeight >= targetPos || attempts >= MAX_ATTEMPTS) {
+      // Content is tall enough — apply the scroll
+      reader.scrollTop = targetPos;
+      // Verify it actually landed (browser may clamp) and clear the pending
+      setTimeout(() => {
+        if (Math.abs(reader.scrollTop - targetPos) < 5) {
+          delete window._pendingScrollRestore[sectionId];
+        }
+        // If it didn't land (content still growing?), the loop already stopped —
+        // that's acceptable, we tried our best.
+      }, 50);
+    } else {
+      attempts++;
+      requestAnimationFrame(attempt);
+    }
+  }
+
+  requestAnimationFrame(attempt);
 }
 
 let markDoneUnlocked = false;
@@ -4820,14 +4882,8 @@ async function _loadChumashNative(sectionId, silent) {
       if (contEl) contEl.style.display = 'block';
     }
 
-    // Restore saved scroll position for today
-    const saved = _getSavedScrollPos('chumash');
-    if (saved > 0) {
-      setTimeout(() => {
-        const reader = document.getElementById('native-reader');
-        if (reader) reader.scrollTop = saved;
-      }, 80);
-    }
+    // Restore scroll — robust rAF loop handles slow paints and re-renders
+    if (!silent) _restoreScrollAfterRender('chumash', _getSavedScrollPos('chumash'));
     return true;
 
   } catch(e) {
@@ -4838,7 +4894,9 @@ async function _loadChumashNative(sectionId, silent) {
 
 function _setChumashLang(lang) {
   localStorage.setItem('chitas_lang_chumash', lang);
+  const pos = document.getElementById('native-reader')?.scrollTop || 0;
   _renderChumashContent();
+  _restoreScrollAfterRender('chumash', pos);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -4923,7 +4981,7 @@ async function _loadRambamNative(sectionId, silent) {
       if (contEl) contEl.style.display = 'block';
     }
 
-    if (!silent) { const saved = _getSavedScrollPos('rambam'); if (saved > 0) setTimeout(() => { const r = document.getElementById('native-reader'); if (r) r.scrollTop = saved; }, 80); }
+    if (!silent) _restoreScrollAfterRender('rambam', _getSavedScrollPos('rambam'));
 
     return true;
 
@@ -5127,7 +5185,9 @@ function _renderRambamContent() {
 
 function _setRambamLang(lang) {
   localStorage.setItem('chitas_lang_rambam', lang);
+  const pos = document.getElementById('native-reader')?.scrollTop || 0;
   _renderRambamContent();
+  _restoreScrollAfterRender('rambam', pos);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -5244,17 +5304,10 @@ async function _loadTehillimNative(sectionId, silent) {
       if (contEl) contEl.style.display = 'block';
     }
 
-    // Restore scroll position AFTER personal psalms have loaded
-    // so the saved position is reachable even if it's in the personal section
+    // Restore scroll after personal psalms finish rendering too
     const _tehSaved = _getSavedScrollPos('tehillim');
     _renderPersonalPsalms().then(() => {
-      if (_tehSaved > 0) {
-        // Small delay for DOM to settle after personal psalms render
-        setTimeout(() => {
-          const reader = document.getElementById('native-reader');
-          if (reader) reader.scrollTop = _tehSaved;
-        }, 80);
-      }
+      _restoreScrollAfterRender('tehillim', _tehSaved);
     });
     return true;
 
@@ -5665,16 +5718,13 @@ async function _loadTanyaNative(sectionId, silent) {
         const markBtn = document.getElementById('chabad-mark-btn');
         if (panel?.style.display !== 'none' && markBtn?.dataset?.sectionId === 'tanya') {
           _renderTanyaContent();
+          // Re-register restore so rAF loop picks up the new content height
+          _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
         }
       });
 
-    const saved = _getSavedScrollPos('tanya');
-    if (saved > 0) {
-      setTimeout(() => {
-        const reader = document.getElementById('native-reader');
-        if (reader) reader.scrollTop = saved;
-      }, 80);
-    }
+    // Restore scroll — rAF loop handles both slow paints and the enhance re-render
+    _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
     return true;
 
   } catch(e) {
@@ -5810,12 +5860,16 @@ function _renderTanyaContent() {
 function _toggleTanyaLit() {
   const on = localStorage.getItem('chitas_tanya_lit') !== 'off';
   localStorage.setItem('chitas_tanya_lit', on ? 'off' : 'on');
+  const pos = document.getElementById('native-reader')?.scrollTop || 0;
   _renderTanyaContent();
+  _restoreScrollAfterRender('tanya', pos);
 }
 
 function _setTanyaLang(lang) {
   localStorage.setItem('chitas_lang_tanya', lang);
+  const pos = document.getElementById('native-reader')?.scrollTop || 0;
   _renderTanyaContent();
+  _restoreScrollAfterRender('tanya', pos);
 }
 
 
@@ -5864,12 +5918,8 @@ function openChabadPanel(sectionId) {
       if (contEl) { contEl.style.display = 'block'; contEl.innerHTML = ''; }
       renderFn();
       if (contEl) contEl.style.display = 'block';
-      // Restore scroll
-      const saved = _getSavedScrollPos(sectionId);
-      if (saved > 0) setTimeout(() => {
-        const r = document.getElementById('native-reader');
-        if (r) r.scrollTop = saved;
-      }, 40);
+      // Restore scroll — rAF loop handles slow paints
+      _restoreScrollAfterRender(sectionId, _getSavedScrollPos(sectionId));
       // Tehillim: render personal psalms
       if (sectionId === 'tehillim') _renderPersonalPsalms();
     } else {
@@ -6033,6 +6083,8 @@ function closeChabadPanel() {
   }
   // Cancel any pending throttled scroll save before resetting to 0
   if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
+  // Clear any pending rAF restore — panel is closing, we don't want it to fire
+  window._pendingScrollRestore = {};
   if (reader) reader.scrollTop = 0;
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
@@ -7459,7 +7511,9 @@ function _rerenderDaf() {
 
 function _setDafLang(l) {
   localStorage.setItem('chitas_lang_extra_dafYomi', l);
+  const pos = document.getElementById('native-reader')?.scrollTop || 0;
   _rerenderDaf();
+  _restoreScrollAfterRender('extra_dafYomi', pos);
 }
 
 function _toggleDafComm(val) {
@@ -7468,7 +7522,9 @@ function _toggleDafComm(val) {
   if (commSet.has(val)) commSet.delete(val);
   else commSet.add(val);
   localStorage.setItem('chitas_daf_commentary', [...commSet].join(','));
+  const pos = document.getElementById('native-reader')?.scrollTop || 0;
   _rerenderDaf();
+  _restoreScrollAfterRender('extra_dafYomi', pos);
 }
 
 
@@ -7917,13 +7973,7 @@ function _flatHtml(x) {
 
 // ── Scroll position for extra tracks (persisted by section + date) ─────────────
 function _restoreExtraScroll(id) {
-  const saved = _getSavedScrollPos('extra_' + id);
-  if (saved > 0) {
-    setTimeout(() => {
-      const reader = document.getElementById('native-reader');
-      if (reader) reader.scrollTop = saved;
-    }, 80);
-  }
+  _restoreScrollAfterRender('extra_' + id, _getSavedScrollPos('extra_' + id));
   unlockMarkDone(); // extra tracks unlock immediately
 }
 
