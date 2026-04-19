@@ -4504,41 +4504,17 @@ function _pruneScrollKeys() {
  */
 function _restoreScrollAfterRender(sectionId, targetPos) {
   if (!targetPos || targetPos <= 0) return;
-
+  // Cancel any previous pending restore for this section
   window._pendingScrollRestore[sectionId] = targetPos;
-
-  let attempts = 0;
-  const MAX = 60; // up to ~1s at 60fps
-
-  function attempt() {
-    if (window._pendingScrollRestore[sectionId] !== targetPos) return; // superseded
-    if (document.getElementById('chabad-panel')?.style.display === 'none') return; // closed
-
+  requestAnimationFrame(() => {
+    // If superseded by a newer call, stop
+    if (window._pendingScrollRestore[sectionId] !== targetPos) return;
     const reader = document.getElementById('native-reader');
     if (!reader) return;
-
-    // Wait until the reader has actual layout (panel display:flex may not
-    // have been processed by the browser yet on first rAF)
-    if (reader.clientHeight === 0) {
-      attempts++;
-      if (attempts < MAX) requestAnimationFrame(attempt);
-      return;
-    }
-
+    if (document.getElementById('chabad-panel')?.style.display === 'none') return;
     reader.scrollTop = targetPos;
-
-    // Check if it landed — if scrollHeight is too small the browser clamps it
-    if (Math.abs(reader.scrollTop - targetPos) < 2) {
-      delete window._pendingScrollRestore[sectionId];
-    } else if (attempts < MAX) {
-      attempts++;
-      requestAnimationFrame(attempt);
-    } else {
-      delete window._pendingScrollRestore[sectionId];
-    }
-  }
-
-  requestAnimationFrame(attempt);
+    delete window._pendingScrollRestore[sectionId];
+  });
 }
 
 let markDoneUnlocked = false;
@@ -5890,9 +5866,14 @@ function openChabadPanel(sectionId) {
 
   if (sectionId === 'chumash' || sectionId === 'rambam' || sectionId === 'tehillim' || sectionId === 'tanya') {
     iframeEl.style.display = 'none'; iframeEl.src = '';
-    // Clear stale content from previous section (e.g. translation hint from Chumash)
-    const staleContent = document.getElementById('native-reader-content');
-    if (staleContent) staleContent.innerHTML = '';
+    // Only wipe stale content when switching between different sections.
+    // Reopening the same section: renderFn() overwrites innerHTML anyway,
+    // and wiping first collapses scrollHeight which breaks scroll restore.
+    const prevSectionId = document.getElementById('native-reader-content')?.dataset?.sectionId;
+    if (prevSectionId && prevSectionId !== sectionId) {
+      const staleContent = document.getElementById('native-reader-content');
+      if (staleContent) staleContent.innerHTML = '';
+    }
     nativeEl.style.display = 'flex';
     if (progWrap) progWrap.style.display = 'block';
     document.getElementById('chabad-panel-extlink').style.display = 'none';
@@ -5911,12 +5892,9 @@ function openChabadPanel(sectionId) {
       const contEl = document.getElementById('native-reader-content');
       if (loadEl) loadEl.style.display = 'none';
       if (contEl) contEl.style.display = 'block';
-      if (nativeEl) nativeEl.scrollTop = 0;
       renderFn();
-      // Use setTimeout(0) to push past the current sync frame so the browser
-      // has committed the panel's display:flex to layout before we try to scroll
-      const savedPos = _getSavedScrollPos(sectionId);
-      setTimeout(() => _restoreScrollAfterRender(sectionId, savedPos), 0);
+      if (contEl) contEl.dataset.sectionId = sectionId;
+      _restoreScrollAfterRender(sectionId, _getSavedScrollPos(sectionId));
       if (sectionId === 'tehillim') _renderPersonalPsalms();
     } else {
       // Not pre-fetched yet — load normally
@@ -5926,8 +5904,11 @@ function openChabadPanel(sectionId) {
           iframeEl.style.display = 'flex'; iframeEl.src = s.chabadUrl;
           if (progWrap) progWrap.style.display = 'none';
           document.getElementById('chabad-panel-extlink').style.display = 'flex';
-        } else if (sectionId === 'tehillim') {
-          _renderPersonalPsalms();
+        } else {
+          // Stamp sectionId so next open knows what content is loaded
+          const contEl2 = document.getElementById('native-reader-content');
+          if (contEl2) contEl2.dataset.sectionId = sectionId;
+          if (sectionId === 'tehillim') _renderPersonalPsalms();
         }
       });
     }
