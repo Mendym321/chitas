@@ -8590,17 +8590,22 @@ const _LS_PARSHA_MAP = {
   'Shemot':'shemos','Vaera':'vaeira','Bo':'bo','Beshalach':'beshalach',
   'Yitro':'yisro','Mishpatim':'mishpatim','Terumah':'terumah','Tetzaveh':'tetzaveh',
   'Ki Tisa':'ki_sisa','Vayakhel':'vayakhel','Pekudei':'pekudei',
-  'Vayakhel-Pekudei':'vayakhel',
+  'Vayakhel-Pekudei':['vayakhel','pekudei'],
   'Vayikra':'vayikra','Tzav':'tzav','Shemini':'shmini','Tazria':'tazria','Metzora':'metzora',
-  'Tazria-Metzora':'tazria','Acharei Mot':'acharei_mos','Kedoshim':'kedoshim',
-  'Acharei Mot-Kedoshim':'acharei_mos','Emor':'emor','Behar':'behar','Bechukotai':'bechukosai',
-  'Behar-Bechukotai':'behar',
+  'Tazria-Metzora':['tazria','metzora'],
+  'Acharei Mot':'acharei_mos','Kedoshim':'kedoshim',
+  'Acharei Mot-Kedoshim':['acharei_mos','kedoshim'],
+  'Emor':'emor','Behar':'behar','Bechukotai':'bechukosai',
+  'Behar-Bechukotai':['behar','bechukosai'],
   'Bamidbar':'bamidbar','Nasso':'naso',"Beha'alotcha":'behaaloscha','Shelach':'shlach',
-  'Korach':'korach','Chukat':'chukas','Balak':'balak','Chukat-Balak':'chukas',
-  'Pinchas':'pinchas','Matot':'matos','Masei':'masei','Matot-Masei':'matos',
+  'Korach':'korach','Chukat':'chukas','Balak':'balak',
+  'Chukat-Balak':['chukas','balak'],
+  'Pinchas':'pinchas','Matot':'matos','Masei':'masei',
+  'Matot-Masei':['matos','masei'],
   'Devarim':'devarim','Vaetchanan':'vaeschanan','Eikev':'eikev',"Re'eh":'reeh',
   'Shoftim':'shoftim','Ki Teitzei':'ki_seitzei','Ki Tavo':'ki_savo',
-  'Nitzavim':'nitzavim','Vayeilech':'vayelech','Nitzavim-Vayeilech':'nitzavim',
+  'Nitzavim':'nitzavim','Vayeilech':'vayelech',
+  'Nitzavim-Vayeilech':['nitzavim','vayelech'],
   'Haazinu':'haazinu','Vezot Haberakhah':'vzos_habrachah',
 };
 const _LS_PARSHA_HEB = {
@@ -8619,27 +8624,44 @@ const _LS_PARSHA_HEB = {
   'nitzavim':'נצבים','vayelech':'וילך','haazinu':'האזינו','vzos_habrachah':'וזאת הברכה',
 };
 const _LS_GEM = ['','א','ב','ג','ד','ה','ו','ז','ח','ט','י','יא','יב','יג','יד','טו','טז','יז','יח','יט','כ','כא','כב','כג','כד','כה','כו','כז','כח','כט','ל','לא','לב','לג','לד','לה','לו','לז','לח','לט'];
+const _LS_SETS = [
+  {id:'1-2',heb:'א–ב',en:'Vols. 1–2'},
+  {id:'3-4',heb:'ג–ד',en:'Vols. 3–4'},
+  {id:'5-9',heb:'ה–ט',en:'Vols. 5–9'},
+  {id:'10-14',heb:'י–יד',en:'Vols. 10–14'},
+  {id:'15-19',heb:'טו–יט',en:'Vols. 15–19'},
+  {id:'20-24',heb:'כ–כד',en:'Vols. 20–24'},
+  {id:'25-29',heb:'כה–כט',en:'Vols. 25–29'},
+  {id:'30-34',heb:'ל–לד',en:'Vols. 30–34'},
+  {id:'35-39',heb:'לה–לט',en:'Vols. 35–39'},
+];
 
-function _lsParshaKey(parshaEn) { return _LS_PARSHA_MAP[parshaEn] || null; }
-function _lsParshaHeb(parshaEn) {
-  const key = _lsParshaKey(parshaEn);
-  return key ? (_LS_PARSHA_HEB[key] || parshaEn) : parshaEn;
+// Returns array of dach.dev parsha keys for the current week (handles double parshas)
+function _lsParshaKeys(parshaEn) {
+  const val = _LS_PARSHA_MAP[parshaEn];
+  if (!val) return [];
+  return Array.isArray(val) ? val : [val];
 }
+function _lsParshaHeb(parshaEn) {
+  const keys = _lsParshaKeys(parshaEn);
+  return keys.map(k => _LS_PARSHA_HEB[k] || k).join(' · ');
+}
+
+// ── User preferences (persisted in localStorage) ──────────────────────────────
+function _lsGetMode() { try { return localStorage.getItem('ls_mode') || 'all'; } catch { return 'all'; } }
+function _lsGetSet()  { try { return localStorage.getItem('ls_set')  || '1-2'; } catch { return '1-2'; } }
+function _lsSetMode(m) { try { localStorage.setItem('ls_mode', m); } catch {} }
+function _lsSetSet(s)  { try { localStorage.setItem('ls_set', s);  } catch {} }
 
 // ── State ──────────────────────────────────────────────────────────────────────
-let _lsSichos   = [];   // current sicha list
-let _lsCurIdx   = 0;    // which sicha is open
-let _lsFnMap    = {};   // footnote num → text for open sicha
-let _lsFontStep = 1;    // 0=small,1=med,2=large
-const _LS_FONT_SIZES = [18, 22, 27];
+let _lsSichos    = [];
+let _lsCurIdx    = 0;
+let _lsFnMap     = {};
+let _lsInReader  = false;   // true when a sicha is open (vs. sicha list)
 let _lsScrollTimer = null;
 
-function _lsSaveScroll(cid, pos) {
-  try { localStorage.setItem('ls_s_' + cid, String(Math.round(pos))); } catch{}
-}
-function _lsLoadScroll(cid) {
-  try { return parseInt(localStorage.getItem('ls_s_' + cid) || '0') || 0; } catch { return 0; }
-}
+function _lsSaveScroll(cid, pos) { try { localStorage.setItem('ls_s_' + cid, String(Math.round(pos))); } catch {} }
+function _lsLoadScroll(cid)      { try { return parseInt(localStorage.getItem('ls_s_' + cid) || '0') || 0; } catch { return 0; } }
 
 // ── Firebase (dach.dev) ───────────────────────────────────────────────────────
 let _lsDb = null;
@@ -8654,74 +8676,121 @@ async function _getLsDb() {
 }
 async function _lsGetDoc(path) {
   const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  const db = await _getLsDb();
-  return getDoc(doc(db, path));
+  return getDoc(doc(await _getLsDb(), path));
 }
 
-// ── Sicha list panel ───────────────────────────────────────────────────────────
-// Runs when user taps LS extra track card — shows sicha list for this week's parsha
-async function _openLSSichaList() {
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const parshaEn = getParshaForDate(d);
-  const parshaKey = parshaEn ? _lsParshaKey(parshaEn) : null;
-  const parshaHeb = parshaEn ? _lsParshaHeb(parshaEn) : 'השבוע';
+// ── Override openExtraReader for LS to intercept X and Mark Done behaviour ────
+// When LS is active, X from sicha reader → back to sicha list (not home)
+// When LS sicha list is active, X → close panel (home) — normal behaviour
+const _origCloseChabadPanel = closeChabadPanel;
+function closeChabadPanel() {
+  if (_lsInReader) {
+    // X tapped while reading a sicha → go back to sicha list
+    _lsInReader = false;
+    _lsBackToList();
+    return;
+  }
+  // Otherwise normal close
+  document.getElementById('ls-nav-bar')?.remove();
+  document.getElementById('ls-fn-popup')?.remove();
+  _origCloseChabadPanel.apply(this, arguments);
+}
 
-  // Update panel header
+// ── Open LS (called from openExtraReader) ──────────────────────────────────────
+async function _openLSSichaList() {
+  _lsInReader = false;
+  document.getElementById('ls-nav-bar')?.remove();
+
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const parshaEn  = getParshaForDate(d);
+  const parshaKeys = parshaEn ? _lsParshaKeys(parshaEn) : [];
+  const parshaHeb  = parshaEn ? _lsParshaHeb(parshaEn) : 'השבוע';
+  const mode = _lsGetMode();
+  const setId = _lsGetSet();
+
+  // Panel header
   document.getElementById('chabad-panel-title').textContent = 'לקוטי שיחות';
   document.getElementById('chabad-panel-sub').textContent = parshaHeb + ' — טוען…';
 
-  // Render sicha list into the native reader content area
+  // Hide mark-done (irrelevant at list level)
+  const markBtn = document.getElementById('chabad-mark-btn');
+  if (markBtn) markBtn.style.display = 'none';
+
   const contEl = document.getElementById('native-reader-content');
   const loadEl = document.getElementById('native-reader-loading');
   if (loadEl) loadEl.style.display = 'none';
   if (contEl) { contEl.style.display = 'block'; contEl.dataset.sectionId = 'likkuteiSichos'; }
 
-  if (!parshaKey) {
-    if (contEl) contEl.innerHTML = '<p style="padding:24px;color:var(--t3);text-align:center;">Parsha not available for this date.</p>';
+  if (!parshaKeys.length) {
+    if (contEl) contEl.innerHTML = '<p style="padding:24px;color:var(--t3);text-align:center;">Parsha not available.</p>';
     return;
   }
 
   if (contEl) contEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;padding:60px 20px;"><div class="spinner" style="border-top-color:#8B5CF6;"></div></div>';
 
   try {
-    const snap = await _lsGetDoc(`books/likkuteiSichos/tocByParsha/${parshaKey}`);
-    if (!snap.exists()) throw new Error('No sichos found for this parsha yet.');
+    // Fetch all parsha keys (double parshas get merged)
+    const allItems = [];
+    const seenIds  = new Set();
+    for (const key of parshaKeys) {
+      const snap = await _lsGetDoc('books/likkuteiSichos/tocByParsha/' + key);
+      if (!snap.exists()) continue;
+      Object.entries(snap.data())
+        .sort(([a],[b]) => parseInt(a) - parseInt(b))
+        .map(([,v]) => v)
+        .filter(it => it && it.title)
+        .forEach(it => {
+          const uid = it.page + '_' + it.vol;
+          if (!seenIds.has(uid)) { seenIds.add(uid); allItems.push(it); }
+        });
+    }
+    allItems.sort((a,b) => (a.vol||0)-(b.vol||0) || (a.page||0)-(b.page||0));
 
-    _lsSichos = Object.entries(snap.data())
-      .sort(([a],[b]) => parseInt(a) - parseInt(b))
-      .map(([,v]) => v).filter(it => it && it.title)
-      .sort((a,b) => (a.vol||0)-(b.vol||0) || (a.page||0)-(b.page||0));
+    // Filter by set if in set mode
+    let items = allItems;
+    if (mode === 'set') {
+      const [lo,hi] = setId.split('-').map(Number);
+      items = allItems.filter(it => (it.vol||0) >= lo && (it.vol||0) <= hi);
+    }
 
-    document.getElementById('chabad-panel-sub').textContent = parshaHeb + ' · ' + _lsSichos.length + ' שיחות';
+    _lsSichos = items;
+
+    const countLabel = items.length + ' שיחות' + (mode === 'set' ? ' · חלקים ' + (_LS_SETS.find(s=>s.id===setId)?.heb||setId) : '');
+    document.getElementById('chabad-panel-sub').textContent = parshaHeb + ' · ' + countLabel;
 
     // Group by volume
     const byVol = {};
-    _lsSichos.forEach(it => { const v = it.vol; if (!byVol[v]) byVol[v] = []; byVol[v].push(it); });
+    items.forEach(it => { const v = it.vol; if(!byVol[v]) byVol[v]=[]; byVol[v].push(it); });
 
-    let html = '<div style="padding:12px 16px 60px;">';
+    const setBtn = '<button onclick="_lsOpenSetPicker()" style="display:flex;align-items:center;gap:6px;margin:0 16px 14px;padding:9px 14px;border-radius:10px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);color:#8B5CF6;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;width:calc(100% - 32px);">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>'
+      + (mode === 'set' ? 'Following: ' + (_LS_SETS.find(s=>s.id===setId)?.en||setId) + '  ·  Change' : 'All volumes  ·  Follow a set →')
+      + '</button>';
+
+    let rowsHtml = '';
     Object.keys(byVol).map(Number).sort((a,b)=>a-b).forEach(v => {
-      html += '<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);padding:14px 0 8px;border-bottom:1px solid var(--border);margin-bottom:9px;">חלק ' + _LS_GEM[v] + '</div>';
+      rowsHtml += '<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);padding:14px 0 8px;border-bottom:1px solid var(--border);margin-bottom:9px;">חלק ' + _LS_GEM[v] + '</div>';
       byVol[v].forEach((it, i) => {
-        const cid = it.page + '_' + it.vol;
-        const saved = _lsLoadScroll(cid);
-        const inProgress = saved > 30;
-        const rowIdx = _lsSichos.indexOf(it);
-        html += '<div onclick="_lsOpenReader(' + rowIdx + ')" style="background:var(--card);border:1px solid ' + (inProgress ? 'rgba(139,92,246,.4)' : 'var(--border)') + ';border-radius:12px;padding:12px 13px;margin-bottom:7px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;position:relative;overflow:hidden;" onmousedown="this.style.background=\'var(--hi)\'" onmouseup="this.style.background=\'var(--card)\'" ontouchstart="this.style.background=\'var(--hi)\'" ontouchend="this.style.background=\'var(--card)\'">'
-          + (inProgress ? '<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#8B5CF6;border-radius:12px 0 0 12px;"></div>' : '')
-          + '<div style="width:22px;height:22px;border-radius:6px;flex-shrink:0;background:' + (inProgress ? 'rgba(139,92,246,.12)' : 'var(--surface)') + ';border:1px solid ' + (inProgress ? 'rgba(139,92,246,.3)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:' + (inProgress ? '#8B5CF6' : 'var(--t3)') + ';margin-top:2px;direction:ltr;">' + (inProgress ? '▶' : i+1) + '</div>'
+        const cid      = it.page + '_' + it.vol;
+        const saved    = _lsLoadScroll(cid);
+        const inProg   = saved > 50;
+        const rowIdx   = items.indexOf(it);
+        const borderCol = inProg ? 'rgba(139,92,246,.4)' : 'var(--border)';
+        rowsHtml += '<div onclick="_lsOpenReader(' + rowIdx + ')" style="background:var(--card);border:1px solid ' + borderCol + ';border-radius:12px;padding:12px 13px;margin-bottom:7px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;position:relative;overflow:hidden;" onmousedown="this.style.background=\'var(--hi)\'" onmouseup="this.style.background=\'var(--card)\'" ontouchstart="this.style.background=\'var(--hi)\'" ontouchend="this.style.background=\'var(--card)\'">'
+          + (inProg ? '<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#8B5CF6;border-radius:12px 0 0 12px;"></div>' : '')
+          + '<div style="width:22px;height:22px;border-radius:6px;flex-shrink:0;background:' + (inProg ? 'rgba(139,92,246,.12)' : 'var(--surface)') + ';border:1px solid ' + (inProg ? 'rgba(139,92,246,.3)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:' + (inProg ? '#8B5CF6' : 'var(--t3)') + ';margin-top:2px;direction:ltr;">' + (inProg ? '▶' : i+1) + '</div>'
           + '<div style="flex:1;min-width:0;">'
           + '<div style="font-family:\'Frank Ruhl Libre\',serif;font-size:14px;color:var(--t1);line-height:1.4;direction:rtl;text-align:right;">' + it.title + '</div>'
           + '<div style="font-size:10px;color:var(--t3);margin-top:3px;direction:ltr;">Vol. ' + it.vol + ' · pg. ' + it.page + '</div>'
           + (it.summary ? '<div style="font-size:11px;color:var(--t3);margin-top:3px;line-height:1.45;direction:rtl;text-align:right;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + it.summary + '</div>' : '')
-          + (inProgress ? '<div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(139,92,246,.1);color:#8B5CF6;margin-top:5px;display:inline-block;">▶ In progress</div>' : '')
+          + (inProg ? '<div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(139,92,246,.1);color:#8B5CF6;margin-top:5px;display:inline-block;">▶ In progress</div>' : '')
           + '</div>'
           + '</div>';
       });
     });
-    html += '</div>';
-    html += '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 
-    if (contEl) contEl.innerHTML = html;
+    if (contEl) contEl.innerHTML = '<div style="padding:14px 16px 60px;">' + setBtn + rowsHtml + '</div>'
+      + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
     unlockMarkDone();
 
   } catch(e) {
@@ -8730,43 +8799,144 @@ async function _openLSSichaList() {
   }
 }
 
-// ── Open individual sicha reader ───────────────────────────────────────────────
+// ── Set picker ─────────────────────────────────────────────────────────────────
+function _lsOpenSetPicker() {
+  const mode   = _lsGetMode();
+  const setId  = _lsGetSet();
+
+  const setButtons = _LS_SETS.map(s =>
+    '<button onclick="_lsPickSet(\'' + s.id + '\',this)" style="padding:10px 8px;border-radius:10px;background:' + (mode==='set'&&setId===s.id ? 'rgba(139,92,246,.15)' : 'var(--card)') + ';border:1.5px solid ' + (mode==='set'&&setId===s.id ? '#8B5CF6' : 'var(--border)') + ';cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;color:' + (mode==='set'&&setId===s.id ? '#8B5CF6' : 'var(--t1)') + ';">'
+    + '<div style="font-family:\'Frank Ruhl Libre\',serif;font-size:15px;margin-bottom:2px;">' + s.heb + '</div>'
+    + '<div style="font-size:10px;color:var(--t3);font-weight:600;">' + s.en + '</div>'
+    + '</button>'
+  ).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'ls-set-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.onclick = e => { if(e.target===modal) modal.remove(); };
+  modal.innerHTML = '<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px 20px 36px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'
+    + '<p style="font-size:17px;font-weight:800;color:var(--t1);">Choose mode</p>'
+    + '<button onclick="document.getElementById(\'ls-set-modal\').remove()" style="width:30px;height:30px;border-radius:50%;background:var(--surface);border:none;font-size:18px;cursor:pointer;color:var(--t2);">×</button>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;">'
+    + '<button onclick="_lsPickMode(\'all\')" id="ls-mode-all" style="padding:12px;border-radius:12px;background:' + (mode==='all'?'rgba(139,92,246,.12)':'var(--card)') + ';border:1.5px solid ' + (mode==='all'?'#8B5CF6':'var(--border)') + ';cursor:pointer;font-family:inherit;text-align:left;">'
+    + '<div style="font-size:13px;font-weight:800;color:' + (mode==='all'?'#8B5CF6':'var(--t1)') + ';margin-bottom:3px;">All volumes</div>'
+    + '<div style="font-size:11px;color:var(--t3);line-height:1.4;">See all sichos for the parsha each week</div>'
+    + '</button>'
+    + '<button onclick="_lsPickMode(\'set\')" id="ls-mode-set" style="padding:12px;border-radius:12px;background:' + (mode==='set'?'rgba(139,92,246,.12)':'var(--card)') + ';border:1.5px solid ' + (mode==='set'?'#8B5CF6':'var(--border)') + ';cursor:pointer;font-family:inherit;text-align:left;">'
+    + '<div style="font-size:13px;font-weight:800;color:' + (mode==='set'?'#8B5CF6':'var(--t1)') + ';margin-bottom:3px;">Follow a set</div>'
+    + '<div style="font-size:11px;color:var(--t3);line-height:1.4;">Pick volumes, learn that set each week</div>'
+    + '</button>'
+    + '</div>'
+    + '<p style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Choose set</p>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:20px;">' + setButtons + '</div>'
+    + '<button onclick="_lsConfirmSetPicker()" style="width:100%;padding:14px;border-radius:14px;background:#8B5CF6;border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">Save →</button>'
+    + '</div>';
+  document.body.appendChild(modal);
+}
+
+function _lsPickMode(m) {
+  _lsSetMode(m);
+  // Update button styles in modal
+  const allBtn = document.getElementById('ls-mode-all');
+  const setBtn = document.getElementById('ls-mode-set');
+  if (allBtn) { allBtn.style.background = m==='all'?'rgba(139,92,246,.12)':'var(--card)'; allBtn.style.borderColor = m==='all'?'#8B5CF6':'var(--border)'; allBtn.querySelector('div').style.color = m==='all'?'#8B5CF6':'var(--t1)'; }
+  if (setBtn) { setBtn.style.background = m==='set'?'rgba(139,92,246,.12)':'var(--card)'; setBtn.style.borderColor = m==='set'?'#8B5CF6':'var(--border)'; setBtn.querySelector('div').style.color = m==='set'?'#8B5CF6':'var(--t1)'; }
+}
+
+function _lsPickSet(id, btn) {
+  _lsSetSet(id);
+  _lsPickMode('set'); // auto-switch to set mode when a set is chosen
+  // Update set button styles
+  document.querySelectorAll('#ls-set-modal button[onclick^="_lsPickSet"]').forEach(b => {
+    const selected = b === btn;
+    b.style.background     = selected ? 'rgba(139,92,246,.15)' : 'var(--card)';
+    b.style.borderColor    = selected ? '#8B5CF6' : 'var(--border)';
+    b.style.color          = selected ? '#8B5CF6' : 'var(--t1)';
+  });
+}
+
+function _lsConfirmSetPicker() {
+  document.getElementById('ls-set-modal')?.remove();
+  // Reload sicha list with new settings
+  _openLSSichaList();
+}
+
+// ── Open sicha reader ─────────────────────────────────────────────────────────
 async function _lsOpenReader(idx) {
-  _lsCurIdx = idx;
+  _lsCurIdx  = idx;
+  _lsInReader = true;
   const item = _lsSichos[idx];
   if (!item) return;
 
-  const cid = item.page + '_' + item.vol;
-  const contEl = document.getElementById('native-reader-content');
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const parshaEn = getParshaForDate(d);
+  const cid       = item.page + '_' + item.vol;
+  const d         = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const parshaEn  = getParshaForDate(d);
   const parshaHeb = parshaEn ? _lsParshaHeb(parshaEn) : '';
 
   document.getElementById('chabad-panel-title').textContent = item.title || 'שיחה';
-  document.getElementById('chabad-panel-sub').textContent = parshaHeb + ' · חלק ' + (_LS_GEM[item.vol]||item.vol);
+  document.getElementById('chabad-panel-sub').textContent   = parshaHeb + ' · חלק ' + (_LS_GEM[item.vol]||item.vol);
 
+  // Show/configure mark-done for this sicha (marks just this sicha read)
+  const markBtn   = document.getElementById('chabad-mark-btn');
+  const markLabel = document.getElementById('chabad-mark-label');
+  const markXp    = document.getElementById('chabad-mark-xp');
+  if (markBtn) {
+    markBtn.style.display  = 'flex';
+    markBtn.style.background = '#8B5CF6';
+    markBtn.style.border   = 'none';
+    markBtn.style.color    = '#fff';
+    markBtn.style.cursor   = 'pointer';
+    markBtn.dataset.sectionId = 'likkuteiSichos';
+    if (markLabel) markLabel.textContent = 'Sicha read ✓';
+    if (markXp)    markXp.textContent    = '';
+    markBtn.onclick = () => {
+      // Mark this sicha as read by saving a "done" scroll position
+      _lsSaveScroll(cid, -1); // -1 = done sentinel
+      if (markBtn) {
+        markBtn.style.background = 'rgba(29,185,84,.15)';
+        markBtn.style.border     = '1px solid rgba(29,185,84,.4)';
+        markBtn.style.color      = '#1DB954';
+        markBtn.style.cursor     = 'default';
+        if (markLabel) markLabel.textContent = '✓ Read';
+        markBtn.onclick = null;
+      }
+      fire('Sicha marked read', 'xp');
+      // Do NOT close panel — user stays in reader
+    };
+  }
+
+  // Progress bar — purple for LS
+  const progWrap = document.getElementById('reader-progress-wrap');
+  const progBar  = document.getElementById('reader-progress-bar');
+  if (progWrap) progWrap.style.display = 'block';
+  if (progBar)  progBar.style.background = '#8B5CF6';
+
+  // Build sicha nav bar
+  _lsRenderNavBar(parshaHeb, idx);
+
+  const contEl = document.getElementById('native-reader-content');
   if (contEl) {
     contEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;padding:60px 20px;"><div class="spinner" style="border-top-color:#8B5CF6;"></div></div>';
     contEl.dataset.sectionId = 'likkuteiSichos';
   }
 
-  // Show/update nav bar
-  _lsRenderNavBar(parshaHeb);
-
   try {
-    const snap = await _lsGetDoc(`books/likkuteiSichos/sichos/${cid}`);
+    const snap = await _lsGetDoc('books/likkuteiSichos/sichos/' + cid);
     if (!snap.exists()) throw new Error('Sicha not found.');
     const data = snap.data();
 
-    const fns = _lsParseFn(data.footnotes || '');
-    _lsFnMap = {};
+    const fns  = _lsParseFn(data.footnotes || '');
+    _lsFnMap   = {};
     fns.forEach(f => _lsFnMap[f.num] = f.text);
 
     const body = _lsLinkify(data.mainText || '');
     const fnSection = fns.length
       ? '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">'
         + '<div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">הערות (' + fns.length + ')</div>'
-        + fns.map(f => '<div id="ls-fn-' + f.num + '" style="display:flex;gap:8px;align-items:flex-start;padding:9px 11px;background:var(--surface);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;">'
+        + fns.map(f => '<div id="ls-fn-' + f.num + '" style="display:flex;gap:8px;padding:9px 11px;background:var(--surface);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;">'
             + '<div style="font-family:\'DM Sans\';font-size:10px;font-weight:800;color:var(--gold);flex-shrink:0;direction:ltr;">' + f.num + '</div>'
             + '<div style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:13px;line-height:1.55;color:var(--t3);direction:rtl;text-align:right;flex:1;">' + f.text + '</div>'
             + '</div>').join('')
@@ -8778,29 +8948,23 @@ async function _lsOpenReader(idx) {
       + '<div style="font-family:\'Frank Ruhl Libre\',serif;font-size:22px;font-weight:700;color:var(--t1);line-height:1.3;margin-bottom:4px;direction:rtl;">' + (item.title||'שיחה') + '</div>'
       + '<div style="font-size:12px;color:var(--t3);margin-bottom:18px;">לקוטי שיחות · חלק ' + (_LS_GEM[item.vol]||item.vol) + ' · עמ׳ ' + item.page + '</div>'
       + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 16px;">'
-      + '<div id="ls-reader-body" style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:' + _LS_FONT_SIZES[_lsFontStep] + 'px;line-height:1.6;color:var(--t1);direction:rtl;text-align:justify;">' + body + '</div>'
+      + '<div id="ls-reader-body" style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:22px;line-height:1.6;color:var(--t1);direction:rtl;text-align:justify;">' + body + '</div>'
       + '</div>'
-      + fnSection
-      + '</div>'
+      + fnSection + '</div>'
       + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 
-    if (contEl) contEl.innerHTML = html;
-
-    // Restore scroll
-    const saved = _lsLoadScroll(cid);
-    if (saved > 0) {
-      requestAnimationFrame(() => {
-        const reader = document.getElementById('native-reader');
-        if (reader) reader.scrollTop = saved;
-      });
-    }
-
-    // Attach footnote tap listener
     if (contEl) {
+      contEl.innerHTML = html;
       contEl.onclick = e => {
         const ref = e.target.closest('[data-lsfn]');
         if (ref) _lsShowFnPopup(parseInt(ref.dataset.lsfn), ref);
       };
+    }
+
+    // Restore scroll
+    const saved = _lsLoadScroll(cid);
+    if (saved > 0) {
+      _restoreScrollAfterRender('likkuteiSichos', saved);
     }
 
   } catch(e) {
@@ -8809,29 +8973,27 @@ async function _lsOpenReader(idx) {
   }
 }
 
-// ── Sicha nav bar (prev/next/back to list) ─────────────────────────────────────
-function _lsRenderNavBar(parshaHeb) {
-  // Remove existing nav bar if any
+// ── Sicha nav bar ──────────────────────────────────────────────────────────────
+function _lsRenderNavBar(parshaHeb, idx) {
   document.getElementById('ls-nav-bar')?.remove();
-
   const panel = document.getElementById('chabad-panel');
-  const bar = document.createElement('div');
+  const bar   = document.createElement('div');
   bar.id = 'ls-nav-bar';
   bar.style.cssText = 'position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 14px 20px;display:flex;align-items:center;gap:8px;z-index:10;';
 
-  const btnStyle = 'flex:1;padding:11px 8px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;font-family:\'DM Sans\',sans-serif;cursor:pointer;';
-  const centerStyle = 'flex:2;padding:11px 8px;border-radius:12px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);color:#8B5CF6;font-size:12px;font-weight:700;text-align:center;font-family:\'DM Sans\',sans-serif;cursor:pointer;';
+  const btn = 'flex:1;padding:11px 8px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;font-family:\'DM Sans\',sans-serif;cursor:pointer;';
+  const ctr = 'flex:2;padding:11px 8px;border-radius:12px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);color:#8B5CF6;font-size:12px;font-weight:700;text-align:center;font-family:\'DM Sans\',sans-serif;cursor:pointer;';
 
-  const hasPrev = _lsCurIdx > 0;
-  const hasNext = _lsCurIdx < _lsSichos.length - 1;
+  const hasPrev = idx > 0;
+  const hasNext = idx < _lsSichos.length - 1;
 
-  bar.innerHTML = '<button onclick="_lsNavSicha(-1)" style="' + btnStyle + (hasPrev ? '' : 'opacity:.3;pointer-events:none;') + '">'
+  bar.innerHTML = '<button onclick="_lsNavSicha(-1)" style="' + btn + (hasPrev?'':'opacity:.3;pointer-events:none;') + '">'
     + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Prev'
     + '</button>'
-    + '<button onclick="_lsBackToList()" style="' + centerStyle + '">'
-    + (parshaHeb || 'שיחות') + ' (' + (_lsCurIdx+1) + '/' + _lsSichos.length + ')'
+    + '<button onclick="_lsBackToList()" style="' + ctr + '">'
+    + (parshaHeb||'שיחות') + ' (' + (idx+1) + '/' + _lsSichos.length + ')'
     + '</button>'
-    + '<button onclick="_lsNavSicha(1)" style="' + btnStyle + (hasNext ? '' : 'opacity:.3;pointer-events:none;') + '">'
+    + '<button onclick="_lsNavSicha(1)" style="' + btn + (hasNext?'':'opacity:.3;pointer-events:none;') + '">'
     + 'Next<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
     + '</button>';
 
@@ -8839,32 +9001,37 @@ function _lsRenderNavBar(parshaHeb) {
 }
 
 function _lsNavSicha(dir) {
-  // Save current scroll before navigating
   const reader = document.getElementById('native-reader');
-  const item = _lsSichos[_lsCurIdx];
+  const item   = _lsSichos[_lsCurIdx];
   if (reader && item) _lsSaveScroll(item.page + '_' + item.vol, reader.scrollTop);
-
   _lsOpenReader(_lsCurIdx + dir);
 }
 
 function _lsBackToList() {
+  _lsInReader = false;
   document.getElementById('ls-nav-bar')?.remove();
+  // Restore progress bar to gold
+  const progBar = document.getElementById('reader-progress-bar');
+  if (progBar) progBar.style.background = 'var(--gold)';
+  // Hide mark-done
+  const markBtn = document.getElementById('chabad-mark-btn');
+  if (markBtn) markBtn.style.display = 'none';
   _openLSSichaList();
 }
 
-// Save scroll on reader scroll event (called by existing onReaderScroll)
-function _lsOnScroll(scrollTop) {
-  const item = _lsSichos[_lsCurIdx];
-  if (!item) return;
+// ── Scroll hook — save position + update progress bar ─────────────────────────
+const _origOnReaderScroll_ls = window.onReaderScroll;
+function onReaderScroll() {
+  if (typeof _origOnReaderScroll_ls === 'function') _origOnReaderScroll_ls.call(this);
+  if (!_lsInReader) return;
+  const reader = document.getElementById('native-reader');
+  if (!reader) return;
   clearTimeout(_lsScrollTimer);
   _lsScrollTimer = setTimeout(() => {
-    _lsSaveScroll(item.page + '_' + item.vol, scrollTop);
+    const item = _lsSichos[_lsCurIdx];
+    if (item) _lsSaveScroll(item.page + '_' + item.vol, reader.scrollTop);
   }, 300);
 }
-
-// Hook into existing onReaderScroll
-const _origOnReaderScroll = window.onReaderScroll || function(){};
-// We'll call _lsOnScroll from the existing handler when LS is active
 
 // ── Footnotes ──────────────────────────────────────────────────────────────────
 function _lsParseFn(raw) {
@@ -8876,18 +9043,14 @@ function _lsParseFn(raw) {
     return { num: parseInt(m[1]), text: m[2].replace(/\n/g,' ').replace(/\s+/g,' ').trim() };
   }).filter(Boolean);
 }
-
 function _lsLinkify(text) {
   return text.replace(/<sup>(\d+)<\/sup>/g, (_, n) =>
-    `<span data-lsfn="${n}" style="font-family:'DM Sans',sans-serif;font-size:10px;font-weight:800;color:var(--gold);cursor:pointer;vertical-align:super;line-height:0;padding:0 1px;border-radius:3px;">${n}</span>`
+    '<span data-lsfn="' + n + '" style="font-family:\'DM Sans\',sans-serif;font-size:10px;font-weight:800;color:var(--gold);cursor:pointer;vertical-align:super;line-height:0;padding:0 1px;border-radius:3px;">' + n + '</span>'
   );
 }
-
 function _lsShowFnPopup(num, el) {
   const text = _lsFnMap[num];
   if (!text) return;
-  // Reuse the app's existing toast area or create a simple inline popup
-  // Simple approach: show in a fixed overlay near the tapped element
   let popup = document.getElementById('ls-fn-popup');
   if (!popup) {
     popup = document.createElement('div');
@@ -8898,18 +9061,16 @@ function _lsShowFnPopup(num, el) {
   popup.innerHTML = '<div style="font-family:\'DM Sans\';font-size:10px;font-weight:800;color:var(--gold);margin-bottom:4px;direction:ltr;text-align:left;">הערה ' + num + '</div>'
     + '<div style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:13px;line-height:1.5;color:var(--t2);">' + text + '</div>';
   popup.style.display = 'block';
-
   const rect = el.getBoundingClientRect();
-  const pw = Math.min(285, window.innerWidth - 16);
+  const pw   = Math.min(285, window.innerWidth - 16);
   popup.style.maxWidth = pw + 'px';
-  const ph = popup.offsetHeight || 70;
-  let left = rect.left + rect.width/2 - pw/2;
-  left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
-  let top = rect.top - ph - 10;
+  const ph   = popup.offsetHeight || 70;
+  let left   = rect.left + rect.width/2 - pw/2;
+  left       = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+  let top    = rect.top - ph - 10;
   if (top < 60) top = rect.bottom + 10;
   popup.style.left = left + 'px';
-  popup.style.top = top + 'px';
-
+  popup.style.top  = top + 'px';
   setTimeout(() => {
     const dm = e => {
       if (!popup.contains(e.target) && !e.target.closest('[data-lsfn]')) {
@@ -8921,32 +9082,6 @@ function _lsShowFnPopup(num, el) {
   }, 10);
 }
 
-// ── Font size (called from existing font controls) ──────────────────────────────
-// The existing reader font controls work per-section. LS overrides when active.
-// Hook: when LS reader is open, font buttons adjust _lsFontStep.
-// This is handled automatically since the font controls call _readerFontStep()
-// which injects CSS on #native-reader-content — and our LS body inherits from it.
-
-// ── Scroll save hook ───────────────────────────────────────────────────────────
-// Patch onReaderScroll to also save LS position when LS is active
-const _origReaderScroll_ls = onReaderScroll;
-function onReaderScroll() {
-  _origReaderScroll_ls.apply(this, arguments);
-  // If LS reader is open (panel title is a sicha title, nav bar exists)
-  const navBar = document.getElementById('ls-nav-bar');
-  if (navBar) {
-    const reader = document.getElementById('native-reader');
-    if (reader) _lsOnScroll(reader.scrollTop);
-  }
-}
-
-// Clean up nav bar when panel closes
-const _origClose_ls = closeChabadPanel;
-function closeChabadPanel() {
-  document.getElementById('ls-nav-bar')?.remove();
-  document.getElementById('ls-fn-popup')?.remove();
-  _origClose_ls.apply(this, arguments);
-}
 
 bootApp();
 </script>
