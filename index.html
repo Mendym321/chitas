@@ -621,7 +621,7 @@ onAuthStateChanged(auth, user => {
 
         <!-- CTA -->
         <div style="width:100%;animation:up .5s .85s ease both;">
-          <button onclick="document.getElementById('ob-step0').style.display='none';document.getElementById('ob-step1').style.display='block';stopObTicker();"
+          <button onclick="document.getElementById('ob-step0').style.display='none';document.getElementById('ob-showcase').style.display='flex';stopObTicker();obShowcaseStart();"
             style="width:100%;padding:18px;border-radius:16px;background:linear-gradient(135deg,#F0A500,#E09000);border:none;color:#000;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:12px;animation:glowPulse 3s 1.4s ease infinite;letter-spacing:-.3px;">
             Get Started
           </button>
@@ -630,9 +630,169 @@ onAuthStateChanged(auth, user => {
 
       </div>
 
+      <!-- ── FEATURE SHOWCASE ── -->
+      <div id="ob-showcase" style="display:none;flex-direction:column;min-height:88vh;padding:20px 0;">
+
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;">
+          <button onclick="document.getElementById('ob-showcase').style.display='none';document.getElementById('ob-step0').style.display='flex';" style="background:none;border:none;color:var(--t3);font-size:13px;font-family:inherit;cursor:pointer;">← Back</button>
+          <button onclick="obShowcaseSkip();" style="background:none;border:none;color:var(--t3);font-size:13px;font-family:inherit;cursor:pointer;">Skip →</button>
+        </div>
+
+        <!-- Cards viewport -->
+        <div style="flex:1;position:relative;overflow:hidden;" id="ob-sc-viewport">
+
+          <!-- Card 1: Bilingual reader -->
+          <div class="ob-sc-card" id="ob-sc-0" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeUp .4s ease both;">
+            <!-- Visual mockup -->
+            <div style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:32px;position:relative;overflow:hidden;">
+              <!-- Section header bar -->
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+                <div style="width:32px;height:32px;border-radius:9px;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                </div>
+                <div>
+                  <p style="font-size:13px;font-weight:800;color:var(--t1);">Chumash</p>
+                  <p style="font-size:10px;color:var(--t3);">Vayikra · Aliya 3</p>
+                </div>
+              </div>
+              <!-- Side-by-side text -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                  <p style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">English</p>
+                  <p style="font-size:12px;color:var(--t2);line-height:1.7;">And He called to Moses, and the L-rd spoke to him from the Tent of Meeting...</p>
+                </div>
+                <div style="text-align:right;">
+                  <p style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;direction:rtl;">עברית</p>
+                  <p style="font-size:13px;color:var(--t1);line-height:1.9;direction:rtl;font-family:'Frank Ruhl Libre',serif;">וַיִּקְרָא אֶל־מֹשֶׁה וַיְדַבֵּר יְהֹוָה אֵלָיו מֵאֹהֶל מוֹעֵד לֵאמֹר׃</p>
+                </div>
+              </div>
+              <!-- Lang toggle pills -->
+              <div style="display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+                <div style="padding:5px 12px;border-radius:99px;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.4);">
+                  <span style="font-size:10px;font-weight:700;color:var(--gold);">Both</span>
+                </div>
+                <div style="padding:5px 12px;border-radius:99px;background:var(--surface);border:1px solid var(--border);">
+                  <span style="font-size:10px;font-weight:600;color:var(--t3);">Hebrew</span>
+                </div>
+                <div style="padding:5px 12px;border-radius:99px;background:var(--surface);border:1px solid var(--border);">
+                  <span style="font-size:10px;font-weight:600;color:var(--t3);">English</span>
+                </div>
+              </div>
+            </div>
+            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Read it your way</h2>
+            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Hebrew, English, or side by side. Every section, every day — with Rashi included.</p>
+          </div>
+
+          <!-- Card 2: Streak + progress -->
+          <div class="ob-sc-card" id="ob-sc-1" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:32px;">
+              <!-- Streak hero -->
+              <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px;">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="#F0A500" style="animation:flamePulse 2s ease-in-out infinite;flex-shrink:0;"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
+                <div>
+                  <p style="font-size:38px;font-weight:900;color:var(--gold);line-height:1;letter-spacing:-1.5px;">47<span style="font-size:16px;font-weight:700;color:var(--t3);margin-left:3px;">days</span></p>
+                  <p style="font-size:11px;color:var(--t3);margin-top:2px;">Current streak · Best: 47 days</p>
+                </div>
+              </div>
+              <!-- 4-section progress -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                ${[['Chumash','#F0A500'],['Tehillim','#4A9EFF'],['Tanya','#A855F7'],['Rambam','#1DB954']].map(([name,color]) => `
+                <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+                  <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
+                  <span style="font-size:12px;font-weight:700;color:var(--t1);">${name}</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>`).join('')}
+              </div>
+            </div>
+            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Your streak, front and center</h2>
+            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Track every day, every section. XP, levels, and medals keep the momentum going.</p>
+          </div>
+
+          <!-- Card 3: Personal Tehillim -->
+          <div class="ob-sc-card" id="ob-sc-2" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:32px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+                <div style="width:32px;height:32px;border-radius:9px;background:rgba(74,158,255,.12);border:1px solid rgba(74,158,255,.25);display:flex;align-items:center;justify-content:center;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                </div>
+                <div>
+                  <p style="font-size:13px;font-weight:800;color:var(--t1);">Tehillim</p>
+                  <p style="font-size:10px;color:var(--t3);">+ your personal chapters</p>
+                </div>
+              </div>
+              <!-- People list -->
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                ${[
+                  ['Bubby Sarah', 'Psalm 27', '#A855F7'],
+                  ['Chaim Mendel', 'Psalm 42', '#1DB954'],
+                  ['The Rebbe', 'Psalm 70', '#F0A500'],
+                ].map(([name, psalm, color]) => `
+                <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:${color}22;border:1px solid ${color}44;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${color};">${name[0]}</div>
+                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">${name}</span>
+                  <span style="font-size:11px;color:var(--t3);">${psalm}</span>
+                </div>`).join('')}
+              </div>
+            </div>
+            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Tehillim for your people</h2>
+            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Add names and birthdays. The right chapter is calculated and added to your daily Tehillim automatically.</p>
+          </div>
+
+          <!-- Card 4: Extra learning + leaderboard -->
+          <div class="ob-sc-card" id="ob-sc-3" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:32px;">
+              <!-- Extra tracks -->
+              <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+                <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Additional learning</p>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;">
+                  ${[['Daf Yomi','#F0A500'],['Likkutei Torah','#A855F7'],['Mishnah Yomi','#1DB954'],['Hayom Yom','#4A9EFF']].map(([t,c]) =>
+                    `<div style="padding:5px 11px;border-radius:8px;background:${c}12;border:1px solid ${c}30;"><span style="font-size:11px;font-weight:700;color:${c};">${t}</span></div>`
+                  ).join('')}
+                </div>
+              </div>
+              <!-- Leaderboard preview -->
+              <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Leaderboard</p>
+              <div style="display:flex;flex-direction:column;gap:7px;">
+                ${[['🥇','Mendel K.','Crown Heights','2,840 XP'],['🥈','Rivka S.','Monsey','2,210 XP'],['🥉','Yosef L.','Tzfas','1,990 XP']].map(([medal,name,city,xp]) => `
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
+                  <span style="font-size:15px;">${medal}</span>
+                  <div style="flex:1;">
+                    <p style="font-size:12px;font-weight:700;color:var(--t1);">${name}</p>
+                    <p style="font-size:10px;color:var(--t3);">${city}</p>
+                  </div>
+                  <span style="font-size:11px;font-weight:700;color:var(--gold);">${xp}</span>
+                </div>`).join('')}
+              </div>
+            </div>
+            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">More to learn, together</h2>
+            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Add Daf Yomi, Likkutei Torah and more. See where you rank among daily learners worldwide.</p>
+          </div>
+
+        </div><!-- /viewport -->
+
+        <!-- Bottom nav: dots + next -->
+        <div style="padding-top:24px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <!-- Dot indicators -->
+            <div style="display:flex;gap:6px;align-items:center;" id="ob-sc-dots">
+              <div class="ob-sc-dot" id="ob-sc-dot-0" style="width:20px;height:6px;border-radius:3px;background:var(--gold);transition:all .3s;"></div>
+              <div class="ob-sc-dot" id="ob-sc-dot-1" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
+              <div class="ob-sc-dot" id="ob-sc-dot-2" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
+              <div class="ob-sc-dot" id="ob-sc-dot-3" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
+            </div>
+            <!-- Next / finish button -->
+            <button id="ob-sc-next-btn" onclick="obShowcaseNext();" style="padding:14px 28px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">
+              Next →
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /ob-showcase -->
+
             <!-- Step 1: Sign in -->
       <div id="ob-step1" style="display:none;">
-        <button onclick="document.getElementById('ob-step0').style.display='block';document.getElementById('ob-step1').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
+        <button onclick="document.getElementById('ob-step1').style.display='none';document.getElementById('ob-showcase').style.display='flex';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
         <h2 style="font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Sign in to save progress</h2>
         <p style="color:var(--t2);font-size:14px;margin-bottom:28px;line-height:1.5;">Your streak, XP and medals sync<br>across all your devices.</p>
         <!-- Google sign-in -->
@@ -994,16 +1154,7 @@ onAuthStateChanged(auth, user => {
   </div>
 </div>
 
-<!-- Confirm done modal -->
-<div id="confirm-modal" onclick="if(event.target.id==='confirm-modal')closeConfirm()" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.65);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:24px;">
-  <div style="background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:28px;padding:32px 24px 28px;width:100%;max-width:360px;text-align:center;animation:momentSlide .35s cubic-bezier(.22,1,.36,1);box-shadow:0 24px 64px rgba(0,0,0,.6);">
-    <div id="confirm-icon" style="width:64px;height:64px;border-radius:20px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;animation:iconBounce .5s .1s cubic-bezier(.22,1,.36,1) both;"></div>
-    <p id="confirm-title" style="font-size:22px;font-weight:900;color:var(--t1);margin-bottom:6px;letter-spacing:-.3px;"></p>
-    <p id="confirm-sub" style="font-size:14px;color:var(--t3);margin-bottom:28px;line-height:1.5;"></p>
-    <button id="confirm-yes" style="width:100%;padding:15px;border-radius:14px;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;" onclick="confirmDone()"></button>
-    <button onclick="closeConfirm()" style="width:100%;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:transparent;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--t3);">Not yet</button>
-  </div>
-</div>
+<!-- Confirm done modal — kept as stub; showConfirm bypasses this and marks done directly -->
 
 <!-- ── MOMENT MODAL — centered celebration popup ── -->
 <div id="moment-modal" onclick="if(event.target.id==='moment-modal')closeMoment()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.75);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:24px;">
@@ -1363,65 +1514,42 @@ function icon(name, size=20, color='currentColor') {
 // ZONE 3 · SAVE / LOCALSTORAGE
 // ════════════════════════════════════════════════════════════════════
 // ── SAVE ──────────────────────────────────────────────────────────────────────
-function saveUser() {
-  // Always save locally first (fast, offline-safe)
-  try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
-  // Then sync to Firebase if signed in (fire-and-forget is intentional for
-  // non-critical saves; markDone uses saveUserCritical() for race-safe writes)
-  if (user.uid && window._fb) {
-    window._fb.saveUser(user.uid, {
-      name: user.name,
-      photoURL: user.photoURL || '',
-      city: user.city || '',
-      rambamTrack: user.rambamTrack,
-      streak: user.streak,
-      longestStreak: user.longestStreak || 0,   // FIX 4: was missing
-      total: user.total,
-      xp: user.xp,
-      perfectDays: user.perfectDays || 0,
-      quizTotal: user.quizTotal || 0,
-      quizCorrect: user.quizCorrect || 0,
-      lastDate: user.lastDate || null,
-      done: user.done || {},
-      quizDone: user.quizDone || {},
-      pastDone: user.pastDone || {},
-      pastQuizDone: user.pastQuizDone || {},
-      weeklyQuizDone: user.weeklyQuizDone || {},
-      tehillimPeople: user.tehillimPeople || [],
-      tehillimFixedOpts: user.tehillimFixedOpts || {},
-      extraTracks: user.extraTracks || [],
-    });
-  }
+// Build the Firestore payload from current user state (single source of truth)
+function _userPayload() {
+  return {
+    name: user.name,
+    photoURL: user.photoURL || '',
+    city: user.city || '',
+    rambamTrack: user.rambamTrack,
+    streak: user.streak,
+    longestStreak: user.longestStreak || 0,
+    total: user.total,
+    xp: user.xp,
+    perfectDays: user.perfectDays || 0,
+    quizTotal: user.quizTotal || 0,
+    quizCorrect: user.quizCorrect || 0,
+    lastDate: user.lastDate || null,
+    done: user.done || {},
+    quizDone: user.quizDone || {},
+    pastDone: user.pastDone || {},
+    pastQuizDone: user.pastQuizDone || {},
+    weeklyQuizDone: user.weeklyQuizDone || {},
+    tehillimPeople: user.tehillimPeople || [],
+    tehillimFixedOpts: user.tehillimFixedOpts || {},
+    extraTracks: user.extraTracks || [],
+  };
 }
 
-// saveUserCritical — awaitable version used by markDone/unmarkDone so rapid
-// taps don't race each other. Saves locally first, then awaits Firestore.
+// Fire-and-forget save — used for non-critical updates (preference changes etc.)
+function saveUser() {
+  try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
+  if (user.uid && window._fb) window._fb.saveUser(user.uid, _userPayload());
+}
+
+// Awaitable save — used by markDone/unmarkDone so rapid taps don't race
 async function saveUserCritical() {
   try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
-  if (user.uid && window._fb) {
-    await window._fb.saveUser(user.uid, {
-      name: user.name,
-      photoURL: user.photoURL || '',
-      city: user.city || '',
-      rambamTrack: user.rambamTrack,
-      streak: user.streak,
-      longestStreak: user.longestStreak || 0,
-      total: user.total,
-      xp: user.xp,
-      perfectDays: user.perfectDays || 0,
-      quizTotal: user.quizTotal || 0,
-      quizCorrect: user.quizCorrect || 0,
-      lastDate: user.lastDate || null,
-      done: user.done || {},
-      quizDone: user.quizDone || {},
-      pastDone: user.pastDone || {},
-      pastQuizDone: user.pastQuizDone || {},
-      weeklyQuizDone: user.weeklyQuizDone || {},
-      tehillimPeople: user.tehillimPeople || [],
-      tehillimFixedOpts: user.tehillimFixedOpts || {},
-      extraTracks: user.extraTracks || [],
-    });
-  }
+  if (user.uid && window._fb) await window._fb.saveUser(user.uid, _userPayload());
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -2679,22 +2807,21 @@ function setGreeting() {
   nudgeEl.textContent = nudge;
 }
 
+// Single call to refresh all stat displays after any user state change
+function _refreshUI() {
+  _refreshUI();
+}
+
 function updateHeader() {
   const level    = levelFromXp(user.xp);
   const inLevel  = xpInCurrentLevel(user.xp);
-  const needed   = xpNeededForLevel(level);
+  const needed   = xpNeededForLvl(level);
   const pct      = Math.round(inLevel / needed * 100);
 
   document.getElementById('level-num').textContent  = level;
   document.getElementById('xp-label').textContent   = user.xp + ' XP';
   document.getElementById('xp-next').textContent    = 'Lv' + level + ' · ' + inLevel + '/' + needed;
   document.getElementById('xp-bar').style.width     = pct + '%';
-
-  // Update inline stats
-  const si = document.getElementById('stat-streak-inline');
-  const xi = document.getElementById('stat-xp-inline');
-  if (si) si.textContent = user.streak;
-  if (xi) xi.textContent = user.xp;
 
   // Avatar
   // Level badge in progress card
@@ -2709,11 +2836,6 @@ function updateHeader() {
 }
 
 function updateStats() {
-  // Hidden elements (kept for any legacy references)
-  document.getElementById('stat-streak').textContent = user.streak;
-  document.getElementById('stat-days').textContent   = user.total;
-  document.getElementById('stat-xp').textContent     = user.xp;
-  // Inline elements in progress card
   const si = document.getElementById('stat-streak-inline');
   const xi = document.getElementById('stat-xp-inline');
   if (si) si.textContent = user.streak;
@@ -2782,10 +2904,6 @@ function levelFromXp(xp) {
 function xpInCurrentLevel(xp) {
   const level = levelFromXp(xp);
   return xp - xpForLevel(level);
-}
-
-function xpNeededForLevel(level) {
-  return xpNeededForLvl(level);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -3081,8 +3199,7 @@ function updateProgressRing() {
 }
 
 // ── CONFIRM MODAL ────────────────────────────────────────────────────────────
-let _confirmSectionId = null;
-let _confirmCallback = null;
+
 
 function showConfirm(sectionId, fromReader) {
   // No confirmation modal — just mark done directly
@@ -3101,17 +3218,11 @@ function showConfirm(sectionId, fromReader) {
   }
 }
 
-function confirmDone() {
-  const cb = _confirmCallback; // save before closeConfirm nulls it
-  closeConfirm();
-  if (cb) cb();
-}
 
-function closeConfirm() {
-  document.getElementById('confirm-modal').style.display = 'none';
-  _confirmSectionId = null;
-  _confirmCallback = null;
-}
+
+// Stubs — confirm modal was removed; showConfirm marks done directly
+function confirmDone() {}
+function closeConfirm() {}
 
 function showConfirmPast(id, iso) {
   // No confirmation modal — just mark done directly
@@ -3133,11 +3244,7 @@ function unmarkDonePast(id, iso) {
   }
   user.pastDone[iso][id] = false;
   saveUser();
-  updateStats();
-  updateHeader();
-  updateProgressRing();
-  renderMedals();
-  renderStats();
+  _refreshUI();
   const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
   renderSectionsForOffset(dateISO(d2));
   fire('Unmarked ' + s.label, 'xp');
@@ -3159,11 +3266,7 @@ function unmarkDone(id) {
   user.done[id] = false;
   user.lastDate = dateISO(new Date());
   saveUser();
-  updateStats();
-  updateHeader();
-  updateProgressRing();
-  renderMedals();
-  renderStats();
+  _refreshUI();
   // Re-render sections
   const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
   renderSectionsForOffset(dateISO(d2));
@@ -3255,11 +3358,7 @@ function markDone(id) {
   }
   checkLevelUp(xpBefore, user.xp);
 
-  updateStats();
-  updateHeader();
-  updateProgressRing();
-  renderMedals();
-  renderStats();
+  _refreshUI();
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -4135,7 +4234,50 @@ function checkWeeklySummary() {
 // ════════════════════════════════════════════════════════════════════
 // ZONE 19 · ONBOARDING TICKER  (animated word ticker on landing screen)
 // ════════════════════════════════════════════════════════════════════
-// ── LANDING TICKER ───────────────────────────────────────────────────────────
+// ── FEATURE SHOWCASE (between landing and sign-in) ────────────────────────────
+let _obScIdx = 0;
+const _OB_SC_COUNT = 4;
+
+function obShowcaseStart() {
+  _obScIdx = 0;
+  _obScShow(0);
+}
+
+function _obScShow(idx) {
+  for (let i = 0; i < _OB_SC_COUNT; i++) {
+    const card = document.getElementById('ob-sc-' + i);
+    if (!card) continue;
+    if (i === idx) {
+      card.style.display = 'flex';
+      card.style.animation = 'fadeUp .35s ease both';
+    } else {
+      card.style.display = 'none';
+    }
+    const dot = document.getElementById('ob-sc-dot-' + i);
+    if (dot) {
+      dot.style.width = i === idx ? '20px' : '6px';
+      dot.style.background = i === idx ? 'var(--gold)' : 'var(--border)';
+    }
+  }
+  const btn = document.getElementById('ob-sc-next-btn');
+  if (btn) btn.textContent = idx === _OB_SC_COUNT - 1 ? 'Get Started →' : 'Next →';
+}
+
+function obShowcaseNext() {
+  if (_obScIdx < _OB_SC_COUNT - 1) {
+    _obScIdx++;
+    _obScShow(_obScIdx);
+  } else {
+    obShowcaseSkip();
+  }
+}
+
+function obShowcaseSkip() {
+  document.getElementById('ob-showcase').style.display = 'none';
+  document.getElementById('ob-step1').style.display = 'block';
+}
+
+
 let _obTickerTimer = null;
 let _obTickerIdx = 0;
 const OB_TICKER_ITEMS = [
@@ -5442,67 +5584,6 @@ const TANYA_CHAPTER_INTROS = {
 
 // ── Tanya paragraph splitter ──────────────────────────────────────────────────
 // Splits a long Sefaria segment into smaller readable chunks.
-// Breaks at sentence boundaries, targeting ~60-80 words per chunk.
-function _splitTanyaSegment(text, maxWords = 75) {
-  if (!text) return [];
-  const words = text.split(' ');
-  if (words.length <= maxWords) return [text];
-
-  // Find sentence boundaries: '. ' or '." ' or '! ' or '? ' followed by capital
-  const chunks = [];
-  let current = '';
-  let wordCount = 0;
-
-  // Split into sentences first
-  const sentenceBreaks = [];
-  let pos = 0;
-  while (pos < text.length) {
-    const match = text.slice(pos).search(/[.!?][\"\']?\s+[A-Zא-ת]/);
-    if (match === -1) break;
-    sentenceBreaks.push(pos + match + 1); // position after the punctuation
-    pos = pos + match + 2;
-  }
-  sentenceBreaks.push(text.length);
-
-  let start = 0;
-  let chunkWords = 0;
-  let lastBreak = 0;
-
-  sentenceBreaks.forEach(breakPos => {
-    const segment = text.slice(start, breakPos).trim();
-    const segWords = segment.split(' ').length;
-    chunkWords += segWords;
-
-    if (chunkWords >= maxWords && lastBreak > start) {
-      // Emit chunk up to last break
-      chunks.push(text.slice(start, lastBreak).trim());
-      start = lastBreak;
-      chunkWords = text.slice(start, breakPos).split(' ').length;
-    }
-    lastBreak = breakPos;
-  });
-
-  // Push remainder
-  const remainder = text.slice(start).trim();
-  if (remainder) chunks.push(remainder);
-
-  return chunks.length ? chunks : [text];
-}
-
-
-// Split Hebrew text into N equal-word chunks (proportional to English splits)
-function _splitHebrewProportional(text, n) {
-  if (!text || n <= 1) return [text];
-  const words = text.split(' ');
-  if (words.length < n * 3) return [text]; // too short to split meaningfully
-  const chunkSize = Math.ceil(words.length / n);
-  const chunks = [];
-  for (let i = 0; i < n; i++) {
-    const chunk = words.slice(i * chunkSize, (i + 1) * chunkSize).join(' ');
-    if (chunk) chunks.push(chunk);
-  }
-  return chunks;
-}
 
 async function _loadTanyaNative(sectionId, silent) {
   const loadEl = document.getElementById('native-reader-loading');
@@ -6241,7 +6322,7 @@ async function renderLeaders() {
 function renderStats() {
   const level = levelFromXp(user.xp);
   const xpInLevel = xpInCurrentLevel(user.xp);
-  const xpNeeded = xpNeededForLevel(level);
+  const xpNeeded = xpNeededForLvl(level);
   const streakColor = user.streak >= 30 ? '#FF4757' : user.streak >= 7 ? '#FF6B35' : '#F0A500';
 
   // ── Compute lifetime stats ──
@@ -6415,7 +6496,7 @@ function openProfileSheet() {
   // Populate compact level bar
   const psLevel = levelFromXp(user.xp);
   const psInLevel = xpInCurrentLevel(user.xp);
-  const psNeeded = xpNeededForLevel(psLevel);
+  const psNeeded = xpNeededForLvl(psLevel);
   const el = document.getElementById('ps-level');
   if (el) el.textContent = psLevel;
   const bar = document.getElementById('ps-xp-bar');
@@ -6456,7 +6537,7 @@ function closeProfileSheet() {
 function renderProfileSheetContent() {
   const level = levelFromXp(user.xp);
   const xpInLevel = xpInCurrentLevel(user.xp);
-  const xpNeeded = xpNeededForLevel(level);
+  const xpNeeded = xpNeededForLvl(level);
   const earned = MEDALS.filter(m => m.req(user));
   const cw = WORLDS[currentWorldIndex()];
   const next = cw ? cw.medals.find(m => !m.req(user)) : null;
@@ -6672,15 +6753,10 @@ function switchTab(id) {
 async function _prefetchAllReaders() {
   window._prefetched = {};
 
-  const loadEl = document.getElementById('native-reader-loading');
-  const contEl = document.getElementById('native-reader-content');
-
   async function silentLoad(fn, id) {
-    // Run loader in silent mode — fetches and caches data but skips all DOM writes
     window._prefetchingId = id;
     try {
-      const ok = await fn(id, true); // true = silent
-      window._prefetched[id] = ok;
+      window._prefetched[id] = await fn(id, true); // true = silent — no DOM writes
     } catch(e) {
       window._prefetched[id] = false;
     } finally {
@@ -6688,22 +6764,18 @@ async function _prefetchAllReaders() {
     }
   }
 
-  // Only prefetch Chumash immediately (shown first)
-  // Others load on-demand when user taps — feels faster
+  // Prefetch Chumash immediately (most likely to be tapped first)
   await silentLoad(_loadChumashNative, 'chumash');
-  // Prefetch the rest after a short delay so UI is responsive first
-  // Guard: don't prefetch if user has navigated to a past day by the time this fires
+
+  // Prefetch the rest after a short delay so UI stays responsive
   setTimeout(() => {
-    if (dayOffset !== 0) return; // user navigated away — skip, they'll load on demand
+    if (dayOffset !== 0) return; // user navigated to a past day — skip
     Promise.all([
       silentLoad(_loadTehillimNative, 'tehillim'),
       silentLoad(_loadTanyaNative, 'tanya'),
       silentLoad(_loadRambamNative, 'rambam'),
     ]).catch(() => {});
   }, 1500);
-
-  if (loadEl) loadEl.style.display = 'none';
-  if (contEl) contEl.style.display = 'none';
 }
 
 
@@ -6714,47 +6786,42 @@ async function _bustTanyaCache() {
 
   const results = [];
 
+  // Use /api/tanya-boundary (same as the app) to get the correct chapterSlug + verse range
   for (const offset of [0, -1]) {
     try {
       const d = new Date(); d.setDate(d.getDate() + offset);
       const tomorrow = new Date(d); tomorrow.setDate(d.getDate() + 1);
+      const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 
-      const calUrl = '/api/sefaria-calendar?gy=' + d.getFullYear()
-        + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate();
-      const calData = await fetch(calUrl).then(r => r.json()).catch(() => null);
-      const tanyaItem = (calData?.calendar_items || []).find(i =>
-        (i.title?.en || '').toLowerCase().includes('tanya') || (i.ref || '').toLowerCase().includes('tanya')
-      );
-      if (!tanyaItem?.ref) { results.push('Day ' + offset + ': no ref found'); continue; }
+      const boundary = await fetch('/api/tanya-boundary?date=' + iso).then(r => r.json()).catch(() => null);
+      if (!boundary?.todayUrl) { results.push((offset===0?'Today':'Yesterday') + ': no boundary'); continue; }
 
-      const m = tanyaItem.ref.match(/^(.*?)(\d+):(\d+)$/);
-      if (!m) { results.push('Day ' + offset + ': could not parse ' + tanyaItem.ref); continue; }
-      const base = m[1].replace(/:$/, '').trim();
-      const chapter = parseInt(m[2]);
-      const seg = parseInt(m[3]);
-      const chapterRef = base + ' ' + chapter;
+      function parseSlug(url) {
+        if (!url) return null;
+        const m = url.match(/\.([0-9]+)\.([0-9]+)$/);
+        if (!m) return null;
+        return { chapterSlug: url.substring(0, url.lastIndexOf('.')), chapter: parseInt(m[1]), verse: parseInt(m[2]) };
+      }
 
-      // Get tomorrow to know segEnd
-      const tomUrl = '/api/sefaria-calendar?gy=' + tomorrow.getFullYear()
-        + '&gm=' + (tomorrow.getMonth()+1) + '&gd=' + tomorrow.getDate();
-      const tomData = await fetch(tomUrl).then(r => r.json()).catch(() => null);
-      const tomItem = (tomData?.calendar_items || []).find(i =>
-        (i.title?.en || '').toLowerCase().includes('tanya') || (i.ref || '').toLowerCase().includes('tanya')
-      );
-      const tm = tomItem?.ref?.match(/^(.*?)(\d+):(\d+)$/);
-      const segStart = seg - 1;
-      const segEnd = (tm && parseInt(tm[2]) === chapter) ? parseInt(tm[3]) - 1 : undefined;
+      const t = parseSlug(boundary.todayUrl);
+      const n = parseSlug(boundary.tomorrowUrl);
+      if (!t) { results.push((offset===0?'Today':'Yesterday') + ': could not parse slug'); continue; }
 
-      const apiUrl = '/api/tanya-enhance?ref=' + encodeURIComponent(chapterRef)
-        + '&segStart=' + segStart
-        + (segEnd !== undefined ? '&segEnd=' + segEnd : '')
+      const startVerse = t.verse;
+      const sameChapter = n && t.chapterSlug === n.chapterSlug;
+      const endVerse = (sameChapter && n.verse > startVerse) ? n.verse - 1 : null;
+
+      const apiUrl = '/api/tanya-enhance'
+        + '?chapterSlug=' + encodeURIComponent(t.chapterSlug)
+        + '&startVerse=' + startVerse
+        + (endVerse !== null ? '&endVerse=' + endVerse : '')
         + '&bust=1';
 
       const result = await fetch(apiUrl).then(r => r.json()).catch(e => ({ error: e.message }));
       const label = offset === 0 ? 'Today' : 'Yesterday';
-      results.push(label + ' (' + chapterRef + '): ' + (result.source || result.error || 'done'));
+      results.push(label + ' (' + t.chapterSlug + ' v' + startVerse + '): ' + (result.source || result.error || 'done'));
     } catch(e) {
-      results.push('Day ' + offset + ' error: ' + e.message);
+      results.push((offset===0?'Today':'Yesterday') + ' error: ' + e.message);
     }
   }
 
@@ -6986,7 +7053,13 @@ async function _loadExtraSubtitle(id) {
     const cal = await fetchSefariaCalendar(d);
     const items = cal?.calendar_items || [];
 
-    if (id === 'dafYomi') {
+    if (id === 'likkuteiSichos') {
+      // Show this week's parsha name
+      const d2 = new Date(); d2.setDate(d2.getDate() + (dayOffset || 0));
+      const parshaEn = getParshaForDate(d2);
+      const lsKey = parshaEn ? _lsParshaKey(parshaEn) : null;
+      el.textContent = parshaEn ? 'פרשת ' + _lsParshaHeb(parshaEn) : "This week's parsha";
+    } else if (id === 'dafYomi') {
       const item = items.find(i => i.title?.en === 'Daf Yomi');
       el.textContent = item?.displayValue?.en || item?.ref || 'Daf Yomi';
     } else if (id === 'hayomYom') {
@@ -7097,6 +7170,14 @@ const EXTRA_TRACK_DEFS = {
     duration: '~5 min',
     color: '#2A9D8F',
     iconPath: '<rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  },
+  likkuteiSichos: {
+    id: 'likkuteiSichos',
+    label: 'Likkutei Sichos',
+    desc: "The Rebbe's sichos on the weekly parsha",
+    duration: '~20 min',
+    color: '#8B5CF6',
+    iconPath: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
   },
 };
 
@@ -7255,6 +7336,7 @@ async function openExtraReader(id) {
     else if (id === 'hayomYom')      _loadHayomYomIframe();
     else if (id === 'likkuteiTorah') await _loadLikkuteiTorah();
     else if (id === 'mishnahYomi')   await _loadMishnahYomi();
+    else if (id === 'likkuteiSichos') await _openLSSichaList();
   } catch(e) {
     console.error('Extra reader error:', e);
     if (contEl) { contEl.innerHTML = '<p style="padding:20px;color:var(--t3);text-align:center;">Could not load content. Please try again.</p>'; contEl.style.display = 'block'; }
@@ -8495,6 +8577,376 @@ function bootApp() {
   tryRegister();
 }
 
+
+// ════════════════════════════════════════════════════════════════════
+// LIKKUTEI SICHOS  (extra track — parsha-based reader via dach.dev)
+// ════════════════════════════════════════════════════════════════════
+
+// ── Parsha name → dach.dev tocByParsha key ────────────────────────────────────
+const _LS_PARSHA_MAP = {
+  'Bereishit':'bereishis','Noach':'noach','Lech Lecha':'lech_lecha','Vayera':'vayera',
+  'Chayei Sara':'chayei_sarah','Toldot':'toldos','Vayetzei':'vayetzei','Vayishlach':'vayishlach',
+  'Vayeshev':'vayeshev','Miketz':'miketz','Vayigash':'vayigash','Vayechi':'vayechi',
+  'Shemot':'shemos','Vaera':'vaeira','Bo':'bo','Beshalach':'beshalach',
+  'Yitro':'yisro','Mishpatim':'mishpatim','Terumah':'terumah','Tetzaveh':'tetzaveh',
+  'Ki Tisa':'ki_sisa','Vayakhel':'vayakhel','Pekudei':'pekudei',
+  'Vayakhel-Pekudei':'vayakhel',
+  'Vayikra':'vayikra','Tzav':'tzav','Shemini':'shmini','Tazria':'tazria','Metzora':'metzora',
+  'Tazria-Metzora':'tazria','Acharei Mot':'acharei_mos','Kedoshim':'kedoshim',
+  'Acharei Mot-Kedoshim':'acharei_mos','Emor':'emor','Behar':'behar','Bechukotai':'bechukosai',
+  'Behar-Bechukotai':'behar',
+  'Bamidbar':'bamidbar','Nasso':'naso',"Beha'alotcha":'behaaloscha','Shelach':'shlach',
+  'Korach':'korach','Chukat':'chukas','Balak':'balak','Chukat-Balak':'chukas',
+  'Pinchas':'pinchas','Matot':'matos','Masei':'masei','Matot-Masei':'matos',
+  'Devarim':'devarim','Vaetchanan':'vaeschanan','Eikev':'eikev',"Re'eh":'reeh',
+  'Shoftim':'shoftim','Ki Teitzei':'ki_seitzei','Ki Tavo':'ki_savo',
+  'Nitzavim':'nitzavim','Vayeilech':'vayelech','Nitzavim-Vayeilech':'nitzavim',
+  'Haazinu':'haazinu','Vezot Haberakhah':'vzos_habrachah',
+};
+const _LS_PARSHA_HEB = {
+  'bereishis':'בראשית','noach':'נח','lech_lecha':'לך לך','vayera':'וירא',
+  'chayei_sarah':'חיי שרה','toldos':'תולדות','vayetzei':'ויצא','vayishlach':'וישלח',
+  'vayeshev':'וישב','miketz':'מקץ','vayigash':'ויגש','vayechi':'ויחי',
+  'shemos':'שמות','vaeira':'וארא','bo':'בא','beshalach':'בשלח',
+  'yisro':'יתרו','mishpatim':'משפטים','terumah':'תרומה','tetzaveh':'תצוה',
+  'ki_sisa':'כי תשא','vayakhel':'ויקהל','pekudei':'פקודי',
+  'vayikra':'ויקרא','tzav':'צו','shmini':'שמיני','tazria':'תזריע','metzora':'מצורע',
+  'acharei_mos':'אחרי מות','kedoshim':'קדושים','emor':'אמור','behar':'בהר','bechukosai':'בחוקותי',
+  'bamidbar':'במדבר','naso':'נשא','behaaloscha':'בהעלותך','shlach':'שלח',
+  'korach':'קרח','chukas':'חוקת','balak':'בלק','pinchas':'פינחס','matos':'מטות','masei':'מסעי',
+  'devarim':'דברים','vaeschanan':'ואתחנן','eikev':'עקב','reeh':'ראה',
+  'shoftim':'שופטים','ki_seitzei':'כי תצא','ki_savo':'כי תבוא',
+  'nitzavim':'נצבים','vayelech':'וילך','haazinu':'האזינו','vzos_habrachah':'וזאת הברכה',
+};
+const _LS_GEM = ['','א','ב','ג','ד','ה','ו','ז','ח','ט','י','יא','יב','יג','יד','טו','טז','יז','יח','יט','כ','כא','כב','כג','כד','כה','כו','כז','כח','כט','ל','לא','לב','לג','לד','לה','לו','לז','לח','לט'];
+
+function _lsParshaKey(parshaEn) { return _LS_PARSHA_MAP[parshaEn] || null; }
+function _lsParshaHeb(parshaEn) {
+  const key = _lsParshaKey(parshaEn);
+  return key ? (_LS_PARSHA_HEB[key] || parshaEn) : parshaEn;
+}
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let _lsSichos   = [];   // current sicha list
+let _lsCurIdx   = 0;    // which sicha is open
+let _lsFnMap    = {};   // footnote num → text for open sicha
+let _lsFontStep = 1;    // 0=small,1=med,2=large
+const _LS_FONT_SIZES = [18, 22, 27];
+let _lsScrollTimer = null;
+
+function _lsSaveScroll(cid, pos) {
+  try { localStorage.setItem('ls_s_' + cid, String(Math.round(pos))); } catch{}
+}
+function _lsLoadScroll(cid) {
+  try { return parseInt(localStorage.getItem('ls_s_' + cid) || '0') || 0; } catch { return 0; }
+}
+
+// ── Firebase (dach.dev) ───────────────────────────────────────────────────────
+let _lsDb = null;
+async function _getLsDb() {
+  if (_lsDb) return _lsDb;
+  const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  const cfg = {apiKey:'AIzaSyCYqa2tVY0YaM4noiT2R_ZJbFMJVE_AuCg',authDomain:'dach-dev.firebaseapp.com',projectId:'dach-dev',storageBucket:'dach-dev.firebasestorage.app',messagingSenderId:'505952629847',appId:'1:505952629847:web:34ec779e3cda8d73385f12'};
+  const existing = getApps().find(a => a.name === 'dach');
+  _lsDb = getFirestore(existing || initializeApp(cfg, 'dach'));
+  return _lsDb;
+}
+async function _lsGetDoc(path) {
+  const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  const db = await _getLsDb();
+  return getDoc(doc(db, path));
+}
+
+// ── Sicha list panel ───────────────────────────────────────────────────────────
+// Runs when user taps LS extra track card — shows sicha list for this week's parsha
+async function _openLSSichaList() {
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const parshaEn = getParshaForDate(d);
+  const parshaKey = parshaEn ? _lsParshaKey(parshaEn) : null;
+  const parshaHeb = parshaEn ? _lsParshaHeb(parshaEn) : 'השבוע';
+
+  // Update panel header
+  document.getElementById('chabad-panel-title').textContent = 'לקוטי שיחות';
+  document.getElementById('chabad-panel-sub').textContent = parshaHeb + ' — טוען…';
+
+  // Render sicha list into the native reader content area
+  const contEl = document.getElementById('native-reader-content');
+  const loadEl = document.getElementById('native-reader-loading');
+  if (loadEl) loadEl.style.display = 'none';
+  if (contEl) { contEl.style.display = 'block'; contEl.dataset.sectionId = 'likkuteiSichos'; }
+
+  if (!parshaKey) {
+    if (contEl) contEl.innerHTML = '<p style="padding:24px;color:var(--t3);text-align:center;">Parsha not available for this date.</p>';
+    return;
+  }
+
+  if (contEl) contEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;padding:60px 20px;"><div class="spinner" style="border-top-color:#8B5CF6;"></div></div>';
+
+  try {
+    const snap = await _lsGetDoc(`books/likkuteiSichos/tocByParsha/${parshaKey}`);
+    if (!snap.exists()) throw new Error('No sichos found for this parsha yet.');
+
+    _lsSichos = Object.entries(snap.data())
+      .sort(([a],[b]) => parseInt(a) - parseInt(b))
+      .map(([,v]) => v).filter(it => it && it.title)
+      .sort((a,b) => (a.vol||0)-(b.vol||0) || (a.page||0)-(b.page||0));
+
+    document.getElementById('chabad-panel-sub').textContent = parshaHeb + ' · ' + _lsSichos.length + ' שיחות';
+
+    // Group by volume
+    const byVol = {};
+    _lsSichos.forEach(it => { const v = it.vol; if (!byVol[v]) byVol[v] = []; byVol[v].push(it); });
+
+    let html = '<div style="padding:12px 16px 60px;">';
+    Object.keys(byVol).map(Number).sort((a,b)=>a-b).forEach(v => {
+      html += '<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);padding:14px 0 8px;border-bottom:1px solid var(--border);margin-bottom:9px;">חלק ' + _LS_GEM[v] + '</div>';
+      byVol[v].forEach((it, i) => {
+        const cid = it.page + '_' + it.vol;
+        const saved = _lsLoadScroll(cid);
+        const inProgress = saved > 30;
+        const rowIdx = _lsSichos.indexOf(it);
+        html += '<div onclick="_lsOpenReader(' + rowIdx + ')" style="background:var(--card);border:1px solid ' + (inProgress ? 'rgba(139,92,246,.4)' : 'var(--border)') + ';border-radius:12px;padding:12px 13px;margin-bottom:7px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;position:relative;overflow:hidden;" onmousedown="this.style.background=\'var(--hi)\'" onmouseup="this.style.background=\'var(--card)\'" ontouchstart="this.style.background=\'var(--hi)\'" ontouchend="this.style.background=\'var(--card)\'">'
+          + (inProgress ? '<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#8B5CF6;border-radius:12px 0 0 12px;"></div>' : '')
+          + '<div style="width:22px;height:22px;border-radius:6px;flex-shrink:0;background:' + (inProgress ? 'rgba(139,92,246,.12)' : 'var(--surface)') + ';border:1px solid ' + (inProgress ? 'rgba(139,92,246,.3)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:' + (inProgress ? '#8B5CF6' : 'var(--t3)') + ';margin-top:2px;direction:ltr;">' + (inProgress ? '▶' : i+1) + '</div>'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="font-family:\'Frank Ruhl Libre\',serif;font-size:14px;color:var(--t1);line-height:1.4;direction:rtl;text-align:right;">' + it.title + '</div>'
+          + '<div style="font-size:10px;color:var(--t3);margin-top:3px;direction:ltr;">Vol. ' + it.vol + ' · pg. ' + it.page + '</div>'
+          + (it.summary ? '<div style="font-size:11px;color:var(--t3);margin-top:3px;line-height:1.45;direction:rtl;text-align:right;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + it.summary + '</div>' : '')
+          + (inProgress ? '<div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(139,92,246,.1);color:#8B5CF6;margin-top:5px;display:inline-block;">▶ In progress</div>' : '')
+          + '</div>'
+          + '</div>';
+      });
+    });
+    html += '</div>';
+    html += '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+
+    if (contEl) contEl.innerHTML = html;
+    unlockMarkDone();
+
+  } catch(e) {
+    console.error('LS sicha list error:', e);
+    if (contEl) contEl.innerHTML = '<p style="padding:24px;color:var(--t3);text-align:center;">' + e.message + '</p>';
+  }
+}
+
+// ── Open individual sicha reader ───────────────────────────────────────────────
+async function _lsOpenReader(idx) {
+  _lsCurIdx = idx;
+  const item = _lsSichos[idx];
+  if (!item) return;
+
+  const cid = item.page + '_' + item.vol;
+  const contEl = document.getElementById('native-reader-content');
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const parshaEn = getParshaForDate(d);
+  const parshaHeb = parshaEn ? _lsParshaHeb(parshaEn) : '';
+
+  document.getElementById('chabad-panel-title').textContent = item.title || 'שיחה';
+  document.getElementById('chabad-panel-sub').textContent = parshaHeb + ' · חלק ' + (_LS_GEM[item.vol]||item.vol);
+
+  if (contEl) {
+    contEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;padding:60px 20px;"><div class="spinner" style="border-top-color:#8B5CF6;"></div></div>';
+    contEl.dataset.sectionId = 'likkuteiSichos';
+  }
+
+  // Show/update nav bar
+  _lsRenderNavBar(parshaHeb);
+
+  try {
+    const snap = await _lsGetDoc(`books/likkuteiSichos/sichos/${cid}`);
+    if (!snap.exists()) throw new Error('Sicha not found.');
+    const data = snap.data();
+
+    const fns = _lsParseFn(data.footnotes || '');
+    _lsFnMap = {};
+    fns.forEach(f => _lsFnMap[f.num] = f.text);
+
+    const body = _lsLinkify(data.mainText || '');
+    const fnSection = fns.length
+      ? '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">'
+        + '<div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">הערות (' + fns.length + ')</div>'
+        + fns.map(f => '<div id="ls-fn-' + f.num + '" style="display:flex;gap:8px;align-items:flex-start;padding:9px 11px;background:var(--surface);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;">'
+            + '<div style="font-family:\'DM Sans\';font-size:10px;font-weight:800;color:var(--gold);flex-shrink:0;direction:ltr;">' + f.num + '</div>'
+            + '<div style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:13px;line-height:1.55;color:var(--t3);direction:rtl;text-align:right;flex:1;">' + f.text + '</div>'
+            + '</div>').join('')
+        + '</div>'
+      : '';
+
+    const html = '<div style="padding:18px 16px 100px;">'
+      + '<div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8B5CF6;margin-bottom:7px;">' + parshaHeb + '</div>'
+      + '<div style="font-family:\'Frank Ruhl Libre\',serif;font-size:22px;font-weight:700;color:var(--t1);line-height:1.3;margin-bottom:4px;direction:rtl;">' + (item.title||'שיחה') + '</div>'
+      + '<div style="font-size:12px;color:var(--t3);margin-bottom:18px;">לקוטי שיחות · חלק ' + (_LS_GEM[item.vol]||item.vol) + ' · עמ׳ ' + item.page + '</div>'
+      + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 16px;">'
+      + '<div id="ls-reader-body" style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:' + _LS_FONT_SIZES[_lsFontStep] + 'px;line-height:1.6;color:var(--t1);direction:rtl;text-align:justify;">' + body + '</div>'
+      + '</div>'
+      + fnSection
+      + '</div>'
+      + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+
+    if (contEl) contEl.innerHTML = html;
+
+    // Restore scroll
+    const saved = _lsLoadScroll(cid);
+    if (saved > 0) {
+      requestAnimationFrame(() => {
+        const reader = document.getElementById('native-reader');
+        if (reader) reader.scrollTop = saved;
+      });
+    }
+
+    // Attach footnote tap listener
+    if (contEl) {
+      contEl.onclick = e => {
+        const ref = e.target.closest('[data-lsfn]');
+        if (ref) _lsShowFnPopup(parseInt(ref.dataset.lsfn), ref);
+      };
+    }
+
+  } catch(e) {
+    console.error('LS reader error:', e);
+    if (contEl) contEl.innerHTML = '<p style="padding:24px;color:var(--t3);text-align:center;">' + e.message + '</p>';
+  }
+}
+
+// ── Sicha nav bar (prev/next/back to list) ─────────────────────────────────────
+function _lsRenderNavBar(parshaHeb) {
+  // Remove existing nav bar if any
+  document.getElementById('ls-nav-bar')?.remove();
+
+  const panel = document.getElementById('chabad-panel');
+  const bar = document.createElement('div');
+  bar.id = 'ls-nav-bar';
+  bar.style.cssText = 'position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 14px 20px;display:flex;align-items:center;gap:8px;z-index:10;';
+
+  const btnStyle = 'flex:1;padding:11px 8px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;font-family:\'DM Sans\',sans-serif;cursor:pointer;';
+  const centerStyle = 'flex:2;padding:11px 8px;border-radius:12px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);color:#8B5CF6;font-size:12px;font-weight:700;text-align:center;font-family:\'DM Sans\',sans-serif;cursor:pointer;';
+
+  const hasPrev = _lsCurIdx > 0;
+  const hasNext = _lsCurIdx < _lsSichos.length - 1;
+
+  bar.innerHTML = '<button onclick="_lsNavSicha(-1)" style="' + btnStyle + (hasPrev ? '' : 'opacity:.3;pointer-events:none;') + '">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Prev'
+    + '</button>'
+    + '<button onclick="_lsBackToList()" style="' + centerStyle + '">'
+    + (parshaHeb || 'שיחות') + ' (' + (_lsCurIdx+1) + '/' + _lsSichos.length + ')'
+    + '</button>'
+    + '<button onclick="_lsNavSicha(1)" style="' + btnStyle + (hasNext ? '' : 'opacity:.3;pointer-events:none;') + '">'
+    + 'Next<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
+    + '</button>';
+
+  panel.appendChild(bar);
+}
+
+function _lsNavSicha(dir) {
+  // Save current scroll before navigating
+  const reader = document.getElementById('native-reader');
+  const item = _lsSichos[_lsCurIdx];
+  if (reader && item) _lsSaveScroll(item.page + '_' + item.vol, reader.scrollTop);
+
+  _lsOpenReader(_lsCurIdx + dir);
+}
+
+function _lsBackToList() {
+  document.getElementById('ls-nav-bar')?.remove();
+  _openLSSichaList();
+}
+
+// Save scroll on reader scroll event (called by existing onReaderScroll)
+function _lsOnScroll(scrollTop) {
+  const item = _lsSichos[_lsCurIdx];
+  if (!item) return;
+  clearTimeout(_lsScrollTimer);
+  _lsScrollTimer = setTimeout(() => {
+    _lsSaveScroll(item.page + '_' + item.vol, scrollTop);
+  }, 300);
+}
+
+// Hook into existing onReaderScroll
+const _origOnReaderScroll = window.onReaderScroll || function(){};
+// We'll call _lsOnScroll from the existing handler when LS is active
+
+// ── Footnotes ──────────────────────────────────────────────────────────────────
+function _lsParseFn(raw) {
+  if (!raw || typeof raw !== 'string') return [];
+  const stripped = raw.replace(/<\/p>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&#39;/g,"'");
+  return stripped.split(/\n+(?=\d+\))/).map(part => {
+    const m = part.match(/^(\d+)\)\s*([\s\S]*)/);
+    if (!m) return null;
+    return { num: parseInt(m[1]), text: m[2].replace(/\n/g,' ').replace(/\s+/g,' ').trim() };
+  }).filter(Boolean);
+}
+
+function _lsLinkify(text) {
+  return text.replace(/<sup>(\d+)<\/sup>/g, (_, n) =>
+    `<span data-lsfn="${n}" style="font-family:'DM Sans',sans-serif;font-size:10px;font-weight:800;color:var(--gold);cursor:pointer;vertical-align:super;line-height:0;padding:0 1px;border-radius:3px;">${n}</span>`
+  );
+}
+
+function _lsShowFnPopup(num, el) {
+  const text = _lsFnMap[num];
+  if (!text) return;
+  // Reuse the app's existing toast area or create a simple inline popup
+  // Simple approach: show in a fixed overlay near the tapped element
+  let popup = document.getElementById('ls-fn-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'ls-fn-popup';
+    popup.style.cssText = 'position:fixed;z-index:9900;max-width:285px;background:var(--card);border:1.5px solid rgba(240,165,0,.5);border-radius:12px;padding:10px 13px;box-shadow:0 8px 32px rgba(0,0,0,.55);direction:rtl;text-align:right;pointer-events:none;animation:pop .14s ease both;';
+    document.body.appendChild(popup);
+  }
+  popup.innerHTML = '<div style="font-family:\'DM Sans\';font-size:10px;font-weight:800;color:var(--gold);margin-bottom:4px;direction:ltr;text-align:left;">הערה ' + num + '</div>'
+    + '<div style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:13px;line-height:1.5;color:var(--t2);">' + text + '</div>';
+  popup.style.display = 'block';
+
+  const rect = el.getBoundingClientRect();
+  const pw = Math.min(285, window.innerWidth - 16);
+  popup.style.maxWidth = pw + 'px';
+  const ph = popup.offsetHeight || 70;
+  let left = rect.left + rect.width/2 - pw/2;
+  left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+  let top = rect.top - ph - 10;
+  if (top < 60) top = rect.bottom + 10;
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+
+  setTimeout(() => {
+    const dm = e => {
+      if (!popup.contains(e.target) && !e.target.closest('[data-lsfn]')) {
+        popup.style.display = 'none';
+        document.removeEventListener('click', dm, true);
+      }
+    };
+    document.addEventListener('click', dm, true);
+  }, 10);
+}
+
+// ── Font size (called from existing font controls) ──────────────────────────────
+// The existing reader font controls work per-section. LS overrides when active.
+// Hook: when LS reader is open, font buttons adjust _lsFontStep.
+// This is handled automatically since the font controls call _readerFontStep()
+// which injects CSS on #native-reader-content — and our LS body inherits from it.
+
+// ── Scroll save hook ───────────────────────────────────────────────────────────
+// Patch onReaderScroll to also save LS position when LS is active
+const _origReaderScroll_ls = onReaderScroll;
+function onReaderScroll() {
+  _origReaderScroll_ls.apply(this, arguments);
+  // If LS reader is open (panel title is a sicha title, nav bar exists)
+  const navBar = document.getElementById('ls-nav-bar');
+  if (navBar) {
+    const reader = document.getElementById('native-reader');
+    if (reader) _lsOnScroll(reader.scrollTop);
+  }
+}
+
+// Clean up nav bar when panel closes
+const _origClose_ls = closeChabadPanel;
+function closeChabadPanel() {
+  document.getElementById('ls-nav-bar')?.remove();
+  document.getElementById('ls-fn-popup')?.remove();
+  _origClose_ls.apply(this, arguments);
+}
 
 bootApp();
 </script>
