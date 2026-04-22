@@ -438,13 +438,40 @@
   column-gap: 20px;
   column-rule: 1px solid var(--border);
   column-fill: balance;
+  /* Prevent words breaking across columns */
+  overflow-wrap: break-word;
+  word-break: normal;
 }
-#ls-body-wrap p { margin-bottom: 1.1em; orphans: 3; widows: 3; }
+#ls-body-wrap p { margin-bottom: 1em; orphans: 3; widows: 3; }
 /* Section labels (א. ב. etc) span full width */
-#ls-body-wrap .ls-sh { display: block; font-weight: 700; break-after: avoid; column-span: all; margin-bottom: .3em; }
-/* Two columns on screens >= 560px (tablet / desktop) */
+#ls-body-wrap .ls-sh {
+  display: block; font-weight: 700; break-after: avoid;
+  column-span: all; margin-bottom: .35em; margin-top: .5em;
+}
+
+/* Two columns on screens >= 560px — match the dense print style */
 @media (min-width: 560px) {
-  #ls-body-wrap { column-count: 2; }
+  #ls-body-wrap {
+    column-count: 2;
+    column-gap: 24px;
+    column-rule: 1px solid rgba(128,128,128,.4);
+  }
+  /* Tighter card padding on desktop to maximize text width */
+  #ls-reader-card {
+    padding: 22px 20px !important;
+  }
+  /* Slightly smaller font on desktop — matches print density */
+  #ls-body-wrap {
+    font-size: 16px !important;
+    line-height: 1.6;
+  }
+  /* Footnote refs smaller on desktop */
+  .ls-fn-ref { font-size: 8px; }
+}
+/* Even wider screens — more breathing room between columns */
+@media (min-width: 900px) {
+  #ls-body-wrap { column-gap: 32px; }
+  #ls-reader-card { padding: 28px 24px !important; }
 }
 /* Footnote ref */
 .ls-fn-ref {
@@ -4710,17 +4737,41 @@ function _pruneScrollKeys() {
  */
 function _restoreScrollAfterRender(sectionId, targetPos) {
   if (!targetPos || targetPos <= 0) return;
-  // Cancel any previous pending restore for this section
   window._pendingScrollRestore[sectionId] = targetPos;
-  requestAnimationFrame(() => {
-    // If superseded by a newer call, stop
+
+  let attempts = 0;
+  const MAX_ATTEMPTS = 40; // ~650ms at 60fps
+
+  const tryRestore = () => {
+    // Superseded by a newer call for the same section
     if (window._pendingScrollRestore[sectionId] !== targetPos) return;
+
     const reader = document.getElementById('native-reader');
     if (!reader) return;
     if (document.getElementById('chabad-panel')?.style.display === 'none') return;
-    reader.scrollTop = targetPos;
-    delete window._pendingScrollRestore[sectionId];
-  });
+
+    const maxScroll = reader.scrollHeight - reader.clientHeight;
+
+    // Content is tall enough — set position and stop
+    if (maxScroll >= targetPos - 20) {
+      reader.scrollTop = targetPos;
+      delete window._pendingScrollRestore[sectionId];
+      return;
+    }
+
+    // Content not tall enough yet — retry next frame (up to limit)
+    if (attempts < MAX_ATTEMPTS) {
+      attempts++;
+      requestAnimationFrame(tryRestore);
+    }
+    // If we exhaust retries just scroll as far as we can
+    else {
+      reader.scrollTop = targetPos;
+      delete window._pendingScrollRestore[sectionId];
+    }
+  };
+
+  requestAnimationFrame(tryRestore);
 }
 
 let markDoneUnlocked = false;
@@ -9161,7 +9212,7 @@ async function _lsOpenReader(idx) {
       + '<div style="font-family:\'Frank Ruhl Libre\',serif;font-size:22px;font-weight:700;color:var(--t1);line-height:1.3;margin-bottom:4px;direction:rtl;">'+(item.title||'שיחה')+'</div>'
       + '<div style="font-size:12px;color:var(--t3);margin-bottom:18px;">לקוטי שיחות · חלק '+(_LS_GEM[item.vol]||item.vol)+' · עמ׳ '+item.page+'</div>'
       // Card wraps the two-column body
-      + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 16px;">'
+      + '<div id="ls-reader-card" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 16px;">'
       + '<div id="ls-body-wrap" style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:18px;line-height:1.65;">'+body+'</div>'
       + '</div>'
       + fnSection + '</div>'
@@ -9175,9 +9226,23 @@ async function _lsOpenReader(idx) {
       };
     }
 
-    // Restore scroll position
+    // Restore scroll — retry until content has enough height to reach target
     const saved = _lsLoadScroll(cid);
-    if (saved > 0) _restoreScrollAfterRender('likkuteiSichos', saved);
+    if (saved > 0) {
+      let attempts = 0;
+      const tryRestore = () => {
+        const reader = document.getElementById('native-reader');
+        if (!reader) return;
+        const maxScroll = reader.scrollHeight - reader.clientHeight;
+        if (maxScroll >= saved - 10 || attempts > 25) {
+          reader.scrollTop = saved;
+        } else {
+          attempts++;
+          requestAnimationFrame(tryRestore);
+        }
+      };
+      requestAnimationFrame(tryRestore);
+    }
 
   } catch(e) {
     console.error('LS reader error:', e);
