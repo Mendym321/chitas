@@ -434,44 +434,36 @@
 #ls-body-wrap {
   direction: rtl;
   text-align: justify;
-  column-count: 1; /* single column on narrow phones */
-  column-gap: 20px;
+  column-count: 1;
+  column-gap: 18px;
   column-rule: 1px solid var(--border);
   column-fill: balance;
-  /* Prevent words breaking across columns */
   overflow-wrap: break-word;
   word-break: normal;
+  font-size: 17px;
+  line-height: 1.6;
 }
-#ls-body-wrap p { margin-bottom: 1em; orphans: 3; widows: 3; }
-/* Section labels (א. ב. etc) span full width */
+#ls-body-wrap p { margin-bottom: .85em; orphans: 3; widows: 3; }
 #ls-body-wrap .ls-sh {
   display: block; font-weight: 700; break-after: avoid;
-  column-span: all; margin-bottom: .35em; margin-top: .5em;
+  column-span: all; margin-bottom: .3em; margin-top: .6em;
 }
-
-/* Two columns on screens >= 560px — match the dense print style */
-@media (min-width: 560px) {
+/* Two columns on screens >= 540px — tight, like the print */
+@media (min-width: 540px) {
   #ls-body-wrap {
     column-count: 2;
-    column-gap: 24px;
-    column-rule: 1px solid rgba(128,128,128,.4);
+    column-gap: 14px;
+    column-rule: 1px solid rgba(120,120,120,.35);
+    font-size: 14.5px;
+    line-height: 1.52;
   }
-  /* Tighter card padding on desktop to maximize text width */
-  #ls-reader-card {
-    padding: 22px 20px !important;
-  }
-  /* Slightly smaller font on desktop — matches print density */
-  #ls-body-wrap {
-    font-size: 16px !important;
-    line-height: 1.6;
-  }
-  /* Footnote refs smaller on desktop */
+  #ls-body-wrap p { margin-bottom: .6em; }
+  #ls-reader-card { padding: 16px 12px !important; }
   .ls-fn-ref { font-size: 8px; }
 }
-/* Even wider screens — more breathing room between columns */
 @media (min-width: 900px) {
-  #ls-body-wrap { column-gap: 32px; }
-  #ls-reader-card { padding: 28px 24px !important; }
+  #ls-body-wrap { font-size: 15px; line-height: 1.55; column-gap: 16px; }
+  #ls-reader-card { padding: 20px 16px !important; }
 }
 /* Footnote ref */
 .ls-fn-ref {
@@ -6254,13 +6246,16 @@ function closeChabadPanel() {
   if (_lspb) _lspb.style.background = 'var(--gold)';
   const reader = document.getElementById('native-reader');
   const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-  // Save position before hiding
+  // Save position before hiding — includes LS sicha
   if (reader && reader.scrollTop > 0) {
     if (sid) {
       if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
         _saveScrollPos(sid, reader.scrollTop);
       } else if (EXTRA_TRACK_DEFS[sid]) {
         _saveScrollPos('extra_' + sid, reader.scrollTop);
+      } else if (sid === 'likkuteiSichos' && window._lsInReader) {
+        const it = window._lsSichos && window._lsSichos[window._lsCurIdx];
+        if (it) { try { localStorage.setItem('ls_s_'+it.page+'_'+it.vol, String(Math.round(reader.scrollTop))); } catch {} }
       }
     }
   }
@@ -9213,7 +9208,7 @@ async function _lsOpenReader(idx) {
       + '<div style="font-size:12px;color:var(--t3);margin-bottom:18px;">לקוטי שיחות · חלק '+(_LS_GEM[item.vol]||item.vol)+' · עמ׳ '+item.page+'</div>'
       // Card wraps the two-column body
       + '<div id="ls-reader-card" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 16px;">'
-      + '<div id="ls-body-wrap" style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:18px;line-height:1.65;">'+body+'</div>'
+      + '<div id="ls-body-wrap" style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;">'+body+'</div>'
       + '</div>'
       + fnSection + '</div>'
       + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
@@ -9226,22 +9221,25 @@ async function _lsOpenReader(idx) {
       };
     }
 
-    // Restore scroll — retry until content has enough height to reach target
-    const saved = _lsLoadScroll(cid);
-    if (saved > 0) {
-      let attempts = 0;
-      const tryRestore = () => {
+    // Restore scroll — self-contained retry loop, immune to _pendingScrollRestore clears
+    const savedPos = _lsLoadScroll(cid);
+    if (savedPos > 0) {
+      // Use a unique token so old loops from previous sicha opens don't interfere
+      const restoreToken = Date.now();
+      contEl._lsRestoreToken = restoreToken;
+      let att = 0;
+      const tryLsRestore = () => {
+        if (contEl._lsRestoreToken !== restoreToken) return; // superseded
         const reader = document.getElementById('native-reader');
         if (!reader) return;
-        const maxScroll = reader.scrollHeight - reader.clientHeight;
-        if (maxScroll >= saved - 10 || attempts > 25) {
-          reader.scrollTop = saved;
-        } else {
-          attempts++;
-          requestAnimationFrame(tryRestore);
+        if (reader.scrollHeight - reader.clientHeight >= savedPos - 20) {
+          reader.scrollTop = savedPos;
+          return;
         }
+        if (att++ < 50) requestAnimationFrame(tryLsRestore); // up to ~800ms
+        else reader.scrollTop = savedPos; // give up, try anyway
       };
-      requestAnimationFrame(tryRestore);
+      requestAnimationFrame(tryLsRestore);
     }
 
   } catch(e) {
@@ -9269,14 +9267,21 @@ function _lsRenderNavBar(parshaHeb, idx) {
   panel.appendChild(bar);
 }
 
-function _lsNavSicha(dir) {
+function _lsSaveCurrentScroll() {
   const reader = document.getElementById('native-reader');
-  const item   = _lsSichos[_lsCurIdx];
-  if (reader && item) _lsSaveScroll(item.page+'_'+item.vol, reader.scrollTop);
+  const it = _lsSichos[_lsCurIdx];
+  if (reader && it && reader.scrollTop > 0) {
+    _lsSaveScroll(it.page + '_' + it.vol, reader.scrollTop);
+  }
+}
+
+function _lsNavSicha(dir) {
+  _lsSaveCurrentScroll();
   _lsOpenReader(_lsCurIdx + dir);
 }
 
 function _lsBackToList() {
+  _lsSaveCurrentScroll();
   _lsInReader = false;
   window._lsHandleClose = function() { return false; };
   document.getElementById('ls-nav-bar')?.remove();
@@ -9365,6 +9370,24 @@ function _lsShowFnPopup(num, el) {
 // ── Subtitle on feed card ─────────────────────────────────────────────────────
 // (Called from _loadExtraSubtitle — already wired above)
 
+
+// Save scroll position on page unload — catches reloads and tab closes
+window.addEventListener('beforeunload', () => {
+  const reader = document.getElementById('native-reader');
+  if (!reader || reader.scrollTop <= 0) return;
+  const panel = document.getElementById('chabad-panel');
+  if (!panel || panel.style.display === 'none') return;
+  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  if (!sid) return;
+  if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
+    _saveScrollPos(sid, reader.scrollTop);
+  } else if (typeof EXTRA_TRACK_DEFS !== 'undefined' && EXTRA_TRACK_DEFS[sid]) {
+    _saveScrollPos('extra_' + sid, reader.scrollTop);
+  } else if (sid === 'likkuteiSichos' && window._lsInReader) {
+    const it = window._lsSichos && window._lsSichos[window._lsCurIdx];
+    if (it) { try { localStorage.setItem('ls_s_'+it.page+'_'+it.vol, String(Math.round(reader.scrollTop))); } catch {} }
+  }
+});
 
 bootApp();
 </script>
