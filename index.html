@@ -6197,14 +6197,14 @@ function _applyReaderFontSize(sectionId) {
   styleEl.textContent = `
     #native-reader-content p:not(.hagahah-text),
     #native-reader-content div:not(.tanya-hagahah) > p { font-size: calc(var(--rf-base, 15px) * ${scale}) !important; }
-    #native-reader-content :not(.tanya-hagahah) > [style*="font-size:15px"],
-    #native-reader-content :not(.tanya-hagahah) > [style*="font-size: 15px"] { font-size: ${Math.round(15 * scale)}px !important; }
-    #native-reader-content :not(.tanya-hagahah) > [style*="font-size:16px"],
-    #native-reader-content :not(.tanya-hagahah) > [style*="font-size: 16px"] { font-size: ${Math.round(16 * scale)}px !important; }
-    #native-reader-content :not(.tanya-hagahah) > [style*="font-size:18px"],
-    #native-reader-content :not(.tanya-hagahah) > [style*="font-size: 18px"] { font-size: ${Math.round(18 * scale)}px !important; }
-    #native-reader-content :not(.tanya-hagahah) > [style*="font-size:19px"],
-    #native-reader-content :not(.tanya-hagahah) > [style*="font-size: 19px"] { font-size: ${Math.round(19 * scale)}px !important; }
+    #native-reader-content :not(.tanya-hagahah) [style*="font-size:15px"]:not(.tanya-hagahah *),
+    #native-reader-content :not(.tanya-hagahah) [style*="font-size: 15px"]:not(.tanya-hagahah *) { font-size: ${Math.round(15 * scale)}px !important; }
+    #native-reader-content :not(.tanya-hagahah) [style*="font-size:16px"]:not(.tanya-hagahah *),
+    #native-reader-content :not(.tanya-hagahah) [style*="font-size: 16px"]:not(.tanya-hagahah *) { font-size: ${Math.round(16 * scale)}px !important; }
+    #native-reader-content :not(.tanya-hagahah) [style*="font-size:18px"]:not(.tanya-hagahah *),
+    #native-reader-content :not(.tanya-hagahah) [style*="font-size: 18px"]:not(.tanya-hagahah *) { font-size: ${Math.round(18 * scale)}px !important; }
+    #native-reader-content :not(.tanya-hagahah) [style*="font-size:19px"]:not(.tanya-hagahah *),
+    #native-reader-content :not(.tanya-hagahah) [style*="font-size: 19px"]:not(.tanya-hagahah *) { font-size: ${Math.round(19 * scale)}px !important; }
     .tanya-hagahah p { font-size: ${Math.round(13 * scale)}px !important; }
     .tanya-hagahah [style*="font-size:15px"] { font-size: ${Math.round(15 * scale * 0.87)}px !important; }
   `;
