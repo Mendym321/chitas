@@ -448,7 +448,7 @@
   display: block; font-weight: 700; break-after: avoid;
   column-span: all; margin-bottom: .3em; margin-top: .6em;
 }
-/* Two columns on screens >= 540px — tight, like the print */
+/* Two columns on tablets (540–899px) */
 @media (min-width: 540px) {
   #ls-body-wrap {
     column-count: 2;
@@ -461,8 +461,15 @@
   #ls-reader-card { padding: 16px 12px !important; }
   .ls-fn-ref { font-size: 8px; }
 }
+/* Three columns on desktop (900px+) — skinnier, closer to print feel */
 @media (min-width: 900px) {
-  #ls-body-wrap { font-size: 15px; line-height: 1.55; column-gap: 16px; }
+  #ls-body-wrap {
+    column-count: 3;
+    column-gap: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  #ls-body-wrap p { margin-bottom: .55em; }
   #ls-reader-card { padding: 20px 16px !important; }
 }
 /* Footnote ref */
@@ -7177,7 +7184,7 @@ async function _loadExtraSubtitle(id) {
       const d2 = new Date(); d2.setDate(d2.getDate() + (dayOffset || 0));
       const parshaEn = getParshaForDate(d2);
       const lsKey = parshaEn ? _lsParshaKey(parshaEn) : null;
-      el.textContent = parshaEn ? 'פרשת ' + _lsParshaHeb(parshaEn) : "This week's parsha";
+      el.textContent = parshaEn ? 'Sichos · ' + _lsParshaHeb(parshaEn) : "This week's parsha";
     } else if (id === 'dafYomi') {
       const item = items.find(i => i.title?.en === 'Daf Yomi');
       el.textContent = item?.displayValue?.en || item?.ref || 'Daf Yomi';
@@ -7293,7 +7300,7 @@ const EXTRA_TRACK_DEFS = {
   likkuteiSichos: {
     id: 'likkuteiSichos',
     label: 'Likkutei Sichos',
-    desc: "The Rebbe's sichos on the weekly parsha",
+    desc: "Weekly sichos on the parsha",
     duration: '~20 min',
     color: '#8B5CF6',
     iconPath: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
@@ -8820,7 +8827,7 @@ async function _openLSSichaList() {
   _lsActiveParshaDivs = parshaKeys;
 
   document.getElementById('chabad-panel-title').textContent = 'לקוטי שיחות';
-  document.getElementById('chabad-panel-sub').textContent   = parshaKeys.map(k => _lsParshaHeb(k)).join(' · ') + ' — טוען…';
+  document.getElementById('chabad-panel-sub').textContent   = 'Sichos of the week';
 
   // Hide mark-done at list level
   const markBtn = document.getElementById('chabad-mark-btn');
@@ -8871,7 +8878,7 @@ async function _openLSSichaList() {
     const modeLabel  = mode === 'sets' && userSets.length
       ? 'Vols. ' + userSets.map(s => _LS_SETS.find(x=>x.id===s)?.en || s).join(', ')
       : 'All volumes';
-    document.getElementById('chabad-panel-sub').textContent = parshaKeys.map(k => _lsParshaHeb(k)).join(' · ') + ' · ' + totalCount + ' שיחות';
+    document.getElementById('chabad-panel-sub').textContent = parshaKeys.map(k => _lsParshaHeb(k)).join(' · ');
 
     // Mode/set change button
     const changeBtnHtml = '<button onclick="_lsOpenSetPicker(false)" style="display:flex;align-items:center;justify-content:space-between;margin:0 16px 14px;padding:9px 14px;border-radius:10px;background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);color:var(--t1);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;width:calc(100% - 32px);">'
@@ -8901,13 +8908,13 @@ async function _openLSSichaList() {
           html += '<div onclick="_lsOpenReader('+rowIdx+')" style="background:var(--card);border:1px solid '+(isDone?'rgba(29,185,84,.3)':inProg?'rgba(139,92,246,.4)':'var(--border)')+';border-radius:12px;padding:12px 13px;margin-bottom:7px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;position:relative;overflow:hidden;" onmousedown="this.style.background=\'var(--hi)\'" onmouseup="this.style.background=\'var(--card)\'" ontouchstart="this.style.background=\'var(--hi)\'" ontouchend="this.style.background=\'var(--card)\'">'
             + (inProg ? '<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#8B5CF6;border-radius:12px 0 0 12px;"></div>' : '')
             + (isDone ? '<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);border-radius:12px 0 0 12px;"></div>' : '')
-            + '<div style="width:22px;height:22px;border-radius:6px;flex-shrink:0;background:'+(isDone?'rgba(29,185,84,.1)':inProg?'rgba(139,92,246,.1)':'var(--surface)')+';border:1px solid '+(isDone?'rgba(29,185,84,.3)':inProg?'rgba(139,92,246,.3)':'var(--border)')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:'+(isDone?'var(--green)':inProg?'#8B5CF6':'var(--t3)')+';margin-top:2px;direction:ltr;">'+(isDone?'✓':inProg?'▶':i+1)+'</div>'
+            + '<div style="width:22px;height:22px;border-radius:6px;flex-shrink:0;background:'+(isDone?'rgba(29,185,84,.1)':inProg?'rgba(139,92,246,.1)':'var(--surface)')+';border:1px solid '+(isDone?'rgba(29,185,84,.3)':inProg?'rgba(139,92,246,.3)':'var(--border)')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:'+(isDone?'var(--green)':inProg?'#8B5CF6':'var(--t3)')+';margin-top:2px;direction:ltr;">'+(isDone?'✓':i+1)+'</div>'
             + '<div style="flex:1;min-width:0;">'
             + '<div style="font-family:\'Frank Ruhl Libre\',serif;font-size:14px;color:var(--t1);line-height:1.4;direction:rtl;text-align:right;">'+it.title+'</div>'
             + '<div style="font-size:10px;color:var(--t3);margin-top:3px;direction:ltr;">Vol. '+it.vol+' · pg. '+it.page+'</div>'
             + (it.summary ? '<div style="font-size:11px;color:var(--t3);margin-top:3px;line-height:1.45;direction:rtl;text-align:right;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+it.summary+'</div>' : '')
             + (isDone ? '<div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(29,185,84,.1);color:var(--green);margin-top:5px;display:inline-block;">✓ Read</div>' : '')
-            + (inProg ? '<div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(139,92,246,.1);color:#8B5CF6;margin-top:5px;display:inline-block;">▶ In progress</div>' : '')
+            + (inProg ? '<div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(139,92,246,.1);color:#8B5CF6;margin-top:5px;display:inline-flex;align-items:center;gap:3px;"><svg width="7" height="8" viewBox="0 0 8 9" fill="#8B5CF6"><path d="M1 1l6 3.5L1 8V1z"/></svg>In progress</div>' : '')
             + '</div></div>';
         });
       });
