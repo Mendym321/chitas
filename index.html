@@ -435,6 +435,15 @@
   src: url('https://dach.dev/fonts/Heilig-ls-Bold.ttf') format('truetype');
   font-weight: bold; font-display: swap;
 }
+/* Bold DachHeilig has slightly taller metrics than the regular OTF —
+   scale it down fractionally so cap heights match inline */
+#ls-body-wrap strong,
+#ls-body-wrap b,
+#ls-body-wrap [style*="font-weight:bold"],
+#ls-body-wrap [style*="font-weight: bold"] {
+  font-size: .88em;
+  line-height: inherit;
+}
 /* Two-column newspaper layout — right column fills first (matches print) */
 #ls-body-wrap {
   direction: rtl;
