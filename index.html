@@ -8127,7 +8127,9 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
   if (!contEl) return;
   contEl.style.display = 'block';
 
-  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+  const HE = id === 'likkuteiTorah'
+    ? "'DachHeilig','Frank Ruhl Libre',serif"
+    : "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
   const langKey = 'chitas_lang_extra_' + id;
   const lang = localStorage.getItem(langKey) || (enSegs.length ? 'both' : 'he');
 
