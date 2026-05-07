@@ -440,8 +440,9 @@
   column-fill: balance;
   overflow-wrap: break-word;
   word-break: normal;
-  font-size: 17px;
-  line-height: 1.6;
+  /* Base font size — overridden by --ls-font-size CSS variable when user adjusts */
+  font-size: var(--ls-font-size, 20px);
+  line-height: 1.65;
 }
 #ls-body-wrap p { margin-bottom: .85em; orphans: 3; widows: 3; }
 #ls-body-wrap .ls-sh {
@@ -454,8 +455,8 @@
     column-count: 2;
     column-gap: 14px;
     column-rule: 1px solid rgba(120,120,120,.35);
-    font-size: 14.5px;
-    line-height: 1.52;
+    font-size: var(--ls-font-size, 17px);
+    line-height: 1.55;
   }
   #ls-body-wrap p { margin-bottom: .6em; }
   #ls-reader-card { padding: 16px 12px !important; }
@@ -466,8 +467,8 @@
   #ls-body-wrap {
     column-count: 3;
     column-gap: 16px;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: var(--ls-font-size, 16px);
+    line-height: 1.52;
   }
   #ls-body-wrap p { margin-bottom: .55em; }
   #ls-reader-card { padding: 20px 16px !important; }
@@ -775,7 +776,7 @@ onAuthStateChanged(auth, user => {
             <div style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:32px;">
               <!-- Streak hero -->
               <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px;">
-                <svg width="38" height="38" viewBox="0 0 24 24" fill="#F0A500" style="animation:flamePulse 2s ease-in-out infinite;flex-shrink:0;"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="#F0A500" style="flex-shrink:0;"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
                 <div>
                   <p style="font-size:38px;font-weight:900;color:var(--gold);line-height:1;letter-spacing:-1.5px;">47<span style="font-size:16px;font-weight:700;color:var(--t3);margin-left:3px;">days</span></p>
                   <p style="font-size:11px;color:var(--t3);margin-top:2px;">Current streak · Best: 47 days</p>
@@ -783,12 +784,26 @@ onAuthStateChanged(auth, user => {
               </div>
               <!-- 4-section progress -->
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                ${[['Chumash','#F0A500'],['Tehillim','#4A9EFF'],['Tanya','#A855F7'],['Rambam','#1DB954']].map(([name,color]) => `
                 <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-                  <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
-                  <span style="font-size:12px;font-weight:700;color:var(--t1);">${name}</span>
+                  <div style="width:8px;height:8px;border-radius:50%;background:#F0A500;flex-shrink:0;"></div>
+                  <span style="font-size:12px;font-weight:700;color:var(--t1);">Chumash</span>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
-                </div>`).join('')}
+                </div>
+                <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#4A9EFF;flex-shrink:0;"></div>
+                  <span style="font-size:12px;font-weight:700;color:var(--t1);">Tehillim</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#A855F7;flex-shrink:0;"></div>
+                  <span style="font-size:12px;font-weight:700;color:var(--t1);">Tanya</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#1DB954;flex-shrink:0;"></div>
+                  <span style="font-size:12px;font-weight:700;color:var(--t1);">Rambam</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
               </div>
             </div>
             <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Your streak, front and center</h2>
@@ -809,16 +824,21 @@ onAuthStateChanged(auth, user => {
               </div>
               <!-- People list -->
               <div style="display:flex;flex-direction:column;gap:8px;">
-                ${[
-                  ['Bubby Sarah', 'Psalm 27', '#A855F7'],
-                  ['Chaim Mendel', 'Psalm 42', '#1DB954'],
-                  ['The Rebbe', 'Psalm 70', '#F0A500'],
-                ].map(([name, psalm, color]) => `
                 <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:${color}22;border:1px solid ${color}44;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${color};">${name[0]}</div>
-                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">${name}</span>
-                  <span style="font-size:11px;color:var(--t3);">${psalm}</span>
-                </div>`).join('')}
+                  <div style="width:28px;height:28px;border-radius:50%;background:rgba(168,85,247,.13);border:1px solid rgba(168,85,247,.27);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#A855F7;">B</div>
+                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">Bubby Sarah</span>
+                  <span style="font-size:11px;color:var(--t3);">Psalm 27</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:rgba(29,185,84,.13);border:1px solid rgba(29,185,84,.27);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#1DB954;">C</div>
+                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">Chaim Mendel</span>
+                  <span style="font-size:11px;color:var(--t3);">Psalm 42</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:rgba(240,165,0,.13);border:1px solid rgba(240,165,0,.27);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#F0A500;">R</div>
+                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">The Rebbe</span>
+                  <span style="font-size:11px;color:var(--t3);">Psalm 70</span>
+                </div>
               </div>
             </div>
             <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Tehillim for your people</h2>
@@ -832,23 +852,30 @@ onAuthStateChanged(auth, user => {
               <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
                 <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Additional learning</p>
                 <div style="display:flex;flex-wrap:wrap;gap:7px;">
-                  ${[['Daf Yomi','#F0A500'],['Likkutei Torah','#A855F7'],['Mishnah Yomi','#1DB954'],['Hayom Yom','#4A9EFF']].map(([t,c]) =>
-                    `<div style="padding:5px 11px;border-radius:8px;background:${c}12;border:1px solid ${c}30;"><span style="font-size:11px;font-weight:700;color:${c};">${t}</span></div>`
-                  ).join('')}
+                  <div style="padding:5px 11px;border-radius:8px;background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);"><span style="font-size:11px;font-weight:700;color:#F0A500;">Daf Yomi</span></div>
+                  <div style="padding:5px 11px;border-radius:8px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);"><span style="font-size:11px;font-weight:700;color:#A855F7;">Likkutei Torah</span></div>
+                  <div style="padding:5px 11px;border-radius:8px;background:rgba(29,185,84,.08);border:1px solid rgba(29,185,84,.2);"><span style="font-size:11px;font-weight:700;color:#1DB954;">Mishnah Yomi</span></div>
+                  <div style="padding:5px 11px;border-radius:8px;background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);"><span style="font-size:11px;font-weight:700;color:#4A9EFF;">Hayom Yom</span></div>
                 </div>
               </div>
               <!-- Leaderboard preview -->
               <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Leaderboard</p>
               <div style="display:flex;flex-direction:column;gap:7px;">
-                ${[['🥇','Mendel K.','Crown Heights','2,840 XP'],['🥈','Rivka S.','Monsey','2,210 XP'],['🥉','Yosef L.','Tzfas','1,990 XP']].map(([medal,name,city,xp]) => `
                 <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
-                  <span style="font-size:15px;">${medal}</span>
-                  <div style="flex:1;">
-                    <p style="font-size:12px;font-weight:700;color:var(--t1);">${name}</p>
-                    <p style="font-size:10px;color:var(--t3);">${city}</p>
-                  </div>
-                  <span style="font-size:11px;font-weight:700;color:var(--gold);">${xp}</span>
-                </div>`).join('')}
+                  <div style="width:20px;height:20px;border-radius:50%;background:rgba(240,165,0,.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gold);">1</div>
+                  <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Mendel K.</p><p style="font-size:10px;color:var(--t3);">Crown Heights</p></div>
+                  <span style="font-size:11px;font-weight:700;color:var(--gold);">2,840 XP</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
+                  <div style="width:20px;height:20px;border-radius:50%;background:rgba(144,144,168,.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--t2);">2</div>
+                  <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Rivka S.</p><p style="font-size:10px;color:var(--t3);">Monsey</p></div>
+                  <span style="font-size:11px;font-weight:700;color:var(--t2);">2,210 XP</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
+                  <div style="width:20px;height:20px;border-radius:50%;background:rgba(144,144,168,.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--t2);">3</div>
+                  <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Yosef L.</p><p style="font-size:10px;color:var(--t3);">Tzfas</p></div>
+                  <span style="font-size:11px;font-weight:700;color:var(--t2);">1,990 XP</span>
+                </div>
               </div>
             </div>
             <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">More to learn, together</h2>
@@ -6212,9 +6239,37 @@ function _applyReaderFontSize(sectionId) {
   }
 }
 
+// LS uses its own font sizes (not rf-body based) — steps in px for mobile baseline
+const _LS_FONT_PX   = [20, 23, 26, 30]; // mobile baseline sizes
+const _LS_FONT_STEPS = _LS_FONT_PX.length;
+const _LS_FONT_DEFAULT = 0; // index 0 = 20px is the minimum/default
+
+function _lsGetFontStep() { try { return parseInt(localStorage.getItem('ls_font_step')||'0')||0; } catch { return 0; } }
+function _lsSetFontSize(step) {
+  const s = Math.max(0, Math.min(_LS_FONT_STEPS - 1, step));
+  try { localStorage.setItem('ls_font_step', String(s)); } catch {}
+  const px = _LS_FONT_PX[s];
+  // Update CSS variable on #ls-reader-card (scoped to the reader card, not the whole page)
+  const card = document.getElementById('ls-reader-card');
+  if (card) card.style.setProperty('--ls-font-size', px + 'px');
+  // Update button dim state
+  const ctrl = document.getElementById('reader-font-controls');
+  if (ctrl) {
+    const btns = ctrl.querySelectorAll('button');
+    if (btns[0]) { btns[0].style.opacity = s === 0 ? '0.35' : '1'; btns[0].style.cursor = s === 0 ? 'default' : 'pointer'; }
+    if (btns[1]) { btns[1].style.opacity = s === _LS_FONT_STEPS-1 ? '0.35' : '1'; btns[1].style.cursor = s === _LS_FONT_STEPS-1 ? 'default' : 'pointer'; }
+  }
+  fire('Text size ' + px + 'px', 'xp');
+}
+
 function _readerFontStep(delta) {
   const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
   if (!sid) return;
+  // LS uses its own font system
+  if (sid === 'likkuteiSichos') {
+    _lsSetFontSize(_lsGetFontStep() + delta);
+    return;
+  }
   const cur  = _getReaderFontStep(sid);
   const next = Math.max(0, Math.min(_FONT_STEPS - 1, cur + delta));
   if (next === cur) return;
@@ -9162,6 +9217,10 @@ async function _lsOpenReader(idx) {
   if (progWrap) progWrap.style.display = 'block';
   if (progBar)  { progBar.style.background = '#8B5CF6'; progBar.style.width = '0%'; }
 
+  // Show font controls for LS reader
+  const fontCtrl = document.getElementById('reader-font-controls');
+  if (fontCtrl) fontCtrl.style.display = 'flex';
+
   // Render nav bar
   _lsRenderNavBar(parshaHeb, idx);
 
@@ -9211,6 +9270,21 @@ async function _lsOpenReader(idx) {
         if (ref) _lsShowFnPopup(parseInt(ref.dataset.lsfn), ref);
       };
     }
+
+    // Apply saved font size
+    const savedStep = _lsGetFontStep();
+    const card = document.getElementById('ls-reader-card');
+    if (card) card.style.setProperty('--ls-font-size', _LS_FONT_PX[savedStep] + 'px');
+    // Sync button dim state without firing toast
+    (function() {
+      const s = savedStep;
+      const ctrl = document.getElementById('reader-font-controls');
+      if (ctrl) {
+        const btns = ctrl.querySelectorAll('button');
+        if (btns[0]) { btns[0].style.opacity = s === 0 ? '0.35' : '1'; btns[0].style.cursor = s === 0 ? 'default' : 'pointer'; }
+        if (btns[1]) { btns[1].style.opacity = s === _LS_FONT_STEPS-1 ? '0.35' : '1'; btns[1].style.cursor = s === _LS_FONT_STEPS-1 ? 'default' : 'pointer'; }
+      }
+    })();
 
     // Restore scroll — self-contained retry loop, immune to _pendingScrollRestore clears
     const savedPos = _lsLoadScroll(cid);
@@ -9282,6 +9356,8 @@ function _lsBackToList() {
   if (markBtn) markBtn.style.display = 'none';
   const progWrap = document.getElementById('reader-progress-wrap');
   if (progWrap) progWrap.style.display = 'none';
+  const fontCtrl = document.getElementById('reader-font-controls');
+  if (fontCtrl) fontCtrl.style.display = 'none';
   _openLSSichaList();
 }
 
