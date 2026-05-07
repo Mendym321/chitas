@@ -435,13 +435,13 @@
   src: url('https://dach.dev/fonts/Heilig-ls-Bold.ttf') format('truetype');
   font-weight: bold; font-display: swap;
 }
-/* Bold DachHeilig has slightly taller metrics than the regular OTF —
-   scale it down fractionally so cap heights match inline */
+/* Bold DachHeilig (Heilig-ls-Bold.ttf) has slightly taller metrics than the regular OTF —
+   nudge it down just a touch so cap heights match inline */
 #ls-body-wrap strong,
 #ls-body-wrap b,
 #ls-body-wrap [style*="font-weight:bold"],
 #ls-body-wrap [style*="font-weight: bold"] {
-  font-size: .88em;
+  font-size: .93em;
   line-height: inherit;
 }
 /* Two-column newspaper layout — right column fills first (matches print) */
@@ -1131,7 +1131,7 @@ onAuthStateChanged(auth, user => {
       <div id="tanya-note" style="display:none;"></div>
 
       <!-- Extra learning tracks -->
-      <div id="extra-tracks-separator" style="display:none;margin:10px 0 8px;display:flex;align-items:center;gap:10px;">
+      <div id="extra-tracks-separator" style="display:none;margin:4px 0 4px;display:flex;align-items:center;gap:10px;">
         <div style="flex:1;height:1px;background:var(--border);"></div>
         <p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);white-space:nowrap;">Extra learning</p>
         <div style="flex:1;height:1px;background:var(--border);"></div>
@@ -1566,54 +1566,6 @@ const RAMBAM_TRACKS = {
 };
 
 // 4 worlds × 6 medals. Each world unlocks when all medals in previous world earned.
-const WORLDS = [
-  {
-    id:'bronze', label:'Bronze', color:'#CD7F32', lockColor:'#3D2E1E',
-    medals:[
-      {id:'b_streak3',  label:'Starter',   desc:'3-day streak',          icon:'flame',  req:u=>u.streak>=3},
-      {id:'b_streak7',  label:'Regular',   desc:'7-day streak',          icon:'flame',  req:u=>u.streak>=7},
-      {id:'b_days10',   label:'Dedicated', desc:'10 days completed',     icon:'book',   req:u=>u.total>=10},
-      {id:'b_days30',   label:'Committed', desc:'30 days completed',     icon:'book',   req:u=>u.total>=30},
-      {id:'b_perfect5', label:'Sharp',     desc:'5 perfect days',        icon:'star',   req:u=>(u.perfectDays||0)>=5},
-      {id:'b_quiz',     label:'Curious',   desc:'10 quizzes at 80%+',    icon:'quiz',   req:u=>(u.quizTotal||0)>=10&&(u.quizCorrect/Math.max(u.quizTotal,1))>=0.8},
-    ]
-  },
-  {
-    id:'silver', label:'Silver', color:'#A8A8B8', lockColor:'#2A2A35',
-    medals:[
-      {id:'s_streak30',  label:'Consistent', desc:'30-day streak',         icon:'flame',  req:u=>u.streak>=30},
-      {id:'s_streak60',  label:'Reliable',   desc:'60-day streak',         icon:'flame',  req:u=>u.streak>=60},
-      {id:'s_days50',    label:'Veteran',    desc:'50 days completed',     icon:'book',   req:u=>u.total>=50},
-      {id:'s_days100',   label:'Century',    desc:'100 days completed',    icon:'book',   req:u=>u.total>=100},
-      {id:'s_perfect20', label:'Precise',    desc:'20 perfect days',       icon:'star',   req:u=>(u.perfectDays||0)>=20},
-      {id:'s_quiz',      label:'Scholar',    desc:'25 quizzes at 80%+',    icon:'quiz',   req:u=>(u.quizTotal||0)>=25&&(u.quizCorrect/Math.max(u.quizTotal,1))>=0.8},
-    ]
-  },
-  {
-    id:'gold', label:'Gold', color:'#F0A500', lockColor:'#2E2500',
-    medals:[
-      {id:'g_streak90',  label:'Unstoppable',desc:'90-day streak',         icon:'flame',  req:u=>u.streak>=90},
-      {id:'g_streak180', label:'Iron Will',  desc:'180-day streak',        icon:'flame',  req:u=>u.streak>=180},
-      {id:'g_days200',   label:'Elite',      desc:'200 days completed',    icon:'trophy', req:u=>u.total>=200},
-      {id:'g_days365',   label:'Year One',   desc:'365 days completed',    icon:'trophy', req:u=>u.total>=365},
-      {id:'g_perfect50', label:'Flawless',   desc:'50 perfect days',       icon:'star',   req:u=>(u.perfectDays||0)>=50},
-      {id:'g_quiz',      label:'Expert',     desc:'50 quizzes at 80%+',    icon:'quiz',   req:u=>(u.quizTotal||0)>=50&&(u.quizCorrect/Math.max(u.quizTotal,1))>=0.8},
-    ]
-  },
-  {
-    id:'diamond', label:'Diamond', color:'#7DF9FF', lockColor:'#001A1C',
-    medals:[
-      {id:'d_streak365', label:'Legend',     desc:'365-day streak',        icon:'flame',  req:u=>u.streak>=365},
-      {id:'d_streak730', label:'Mythic',     desc:'730-day streak',        icon:'flame',  req:u=>u.streak>=730},
-      {id:'d_days500',   label:'500 Days',   desc:'500 days completed',    icon:'trophy', req:u=>u.total>=500},
-      {id:'d_days1000',  label:'1000 Days',  desc:'1000 days completed',   icon:'trophy', req:u=>u.total>=1000},
-      {id:'d_perfect100',label:'Perfect 100','desc':'100 perfect days',    icon:'star',   req:u=>(u.perfectDays||0)>=100},
-      {id:'d_quiz',      label:'Master',     desc:'100 quizzes at 80%+',   icon:'quiz',   req:u=>(u.quizTotal||0)>=100&&(u.quizCorrect/Math.max(u.quizTotal,1))>=0.8},
-    ]
-  },
-];
-// Flat list for backward compat
-const MEDALS = WORLDS.flatMap(w => w.medals.map(m => ({...m, world:w.id, worldColor:w.color})));
 
 // Leaderboard uses live Firebase data
 
@@ -2751,7 +2703,6 @@ async function init() {
 
   updateHeader();
   updateStats();
-  renderMedals();
   renderLeaders();
   renderStats();
 
@@ -3413,8 +3364,7 @@ function markDonePast(id, iso) {
     updateStats();
     updateHeader();
     updateProgressRing();
-    renderMedals();
-    renderStats();
+      renderStats();
     // Show a moment if streak jumped meaningfully
     const streakMsg = newStreak > 1 ? newStreak + '-day streak' : 'Day complete';
     fire(streakMsg + ' · +' + (s.xp + 50) + ' XP', 'gold');
@@ -3424,8 +3374,7 @@ function markDonePast(id, iso) {
     updateStats();
     updateHeader();
     updateProgressRing();
-    renderMedals();
-    renderStats();
+      renderStats();
   }
   const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
   renderSectionsForOffset(dateISO(d2));
@@ -6360,26 +6309,6 @@ function closeChabadPanel() {
 // ZONE 22 · MEDALS  (worlds, unlocks, hero + collapsed rows)
 // ════════════════════════════════════════════════════════════════════
 // ── MEDALS ────────────────────────────────────────────────────────────────────
-function worldUnlocked(worldIndex) {
-  if (worldIndex === 0) return true;
-  return WORLDS[worldIndex - 1].medals.every(m => m.req(user));
-}
-
-function currentWorldIndex() {
-  for (let i = 0; i < WORLDS.length; i++) {
-    if (!worldUnlocked(i)) return Math.max(0, i - 1);
-    if (!WORLDS[i].medals.every(m => m.req(user))) return i;
-  }
-  return WORLDS.length - 1;
-}
-
-function renderMedals() {
-  // Medals grid removed from stats tab — only update the count badge if it exists
-  const totalEarned = MEDALS.filter(m => m.req(user)).length;
-  const countEl = document.getElementById('medals-count');
-  if (countEl) countEl.innerHTML =
-    '<span style="color:var(--gold);font-weight:700;">' + totalEarned + '</span> / ' + MEDALS.length + ' earned';
-}
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 23 · LEADERBOARD  (top 50 by XP or streak, Firestore)
@@ -6708,11 +6637,6 @@ function renderProfileSheetContent() {
   const level = levelFromXp(user.xp);
   const xpInLevel = xpInCurrentLevel(user.xp);
   const xpNeeded = xpNeededForLvl(level);
-  const earned = MEDALS.filter(m => m.req(user));
-  const cw = WORLDS[currentWorldIndex()];
-  const next = cw ? cw.medals.find(m => !m.req(user)) : null;
-  if (next) next.color = cw.color;
-
   // Activity grid 28 days
   const today = new Date();
   let gridHTML = '';
@@ -6745,16 +6669,7 @@ function renderProfileSheetContent() {
         '<p style="font-size:11px;color:var(--t3);">28 days</p>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">' + gridHTML + '</div>' +
-    '</div>' +
-    // Next medal
-    (next ?
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">' +
-        '<div style="width:38px;height:38px;border-radius:11px;background:' + next.color + '18;border:1px solid ' + next.color + '30;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + next.color + ';">' + icon(next.icon, 18) + '</div>' +
-        '<div><p style="font-size:13px;font-weight:700;color:var(--t1);">' + next.label + '</p><p style="font-size:11px;color:var(--t3);">' + next.desc + '</p></div>' +
-        '<span style="font-size:11px;color:' + next.color + ';font-weight:700;flex-shrink:0;margin-left:auto;">Next</span>' +
-      '</div>'
-      : '<div style="font-size:13px;color:var(--green);font-weight:700;text-align:center;padding:8px;">All medals earned!</div>'
-    );
+    '</div>';
 }
 
 function changeTrack() {
@@ -6887,7 +6802,6 @@ function resetProgress() {
   saveUser();
   updateStats();
   updateHeader();
-  renderMedals();
   renderLeaders();
   renderStats();
   if (schedule) renderSectionsForOffset(dateISO(new Date()));
@@ -6907,7 +6821,7 @@ function switchTab(id) {
     b.style.borderColor = active ? '#F0A500' : 'var(--border)';
     b.style.color = active ? '#000' : 'var(--t2)';
   });
-  if (id === 'stats')   { renderStats(); renderMedals(); }
+  if (id === 'stats')   { renderStats(); }
   if (id === 'leaders') renderLeaders();
 }
 
