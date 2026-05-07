@@ -1139,7 +1139,6 @@ onAuthStateChanged(auth, user => {
     <!-- ── STATS TAB ── -->
     <div id="tab-stats" class="screen" style="padding:20px 20px 0;">
       <div id="stats-content"></div>
-      <div style="margin-top:4px;"><div id="medals-grid"></div></div>
     </div>
 
     <!-- Profile sheet hidden elements -->
@@ -1524,7 +1523,7 @@ function letterAvatar(name, size=32, fontSize=14) {
     font-size:${fontSize}px;font-weight:800;color:${fg};flex-shrink:0;font-family:'DM Sans',sans-serif;">${letter}</div>`;
 }
 
-const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{},tehillimPeople:[],tehillimFixedOpts:{rebbe:true,rebbetzin:true},extraTracks:[]};
+const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{},tehillimPeople:[],tehillimFixedOpts:{rebbe:true,rebbetzin:true},extraTracks:[],lifetime:{verses:0,psalms:0,psalmChaps:0,tanyaChaps:0,tanyaChapsSeen:{},halachos:0,rambamChaps:0}};
 let user = (() => {
   try {
     // Try current key first
@@ -3422,6 +3421,33 @@ function markDone(id) {
   if (user.done[id] || !schedule) return;
   const s = schedule[id];
   user.done[id] = true;
+
+  // ── Accumulate exact lifetime counts from real loaded data ──────────────
+  if (!user.lifetime) user.lifetime = {verses:0, psalms:0, tanyaBlocks:0, halachos:0};
+  if (id === 'chumash' && window._chumashData?.torahChunks) {
+    const v = window._chumashData.torahChunks.reduce((sum, ch) => sum + Math.max(ch.en.length, ch.he.length), 0);
+    user.lifetime.verses = (user.lifetime.verses || 0) + v;
+  }
+  if (id === 'tehillim' && window._tehillimData?.chapters) {
+    const p = window._tehillimData.chapters.reduce((sum, ch) => sum + Math.max(ch.he.length, ch.en.length), 0);
+    user.lifetime.psalms = (user.lifetime.psalms || 0) + p;
+    user.lifetime.psalmChaps = (user.lifetime.psalmChaps || 0) + window._tehillimData.chapters.length;
+  }
+  if (id === 'tanya' && window._tanyaData?.chapterNum) {
+    // Track unique chapters completed (a chapter spans multiple days — count it once when first seen)
+    if (!user.lifetime.tanyaChapsSeen) user.lifetime.tanyaChapsSeen = {};
+    const ch = window._tanyaData.chapterNum;
+    if (!user.lifetime.tanyaChapsSeen[ch]) {
+      user.lifetime.tanyaChapsSeen[ch] = true;
+      user.lifetime.tanyaChaps = (user.lifetime.tanyaChaps || 0) + 1;
+    }
+  }
+  if (id === 'rambam' && window._rambamData?.chapters) {
+    const h = window._rambamData.chapters.reduce((sum, ch) => sum + Math.max(ch.en.length, ch.he.length), 0);
+    user.lifetime.halachos = (user.lifetime.halachos || 0) + h;
+    user.lifetime.rambamChaps = (user.lifetime.rambamChaps || 0) + window._rambamData.chapters.length;
+  }
+  // ── End accumulation ────────────────────────────────────────────────────
   const xpBefore = user.xp;
   user.xp += s.xp;
   user.lastDate = dateISO(new Date());
@@ -5861,7 +5887,7 @@ async function _loadTanyaNative(sectionId, silent) {
                         /^<small>/i.test(enPortion[i] || '');
       blocks.push({ he: heRaw, en: enRaw, lit: '', isHagahah });
     }
-    window._tanyaData = { blocks, chapterLabel, isFirstSegment, isApproximate };
+    window._tanyaData = { blocks, chapterLabel, chapterNum: tp.chapter, isFirstSegment, isApproximate };
     if (!silent) {
       _renderTanyaContent();
       if (loadEl) loadEl.style.display = 'none';
@@ -6334,81 +6360,11 @@ function currentWorldIndex() {
 }
 
 function renderMedals() {
+  // Medals grid removed from stats tab — only update the count badge if it exists
   const totalEarned = MEDALS.filter(m => m.req(user)).length;
   const countEl = document.getElementById('medals-count');
   if (countEl) countEl.innerHTML =
     '<span style="color:var(--gold);font-weight:700;">' + totalEarned + '</span> / ' + MEDALS.length + ' earned';
-
-  const activeWi = currentWorldIndex();
-  let html = '';
-
-  // ── HERO: current world full-width on top ──
-  {
-    const world = WORLDS[activeWi];
-    const worldEarned = world.medals.filter(m => m.req(user)).length;
-    const worldComplete = worldEarned === world.medals.length;
-    const pct = Math.round((worldEarned / world.medals.length) * 100);
-
-    const medalRows = world.medals.map((m, mi) => {
-      const e = m.req(user);
-      return `
-      <div style="display:flex;align-items:center;gap:14px;background:${e ? world.color+'12' : 'var(--surface)'};border:1.5px solid ${e ? world.color+'45' : 'var(--border)'};border-radius:14px;padding:13px 14px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${mi*.05}s;">
-        <div style="width:42px;height:42px;border-radius:12px;background:${e ? world.color+'25' : 'var(--card)'};border:1px solid ${e ? world.color+'50' : 'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${e ? world.color : 'var(--t3)'};">${icon(m.icon, 20)}</div>
-        <div style="flex:1;min-width:0;">
-          <p style="font-weight:800;font-size:14px;color:${e ? 'var(--t1)' : 'var(--t2)'};">${m.label}</p>
-          <p style="font-size:11px;color:var(--t3);margin-top:2px;">${m.desc}</p>
-        </div>
-        <p style="font-size:11px;font-weight:800;color:${e ? '#1DB954' : 'var(--t3)'};flex-shrink:0;">${e ? '✓' : ''}</p>
-      </div>`;
-    }).join('');
-
-    html += `
-    <div style="background:${world.color}0C;border:2px solid ${world.color}40;border-radius:20px;padding:18px;margin-bottom:20px;animation:up .3s ease both;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:40px;height:40px;border-radius:12px;background:${world.color}22;border:1.5px solid ${world.color}55;display:flex;align-items:center;justify-content:center;font-size:20px;">${worldComplete ? '✨' : '🌍'}</div>
-          <div>
-            <p style="font-size:18px;font-weight:900;color:${world.color};font-family:'DM Sans',sans-serif;">${world.label} World</p>
-            <p style="font-size:11px;color:var(--t2);">Current · ${worldEarned} of ${world.medals.length} earned</p>
-          </div>
-        </div>
-        ${worldComplete
-          ? `<span style="font-size:11px;font-weight:700;color:#1DB954;background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);border-radius:99px;padding:4px 11px;">Complete! 🎉</span>`
-          : `<span style="font-size:13px;font-weight:800;color:${world.color};">${pct}%</span>`}
-      </div>
-      <div style="height:5px;background:var(--border);border-radius:99px;margin-bottom:16px;overflow:hidden;">
-        <div style="height:100%;width:${pct}%;background:${world.color};border-radius:99px;transition:width 1s cubic-bezier(.22,1,.36,1);"></div>
-      </div>
-      ${medalRows}
-    </div>`;
-  }
-
-  // ── COLLAPSED ROWS: all other worlds below ──
-  html += `<p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Other Worlds</p>`;
-
-  WORLDS.forEach((world, wi) => {
-    if (wi === activeWi) return;
-    const unlocked = worldUnlocked(wi);
-    const worldEarned = unlocked ? world.medals.filter(m => m.req(user)).length : 0;
-    const worldComplete = unlocked && worldEarned === world.medals.length;
-    const rowColor = unlocked ? world.color : '#666';
-    const dots = world.medals.map(m => {
-      const e = unlocked && m.req(user);
-      return `<div style="width:8px;height:8px;border-radius:50%;background:${e ? world.color : 'var(--border)'};flex-shrink:0;"></div>`;
-    }).join('');
-
-    html += `
-    <div style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:8px;opacity:${unlocked ? 0.7 : 0.35};animation:up .3s ease both;animation-delay:${wi*.06}s;">
-      <div style="width:36px;height:36px;border-radius:10px;background:${rowColor}15;border:1px solid ${rowColor}30;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${!unlocked ? '🔒' : worldComplete ? '✨' : '🌍'}</div>
-      <div style="flex:1;min-width:0;">
-        <p style="font-size:14px;font-weight:800;color:${rowColor};">${world.label} World</p>
-        <p style="font-size:10px;color:var(--t3);margin-top:2px;">${unlocked ? `${worldEarned} / ${world.medals.length} earned` : 'Unlock by completing previous world'}</p>
-      </div>
-      <div style="display:flex;gap:3px;align-items:center;">${dots}</div>
-    </div>`;
-  });
-
-  document.getElementById('medals-grid').innerHTML = html;
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -6485,154 +6441,201 @@ async function renderLeaders() {
 // ════════════════════════════════════════════════════════════════════
 // ── STATS ─────────────────────────────────────────────────────────────────────
 function renderStats() {
-  const level = levelFromXp(user.xp);
-  const xpInLevel = xpInCurrentLevel(user.xp);
-  const xpNeeded = xpNeededForLvl(level);
-  const streakColor = user.streak >= 30 ? '#FF4757' : user.streak >= 7 ? '#FF6B35' : '#F0A500';
+  // ── Real lifetime counts (accumulated at mark-done time) ─────────────────
+  const lt = user.lifetime || {};
+  const hasRealData = (lt.verses || lt.psalms || lt.halachos || lt.tanyaBlocks);
 
-  // ── Compute lifetime stats ──
-  // Total sections learned across all days
-  let totalSections = 0;
-  const sectionCounts = {chumash:0, tehillim:0, tanya:0, rambam:0};
+  // Section-level completion counts (for days-done bars)
   const ids = ['chumash','tehillim','tanya','rambam'];
-  // Today
-  ids.forEach(id => { if (user.done?.[id]) { totalSections++; sectionCounts[id]++; } });
-  // Past days
-  Object.values(user.pastDone || {}).forEach(dayDone => {
-    ids.forEach(id => { if (dayDone[id]) { totalSections++; sectionCounts[id]++; } });
+  const counts = {chumash:0, tehillim:0, tanya:0, rambam:0};
+  ids.forEach(id => { if (user.done?.[id]) counts[id]++; });
+  Object.values(user.pastDone || {}).forEach(day => {
+    ids.forEach(id => { if (day[id]) counts[id]++; });
   });
+
+  const today = new Date();
+
+  // Streaks
+  const streak       = user.streak || 0;
+  const bestStreak   = Math.max(user.longestStreak || 0, streak);
+  const totalDays    = user.total || 0;
+  const perfectDays  = user.perfectDays || 0;
+
+  // Consistency — last 28 days
+  let activeDays = 0;
+  for (let i = 0; i < 28; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const iso = dateISO(d);
+    const day = i === 0 ? user.done : (user.pastDone?.[iso] || {});
+    if (ids.some(id => day[id])) activeDays++;
+  }
 
   // Quiz accuracy
   const quizAcc = user.quizTotal > 0 ? Math.round(user.quizCorrect / user.quizTotal * 100) : null;
 
-  // Weekly consistency (last 4 weeks = 28 days)
-  let activeDays = 0;
-  const today = new Date();
-  for (let i = 0; i < 28; i++) {
-    const d = new Date(today); d.setDate(d.getDate() - i);
-    const iso = dateISO(d);
-    const dayData = i === 0 ? user.done : (user.pastDone?.[iso] || {});
-    if (ids.some(id => dayData[id])) activeDays++;
-  }
-  const consistency = Math.round(activeDays / 28 * 100);
+  // ── Calendar grid — 10 weeks (70 days), oldest first ──────────────────────
+  // Snap to start of current week (Sunday)
+  const dow = today.getDay();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - dow);
 
-  // Activity grid
-  const gridDays = [];
-  for (let i = 27; i >= 0; i--) {
-    const d = new Date(today); d.setDate(d.getDate() - i);
+  const calDays = [];
+  for (let i = 69; i >= 0; i--) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() - i);
     const iso = dateISO(d);
-    const isToday = i === 0;
-    const dayData = isToday ? user.done : (user.pastDone?.[iso] || {});
-    const count = ids.filter(id => dayData[id]).length;
-    gridDays.push({ iso, count, isToday });
+    const isT = iso === dateISO(today);
+    const isFuture = d > today;
+    const day = isT ? user.done : (user.pastDone?.[iso] || {});
+    const done = isFuture ? [] : ids.filter(id => day[id]);
+    calDays.push({ iso, done, isT, isFuture, d });
   }
-  const gridHTML = gridDays.map(d => {
-    const op = d.count === 0 ? '0.07' : d.count === 1 ? '0.3' : d.count === 2 ? '0.55' : d.count === 3 ? '0.8' : '1';
-    const border = d.isToday ? '1.5px solid var(--gold)' : '1.5px solid transparent';
-    return '<div style="width:100%;aspect-ratio:1;border-radius:4px;background:var(--gold);opacity:' + op + ';border:' + border + ';"></div>';
+
+  // Color: 0=empty, 1=one section, 2=two, 3=three, 4=all four (perfect day)
+  const sectionColors = ['#F0A500','#4A9EFF','#A855F7','#1DB954'];
+  const calHTML = calDays.map(day => {
+    if (day.isFuture) {
+      return '<div style="width:100%;aspect-ratio:1;border-radius:3px;background:var(--border);opacity:0.2;"></div>';
+    }
+    const n = day.done.length;
+    const bg = n === 0 ? 'var(--border)' : n === 4 ? 'var(--gold)' : sectionColors[n-1];
+    const op = n === 0 ? '0.25' : n === 1 ? '0.6' : n === 2 ? '0.75' : n === 3 ? '0.9' : '1';
+    const border = day.isT ? '1.5px solid var(--gold)' : '1.5px solid transparent';
+    const offset = -(69 - calDays.indexOf(day)); // negative dayOffset to navigate there
+    return '<div onclick="navDay(' + (-(69 - calDays.indexOf(day))) + ')" title="' + day.iso + '" style="width:100%;aspect-ratio:1;border-radius:3px;background:' + bg + ';opacity:' + op + ';border:' + border + ';cursor:pointer;transition:opacity .15s;" onmouseenter="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'' + op + '\'"></div>';
   }).join('');
 
-  // Section breakdown bars
-  const sectionDefs = [
-    {id:'chumash',  label:'Chumash',  color:'#F0A500'},
-    {id:'tehillim', label:'Tehillim', color:'#4A9EFF'},
-    {id:'tanya',    label:'Tanya',    color:'#A855F7'},
-    {id:'rambam',   label:'Rambam',   color:'#1DB954'},
+  // Day-of-week labels
+  const dayLabels = ['S','M','T','W','T','F','S'].map(l =>
+    '<div style="text-align:center;font-size:8px;font-weight:700;color:var(--t3);">' + l + '</div>'
+  ).join('');
+
+  // ── Streak color ──────────────────────────────────────────────────────────
+  const sc = streak >= 30 ? '#FF4757' : streak >= 7 ? '#FF6B35' : '#F0A500';
+
+  // ── Section cards — real data if available, days-done otherwise ──────────
+  const sections = [
+    { label:'Chumash',  sub:'Torah portions', color:'#F0A500',
+      val:  lt.verses   || counts.chumash,
+      unit: lt.verses   ? 'verses learned' : 'portions completed',
+      icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/>' },
+    { label:'Tehillim', sub:'Daily Psalms',    color:'#4A9EFF',
+      val:  lt.psalms    || counts.tehillim,
+      unit: lt.psalms    ? (lt.psalmChaps ? lt.psalmChaps + ' chapters · ' + lt.psalms + ' verses' : 'verses said') : 'portions completed',
+      icon:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>' },
+    { label:'Tanya',    sub:'Daily learning',  color:'#A855F7',
+      val:  lt.tanyaChaps || counts.tanya,
+      unit: lt.tanyaChaps ? 'chapters completed' : 'sessions completed',
+      icon:'<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>' },
+    { label:'Rambam',   sub:'Halachah Yomi',   color:'#1DB954',
+      val:  lt.halachos  || counts.rambam,
+      unit: lt.halachos  ? (lt.rambamChaps ? lt.rambamChaps + ' chapters · ' + lt.halachos + ' halachos' : 'halachos learned') : 'sessions completed',
+      icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>' },
   ];
-  const maxCount = Math.max(...Object.values(sectionCounts), 1);
-  const sectionBarsHTML = sectionDefs.map(s =>
-    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
-      '<span style="font-size:11px;color:var(--t3);width:52px;flex-shrink:0;">' + s.label + '</span>' +
-      '<div style="flex:1;height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">' +
-        '<div style="height:100%;width:' + Math.round(sectionCounts[s.id]/maxCount*100) + '%;background:' + s.color + ';border-radius:4px;transition:width 1s ease;"></div>' +
+
+  const sectionCardsHTML = sections.map(s =>
+    '<div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px 14px 12px;position:relative;overflow:hidden;">' +
+      '<div style="position:absolute;top:0;right:0;width:40px;height:40px;background:' + s.color + '08;border-radius:0 14px 0 40px;"></div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+        '<div style="width:28px;height:28px;border-radius:8px;background:' + s.color + '15;border:1px solid ' + s.color + '30;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="' + s.color + '" stroke-width="1.8" stroke-linecap="round">' + s.icon + '</svg>' +
+        '</div>' +
+        '<div><p style="font-size:12px;font-weight:800;color:var(--t1);line-height:1.2;">' + s.label + '</p>' +
+        '<p style="font-size:9px;color:var(--t3);">' + s.sub + '</p></div>' +
       '</div>' +
-      '<span style="font-size:11px;font-weight:700;color:var(--t2);flex-shrink:0;">' + sectionCounts[s.id] + 'x</span>' +
+      '<p class="stats-num" data-target="' + s.val + '" style="font-size:32px;font-weight:900;color:' + s.color + ';line-height:1;letter-spacing:-1px;margin-bottom:3px;">0</p>' +
+      '<p style="font-size:9px;color:var(--t3);font-weight:600;">' + s.unit + '</p>' +
     '</div>'
   ).join('');
 
-  // Next medal
-  const cw = WORLDS[currentWorldIndex()];
-  const nextMedal = cw ? cw.medals.find(m => !m.req(user)) : null;
-  if (nextMedal) nextMedal.color = cw.color;
-  const earned = MEDALS.filter(m => m.req(user));
+  // ── Medals count ─────────────────────────────────────────────────────────
+  const earnedMedals = MEDALS.filter(m => m.req(user)).length;
 
-  document.getElementById('stats-content').innerHTML = '<div style="padding-bottom:24px;">' +
+  // ── Build HTML ────────────────────────────────────────────────────────────
+  document.getElementById('stats-content').innerHTML =
+    '<div style="padding-bottom:60px;">' +
 
-    // ── STREAK HERO ──
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;">' +
-      '<div style="position:absolute;inset:0;background:radial-gradient(circle at 0% 50%, ' + streakColor + '15, transparent 60%);pointer-events:none;"></div>' +
-      '<div style="animation:flamePulse 2s ease-in-out infinite;flex-shrink:0;">' +
-        '<svg width="40" height="40" viewBox="0 0 24 24" fill="' + streakColor + '"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>' +
-      '</div>' +
-      '<div style="flex:1;">' +
-        '<p style="font-size:38px;font-weight:900;color:' + streakColor + ';line-height:1;letter-spacing:-1.5px;">' + user.streak + '<span style="font-size:16px;font-weight:700;color:var(--t3);margin-left:4px;">days</span></p>' +
-        '<p style="font-size:12px;color:var(--t3);margin-top:2px;">Best: ' + (user.longestStreak||user.streak) + ' days' + (user.streak >= 7 ? ' · ' + (user.streak >= 30 ? 'Incredible' : user.streak >= 14 ? 'On fire' : 'Great run') : '') + '</p>' +
-      '</div>' +
-      '<div style="text-align:right;flex-shrink:0;">' +
-        '<p style="font-size:22px;font-weight:900;color:var(--t1);">' + consistency + '%</p>' +
-        '<p style="font-size:10px;color:var(--t3);font-weight:600;">days learned<br>this month</p>' +
-      '</div>' +
-    '</div>' +
-
-    // ── KEY NUMBERS — 3 across ──
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;">' +
-        '<p style="font-size:26px;font-weight:900;color:var(--t1);line-height:1;margin-bottom:3px;">' + totalSections + '</p>' +
-        '<p style="font-size:9px;color:var(--t3);font-weight:600;">sections<br>learned</p>' +
-      '</div>' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;">' +
-        '<p style="font-size:26px;font-weight:900;color:' + (quizAcc !== null ? (quizAcc >= 80 ? '#1DB954' : quizAcc >= 60 ? '#F0A500' : '#FF4757') : 'var(--t3)') + ';line-height:1;margin-bottom:3px;">' + (quizAcc !== null ? quizAcc + '%' : '—') + '</p>' +
-        '<p style="font-size:9px;color:var(--t3);font-weight:600;">quiz<br>accuracy</p>' +
-      '</div>' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;">' +
-        '<p style="font-size:26px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:3px;">' + level + '</p>' +
-        '<p style="font-size:9px;color:var(--t3);font-weight:600;">' + user.xp + '<br>XP total</p>' +
-      '</div>' +
-    '</div>' +
-
-    // ── XP PROGRESS ──
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
-        '<span style="font-size:12px;font-weight:700;color:var(--t1);">Level ' + level + '</span>' +
-        '<span style="font-size:12px;color:var(--t3);">' + xpInLevel + ' / ' + xpNeeded + ' XP to level ' + (level+1) + '</span>' +
-      '</div>' +
-      '<div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;">' +
-        '<div style="height:100%;width:' + Math.round(xpInLevel/xpNeeded*100) + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:3px;transition:width 1s ease;"></div>' +
-      '</div>' +
-    '</div>' +
-
-    // ── ACTIVITY GRID ──
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-        '<p style="font-size:12px;font-weight:700;color:var(--t1);">Daily learning</p>' +
-        '<p style="font-size:11px;color:var(--t3);">learned on ' + activeDays + ' of the last 28 days</p>' +
-      '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">' + gridHTML + '</div>' +
-    '</div>' +
-
-    // ── SECTION BREAKDOWN ──
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
-      '<div style="margin-bottom:12px;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Sections completed</p><p style="font-size:11px;color:var(--t3);margin-top:2px;">Total times each section has been learned</p></div>' +
-      sectionBarsHTML +
-    '</div>' +
-
-    // ── NEXT MEDAL ──
-    (nextMedal ?
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">' +
-        '<div style="width:38px;height:38px;border-radius:11px;background:' + nextMedal.color + '18;border:1px solid ' + nextMedal.color + '30;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + nextMedal.color + ';">' + icon(nextMedal.icon, 18) + '</div>' +
-        '<div style="flex:1;min-width:0;">' +
-          '<p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Next medal</p>' +
-          '<p style="font-size:13px;font-weight:700;color:var(--t1);">' + nextMedal.label + '</p>' +
-          '<p style="font-size:11px;color:var(--t3);">' + nextMedal.desc + '</p>' +
+    // Streak hero
+    '<div style="background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:18px 18px 16px;margin-bottom:10px;position:relative;overflow:hidden;">' +
+      '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 0% 50%,' + sc + '12,transparent 65%);pointer-events:none;"></div>' +
+      '<div style="display:flex;align-items:flex-start;gap:14px;">' +
+        '<div style="flex:1;">' +
+          '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:' + sc + ';opacity:.8;margin-bottom:6px;">Current streak</p>' +
+          '<p style="font-size:52px;font-weight:900;color:' + sc + ';line-height:1;letter-spacing:-2px;">' + streak + '<span style="font-size:18px;font-weight:700;color:var(--t3);letter-spacing:0;margin-left:5px;">days</span></p>' +
+          '<p style="font-size:11px;color:var(--t3);margin-top:5px;">Best ever: <b style="color:var(--t2);">' + bestStreak + ' days</b></p>' +
         '</div>' +
-        '<p style="font-size:11px;color:' + nextMedal.color + ';font-weight:700;flex-shrink:0;">' + earned.length + '/' + MEDALS.length + '</p>' +
-      '</div>'
-    : '<div style="text-align:center;padding:12px;font-size:13px;color:var(--green);font-weight:700;">All medals earned!</div>'
-    ) +
+        '<div style="text-align:right;">' +
+          '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);opacity:.8;margin-bottom:6px;">This month</p>' +
+          '<p style="font-size:30px;font-weight:900;color:var(--t1);line-height:1;">' + activeDays + '<span style="font-size:13px;font-weight:600;color:var(--t3);margin-left:3px;">/28</span></p>' +
+          '<p style="font-size:11px;color:var(--t3);margin-top:5px;">days learned</p>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid var(--border);">' +
+        '<div style="flex:1;text-align:center;">' +
+          '<p style="font-size:18px;font-weight:900;color:var(--t1);">' + totalDays + '</p>' +
+          '<p style="font-size:9px;color:var(--t3);font-weight:600;">total days</p>' +
+        '</div>' +
+        '<div style="width:1px;background:var(--border);"></div>' +
+        '<div style="flex:1;text-align:center;">' +
+          '<p style="font-size:18px;font-weight:900;color:var(--t1);">' + perfectDays + '</p>' +
+          '<p style="font-size:9px;color:var(--t3);font-weight:600;">perfect days</p>' +
+        '</div>' +
+        '<div style="width:1px;background:var(--border);"></div>' +
+        '<div style="flex:1;text-align:center;">' +
+          '<p style="font-size:18px;font-weight:900;color:' + (quizAcc !== null ? (quizAcc>=80?'#1DB954':quizAcc>=60?'#F0A500':'#FF4757') : 'var(--t3)') + ';">' + (quizAcc !== null ? quizAcc+'%' : '—') + '</p>' +
+          '<p style="font-size:9px;color:var(--t3);font-weight:600;">quiz accuracy</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
 
-  '</div>';
+    // Section learning totals — 2x2 grid
+    '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:14px 0 8px;">Learning totals</p>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">' + sectionCardsHTML + '</div>' +
+
+    // Calendar
+    '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:14px 0 8px;">Activity — last 10 weeks <span style="font-weight:500;text-transform:none;letter-spacing:0;">(tap any day)</span></p>' +
+    '<div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px;">' +
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;">' + dayLabels + '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">' + calHTML + '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);">' +
+        '<p style="font-size:9px;color:var(--t3);font-weight:600;flex:1;">Sections:</p>' +
+        '<div style="width:10px;height:10px;border-radius:2px;background:var(--border);opacity:.4;"></div><p style="font-size:9px;color:var(--t3);">0</p>' +
+        '<div style="width:10px;height:10px;border-radius:2px;background:#F0A500;opacity:.6;"></div><p style="font-size:9px;color:var(--t3);">1</p>' +
+        '<div style="width:10px;height:10px;border-radius:2px;background:#4A9EFF;opacity:.75;"></div><p style="font-size:9px;color:var(--t3);">2</p>' +
+        '<div style="width:10px;height:10px;border-radius:2px;background:#A855F7;opacity:.9;"></div><p style="font-size:9px;color:var(--t3);">3</p>' +
+        '<div style="width:10px;height:10px;border-radius:2px;background:var(--gold);"></div><p style="font-size:9px;color:var(--t3);">All ✓</p>' +
+      '</div>' +
+    '</div>' +
+
+    // Achievements row — compact, not front and center
+    '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-top:10px;">' +
+      '<div style="display:flex;align-items:center;gap:9px;">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' +
+        '<p style="font-size:13px;font-weight:700;color:var(--t1);">Achievements</p>' +
+      '</div>' +
+      '<p style="font-size:13px;color:var(--t2);"><b style="color:var(--gold);">' + earnedMedals + '</b> / ' + MEDALS.length + ' earned</p>' +
+    '</div>' +
+
+    '</div>';
+
+  // ── Animate the counting numbers ──────────────────────────────────────────
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.stats-num[data-target]').forEach(el => {
+      const target = parseInt(el.dataset.target) || 0;
+      if (target === 0) { el.textContent = '0'; return; }
+      const duration = 900;
+      const start = performance.now();
+      const step = (now) => {
+        const t = Math.min((now - start) / duration, 1);
+        // Ease-out cubic
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(eased * target);
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  });
 }
-
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 25 · PROFILE SHEET  (name, level bar, city, track, appearance)
