@@ -8154,24 +8154,36 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
     + '</div>';
 
   let v = '';
+  const isLT = id === 'likkuteiTorah';
   const maxLen = Math.max(heSegs.length, enSegs.length);
   for (let i = 0; i < maxLen; i++) {
     const he = heSegs[i] || '';
     const en = enSegs[i] || '';
     if (!he && !en) continue;
 
+    // LT: no dividers, tighter spacing, justified
+    const wrapStyle = isLT
+      ? 'margin-bottom:0.9em;'
+      : 'padding:14px 0;border-bottom:1px solid var(--border);';
+    const heStyle = isLT
+      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.62;color:var(--t1);'
+      : 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:2.0;color:var(--t1);';
+    const enStyle = isLT
+      ? '--rf-sz:16px;--rf-lh:1.7;color:var(--t1);'
+      : '--rf-sz:16px;--rf-lh:1.85;color:var(--t1);';
+
     if (lang === 'both' && he && en) {
-      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
-      v += '<p class="rf-body" style="--rf-sz:16px;--rf-lh:1.85;color:var(--t1);">' + en + '</p>';
-      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:2.0;color:var(--t1);">' + he + '</p>';
+      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + (isLT ? '' : 'padding:14px 0;border-bottom:1px solid var(--border);') + 'align-items:start;">';
+      v += '<p class="rf-body" style="' + enStyle + '">' + en + '</p>';
+      v += '<p class="rf-body" style="' + heStyle + '">' + he + '</p>';
       v += '</div>';
     } else if (lang === 'he' || !en) {
-      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:2.0;color:var(--t1);">' + he + '</p>';
+      v += '<div style="' + wrapStyle + '">';
+      v += '<p class="rf-body" style="' + heStyle + '">' + he + '</p>';
       v += '</div>';
     } else {
-      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
-      v += '<p class="rf-body" style="--rf-sz:16px;--rf-lh:1.85;color:var(--t1);">' + en + '</p>';
+      v += '<div style="' + wrapStyle + '">';
+      v += '<p class="rf-body" style="' + enStyle + '">' + en + '</p>';
       v += '</div>';
     }
   }
