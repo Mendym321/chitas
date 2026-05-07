@@ -6520,16 +6520,16 @@ function renderStats() {
       unit: lt.verses   ? 'verses learned' : 'portions completed',
       icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/>' },
     { label:'Tehillim', sub:'Daily Psalms',    color:'#4A9EFF',
-      val:  lt.psalms    || counts.tehillim,
-      unit: lt.psalms    ? (lt.psalmChaps ? lt.psalmChaps + ' chapters · ' + lt.psalms + ' verses' : 'verses said') : 'portions completed',
+      val:  lt.psalmChaps || counts.tehillim,
+      unit: lt.psalmChaps ? (lt.psalms ? lt.psalmChaps + ' chapters · ' + lt.psalms + ' verses' : 'psalm chapters') : 'portions completed',
       icon:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>' },
     { label:'Tanya',    sub:'Daily learning',  color:'#A855F7',
       val:  lt.tanyaChaps || counts.tanya,
-      unit: lt.tanyaChaps ? 'chapters completed' : 'sessions completed',
+      unit: lt.tanyaChaps ? 'chapters completed' : 'days learned',
       icon:'<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>' },
     { label:'Rambam',   sub:'Halachah Yomi',   color:'#1DB954',
-      val:  lt.halachos  || counts.rambam,
-      unit: lt.halachos  ? (lt.rambamChaps ? lt.rambamChaps + ' chapters · ' + lt.halachos + ' halachos' : 'halachos learned') : 'sessions completed',
+      val:  lt.halachos  || lt.rambamChaps || counts.rambam,
+      unit: lt.halachos  ? (lt.rambamChaps ? lt.rambamChaps + ' chapters · ' + lt.halachos + ' halachos' : 'halachos learned') : 'days learned',
       icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>' },
   ];
 
@@ -6547,9 +6547,6 @@ function renderStats() {
       '<p style="font-size:9px;color:var(--t3);font-weight:600;">' + s.unit + '</p>' +
     '</div>'
   ).join('');
-
-  // ── Medals count ─────────────────────────────────────────────────────────
-  const earnedMedals = MEDALS.filter(m => m.req(user)).length;
 
   // ── Build HTML ────────────────────────────────────────────────────────────
   document.getElementById('stats-content').innerHTML =
@@ -6605,15 +6602,6 @@ function renderStats() {
         '<div style="width:10px;height:10px;border-radius:2px;background:#A855F7;opacity:.9;"></div><p style="font-size:9px;color:var(--t3);">3</p>' +
         '<div style="width:10px;height:10px;border-radius:2px;background:var(--gold);"></div><p style="font-size:9px;color:var(--t3);">All ✓</p>' +
       '</div>' +
-    '</div>' +
-
-    // Achievements row — compact, not front and center
-    '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-top:10px;">' +
-      '<div style="display:flex;align-items:center;gap:9px;">' +
-        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' +
-        '<p style="font-size:13px;font-weight:700;color:var(--t1);">Achievements</p>' +
-      '</div>' +
-      '<p style="font-size:13px;color:var(--t2);"><b style="color:var(--gold);">' + earnedMedals + '</b> / ' + MEDALS.length + ' earned</p>' +
     '</div>' +
 
     '</div>';
