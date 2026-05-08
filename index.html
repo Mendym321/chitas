@@ -8103,11 +8103,11 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + (isLT ? '' : 'padding:14px 0;border-bottom:1px solid var(--border);') + 'align-items:start;">';
       v += '<p class="rf-body" style="' + enStyle + '">' + en + '</p>';
-      v += '<p class="rf-body" style="' + heStyle + '">' + he + '</p>';
+      v += '<p class="rf-body" style="' + heStyle + '">' + (isLT ? _ltFormatHe(he) : he) + '</p>';
       v += '</div>';
     } else if (lang === 'he' || !en) {
       v += '<div style="' + wrapStyle + '">';
-      v += '<p class="rf-body" style="' + heStyle + '">' + he + '</p>';
+      v += '<p class="rf-body" style="' + heStyle + '">' + (isLT ? _ltFormatHe(he) : he) + '</p>';
       v += '</div>';
     } else {
       v += '<div style="' + wrapStyle + '">';
@@ -8118,6 +8118,65 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
 
   contEl.innerHTML = t + heading + v
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
+// ── Likkutei Torah: format dibbur hamaschil with drop-word layout ─────────────
+// The opening <b>...</b> of each LT paragraph is the dibbur hamaschil —
+// the quoted pasuk that the maamar begins with.
+// Layout: first WORD of the dibbur is large (float:right in RTL),
+// remaining dibbur words wrap beside it at medium size,
+// body text follows at normal size.
+function _ltFormatHe(he) {
+  // Check if paragraph starts with a <b> tag (dibbur hamaschil)
+  const bMatch = he.match(/^<b>([\s\S]*?)<\/b>([\s\S]*)$/i);
+  if (!bMatch) return he; // no dibbur — return as-is
+
+  const dibbur = bMatch[1].trim();       // full dibbur hamaschil text
+  const body   = bMatch[2].trim();       // rest of paragraph after dibbur
+
+  // Split dibbur into first word and remainder
+  // Hebrew words are separated by spaces; first word ends at first space
+  const spaceIdx = dibbur.search(/\s/);
+  let firstWord, restDibbur;
+  if (spaceIdx === -1) {
+    // Single-word dibbur hamaschil
+    firstWord  = dibbur;
+    restDibbur = '';
+  } else {
+    firstWord  = dibbur.slice(0, spaceIdx);
+    restDibbur = dibbur.slice(spaceIdx + 1).trim();
+  }
+
+  // Build the drop-word layout (RTL float):
+  // The large first word floats to the right.
+  // restDibbur at medium size wraps beside it on the left.
+  // Body text follows below, clearing the float.
+  const FONT = "'DachHeilig','Frank Ruhl Libre',serif";
+
+  const dropWord = '<span style="'
+    + 'float:right;'
+    + 'font-family:' + FONT + ';'
+    + 'font-weight:bold;'
+    + 'font-size:2em;'         // large first word
+    + 'line-height:1;'
+    + 'margin-left:0.2em;'     // small gap between drop-word and following text
+    + 'margin-bottom:0.05em;'
+    + '">' + firstWord + '</span>';
+
+  const middleDibbur = restDibbur
+    ? '<span style="'
+        + 'font-family:' + FONT + ';'
+        + 'font-weight:bold;'
+        + 'font-size:1.15em;'   // medium — bigger than body, smaller than drop-word
+        + 'line-height:inherit;'
+        + '">' + restDibbur + '</span> '
+    : '';
+
+  const clearDiv = body
+    ? '<span style="display:block;clear:both;"></span>'
+    : '<span style="display:block;clear:both;"></span>';
+
+  return dropWord + middleDibbur + (body ? body : '') + clearDiv;
 }
 
 // ── HTML flattener (reuse _cleanHtml logic) ────────────────────────────────────
