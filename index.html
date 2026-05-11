@@ -444,8 +444,13 @@
   font-size: .93em;
   line-height: inherit;
 }
-/* Likkutei Torah: bold stays regular-weight Heilig — sizing done by _ltFormatHe */
-.lt-body b, .lt-body strong { font-weight: normal; }
+/* Likkutei Torah: bold stays regular-weight Heilig at medium size (1.15em) —
+   matches the "rest of dibbur hamaschil" treatment throughout */
+.lt-body b, .lt-body strong {
+  font-weight: normal;
+  font-size: 1.15em;
+  line-height: inherit;
+}
 /* Two-column newspaper layout — right column fills first (matches print) */
 #ls-body-wrap {
   direction: rtl;
@@ -8105,7 +8110,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + (isLT ? '' : 'padding:14px 0;border-bottom:1px solid var(--border);') + 'align-items:start;">';
       v += '<p class="rf-body" style="' + enStyle + '">' + en + '</p>';
-      v += '<p class="rf-body" style="' + heStyle + '">' + (isLT ? _ltFormatHe(he) : he) + '</p>';
+      v += '<p class="rf-body' + (isLT ? ' lt-body' : '') + '" style="' + heStyle + '">' + (isLT ? _ltFormatHe(he) : he) + '</p>';
       v += '</div>';
     } else if (lang === 'he' || !en) {
       v += '<div style="' + wrapStyle + '">';
