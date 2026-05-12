@@ -435,6 +435,18 @@
   src: url('https://dach.dev/fonts/Heilig-ls-Bold.ttf') format('truetype');
   font-weight: bold; font-display: swap;
 }
+@font-face {
+  font-family: 'Vilna';
+  src: url('/fonts/OT Vilna Basic-VF.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'OTSiddur';
+  src: url('/fonts/OT Siddur - Classic.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
 /* Bold DachHeilig (Heilig-ls-Bold.ttf) has slightly taller metrics than the regular OTF —
    nudge it down just a touch so cap heights match inline */
 #ls-body-wrap strong,
@@ -1934,7 +1946,7 @@ async function _renderPersonalPsalms() {
   if (!people.length) { el.innerHTML = ''; return; }
 
   const BLUE = '#4A9EFF';
-  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+  const HE = "'OTSiddur','Shlomo','Noto Serif Hebrew',serif";
   const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
 
   let h = '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">'
@@ -4959,7 +4971,7 @@ function _renderChumashContent() {
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
-  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+  const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
   const RBG = 'background:rgba(240,165,0,.09);border-left:4px solid rgba(240,165,0,.55);';
 
   // Lang toggle
@@ -5582,7 +5594,7 @@ function _renderTehillimContent() {
 
   // Frank Ruhl Libre has superior nikud rendering for vowelized Tehillim text
   // Noto Serif Hebrew misrenders certain vowel combos (tzere looks like kamatz)
-  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+  const HE = "'OTSiddur','Shlomo','Noto Serif Hebrew',serif";
   const BLUE = '#4A9EFF';
 
   // Lang toggle
@@ -5923,7 +5935,7 @@ function _renderTanyaContent() {
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
-  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+  const HE = "'OTSiddur','Shlomo','Noto Serif Hebrew',serif";
   const PURPLE = '#A855F7';
   const hasLit = blocks.some(b => b.lit);
 
@@ -5977,7 +5989,7 @@ function _renderTanyaContent() {
 
     // Hagahot — group consecutive hagahah sentences into ONE box (no repeated headers)
     if (isHagahah) {
-      const HE_SMALL = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+      const HE_SMALL = "'OTSiddur','Shlomo','Noto Serif Hebrew',serif";
       const prevBlock = blocks[blocks.indexOf(block) - 1];
       const nextBlock = blocks[blocks.indexOf(block) + 1];
       const isFirst = !prevBlock || !prevBlock.isHagahah;
@@ -7514,7 +7526,7 @@ function _rerenderDaf() {
   if (!contEl) return;
   contEl.style.display = 'block';
 
-  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+  const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
   const lang = localStorage.getItem('chitas_lang_extra_dafYomi') || 'he';
   const commStr = localStorage.getItem('chitas_daf_commentary') || '';
   const commSet = new Set(commStr.split(',').filter(Boolean));
