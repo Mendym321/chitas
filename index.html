@@ -1234,7 +1234,7 @@ onAuthStateChanged(auth, user => {
 </div>
 
 <!-- Reader panel — native text for Chumash/Tanya/Rambam, iframe for Tehillim -->
-<div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;">
+<div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;" onclick="_closeSettingsOnOutsideClick(event)">
 
   <!-- Sticky header -->
   <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
@@ -1245,15 +1245,34 @@ onAuthStateChanged(auth, user => {
       <p id="chabad-panel-title" style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
       <p id="chabad-panel-sub" style="font-size:11px;color:var(--t3);">via Chabad.org</p>
     </div>
-    <!-- Font size controls — only shown for native reader sections -->
-    <div id="reader-font-controls" style="display:none;align-items:center;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0;">
-      <button onclick="_readerFontStep(-1)" title="Smaller text" style="width:34px;height:38px;border:none;background:transparent;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:800;transition:background .12s;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='transparent'">A</button>
-      <div style="width:1px;height:20px;background:var(--border);flex-shrink:0;"></div>
-      <button onclick="_readerFontStep(1)" title="Larger text" style="width:38px;height:38px;border:none;background:transparent;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:800;transition:background .12s;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='transparent'">A</button>
-    </div>
+    <!-- Settings button — only shown for native reader sections -->
+    <button id="reader-font-controls" onclick="openReaderSettings()" title="Reader settings" style="display:none;width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--t2);cursor:pointer;flex-shrink:0;transition:background .12s;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='var(--card)'">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+    </button>
     <a id="chabad-panel-extlink" href="#" target="_blank" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);text-decoration:none;" title="Open in browser">
       <svg width="16" height="16" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" fill="none"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8"/></svg>
     </a>
+  </div>
+
+  <!-- Reader settings popover — slides down from header, z-index above content but below header -->
+  <div id="reader-settings-popover" style="display:none;position:absolute;top:67px;right:12px;z-index:10;width:260px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.35);padding:14px 16px;flex-direction:column;gap:16px;animation:up .18s ease both;">
+    <!-- Font size row -->
+    <div>
+      <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Text Size</p>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="_readerFontStep(-1)" id="rs-font-dec" style="width:36px;height:36px;border-radius:9px;background:var(--surface);border:1px solid var(--border);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:800;flex-shrink:0;">A</button>
+        <div id="rs-font-track" style="flex:1;height:4px;background:var(--border);border-radius:2px;position:relative;cursor:pointer;" onclick="_readerFontStepTo(event)">
+          <div id="rs-font-fill" style="height:100%;border-radius:2px;background:var(--gold);transition:width .15s;"></div>
+          <div id="rs-font-thumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid var(--card);box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .15s;"></div>
+        </div>
+        <button onclick="_readerFontStep(1)" id="rs-font-inc" style="width:36px;height:36px;border-radius:9px;background:var(--surface);border:1px solid var(--border);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:800;flex-shrink:0;">A</button>
+      </div>
+    </div>
+    <!-- Section-specific options injected here by JS -->
+    <div id="rs-section-opts"></div>
   </div>
 
   <!-- Scroll progress bar (native reader only) -->
@@ -6228,23 +6247,8 @@ function _applyReaderFontSize(sectionId) {
     #native-reader-content .rf-header  { /* static — intentionally not scaled */ }
   `;
 
-  // Update button state
-  const ctrl = document.getElementById('reader-font-controls');
-  if (ctrl) {
-    const btns = ctrl.querySelectorAll('button');
-    const decBtn = btns[0];
-    const incBtn = btns[1];
-    if (decBtn) {
-      decBtn.style.opacity = step === 0 ? '0.35' : '1';
-      decBtn.style.color   = step === 0 ? 'var(--t3)' : 'var(--t2)';
-      decBtn.style.cursor  = step === 0 ? 'default' : 'pointer';
-    }
-    if (incBtn) {
-      incBtn.style.opacity = step === _FONT_STEPS - 1 ? '0.35' : '1';
-      incBtn.style.color   = step === _FONT_STEPS - 1 ? 'var(--t3)' : 'var(--t2)';
-      incBtn.style.cursor  = step === _FONT_STEPS - 1 ? 'default' : 'pointer';
-    }
-  }
+  // Update the settings popover slider if it's visible
+  _updateSettingsSlider(step);
 }
 
 // LS uses its own font sizes (not rf-body based) — steps in px for mobile baseline
@@ -6260,13 +6264,8 @@ function _lsSetFontSize(step) {
   // Update CSS variable on #ls-reader-card (scoped to the reader card, not the whole page)
   const card = document.getElementById('ls-reader-card');
   if (card) card.style.setProperty('--ls-font-size', px + 'px');
-  // Update button dim state
-  const ctrl = document.getElementById('reader-font-controls');
-  if (ctrl) {
-    const btns = ctrl.querySelectorAll('button');
-    if (btns[0]) { btns[0].style.opacity = s === 0 ? '0.35' : '1'; btns[0].style.cursor = s === 0 ? 'default' : 'pointer'; }
-    if (btns[1]) { btns[1].style.opacity = s === _LS_FONT_STEPS-1 ? '0.35' : '1'; btns[1].style.cursor = s === _LS_FONT_STEPS-1 ? 'default' : 'pointer'; }
-  }
+  // Update the settings popover slider
+  _updateSettingsSlider(s, _LS_FONT_STEPS);
   fire('Text size ' + px + 'px', 'xp');
 }
 
@@ -6286,6 +6285,185 @@ function _readerFontStep(delta) {
   // Subtle toast feedback
   const pct = Math.round(_FONT_SCALES[next] * 100);
   fire('Text size ' + pct + '%', 'xp');
+}
+
+// Tap on the slider track to jump to a step
+function _readerFontStepTo(e) {
+  const track = document.getElementById('rs-font-track');
+  if (!track) return;
+  const rect = track.getBoundingClientRect();
+  const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  if (!sid) return;
+  const isLS = sid === 'likkuteiSichos';
+  const steps = isLS ? _LS_FONT_STEPS : _FONT_STEPS;
+  const target = Math.round(ratio * (steps - 1));
+  if (isLS) { _lsSetFontSize(target); }
+  else {
+    localStorage.setItem(_readerFontKey(sid), String(target));
+    _applyReaderFontSize(sid);
+    const pct = Math.round(_FONT_SCALES[target] * 100);
+    fire('Text size ' + pct + '%', 'xp');
+  }
+}
+
+// Update the slider fill + thumb position in the settings popover
+function _updateSettingsSlider(step, totalSteps) {
+  const steps = totalSteps || _FONT_STEPS;
+  const pct   = steps > 1 ? (step / (steps - 1)) * 100 : 50;
+  const fill  = document.getElementById('rs-font-fill');
+  const thumb = document.getElementById('rs-font-thumb');
+  const decBtn = document.getElementById('rs-font-dec');
+  const incBtn = document.getElementById('rs-font-inc');
+  if (fill)  fill.style.width  = pct + '%';
+  if (thumb) thumb.style.left  = pct + '%';
+  if (decBtn) { decBtn.style.opacity = step === 0 ? '0.35' : '1'; decBtn.style.cursor = step === 0 ? 'default' : 'pointer'; }
+  if (incBtn) { incBtn.style.opacity = step === steps - 1 ? '0.35' : '1'; incBtn.style.cursor = step === steps - 1 ? 'default' : 'pointer'; }
+}
+
+// Build the section-specific options block inside the popover
+function _buildSettingsSectionOpts(sectionId) {
+  const el = document.getElementById('rs-section-opts');
+  if (!el) return;
+  let html = '';
+
+  if (sectionId === 'chumash') {
+    const lang  = localStorage.getItem('chitas_lang_chumash') || 'both';
+    const trans = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Metsudah';
+    html += _rsLangToggle('chumash', lang, '#F0A500');
+    html += _rsDivider();
+    html += '<div>'
+      + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Translation</p>'
+      + '<button onclick="_openChumashTranslationPicker()" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;">'
+      + '<span>' + trans + '</span>'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
+      + '</button></div>';
+
+  } else if (sectionId === 'tehillim') {
+    const lang = localStorage.getItem('chitas_lang_tehillim') || 'both';
+    html += _rsLangToggle('tehillim', lang, '#4A9EFF');
+    html += _rsDivider();
+    const opts   = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
+    const custom = (user.tehillimPeople || []).length;
+    const fixed  = (opts.rebbe !== false ? 1 : 0) + (opts.rebbetzin !== false ? 1 : 0);
+    const total  = fixed + custom;
+    html += '<div>'
+      + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Personal Tehillim</p>'
+      + '<button onclick="closeReaderSettings();_openTehillimPeopleManager();" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;">'
+      + '<span>' + (total === 0 ? 'Add people' : total + ' ' + (total === 1 ? 'person' : 'people')) + '</span>'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
+      + '</button></div>';
+
+  } else if (sectionId === 'tanya') {
+    const lang = localStorage.getItem('chitas_lang_tanya') || 'both';
+    html += _rsLangToggle('tanya', lang, '#A855F7');
+
+  } else if (sectionId === 'rambam') {
+    const lang  = localStorage.getItem('chitas_lang_rambam') || 'both';
+    const track = RAMBAM_TRACKS[user.rambamTrack]?.label || '';
+    html += _rsLangToggle('rambam', lang, '#1DB954');
+    html += _rsDivider();
+    html += '<div>'
+      + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Study Track</p>'
+      + '<button onclick="closeReaderSettings();_openRambamTrackPicker();" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;">'
+      + '<span>' + track + '</span>'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
+      + '</button></div>';
+  } else {
+    // Extra tracks that have bilingual content
+    const langKey = 'chitas_lang_extra_' + sectionId;
+    const lang = localStorage.getItem(langKey) || 'both';
+    const def = typeof EXTRA_TRACK_DEFS !== 'undefined' ? EXTRA_TRACK_DEFS[sectionId] : null;
+    if (def && def.color) {
+      html += _rsLangToggle('extra_' + sectionId, lang, def.color, langKey, 'openExtraReader(\'' + sectionId + '\')');
+    }
+  }
+
+  el.innerHTML = html;
+  el.style.display = html ? 'flex' : 'none';
+  el.style.flexDirection = 'column';
+  el.style.gap = '14px';
+}
+
+function _rsLangToggle(sectionId, lang, color, storageKey, reloadCall) {
+  const key  = storageKey  || 'chitas_lang_' + sectionId;
+  const call = reloadCall  || '_setReaderLang(\'' + sectionId + '\',\'LANG\')';
+  const opts = [['he','עב'], ['both','Both'], ['en','En']];
+  let h = '<div>'
+    + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Language</p>'
+    + '<div style="display:flex;gap:5px;">';
+  opts.forEach(([l, lb]) => {
+    const active = lang === l;
+    const fn = reloadCall
+      ? 'localStorage.setItem(\'' + key + '\',\'' + l + '\');' + reloadCall + ';closeReaderSettings();'
+      : '_setReaderLang(\'' + sectionId + '\',\'' + l + '\')';
+    h += '<button onclick="' + fn + '" style="flex:1;padding:8px 4px;border-radius:9px;border:1.5px solid;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;'
+      + (active ? 'background:' + color + ';color:' + (color === '#F0A500' ? '#000' : '#fff') + ';border-color:' + color + ';'
+               : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
+      + '">' + lb + '</button>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+function _rsDivider() {
+  return '<div style="height:1px;background:var(--border);margin:0 -16px;"></div>';
+}
+
+// Central lang setter — called from within the popover for core sections
+function _setReaderLang(sectionId, lang) {
+  if (sectionId === 'chumash')  { _setChumashLang(lang); }
+  else if (sectionId === 'tehillim') { localStorage.setItem('chitas_lang_tehillim', lang); _renderTehillimContent(); }
+  else if (sectionId === 'tanya')    { localStorage.setItem('chitas_lang_tanya',    lang); _renderTanyaContent(); }
+  else if (sectionId === 'rambam')   { localStorage.setItem('chitas_lang_rambam',   lang); _renderRambamContent(); }
+  // Re-render section options so the active button updates
+  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  if (sid) _buildSettingsSectionOpts(sid);
+}
+
+let _settingsOpen = false;
+
+function openReaderSettings() {
+  const pop = document.getElementById('reader-settings-popover');
+  if (!pop) return;
+
+  if (_settingsOpen) { closeReaderSettings(); return; }
+  _settingsOpen = true;
+
+  // Populate slider
+  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  const isLS = sid === 'likkuteiSichos';
+  const step = isLS ? _lsGetFontStep() : _getReaderFontStep(sid);
+  const total = isLS ? _LS_FONT_STEPS : _FONT_STEPS;
+  _updateSettingsSlider(step, total);
+
+  // Populate section options
+  if (sid) _buildSettingsSectionOpts(sid);
+
+  // Activate gear icon
+  const gear = document.getElementById('reader-font-controls');
+  if (gear) { gear.style.background = 'var(--hi)'; gear.style.color = 'var(--gold)'; }
+
+  pop.style.display = 'flex';
+}
+
+function closeReaderSettings() {
+  const pop = document.getElementById('reader-settings-popover');
+  if (pop) pop.style.display = 'none';
+  _settingsOpen = false;
+  const gear = document.getElementById('reader-font-controls');
+  if (gear) { gear.style.background = 'var(--card)'; gear.style.color = 'var(--t2)'; }
+}
+
+function _openRambamTrackPicker() { changeTrack(); }
+
+function _closeSettingsOnOutsideClick(e) {
+  if (!_settingsOpen) return;
+  const pop  = document.getElementById('reader-settings-popover');
+  const gear = document.getElementById('reader-font-controls');
+  if (pop && !pop.contains(e.target) && gear && !gear.contains(e.target)) {
+    closeReaderSettings();
+  }
 }
 
 function closeChabadPanel() {
@@ -6321,6 +6499,7 @@ function closeChabadPanel() {
   document.getElementById('chabad-iframe').src = '';
   const fontCtrl = document.getElementById('reader-font-controls');
   if (fontCtrl) fontCtrl.style.display = 'none';
+  closeReaderSettings();
   markDoneUnlocked = false;
 }
 
