@@ -780,11 +780,11 @@ onAuthStateChanged(auth, user => {
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                 <div>
                   <p style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">English</p>
-                  <p style="font-size:12px;color:var(--t2);line-height:1.7;">And He called to Moses, and the L-rd spoke to him from the Tent of Meeting...</p>
+                  <p style="font-size:12px;color:var(--t2);line-height:1.82;">And He called to Moses, and the L-rd spoke to him from the Tent of Meeting...</p>
                 </div>
                 <div style="text-align:right;">
                   <p style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;direction:rtl;">עברית</p>
-                  <p style="font-size:13px;color:var(--t1);line-height:1.9;direction:rtl;font-family:'Frank Ruhl Libre',serif;">וַיִּקְרָא אֶל־מֹשֶׁה וַיְדַבֵּר יְהֹוָה אֵלָיו מֵאֹהֶל מוֹעֵד לֵאמֹר׃</p>
+                  <p style="font-size:13px;color:var(--t1);line-height:1.95;direction:rtl;font-family:'Frank Ruhl Libre',serif;">וַיִּקְרָא אֶל־מֹשֶׁה וַיְדַבֵּר יְהֹוָה אֵלָיו מֵאֹהֶל מוֹעֵד לֵאמֹר׃</p>
                 </div>
               </div>
               <!-- Lang toggle pills -->
@@ -2001,8 +2001,8 @@ async function _renderPersonalPsalms() {
     // Flowing prose — same style as main Tehillim (rf-body so it scales with font controls)
     const verses = isHe ? p.heSegs : p.enSegs;
     const paraStyle = isHe
-      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.65;font-weight:400;color:var(--t1);'
-      : '--rf-sz:15px;--rf-lh:1.65;color:var(--t1);text-align:justify;';
+      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.78;font-weight:400;color:var(--t1);'
+      : '--rf-sz:15px;--rf-lh:1.78;color:var(--t1);text-align:justify;';
 
     if (verses.length) {
       const verseHTML = verses.map((vText, i) => {
@@ -5050,35 +5050,35 @@ function _renderChumashContent() {
       if (lang === 'both') {
         // Verse row
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.7;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.75;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
+        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.92;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         // One Rashi block per comment — each aligned in two columns
         rashiComments.forEach(rc => {
           v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
-          v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.6;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
-          v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:18px;--rf-lh:1.8;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
+          v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
+          v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:18px;--rf-lh:1.92;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
           v += '</div>';
         });
       } else if (lang === 'he') {
         v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.75;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.92;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.he) {
             v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
-            v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:18px;--rf-lh:1.8;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
+            v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:18px;--rf-lh:1.92;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
             v += '</div>';
           }
         });
       } else {
         v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.7;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
+        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.en) {
             v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
-            v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.6;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
+            v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
             v += '</div>';
           }
         });
@@ -5362,7 +5362,7 @@ function _renderRambamContent() {
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
-  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+  const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
   const GREEN = '#1DB954';
 
   // Hebrew letters for halacha numbering (alef, beis, gimmel...)
@@ -5434,16 +5434,16 @@ function _renderRambamContent() {
 
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
-        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.7;">' + enMark + en + '</p>';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.75;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + enMark + en + '</p>';
+        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.75;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.7;">' + enMark + en + '</p>';
+        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + enMark + en + '</p>';
         v += '</div>';
       }
     }
@@ -5650,8 +5650,8 @@ function _renderTehillimContent() {
 
     // Flowing prose — all verses in one paragraph, verse number as superscript inline
     const paraStyle = isHe
-      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.65;font-weight:400;color:var(--t1);'
-      : '--rf-sz:15px;--rf-lh:1.65;color:var(--t1);text-align:justify;';
+      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.78;font-weight:400;color:var(--t1);'
+      : '--rf-sz:15px;--rf-lh:1.78;color:var(--t1);text-align:justify;';
 
     const verseHTML = verses.map((vText, i) => {
       if (!vText) return '';
@@ -5995,7 +5995,7 @@ function _renderTanyaContent() {
     if (block.type === 'intro') {
       v += '<div style="margin-bottom:18px;padding:11px 15px;background:rgba(168,85,247,.11);border-left:4px solid rgba(168,85,247,.6);border-radius:0 7px 7px 0;">'
          + '<p style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:5px;">Context</p>'
-         + '<p style="font-size:13px;line-height:1.75;color:var(--t2);font-style:italic;">' + block.text + '</p>'
+         + '<p style="font-size:13px;line-height:1.92;color:var(--t2);font-style:italic;">' + block.text + '</p>'
          + '</div>';
       return;
     }
@@ -6024,11 +6024,11 @@ function _renderTanyaContent() {
       // Each sentence — side by side in both mode, no italics
       if (lang === 'both' && en && he) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">';
-        v += '<p class="rf-hagahah" style="--rf-sz:13px;--rf-lh:1.7;color:var(--t2);">' + en + '</p>';
+        v += '<p class="rf-hagahah" style="--rf-sz:13px;--rf-lh:1.82;color:var(--t2);">' + en + '</p>';
         v += '<p class="rf-hagahah" style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';--rf-sz:16px;--rf-lh:2.1;color:var(--t2);">' + he + '</p>';
         v += '</div>';
       } else if (lang === 'en' || (lang === 'both' && !he)) {
-        v += '<p class="rf-hagahah" style="--rf-sz:13px;--rf-lh:1.7;color:var(--t2);">' + en + '</p>';
+        v += '<p class="rf-hagahah" style="--rf-sz:13px;--rf-lh:1.82;color:var(--t2);">' + en + '</p>';
       } else {
         v += '<p class="rf-hagahah" style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';--rf-sz:16px;--rf-lh:2.1;color:var(--t2);">' + he + '</p>';
       }
@@ -6043,20 +6043,20 @@ function _renderTanyaContent() {
     // Regular body — no dividing line, just paragraph spacing
     if (lang === 'both') {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:6px 0 10px;align-items:start;">';
-      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.72;color:var(--t1);">' + (en||'') + '</p>';
-      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.72;color:var(--t1);">' + (he||'') + '</p>';
+      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.85;color:var(--t1);">' + (en||'') + '</p>';
+      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.85;color:var(--t1);">' + (he||'') + '</p>';
       v += '</div>';
     } else if (lang === 'he') {
-      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.72;color:var(--t1);padding:4px 0 8px;">' + (he||'') + '</p>';
+      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.85;color:var(--t1);padding:4px 0 8px;">' + (he||'') + '</p>';
     } else {
-      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.72;color:var(--t1);padding:4px 0 8px;">' + (en||'') + '</p>';
+      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.85;color:var(--t1);padding:4px 0 8px;">' + (en||'') + '</p>';
     }
 
     // Lessons in Tanya commentary — shown below each paragraph
     if (litOn && lit) {
       v += '<div style="margin-bottom:6px;padding:10px 14px;background:rgba(168,85,247,.11);border-left:4px solid rgba(168,85,247,.6);border-radius:0 6px 6px 0;">'
         + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:5px;">Lessons in Tanya</p>'
-        + '<p style="font-size:13px;line-height:1.75;color:var(--t2);">' + lit + '</p>'
+        + '<p style="font-size:13px;line-height:1.92;color:var(--t2);">' + lit + '</p>'
         + '</div>';
     }
   });
@@ -7841,13 +7841,13 @@ function _rerenderDaf() {
     let v = '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">'
-        + '<p style="font-size:15px;line-height:1.7;color:var(--t1);">' + en + '</p>'
-        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:1.72;color:var(--t1);">' + he + '</p>'
+        + '<p style="font-size:15px;line-height:1.82;color:var(--t1);">' + en + '</p>'
+        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:1.92;color:var(--t1);">' + he + '</p>'
         + '</div>';
     } else if (lang === 'en' && en) {
-      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.7;color:var(--t1);">' + en + '</p>';
+      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
     } else if (he) {
-      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.72;color:var(--t1);">' + he + '</p>';
+      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.85;color:var(--t1);">' + he + '</p>';
     }
     if (showRashi && rHe) {
       v += '<div style="margin-top:8px;padding:9px 12px;background:#10B98118;border-left:4px solid #10B981AA;border-radius:0 6px 6px 0;">'
@@ -7855,19 +7855,19 @@ function _rerenderDaf() {
       if (lang === 'both' && rEn) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">'
           + '<p style="font-size:13px;line-height:1.65;color:var(--t2);">' + rEn + '</p>'
-          + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.75;color:var(--t1);">' + rHe + '</p>'
+          + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.88;color:var(--t1);">' + rHe + '</p>'
           + '</div>';
       } else if (lang === 'en' && rEn) {
         v += '<p style="font-size:13px;line-height:1.65;color:var(--t2);">' + rEn + '</p>';
       } else {
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.75;color:var(--t1);width:100%;display:block;">' + rHe + '</p>';
+        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.92;color:var(--t1);width:100%;display:block;">' + rHe + '</p>';
       }
       v += '</div>';
     }
     if (showTosafot && tosHe) {
       v += '<div style="margin-top:6px;padding:9px 12px;background:#8B5CF618;border-left:4px solid #8B5CF6AA;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8B5CF6;margin-bottom:5px;">\u05EA\u05D5\u05E1\u05E4\u05D5\u05EA</p>'
-        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.75;color:var(--t1);">' + tosHe + '</p>'
+        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.88;color:var(--t1);">' + tosHe + '</p>'
         + '</div>';
     }
     v += '</div>';
@@ -8142,7 +8142,7 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
   contEl.style.display = 'block';
 
   const GREEN = '#1DB954';
-  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+  const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
   const langKey = 'chitas_lang_rambam'; // reuse Rambam lang pref
   const lang = localStorage.getItem(langKey) || 'both';
 
@@ -8184,16 +8184,16 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
 
       if (lang === 'both' && he && en) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0;border-bottom:1px solid var(--border);align-items:start;">';
-        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.7;color:var(--t1);">' + en + '</p>';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.75;color:var(--t1);">' + he + '</p>';
+        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
+        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;color:var(--t1);">' + he + '</p>';
         v += '</div>';
       } else if (lang === 'he' || !en) {
         v += '<div style="padding:16px 0;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.75;color:var(--t1);">' + he + '</p>';
+        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;color:var(--t1);">' + he + '</p>';
         v += '</div>';
       } else {
         v += '<div style="padding:16px 0;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.7;color:var(--t1);">' + en + '</p>';
+        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
         v += '</div>';
       }
     }
@@ -8358,10 +8358,10 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
       : 'padding:14px 0;border-bottom:1px solid var(--border);';
     const heStyle = isLT
       ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.62;color:var(--t1);'
-      : 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.72;color:var(--t1);';
+      : 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.85;color:var(--t1);';
     const enStyle = isLT
-      ? '--rf-sz:15px;--rf-lh:1.65;color:var(--t1);'
-      : '--rf-sz:15px;--rf-lh:1.7;color:var(--t1);';
+      ? '--rf-sz:15px;--rf-lh:1.78;color:var(--t1);'
+      : '--rf-sz:15px;--rf-lh:1.82;color:var(--t1);';
 
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + (isLT ? '' : 'padding:14px 0;border-bottom:1px solid var(--border);') + 'align-items:start;">';
