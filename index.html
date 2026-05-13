@@ -1262,12 +1262,9 @@ onAuthStateChanged(auth, user => {
     <!-- Font size row -->
     <div>
       <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Text Size</p>
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div style="display:flex;align-items:center;gap:8px;">
         <button onclick="_readerFontStep(-1)" id="rs-font-dec" style="width:36px;height:36px;border-radius:9px;background:var(--surface);border:1px solid var(--border);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:800;flex-shrink:0;">A</button>
-        <div id="rs-font-track" style="flex:1;height:4px;background:var(--border);border-radius:2px;position:relative;cursor:pointer;" onclick="_readerFontStepTo(event)">
-          <div id="rs-font-fill" style="height:100%;border-radius:2px;background:var(--gold);transition:width .15s;"></div>
-          <div id="rs-font-thumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid var(--card);box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .15s;"></div>
-        </div>
+        <div id="rs-font-dots" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;"></div>
         <button onclick="_readerFontStep(1)" id="rs-font-inc" style="width:36px;height:36px;border-radius:9px;background:var(--surface);border:1px solid var(--border);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:800;flex-shrink:0;">A</button>
       </div>
     </div>
@@ -6287,36 +6284,20 @@ function _readerFontStep(delta) {
   fire('Text size ' + pct + '%', 'xp');
 }
 
-// Tap on the slider track to jump to a step
-function _readerFontStepTo(e) {
-  const track = document.getElementById('rs-font-track');
-  if (!track) return;
-  const rect = track.getBoundingClientRect();
-  const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-  if (!sid) return;
-  const isLS = sid === 'likkuteiSichos';
-  const steps = isLS ? _LS_FONT_STEPS : _FONT_STEPS;
-  const target = Math.round(ratio * (steps - 1));
-  if (isLS) { _lsSetFontSize(target); }
-  else {
-    localStorage.setItem(_readerFontKey(sid), String(target));
-    _applyReaderFontSize(sid);
-    const pct = Math.round(_FONT_SCALES[target] * 100);
-    fire('Text size ' + pct + '%', 'xp');
-  }
-}
+// Tap on the slider track to jump to a step — REMOVED (was misleading)
 
-// Update the slider fill + thumb position in the settings popover
+// Update the step-dot indicator in the settings popover
 function _updateSettingsSlider(step, totalSteps) {
-  const steps = totalSteps || _FONT_STEPS;
-  const pct   = steps > 1 ? (step / (steps - 1)) * 100 : 50;
-  const fill  = document.getElementById('rs-font-fill');
-  const thumb = document.getElementById('rs-font-thumb');
-  const decBtn = document.getElementById('rs-font-dec');
-  const incBtn = document.getElementById('rs-font-inc');
-  if (fill)  fill.style.width  = pct + '%';
-  if (thumb) thumb.style.left  = pct + '%';
+  const steps   = totalSteps || _FONT_STEPS;
+  const dotsEl  = document.getElementById('rs-font-dots');
+  const decBtn  = document.getElementById('rs-font-dec');
+  const incBtn  = document.getElementById('rs-font-inc');
+  if (dotsEl) {
+    dotsEl.innerHTML = Array.from({ length: steps }, (_, i) =>
+      '<div style="width:' + (i === step ? '20px' : '6px') + ';height:6px;border-radius:3px;background:' +
+      (i === step ? 'var(--gold)' : 'var(--border)') + ';transition:all .18s;"></div>'
+    ).join('');
+  }
   if (decBtn) { decBtn.style.opacity = step === 0 ? '0.35' : '1'; decBtn.style.cursor = step === 0 ? 'default' : 'pointer'; }
   if (incBtn) { incBtn.style.opacity = step === steps - 1 ? '0.35' : '1'; incBtn.style.cursor = step === steps - 1 ? 'default' : 'pointer'; }
 }
@@ -6329,15 +6310,24 @@ function _buildSettingsSectionOpts(sectionId) {
 
   if (sectionId === 'chumash') {
     const lang  = localStorage.getItem('chitas_lang_chumash') || 'both';
-    const trans = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Metsudah';
+    const curId = localStorage.getItem('chitas_chumash_translation') || 'metsudah';
     html += _rsLangToggle('chumash', lang, '#F0A500');
     html += _rsDivider();
+    // Inline translation picker — radio-style rows, no separate modal
     html += '<div>'
       + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Translation</p>'
-      + '<button onclick="_openChumashTranslationPicker()" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;">'
-      + '<span>' + trans + '</span>'
-      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
-      + '</button></div>';
+      + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:hidden;">';
+    CHUMASH_TRANSLATIONS.forEach((t, i) => {
+      const active = t.id === curId;
+      const border = i < CHUMASH_TRANSLATIONS.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
+      html += '<button onclick="_setChumashTranslationInline(\'' + t.id + '\')"'
+        + ' style="width:100%;padding:10px 13px;background:' + (active ? 'rgba(240,165,0,.1)' : 'transparent') + ';border:none;' + border
+        + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
+        + '<p style="font-size:13px;font-weight:' + (active ? '700' : '600') + ';color:' + (active ? 'var(--gold)' : 'var(--t1)') + ';text-align:left;">' + t.label + '</p>'
+        + (active ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
+        + '</button>';
+    });
+    html += '</div></div>';
 
   } else if (sectionId === 'tehillim') {
     const lang = localStorage.getItem('chitas_lang_tehillim') || 'both';
@@ -6369,13 +6359,54 @@ function _buildSettingsSectionOpts(sectionId) {
       + '<span>' + track + '</span>'
       + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
       + '</button></div>';
+
   } else {
-    // Extra tracks that have bilingual content
-    const langKey = 'chitas_lang_extra_' + sectionId;
-    const lang = localStorage.getItem(langKey) || 'both';
+    // Extra tracks
+    const isDafType = (sectionId === 'dafYomi' || sectionId === 'sotah');
+    const langKey = isDafType ? 'chitas_lang_extra_dafYomi' : 'chitas_lang_extra_' + sectionId;
+    const lang = localStorage.getItem(langKey) || (isDafType ? 'he' : 'both');
     const def = typeof EXTRA_TRACK_DEFS !== 'undefined' ? EXTRA_TRACK_DEFS[sectionId] : null;
-    if (def && def.color) {
-      html += _rsLangToggle('extra_' + sectionId, lang, def.color, langKey, 'openExtraReader(\'' + sectionId + '\')');
+    const color = def?.color || 'var(--gold)';
+
+    // Lang toggle for bilingual extra tracks
+    const hasBilingual = sectionId !== 'likkuteiSichos'; // LS has its own UI
+    if (hasBilingual && def) {
+      const reloadFn = isDafType
+        ? '_setDafLang(\'LANG\')'
+        : 'localStorage.setItem(\'' + langKey + '\',\'LANG\');openExtraReader(\'' + sectionId + '\');closeReaderSettings();';
+      html += _rsLangToggleCustom(lang, color, langKey, reloadFn);
+    }
+
+    // Rashi / Tosafos toggles for Gemara tracks
+    if (isDafType && window._dafData) {
+      const dat = window._dafData;
+      const isSplit = !!dat.aHe;
+      const hasRashi   = isSplit ? (dat.aRashiHe?.some(Boolean) || dat.bRashiHe?.some(Boolean))
+                                 : (dat.rashiHe?.some(Boolean));
+      const hasTosafot = isSplit ? (dat.aTosHe?.some(Boolean) || dat.bTosHe?.some(Boolean))
+                                 : (dat.tosafotHe?.some(Boolean));
+      if (hasRashi || hasTosafot) {
+        const commStr = localStorage.getItem('chitas_daf_commentary') || '';
+        const commSet = new Set(commStr.split(',').filter(Boolean));
+        if (html) html += _rsDivider();
+        html += '<div><p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Commentary</p>'
+          + '<div style="display:flex;gap:6px;">';
+        if (hasRashi) {
+          const on = commSet.has('rashi');
+          html += '<button onclick="_toggleDafCommSettings(\'rashi\')"'
+            + ' style="flex:1;padding:9px 6px;border-radius:9px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
+            + (on ? 'background:#10B98120;color:#10B981;border-color:#10B981;' : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
+            + '">רש״י</button>';
+        }
+        if (hasTosafot) {
+          const on = commSet.has('tosafot');
+          html += '<button onclick="_toggleDafCommSettings(\'tosafot\')"'
+            + ' style="flex:1;padding:9px 6px;border-radius:9px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
+            + (on ? 'background:#8B5CF620;color:#8B5CF6;border-color:#8B5CF6;' : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
+            + '">תוספות</button>';
+        }
+        html += '</div></div>';
+      }
     }
   }
 
@@ -6408,6 +6439,40 @@ function _rsLangToggle(sectionId, lang, color, storageKey, reloadCall) {
 
 function _rsDivider() {
   return '<div style="height:1px;background:var(--border);margin:0 -16px;"></div>';
+}
+
+// Lang toggle for extra tracks with custom storage key + reload call
+function _rsLangToggleCustom(lang, color, storageKey, reloadCallTemplate) {
+  const opts = [['he','עב'], ['both','Both'], ['en','En']];
+  let h = '<div>'
+    + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Language</p>'
+    + '<div style="display:flex;gap:5px;">';
+  opts.forEach(([l, lb]) => {
+    const active = lang === l;
+    const fn = 'localStorage.setItem(\'' + storageKey + '\',\'' + l + '\');'
+      + reloadCallTemplate.replace('LANG', l);
+    h += '<button onclick="' + fn + '" style="flex:1;padding:8px 4px;border-radius:9px;border:1.5px solid;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;'
+      + (active ? 'background:' + color + ';color:#fff;border-color:' + color + ';'
+               : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
+      + '">' + lb + '</button>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+// Inline Chumash translation select — stays inside the popover, rebuilds it after
+function _setChumashTranslationInline(id) {
+  _setChumashTranslation(id);           // existing function: saves, reloads reader
+  // Rebuild section opts so checkmark moves immediately
+  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  if (sid) _buildSettingsSectionOpts(sid);
+}
+
+// Toggle Rashi/Tosafos from inside the settings popover and rebuild opts
+function _toggleDafCommSettings(val) {
+  _toggleDafComm(val);                  // existing function: saves + re-renders daf
+  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  if (sid) _buildSettingsSectionOpts(sid);
 }
 
 // Central lang setter — called from within the popover for core sections
