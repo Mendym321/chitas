@@ -13,7 +13,7 @@
 <title>Chitas Daily</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Noto+Serif+Hebrew:wght@300;400;500;600&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 @font-face {
   font-family: 'Taamey Frank CLM';
@@ -76,7 +76,6 @@
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   @keyframes tickerExitUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-20px) scale(.93)} }
   @keyframes tickerEnterDown { 0%{opacity:0;transform:translateY(18px) scale(.95)} 100%{opacity:1;transform:translateY(0) scale(1)} }
-  @keyframes spinSlow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   @keyframes logoReveal { 0%{transform:scale(.4) rotate(-20deg);opacity:0} 70%{transform:scale(1.08) rotate(2deg)} 100%{transform:scale(1) rotate(0deg);opacity:1} }
   @keyframes titleReveal { 0%{transform:translateY(24px);opacity:0} 100%{transform:translateY(0);opacity:1} }
   @keyframes glowPulse { 0%,100%{box-shadow:0 0 30px rgba(240,165,0,.2),0 4px 20px rgba(240,165,0,.3)} 50%{box-shadow:0 0 50px rgba(240,165,0,.35),0 4px 28px rgba(240,165,0,.45)} }
@@ -100,20 +99,6 @@
   .anim-up { animation: up .32s ease both; }
   .anim-fadeup { animation: fadeUp .4s ease both; }
   .spinner { width:30px;height:30px;border:3px solid var(--border);border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite; }
-
-  /* Layout helpers */
-  .flex { display: flex; }
-  .flex-col { display: flex; flex-direction: column; }
-  .items-center { align-items: center; }
-  .justify-center { justify-content: center; }
-  .justify-between { justify-content: space-between; }
-  .flex-1 { flex: 1; min-width: 0; }
-  .gap-6 { gap: 6px; } .gap-8 { gap: 8px; } .gap-10 { gap: 10px; } .gap-12 { gap: 12px; }
-  .text-center { text-align: center; }
-  .ellipsis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-  .w100 { width: 100%; }
 
   /* Rambam reader — make bold text actually visible */
   #native-reader-content b { font-weight: 800; color: var(--t1); }
@@ -704,11 +689,11 @@ onAuthStateChanged(auth, user => {
 
         <!-- Logo -->
         <div style="width:88px;height:88px;margin:0 auto 32px;position:relative;animation:logoReveal .7s cubic-bezier(.22,1,.36,1) both;">
-          <svg width="88" height="88" viewBox="0 0 88 88" style="position:absolute;inset:0;animation:spinSlow 18s linear infinite;">
+          <svg width="88" height="88" viewBox="0 0 88 88" style="position:absolute;inset:0;animation:spin 18s linear infinite;">
             <circle cx="44" cy="44" r="42" fill="none" stroke="rgba(240,165,0,0.1)" stroke-width="1" stroke-dasharray="3 8"/>
             <circle cx="44" cy="3" r="2.5" fill="rgba(240,165,0,0.45)"/>
           </svg>
-          <svg width="88" height="88" viewBox="0 0 88 88" style="position:absolute;inset:0;animation:spinSlow 11s linear infinite reverse;">
+          <svg width="88" height="88" viewBox="0 0 88 88" style="position:absolute;inset:0;animation:spin 11s linear infinite reverse;">
             <circle cx="44" cy="44" r="32" fill="none" stroke="rgba(240,165,0,0.18)" stroke-width="1.5" stroke-dasharray="2 6"/>
             <circle cx="44" cy="12" r="2" fill="rgba(240,165,0,0.6)"/>
           </svg>
@@ -1133,9 +1118,9 @@ onAuthStateChanged(auth, user => {
           <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
-      <span id="hebcal-link" style="display:none;"></span>
 
       <!-- Skeleton loaders -->
+      <span id="hebcal-link" style="display:none;"></span>
       <div id="skeletons">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:17px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:center;opacity:.4;animation:up .35s ease both;"><div style="width:44px;height:44px;border-radius:13px;background:var(--surface);flex-shrink:0;"></div><div style="flex:1;"><div class="skel" style="height:13px;width:38%;margin-bottom:8px;"></div><div class="skel" style="height:10px;width:60%;"></div></div></div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:17px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:center;opacity:.4;animation:up .35s ease both .07s;"><div style="width:44px;height:44px;border-radius:13px;background:var(--surface);flex-shrink:0;"></div><div style="flex:1;"><div class="skel" style="height:13px;width:42%;margin-bottom:8px;"></div><div class="skel" style="height:10px;width:55%;"></div></div></div>
@@ -1145,9 +1130,6 @@ onAuthStateChanged(auth, user => {
 
       <!-- Actual sections -->
       <div id="sections-list" style="display:none;"></div>
-
-      <!-- tanya-note removed -->
-      <div id="tanya-note" style="display:none;"></div>
 
       <!-- Extra learning tracks -->
       <div id="extra-tracks-separator" style="display:none;margin:4px 0 4px;display:flex;align-items:center;gap:10px;">
@@ -1760,6 +1742,7 @@ async function onSignedIn(fbUser) {
     // Write merged data back to Firestore so leaderboard reflects current streak
     saveUser();
     document.getElementById('onboarding').style.display = 'none';
+    document.getElementById('ob-bg-glow').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     init();
   } else {
@@ -2443,6 +2426,7 @@ function obStart() {
   }
   saveUser();
   document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('ob-bg-glow').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
   showLoaderSafe();
   init();
@@ -2647,14 +2631,11 @@ const REGULAR_PARSHIOT = new Set([
 
 function parseHebcal(data) {
   const items = data.items || [];
-  // Find the regular weekly parsha — skip holiday/special readings
-  // When a holiday falls on Shabbos, Hebcal returns that holiday as the parashat item
-  // but Chabad Chumash always follows the regular 54-parsha cycle
   const allParshaItems = items.filter(i => i.category === 'parashat');
   const parshaItem = allParshaItems.find(i => {
     const name = (i.title || '').replace(/Parashat |Parasha /, '');
     return REGULAR_PARSHIOT.has(name);
-  }) || allParshaItems[0]; // fallback to first if none match (shouldn't happen)
+  }) || allParshaItems[0];
   const dow = new Date().getDay();
   const aliyaNum = dow===6 ? 7 : dow+1;
   const leyning = parshaItem?.leyning || {};
@@ -2670,15 +2651,12 @@ function parseHebcal(data) {
   }
 
   const rt = user.rambamTrack;
-  const rambamItem = rt==='m'
-    ? items.find(i=>i.category==='dailyLearning'&&(i.title?.includes('Mitzvot')||i.title?.includes('Mitzvos')||i.title?.startsWith('Sefer')))
-    : rt==='1'
-      ? (items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')&&i.title?.includes('1 Chapter'))||items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')))
-      : (items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')&&!i.title?.includes('1 Chapter'))||items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')));
+  const rambamItem = rt==='1'
+    ? (items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')&&i.title?.includes('1 Chapter'))||items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')))
+    : (items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')&&!i.title?.includes('1 Chapter'))||items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')));
 
   return { parshaName, aliyaNum, aliyaRef, tehTitle, tehChapters, rambamTitle: rambamItem?.title||'Daily Rambam' };
 }
-
 
 // ── Cached Sefaria calendar fetch ────────────────────────────────────────────
 // Sefaria rate-limits aggressively. Fetch once, cache for the session.
@@ -3303,11 +3281,7 @@ function updateProgressRing() {
     : `${sections.length - doneCount} section${sections.length-doneCount!==1?'s':''} remaining`;
 }
 
-// ── CONFIRM MODAL ────────────────────────────────────────────────────────────
-
-
 function showConfirm(sectionId, fromReader) {
-  // No confirmation modal — just mark done directly
   if (!schedule) return;
   const isToday = dayOffset === 0;
   const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
@@ -3323,14 +3297,7 @@ function showConfirm(sectionId, fromReader) {
   }
 }
 
-
-
-// Stubs — confirm modal was removed; showConfirm marks done directly
-function confirmDone() {}
-function closeConfirm() {}
-
 function showConfirmPast(id, iso) {
-  // No confirmation modal — just mark done directly
   markDonePast(id, iso);
   renderSectionsForOffset(iso);
 }
@@ -8892,6 +8859,7 @@ function bootApp() {
   // This avoids a blank screen while Firebase auth resolves.
   if (user.uid && user.rambamTrack) {
     document.getElementById('onboarding').style.display = 'none';
+    document.getElementById('ob-bg-glow').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     // Don't call init() yet — wait for Firestore sync below so we have
     // fresh data before the day-rollover logic runs (FIX 1 + FIX 2)
@@ -8968,6 +8936,7 @@ function bootApp() {
       // (fire-and-forget — don't block app startup)
       if (user.uid) saveUser();
       document.getElementById('onboarding').style.display = 'none';
+      document.getElementById('ob-bg-glow').style.display = 'none';
       document.getElementById('main-app').style.display = 'block';
       showLoaderSafe();
       if (typeof init === 'function') init();
@@ -8981,6 +8950,7 @@ function bootApp() {
         // Save to Firestore now so next load finds it
         saveUser();
         document.getElementById('onboarding').style.display = 'none';
+        document.getElementById('ob-bg-glow').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         showLoaderSafe();
         if (typeof init === 'function') init();
