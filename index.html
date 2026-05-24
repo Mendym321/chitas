@@ -411,15 +411,18 @@
 }
 /* ══ LIKKUTEI SICHOS TRANSLATION MODE ══════════════════════════════════════ */
 .ls-trans-word {
-  text-decoration: underline wavy #8B5CF6;
-  text-decoration-skip-ink: none;
-  text-underline-offset: 3px;
+  /* SVG wavy underline — works on all mobile browsers */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3'%3E%3Cpath d='M0 2.5 Q1.5 0 3 2.5 Q4.5 5 6 2.5' stroke='%238B5CF6' stroke-width='1.2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom;
+  background-size: 6px 3px;
+  padding-bottom: 3px;
   cursor: pointer;
   border-radius: 2px;
-  transition: background .12s;
+  transition: background-color .12s;
 }
-.ls-trans-word:hover, .ls-trans-word.active {
-  background: rgba(139,92,246,.12);
+.ls-trans-word:active, .ls-trans-word.active {
+  background-color: rgba(139,92,246,.12);
 }
 #ls-trans-popup {
   position: fixed;
@@ -9090,29 +9093,33 @@ function _lsApplyTranslations() {
   const wrap = document.getElementById('ls-body-wrap');
   if (!wrap) return;
 
-  // Walk text nodes and wrap known words
-  const dict = _lsDict;
+  const dict  = _lsDict;
   const words = Object.keys(dict);
   if (!words.length) return;
 
-  // Build a regex that matches any known word (whole word boundaries in Hebrew)
-  // Sort longest first so compound words match before their parts
+  // Sort longest first — phrases match before their component words
   const escaped = words
-    .sort((a,b) => b.length - a.length)
+    .sort((a, b) => b.length - a.length)
     .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
+  // Match Hebrew/Yiddish characters and spaces (for phrases)
+  // Wrap in a non-destructive span — skip content already inside a span
   const re = new RegExp('(' + escaped.join('|') + ')', 'g');
 
-  // Process all text nodes inside ls-body-wrap
+  // Process leaf text nodes only — skip existing spans and elements
   function processNode(node) {
-    if (node.nodeType === 3) { // text node
+    if (node.nodeType === 3) {
       const text = node.textContent;
+      re.lastIndex = 0;
       if (!re.test(text)) return;
       re.lastIndex = 0;
+
       const frag = document.createDocumentFragment();
       let last = 0, m;
-      re.lastIndex = 0;
       while ((m = re.exec(text)) !== null) {
-        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        if (m.index > last) {
+          frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        }
         const span = document.createElement('span');
         span.className = 'ls-trans-word';
         span.dataset.word = m[1];
@@ -9120,15 +9127,19 @@ function _lsApplyTranslations() {
         frag.appendChild(span);
         last = m.index + m[1].length;
       }
-      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      if (last < text.length) {
+        frag.appendChild(document.createTextNode(text.slice(last)));
+      }
       node.parentNode.replaceChild(frag, node);
-    } else if (node.nodeType === 1 && !['SCRIPT','STYLE'].includes(node.tagName)) {
+    } else if (
+      node.nodeType === 1 &&
+      !['SCRIPT','STYLE','SPAN'].includes(node.tagName) // skip existing spans
+    ) {
       Array.from(node.childNodes).forEach(processNode);
     }
   }
-  Array.from(wrap.childNodes).forEach(processNode);
 
-  // Attach tap handler
+  Array.from(wrap.childNodes).forEach(processNode);
   wrap.addEventListener('click', _lsTransWordClick, { passive: true });
 }
 
@@ -9171,11 +9182,25 @@ function _lsTransWordClick(e) {
 
   popup.style.display = 'block';
 
-  // Position: above word, right-aligned to screen edge if needed
-  let top  = rect.top - popup.offsetHeight - 10 + window.scrollY;
-  let left = rect.left + window.scrollX;
-  if (top < 60) top = rect.bottom + 10 + window.scrollY;
-  if (left + 260 > window.innerWidth) left = window.innerWidth - 270;
+  // Position in viewport coords (popup is position:fixed)
+  const PAD    = 10;
+  const VW     = window.innerWidth;
+  const VH     = window.innerHeight;
+  const pw     = Math.min(260, VW - PAD * 2);
+  popup.style.maxWidth = pw + 'px';
+
+  // Prefer above the word, fall back to below
+  const aboveTop = rect.top - popup.offsetHeight - PAD;
+  const belowTop = rect.bottom + PAD;
+  let top  = aboveTop >= 60 ? aboveTop : belowTop;
+  let left = rect.left + rect.width / 2 - pw / 2; // centered on word
+
+  // Clamp horizontally
+  left = Math.max(PAD, Math.min(left, VW - pw - PAD));
+  // Clamp vertically (if below goes off bottom, force above)
+  if (top + popup.offsetHeight > VH - PAD) top = aboveTop;
+  top = Math.max(60, top);
+
   popup.style.top  = top + 'px';
   popup.style.left = left + 'px';
 
