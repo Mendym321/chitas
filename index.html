@@ -9102,9 +9102,13 @@ function _lsApplyTranslations() {
     .sort((a, b) => b.length - a.length)
     .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
-  // Match Hebrew/Yiddish characters and spaces (for phrases)
-  // Wrap in a non-destructive span — skip content already inside a span
-  const re = new RegExp('(' + escaped.join('|') + ')', 'g');
+  // Use negative lookbehind/lookahead to ensure we only match whole words
+  // A Hebrew word boundary = not preceded/followed by a Hebrew letter
+  const HE = '\u05D0-\u05EA\u05F3\u05F4';
+  const re = new RegExp(
+    '(?<![' + HE + '])(' + escaped.join('|') + ')(?![' + HE + '])',
+    'g'
+  );
 
   // Process leaf text nodes only — skip existing spans and elements
   function processNode(node) {
