@@ -6409,8 +6409,10 @@ function _buildSettingsSectionOpts(sectionId) {
         + '<button onclick="_lsToggleTransMode(' + (!on) + ')" style="width:100%;padding:10px 13px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;'
         + (on ? 'background:rgba(139,92,246,.12);color:#8B5CF6;border-color:#8B5CF6;' : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
         + '">'
-        + '<span>' + (on ? '✦ On — tap words to translate' : 'Off') + '</span>'
-        + '<span style="font-size:18px;">' + (on ? '🔤' : '🔤') + '</span>'
+        + '<span>' + (on ? 'On — tap words to translate' : 'Off') + '</span>'
+        + '<div style="width:36px;height:20px;border-radius:10px;background:' + (on ? '#8B5CF6' : 'var(--border)') + ';position:relative;flex-shrink:0;transition:background .15s;">'
+        + '<div style="position:absolute;top:3px;left:' + (on ? '19px' : '3px') + ';width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>'
+        + '</div>'
         + '</button></div>';
       // Admin: add word button
       if (user?.isAdmin || user?.role === 'admin') {
