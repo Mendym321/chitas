@@ -9068,8 +9068,10 @@ let _lsDictWord   = null;  // word currently being added in admin modal
 async function _lsLoadDict() {
   if (_lsDict) return _lsDict;
   try {
-    const { collection: col, getDocs: gd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const snap = await gd(col(db, 'lsDict'));
+    const { getApp }     = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getFirestore, collection: col, getDocs: gd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const _db   = getFirestore(getApp());
+    const snap  = await gd(col(_db, 'lsDict'));
     _lsDict = {};
     snap.forEach(d => { _lsDict[d.id] = d.data(); });
     console.log('[lsDict] Loaded', Object.keys(_lsDict).length, 'words');
@@ -9226,8 +9228,10 @@ async function _lsDictModalSave() {
   if (!translation) { fire('Please enter a translation', 'warn'); return; }
 
   try {
-    const { doc: firestoreDoc, setDoc: sd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    await sd(firestoreDoc(db, 'lsDict', _lsDictWord), {
+    const { getApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getFirestore, doc: firestoreDoc, setDoc: sd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const _db = getFirestore(getApp());
+    await sd(firestoreDoc(_db, 'lsDict', _lsDictWord), {
       translation,
       notes: notes || '',
       updatedAt: Date.now()
