@@ -9070,14 +9070,14 @@ async function _lsLoadDict() {
   try {
     const { getApp }     = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const { getFirestore, collection: col, getDocs: gd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const _db   = getFirestore(getApp());
+    const _db   = getFirestore(getApp('[DEFAULT]'));
     const snap  = await gd(col(_db, 'lsDict'));
     _lsDict = {};
     snap.forEach(d => { _lsDict[d.id] = d.data(); });
     console.log('[lsDict] Loaded', Object.keys(_lsDict).length, 'words');
   } catch(e) {
     console.warn('[lsDict] Load failed:', e.message);
-    _lsDict = {};
+    _lsDict = null; // reset so it retries next time
   }
   return _lsDict;
 }
@@ -9230,7 +9230,7 @@ async function _lsDictModalSave() {
   try {
     const { getApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const { getFirestore, doc: firestoreDoc, setDoc: sd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const _db = getFirestore(getApp());
+    const _db = getFirestore(getApp('[DEFAULT]'));
     await sd(firestoreDoc(_db, 'lsDict', _lsDictWord), {
       translation,
       notes: notes || '',
