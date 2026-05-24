@@ -409,7 +409,51 @@
   border:none;font-size:18px;cursor:pointer;color:var(--t2);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
-/* ══ LIKKUTEI SICHOS READER ════════════════════════════════════════════════ */
+/* ══ LIKKUTEI SICHOS TRANSLATION MODE ══════════════════════════════════════ */
+.ls-trans-word {
+  text-decoration: underline wavy #8B5CF6;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background .12s;
+}
+.ls-trans-word:hover, .ls-trans-word.active {
+  background: rgba(139,92,246,.12);
+}
+#ls-trans-popup {
+  position: fixed;
+  z-index: 1200;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.35);
+  padding: 13px 16px;
+  max-width: 260px;
+  min-width: 180px;
+  animation: lsFnPop .14s cubic-bezier(.22,1,.36,1) both;
+  pointer-events: auto;
+}
+#ls-trans-popup .ls-tp-word {
+  font-family: 'DachHeilig','Frank Ruhl Libre',serif;
+  font-size: 20px;
+  color: var(--t1);
+  direction: rtl;
+  margin-bottom: 5px;
+}
+#ls-trans-popup .ls-tp-trans {
+  font-size: 14px;
+  font-weight: 600;
+  color: #8B5CF6;
+  margin-bottom: 4px;
+}
+#ls-trans-popup .ls-tp-notes {
+  font-size: 12px;
+  color: var(--t3);
+  line-height: 1.5;
+}
+
+/* ══ END LIKKUTEI SICHOS TRANSLATION MODE ══════════════════════════════════ */
 @font-face {
   font-family: 'DachHeilig';
   src: url('https://dach.dev/fonts/Heilig.OTF') format('opentype');
@@ -1294,6 +1338,27 @@ onAuthStateChanged(auth, user => {
         <span style="font-size:11px;font-weight:700;opacity:.7;">+35 XP</span>
       </button>
     </div>
+  </div>
+</div>
+
+<!-- LS Translation popup (word tap) -->
+<div id="ls-trans-popup" style="display:none;"></div>
+
+<!-- LS Dictionary Admin Input Modal -->
+<div id="ls-dict-modal" style="display:none;position:fixed;inset:0;z-index:1300;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;" onclick="if(event.target.id==='ls-dict-modal')_lsDictModalClose()">
+  <div style="background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-width:430px;padding:20px 20px calc(20px + env(safe-area-inset-bottom));">
+    <div style="display:flex;justify-content:center;margin-bottom:12px;"><div style="width:36px;height:4px;border-radius:2px;background:var(--border);"></div></div>
+    <p style="font-size:17px;font-weight:800;color:var(--t1);margin-bottom:4px;">Add Translation</p>
+    <p id="ls-dict-modal-word" style="font-family:'DachHeilig','Frank Ruhl Libre',serif;font-size:26px;color:#8B5CF6;direction:rtl;margin-bottom:16px;"></p>
+    <div style="margin-bottom:12px;">
+      <p style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Translation</p>
+      <input id="ls-dict-trans-input" type="text" placeholder="English translation..." style="width:100%;padding:11px 13px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:15px;font-family:inherit;box-sizing:border-box;outline:none;">
+    </div>
+    <div style="margin-bottom:18px;">
+      <p style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Notes (optional)</p>
+      <input id="ls-dict-notes-input" type="text" placeholder="e.g. grammar note, alternate meaning..." style="width:100%;padding:11px 13px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:14px;font-family:inherit;box-sizing:border-box;outline:none;">
+    </div>
+    <button onclick="_lsDictModalSave()" style="width:100%;padding:14px;border-radius:12px;background:#8B5CF6;border:none;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;">Save to Dictionary</button>
   </div>
 </div>
 
@@ -6330,10 +6395,28 @@ function _buildSettingsSectionOpts(sectionId) {
   } else {
     // Extra tracks
     const isDafType = (sectionId === 'dafYomi' || sectionId === 'sotah');
+    const isLS = sectionId === 'likkuteiSichos';
     const langKey = isDafType ? 'chitas_lang_extra_dafYomi' : 'chitas_lang_extra_' + sectionId;
     const lang = localStorage.getItem(langKey) || (isDafType ? 'he' : 'both');
     const def = typeof EXTRA_TRACK_DEFS !== 'undefined' ? EXTRA_TRACK_DEFS[sectionId] : null;
     const color = def?.color || 'var(--gold)';
+
+    // LS: translation mode toggle
+    if (isLS) {
+      const on = _lsTransMode;
+      html += '<div>'
+        + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Translation Mode</p>'
+        + '<button onclick="_lsToggleTransMode(' + (!on) + ')" style="width:100%;padding:10px 13px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;'
+        + (on ? 'background:rgba(139,92,246,.12);color:#8B5CF6;border-color:#8B5CF6;' : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
+        + '">'
+        + '<span>' + (on ? '✦ On — tap words to translate' : 'Off') + '</span>'
+        + '<span style="font-size:18px;">' + (on ? '🔤' : '🔤') + '</span>'
+        + '</button></div>';
+      // Admin: add word button
+      if (user?.isAdmin || user?.role === 'admin') {
+        html += '<button onclick="closeReaderSettings();_lsDictModalOpen(\'\')" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;">➕ Add word to dictionary</button>';
+      }
+    }
 
     // Lang toggle for bilingual extra tracks
     const hasBilingual = sectionId !== 'likkuteiSichos'; // LS has its own UI
@@ -8973,6 +9056,201 @@ function bootApp() {
 
 
 // ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+// ZONE LS-DICT · LIKKUTEI SICHOS TRANSLATION MODE
+// ════════════════════════════════════════════════════════════════════════════
+
+let _lsDict       = null;  // { word: { translation, notes } } — loaded once
+let _lsTransMode  = false; // is translation mode on?
+let _lsDictWord   = null;  // word currently being added in admin modal
+
+// ── Load dictionary from Firestore ──────────────────────────────────────────
+async function _lsLoadDict() {
+  if (_lsDict) return _lsDict;
+  try {
+    const { collection: col, getDocs: gd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap = await gd(col(db, 'lsDict'));
+    _lsDict = {};
+    snap.forEach(d => { _lsDict[d.id] = d.data(); });
+    console.log('[lsDict] Loaded', Object.keys(_lsDict).length, 'words');
+  } catch(e) {
+    console.warn('[lsDict] Load failed:', e.message);
+    _lsDict = {};
+  }
+  return _lsDict;
+}
+
+// ── Apply translation squiggles to rendered body ─────────────────────────────
+function _lsApplyTranslations() {
+  if (!_lsTransMode || !_lsDict) return;
+  const wrap = document.getElementById('ls-body-wrap');
+  if (!wrap) return;
+
+  // Walk text nodes and wrap known words
+  const dict = _lsDict;
+  const words = Object.keys(dict);
+  if (!words.length) return;
+
+  // Build a regex that matches any known word (whole word boundaries in Hebrew)
+  // Sort longest first so compound words match before their parts
+  const escaped = words
+    .sort((a,b) => b.length - a.length)
+    .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const re = new RegExp('(' + escaped.join('|') + ')', 'g');
+
+  // Process all text nodes inside ls-body-wrap
+  function processNode(node) {
+    if (node.nodeType === 3) { // text node
+      const text = node.textContent;
+      if (!re.test(text)) return;
+      re.lastIndex = 0;
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+      re.lastIndex = 0;
+      while ((m = re.exec(text)) !== null) {
+        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        const span = document.createElement('span');
+        span.className = 'ls-trans-word';
+        span.dataset.word = m[1];
+        span.textContent = m[1];
+        frag.appendChild(span);
+        last = m.index + m[1].length;
+      }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    } else if (node.nodeType === 1 && !['SCRIPT','STYLE'].includes(node.tagName)) {
+      Array.from(node.childNodes).forEach(processNode);
+    }
+  }
+  Array.from(wrap.childNodes).forEach(processNode);
+
+  // Attach tap handler
+  wrap.addEventListener('click', _lsTransWordClick, { passive: true });
+}
+
+// ── Remove translation squiggles ─────────────────────────────────────────────
+function _lsRemoveTranslations() {
+  const wrap = document.getElementById('ls-body-wrap');
+  if (!wrap) return;
+  wrap.querySelectorAll('.ls-trans-word').forEach(span => {
+    span.replaceWith(document.createTextNode(span.textContent));
+  });
+  wrap.normalize();
+  wrap.removeEventListener('click', _lsTransWordClick);
+  _lsHideTransPopup();
+}
+
+// ── Word tap handler ──────────────────────────────────────────────────────────
+function _lsTransWordClick(e) {
+  const span = e.target.closest('.ls-trans-word');
+  if (!span) { _lsHideTransPopup(); return; }
+  e.stopPropagation();
+  const word  = span.dataset.word;
+  const entry = (_lsDict || {})[word];
+  if (!entry) return;
+
+  // Highlight tapped word
+  document.querySelectorAll('.ls-trans-word.active').forEach(s => s.classList.remove('active'));
+  span.classList.add('active');
+
+  // Position popup above the word
+  const rect   = span.getBoundingClientRect();
+  const popup  = document.getElementById('ls-trans-popup');
+  if (!popup) return;
+
+  const isAdmin = user?.isAdmin || user?.role === 'admin';
+  popup.innerHTML =
+    '<div class="ls-tp-word">' + word + '</div>'
+    + '<div class="ls-tp-trans">' + (entry.translation || '') + '</div>'
+    + (entry.notes ? '<div class="ls-tp-notes">' + entry.notes + '</div>' : '')
+    + (isAdmin ? '<button onclick="_lsDictModalOpen(\'' + word + '\')" style="margin-top:8px;font-size:11px;font-weight:700;color:var(--t3);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">✏️ Edit</button>' : '');
+
+  popup.style.display = 'block';
+
+  // Position: above word, right-aligned to screen edge if needed
+  let top  = rect.top - popup.offsetHeight - 10 + window.scrollY;
+  let left = rect.left + window.scrollX;
+  if (top < 60) top = rect.bottom + 10 + window.scrollY;
+  if (left + 260 > window.innerWidth) left = window.innerWidth - 270;
+  popup.style.top  = top + 'px';
+  popup.style.left = left + 'px';
+
+  // Dismiss on outside tap
+  setTimeout(() => document.addEventListener('click', _lsHideTransPopup, { once: true }), 50);
+}
+
+function _lsHideTransPopup() {
+  const popup = document.getElementById('ls-trans-popup');
+  if (popup) popup.style.display = 'none';
+  document.querySelectorAll('.ls-trans-word.active').forEach(s => s.classList.remove('active'));
+}
+
+// ── Toggle translation mode (called from settings gear) ──────────────────────
+async function _lsToggleTransMode(on) {
+  _lsTransMode = on;
+  localStorage.setItem('ls_trans_mode', on ? '1' : '0');
+  if (on) {
+    if (!_lsDict) await _lsLoadDict();
+    _lsApplyTranslations();
+  } else {
+    _lsRemoveTranslations();
+  }
+  // Rebuild settings opts so toggle reflects state
+  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+  if (sid) _buildSettingsSectionOpts(sid);
+}
+
+// ── Admin: open add/edit modal ────────────────────────────────────────────────
+function _lsDictModalOpen(word) {
+  _lsHideTransPopup();
+  _lsDictWord = word;
+  const existing = (_lsDict || {})[word] || {};
+  document.getElementById('ls-dict-modal-word').textContent  = word;
+  document.getElementById('ls-dict-trans-input').value       = existing.translation || '';
+  document.getElementById('ls-dict-notes-input').value       = existing.notes || '';
+  const modal = document.getElementById('ls-dict-modal');
+  if (modal) modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('ls-dict-trans-input')?.focus(), 200);
+}
+
+function _lsDictModalClose() {
+  const modal = document.getElementById('ls-dict-modal');
+  if (modal) modal.style.display = 'none';
+  _lsDictWord = null;
+}
+
+async function _lsDictModalSave() {
+  if (!_lsDictWord) return;
+  const translation = document.getElementById('ls-dict-trans-input').value.trim();
+  const notes       = document.getElementById('ls-dict-notes-input').value.trim();
+  if (!translation) { fire('Please enter a translation', 'warn'); return; }
+
+  try {
+    const { doc: firestoreDoc, setDoc: sd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    await sd(firestoreDoc(db, 'lsDict', _lsDictWord), {
+      translation,
+      notes: notes || '',
+      updatedAt: Date.now()
+    });
+    // Update local cache
+    if (!_lsDict) _lsDict = {};
+    _lsDict[_lsDictWord] = { translation, notes };
+    fire('Saved: ' + _lsDictWord, 'gold');
+    _lsDictModalClose();
+    // Re-apply so new word gets squiggle immediately
+    if (_lsTransMode) {
+      _lsRemoveTranslations();
+      _lsApplyTranslations();
+    }
+  } catch(e) {
+    fire('Save failed: ' + e.message, 'warn');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// END ZONE LS-DICT
+// ════════════════════════════════════════════════════════════════════════════
+
 // LIKKUTEI SICHOS  (extra track — parsha-based reader via dach.dev)
 // ════════════════════════════════════════════════════════════════════
 
@@ -9048,6 +9326,8 @@ let _lsSichos   = [];   // flat list currently shown
 let _lsCurIdx   = 0;
 let _lsFnMap    = {};
 let _lsInReader = false;
+// Restore translation mode preference
+_lsTransMode = localStorage.getItem('ls_trans_mode') === '1';
 let _lsScrollTimer = null;
 let _lsActiveParshaDivs = []; // keys for current week (for grouped display)
 // Expose to window so onReaderScroll (defined earlier) can access
@@ -9498,6 +9778,10 @@ async function _lsOpenReader(idx) {
         const ref = e.target.closest('.ls-fn-ref[data-lsfn]');
         if (ref) _lsShowFnPopup(parseInt(ref.dataset.lsfn), ref);
       };
+      // Apply translation squiggles if mode is on
+      if (_lsTransMode) {
+        _lsLoadDict().then(() => _lsApplyTranslations());
+      }
     }
 
     // Apply saved font size
