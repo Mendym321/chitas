@@ -9395,26 +9395,54 @@ function _lsApplyPasukSquiggles(footnoteMap) {
   const wrap = document.getElementById('ls-body-wrap');
   if (!wrap) return;
 
-  let html = wrap.innerHTML;
+  // Walk text nodes only — never touch innerHTML directly (breaks HTML attributes)
+  function processNode(node) {
+    if (node.nodeType === 3) {
+      const text = node.textContent;
+      // Match "quoted text" — regular or guillemet quotes
+      const re = /([„"])([^"„""]{3,300}?)([""])/g;
+      if (!re.test(text)) return;
+      re.lastIndex = 0;
 
-  // Match both „..." guillemets and "..." regular quotes
-  // Also capture an optional footnote superscript immediately after the closing quote
-  const quoteRe = /([„\u201C"])([^"„\u201D"]{3,300}?)(["\u201D"])(\s*<[^>]*data-lsfn="(\d+)"[^>]*>\d+<\/[^>]+>)?/g;
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+      while ((m = re.exec(text)) !== null) {
+        // Text before the quote
+        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
 
-  html = html.replace(quoteRe, (match, openQ, inner, closeQ, fnSpan, fnNum) => {
-    // Also scan inside the inner text for a footnote ref
-    const innerFn = inner.match(/data-lsfn="(\d+)"/);
-    const fn = fnNum || (innerFn ? innerFn[1] : null);
-    const src = fn ? (footnoteMap[parseInt(fn)] || '') : '';
-    const dataFn  = fn ? ' data-lsfn="' + fn + '"' : '';
-    const dataSrc = ' data-pasuk-src="' + encodeURIComponent(src) + '"';
-    return '<span class="ls-pasuk-quote"' + dataSrc + dataFn + '>'
-      + openQ + inner + closeQ
-      + '</span>'
-      + (fnSpan || '');
-  });
+        // Find the nearest footnote ref sibling after this text node
+        // We'll look it up by scanning the parent's next siblings
+        const span = document.createElement('span');
+        span.className = 'ls-pasuk-quote';
+        span.textContent = m[0];
 
-  wrap.innerHTML = html;
+        // Try to find associated footnote number from next sibling
+        let sibling = node.nextSibling;
+        let fnNum = null;
+        while (sibling && !fnNum) {
+          if (sibling.nodeType === 1) {
+            const fnRef = sibling.querySelector ? sibling.querySelector('[data-lsfn]') : null;
+            if (fnRef) fnNum = fnRef.dataset.lsfn;
+            else if (sibling.dataset?.lsfn) fnNum = sibling.dataset.lsfn;
+            break;
+          }
+          sibling = sibling.nextSibling;
+        }
+        if (fnNum) {
+          span.dataset.lsfn = fnNum;
+          span.dataset.pasukSrc = encodeURIComponent(footnoteMap[parseInt(fnNum)] || '');
+        }
+        frag.appendChild(span);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    } else if (node.nodeType === 1 && !['SCRIPT','STYLE','SPAN'].includes(node.tagName)) {
+      Array.from(node.childNodes).forEach(processNode);
+    }
+  }
+
+  Array.from(wrap.childNodes).forEach(processNode);
   wrap.addEventListener('click', _lsPasukClick, { passive: true });
 }
 
