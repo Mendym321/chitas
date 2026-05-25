@@ -9226,8 +9226,11 @@ async function _lsToggleTransMode(on) {
   localStorage.setItem('ls_trans_mode', on ? '1' : '0');
   if (on) {
     if (!_lsDict) await _lsLoadDict();
-    _lsApplyPasukSquiggles(window._lsCurrentFnMap || {});
     _lsApplyTranslations();
+    // Apply pasuk squiggles if text map already built, else wait for async detection
+    if (Object.keys(window._lsPasukTextMap || {}).length) {
+      _lsApplyPasukSquiggles(window._lsCurrentFnMap || {});
+    }
   } else {
     _lsRemoveTranslations();
   }
@@ -9533,20 +9536,15 @@ function _lsApplyPasukSquiggles(footnoteMap) {
   const wrap = document.getElementById('ls-body-wrap');
   if (!wrap) return;
 
-  const quoteMap = window._lsQuoteMap || {};
-  const quotes = Object.keys(quoteMap);
-  if (!quotes.length) { wrap.addEventListener('click', _lsWrapClick); return; }
+  const textMap = window._lsPasukTextMap || {};
+  const phrases = Object.keys(textMap);
+  if (!phrases.length) { wrap.addEventListener('click', _lsWrapClick); return; }
 
-  // Sort longest first so longer quotes match before sub-phrases
-  quotes.sort((a, b) => b.length - a.length);
-  const escaped = quotes.map(q => q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-
-  // Hebrew word boundary: not preceded/followed by Hebrew letter
+  // Sort longest first
+  phrases.sort((a, b) => b.length - a.length);
+  const escaped = phrases.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const HE = '\u05D0-\u05EA';
-  const re = new RegExp(
-    '(?<![' + HE + '])(' + escaped.join('|') + ')(?![' + HE + '])',
-    'g'
-  );
+  const re = new RegExp('(?<![' + HE + '])(' + escaped.join('|') + ')(?![' + HE + '])', 'g');
 
   function processNode(node) {
     if (node.nodeType === 3) {
@@ -9560,13 +9558,15 @@ function _lsApplyPasukSquiggles(footnoteMap) {
       let last = 0, m;
       while ((m = re.exec(text)) !== null) {
         if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
-        const qData = quoteMap[m[1]];
-        const span = document.createElement('span');
-        span.className = 'ls-pasuk-quote';
-        span.textContent = m[1];
-        span.dataset.lsfn    = qData?.fnNum || '';
-        span.dataset.pasukSrc = encodeURIComponent(qData?.src || '');
+        const pData = textMap[m[1]];
+        const span  = document.createElement('span');
+        span.className       = 'ls-pasuk-quote';
+        span.textContent     = m[1];
+        span.dataset.lsfn    = pData?.fnNum || '';
+        span.dataset.pasukSrc = encodeURIComponent(pData?.src || '');
         span.dataset.quoted  = encodeURIComponent(m[1]);
+        // Cache the already-fetched pasuk so click is instant
+        if (pData?.pasuk) span.dataset.pasukKey = pData.key || '';
         frag.appendChild(span);
         last = m.index + m[1].length;
       }
@@ -9626,8 +9626,12 @@ async function _lsPasukClick(e) {
     return;
   }
 
+  // Use cached pasuk from text detection if available — no extra fetch needed
+  const textMap = window._lsPasukTextMap || {};
+  const quoted  = decodeURIComponent(span.dataset.quoted || '');
+  const cached  = Object.values(textMap).find(d => d.key === ref.key);
   const isTalmud = ref.isTalmud || (sourceType === 'talmud' || sourceType === 'yerushalmi');
-  const pasuk = await _fetchPasuk(ref.book, ref.ch, ref.v, isTalmud, ref.key);
+  const pasuk = cached?.pasuk || await _fetchPasuk(ref.book, ref.ch, ref.v, isTalmud, ref.key);
   if (!pasuk) {
     popup.innerHTML = '<p style="font-size:13px;color:var(--t3);">' + ref.ref + '</p>';
     return;
@@ -10238,42 +10242,64 @@ async function _lsOpenReader(idx) {
     _lsFnMap  = {};
     fns.forEach(f => _lsFnMap[f.num] = f.text);
 
-    // ── Pre-parse quotes from raw mainText (before spans are injected) ──────
+    // ── Pre-detect pasuk text in body (before spans injected) ──────────────
+    // For each footnote that has a parseable source, fetch the pasuk and
+    // find its text in the sicha body — much more robust than quote detection
     window._lsQuoteMap = {};
-    const rawHtml = data.mainText || '';
+    window._lsPasukTextMap = {}; // phrase → { fnNum, src, key }
 
-    // Build two parallel arrays: strippedText and a map from stripped-pos → rawHtml-pos
-    let stripped = '';
-    const posMap = []; // posMap[i] = position in rawHtml for stripped[i]
-    let inTag = false;
-    for (let i = 0; i < rawHtml.length; i++) {
-      const ch = rawHtml[i];
-      if (ch === '<') { inTag = true; continue; }
-      if (ch === '>') { inTag = false; continue; }
-      if (!inTag) { posMap.push(i); stripped += ch; }
-    }
+    const rawStripped = (data.mainText || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 
-    // Match quotes in stripped text
-    const qRe = /[„"]([^"„""]{2,200}?)[""]/g;
-    let qs;
-    while ((qs = qRe.exec(stripped)) !== null) {
-      const plainQ = qs[1].trim();
-      if (plainQ.length < 3) continue;
+    // Run async detection in background — don't block render
+    (async () => {
+      const strip = s => s
+        .replace(/\u05BE/g, ' ')         // maqaf → space first
+        .replace(/[\u0591-\u05C7]/g, '') // strip nikud/cantillation
+        .replace(/\s+/g, ' ').trim();
 
-      // Map stripped position back to raw HTML position
-      const rawStart = posMap[qs.index] || 0;
-      const rawEnd   = posMap[Math.min(qs.index + qs[0].length, posMap.length - 1)] || rawStart;
+      for (const [numStr, src] of Object.entries(_lsFnMap)) {
+        const ref = _parsePasukRef(src);
+        if (!ref) continue;
+        if (_detectSourceType(src) === 'skip') continue;
 
-      // Look for data-lsfn within ±300 chars in raw HTML around the quote
-      const context = rawHtml.substring(Math.max(0, rawStart - 50), rawEnd + 300);
-      const fnMatch = context.match(/data-lsfn="(\d+)"/);
-      const fnNum   = fnMatch ? parseInt(fnMatch[1]) : null;
-      const src     = fnNum ? (_lsFnMap[fnNum] || '') : '';
+        try {
+          const pasuk = await _fetchPasuk(ref.book, ref.ch, ref.v, ref.isTalmud, ref.key);
+          if (!pasuk?.he) continue;
 
-      if (src && _parsePasukRef(src)) {
-        window._lsQuoteMap[plainQ] = { fnNum, src };
+          const heClean = strip(pasuk.he);
+          const words = heClean.split(' ').filter(w => w.length > 1);
+
+          // Try 3-word windows, then 2-word, to find the best match in the body
+          let found = null;
+          for (let len = 4; len >= 2; len--) {
+            for (let i = 0; i <= words.length - len; i++) {
+              const phrase = words.slice(i, i + len).join(' ');
+              if (phrase.length < 6) continue;
+              if (rawStripped.includes(phrase)) {
+                found = phrase;
+                break;
+              }
+            }
+            if (found) break;
+          }
+
+          if (found) {
+            window._lsPasukTextMap[found] = {
+              fnNum: parseInt(numStr),
+              src,
+              key: ref.key,
+              isTalmud: ref.isTalmud,
+              pasuk // cache the already-fetched pasuk
+            };
+          }
+        } catch(e) {}
       }
-    }
+
+      // Now apply squiggles if translation mode is on and reader is still showing
+      if (_lsTransMode && document.getElementById('ls-body-wrap')) {
+        _lsApplyPasukSquiggles(_lsFnMap);
+      }
+    })();
 
     const body = _lsLinkify(data.mainText || '');
 
@@ -10307,13 +10333,9 @@ async function _lsOpenReader(idx) {
       };
       // _lsFnMap is already built above from _lsParseFn — use it directly
       window._lsCurrentFnMap = _lsFnMap;
-      // Apply translation squiggles if mode is on
+      // Apply word translations immediately; pasuk squiggles applied async after fetching
       if (_lsTransMode) {
-        _lsLoadDict().then(() => {
-          // Pasuk FIRST (before word spans are inserted), then words
-          _lsApplyPasukSquiggles(_lsFnMap);
-          _lsApplyTranslations();
-        });
+        _lsLoadDict().then(() => _lsApplyTranslations());
       }
     }
 
