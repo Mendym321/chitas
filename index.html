@@ -9393,28 +9393,44 @@ function _heToNum(s) {
   return _HE_NUMS[s] || null;
 }
 
-// Parse a footnote string for the first pasuk reference
-// Patterns: "בהעלותך י, י" or "(ויקרא א, ב)" or "שמות כ, ח"
+// Parse a footnote string for the first source reference
+// Tanach: "שמות כ, ח" → {book, ch, v, key:"Exodus.20.8"}
+// Talmud: "ברכות לד, ב" → {book, ch, v, key:"Berakhot.34b", isTalmud:true}
 function _parsePasukRef(fnText) {
-  const clean = fnText.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+  const clean = fnText.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
 
-  // Match: BookName ch, v  (with optional parens, dots, spaces)
   const bookNames = Object.keys(_SEFARIA_BOOKS)
     .sort((a,b) => b.length - a.length)
     .map(b => b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'))
     .join('|');
 
   const re = new RegExp(
-    '(' + bookNames + ')\\s+([א-ת״׳\\d]+)[,،]\\s*([א-ת״׳\\d]+)',
+    '(' + bookNames + ')[\\s,]+([א-ת״׳\\d]+)[,،\\s]+([א-ת״׳\\d]+)',
     'g'
   );
 
   let m;
   while ((m = re.exec(clean)) !== null) {
-    const book = _SEFARIA_BOOKS[m[1]];
-    const ch   = _heToNum(m[2]);
-    const v    = _heToNum(m[3]);
-    if (book && ch && v) return { book, ch, v, ref: m[1] + ' ' + m[2] + ':' + m[3] };
+    const bookHe = m[1];
+    const book   = _SEFARIA_BOOKS[bookHe];
+    const ch     = _heToNum(m[2]);
+    const v      = _heToNum(m[3]);
+    if (!book || !ch) continue;
+
+    // Check if this is a Talmud tractate — Talmud uses daf+amud not chapter:verse
+    const isTalmud = [..._TALMUD_TRACTATES].includes(bookHe) ||
+                     [..._YERUSHALMI_TRACTATES].some(t => bookHe.startsWith(t));
+
+    if (isTalmud) {
+      // Talmud: ch = daf number, v = 1(א) or 2(ב) = amud a or b
+      const amud  = (v === 1 || m[3].trim().replace(/[״׳]/g,'') === 'א') ? 'a' : 'b';
+      const key   = book + '.' + ch + amud;
+      return { book, ch, v: amud, key, ref: bookHe + ' ' + m[2] + m[3], isTalmud: true };
+    } else {
+      if (!v) continue;
+      const key = book + '.' + ch + '.' + v;
+      return { book, ch, v, key, ref: bookHe + ' ' + m[2] + ':' + m[3], isTalmud: false };
+    }
   }
   return null;
 }
@@ -9460,11 +9476,11 @@ function _isTalmudRef(src) {
 // Cache of fetched pesukim
 const _pasukCache = {};
 
-async function _fetchPasuk(book, ch, v, isTalmud = false) {
-  const key = book + '.' + ch + '.' + v;
-  if (_pasukCache[key]) return _pasukCache[key];
+async function _fetchPasuk(book, ch, v, isTalmud = false, key = null) {
+  const cacheKey = key || (book + '.' + ch + '.' + v);
+  if (_pasukCache[cacheKey]) return _pasukCache[cacheKey];
 
-  const enc = encodeURIComponent(key);
+  const enc = encodeURIComponent(cacheKey);
   let en = '', he = '', ref = key;
 
   try {
@@ -9506,9 +9522,8 @@ async function _fetchPasuk(book, ch, v, isTalmud = false) {
 
   // If no English found, note it gracefully
   if (!en && !he) return null;
-
   const result = { he, en, ref };
-  _pasukCache[key] = result;
+  _pasukCache[cacheKey] = result;
   return result;
 }
 
@@ -9518,41 +9533,51 @@ function _lsApplyPasukSquiggles(footnoteMap) {
   const wrap = document.getElementById('ls-body-wrap');
   if (!wrap) return;
 
-  // Process paragraph by paragraph — work on innerHTML of each <p>
-  // This lets us catch quotes where the fn ref span is INSIDE the quoted text
-  wrap.querySelectorAll('p').forEach(p => {
-    let html = p.innerHTML;
+  const quoteMap = window._lsQuoteMap || {};
+  const quotes = Object.keys(quoteMap);
+  if (!quotes.length) { wrap.addEventListener('click', _lsWrapClick); return; }
 
-    // Match "quoted text" optionally containing HTML spans inside
-    // Handles: "text<span...>N</span>" and "<span...>N</span>text"
-    const quoteRe = /([„"])([^„""]{2,}?)([""])(\s*<span[^>]*data-lsfn="(\d+)"[^>]*>\d+<\/span>)?/g;
+  // Sort longest first so longer quotes match before sub-phrases
+  quotes.sort((a, b) => b.length - a.length);
+  const escaped = quotes.map(q => q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
-    html = html.replace(quoteRe, (match, openQ, inner, closeQ, fnSpanAfter, fnNumAfter) => {
-      // Check for fn ref INSIDE the inner text too
-      const innerFnMatch = inner.match(/data-lsfn="(\d+)"/);
-      const fnNum = fnNumAfter || (innerFnMatch ? innerFnMatch[1] : null);
+  // Hebrew word boundary: not preceded/followed by Hebrew letter
+  const HE = '\u05D0-\u05EA';
+  const re = new RegExp(
+    '(?<![' + HE + '])(' + escaped.join('|') + ')(?![' + HE + '])',
+    'g'
+  );
 
-      // Only wrap if footnote parses to a real source
-      const src = fnNum ? (footnoteMap[parseInt(fnNum)] || '') : '';
-      if (!src || !_parsePasukRef(src)) {
-        // Not a pasuk source — return unchanged
-        return match;
+  function processNode(node) {
+    if (node.nodeType === 3) {
+      if (node.parentNode?.tagName === 'SPAN') return;
+      const text = node.textContent;
+      re.lastIndex = 0;
+      if (!re.test(text)) return;
+      re.lastIndex = 0;
+
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+      while ((m = re.exec(text)) !== null) {
+        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        const qData = quoteMap[m[1]];
+        const span = document.createElement('span');
+        span.className = 'ls-pasuk-quote';
+        span.textContent = m[1];
+        span.dataset.lsfn    = qData?.fnNum || '';
+        span.dataset.pasukSrc = encodeURIComponent(qData?.src || '');
+        span.dataset.quoted  = encodeURIComponent(m[1]);
+        frag.appendChild(span);
+        last = m.index + m[1].length;
       }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    } else if (node.nodeType === 1 && !['SCRIPT','STYLE','SPAN'].includes(node.tagName)) {
+      Array.from(node.childNodes).forEach(processNode);
+    }
+  }
 
-      // Extract the plain quoted text (strip inner HTML for display)
-      const plainInner = inner.replace(/<[^>]+>/g, '');
-
-      return '<span class="ls-pasuk-quote"'
-        + ' data-lsfn="' + fnNum + '"'
-        + ' data-pasuk-src="' + encodeURIComponent(src) + '"'
-        + ' data-quoted="' + encodeURIComponent(plainInner) + '"'
-        + '>' + openQ + inner + closeQ + '</span>'
-        + (fnSpanAfter || '');
-    });
-
-    p.innerHTML = html;
-  });
-
+  Array.from(wrap.childNodes).forEach(processNode);
   wrap.addEventListener('click', _lsWrapClick);
 }
 
@@ -9601,8 +9626,8 @@ async function _lsPasukClick(e) {
     return;
   }
 
-  const isTalmud = (sourceType === 'talmud' || sourceType === 'yerushalmi');
-  const pasuk = await _fetchPasuk(ref.book, ref.ch, ref.v, isTalmud);
+  const isTalmud = ref.isTalmud || (sourceType === 'talmud' || sourceType === 'yerushalmi');
+  const pasuk = await _fetchPasuk(ref.book, ref.ch, ref.v, isTalmud, ref.key);
   if (!pasuk) {
     popup.innerHTML = '<p style="font-size:13px;color:var(--t3);">' + ref.ref + '</p>';
     return;
@@ -10212,6 +10237,35 @@ async function _lsOpenReader(idx) {
     const fns = _lsParseFn(data.footnotes || '');
     _lsFnMap  = {};
     fns.forEach(f => _lsFnMap[f.num] = f.text);
+
+    // ── Pre-parse quotes from raw mainText (before spans are injected) ──────
+    // Build map: plainQuoteText → { fnNum, src }
+    // Must happen on raw HTML before _lsLinkify adds word spans
+    window._lsQuoteMap = {};
+    const rawForQuotes = (data.mainText || '').replace(/<[^>]+>/g, '\x01'); // replace tags with placeholder
+    // Match „text" or "text" — quotes may have \x01 placeholders inside (from spans/fn-refs)
+    const qMapRe = /[„"]([^\x01"„""]{2,200}(?:\x01[^\x01"„""]{0,50}){0,5}?)[""](\s*\x01)?/g;
+    let qm;
+    // Also build a simpler version: strip all tags from mainText for clean quote extraction
+    const rawStripped = (data.mainText || '').replace(/<[^>]+>/g, ' ');
+    // Match quotes in stripped text and find nearby fn numbers from original
+    const qReStripped = /[„"]([^"„""]{2,200}?)[""]/g;
+    let qs;
+    while ((qs = qReStripped.exec(rawStripped)) !== null) {
+      const plainQ = qs[1].trim();
+      if (plainQ.length < 3) continue;
+      // Find fn number that appears after this quote in the raw HTML
+      // Look at position in original for nearby data-lsfn
+      const approxPos = qs.index;
+      const nearby = (data.mainText || '').substring(approxPos, approxPos + qs[0].length + 200);
+      const fnInside = (data.mainText || '').substring(Math.max(0, approxPos - 20), approxPos + qs[0].length + 50);
+      const fnMatch = fnInside.match(/data-lsfn="(\d+)"/);
+      const fnNum = fnMatch ? parseInt(fnMatch[1]) : null;
+      const src = fnNum ? (_lsFnMap[fnNum] || '') : '';
+      if (src && _parsePasukRef(src)) {
+        window._lsQuoteMap[plainQ] = { fnNum, src };
+      }
+    }
 
     const body = _lsLinkify(data.mainText || '');
 
