@@ -9608,34 +9608,83 @@ async function _lsPasukClick(e) {
     return;
   }
 
-  // The actual quoted text — use stored plain text, strip leading/trailing quote chars
+  // The actual quoted text — clean it up
   const quotedText = decodeURIComponent(span.dataset.quoted || '')
-    .replace(/^[„""]|["""]$/g, '').trim()
-    // Also strip גו׳ and similar abbreviations at end
-    .replace(/\s+גו[׳'].*$/, '').trim();
+    .replace(/^[„""]|["""]$/g, '')
+    .replace(/\s+גו[׳']\s*$/, '')  // strip trailing גו׳
+    .replace(/\s+וגו[׳']\s*$/, '') // strip trailing וגו׳
+    .trim();
 
-  // Build Hebrew display — bold the quoted portion within the full verse
+  // Helper: strip nikud/cantillation so we can match quoted text against nikud Hebrew
+  const stripNikud = s => s.replace(/[\u0591-\u05C7]/g, '').replace(/\s+/g, ' ').trim();
+
   let heDisplay = pasuk.he || '';
-  if (quotedText.length > 3 && heDisplay) {
-    // Try exact match first, then fuzzy (first 10 chars)
-    const escapedQ = quotedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const shortQ   = quotedText.substring(0, 12).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    heDisplay = heDisplay.replace(new RegExp('(' + escapedQ + ')'), '<strong>$1</strong>')
-                         .replace(new RegExp('(' + shortQ + '[^<]{0,30})'), '<strong>$1</strong>');
+  let enDisplay = pasuk.en || '';
+
+  if (quotedText.length > 2 && heDisplay) {
+    const qStripped  = stripNikud(quotedText);
+    const heStripped = stripNikud(heDisplay);
+
+    // Find position of quoted text in the nikud-stripped version
+    const idx = heStripped.indexOf(qStripped);
+
+    if (idx !== -1) {
+      // Map that position back to the original nikud text
+      // Walk both strings simultaneously
+      let origIdx = 0, strippedCount = 0;
+      let origStart = -1, origEnd = -1;
+
+      for (let i = 0; i < heDisplay.length; i++) {
+        const ch = heDisplay[i];
+        const isNikud = ch >= '\u0591' && ch <= '\u05C7';
+        if (!isNikud) {
+          if (strippedCount === idx && origStart === -1) origStart = i;
+          if (strippedCount === idx + qStripped.length) { origEnd = i; break; }
+          strippedCount++;
+        }
+      }
+      if (origEnd === -1) origEnd = heDisplay.length;
+
+      if (origStart !== -1) {
+        // Bold the matched portion
+        heDisplay = heDisplay.slice(0, origStart)
+          + '<strong style="color:var(--t1);">' + heDisplay.slice(origStart, origEnd) + '</strong>'
+          + heDisplay.slice(origEnd);
+      }
+    } else {
+      // Fallback: try first 6 chars match (handles partial quotes, gershayim differences)
+      const shortQ = stripNikud(quotedText.substring(0, 6));
+      const shortIdx = heStripped.indexOf(shortQ);
+      if (shortIdx !== -1) {
+        // Just bold the approximate region
+        let origStart = -1; let sc = 0;
+        for (let i = 0; i < heDisplay.length; i++) {
+          const isNikud = heDisplay[i] >= '\u0591' && heDisplay[i] <= '\u05C7';
+          if (!isNikud) {
+            if (sc === shortIdx) { origStart = i; break; }
+            sc++;
+          }
+        }
+        if (origStart !== -1) {
+          // Bold from match point for approx length of quoted text
+          const boldLen = Math.min(qStripped.length * 1.5, heDisplay.length - origStart);
+          heDisplay = heDisplay.slice(0, origStart)
+            + '<strong style="color:var(--t1);">' + heDisplay.slice(origStart, origStart + boldLen) + '</strong>'
+            + heDisplay.slice(origStart + boldLen);
+        }
+      }
+    }
   }
 
-  const SOURCE_LABELS = {
-    tanach: '📖', talmud: '🏛', yerushalmi: '🏛', midrash: '📜', rashi: '✍️', zohar: '✡️'
-  };
   const srcLabel = { tanach:'Tanach', talmud:'Talmud Bavli', yerushalmi:'Yerushalmi', midrash:'Midrash', rashi:'Rashi', zohar:'Zohar' }[sourceType] || '';
 
   popup.innerHTML =
     '<p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4A9EFF;margin-bottom:6px;">'
     + pasuk.ref
-    + (srcLabel ? ' · <span style="color:var(--t3)">' + srcLabel + '</span>' : '')
+    + (srcLabel ? ' · <span style="color:var(--t3);">' + srcLabel + '</span>' : '')
     + '</p>'
-    + (heDisplay ? '<p style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:16px;line-height:1.7;direction:rtl;color:var(--t1);margin-bottom:8px;">' + heDisplay + '</p>' : '')
-    + (pasuk.en  ? '<p style="font-size:13px;line-height:1.6;color:var(--t2);">' + pasuk.en + '</p>'
+    + (heDisplay ? '<p style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:16px;line-height:1.7;direction:rtl;color:var(--t2);margin-bottom:8px;">' + heDisplay + '</p>' : '')
+    + (enDisplay ? '<p style="font-size:13px;line-height:1.6;color:var(--t2);">' + enDisplay + '</p>'
                  : '<p style="font-size:12px;color:var(--t3);">No English translation available</p>');
 
   _positionPopup(popup, span);
