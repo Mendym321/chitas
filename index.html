@@ -424,6 +424,21 @@
 .ls-trans-word:active, .ls-trans-word.active {
   background-color: rgba(139,92,246,.12);
 }
+
+/* ── Pasuk squiggle (blue) ── */
+.ls-pasuk-quote {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3'%3E%3Cpath d='M0 2.5 Q1.5 0 3 2.5 Q4.5 5 6 2.5' stroke='%234A9EFF' stroke-width='1.2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom;
+  background-size: 6px 3px;
+  padding-bottom: 3px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background-color .12s;
+}
+.ls-pasuk-quote:active, .ls-pasuk-quote.active {
+  background-color: rgba(74,158,255,.12);
+}
 #ls-trans-popup {
   position: fixed;
   z-index: 1200;
@@ -9154,8 +9169,12 @@ function _lsRemoveTranslations() {
   wrap.querySelectorAll('.ls-trans-word').forEach(span => {
     span.replaceWith(document.createTextNode(span.textContent));
   });
+  wrap.querySelectorAll('.ls-pasuk-quote').forEach(span => {
+    span.replaceWith(document.createTextNode(span.textContent));
+  });
   wrap.normalize();
   wrap.removeEventListener('click', _lsTransWordClick);
+  wrap.removeEventListener('click', _lsPasukClick);
   _lsHideTransPopup();
 }
 
@@ -9187,26 +9206,7 @@ function _lsTransWordClick(e) {
   popup.style.display = 'block';
 
   // Position in viewport coords (popup is position:fixed)
-  const PAD    = 10;
-  const VW     = window.innerWidth;
-  const VH     = window.innerHeight;
-  const pw     = Math.min(260, VW - PAD * 2);
-  popup.style.maxWidth = pw + 'px';
-
-  // Prefer above the word, fall back to below
-  const aboveTop = rect.top - popup.offsetHeight - PAD;
-  const belowTop = rect.bottom + PAD;
-  let top  = aboveTop >= 60 ? aboveTop : belowTop;
-  let left = rect.left + rect.width / 2 - pw / 2; // centered on word
-
-  // Clamp horizontally
-  left = Math.max(PAD, Math.min(left, VW - pw - PAD));
-  // Clamp vertically (if below goes off bottom, force above)
-  if (top + popup.offsetHeight > VH - PAD) top = aboveTop;
-  top = Math.max(60, top);
-
-  popup.style.top  = top + 'px';
-  popup.style.left = left + 'px';
+  _positionPopup(popup, span);
 
   // Dismiss on outside tap
   setTimeout(() => document.addEventListener('click', _lsHideTransPopup, { once: true }), 50);
@@ -9225,6 +9225,7 @@ async function _lsToggleTransMode(on) {
   if (on) {
     if (!_lsDict) await _lsLoadDict();
     _lsApplyTranslations();
+    _lsApplyPasukSquiggles(window._lsCurrentFnMap || {});
   } else {
     _lsRemoveTranslations();
   }
@@ -9283,7 +9284,207 @@ async function _lsDictModalSave() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// END ZONE LS-DICT
+// ZONE LS-PASUK · QUOTED PASUK / RASHI DETECTION & SEFARIA TRANSLATION
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Hebrew book/parsha name → Sefaria API name ───────────────────────────────
+const _SEFARIA_BOOKS = {
+  // Torah — by book name
+  'בראשית':'Genesis','שמות':'Exodus','ויקרא':'Leviticus','במדבר':'Numbers','דברים':'Deuteronomy',
+  // Torah — by parsha name (maps to book, chapter offset handled separately)
+  'בראשית':'Genesis','נח':'Genesis','לך לך':'Genesis','וירא':'Genesis','חיי שרה':'Genesis',
+  'תולדות':'Genesis','ויצא':'Genesis','וישלח':'Genesis','וישב':'Genesis','מקץ':'Genesis',
+  'ויגש':'Genesis','ויחי':'Genesis',
+  'שמות':'Exodus','וארא':'Exodus','בא':'Exodus','בשלח':'Exodus','יתרו':'Exodus',
+  'משפטים':'Exodus','תרומה':'Exodus','תצוה':'Exodus','כי תשא':'Exodus','ויקהל':'Exodus','פקודי':'Exodus',
+  'ויקרא':'Leviticus','צו':'Leviticus','שמיני':'Leviticus','תזריע':'Leviticus','מצורע':'Leviticus',
+  'אחרי':'Leviticus','קדושים':'Leviticus','אמור':'Leviticus','בהר':'Leviticus','בחוקותי':'Leviticus',
+  'במדבר':'Numbers','נשא':'Numbers','בהעלותך':'Numbers','שלח':'Numbers','קרח':'Numbers',
+  'חקת':'Numbers','בלק':'Numbers','פינחס':'Numbers','מטות':'Numbers','מסעי':'Numbers',
+  'דברים':'Deuteronomy','ואתחנן':'Deuteronomy','עקב':'Deuteronomy','ראה':'Deuteronomy',
+  'שופטים':'Deuteronomy','כי תצא':'Deuteronomy','כי תבא':'Deuteronomy','נצבים':'Deuteronomy',
+  'וילך':'Deuteronomy','האזינו':'Deuteronomy','וזאת הברכה':'Deuteronomy',
+  // Prophets
+  'יהושע':'Joshua','שופטים':'Judges','שמואל':'Samuel','מלכים':'Kings',
+  'ישעיה':'Isaiah','ירמיה':'Jeremiah','יחזקאל':'Ezekiel',
+  'הושע':'Hosea','יואל':'Joel','עמוס':'Amos','עובדיה':'Obadiah','יונה':'Jonah',
+  'מיכה':'Micah','נחום':'Nahum','חבקוק':'Habakkuk','צפניה':'Zephaniah','חגי':'Haggai',
+  'זכריה':'Zechariah','מלאכי':'Malachi',
+  // Writings
+  'תהלים':'Psalms','משלי':'Proverbs','איוב':'Job','שיר השירים':'Song of Songs',
+  'רות':'Ruth','איכה':'Lamentations','קהלת':'Ecclesiastes','אסתר':'Esther',
+  'דניאל':'Daniel','עזרא':'Ezra','נחמיה':'Nehemiah','דברי הימים':'Chronicles',
+};
+
+// Hebrew letter → number (for chapter/verse)
+const _HE_NUMS = {
+  'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,
+  'י':10,'יא':11,'יב':12,'יג':13,'יד':14,'טו':15,'טז':16,'יז':17,'יח':18,'יט':19,
+  'כ':20,'כא':21,'כב':22,'כג':23,'כד':24,'כה':25,'כו':26,'כז':27,'כח':28,'כט':29,
+  'ל':30,'לא':31,'לב':32,'לג':33,'לד':34,'לה':35,'לו':36,'לז':37,'לח':38,'לט':39,
+  'מ':40,'מא':41,'מב':42,'מג':43,'מד':44,'מה':45,'מו':46,'מז':47,'מח':48,'מט':49,
+  'נ':50,'נא':51,'נב':52,'נג':53,'נד':54,'נה':55,'נו':56,'נז':57,'נח':58,'נט':59,
+  'ס':60,'סא':61,'סב':62,'סג':63,'סד':64,'סה':65,'סו':66,'סז':67,'סח':68,'סט':69,
+  'ע':70,'עא':71,'עב':72,'עג':73,'עד':74,'עה':75,'עו':76,'עז':77,'עח':78,'עט':79,
+  'פ':80,'פא':81,'פב':82,'פג':83,'פד':84,'פה':85,'פו':86,'פז':87,'פח':88,'פט':89,
+  'צ':90,'צא':91,'צב':92,'צג':93,'צד':94,'צה':95,'צו':96,'צז':97,'צח':98,'צט':99,
+  'ק':100,'קא':101,'קב':102,'קג':103,'קד':104,'קה':105,'קו':106,'קז':107,'קח':108,'קט':109,
+  'קי':110,'קיא':111,'קיב':112,'קיג':113,'קיד':114,'קטו':115,'קטז':116,'קיז':117,'קיח':118,'קיט':119,
+  'קכ':120,'קכא':121,'קכב':122,'קכג':123,'קכד':124,'קכה':125,'קכו':126,'קכז':127,'קכח':128,'קכט':129,
+  'קל':130,'קלא':131,'קלב':132,'קלג':133,'קלד':134,'קלה':135,'קלו':136,'קלז':137,'קלח':138,'קלט':139,
+  'קמ':140,'קמא':141,'קמב':142,'קמג':143,'קמד':144,'קמה':145,'קמו':146,'קמז':147,'קמח':148,'קמט':149,'קנ':150,
+};
+
+function _heToNum(s) {
+  s = (s||'').trim().replace(/[״׳]/g,'');
+  if (/^\d+$/.test(s)) return parseInt(s);
+  return _HE_NUMS[s] || null;
+}
+
+// Parse a footnote string for the first pasuk reference
+// Patterns: "בהעלותך י, י" or "(ויקרא א, ב)" or "שמות כ, ח"
+function _parsePasukRef(fnText) {
+  const clean = fnText.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+
+  // Match: BookName ch, v  (with optional parens, dots, spaces)
+  const bookNames = Object.keys(_SEFARIA_BOOKS)
+    .sort((a,b) => b.length - a.length)
+    .map(b => b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'))
+    .join('|');
+
+  const re = new RegExp(
+    '(' + bookNames + ')\\s+([א-ת״׳\\d]+)[,،]\\s*([א-ת״׳\\d]+)',
+    'g'
+  );
+
+  let m;
+  while ((m = re.exec(clean)) !== null) {
+    const book = _SEFARIA_BOOKS[m[1]];
+    const ch   = _heToNum(m[2]);
+    const v    = _heToNum(m[3]);
+    if (book && ch && v) return { book, ch, v, ref: m[1] + ' ' + m[2] + ':' + m[3] };
+  }
+  return null;
+}
+
+// Cache of fetched pesukim
+const _pasukCache = {};
+
+async function _fetchPasuk(book, ch, v) {
+  const key = book + '.' + ch + '.' + v;
+  if (_pasukCache[key]) return _pasukCache[key];
+  try {
+    const url = 'https://www.sefaria.org/api/texts/' + encodeURIComponent(book + '.' + ch + '.' + v) + '?commentary=0&context=0';
+    const res = await fetch(url);
+    const data = await res.json();
+    const result = {
+      he: Array.isArray(data.he) ? data.he.join(' ') : (data.he || ''),
+      en: Array.isArray(data.text) ? data.text.join(' ') : (data.text || ''),
+      ref: data.ref || key,
+    };
+    _pasukCache[key] = result;
+    return result;
+  } catch(e) {
+    return null;
+  }
+}
+
+// ── Apply pasuk squiggles to quoted text in the sicha ──────────────────────
+function _lsApplyPasukSquiggles(footnoteMap) {
+  if (!_lsTransMode) return;
+  const wrap = document.getElementById('ls-body-wrap');
+  if (!wrap) return;
+
+  // Find all „...quotedtext..." patterns in the HTML
+  // Replace with a span that has the footnote number attached
+  // We process the whole innerHTML at once for quote detection
+  let html = wrap.innerHTML;
+
+  // Pattern: „text" where text may include HTML tags (for footnote superscripts)
+  // Capture the footnote number right after the closing quote if present
+  const quoteRe = /„([\s\S]*?)"/g;
+  html = html.replace(quoteRe, (match, inner) => {
+    // Find footnote refs inside this quote (superscript spans with data-lsfn)
+    const fnMatch = inner.match(/data-lsfn="(\d+)"/);
+    const fnNum   = fnMatch ? parseInt(fnMatch[1]) : null;
+    // Also check the character right after the closing quote
+    const dataAttr = fnNum ? ' data-lsfn="' + fnNum + '"' : '';
+    const src      = fnNum ? (footnoteMap[fnNum] || '') : '';
+    return '<span class="ls-pasuk-quote" data-pasuk-src="' + encodeURIComponent(src) + '"' + dataAttr + '">„' + inner + '"</span>';
+  });
+
+  wrap.innerHTML = html;
+
+  // Tap handler
+  wrap.addEventListener('click', _lsPasukClick, { passive: true });
+}
+
+async function _lsPasukClick(e) {
+  const span = e.target.closest('.ls-pasuk-quote');
+  if (!span) return;
+  e.stopPropagation();
+
+  document.querySelectorAll('.ls-pasuk-quote.active').forEach(s => s.classList.remove('active'));
+  span.classList.add('active');
+
+  const popup = document.getElementById('ls-trans-popup');
+  if (!popup) return;
+
+  // Show loading state
+  popup.innerHTML = '<p style="color:var(--t3);font-size:13px;">Loading...</p>';
+  popup.style.display = 'block';
+  _positionPopup(popup, span);
+
+  // Parse the source from the footnote
+  const src = decodeURIComponent(span.dataset.pasukSrc || '');
+  const ref  = src ? _parsePasukRef(src) : null;
+
+  if (!ref) {
+    // No parseable source — just show the quoted text is a citation
+    popup.innerHTML = '<p style="font-size:13px;color:var(--t3);">Quoted text — source in footnote</p>';
+    setTimeout(() => document.addEventListener('click', _lsHideTransPopup, { once: true }), 50);
+    return;
+  }
+
+  const pasuk = await _fetchPasuk(ref.book, ref.ch, ref.v);
+  if (!pasuk) {
+    popup.innerHTML = '<p style="font-size:13px;color:var(--t3);">' + ref.ref + '</p>';
+    return;
+  }
+
+  popup.innerHTML =
+    '<p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4A9EFF;margin-bottom:6px;">' + pasuk.ref + '</p>'
+    + (pasuk.he ? '<p style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:16px;line-height:1.7;direction:rtl;color:var(--t1);margin-bottom:8px;">' + pasuk.he + '</p>' : '')
+    + (pasuk.en ? '<p style="font-size:13px;line-height:1.6;color:var(--t2);">' + pasuk.en + '</p>' : '');
+
+  _positionPopup(popup, span);
+  setTimeout(() => document.addEventListener('click', _lsHideTransPopup, { once: true }), 50);
+}
+
+// Shared popup positioner (used by both word and pasuk popups)
+function _positionPopup(popup, anchor) {
+  const rect = anchor.getBoundingClientRect();
+  const PAD  = 10;
+  const VW   = window.innerWidth;
+  const VH   = window.innerHeight;
+  const pw   = Math.min(280, VW - PAD * 2);
+  popup.style.maxWidth = pw + 'px';
+  popup.style.display  = 'block';
+
+  const aboveTop = rect.top - popup.offsetHeight - PAD;
+  const belowTop = rect.bottom + PAD;
+  let top  = aboveTop >= 60 ? aboveTop : belowTop;
+  let left = rect.left + rect.width / 2 - pw / 2;
+  left = Math.max(PAD, Math.min(left, VW - pw - PAD));
+  if (top + popup.offsetHeight > VH - PAD) top = Math.max(60, aboveTop);
+  top  = Math.max(60, top);
+
+  popup.style.top  = top + 'px';
+  popup.style.left = left + 'px';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// END ZONE LS-PASUK
 // ════════════════════════════════════════════════════════════════════════════
 
 // LIKKUTEI SICHOS  (extra track — parsha-based reader via dach.dev)
@@ -9813,9 +10014,23 @@ async function _lsOpenReader(idx) {
         const ref = e.target.closest('.ls-fn-ref[data-lsfn]');
         if (ref) _lsShowFnPopup(parseInt(ref.dataset.lsfn), ref);
       };
+      // Build footnote map: { fnNumber → raw footnote text }
+      const fnMap = {};
+      if (_lsTransMode && data.footnotes) {
+        const fnClean = data.footnotes.replace(/<[^>]+>/g,' ');
+        const fnRe = /(\d+)[).]\s*([^0-9]{10,200})/g;
+        let fm;
+        while ((fm = fnRe.exec(fnClean)) !== null) {
+          fnMap[parseInt(fm[1])] = fm[2];
+        }
+      }
+      window._lsCurrentFnMap = fnMap;
       // Apply translation squiggles if mode is on
       if (_lsTransMode) {
-        _lsLoadDict().then(() => _lsApplyTranslations());
+        _lsLoadDict().then(() => {
+          _lsApplyTranslations();
+          _lsApplyPasukSquiggles(fnMap);
+        });
       }
     }
 
