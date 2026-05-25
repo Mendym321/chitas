@@ -9395,27 +9395,26 @@ function _lsApplyPasukSquiggles(footnoteMap) {
   const wrap = document.getElementById('ls-body-wrap');
   if (!wrap) return;
 
-  // Find all „...quotedtext..." patterns in the HTML
-  // Replace with a span that has the footnote number attached
-  // We process the whole innerHTML at once for quote detection
   let html = wrap.innerHTML;
 
-  // Pattern: „text" where text may include HTML tags (for footnote superscripts)
-  // Capture the footnote number right after the closing quote if present
-  const quoteRe = /„([\s\S]*?)"/g;
-  html = html.replace(quoteRe, (match, inner) => {
-    // Find footnote refs inside this quote (superscript spans with data-lsfn)
-    const fnMatch = inner.match(/data-lsfn="(\d+)"/);
-    const fnNum   = fnMatch ? parseInt(fnMatch[1]) : null;
-    // Also check the character right after the closing quote
-    const dataAttr = fnNum ? ' data-lsfn="' + fnNum + '"' : '';
-    const src      = fnNum ? (footnoteMap[fnNum] || '') : '';
-    return '<span class="ls-pasuk-quote" data-pasuk-src="' + encodeURIComponent(src) + '"' + dataAttr + '">„' + inner + '"</span>';
+  // Match both „..." guillemets and "..." regular quotes
+  // Also capture an optional footnote superscript immediately after the closing quote
+  const quoteRe = /([„\u201C"])([^"„\u201D"]{3,300}?)(["\u201D"])(\s*<[^>]*data-lsfn="(\d+)"[^>]*>\d+<\/[^>]+>)?/g;
+
+  html = html.replace(quoteRe, (match, openQ, inner, closeQ, fnSpan, fnNum) => {
+    // Also scan inside the inner text for a footnote ref
+    const innerFn = inner.match(/data-lsfn="(\d+)"/);
+    const fn = fnNum || (innerFn ? innerFn[1] : null);
+    const src = fn ? (footnoteMap[parseInt(fn)] || '') : '';
+    const dataFn  = fn ? ' data-lsfn="' + fn + '"' : '';
+    const dataSrc = ' data-pasuk-src="' + encodeURIComponent(src) + '"';
+    return '<span class="ls-pasuk-quote"' + dataSrc + dataFn + '>'
+      + openQ + inner + closeQ
+      + '</span>'
+      + (fnSpan || '');
   });
 
   wrap.innerHTML = html;
-
-  // Tap handler
   wrap.addEventListener('click', _lsPasukClick, { passive: true });
 }
 
@@ -10025,6 +10024,7 @@ async function _lsOpenReader(idx) {
         }
       }
       window._lsCurrentFnMap = fnMap;
+      console.log('[lsPasuk] fnMap entries:', Object.keys(fnMap).length, fnMap[1]?.substring(0,50));
       // Apply translation squiggles if mode is on
       if (_lsTransMode) {
         _lsLoadDict().then(() => {
