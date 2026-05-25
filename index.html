@@ -9214,8 +9214,8 @@ function _lsTransWordClick(e) {
 
 function _lsHideTransPopup() {
   const popup = document.getElementById('ls-trans-popup');
-  if (popup) popup.style.display = 'none';
-  document.querySelectorAll('.ls-trans-word.active').forEach(s => s.classList.remove('active'));
+  if (popup) { popup.style.display = 'none'; delete popup.dataset.activeSpan; }
+  document.querySelectorAll('.ls-trans-word.active, .ls-pasuk-quote.active').forEach(s => s.classList.remove('active'));
 }
 
 // ── Toggle translation mode (called from settings gear) ──────────────────────
@@ -9314,6 +9314,56 @@ const _SEFARIA_BOOKS = {
   'תהלים':'Psalms','משלי':'Proverbs','איוב':'Job','שיר השירים':'Song of Songs',
   'רות':'Ruth','איכה':'Lamentations','קהלת':'Ecclesiastes','אסתר':'Esther',
   'דניאל':'Daniel','עזרא':'Ezra','נחמיה':'Nehemiah','דברי הימים':'Chronicles',
+  // Talmud tractates
+  'ברכות':'Berakhot','שבת':'Shabbat','עירובין':'Eruvin','פסחים':'Pesachim',
+  'יומא':'Yoma','סוכה':'Sukkah','ביצה':'Beitzah','ראש השנה':'Rosh Hashanah',
+  'תענית':'Taanit','מגילה':'Megillah','מועד קטן':'Moed Katan','חגיגה':'Chagigah',
+  'יבמות':'Yevamot','כתובות':'Ketubot','נדרים':'Nedarim','נזיר':'Nazir',
+  'סוטה':'Sotah','גיטין':'Gittin','קידושין':'Kiddushin',
+  'בבא קמא':'Bava Kamma','בבא מציעא':'Bava Metzia','בבא בתרא':'Bava Batra',
+  'ב״ק':'Bava Kamma','ב״מ':'Bava Metzia','ב״ב':'Bava Batra',
+  'סנהדרין':'Sanhedrin','מכות':'Makkot','שבועות':'Shevuot',
+  'עבודה זרה':'Avodah Zarah','הוריות':'Horayot','זבחים':'Zevachim',
+  'מנחות':'Menachot','חולין':'Chullin','בכורות':'Bekhorot','ערכין':'Arakhin',
+  'תמורה':'Temurah','כריתות':'Keritot','מעילה':'Meilah','נדה':'Niddah',
+  // Yerushalmi
+  'ירושלמי ברכות':'Jerusalem Talmud Berakhot',
+  'ירושלמי שבת':'Jerusalem Talmud Shabbat',
+  'ירושלמי פאה':'Jerusalem Talmud Peah',
+  'ירושלמי דמאי':'Jerusalem Talmud Demai',
+  'ירושלמי כלאים':'Jerusalem Talmud Kilayim',
+  'ירושלמי חגיגה':'Jerusalem Talmud Chagigah',
+  'ירושלמי מגילה':'Jerusalem Talmud Megillah',
+  'ירושלמי קידושין':'Jerusalem Talmud Kiddushin',
+  'ירושלמי סנהדרין':'Jerusalem Talmud Sanhedrin',
+  'ירושלמי פסחים':'Jerusalem Talmud Pesachim',
+  // Midrash Rabbah
+  'בראשית רבה':'Bereishit Rabbah',
+  'שמות רבה':'Shemot Rabbah',
+  'ויקרא רבה':'Vayikra Rabbah',
+  'במדבר רבה':'Bamidbar Rabbah',
+  'דברים רבה':'Devarim Rabbah',
+  'שיר השירים רבה':'Shir HaShirim Rabbah',
+  'רות רבה':'Ruth Rabbah',
+  'איכה רבה':'Eichah Rabbah',
+  'קהלת רבה':'Kohelet Rabbah',
+  'אסתר רבה':'Esther Rabbah',
+  'תנחומא':'Midrash Tanchuma',
+  'ילקוט שמעוני':'Yalkut Shimoni on Torah',
+  // Rashi & commentaries (prefixed with book name)
+  'רש"י בראשית':'Rashi on Genesis',
+  'רש"י שמות':'Rashi on Exodus',
+  'רש"י ויקרא':'Rashi on Leviticus',
+  'רש"י במדבר':'Rashi on Numbers',
+  'רש"י דברים':'Rashi on Deuteronomy',
+  'רש"י תהלים':'Rashi on Psalms',
+  // Halachic sources on Sefaria
+  'מכילתא':'Mekhilta','ספרי':'Sifre Bamidbar','תו"כ':'Sifra',
+  'ספרא':'Sifra',
+  // Rambam (Mishneh Torah) — app already fetches this, just add mapping
+  'רמב"ם':'Mishneh Torah',
+  // Zohar
+  'זוהר':'Zohar','זח"א':'Zohar','זח"ב':'Zohar','זח"ג':'Zohar',
 };
 
 // Hebrew letter → number (for chapter/verse)
@@ -9367,26 +9417,97 @@ function _parsePasukRef(fnText) {
   return null;
 }
 
+// Source type detection
+const _TALMUD_TRACTATES = new Set([
+  'ברכות','שבת','עירובין','פסחים','יומא','סוכה','ביצה','ראש השנה','תענית',
+  'מגילה','מועד קטן','חגיגה','יבמות','כתובות','נדרים','נזיר','סוטה','גיטין',
+  'קידושין','בבא קמא','בבא מציעא','בבא בתרא','ב״ק','ב״מ','ב״ב',
+  'סנהדרין','מכות','שבועות','עבודה זרה','הוריות','זבחים','מנחות','חולין',
+  'בכורות','ערכין','תמורה','כריתות','מעילה','נדה',
+]);
+const _YERUSHALMI_TRACTATES = new Set(['ירושלמי']);
+const _MIDRASH_SOURCES = new Set([
+  'בראשית רבה','שמות רבה','ויקרא רבה','במדבר רבה','דברים רבה',
+  'שיר השירים רבה','רות רבה','איכה רבה','קהלת רבה','אסתר רבה',
+  'תנחומא','ילקוט שמעוני','מכילתא','ספרי','תו"כ','ספרא',
+]);
+const _RASHI_SOURCES  = new Set(['רש"י','פרש"י']);
+const _ZOHAR_SOURCES  = new Set(['זוהר','זח"א','זח"ב','זח"ג','זהר']);
+const _SKIP_SOURCES   = new Set([
+  // Chabad texts — not on Sefaria, skip gracefully
+  'לקו"ש','לקו"ת','תורה אור','אור התורה','שו"ע אדה"ז','תניא',
+  'אגרת הקדש','ד"ה','המשך','לקוטי תורה','לקוטי שיחות',
+]);
+
+function _detectSourceType(src) {
+  const clean = (src || '').replace(/<[^>]+>/g, ' ');
+  if (_SKIP_SOURCES   .has([..._SKIP_SOURCES].find(s => clean.includes(s)) || '')) return 'skip';
+  if ([..._SKIP_SOURCES].some(s => clean.startsWith(s))) return 'skip';
+  if ([..._ZOHAR_SOURCES].some(s => clean.includes(s)))     return 'zohar';
+  if ([..._RASHI_SOURCES].some(s => clean.includes(s)))     return 'rashi';
+  if ([..._MIDRASH_SOURCES].some(s => clean.includes(s)))   return 'midrash';
+  if (_YERUSHALMI_TRACTATES.has([..._YERUSHALMI_TRACTATES].find(s => clean.includes(s)) || '')) return 'yerushalmi';
+  if ([..._TALMUD_TRACTATES].some(s => clean.includes(s)))  return 'talmud';
+  return 'tanach';
+}
+
+function _isTalmudRef(src) {
+  return ['talmud','yerushalmi'].includes(_detectSourceType(src));
+}
+
 // Cache of fetched pesukim
 const _pasukCache = {};
 
-async function _fetchPasuk(book, ch, v) {
+async function _fetchPasuk(book, ch, v, isTalmud = false) {
   const key = book + '.' + ch + '.' + v;
   if (_pasukCache[key]) return _pasukCache[key];
+
+  const enc = encodeURIComponent(key);
+  let en = '', he = '', ref = key;
+
   try {
-    const url = 'https://www.sefaria.org/api/texts/' + encodeURIComponent(book + '.' + ch + '.' + v) + '?commentary=0&context=0';
-    const res = await fetch(url);
-    const data = await res.json();
-    const result = {
-      he: Array.isArray(data.he) ? data.he.join(' ') : (data.he || ''),
-      en: Array.isArray(data.text) ? data.text.join(' ') : (data.text || ''),
-      ref: data.ref || key,
-    };
-    _pasukCache[key] = result;
-    return result;
-  } catch(e) {
-    return null;
-  }
+    if (isTalmud) {
+      // Talmud / Yerushalmi: v3 API → William Davidson (Steinsaltz) English
+      const [enRes, heRes] = await Promise.all([
+        fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
+        fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
+      ]);
+      const engVer = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+      en  = _flatHtml(engVer?.text || []).join(' ');
+      he  = _flatHtml(heRes?.he   || []).join(' ');
+      ref = heRes?.ref || key;
+    } else {
+      // Tanach, Midrash, Rashi, etc: use ven= with keyword matching
+      // Pick best English version available
+      const versions = await fetch(SEFARIA + '/api/texts/versions/' + enc).then(r=>r.json()).catch(()=>[]);
+      const enVersions = Array.isArray(versions) ? versions.filter(v => v.language === 'en') : [];
+
+      // Priority: Metsudah > Soncino > Artscroll > first available
+      const picked = enVersions.find(v => v.versionTitle?.toLowerCase().includes('metsudah'))
+        || enVersions.find(v => v.versionTitle?.toLowerCase().includes('soncino'))
+        || enVersions.find(v => v.versionTitle?.toLowerCase().includes('artscroll'))
+        || enVersions[0];
+
+      const url = picked
+        ? SEFARIA + '/api/texts/' + enc + '?context=0&commentary=0&ven=' + encodeURIComponent(picked.versionTitle)
+        : SEFARIA + '/api/texts/' + enc + '?context=0&commentary=0';
+
+      const d = await fetch(url).then(r=>r.json()).catch(()=>null);
+      const strip = s => (s||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+      const stripHe = s => s.replace(/[\u0591-\u05AF]/g,'').replace(/<[^>]+>/g,'').trim();
+
+      en  = Array.isArray(d?.text) ? d.text.map(strip).filter(Boolean).join(' ') : strip(d?.text);
+      he  = Array.isArray(d?.he)   ? d.he.map(stripHe).filter(Boolean).join(' ') : stripHe(d?.he||'');
+      ref = d?.ref || key;
+    }
+  } catch(e) {}
+
+  // If no English found, note it gracefully
+  if (!en && !he) return null;
+
+  const result = { he, en, ref };
+  _pasukCache[key] = result;
+  return result;
 }
 
 // ── Apply pasuk squiggles to quoted text in the sicha ──────────────────────
@@ -9456,41 +9577,66 @@ async function _lsPasukClick(e) {
   if (!span) return;
   e.stopPropagation();
 
-  document.querySelectorAll('.ls-pasuk-quote.active').forEach(s => s.classList.remove('active'));
-  span.classList.add('active');
-
   const popup = document.getElementById('ls-trans-popup');
   if (!popup) return;
 
-  // Show loading state
+  // Toggle — if already open on this span, close it
+  if (popup.style.display !== 'none' && popup.dataset.activeSpan === span.dataset.lsfn + span.textContent.substring(0,10)) {
+    _lsHideTransPopup();
+    return;
+  }
+
+  document.querySelectorAll('.ls-pasuk-quote.active').forEach(s => s.classList.remove('active'));
+  span.classList.add('active');
+  popup.dataset.activeSpan = span.dataset.lsfn + span.textContent.substring(0,10);
+
+  // Show loading
   popup.innerHTML = '<p style="color:var(--t3);font-size:13px;">Loading...</p>';
   popup.style.display = 'block';
   _positionPopup(popup, span);
 
-  // Parse the source from the footnote
   const src = decodeURIComponent(span.dataset.pasukSrc || '');
-  const ref  = src ? _parsePasukRef(src) : null;
+  const sourceType = _detectSourceType(src);
+  const ref = src ? _parsePasukRef(src) : null;
 
-  if (!ref) {
-    // No parseable source — just show the quoted text is a citation
-    popup.innerHTML = '<p style="font-size:13px;color:var(--t3);">Quoted text — source in footnote</p>';
-    setTimeout(() => document.addEventListener('click', _lsHideTransPopup, { once: true }), 50);
+  if (!ref || sourceType === 'skip') {
+    popup.innerHTML = '<p style="font-size:13px;color:var(--t3);">See footnote for source</p>';
     return;
   }
 
-  const pasuk = await _fetchPasuk(ref.book, ref.ch, ref.v);
+  const isTalmud = (sourceType === 'talmud' || sourceType === 'yerushalmi');
+  const pasuk = await _fetchPasuk(ref.book, ref.ch, ref.v, isTalmud);
   if (!pasuk) {
     popup.innerHTML = '<p style="font-size:13px;color:var(--t3);">' + ref.ref + '</p>';
     return;
   }
 
+  // The actual quoted text (strip quotes and trim)
+  const quotedText = span.textContent.replace(/^[„""]|["""]$/g, '').trim();
+
+  // Build Hebrew display — bold the quoted portion within the full verse
+  let heDisplay = pasuk.he || '';
+  if (quotedText && heDisplay) {
+    // Escape for regex
+    const escapedQ = quotedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    heDisplay = heDisplay.replace(new RegExp('(' + escapedQ + ')'), '<strong>$1</strong>');
+  }
+
+  const SOURCE_LABELS = {
+    tanach: '📖', talmud: '🏛', yerushalmi: '🏛', midrash: '📜', rashi: '✍️', zohar: '✡️'
+  };
+  const srcLabel = { tanach:'Tanach', talmud:'Talmud Bavli', yerushalmi:'Yerushalmi', midrash:'Midrash', rashi:'Rashi', zohar:'Zohar' }[sourceType] || '';
+
   popup.innerHTML =
-    '<p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4A9EFF;margin-bottom:6px;">' + pasuk.ref + '</p>'
-    + (pasuk.he ? '<p style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:16px;line-height:1.7;direction:rtl;color:var(--t1);margin-bottom:8px;">' + pasuk.he + '</p>' : '')
-    + (pasuk.en ? '<p style="font-size:13px;line-height:1.6;color:var(--t2);">' + pasuk.en + '</p>' : '');
+    '<p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4A9EFF;margin-bottom:6px;">'
+    + pasuk.ref
+    + (srcLabel ? ' · <span style="color:var(--t3)">' + srcLabel + '</span>' : '')
+    + '</p>'
+    + (heDisplay ? '<p style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:16px;line-height:1.7;direction:rtl;color:var(--t1);margin-bottom:8px;">' + heDisplay + '</p>' : '')
+    + (pasuk.en  ? '<p style="font-size:13px;line-height:1.6;color:var(--t2);">' + pasuk.en + '</p>'
+                 : '<p style="font-size:12px;color:var(--t3);">No English translation available</p>');
 
   _positionPopup(popup, span);
-  setTimeout(() => document.addEventListener('click', _lsHideTransPopup, { once: true }), 50);
 }
 
 // Shared popup positioner (used by both word and pasuk popups)
