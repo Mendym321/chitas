@@ -9395,13 +9395,10 @@ function _lsApplyPasukSquiggles(footnoteMap) {
   const wrap = document.getElementById('ls-body-wrap');
   if (!wrap) return;
 
-  // Walk text nodes only — never touch innerHTML directly (breaks HTML attributes)
   function processNode(node) {
     if (node.nodeType === 3) {
-      // Skip if inside an existing span (already processed)
       if (node.parentNode?.tagName === 'SPAN') return;
       const text = node.textContent;
-      // Match "quoted text" — regular or guillemet quotes
       const re = /([„"])([^"„""]{3,300}?)([""])/g;
       if (!re.test(text)) return;
       re.lastIndex = 0;
@@ -9409,32 +9406,38 @@ function _lsApplyPasukSquiggles(footnoteMap) {
       const frag = document.createDocumentFragment();
       let last = 0, m;
       while ((m = re.exec(text)) !== null) {
-        // Text before the quote
         if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
 
-        // Find the nearest footnote ref sibling after this text node
-        // We'll look it up by scanning the parent's next siblings
-        const span = document.createElement('span');
-        span.className = 'ls-pasuk-quote';
-        span.textContent = m[0];
-
-        // Try to find associated footnote number from next sibling
+        // Find nearest footnote ref sibling
         let sibling = node.nextSibling;
         let fnNum = null;
         while (sibling && !fnNum) {
           if (sibling.nodeType === 1) {
-            const fnRef = sibling.querySelector ? sibling.querySelector('[data-lsfn]') : null;
+            const fnRef = sibling.querySelector?.('[data-lsfn]');
             if (fnRef) fnNum = fnRef.dataset.lsfn;
             else if (sibling.dataset?.lsfn) fnNum = sibling.dataset.lsfn;
             break;
           }
           sibling = sibling.nextSibling;
         }
-        if (fnNum) {
+
+        // Only wrap in blue squiggle if the footnote contains a parseable pasuk ref
+        const src = fnNum ? (footnoteMap[parseInt(fnNum)] || '') : '';
+        const ref = src ? _parsePasukRef(src) : null;
+
+        if (ref) {
+          // Valid pasuk — apply blue squiggle
+          const span = document.createElement('span');
+          span.className = 'ls-pasuk-quote';
+          span.textContent = m[0];
           span.dataset.lsfn = fnNum;
-          span.dataset.pasukSrc = encodeURIComponent(footnoteMap[parseInt(fnNum)] || '');
+          span.dataset.pasukSrc = encodeURIComponent(src);
+          frag.appendChild(span);
+        } else {
+          // Not a pasuk — leave as plain text
+          frag.appendChild(document.createTextNode(m[0]));
         }
-        frag.appendChild(span);
+
         last = m.index + m[0].length;
       }
       if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
@@ -10043,23 +10046,13 @@ async function _lsOpenReader(idx) {
         const ref = e.target.closest('.ls-fn-ref[data-lsfn]');
         if (ref) _lsShowFnPopup(parseInt(ref.dataset.lsfn), ref);
       };
-      // Build footnote map: { fnNumber → raw footnote text }
-      const fnMap = {};
-      if (_lsTransMode && data.footnotes) {
-        const fnClean = data.footnotes.replace(/<[^>]+>/g,' ');
-        const fnRe = /(\d+)[).]\s*([^0-9]{10,200})/g;
-        let fm;
-        while ((fm = fnRe.exec(fnClean)) !== null) {
-          fnMap[parseInt(fm[1])] = fm[2];
-        }
-      }
-      window._lsCurrentFnMap = fnMap;
-      console.log('[lsPasuk] fnMap entries:', Object.keys(fnMap).length, fnMap[1]?.substring(0,50));
+      // _lsFnMap is already built above from _lsParseFn — use it directly
+      window._lsCurrentFnMap = _lsFnMap;
       // Apply translation squiggles if mode is on
       if (_lsTransMode) {
         _lsLoadDict().then(() => {
           // Pasuk FIRST (before word spans are inserted), then words
-          _lsApplyPasukSquiggles(fnMap);
+          _lsApplyPasukSquiggles(_lsFnMap);
           _lsApplyTranslations();
         });
       }
