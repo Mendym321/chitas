@@ -10239,29 +10239,37 @@ async function _lsOpenReader(idx) {
     fns.forEach(f => _lsFnMap[f.num] = f.text);
 
     // ── Pre-parse quotes from raw mainText (before spans are injected) ──────
-    // Build map: plainQuoteText → { fnNum, src }
-    // Must happen on raw HTML before _lsLinkify adds word spans
     window._lsQuoteMap = {};
-    const rawForQuotes = (data.mainText || '').replace(/<[^>]+>/g, '\x01'); // replace tags with placeholder
-    // Match „text" or "text" — quotes may have \x01 placeholders inside (from spans/fn-refs)
-    const qMapRe = /[„"]([^\x01"„""]{2,200}(?:\x01[^\x01"„""]{0,50}){0,5}?)[""](\s*\x01)?/g;
-    let qm;
-    // Also build a simpler version: strip all tags from mainText for clean quote extraction
-    const rawStripped = (data.mainText || '').replace(/<[^>]+>/g, ' ');
-    // Match quotes in stripped text and find nearby fn numbers from original
-    const qReStripped = /[„"]([^"„""]{2,200}?)[""]/g;
+    const rawHtml = data.mainText || '';
+
+    // Build two parallel arrays: strippedText and a map from stripped-pos → rawHtml-pos
+    let stripped = '';
+    const posMap = []; // posMap[i] = position in rawHtml for stripped[i]
+    let inTag = false;
+    for (let i = 0; i < rawHtml.length; i++) {
+      const ch = rawHtml[i];
+      if (ch === '<') { inTag = true; continue; }
+      if (ch === '>') { inTag = false; continue; }
+      if (!inTag) { posMap.push(i); stripped += ch; }
+    }
+
+    // Match quotes in stripped text
+    const qRe = /[„"]([^"„""]{2,200}?)[""]/g;
     let qs;
-    while ((qs = qReStripped.exec(rawStripped)) !== null) {
+    while ((qs = qRe.exec(stripped)) !== null) {
       const plainQ = qs[1].trim();
       if (plainQ.length < 3) continue;
-      // Find fn number that appears after this quote in the raw HTML
-      // Look at position in original for nearby data-lsfn
-      const approxPos = qs.index;
-      const nearby = (data.mainText || '').substring(approxPos, approxPos + qs[0].length + 200);
-      const fnInside = (data.mainText || '').substring(Math.max(0, approxPos - 20), approxPos + qs[0].length + 50);
-      const fnMatch = fnInside.match(/data-lsfn="(\d+)"/);
-      const fnNum = fnMatch ? parseInt(fnMatch[1]) : null;
-      const src = fnNum ? (_lsFnMap[fnNum] || '') : '';
+
+      // Map stripped position back to raw HTML position
+      const rawStart = posMap[qs.index] || 0;
+      const rawEnd   = posMap[Math.min(qs.index + qs[0].length, posMap.length - 1)] || rawStart;
+
+      // Look for data-lsfn within ±300 chars in raw HTML around the quote
+      const context = rawHtml.substring(Math.max(0, rawStart - 50), rawEnd + 300);
+      const fnMatch = context.match(/data-lsfn="(\d+)"/);
+      const fnNum   = fnMatch ? parseInt(fnMatch[1]) : null;
+      const src     = fnNum ? (_lsFnMap[fnNum] || '') : '';
+
       if (src && _parsePasukRef(src)) {
         window._lsQuoteMap[plainQ] = { fnNum, src };
       }
