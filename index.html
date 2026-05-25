@@ -9224,8 +9224,8 @@ async function _lsToggleTransMode(on) {
   localStorage.setItem('ls_trans_mode', on ? '1' : '0');
   if (on) {
     if (!_lsDict) await _lsLoadDict();
-    _lsApplyTranslations();
     _lsApplyPasukSquiggles(window._lsCurrentFnMap || {});
+    _lsApplyTranslations();
   } else {
     _lsRemoveTranslations();
   }
@@ -9398,6 +9398,8 @@ function _lsApplyPasukSquiggles(footnoteMap) {
   // Walk text nodes only — never touch innerHTML directly (breaks HTML attributes)
   function processNode(node) {
     if (node.nodeType === 3) {
+      // Skip if inside an existing span (already processed)
+      if (node.parentNode?.tagName === 'SPAN') return;
       const text = node.textContent;
       // Match "quoted text" — regular or guillemet quotes
       const re = /([„"])([^"„""]{3,300}?)([""])/g;
@@ -10056,8 +10058,9 @@ async function _lsOpenReader(idx) {
       // Apply translation squiggles if mode is on
       if (_lsTransMode) {
         _lsLoadDict().then(() => {
-          _lsApplyTranslations();
+          // Pasuk FIRST (before word spans are inserted), then words
           _lsApplyPasukSquiggles(fnMap);
+          _lsApplyTranslations();
         });
       }
     }
