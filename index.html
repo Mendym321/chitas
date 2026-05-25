@@ -10444,7 +10444,7 @@ function _lsLinkify(text) {
     '<span class="ls-fn-ref" data-lsfn="'+n+'">'+n+'</span>'
   );
 }
-function _lsShowFnPopup(num, el) {
+async function _lsShowFnPopup(num, el) {
   const text = _lsFnMap[num];
   if (!text) return;
 
@@ -10467,15 +10467,16 @@ function _lsShowFnPopup(num, el) {
     popup.id = 'ls-fn-popup';
     document.body.appendChild(popup);
   }
+
+  // Base content
   popup.innerHTML = '<div style="font-family:\'DM Sans\',sans-serif;font-size:10px;font-weight:800;color:var(--gold);margin-bottom:4px;direction:ltr;text-align:left;">הערה '+num+'</div>'
     + '<div style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:13px;line-height:1.5;color:var(--t2);">'+text+'</div>';
 
-  // Position above/below the tapped element
+  // Position first so we can measure
   popup.style.display = 'block';
   popup.style.animation = 'none';
-  void popup.offsetWidth; // reflow
+  void popup.offsetWidth;
   popup.style.animation = '';
-
   const rect = el.getBoundingClientRect();
   const pw   = Math.min(285, window.innerWidth - 16);
   popup.style.maxWidth = pw + 'px';
@@ -10486,6 +10487,41 @@ function _lsShowFnPopup(num, el) {
   if (top < 60) top = rect.bottom + 10;
   popup.style.left = left + 'px';
   popup.style.top  = top + 'px';
+
+  // If footnote has a parseable source, fetch and append English translation
+  const ref = _parsePasukRef(text);
+  if (ref && _detectSourceType(text) !== 'skip') {
+    // Show loading indicator
+    const transDiv = document.createElement('div');
+    transDiv.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:12px;color:var(--t3);font-family:\'DM Sans\',sans-serif;';
+    transDiv.textContent = 'Loading...';
+    popup.appendChild(transDiv);
+
+    try {
+      const isTalmud = ref.isTalmud || _isTalmudRef(text);
+      // Use cached pasuk if available
+      const cached = (window._lsPasukTextMap || {})[ref.key]?.pasuk
+        || _pasukCache[ref.key];
+      const pasuk = cached || await _fetchPasuk(ref.book, ref.ch, ref.v, isTalmud, ref.key);
+
+      if (pasuk?.en) {
+        const srcLabel = { tanach:'', talmud:' · Steinsaltz', yerushalmi:' · Yerushalmi', midrash:' · Midrash', rashi:' · Rashi', zohar:' · Zohar' }[_detectSourceType(text)] || '';
+        transDiv.innerHTML =
+          '<p style="font-size:10px;font-weight:700;color:#4A9EFF;margin-bottom:4px;">'
+          + ref.ref + srcLabel + '</p>'
+          + '<p style="font-size:12px;line-height:1.55;color:var(--t1);">' + pasuk.en + '</p>';
+        // Reposition after content added
+        const ph2 = popup.offsetHeight || 70;
+        let top2 = rect.top - ph2 - 10;
+        if (top2 < 60) top2 = rect.bottom + 10;
+        popup.style.top = top2 + 'px';
+      } else {
+        transDiv.remove();
+      }
+    } catch(e) {
+      transDiv.remove();
+    }
+  }
 
   // Dismiss on next tap outside
   setTimeout(() => {
