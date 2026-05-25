@@ -9159,7 +9159,7 @@ function _lsApplyTranslations() {
   }
 
   Array.from(wrap.childNodes).forEach(processNode);
-  wrap.addEventListener('click', _lsTransWordClick, { passive: true });
+  // Click handled by _lsWrapClick added in _lsApplyPasukSquiggles
 }
 
 // ── Remove translation squiggles ─────────────────────────────────────────────
@@ -9173,6 +9173,7 @@ function _lsRemoveTranslations() {
     span.replaceWith(document.createTextNode(span.textContent));
   });
   wrap.normalize();
+  wrap.removeEventListener('click', _lsWrapClick);
   wrap.removeEventListener('click', _lsTransWordClick);
   wrap.removeEventListener('click', _lsPasukClick);
   _lsHideTransPopup();
@@ -9181,35 +9182,36 @@ function _lsRemoveTranslations() {
 // ── Word tap handler ──────────────────────────────────────────────────────────
 function _lsTransWordClick(e) {
   const span = e.target.closest('.ls-trans-word');
-  if (!span) { _lsHideTransPopup(); return; }
+  if (!span) {
+    // Tapped outside any word — close popup
+    if (!e.target.closest('#ls-trans-popup')) _lsHideTransPopup();
+    return;
+  }
   e.stopPropagation();
   const word  = span.dataset.word;
   const entry = (_lsDict || {})[word];
   if (!entry) return;
 
-  // Highlight tapped word
-  document.querySelectorAll('.ls-trans-word.active').forEach(s => s.classList.remove('active'));
-  span.classList.add('active');
-
-  // Position popup above the word
-  const rect   = span.getBoundingClientRect();
-  const popup  = document.getElementById('ls-trans-popup');
+  // Toggle — same span tapped again = close
+  const popup = document.getElementById('ls-trans-popup');
   if (!popup) return;
+  if (popup.style.display !== 'none' && popup.dataset.activeSpan === 'w:' + word + span.textContent) {
+    _lsHideTransPopup(); return;
+  }
+
+  document.querySelectorAll('.ls-trans-word.active, .ls-pasuk-quote.active').forEach(s => s.classList.remove('active'));
+  span.classList.add('active');
+  popup.dataset.activeSpan = 'w:' + word + span.textContent;
 
   const isAdmin = user?.isAdmin || user?.role === 'admin';
   popup.innerHTML =
     '<div class="ls-tp-word">' + word + '</div>'
     + '<div class="ls-tp-trans">' + (entry.translation || '') + '</div>'
     + (entry.notes ? '<div class="ls-tp-notes">' + entry.notes + '</div>' : '')
-    + (isAdmin ? '<button onclick="_lsDictModalOpen(\'' + word + '\')" style="margin-top:8px;font-size:11px;font-weight:700;color:var(--t3);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">✏️ Edit</button>' : '');
+    + (isAdmin ? '<button onclick="_lsDictModalOpen(\'' + word + '\')" style="margin-top:8px;font-size:11px;font-weight:700;color:var(--t3);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">Edit</button>' : '');
 
   popup.style.display = 'block';
-
-  // Position in viewport coords (popup is position:fixed)
   _positionPopup(popup, span);
-
-  // Dismiss on outside tap
-  setTimeout(() => document.addEventListener('click', _lsHideTransPopup, { once: true }), 50);
 }
 
 function _lsHideTransPopup() {
@@ -9516,60 +9518,55 @@ function _lsApplyPasukSquiggles(footnoteMap) {
   const wrap = document.getElementById('ls-body-wrap');
   if (!wrap) return;
 
-  function processNode(node) {
-    if (node.nodeType === 3) {
-      if (node.parentNode?.tagName === 'SPAN') return;
-      const text = node.textContent;
-      const re = /([„"])([^"„""]{3,300}?)([""])/g;
-      if (!re.test(text)) return;
-      re.lastIndex = 0;
+  // Process paragraph by paragraph — work on innerHTML of each <p>
+  // This lets us catch quotes where the fn ref span is INSIDE the quoted text
+  wrap.querySelectorAll('p').forEach(p => {
+    let html = p.innerHTML;
 
-      const frag = document.createDocumentFragment();
-      let last = 0, m;
-      while ((m = re.exec(text)) !== null) {
-        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+    // Match "quoted text" optionally containing HTML spans inside
+    // Handles: "text<span...>N</span>" and "<span...>N</span>text"
+    const quoteRe = /([„"])([^„""]{2,}?)([""])(\s*<span[^>]*data-lsfn="(\d+)"[^>]*>\d+<\/span>)?/g;
 
-        // Find nearest footnote ref sibling
-        let sibling = node.nextSibling;
-        let fnNum = null;
-        while (sibling && !fnNum) {
-          if (sibling.nodeType === 1) {
-            const fnRef = sibling.querySelector?.('[data-lsfn]');
-            if (fnRef) fnNum = fnRef.dataset.lsfn;
-            else if (sibling.dataset?.lsfn) fnNum = sibling.dataset.lsfn;
-            break;
-          }
-          sibling = sibling.nextSibling;
-        }
+    html = html.replace(quoteRe, (match, openQ, inner, closeQ, fnSpanAfter, fnNumAfter) => {
+      // Check for fn ref INSIDE the inner text too
+      const innerFnMatch = inner.match(/data-lsfn="(\d+)"/);
+      const fnNum = fnNumAfter || (innerFnMatch ? innerFnMatch[1] : null);
 
-        // Only wrap in blue squiggle if the footnote contains a parseable pasuk ref
-        const src = fnNum ? (footnoteMap[parseInt(fnNum)] || '') : '';
-        const ref = src ? _parsePasukRef(src) : null;
-
-        if (ref) {
-          // Valid pasuk — apply blue squiggle
-          const span = document.createElement('span');
-          span.className = 'ls-pasuk-quote';
-          span.textContent = m[0];
-          span.dataset.lsfn = fnNum;
-          span.dataset.pasukSrc = encodeURIComponent(src);
-          frag.appendChild(span);
-        } else {
-          // Not a pasuk — leave as plain text
-          frag.appendChild(document.createTextNode(m[0]));
-        }
-
-        last = m.index + m[0].length;
+      // Only wrap if footnote parses to a real source
+      const src = fnNum ? (footnoteMap[parseInt(fnNum)] || '') : '';
+      if (!src || !_parsePasukRef(src)) {
+        // Not a pasuk source — return unchanged
+        return match;
       }
-      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-      node.parentNode.replaceChild(frag, node);
-    } else if (node.nodeType === 1 && !['SCRIPT','STYLE','SPAN'].includes(node.tagName)) {
-      Array.from(node.childNodes).forEach(processNode);
-    }
-  }
 
-  Array.from(wrap.childNodes).forEach(processNode);
-  wrap.addEventListener('click', _lsPasukClick, { passive: true });
+      // Extract the plain quoted text (strip inner HTML for display)
+      const plainInner = inner.replace(/<[^>]+>/g, '');
+
+      return '<span class="ls-pasuk-quote"'
+        + ' data-lsfn="' + fnNum + '"'
+        + ' data-pasuk-src="' + encodeURIComponent(src) + '"'
+        + ' data-quoted="' + encodeURIComponent(plainInner) + '"'
+        + '>' + openQ + inner + closeQ + '</span>'
+        + (fnSpanAfter || '');
+    });
+
+    p.innerHTML = html;
+  });
+
+  wrap.addEventListener('click', _lsWrapClick);
+}
+
+function _lsWrapClick(e) {
+  // Pasuk span?
+  const pasukSpan = e.target.closest('.ls-pasuk-quote');
+  if (pasukSpan) { _lsPasukClick(e); return; }
+  // Word span?
+  const wordSpan = e.target.closest('.ls-trans-word');
+  if (wordSpan) { _lsTransWordClick(e); return; }
+  // Popup itself?
+  if (e.target.closest('#ls-trans-popup')) return;
+  // Outside — close
+  _lsHideTransPopup();
 }
 
 async function _lsPasukClick(e) {
@@ -9611,15 +9608,20 @@ async function _lsPasukClick(e) {
     return;
   }
 
-  // The actual quoted text (strip quotes and trim)
-  const quotedText = span.textContent.replace(/^[„""]|["""]$/g, '').trim();
+  // The actual quoted text — use stored plain text, strip leading/trailing quote chars
+  const quotedText = decodeURIComponent(span.dataset.quoted || '')
+    .replace(/^[„""]|["""]$/g, '').trim()
+    // Also strip גו׳ and similar abbreviations at end
+    .replace(/\s+גו[׳'].*$/, '').trim();
 
   // Build Hebrew display — bold the quoted portion within the full verse
   let heDisplay = pasuk.he || '';
-  if (quotedText && heDisplay) {
-    // Escape for regex
+  if (quotedText.length > 3 && heDisplay) {
+    // Try exact match first, then fuzzy (first 10 chars)
     const escapedQ = quotedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    heDisplay = heDisplay.replace(new RegExp('(' + escapedQ + ')'), '<strong>$1</strong>');
+    const shortQ   = quotedText.substring(0, 12).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    heDisplay = heDisplay.replace(new RegExp('(' + escapedQ + ')'), '<strong>$1</strong>')
+                         .replace(new RegExp('(' + shortQ + '[^<]{0,30})'), '<strong>$1</strong>');
   }
 
   const SOURCE_LABELS = {
