@@ -9112,47 +9112,68 @@ function _lsApplyTranslations() {
   const words = Object.keys(dict);
   if (!words.length) return;
 
-  // Sort longest first — phrases match before their component words
-  const escaped = words
-    .sort((a, b) => b.length - a.length)
-    .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // Strip nikud/cantillation + replace maqaf with space for matching
+  const stripNikud = s => s
+    .replace(/\u05BE/g, ' ')           // maqaf → space
+    .replace(/[\u0591-\u05C7]/g, ''); // strip nikud
 
-  // Use negative lookbehind/lookahead to ensure we only match whole words
-  // A Hebrew word boundary = not preceded/followed by a Hebrew letter
+  // Sort longest first — phrases match before component words
+  const sorted = words.slice().sort((a, b) => b.length - a.length);
+  const escaped = sorted.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
   const HE = '\u05D0-\u05EA\u05F3\u05F4';
   const re = new RegExp(
     '(?<![' + HE + '])(' + escaped.join('|') + ')(?![' + HE + '])',
     'g'
   );
 
-  // Process leaf text nodes only — skip existing spans and elements
   function processNode(node) {
     if (node.nodeType === 3) {
-      const text = node.textContent;
+      const orig = node.textContent;
+      // Strip nikud for matching — build position map orig→stripped
+      let stripped = '';
+      const origToStripped = []; // origToStripped[i] = position in stripped for orig[i]
+      const strippedToOrig = []; // strippedToOrig[j] = position in orig for stripped[j]
+      for (let i = 0; i < orig.length; i++) {
+        const ch = orig[i];
+        const code = ch.charCodeAt(0);
+        const isNikud = (code >= 0x0591 && code <= 0x05C7);
+        origToStripped.push(stripped.length);
+        if (!isNikud) {
+          strippedToOrig.push(i);
+          stripped += ch;
+        }
+      }
+      strippedToOrig.push(orig.length); // sentinel
+
       re.lastIndex = 0;
-      if (!re.test(text)) return;
+      if (!re.test(stripped)) return;
       re.lastIndex = 0;
 
       const frag = document.createDocumentFragment();
-      let last = 0, m;
-      while ((m = re.exec(text)) !== null) {
-        if (m.index > last) {
-          frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      let lastOrig = 0, m;
+      while ((m = re.exec(stripped)) !== null) {
+        // Map stripped positions back to orig positions
+        const origStart = strippedToOrig[m.index];
+        const origEnd   = strippedToOrig[m.index + m[1].length] ?? orig.length;
+
+        if (origStart > lastOrig) {
+          frag.appendChild(document.createTextNode(orig.slice(lastOrig, origStart)));
         }
         const span = document.createElement('span');
-        span.className = 'ls-trans-word';
-        span.dataset.word = m[1];
-        span.textContent = m[1];
+        span.className   = 'ls-trans-word';
+        span.dataset.word = m[1]; // store the dict key (no nikud)
+        span.textContent  = orig.slice(origStart, origEnd); // display with nikud
         frag.appendChild(span);
-        last = m.index + m[1].length;
+        lastOrig = origEnd;
       }
-      if (last < text.length) {
-        frag.appendChild(document.createTextNode(text.slice(last)));
+      if (lastOrig < orig.length) {
+        frag.appendChild(document.createTextNode(orig.slice(lastOrig)));
       }
       node.parentNode.replaceChild(frag, node);
     } else if (
       node.nodeType === 1 &&
-      !['SCRIPT','STYLE','SPAN'].includes(node.tagName) // skip existing spans
+      !['SCRIPT','STYLE','SPAN'].includes(node.tagName)
     ) {
       Array.from(node.childNodes).forEach(processNode);
     }
