@@ -10299,6 +10299,8 @@ async function _lsOpenReader(idx) {
         const ref = _parsePasukRef(src);
         if (!ref) continue;
         if (_detectSourceType(src) === 'skip') continue;
+        if (_detectSourceType(src) === 'talmud') continue;
+        if (_detectSourceType(src) === 'yerushalmi') continue;
 
         try {
           const pasuk = await _fetchPasuk(ref.book, ref.ch, ref.v, ref.isTalmud, ref.key);
@@ -10307,12 +10309,12 @@ async function _lsOpenReader(idx) {
           const heClean = strip(pasuk.he);
           const words = heClean.split(' ').filter(w => w.length > 1);
 
-          // Try 3-word windows, then 2-word, to find the best match in the body
+          // Try 4-word windows down to 3 minimum — 2 words too generic
           let found = null;
-          for (let len = 4; len >= 2; len--) {
+          for (let len = 4; len >= 3; len--) {
             for (let i = 0; i <= words.length - len; i++) {
               const phrase = words.slice(i, i + len).join(' ');
-              if (phrase.length < 6) continue;
+              if (phrase.length < 8) continue; // min 8 chars to avoid common short phrases
               if (rawStripped.includes(phrase)) {
                 found = phrase;
                 break;
