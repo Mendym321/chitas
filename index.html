@@ -9509,23 +9509,29 @@ async function _fetchPasuk(book, ch, v, isTalmud = false, key = null) {
 
   try {
     if (isTalmud) {
-      // Talmud: fetch as segments, find matching segment for quoted text
-      const [enRes, heRes] = await Promise.all([
-        fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
-        fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
-      ]);
-      const engVer = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-      const allEn  = _flatHtml(engVer?.text || []);
-      const allHe  = _flatHtml(heRes?.he    || []);
+      // Talmud: fetch segments using v2 API (more reliable structure)
+      const heRes = await fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null);
+      const enRes = await fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0&lang=en').then(r=>r.json()).catch(()=>null);
+
+      const cleanStr = s => (s||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+      const stripNikud = s => cleanStr(s).replace(/[\u0591-\u05C7]/g,'').replace(/\u05BE/g,' ').trim();
+
+      // he and text arrays are the segments
+      const rawHe = Array.isArray(heRes?.he)   ? heRes.he   : [];
+      const rawEn = Array.isArray(heRes?.text) ? heRes.text :
+                    Array.isArray(enRes?.text)  ? enRes.text : [];
+
       ref = heRes?.ref || cacheKey;
-      // Store segments for smart matching in popup
-      const segments = allHe.map((h, i) => ({
-        he: (h||'').replace(/<[^>]+>/g,'').replace(/[\u0591-\u05C7]/g,'').replace(/\u05BE/g,' ').trim(),
-        en: (allEn[i]||'').replace(/<[^>]+>/g,'').trim(),
-        heRaw: (h||'').replace(/<[^>]+>/g,'').trim(),
-      })).filter(s => s.he);
-      he = allHe.map(h => (h||'').replace(/<[^>]+>/g,'').trim()).join(' ');
-      en = allEn.map(e => (e||'').replace(/<[^>]+>/g,'').trim()).join(' ');
+
+      const segments = rawHe.map((h, i) => ({
+        he:    stripNikud(h),
+        heRaw: cleanStr(h),
+        en:    cleanStr(rawEn[i] || ''),
+      })).filter(s => s.he.length > 2);
+
+      he = segments.map(s => s.heRaw).join(' ');
+      en = segments.map(s => s.en).filter(Boolean).join(' ');
+
       const result = { he, en, ref, segments };
       _pasukCache[cacheKey] = result;
       return result;
