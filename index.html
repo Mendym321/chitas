@@ -9509,15 +9509,26 @@ async function _fetchPasuk(book, ch, v, isTalmud = false, key = null) {
 
   try {
     if (isTalmud) {
-      // Talmud / Yerushalmi: v3 API → William Davidson (Steinsaltz) English
+      // Talmud: fetch as segments, find matching segment for quoted text
       const [enRes, heRes] = await Promise.all([
         fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
         fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
       ]);
       const engVer = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-      en  = _flatHtml(engVer?.text || []).join(' ');
-      he  = _flatHtml(heRes?.he   || []).join(' ');
-      ref = heRes?.ref || key;
+      const allEn  = _flatHtml(engVer?.text || []);
+      const allHe  = _flatHtml(heRes?.he    || []);
+      ref = heRes?.ref || cacheKey;
+      // Store segments for smart matching in popup
+      const segments = allHe.map((h, i) => ({
+        he: (h||'').replace(/<[^>]+>/g,'').replace(/[\u0591-\u05C7]/g,'').replace(/\u05BE/g,' ').trim(),
+        en: (allEn[i]||'').replace(/<[^>]+>/g,'').trim(),
+        heRaw: (h||'').replace(/<[^>]+>/g,'').trim(),
+      })).filter(s => s.he);
+      he = allHe.map(h => (h||'').replace(/<[^>]+>/g,'').trim()).join(' ');
+      en = allEn.map(e => (e||'').replace(/<[^>]+>/g,'').trim()).join(' ');
+      const result = { he, en, ref, segments };
+      _pasukCache[cacheKey] = result;
+      return result;
     } else {
       // Tanach, Midrash, Rashi, etc: use ven= with keyword matching
       // Pick best English version available
@@ -10527,10 +10538,45 @@ async function _lsShowFnPopup(num, el) {
 
       if (pasuk?.en) {
         const srcLabel = { tanach:'', talmud:' · Steinsaltz', yerushalmi:' · Yerushalmi', midrash:' · Midrash', rashi:' · Rashi', zohar:' · Zohar' }[_detectSourceType(text)] || '';
+
+        // For Talmud: find the specific segment matching the footnote source context
+        let displayEn = pasuk.en;
+        let displayHe = '';
+        if (pasuk.segments?.length) {
+          // Try to match quoted text from sicha against segments
+          // Use the footnote text itself to find keywords
+          const fnStripped = text.replace(/<[^>]+>/g,'')
+            .replace(/[\u0591-\u05C7]/g,'').replace(/\u05BE/g,' ');
+          // Find segment whose Hebrew appears in the footnote context
+          let bestIdx = -1;
+          let bestScore = 0;
+          pasuk.segments.forEach((seg, i) => {
+            if (!seg.he) return;
+            // Score by how many words of segment appear in footnote
+            const segWords = seg.he.split(/\s+/).filter(w => w.length > 2);
+            const score = segWords.filter(w => fnStripped.includes(w)).length;
+            if (score > bestScore) { bestScore = score; bestIdx = i; }
+          });
+          if (bestIdx === -1) {
+            // No match — just show first 3 segments
+            const slice = pasuk.segments.slice(0, 3);
+            displayEn = slice.map(s => s.en).filter(Boolean).join(' ');
+            displayHe = slice.map(s => s.heRaw).filter(Boolean).join(' ');
+          } else {
+            // Show matched segment + 1 before + 1 after for context
+            const start = Math.max(0, bestIdx - 1);
+            const end   = Math.min(pasuk.segments.length, bestIdx + 2);
+            const slice = pasuk.segments.slice(start, end);
+            displayEn = slice.map(s => s.en).filter(Boolean).join(' ');
+            displayHe = slice.map(s => s.heRaw).filter(Boolean).join(' ');
+          }
+        }
+
         transDiv.innerHTML =
           '<p style="font-size:10px;font-weight:700;color:#4A9EFF;margin-bottom:4px;">'
           + ref.ref + srcLabel + '</p>'
-          + '<p style="font-size:12px;line-height:1.55;color:var(--t1);">' + pasuk.en + '</p>';
+          + (displayHe ? '<p style="font-family:\'DachHeilig\',\'Frank Ruhl Libre\',serif;font-size:13px;line-height:1.6;direction:rtl;color:var(--t2);margin-bottom:4px;">' + displayHe + '</p>' : '')
+          + '<p style="font-size:12px;line-height:1.55;color:var(--t1);">' + displayEn + '</p>';
         // Reposition after content added
         const ph2 = popup.offsetHeight || 70;
         let top2 = rect.top - ph2 - 10;
