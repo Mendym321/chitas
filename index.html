@@ -809,157 +809,215 @@ onAuthStateChanged(auth, user => {
         <!-- Cards viewport -->
         <div style="flex:1;position:relative;overflow:hidden;" id="ob-sc-viewport">
 
-          <!-- Card 1: Bilingual reader -->
+          <!-- Card 1: Real section cards mockup -->
           <div class="ob-sc-card" id="ob-sc-0" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeUp .4s ease both;">
-            <!-- Visual mockup -->
-            <div style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:32px;position:relative;overflow:hidden;">
-              <!-- Section header bar -->
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);">
-                <div style="width:32px;height:32px;border-radius:9px;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.3);display:flex;align-items:center;justify-content:center;">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
-                </div>
-                <div>
-                  <p style="font-size:13px;font-weight:800;color:var(--t1);">Chumash</p>
-                  <p style="font-size:10px;color:var(--t3);">Vayikra · Aliya 3</p>
-                </div>
-              </div>
-              <!-- Side-by-side text -->
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-                <div>
-                  <p style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">English</p>
-                  <p style="font-size:12px;color:var(--t2);line-height:1.82;">And He called to Moses, and the L-rd spoke to him from the Tent of Meeting...</p>
-                </div>
-                <div style="text-align:right;">
-                  <p style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;direction:rtl;">עברית</p>
-                  <p style="font-size:13px;color:var(--t1);line-height:1.95;direction:rtl;font-family:'Frank Ruhl Libre',serif;">וַיִּקְרָא אֶל־מֹשֶׁה וַיְדַבֵּר יְהֹוָה אֵלָיו מֵאֹהֶל מוֹעֵד לֵאמֹר׃</p>
+            <div style="width:100%;margin-bottom:28px;">
+              <!-- Exact replica of real section cards -->
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="width:44px;height:44px;border-radius:13px;background:#F0A50018;border:1px solid #F0A50035;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#F0A500;">
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">Chumash</p>
+                    <p style="font-size:12px;color:var(--t3);">Vayikra · Aliya 1 · with Rashi</p>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
                 </div>
               </div>
-              <!-- Lang toggle pills -->
-              <div style="display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
-                <div style="padding:5px 12px;border-radius:99px;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.4);">
-                  <span style="font-size:10px;font-weight:700;color:var(--gold);">Both</span>
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="width:44px;height:44px;border-radius:13px;background:#4A9EFF18;border:1px solid #4A9EFF35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4A9EFF;">
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">Tehillim</p>
+                    <p style="font-size:12px;color:var(--t3);">Today's chapters · Book 1</p>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
                 </div>
-                <div style="padding:5px 12px;border-radius:99px;background:var(--surface);border:1px solid var(--border);">
-                  <span style="font-size:10px;font-weight:600;color:var(--t3);">Hebrew</span>
+              </div>
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="width:44px;height:44px;border-radius:13px;background:#A855F718;border:1px solid #A855F735;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#A855F7;">
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">Tanya</p>
+                    <p style="font-size:12px;color:var(--t3);">Chapter 32 · Likutei Amarim</p>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
                 </div>
-                <div style="padding:5px 12px;border-radius:99px;background:var(--surface);border:1px solid var(--border);">
-                  <span style="font-size:10px;font-weight:600;color:var(--t3);">English</span>
+              </div>
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:15px 16px;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="width:44px;height:44px;border-radius:13px;background:#1DB95418;border:1px solid #1DB95435;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1DB954;">
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">Rambam</p>
+                    <p style="font-size:12px;color:var(--t3);">Hilchos Teshuvah · 3 chapters</p>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
                 </div>
               </div>
             </div>
-            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Read it your way</h2>
-            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Hebrew, English, or side by side. Every section, every day — with Rashi included.</p>
+            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Your daily Chitas</h2>
+            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Chumash, Tehillim, Tanya & Rambam — every day. Hebrew, English, or both. With Rashi.</p>
           </div>
 
-          <!-- Card 2: Streak + progress -->
+          <!-- Card 2: Streak + progress — real progress card style -->
           <div class="ob-sc-card" id="ob-sc-1" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:32px;">
-              <!-- Streak hero -->
-              <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px;">
-                <svg width="38" height="38" viewBox="0 0 24 24" fill="#F0A500" style="flex-shrink:0;"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
-                <div>
-                  <p style="font-size:38px;font-weight:900;color:var(--gold);line-height:1;letter-spacing:-1.5px;">47<span style="font-size:16px;font-weight:700;color:var(--t3);margin-left:3px;">days</span></p>
-                  <p style="font-size:11px;color:var(--t3);margin-top:2px;">Current streak · Best: 47 days</p>
+            <div style="width:100%;margin-bottom:28px;">
+              <!-- Real progress card replica -->
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+                  <!-- Progress ring -->
+                  <svg width="52" height="52" viewBox="0 0 52 52" style="flex-shrink:0;transform:rotate(-90deg);">
+                    <circle cx="26" cy="26" r="23" fill="none" stroke="var(--border)" stroke-width="3.5"/>
+                    <circle cx="26" cy="26" r="23" fill="none" stroke="#F0A500" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="108 144.5"/>
+                  </svg>
+                  <div style="flex:1;">
+                    <p style="font-weight:800;font-size:16px;color:var(--t1);margin-bottom:2px;">Today's Learning</p>
+                    <p style="font-size:12px;color:var(--t3);">1 section remaining</p>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#F0A500;flex-shrink:0;"></div>
+                    <span style="font-size:12px;font-weight:700;color:var(--t1);">Chumash</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
+                  </div>
+                  <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#4A9EFF;flex-shrink:0;"></div>
+                    <span style="font-size:12px;font-weight:700;color:var(--t1);">Tehillim</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
+                  </div>
+                  <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#A855F7;flex-shrink:0;"></div>
+                    <span style="font-size:12px;font-weight:700;color:var(--t1);">Tanya</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
+                  </div>
+                  <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#1DB954;flex-shrink:0;"></div>
+                    <span style="font-size:12px;font-weight:700;color:var(--t3);">Rambam</span>
+                  </div>
                 </div>
               </div>
-              <!-- 4-section progress -->
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-                  <div style="width:8px;height:8px;border-radius:50%;background:#F0A500;flex-shrink:0;"></div>
-                  <span style="font-size:12px;font-weight:700;color:var(--t1);">Chumash</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
-                </div>
-                <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-                  <div style="width:8px;height:8px;border-radius:50%;background:#4A9EFF;flex-shrink:0;"></div>
-                  <span style="font-size:12px;font-weight:700;color:var(--t1);">Tehillim</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
-                </div>
-                <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-                  <div style="width:8px;height:8px;border-radius:50%;background:#A855F7;flex-shrink:0;"></div>
-                  <span style="font-size:12px;font-weight:700;color:var(--t1);">Tanya</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
-                </div>
-                <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-                  <div style="width:8px;height:8px;border-radius:50%;background:#1DB954;flex-shrink:0;"></div>
-                  <span style="font-size:12px;font-weight:700;color:var(--t1);">Rambam</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
+              <!-- Streak card -->
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="#F0A500"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
+                <div>
+                  <p style="font-size:28px;font-weight:900;color:var(--gold);line-height:1;letter-spacing:-1px;">47 <span style="font-size:13px;font-weight:700;color:var(--t3);">day streak</span></p>
+                  <p style="font-size:11px;color:var(--t3);margin-top:2px;">Best: 47 days · 2,840 XP</p>
                 </div>
               </div>
             </div>
-            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Your streak, front and center</h2>
-            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Track every day, every section. XP, levels, and medals keep the momentum going.</p>
+            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Track every day</h2>
+            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Streaks, XP, levels and medals. See your progress and build a real daily habit.</p>
           </div>
 
           <!-- Card 3: Personal Tehillim -->
           <div class="ob-sc-card" id="ob-sc-2" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:32px;">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);">
-                <div style="width:32px;height:32px;border-radius:9px;background:rgba(74,158,255,.12);border:1px solid rgba(74,158,255,.25);display:flex;align-items:center;justify-content:center;">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:28px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+                <div style="width:44px;height:44px;border-radius:13px;background:#4A9EFF18;border:1px solid #4A9EFF35;display:flex;align-items:center;justify-content:center;color:#4A9EFF;">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                 </div>
                 <div>
-                  <p style="font-size:13px;font-weight:800;color:var(--t1);">Tehillim</p>
-                  <p style="font-size:10px;color:var(--t3);">+ your personal chapters</p>
+                  <p style="font-size:14px;font-weight:800;color:var(--t1);">Tehillim</p>
+                  <p style="font-size:11px;color:var(--t3);">+ personal chapters</p>
                 </div>
               </div>
-              <!-- People list -->
               <div style="display:flex;flex-direction:column;gap:8px;">
                 <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:rgba(168,85,247,.13);border:1px solid rgba(168,85,247,.27);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#A855F7;">B</div>
-                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">Bubby Sarah</span>
-                  <span style="font-size:11px;color:var(--t3);">Psalm 27</span>
+                  <div style="width:28px;height:28px;border-radius:50%;background:#A855F718;border:1px solid #A855F735;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#A855F7;">S</div>
+                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">Savta Miriam</span>
+                  <span style="font-size:11px;color:var(--t3);">Psalm 83</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:rgba(29,185,84,.13);border:1px solid rgba(29,185,84,.27);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#1DB954;">C</div>
-                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">Chaim Mendel</span>
-                  <span style="font-size:11px;color:var(--t3);">Psalm 42</span>
+                  <div style="width:28px;height:28px;border-radius:50%;background:#1DB95418;border:1px solid #1DB95435;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#1DB954;">M</div>
+                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">Menachem Dovid</span>
+                  <span style="font-size:11px;color:var(--t3);">Psalm 12</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:rgba(240,165,0,.13);border:1px solid rgba(240,165,0,.27);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#F0A500;">R</div>
+                  <div style="width:28px;height:28px;border-radius:50%;background:#F0A50018;border:1px solid #F0A50035;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#F0A500;">R</div>
                   <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">The Rebbe</span>
-                  <span style="font-size:11px;color:var(--t3);">Psalm 70</span>
+                  <span style="font-size:11px;color:var(--t3);">Psalm 124</span>
                 </div>
               </div>
             </div>
             <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Tehillim for your people</h2>
-            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Add names and birthdays. The right chapter is calculated and added to your daily Tehillim automatically.</p>
+            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Add names and birthdays. The right psalm is calculated and added to your daily Tehillim automatically.</p>
           </div>
 
-          <!-- Card 4: Extra learning + leaderboard -->
+          <!-- Card 4: Likkutei Sichos translation mode -->
           <div class="ob-sc-card" id="ob-sc-3" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:32px;">
-              <!-- Extra tracks -->
-              <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
-                <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Additional learning</p>
-                <div style="display:flex;flex-wrap:wrap;gap:7px;">
-                  <div style="padding:5px 11px;border-radius:8px;background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);"><span style="font-size:11px;font-weight:700;color:#F0A500;">Daf Yomi</span></div>
-                  <div style="padding:5px 11px;border-radius:8px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);"><span style="font-size:11px;font-weight:700;color:#A855F7;">Likkutei Torah</span></div>
-                  <div style="padding:5px 11px;border-radius:8px;background:rgba(29,185,84,.08);border:1px solid rgba(29,185,84,.2);"><span style="font-size:11px;font-weight:700;color:#1DB954;">Mishnah Yomi</span></div>
-                  <div style="padding:5px 11px;border-radius:8px;background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);"><span style="font-size:11px;font-weight:700;color:#4A9EFF;">Hayom Yom</span></div>
+            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:28px;">
+              <!-- LS section header -->
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+                <div style="width:44px;height:44px;border-radius:13px;background:#8B5CF618;border:1px solid #8B5CF635;display:flex;align-items:center;justify-content:center;color:#8B5CF6;">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+                </div>
+                <div>
+                  <p style="font-size:14px;font-weight:800;color:var(--t1);">לקוטי שיחות</p>
+                  <p style="font-size:11px;color:var(--t3);">Behaaloscha · Vol. 2</p>
                 </div>
               </div>
-              <!-- Leaderboard preview -->
+              <!-- Sicha text with purple squiggles -->
+              <div style="direction:rtl;font-family:'Frank Ruhl Libre',serif;font-size:14px;line-height:2;color:var(--t1);margin-bottom:14px;">
+                <span>אין דער הפטרה פון </span><span style="background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3'%3E%3Cpath d='M0 2.5 Q1.5 0 3 2.5 Q4.5 5 6 2.5' stroke='%238B5CF6' stroke-width='1.2' fill='none'/%3E%3C/svg%3E\");background-repeat:repeat-x;background-position:bottom;background-size:6px 3px;padding-bottom:3px;">פרשתנו</span><span> שטייט: </span><span style="background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3'%3E%3Cpath d='M0 2.5 Q1.5 0 3 2.5 Q4.5 5 6 2.5' stroke='%234A9EFF' stroke-width='1.2' fill='none'/%3E%3C/svg%3E\");background-repeat:repeat-x;background-position:bottom;background-size:6px 3px;padding-bottom:3px;">ראיתי והנה מנורת זהב</span>
+              </div>
+              <!-- Translation mode toggle -->
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-radius:10px;padding:10px 12px;">
+                <div>
+                  <p style="font-size:12px;font-weight:700;color:#8B5CF6;">Translation Mode</p>
+                  <p style="font-size:10px;color:var(--t3);">Tap words for instant translation</p>
+                </div>
+                <div style="width:36px;height:20px;border-radius:10px;background:#8B5CF6;position:relative;flex-shrink:0;">
+                  <div style="position:absolute;top:3px;left:19px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+                </div>
+              </div>
+            </div>
+            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Learn Likkutei Sichos</h2>
+            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">The Rebbe's sichos on this week's parsha. Turn on Translation Mode — tap any word or quoted verse for an instant explanation.</p>
+          </div>
+
+          <!-- Card 5: Extra learning + leaderboard -->
+          <div class="ob-sc-card" id="ob-sc-4" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:28px;">
+              <!-- Extra tracks -->
+              <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+                <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Additional learning</p>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;">
+                  <div style="padding:5px 11px;border-radius:8px;background:#F0A50014;border:1px solid #F0A50030;"><span style="font-size:11px;font-weight:700;color:#F0A500;">Daf Yomi</span></div>
+                  <div style="padding:5px 11px;border-radius:8px;background:#8B5CF614;border:1px solid #8B5CF630;"><span style="font-size:11px;font-weight:700;color:#8B5CF6;">Likkutei Sichos</span></div>
+                  <div style="padding:5px 11px;border-radius:8px;background:#1DB95414;border:1px solid #1DB95430;"><span style="font-size:11px;font-weight:700;color:#1DB954;">Mishnah Yomi</span></div>
+                  <div style="padding:5px 11px;border-radius:8px;background:#4A9EFF14;border:1px solid #4A9EFF30;"><span style="font-size:11px;font-weight:700;color:#4A9EFF;">Hayom Yom</span></div>
+                </div>
+              </div>
+              <!-- Leaderboard -->
               <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Leaderboard</p>
               <div style="display:flex;flex-direction:column;gap:7px;">
                 <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
-                  <div style="width:20px;height:20px;border-radius:50%;background:rgba(240,165,0,.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gold);">1</div>
+                  <div style="width:20px;height:20px;border-radius:50%;background:#F0A50018;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gold);">1</div>
                   <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Mendel K.</p><p style="font-size:10px;color:var(--t3);">Crown Heights</p></div>
                   <span style="font-size:11px;font-weight:700;color:var(--gold);">2,840 XP</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
-                  <div style="width:20px;height:20px;border-radius:50%;background:rgba(144,144,168,.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--t2);">2</div>
+                  <div style="width:20px;height:20px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--t2);">2</div>
                   <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Rivka S.</p><p style="font-size:10px;color:var(--t3);">Monsey</p></div>
                   <span style="font-size:11px;font-weight:700;color:var(--t2);">2,210 XP</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
-                  <div style="width:20px;height:20px;border-radius:50%;background:rgba(144,144,168,.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--t2);">3</div>
+                  <div style="width:20px;height:20px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--t2);">3</div>
                   <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Yosef L.</p><p style="font-size:10px;color:var(--t3);">Tzfas</p></div>
                   <span style="font-size:11px;font-weight:700;color:var(--t2);">1,990 XP</span>
                 </div>
               </div>
             </div>
             <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">More to learn, together</h2>
-            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Add Daf Yomi, Likkutei Torah and more. See where you rank among daily learners worldwide.</p>
+            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Add Daf Yomi, Likkutei Sichos and more. See where you rank among daily learners worldwide.</p>
           </div>
 
         </div><!-- /viewport -->
@@ -973,6 +1031,7 @@ onAuthStateChanged(auth, user => {
               <div class="ob-sc-dot" id="ob-sc-dot-1" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
               <div class="ob-sc-dot" id="ob-sc-dot-2" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
               <div class="ob-sc-dot" id="ob-sc-dot-3" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
+              <div class="ob-sc-dot" id="ob-sc-dot-4" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
             </div>
             <!-- Next / finish button -->
             <button id="ob-sc-next-btn" onclick="obShowcaseNext();" style="padding:14px 28px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">
@@ -1042,7 +1101,7 @@ onAuthStateChanged(auth, user => {
         </div>
         <div style="flex:1;">
           <p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px;">The Rebbe</p>
-          <p id="ob-rebbe-sub" style="font-size:12px;color:var(--t3);">Included in Tehillim</p>
+          <p id="ob-rebbe-sub" style="font-size:12px;color:var(--t3);">Psalm 124 · included</p>
         </div>
         <button id="ob-rebbe-toggle" onclick="obToggleRebbe()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;">
           <div id="ob-rebbe-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
@@ -1054,7 +1113,7 @@ onAuthStateChanged(auth, user => {
         </div>
         <div style="flex:1;">
           <p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px;">The Rebbetzin</p>
-          <p id="ob-rebbetzin-sub" style="font-size:12px;color:var(--t3);">Included in Tehillim</p>
+          <p id="ob-rebbetzin-sub" style="font-size:12px;color:var(--t3);">Psalm 125 · included</p>
         </div>
         <button id="ob-rebbetzin-toggle" onclick="obToggleRebbetzin()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;">
           <div id="ob-rebbetzin-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
@@ -4416,7 +4475,7 @@ function checkWeeklySummary() {
 // ════════════════════════════════════════════════════════════════════
 // ── FEATURE SHOWCASE (between landing and sign-in) ────────────────────────────
 let _obScIdx = 0;
-const _OB_SC_COUNT = 4;
+const _OB_SC_COUNT = 5;
 
 function obShowcaseStart() {
   _obScIdx = 0;
