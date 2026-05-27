@@ -6608,6 +6608,10 @@ function closeChabadPanel() {
   document.getElementById('ls-nav-bar')?.remove();
   document.getElementById('ls-fn-popup')?.remove();
   document.getElementById('ls-set-modal')?.remove();
+  // Clean up translation mode UI
+  _lsHideTransPopup();
+  const wrap = document.getElementById('ls-body-wrap');
+  if (wrap) wrap.removeEventListener('click', _lsWrapClick);
   // Reset progress bar to gold
   const _lspb = document.getElementById('reader-progress-bar');
   if (_lspb) _lspb.style.background = 'var(--gold)';
@@ -9616,6 +9620,8 @@ function _lsApplyPasukSquiggles(footnoteMap) {
   }
 
   Array.from(wrap.childNodes).forEach(processNode);
+  // Remove before adding to prevent duplicate listeners
+  wrap.removeEventListener('click', _lsWrapClick);
   wrap.addEventListener('click', _lsWrapClick);
 }
 
@@ -10371,11 +10377,20 @@ async function _lsOpenReader(idx) {
         const ref = e.target.closest('.ls-fn-ref[data-lsfn]');
         if (ref) _lsShowFnPopup(parseInt(ref.dataset.lsfn), ref);
       };
+      // Always hide any lingering popup from previous sicha
+      _lsHideTransPopup();
+      document.getElementById('ls-fn-popup')?.remove();
+
       // _lsFnMap is already built above from _lsParseFn — use it directly
       window._lsCurrentFnMap = _lsFnMap;
-      // Apply word translations immediately; pasuk squiggles applied async after fetching
+      // Apply word translations + always attach click handler
       if (_lsTransMode) {
-        _lsLoadDict().then(() => _lsApplyTranslations());
+        _lsLoadDict().then(() => {
+          _lsApplyTranslations();
+          // Attach click handler immediately after word translations
+          const w = document.getElementById('ls-body-wrap');
+          if (w) { w.removeEventListener('click', _lsWrapClick); w.addEventListener('click', _lsWrapClick); }
+        });
       }
     }
 
@@ -10449,11 +10464,15 @@ function _lsSaveCurrentScroll() {
 }
 
 function _lsNavSicha(dir) {
+  _lsHideTransPopup();
+  document.getElementById('ls-fn-popup')?.remove();
   _lsSaveCurrentScroll();
   _lsOpenReader(_lsCurIdx + dir);
 }
 
 function _lsBackToList() {
+  _lsHideTransPopup();
+  document.getElementById('ls-fn-popup')?.remove();
   _lsSaveCurrentScroll();
   _lsInReader = false;
   window._lsHandleClose = function() { return false; };
