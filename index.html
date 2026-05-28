@@ -798,22 +798,22 @@ onAuthStateChanged(auth, user => {
       </div>
 
       <!-- ── FEATURE SHOWCASE ── -->
-      <div id="ob-showcase" style="display:none;flex-direction:column;min-height:88vh;padding:20px 0;">
+      <div id="ob-showcase" style="display:none;flex-direction:column;height:100vh;max-height:100vh;overflow:hidden;padding:0 20px;">
 
         <!-- Header row -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0 8px;flex-shrink:0;">
           <button onclick="document.getElementById('ob-showcase').style.display='none';document.getElementById('ob-step0').style.display='flex';" style="background:none;border:none;color:var(--t3);font-size:13px;font-family:inherit;cursor:pointer;">← Back</button>
           <button onclick="obShowcaseSkip();" style="background:none;border:none;color:var(--t3);font-size:13px;font-family:inherit;cursor:pointer;">Skip →</button>
         </div>
 
-        <!-- Cards viewport -->
-        <div style="flex:1;position:relative;overflow:hidden;" id="ob-sc-viewport">
+        <!-- Cards viewport — fixed height, cards absolutely positioned inside -->
+        <div style="flex:1;position:relative;overflow:hidden;min-height:0;" id="ob-sc-viewport">
 
           <!-- Card 1: Real section cards mockup -->
-          <div class="ob-sc-card" id="ob-sc-0" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeUp .4s ease both;">
-            <div style="width:100%;margin-bottom:28px;">
+          <div class="ob-sc-card" id="ob-sc-0" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;animation:fadeUp .4s ease both;overflow:hidden;">
+            <div style="width:100%;margin-bottom:14px;">
               <!-- Exact replica of real section cards -->
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:10px;">
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:11px 14px;margin-bottom:8px;">
                 <div style="display:flex;align-items:center;gap:14px;">
                   <div style="width:44px;height:44px;border-radius:13px;background:#F0A50018;border:1px solid #F0A50035;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#F0A500;">
                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -825,7 +825,7 @@ onAuthStateChanged(auth, user => {
                   <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
                 </div>
               </div>
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:10px;">
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:11px 14px;margin-bottom:8px;">
                 <div style="display:flex;align-items:center;gap:14px;">
                   <div style="width:44px;height:44px;border-radius:13px;background:#4A9EFF18;border:1px solid #4A9EFF35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4A9EFF;">
                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
@@ -837,7 +837,7 @@ onAuthStateChanged(auth, user => {
                   <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
                 </div>
               </div>
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:10px;">
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:11px 14px;margin-bottom:8px;">
                 <div style="display:flex;align-items:center;gap:14px;">
                   <div style="width:44px;height:44px;border-radius:13px;background:#A855F718;border:1px solid #A855F735;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#A855F7;">
                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -862,15 +862,15 @@ onAuthStateChanged(auth, user => {
                 </div>
               </div>
             </div>
-            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Your daily Chitas</h2>
-            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Chumash, Tehillim, Tanya & Rambam — every day. Hebrew, English, or both. With Rashi.</p>
+            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">Your daily Chitas</h2>
+            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Chumash, Tehillim, Tanya & Rambam — every day. Hebrew, English, or both. With Rashi.</p>
           </div>
 
           <!-- Card 2: Streak + progress — real progress card style -->
-          <div class="ob-sc-card" id="ob-sc-1" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="width:100%;margin-bottom:28px;">
+          <div class="ob-sc-card" id="ob-sc-1" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;overflow:hidden;">
+            <div style="width:100%;margin-bottom:14px;">
               <!-- Real progress card replica -->
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;">
+              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;margin-bottom:10px;">
                 <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
                   <!-- Progress ring -->
                   <svg width="52" height="52" viewBox="0 0 52 52" style="flex-shrink:0;transform:rotate(-90deg);">
@@ -913,13 +913,13 @@ onAuthStateChanged(auth, user => {
                 </div>
               </div>
             </div>
-            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Track every day</h2>
-            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Streaks, XP, levels and medals. See your progress and build a real daily habit.</p>
+            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">Track every day</h2>
+            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Streaks, XP, levels and medals. See your progress and build a real daily habit.</p>
           </div>
 
           <!-- Card 3: Personal Tehillim -->
-          <div class="ob-sc-card" id="ob-sc-2" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:28px;">
+          <div class="ob-sc-card" id="ob-sc-2" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;overflow:hidden;">
+            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;margin-bottom:14px;">
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
                 <div style="width:44px;height:44px;border-radius:13px;background:#4A9EFF18;border:1px solid #4A9EFF35;display:flex;align-items:center;justify-content:center;color:#4A9EFF;">
                   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
@@ -947,13 +947,13 @@ onAuthStateChanged(auth, user => {
                 </div>
               </div>
             </div>
-            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Tehillim for your people</h2>
-            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Add names and birthdays. The right psalm is calculated and added to your daily Tehillim automatically.</p>
+            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">Tehillim for your people</h2>
+            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Add names and birthdays. The right psalm is calculated and added to your daily Tehillim automatically.</p>
           </div>
 
           <!-- Card 4: Likkutei Sichos translation mode -->
-          <div class="ob-sc-card" id="ob-sc-3" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:28px;">
+          <div class="ob-sc-card" id="ob-sc-3" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;overflow:hidden;">
+            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;margin-bottom:14px;">
               <!-- LS section header -->
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
                 <div style="width:44px;height:44px;border-radius:13px;background:#8B5CF618;border:1px solid #8B5CF635;display:flex;align-items:center;justify-content:center;color:#8B5CF6;">
@@ -979,13 +979,13 @@ onAuthStateChanged(auth, user => {
                 </div>
               </div>
             </div>
-            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">Learn Likkutei Sichos</h2>
-            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">The Rebbe's sichos on this week's parsha. Turn on Translation Mode — tap any word or quoted verse for an instant explanation.</p>
+            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">Learn Likkutei Sichos</h2>
+            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">The Rebbe's sichos on this week's parsha. Turn on Translation Mode — tap any word or quoted verse for an instant explanation.</p>
           </div>
 
           <!-- Card 5: Extra learning + leaderboard -->
-          <div class="ob-sc-card" id="ob-sc-4" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:28px;">
+          <div class="ob-sc-card" id="ob-sc-4" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;overflow:hidden;">
+            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;margin-bottom:14px;">
               <!-- Extra tracks -->
               <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
                 <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Additional learning</p>
@@ -1016,28 +1016,24 @@ onAuthStateChanged(auth, user => {
                 </div>
               </div>
             </div>
-            <h2 style="font-size:26px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:8px;text-align:center;">More to learn, together</h2>
-            <p style="font-size:14px;color:var(--t2);line-height:1.6;text-align:center;max-width:280px;">Add Daf Yomi, Likkutei Sichos and more. See where you rank among daily learners worldwide.</p>
+            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">More to learn, together</h2>
+            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Add Daf Yomi, Likkutei Sichos and more. See where you rank among daily learners worldwide.</p>
           </div>
 
         </div><!-- /viewport -->
 
-        <!-- Bottom nav: dots + next -->
-        <div style="padding-top:24px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <!-- Dot indicators -->
-            <div style="display:flex;gap:6px;align-items:center;" id="ob-sc-dots">
-              <div class="ob-sc-dot" id="ob-sc-dot-0" style="width:20px;height:6px;border-radius:3px;background:var(--gold);transition:all .3s;"></div>
-              <div class="ob-sc-dot" id="ob-sc-dot-1" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
-              <div class="ob-sc-dot" id="ob-sc-dot-2" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
-              <div class="ob-sc-dot" id="ob-sc-dot-3" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
-              <div class="ob-sc-dot" id="ob-sc-dot-4" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
-            </div>
-            <!-- Next / finish button -->
-            <button id="ob-sc-next-btn" onclick="obShowcaseNext();" style="padding:14px 28px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">
-              Next →
-            </button>
+        <!-- Fixed footer: dots + next -->
+        <div style="padding:16px 0 calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+          <div style="display:flex;gap:6px;align-items:center;" id="ob-sc-dots">
+            <div class="ob-sc-dot" id="ob-sc-dot-0" style="width:20px;height:6px;border-radius:3px;background:var(--gold);transition:all .3s;"></div>
+            <div class="ob-sc-dot" id="ob-sc-dot-1" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
+            <div class="ob-sc-dot" id="ob-sc-dot-2" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
+            <div class="ob-sc-dot" id="ob-sc-dot-3" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
+            <div class="ob-sc-dot" id="ob-sc-dot-4" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
           </div>
+          <button id="ob-sc-next-btn" onclick="obShowcaseNext();" style="padding:14px 28px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">
+            Next →
+          </button>
         </div>
 
       </div><!-- /ob-showcase -->
@@ -4500,6 +4496,9 @@ function _obScShow(idx) {
   }
   const btn = document.getElementById('ob-sc-next-btn');
   if (btn) btn.textContent = idx === _OB_SC_COUNT - 1 ? 'Get Started →' : 'Next →';
+  // Scroll viewport back to top on card change
+  const vp = document.getElementById('ob-sc-viewport');
+  if (vp) vp.scrollTop = 0;
 }
 
 function obShowcaseNext() {
