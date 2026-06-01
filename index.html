@@ -7668,7 +7668,7 @@ const EXTRA_TRACK_DEFS = {
     desc: 'Gate of Trust · Chovot HaLevavot',
     duration: 'at own pace',
     color: '#0EA5E9',
-    iconPath: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    iconPath: '<path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
   },
 };
 function _openExtraTracksMenu() {
@@ -9905,35 +9905,24 @@ async function _fetchShbUnit(unit) {
 }
 
 async function _openShaarHaBitachon() {
-  const def   = EXTRA_TRACK_DEFS.shaarHaBitachon;
-  const prog  = _shbGetProgress();
+  const prog    = _shbGetProgress();
   const unitIdx = SHB_UNITS.findIndex(u => u.id === prog.unitId);
-  const unit  = SHB_UNITS[unitIdx >= 0 ? unitIdx : 0];
+  const unit    = SHB_UNITS[unitIdx >= 0 ? unitIdx : 0];
 
-  // Update panel header
   document.getElementById('chabad-panel-title').textContent = 'שַׁעַר הַבִּטָּחוֹן';
   document.getElementById('chabad-panel-sub').textContent   = unit.label;
 
-  // Override mark button — not a daily "done", it's "Complete Chapter"
-  const markBtn   = document.getElementById('chabad-mark-btn');
-  const markLabel = document.getElementById('chabad-mark-label');
-  const markXp    = document.getElementById('chabad-mark-xp');
-  markBtn.dataset.sectionId = 'shaarHaBitachon';
-  markBtn.style.background  = def.color;
-  markBtn.style.border      = 'none';
-  markBtn.style.color       = '#fff';
-  markBtn.style.cursor      = 'pointer';
-  if (markLabel) markLabel.textContent = 'Complete ' + unit.label;
-  if (markXp)    markXp.textContent    = '';
-  markBtn.onclick = () => _shbCompleteUnit(unit, unitIdx);
+  // Hide quiz button
+  const quizBtn = document.getElementById('chabad-quiz-btn');
+  if (quizBtn) quizBtn.style.display = 'none';
 
-  await _shbRenderUnit(unit, unitIdx, prog.scrollY);
+  await _shbRenderUnit(unit, unitIdx >= 0 ? unitIdx : 0, prog.scrollY);
 }
 
 async function _shbRenderUnit(unit, unitIdx, restoreScroll = 0) {
-  const def     = EXTRA_TRACK_DEFS.shaarHaBitachon;
-  const loadEl  = document.getElementById('native-reader-loading');
-  const contEl  = document.getElementById('native-reader-content');
+  const def    = EXTRA_TRACK_DEFS.shaarHaBitachon;
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
   if (loadEl) loadEl.style.display = 'block';
   if (contEl) contEl.style.display = 'none';
 
@@ -9949,64 +9938,80 @@ async function _shbRenderUnit(unit, unitIdx, restoreScroll = 0) {
     return;
   }
 
-  const isLast   = unitIdx === SHB_UNITS.length - 1;
-  const isFirst  = unitIdx === 0;
-  const prevUnit = isFirst  ? null : SHB_UNITS[unitIdx - 1];
-  const nextUnit = isLast   ? null : SHB_UNITS[unitIdx + 1];
+  const isLast  = unitIdx === SHB_UNITS.length - 1;
+  const isFirst = unitIdx === 0;
+  const color   = def.color;
 
-  // Build nav bar
-  const navBar = `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 14px;border-bottom:1px solid var(--border);margin-bottom:18px;">
-      <button onclick="_shbNavUnit(${unitIdx - 1})" style="background:none;border:none;color:${isFirst ? 'var(--border)' : 'var(--t2)'};font-size:13px;font-weight:700;cursor:${isFirst ? 'default' : 'pointer'};font-family:inherit;padding:0;" ${isFirst ? 'disabled' : ''}>← ${prevUnit ? prevUnit.label : ''}</button>
-      <div style="text-align:center;">
-        <p style="font-size:14px;font-weight:800;color:var(--t1);">${unit.label}</p>
-        <p style="font-size:11px;color:var(--t3);">${unitIdx + 1} of ${SHB_UNITS.length}</p>
-      </div>
-      <button onclick="_shbNavUnit(${unitIdx + 1})" style="background:none;border:none;color:${isLast ? 'var(--border)' : 'var(--t2)'};font-size:13px;font-weight:700;cursor:${isLast ? 'default' : 'pointer'};font-family:inherit;padding:0;" ${isLast ? 'disabled' : ''}>${nextUnit ? nextUnit.label : ''} →</button>
-    </div>`;
+  // ── Sticky chapter nav ───────────────────────────────────────────────────
+  const navBar = '<div style="position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 0 10px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;">'
+    + '<button onclick="_shbNavUnit(' + (unitIdx-1) + ')" style="background:none;border:none;color:' + (isFirst ? 'var(--border)' : 'var(--t2)') + ';font-size:13px;font-weight:700;cursor:' + (isFirst ? 'default' : 'pointer') + ';font-family:inherit;padding:4px 0;"' + (isFirst ? ' disabled' : '') + '>← Prev</button>'
+    + '<div style="text-align:center;"><p style="font-size:13px;font-weight:800;color:var(--t1);">' + unit.label + '</p><p style="font-size:10px;color:var(--t3);">' + (unitIdx+1) + ' of ' + SHB_UNITS.length + '</p></div>'
+    + '<button onclick="_shbNavUnit(' + (unitIdx+1) + ')" style="background:none;border:none;color:' + (isLast ? 'var(--border)' : 'var(--t2)') + ';font-size:13px;font-weight:700;cursor:' + (isLast ? 'default' : 'pointer') + ';font-family:inherit;padding:4px 0;"' + (isLast ? ' disabled' : '') + '>Next →</button>'
+    + '</div>';
 
-  // Build paragraphs
-  let paras = '';
+  // ── Lang toggle ──────────────────────────────────────────────────────────
+  let langToggle = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
+  [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
+    const a = lang === l;
+    langToggle += '<button onclick="localStorage.setItem(\'chitas_lang_extra_shaarHaBitachon\',\'' + l + '\');openExtraReader(\'shaarHaBitachon\')"'
+      + ' style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
+      + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
+      + '">' + lb + '</button>';
+  });
+  langToggle += '</div>';
+
+  // ── Chapter heading ──────────────────────────────────────────────────────
+  const heading = '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'
+    + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + color + '80;margin-bottom:3px;">שַׁעַר הַבִּטָּחוֹן</p>'
+    + '<p style="font-size:17px;font-weight:800;color:' + color + ';line-height:1.3;">' + unit.label + '</p>'
+    + '</div>';
+
+  // ── Paragraphs ───────────────────────────────────────────────────────────
+  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
   const count = Math.max(data.he.length, data.en.length);
+  let v = '';
   for (let i = 0; i < count; i++) {
-    const heText = data.he[i] || '';
-    const enText = data.en[i] || '';
-    if (!heText && !enText) continue;
-
-    if (lang === 'he' || lang === 'both') {
-      paras += `<p style="font-family:'Frank Ruhl Libre',serif;font-size:18px;line-height:1.85;direction:rtl;color:var(--t1);margin-bottom:${lang === 'both' ? '6px' : '18px'};">${heText}</p>`;
-    }
-    if (lang === 'en' || lang === 'both') {
-      paras += `<p style="font-size:15px;line-height:1.75;color:var(--t${lang === 'both' ? '2' : '1'});margin-bottom:18px;">${enText}</p>`;
-    }
-    if (lang === 'both') {
-      paras += `<div style="height:10px;border-bottom:1px solid var(--border);margin-bottom:18px;opacity:.4;"></div>`;
+    const he = data.he[i] || '';
+    const en = data.en[i] || '';
+    if (!he && !en) continue;
+    if (lang === 'both' && he && en) {
+      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--border);align-items:start;">';
+      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
+      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.85;color:var(--t1);">' + he + '</p>';
+      v += '</div>';
+    } else if (lang === 'he' || !en) {
+      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
+      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.85;color:var(--t1);">' + he + '</p>';
+      v += '</div>';
+    } else {
+      v += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
+      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
+      v += '</div>';
     }
   }
 
-  // Attribution
-  const attribution = `<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">Translation: Rabbi Yosef Sebag · <a href="https://dafyomireview.com" target="_blank" style="color:var(--t3);">dafyomireview.com</a> (CC-BY)</p>`;
-
-  // Complete button at bottom
-  const completeBtn = `<button onclick="_shbCompleteUnit(SHB_UNITS[${unitIdx}], ${unitIdx})" style="width:100%;margin-top:24px;padding:15px;border-radius:14px;background:${def.color};border:none;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;">${isLast ? '✓ Complete Sha\'ar HaBitachon' : 'Complete ' + unit.label + ' →'}</button>`;
+  // ── Attribution ─────────────────────────────────────────────────────────
+  const attribution = '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid var(--border);">Translation: Rabbi Yosef Sebag · <a href="https://dafyomireview.com" target="_blank" style="color:var(--t3);">dafyomireview.com</a> (CC-BY)</p>';
 
   if (contEl) {
-    contEl.innerHTML = `<div style="padding:20px;">${navBar}${paras}${attribution}${completeBtn}</div>`;
+    contEl.innerHTML = '<div style="padding:0 20px 40px;">' + navBar + langToggle + heading + v + attribution + '</div>';
     contEl.style.display = 'block';
-    // Restore scroll position
-    if (restoreScroll > 0) {
-      requestAnimationFrame(() => { contEl.scrollTop = restoreScroll; });
-    }
-    // Save scroll on scroll
+    if (restoreScroll > 0) requestAnimationFrame(() => { contEl.scrollTop = restoreScroll; });
     contEl.onscroll = () => _shbSaveProgress(unit.id, contEl.scrollTop);
   }
   if (loadEl) loadEl.style.display = 'none';
 
-  // Update mark button
+  // ── Update top mark button (no duplicate at bottom) ───────────────────
   const markBtn   = document.getElementById('chabad-mark-btn');
   const markLabel = document.getElementById('chabad-mark-label');
-  if (markBtn && markLabel) {
-    markLabel.textContent = isLast ? 'Complete Book ✓' : 'Complete ' + unit.label;
+  const markXp    = document.getElementById('chabad-mark-xp');
+  if (markBtn) {
+    markBtn.style.background = color;
+    markBtn.style.border = 'none';
+    markBtn.style.color = '#fff';
+    markBtn.style.cursor = 'pointer';
+    if (markLabel) markLabel.textContent = isLast ? 'Complete Book' : 'Complete ' + unit.label;
+    if (markXp)    markXp.textContent    = '';
     markBtn.onclick = () => _shbCompleteUnit(unit, unitIdx);
   }
 }
