@@ -7556,6 +7556,10 @@ async function _loadExtraSubtitle(id) {
       const info = await getSotahDafForDate(d).catch(() => null);
       window._sotahDaf = info; // update cache
       el.textContent = info ? 'Daf ' + info.daf : 'Masechet Sotah';
+    } else if (id === 'shaarHaBitachon') {
+      const prog = user.shbProgress || { unitId: 'intro' };
+      const unit = SHB_UNITS.find(u => u.id === prog.unitId) || SHB_UNITS[0];
+      el.textContent = unit.label;
     }
   } catch(e) {
     const def = EXTRA_TRACK_DEFS[id];
@@ -7658,10 +7662,15 @@ const EXTRA_TRACK_DEFS = {
     color: '#8B5CF6',
     iconPath: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
   },
+  shaarHaBitachon: {
+    id: 'shaarHaBitachon',
+    label: 'Sha\'ar HaBitachon',
+    desc: 'Gate of Trust · Chovot HaLevavot',
+    duration: 'at own pace',
+    color: '#0EA5E9',
+    iconPath: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  },
 };
-
-
-// ── Extra tracks selection menu ────────────────────────────────────────────────
 function _openExtraTracksMenu() {
   const existing = document.getElementById('extra-tracks-modal');
   if (existing) existing.remove();
@@ -7816,6 +7825,7 @@ async function openExtraReader(id) {
     else if (id === 'likkuteiTorah') await _loadLikkuteiTorah();
     else if (id === 'mishnahYomi')   await _loadMishnahYomi();
     else if (id === 'likkuteiSichos') await _openLSSichaList();
+    else if (id === 'shaarHaBitachon') await _openShaarHaBitachon();
   } catch(e) {
     console.error('Extra reader error:', e);
     if (contEl) { contEl.innerHTML = '<p style="padding:20px;color:var(--t3);text-align:center;">Could not load content. Please try again.</p>'; contEl.style.display = 'block'; }
@@ -9847,7 +9857,194 @@ function _positionPopup(popup, anchor) {
 // END ZONE LS-PASUK
 // ════════════════════════════════════════════════════════════════════════════
 
-// LIKKUTEI SICHOS  (extra track — parsha-based reader via dach.dev)
+// ════════════════════════════════════════════════════════════════════════════
+// ZONE SHB · SHA'AR HABITACHON READER
+// ════════════════════════════════════════════════════════════════════════════
+
+const SHB_UNITS = [
+  { id: 'intro', label: 'Introduction',  sefaria: 'Duties_of_the_Heart,_Fourth_Treatise_on_Trust,_Introduction', paragraphs: 49 },
+  { id: '1',     label: 'Chapter 1',     sefaria: 'Duties_of_the_Heart,_Fourth_Treatise_on_Trust.1',            paragraphs: 2  },
+  { id: '2',     label: 'Chapter 2',     sefaria: 'Duties_of_the_Heart,_Fourth_Treatise_on_Trust.2',            paragraphs: 17 },
+  { id: '3',     label: 'Chapter 3',     sefaria: 'Duties_of_the_Heart,_Fourth_Treatise_on_Trust.3',            paragraphs: 64 },
+  { id: '4',     label: 'Chapter 4',     sefaria: 'Duties_of_the_Heart,_Fourth_Treatise_on_Trust.4',            paragraphs: 118},
+  { id: '5',     label: 'Chapter 5',     sefaria: 'Duties_of_the_Heart,_Fourth_Treatise_on_Trust.5',            paragraphs: 16 },
+  { id: '6',     label: 'Chapter 6',     sefaria: 'Duties_of_the_Heart,_Fourth_Treatise_on_Trust.6',            paragraphs: 16 },
+  { id: '7',     label: 'Chapter 7',     sefaria: 'Duties_of_the_Heart,_Fourth_Treatise_on_Trust.7',            paragraphs: 24 },
+];
+
+// Progress stored in user object: user.shbProgress = { unitId, scrollY, lastSeen }
+function _shbGetProgress() {
+  return user.shbProgress || { unitId: 'intro', scrollY: 0 };
+}
+
+function _shbSaveProgress(unitId, scrollY) {
+  user.shbProgress = { unitId, scrollY: Math.round(scrollY), lastSeen: Date.now() };
+  saveUser();
+}
+
+function _shbSaveScroll() {
+  const cont = document.getElementById('native-reader-content');
+  if (!cont) return;
+  const prog = _shbGetProgress();
+  _shbSaveProgress(prog.unitId, cont.scrollTop);
+}
+
+// Cache of fetched unit data
+const _shbCache = {};
+
+async function _fetchShbUnit(unit) {
+  if (_shbCache[unit.id]) return _shbCache[unit.id];
+  const url = SEFARIA + '/api/texts/' + encodeURIComponent(unit.sefaria) + '?context=0&commentary=0';
+  const d = await fetch(url).then(r => r.json());
+  const strip = s => (s || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const he  = Array.isArray(d.he)   ? d.he.map(strip)   : [strip(d.he)];
+  const en  = Array.isArray(d.text) ? d.text.map(strip) : [strip(d.text)];
+  const result = { he, en };
+  _shbCache[unit.id] = result;
+  return result;
+}
+
+async function _openShaarHaBitachon() {
+  const def   = EXTRA_TRACK_DEFS.shaarHaBitachon;
+  const prog  = _shbGetProgress();
+  const unitIdx = SHB_UNITS.findIndex(u => u.id === prog.unitId);
+  const unit  = SHB_UNITS[unitIdx >= 0 ? unitIdx : 0];
+
+  // Update panel header
+  document.getElementById('chabad-panel-title').textContent = 'שַׁעַר הַבִּטָּחוֹן';
+  document.getElementById('chabad-panel-sub').textContent   = unit.label;
+
+  // Override mark button — not a daily "done", it's "Complete Chapter"
+  const markBtn   = document.getElementById('chabad-mark-btn');
+  const markLabel = document.getElementById('chabad-mark-label');
+  const markXp    = document.getElementById('chabad-mark-xp');
+  markBtn.dataset.sectionId = 'shaarHaBitachon';
+  markBtn.style.background  = def.color;
+  markBtn.style.border      = 'none';
+  markBtn.style.color       = '#fff';
+  markBtn.style.cursor      = 'pointer';
+  if (markLabel) markLabel.textContent = 'Complete ' + unit.label;
+  if (markXp)    markXp.textContent    = '';
+  markBtn.onclick = () => _shbCompleteUnit(unit, unitIdx);
+
+  await _shbRenderUnit(unit, unitIdx, prog.scrollY);
+}
+
+async function _shbRenderUnit(unit, unitIdx, restoreScroll = 0) {
+  const def     = EXTRA_TRACK_DEFS.shaarHaBitachon;
+  const loadEl  = document.getElementById('native-reader-loading');
+  const contEl  = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
+
+  document.getElementById('chabad-panel-sub').textContent = unit.label;
+
+  const lang = localStorage.getItem('chitas_lang_extra_shaarHaBitachon') || 'both';
+  let data;
+  try {
+    data = await _fetchShbUnit(unit);
+  } catch(e) {
+    if (contEl) { contEl.innerHTML = '<p style="padding:24px;color:var(--t3);text-align:center;">Could not load. Please try again.</p>'; contEl.style.display = 'block'; }
+    if (loadEl) loadEl.style.display = 'none';
+    return;
+  }
+
+  const isLast   = unitIdx === SHB_UNITS.length - 1;
+  const isFirst  = unitIdx === 0;
+  const prevUnit = isFirst  ? null : SHB_UNITS[unitIdx - 1];
+  const nextUnit = isLast   ? null : SHB_UNITS[unitIdx + 1];
+
+  // Build nav bar
+  const navBar = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 14px;border-bottom:1px solid var(--border);margin-bottom:18px;">
+      <button onclick="_shbNavUnit(${unitIdx - 1})" style="background:none;border:none;color:${isFirst ? 'var(--border)' : 'var(--t2)'};font-size:13px;font-weight:700;cursor:${isFirst ? 'default' : 'pointer'};font-family:inherit;padding:0;" ${isFirst ? 'disabled' : ''}>← ${prevUnit ? prevUnit.label : ''}</button>
+      <div style="text-align:center;">
+        <p style="font-size:14px;font-weight:800;color:var(--t1);">${unit.label}</p>
+        <p style="font-size:11px;color:var(--t3);">${unitIdx + 1} of ${SHB_UNITS.length}</p>
+      </div>
+      <button onclick="_shbNavUnit(${unitIdx + 1})" style="background:none;border:none;color:${isLast ? 'var(--border)' : 'var(--t2)'};font-size:13px;font-weight:700;cursor:${isLast ? 'default' : 'pointer'};font-family:inherit;padding:0;" ${isLast ? 'disabled' : ''}>${nextUnit ? nextUnit.label : ''} →</button>
+    </div>`;
+
+  // Build paragraphs
+  let paras = '';
+  const count = Math.max(data.he.length, data.en.length);
+  for (let i = 0; i < count; i++) {
+    const heText = data.he[i] || '';
+    const enText = data.en[i] || '';
+    if (!heText && !enText) continue;
+
+    if (lang === 'he' || lang === 'both') {
+      paras += `<p style="font-family:'Frank Ruhl Libre',serif;font-size:18px;line-height:1.85;direction:rtl;color:var(--t1);margin-bottom:${lang === 'both' ? '6px' : '18px'};">${heText}</p>`;
+    }
+    if (lang === 'en' || lang === 'both') {
+      paras += `<p style="font-size:15px;line-height:1.75;color:var(--t${lang === 'both' ? '2' : '1'});margin-bottom:18px;">${enText}</p>`;
+    }
+    if (lang === 'both') {
+      paras += `<div style="height:10px;border-bottom:1px solid var(--border);margin-bottom:18px;opacity:.4;"></div>`;
+    }
+  }
+
+  // Attribution
+  const attribution = `<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">Translation: Rabbi Yosef Sebag · <a href="https://dafyomireview.com" target="_blank" style="color:var(--t3);">dafyomireview.com</a> (CC-BY)</p>`;
+
+  // Complete button at bottom
+  const completeBtn = `<button onclick="_shbCompleteUnit(SHB_UNITS[${unitIdx}], ${unitIdx})" style="width:100%;margin-top:24px;padding:15px;border-radius:14px;background:${def.color};border:none;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;">${isLast ? '✓ Complete Sha\'ar HaBitachon' : 'Complete ' + unit.label + ' →'}</button>`;
+
+  if (contEl) {
+    contEl.innerHTML = `<div style="padding:20px;">${navBar}${paras}${attribution}${completeBtn}</div>`;
+    contEl.style.display = 'block';
+    // Restore scroll position
+    if (restoreScroll > 0) {
+      requestAnimationFrame(() => { contEl.scrollTop = restoreScroll; });
+    }
+    // Save scroll on scroll
+    contEl.onscroll = () => _shbSaveProgress(unit.id, contEl.scrollTop);
+  }
+  if (loadEl) loadEl.style.display = 'none';
+
+  // Update mark button
+  const markBtn   = document.getElementById('chabad-mark-btn');
+  const markLabel = document.getElementById('chabad-mark-label');
+  if (markBtn && markLabel) {
+    markLabel.textContent = isLast ? 'Complete Book ✓' : 'Complete ' + unit.label;
+    markBtn.onclick = () => _shbCompleteUnit(unit, unitIdx);
+  }
+}
+
+async function _shbNavUnit(newIdx) {
+  if (newIdx < 0 || newIdx >= SHB_UNITS.length) return;
+  _shbSaveScroll(); // save current position before navigating
+  const unit = SHB_UNITS[newIdx];
+  _shbSaveProgress(unit.id, 0); // reset scroll for new unit
+  await _shbRenderUnit(unit, newIdx, 0);
+}
+
+function _shbCompleteUnit(unit, unitIdx) {
+  const isLast = unitIdx === SHB_UNITS.length - 1;
+  if (isLast) {
+    // Completed the whole book!
+    _shbSaveProgress('intro', 0); // reset to beginning
+    if (!user.shbCompleted) user.shbCompleted = 0;
+    user.shbCompleted++;
+    saveUser();
+    fire('🌟 Sha\'ar HaBitachon complete!', 'gold');
+    closeChabadPanel();
+    return;
+  }
+  // Advance to next unit
+  const nextUnit = SHB_UNITS[unitIdx + 1];
+  _shbSaveProgress(nextUnit.id, 0);
+  _shbRenderUnit(nextUnit, unitIdx + 1, 0);
+  // Scroll to top
+  const contEl = document.getElementById('native-reader-content');
+  if (contEl) contEl.scrollTop = 0;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// END ZONE SHB
+// ════════════════════════════════════════════════════════════════════════════
+
+// LIKKUTEI SICHOS
 // ════════════════════════════════════════════════════════════════════
 
 // ── Parsha name → dach.dev tocByParsha key(s) ─────────────────────────────────
