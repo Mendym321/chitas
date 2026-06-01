@@ -9895,7 +9895,7 @@ const _shbCache = {};
 async function _fetchShbUnit(unit) {
   if (_shbCache[unit.id]) return _shbCache[unit.id];
   const url = SEFARIA + '/api/texts/' + encodeURIComponent(unit.sefaria) + '?context=0&commentary=0';
-  const d = await fetch(url).then(r => r.json());
+  const d   = await fetch(url).then(r => r.json());
   const strip = s => (s || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
   const he  = Array.isArray(d.he)   ? d.he.map(strip)   : [strip(d.he)];
   const en  = Array.isArray(d.text) ? d.text.map(strip) : [strip(d.text)];
@@ -9994,7 +9994,7 @@ async function _shbRenderUnit(unit, unitIdx, restoreScroll = 0) {
   const attribution = '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid var(--border);">Translation: Rabbi Yosef Sebag · <a href="https://dafyomireview.com" target="_blank" style="color:var(--t3);">dafyomireview.com</a> (CC-BY)</p>';
 
   if (contEl) {
-    contEl.innerHTML = '<div style="padding:0 20px 40px;">' + navBar + langToggle + heading + v + attribution + '</div>';
+    contEl.innerHTML = navBar + langToggle + heading + v + attribution;
     contEl.style.display = 'block';
     if (restoreScroll > 0) requestAnimationFrame(() => { contEl.scrollTop = restoreScroll; });
     contEl.onscroll = () => _shbSaveProgress(unit.id, contEl.scrollTop);
