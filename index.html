@@ -10030,7 +10030,8 @@ async function _shbLoadSummary(unitId, elId, color) {
     const { getApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
     const _db  = getFirestore(getApp('[DEFAULT]'));
-    const snap = await getDoc(doc(_db, 'shbSummaries', unitId));
+    const docId = unitId === 'intro' ? 'intro' : 'ch' + unitId;
+    const snap = await getDoc(doc(_db, 'shbSummaries', docId));
     if (!snap.exists()) return;
     const { title, summary, points } = snap.data();
     if (!summary && !points?.length) return;
