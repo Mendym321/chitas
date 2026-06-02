@@ -9990,14 +9990,20 @@ async function _shbRenderUnit(unit, unitIdx, restoreScroll = 0) {
     }
   }
 
-  // ── Attribution ─────────────────────────────────────────────────────────
+  // ── Attribution + Summary ────────────────────────────────────────────────
   const attribution = '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid var(--border);">Translation: Rabbi Yosef Sebag · <a href="https://dafyomireview.com" target="_blank" style="color:var(--t3);">dafyomireview.com</a> (CC-BY)</p>';
 
+  // Summary card — fetched from Firebase, shown collapsed by default
+  const summaryId = 'shb-summary-' + unit.id;
+  const summaryPlaceholder = '<div id="' + summaryId + '" style="margin-top:20px;"></div>';
+
   if (contEl) {
-    contEl.innerHTML = navBar + langToggle + heading + v + attribution;
+    contEl.innerHTML = navBar + langToggle + heading + v + attribution + summaryPlaceholder;
     contEl.style.display = 'block';
     if (restoreScroll > 0) requestAnimationFrame(() => { contEl.scrollTop = restoreScroll; });
     contEl.onscroll = () => _shbSaveProgress(unit.id, contEl.scrollTop);
+    // Fetch summary async — don't block render
+    _shbLoadSummary(unit.id, summaryId, color);
   }
   if (loadEl) loadEl.style.display = 'none';
 
@@ -10015,6 +10021,46 @@ async function _shbRenderUnit(unit, unitIdx, restoreScroll = 0) {
     markBtn.onclick = () => _shbCompleteUnit(unit, unitIdx);
   }
 }
+
+async function _shbLoadSummary(unitId, elId, color) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+
+  try {
+    const { getApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const _db  = getFirestore(getApp('[DEFAULT]'));
+    const snap = await getDoc(doc(_db, 'shbSummaries', unitId));
+    if (!snap.exists()) return;
+    const { title, summary, points } = snap.data();
+    if (!summary && !points?.length) return;
+
+    // Build collapsible summary card
+    const pointsHtml = (points || []).map(p =>
+      '<li style="margin-bottom:8px;line-height:1.55;color:var(--t2);font-size:13px;">' + p + '</li>'
+    ).join('');
+
+    el.innerHTML =
+      '<div style="margin-top:20px;background:' + color + '12;border:1px solid ' + color + '30;border-radius:14px;overflow:hidden;">'
+      + '<button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.shb-chev\').style.transform=this.nextElementSibling.style.display===\'none\'?\'rotate(0deg)\':\'rotate(180deg)\'"'
+      + ' style="width:100%;padding:14px 16px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;">'
+      + '<div style="display:flex;align-items:center;gap:10px;">'
+      + '<div style="width:28px;height:28px;border-radius:8px;background:' + color + '22;display:flex;align-items:center;justify-content:center;">'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>'
+      + '</div>'
+      + '<span style="font-size:13px;font-weight:800;color:' + color + ';">Chapter Summary</span>'
+      + '</div>'
+      + '<svg class="shb-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" style="transition:transform .2s;transform:rotate(0deg);flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>'
+      + '</button>'
+      // Collapsed by default — user taps to reveal
+      + '<div style="display:none;padding:0 16px 16px;">'
+      + (summary ? '<p style="font-size:13px;line-height:1.6;color:var(--t2);margin-bottom:14px;">' + summary + '</p>' : '')
+      + (pointsHtml ? '<ul style="margin:0;padding-left:18px;">' + pointsHtml + '</ul>' : '')
+      + '</div>'
+      + '</div>';
+  } catch(e) {}
+}
+
 
 async function _shbNavUnit(newIdx) {
   if (newIdx < 0 || newIdx >= SHB_UNITS.length) return;
