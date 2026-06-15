@@ -2598,7 +2598,7 @@ async function fetchHebcal() {
   const tzHH = String(Math.floor(Math.abs(tzOffset)/60)).padStart(2,'0');
   const tzMM = String(Math.abs(tzOffset)%60).padStart(2,'0');
   const tzParam = encodeURIComponent('UTC' + tzSign + tzHH + ':' + tzMM);
-  const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=${fmt(sun)}&end=${fmt(sat)}&lg=s&tzid=${tzParam}`;
+  const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=${fmt(sun)}&end=${fmt(sat)}&lg=s&i=off&tzid=America/New_York`;
   const r = await fetch(url); if(!r.ok) throw new Error('Hebcal');
   return r.json();
 }
@@ -2637,42 +2637,41 @@ const PARSHA_SCHEDULE = {
   "2026-04-11":"Shemini","2026-04-18":"Tazria-Metzora",
   "2026-04-25":"Acharei Mot-Kedoshim","2026-05-02":"Emor",
   "2026-05-09":"Behar-Bechukotai","2026-05-16":"Bamidbar","2026-05-23":"Nasso",
-  "2026-05-30":"Beha'alotcha","2026-06-06":"Shelach","2026-06-13":"Korach",
-  "2026-06-20":"Chukat","2026-06-27":"Balak","2026-07-04":"Pinchas",
+  "2026-05-30":"Nasso","2026-06-06":"Beha'alotcha","2026-06-13":"Shelach","2026-06-20":"Korach",
+  "2026-06-27":"Chukat-Balak","2026-07-04":"Pinchas",
   "2026-07-11":"Matot-Masei","2026-07-18":"Devarim","2026-07-25":"Vaetchanan",
   "2026-08-01":"Eikev","2026-08-08":"Re'eh","2026-08-15":"Shoftim",
   "2026-08-22":"Ki Teitzei","2026-08-29":"Ki Tavo","2026-09-05":"Nitzavim-Vayeilech",
-  "2026-09-12":"Haazinu","2026-09-19":"Vezot Haberakhah",
+  "2026-09-19":"Haazinu",
   // 5787
-  "2026-09-26":"Bereishit","2026-10-03":"Noach","2026-10-10":"Lech Lecha",
-  "2026-10-17":"Vayera","2026-10-24":"Chayei Sara","2026-10-31":"Toldot",
-  "2026-11-07":"Vayetzei","2026-11-14":"Vayishlach","2026-11-21":"Vayeshev",
-  "2026-11-28":"Miketz","2026-12-05":"Vayigash","2026-12-12":"Vayechi",
-  "2026-12-19":"Shemot","2026-12-26":"Vaera","2027-01-02":"Bo",
-  "2027-01-09":"Beshalach","2027-01-16":"Yitro","2027-01-23":"Mishpatim",
-  "2027-01-30":"Terumah","2027-02-06":"Tetzaveh","2027-02-13":"Ki Tisa",
-  "2027-02-20":"Vayakhel","2027-02-27":"Pekudei","2027-03-06":"Vayikra",
-  "2027-03-13":"Tzav","2027-03-20":"Shemini","2027-03-27":"Tazria",
-  "2027-04-03":"Metzora","2027-04-17":"Acharei Mot","2027-04-24":"Kedoshim",
-  "2027-05-01":"Emor","2027-05-08":"Behar","2027-05-15":"Bechukotai",
-  "2027-05-22":"Bamidbar","2027-05-29":"Nasso","2027-06-05":"Beha'alotcha",
-  "2027-06-12":"Shelach","2027-06-19":"Korach","2027-06-26":"Chukat-Balak",
-  "2027-07-03":"Pinchas","2027-07-10":"Matot-Masei","2027-07-17":"Devarim",
-  "2027-07-24":"Vaetchanan","2027-07-31":"Eikev","2027-08-07":"Re'eh",
-  "2027-08-14":"Shoftim","2027-08-21":"Ki Teitzei","2027-08-28":"Ki Tavo",
-  "2027-09-04":"Nitzavim","2027-09-11":"Vayeilech","2027-09-18":"Haazinu",
-  "2027-09-25":"Vezot Haberakhah",
+  "2026-10-10":"Bereishit","2026-10-17":"Noach","2026-10-24":"Lech Lecha",
+  "2026-10-31":"Vayera","2026-11-07":"Chayei Sara","2026-11-14":"Toldot",
+  "2026-11-21":"Vayetzei","2026-11-28":"Vayishlach","2026-12-05":"Vayeshev",
+  "2026-12-12":"Miketz","2026-12-19":"Vayigash","2026-12-26":"Vayechi",
+  "2027-01-02":"Shemot","2027-01-09":"Vaera","2027-01-16":"Bo",
+  "2027-01-23":"Beshalach","2027-01-30":"Yitro","2027-02-06":"Mishpatim",
+  "2027-02-13":"Terumah","2027-02-20":"Tetzaveh","2027-02-27":"Ki Tisa",
+  "2027-03-06":"Vayakhel","2027-03-13":"Pekudei","2027-03-20":"Vayikra",
+  "2027-03-27":"Tzav","2027-04-03":"Shemini","2027-04-10":"Tazria",
+  "2027-04-17":"Metzora","2027-05-01":"Acharei Mot","2027-05-08":"Kedoshim",
+  "2027-05-15":"Emor","2027-05-22":"Behar","2027-05-29":"Bechukotai",
+  "2027-06-05":"Bamidbar","2027-06-19":"Nasso","2027-06-26":"Beha'alotcha",
+  "2027-07-03":"Shelach","2027-07-10":"Korach","2027-07-17":"Chukat-Balak",
+  "2027-07-24":"Pinchas","2027-07-31":"Matot-Masei","2027-08-07":"Devarim",
+  "2027-08-14":"Vaetchanan","2027-08-21":"Eikev","2027-08-28":"Re'eh",
+  "2027-09-04":"Shoftim","2027-09-11":"Ki Teitzei","2027-09-18":"Ki Tavo",
+  "2027-09-25":"Nitzavim-Vayeilech",
 };
 
 // Given any date, return the parsha name for that week's Chumash
 function getParshaForDate(d) {
-  // Find the upcoming Shabbos (Saturday)
+  // Find the upcoming Shabbos (Saturday) — Chitas reads toward next Shabbos
   const dow = d.getDay(); // 0=Sun, 6=Sat
   const daysUntilSat = dow === 6 ? 0 : 6 - dow;
   const shabbos = new Date(d);
   shabbos.setDate(d.getDate() + daysUntilSat);
-  const iso = shabbos.getFullYear() + '-' 
-    + String(shabbos.getMonth()+1).padStart(2,'0') + '-' 
+  const iso = shabbos.getFullYear() + '-'
+    + String(shabbos.getMonth()+1).padStart(2,'0') + '-'
     + String(shabbos.getDate()).padStart(2,'0');
   return PARSHA_SCHEDULE[iso] || null;
 }
@@ -3238,7 +3237,7 @@ async function rebuildScheduleForOffset() {
     const rTzOffset = -d.getTimezoneOffset();
     const rTzSign = rTzOffset >= 0 ? '+' : '-';
     const rTzParam = encodeURIComponent('UTC' + rTzSign + String(Math.floor(Math.abs(rTzOffset)/60)).padStart(2,'0') + ':' + String(Math.abs(rTzOffset)%60).padStart(2,'0'));
-    const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s&tzid=' + rTzParam);
+    const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s&i=off&tzid=America/New_York');
     const cal = await r.json();
     p = parseHebcalForDate(cal, d);
   } catch(e) { p = null; }
