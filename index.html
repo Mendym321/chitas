@@ -7820,7 +7820,7 @@ async function openExtraReader(id) {
   try {
     if (id === 'dafYomi')            await _loadDafYomi();
     else if (id === 'sotah')         await _loadSotah();
-    else if (id === 'hayomYom')      _loadHayomYomIframe();
+    else if (id === 'hayomYom')      await _loadHayomYomNative(false);
     else if (id === 'likkuteiTorah') await _loadLikkuteiTorah();
     else if (id === 'mishnahYomi')   await _loadMishnahYomi();
     else if (id === 'likkuteiSichos') await _openLSSichaList();
@@ -8075,30 +8075,235 @@ function _toggleDafComm(val) {
 }
 
 
-function _loadHayomYomIframe() {
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const iframeEl = document.getElementById('chabad-iframe');
-  const nativeEl = document.getElementById('native-reader');
-  const loadEl   = document.getElementById('native-reader-loading');
-  const contEl   = document.getElementById('native-reader-content');
-  const progWrap = document.getElementById('reader-progress-wrap');
+// ── Hayom Yom key builder ─────────────────────────────────────────────────────
+// Converts Hebcal hm + hd → Firestore doc key(s)
+// Returns an array — usually 1 key, but 2 for non-leap Adar (show both entries)
+function _hayomYomKeys(hm, hd) {
+  const day = Number(hd);
 
-  // Switch to iframe mode
-  if (nativeEl) nativeEl.style.display = 'none';
-  if (loadEl)   loadEl.style.display = 'none';
-  if (contEl)   contEl.style.display = 'none';
-  if (progWrap) progWrap.style.display = 'none';
+  // Chai Elul — Elul 18 has its own dedicated entry
+  if (hm === 'Elul' && day === 18) return ['Chai_18_Elul'];
 
-  // Chabad.org Hayom Yom URL uses Gregorian date
-  const tdate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
-  const url = 'https://www.chabad.org/dailystudy/hayomyom.asp?tdate=' + tdate;
+  // Map Hebcal month names → Firestore key prefixes
+  // Hebcal returns: Nisan, Iyyar, Sivan, Tamuz, Av, Elul, Tishrei,
+  //                 Cheshvan, Kislev, Tevet, Sh'vat, Adar / Adar I / Adar II
+  const NORM = {
+    'Tishrei':  'Tishrei',
+    'Cheshvan': 'Cheshvan',
+    'Kislev':   'Kislev',
+    'Tevet':    'Tevet',
+    "Sh'vat":   'Shvat',   // Hebcal includes the apostrophe
+    'Shvat':    'Shvat',
+    'Nisan':    'Nissan',  // Hebcal=Nisan, JSON=Nissan (double-n)
+    'Iyyar':    'Iyyar',
+    'Sivan':    'Sivan',
+    'Tamuz':    'Tamuz',
+    'Av':       'Av',
+    'Elul':     'Elul',
+    // Leap year — Hebcal distinguishes Adar I and Adar II
+    'Adar I':   'Adar_I',
+    'Adar II':  'Adar_II',
+    // Non-leap year — Hebcal returns plain "Adar"
+    // Per user requirement: serve BOTH Adar I and Adar II entries on each day
+    'Adar':     null,      // handled specially below
+  };
 
-  document.getElementById('chabad-panel-sub').textContent = 'Hayom Yom';
-  document.getElementById('chabad-panel-extlink').href = url;
-  document.getElementById('chabad-panel-extlink').style.display = 'flex';
+  // Non-leap Adar: return both entries so reader can show them stacked
+  if (hm === 'Adar') {
+    return ['Adar_I_' + day, 'Adar_II_' + day];
+  }
 
-  iframeEl.style.display = 'flex';
-  iframeEl.src = url;
+  const prefix = NORM[hm];
+  if (!prefix) {
+    console.warn('_hayomYomKeys: unknown month', hm);
+    return [];
+  }
+  return [prefix + '_' + day];
+}
+
+// ── Native Hayom Yom reader ───────────────────────────────────────────────────
+async function _loadHayomYomNative(silent) {
+  const def   = EXTRA_TRACK_DEFS.hayomYom;
+  const COLOR = def ? def.color : '#B85C38';
+  const HE_FONT = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
+
+  // DOM refs (only needed when not silent)
+  const loadEl  = document.getElementById('native-reader-loading');
+  const contEl  = document.getElementById('native-reader-content');
+  const subEl   = document.getElementById('chabad-panel-sub');
+  const extEl   = document.getElementById('chabad-panel-extlink');
+  const iframeEl= document.getElementById('chabad-iframe');
+
+  if (!silent) {
+    if (iframeEl) { iframeEl.style.display = 'none'; iframeEl.src = ''; }
+    if (subEl)    subEl.textContent = 'Hayom Yom';
+    if (loadEl)   { loadEl.style.display = 'block'; }
+    if (contEl)   { contEl.style.display = 'none'; }
+    // External link — Chabad.org fallback
+    const d0 = new Date(); d0.setDate(d0.getDate() + (dayOffset || 0));
+    const tdate = (d0.getMonth()+1) + '/' + d0.getDate() + '/' + d0.getFullYear();
+    if (extEl) {
+      extEl.href = 'https://www.chabad.org/dailystudy/hayomyom.asp?tdate=' + tdate;
+      extEl.style.display = 'flex';
+    }
+    // Inject lang toggle into reader settings
+    _hayomYomInjectLangToggle();
+  }
+
+  // ── Determine Hebrew date ──────────────────────────────────────────────────
+  let hm, hd;
+  try {
+    const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+    const url = 'https://www.hebcal.com/converter?cfg=json'
+      + '&gy=' + d.getFullYear()
+      + '&gm=' + (d.getMonth() + 1)
+      + '&gd=' + d.getDate()
+      + '&g2h=1';
+    const resp = await fetch(url);
+    const heb  = await resp.json();
+    hm = heb.hm;
+    hd = heb.hd;
+  } catch(e) {
+    if (!silent) _hayomYomError('Could not determine Hebrew date.');
+    return;
+  }
+
+  // ── Build Firestore key(s) ─────────────────────────────────────────────────
+  const keys = _hayomYomKeys(hm, hd);
+  if (!keys.length) {
+    if (!silent) _hayomYomError('Unknown Hebrew month: ' + hm);
+    return;
+  }
+
+  // ── Fetch from Firestore ───────────────────────────────────────────────────
+  let docs = [];
+  try {
+    const { doc: fsDoc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    for (const key of keys) {
+      const snap = await getDoc(fsDoc(db, 'hayomYom', key));
+      if (snap.exists()) docs.push({ key, ...snap.data() });
+    }
+  } catch(e) {
+    if (!silent) _hayomYomError('Could not load Hayom Yom.');
+    return;
+  }
+
+  if (!docs.length) {
+    if (!silent) _hayomYomError('No entry found for ' + hm + ' ' + hd + '.');
+    return;
+  }
+
+  if (silent) return; // prefetch only — skip DOM writes
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  const lang = window._hayomYomLang || localStorage.getItem('hayomYomLang') || 'both';
+  const isChaiElul = keys[0] === 'Chai_18_Elul';
+  const isNonLeapAdar = hm === 'Adar'; // showing both Adar I + II
+
+  let html = '<div style="max-width:680px;margin:0 auto;padding-bottom:40px;">';
+
+  // Date heading
+  const dateLabel = isChaiElul ? 'Chai Elul · ' + hd + ' ' + hm
+                                : hd + ' ' + hm;
+  html += '<div style="margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);">';
+  html += '<p style="font-size:12px;font-weight:700;color:' + COLOR + ';letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;">' + dateLabel + '</p>';
+  html += '<p style="font-size:22px;font-weight:900;color:var(--t1);font-family:\'Playfair Display\',serif;letter-spacing:-.3px;">Hayom Yom</p>';
+  html += '</div>';
+
+  // Render each doc (1 normally, 2 for non-leap Adar)
+  docs.forEach((data, idx) => {
+    if (isNonLeapAdar && docs.length === 2) {
+      const label = idx === 0 ? 'Adar I' : 'Adar II';
+      html += '<p style="font-size:11px;font-weight:700;color:' + COLOR + ';letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">' + label + '</p>';
+    }
+
+    // Hebrew block
+    if (lang === 'he' || lang === 'both') {
+      if (data.hebrew && data.hebrew.trim()) {
+        html += '<p class="rf-body" style="'
+          + 'direction:rtl;text-align:justify;text-align-last:right;'
+          + 'font-family:' + HE_FONT + ';'
+          + '--rf-sz:21px;--rf-lh:2.0;'
+          + 'color:var(--t1);'
+          + (lang === 'both' ? 'margin-bottom:16px;' : 'margin-bottom:0;')
+          + '">'
+          + data.hebrew.replace(/\n/g, '<br>')
+          + '</p>';
+      }
+    }
+
+    // Divider between Hebrew and English when showing both
+    if (lang === 'both' && data.hebrew && data.hebrew.trim() && data.english && data.english.trim()) {
+      html += '<div style="height:1px;background:var(--border);margin:4px 0 18px;"></div>';
+    }
+
+    // English block
+    if (lang === 'en' || lang === 'both') {
+      if (data.english && data.english.trim()) {
+        html += '<p class="rf-body" style="'
+          + '--rf-sz:15px;--rf-lh:1.82;'
+          + 'color:var(--t1);text-align:justify;'
+          + '">'
+          + data.english.replace(/\n/g, '<br>')
+          + '</p>';
+      }
+    }
+
+    // Separator between the two Adar entries
+    if (isNonLeapAdar && idx === 0 && docs.length === 2) {
+      html += '<div style="height:1px;background:var(--border);margin:24px 0;"></div>';
+    }
+  });
+
+  html += '</div>';
+
+  if (loadEl) loadEl.style.display = 'none';
+  if (contEl) { contEl.innerHTML = html; contEl.style.display = 'block'; }
+
+  _restoreScrollPos('extra_hayomYom');
+}
+
+// ── Lang toggle (Hebrew / Both / English) ─────────────────────────────────────
+function _hayomYomInjectLangToggle() {
+  const opts = document.getElementById('rs-section-opts');
+  if (!opts) return;
+  const lang = window._hayomYomLang || localStorage.getItem('hayomYomLang') || 'both';
+  const btn = (val, label) => {
+    const active = val === lang;
+    return '<button onclick="_hayomYomSetLang(\'' + val + '\')" style="'
+      + 'flex:1;padding:7px 4px;border-radius:7px;border:none;cursor:pointer;'
+      + 'font-size:13px;font-weight:' + (active ? '700' : '600') + ';font-family:inherit;'
+      + 'background:' + (active ? 'var(--card)' : 'transparent') + ';'
+      + 'color:' + (active ? 'var(--t1)' : 'var(--t3)') + ';'
+      + 'transition:all .15s;">' + label + '</button>';
+  };
+  opts.innerHTML = '<div>'
+    + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Language</p>'
+    + '<div style="display:flex;gap:0;background:var(--surface);border-radius:10px;padding:3px;">'
+    + btn('he', 'Hebrew') + btn('both', 'Both') + btn('en', 'English')
+    + '</div></div>';
+}
+
+window._hayomYomSetLang = function(lang) {
+  window._hayomYomLang = lang;
+  try { localStorage.setItem('hayomYomLang', lang); } catch(e) {}
+  _hayomYomInjectLangToggle();
+  _loadHayomYomNative(false);
+};
+
+// ── Error state ────────────────────────────────────────────────────────────────
+function _hayomYomError(msg) {
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'none';
+  if (contEl) {
+    contEl.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--t3);">'
+      + '<p style="font-size:32px;margin-bottom:12px;">📖</p>'
+      + '<p style="font-size:15px;">' + msg + '</p>'
+      + '<p style="font-size:13px;margin-top:8px;">Try the <a href="#" onclick="document.getElementById(\'chabad-panel-extlink\').click()" style="color:var(--accent);">Chabad.org version</a></p>'
+      + '</div>';
+    contEl.style.display = 'block';
+  }
 }
 
 async function _loadLikkuteiTorah() {
