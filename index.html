@@ -8205,7 +8205,7 @@ async function _loadHayomYomNative(silent) {
 
   if (loadEl) loadEl.style.display = 'none';
   if (contEl) { contEl.innerHTML = html; contEl.style.display = 'block'; }
-  _restoreScrollPos('extra_hayomYom');
+  _restoreScrollAfterRender('extra_hayomYom', _getSavedScrollPos('extra_hayomYom'));
 }
 
 // ── Lang toggle ─────────────────────────────────────────────────────────────
