@@ -702,6 +702,11 @@ onAuthStateChanged(auth, user => {
   window._fb._authReady = true;
   window._fb._onAuthReady?.(user);
 });
+
+// Expose Firestore helpers for plain <script> functions (e.g. _loadHayomYomNative)
+window._fsDb    = db;
+window._fsDoc   = doc;
+window._fsGetDoc = getDoc;
 </script>
 </head>
 <body>
@@ -4826,7 +4831,7 @@ function onReaderScroll() {
     const curScrollTop = reader.scrollTop;
     if (curScrollTop < 80) return; // don't save near-top positions
 
-    // LS uses its own per-sicha key (handled elsewhere)
+    // LS uses its own per-sicha key
     if (sid === 'likkuteiSichos' && window._lsInReader) {
       const it = window._lsSichos && window._lsSichos[window._lsCurIdx];
       if (it) { try { localStorage.setItem('ls_s_'+it.page+'_'+it.vol, String(Math.round(curScrollTop))); } catch {} }
@@ -4835,7 +4840,7 @@ function onReaderScroll() {
     // SHB uses its own per-unit key (handled in _shbSaveProgress)
     if (sid === 'shaarHaBitachon') return;
 
-    // Core daily section? save as-is. Extra track? prefix with 'extra_'
+    // Core daily sections save as-is; extra tracks get 'extra_' prefix
     if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
       _saveScrollPos(sid, curScrollTop);
     } else if (typeof EXTRA_TRACK_DEFS !== 'undefined' && EXTRA_TRACK_DEFS[sid]) {
@@ -4849,15 +4854,10 @@ function onReaderScroll() {
 // the restore fires AFTER the new content has full height.
 window._pendingScrollRestore = {}; // { sectionId: targetPixels }
 
-// The KEY used for storage encodes CONTENT IDENTITY, not just section name.
-// Daily sections (chumash, tanya, tehillim, rambam) change content each day,
-// so position must be scoped to the date — otherwise yesterday's deep position
-// gets applied to today's different (possibly shorter) content.
-// Extra tracks that also change daily follow the same rule (mishnahYomi, dafYomi, sotah, sefer, hayomYom).
-// Extra tracks that don't (likkuteiTorah = weekly, shaarHaBitachon = self-paced) get their own scopes.
+// Keys are date-scoped so today's position doesn't collide with yesterday's
+// (yesterday's Chumash has different content than today's, restoring a deep
+// scroll position into a shorter piece of content is nonsensical).
 function _scrollKey(sectionId) {
-  const today = dateISO(new Date());
-  // Weekly reset
   if (sectionId === 'extra_likkuteiTorah') {
     const d = new Date();
     const day = d.getDay();
@@ -4865,8 +4865,7 @@ function _scrollKey(sectionId) {
     monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
     return 'scroll_extra_likkuteiTorah_week_' + monday.toISOString().slice(0, 10);
   }
-  // Everything else: date-scoped so today's position doesn't collide with yesterday's
-  return 'scroll_' + sectionId + '_' + today;
+  return 'scroll_' + sectionId + '_' + dateISO(new Date());
 }
 
 function _saveScrollPos(sectionId, pos) {
@@ -4883,7 +4882,6 @@ function _getSavedScrollPos(sectionId) {
   } catch(e) { return 0; }
 }
 
-// Prune old scroll_* keys — keep last ~20 to avoid unbounded localStorage growth
 function _pruneScrollKeys() {
   try {
     const keys = [];
@@ -6723,7 +6721,7 @@ function closeChabadPanel() {
     }
   }
 
-  // Clear active section — nothing owns the reader until the next open call sets it
+  // Clear active section — nothing owns the reader until the next open sets it
   window._readerActiveSid = null;
   window._pendingScrollRestore = {};
 
@@ -6733,7 +6731,7 @@ function closeChabadPanel() {
   if (fontCtrl) fontCtrl.style.display = 'none';
   closeReaderSettings();
   markDoneUnlocked = false;
-  // Reset scrollTop to 0 on the (now hidden) reader so a section switch starts fresh
+  // Reset scrollTop on the (now hidden) reader so a section switch starts fresh
   // and cannot leak a stale scroll value into the new section's save handler.
   if (reader) reader.scrollTop = 0;
 }
@@ -7859,7 +7857,7 @@ async function openExtraReader(id) {
   try {
     if (id === 'dafYomi')            await _loadDafYomi();
     else if (id === 'sotah')         await _loadSotah();
-    else if (id === 'hayomYom')      _loadHayomYomIframe();
+    else if (id === 'hayomYom')      await _loadHayomYomNative(false);
     else if (id === 'likkuteiTorah') await _loadLikkuteiTorah();
     else if (id === 'mishnahYomi')   await _loadMishnahYomi();
     else if (id === 'likkuteiSichos') await _openLSSichaList();
@@ -8114,111 +8112,164 @@ function _toggleDafComm(val) {
 }
 
 
-async function _loadHayomYomIframe() {
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+// ── Hayom Yom key builder ────────────────────────────────────────────────────
+// Returns array of Firestore doc keys — 1 normally, 2 for non-leap Adar
+function _hayomYomKeys(hm, hd) {
+  const day = Number(hd);
+  // Chai Elul — Elul 18 has its own dedicated entry
+  if (hm === 'Elul' && day === 18) return ['Chai_18_Elul'];
+  // Hebcal month name → Firestore key prefix
+  // Hebcal returns: Nisan, Iyyar, Sivan, Tamuz, Av, Elul, Tishrei,
+  //                 Cheshvan, Kislev, Tevet, Sh'vat, Adar / Adar I / Adar II
+  const NORM = {
+    'Tishrei':'Tishrei','Cheshvan':'Cheshvan','Kislev':'Kislev','Tevet':'Tevet',
+    "Sh'vat":'Shvat','Shvat':'Shvat',
+    'Nisan':'Nissan',   // Hebcal=Nisan, Firestore=Nissan (double-n)
+    'Iyyar':'Iyyar','Sivan':'Sivan','Tamuz':'Tamuz','Av':'Av','Elul':'Elul',
+    'Adar I':'Adar_I','Adar II':'Adar_II',
+    'Adar':null,        // non-leap — handled below
+  };
+  // Non-leap year: Hebcal returns "Adar" → show BOTH Adar I and Adar II entries
+  if (hm === 'Adar') return ['Adar_I_' + day, 'Adar_II_' + day];
+  const prefix = NORM[hm];
+  if (!prefix) { console.warn('_hayomYomKeys: unknown month', hm); return []; }
+  return [prefix + '_' + day];
+}
+
+// ── Native Hayom Yom reader ───────────────────────────────────────────────────
+// Uses window._fsDb / _fsDoc / _fsGetDoc exposed from the module script
+async function _loadHayomYomNative(silent) {
   const def    = EXTRA_TRACK_DEFS.hayomYom;
-  const loadEl = document.getElementById('native-reader-loading');
-  const contEl = document.getElementById('native-reader-content');
-  const nativeEl = document.getElementById('native-reader');
+  const COLOR  = def ? def.color : '#B85C38';
+  const HE_FONT = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
+  const fsDb   = window._fsDb;
+  const fsDoc  = window._fsDoc;
+  const fsGet  = window._fsGetDoc;
+
+  const loadEl   = document.getElementById('native-reader-loading');
+  const contEl   = document.getElementById('native-reader-content');
+  const subEl    = document.getElementById('chabad-panel-sub');
+  const extEl    = document.getElementById('chabad-panel-extlink');
   const iframeEl = document.getElementById('chabad-iframe');
-  const progWrap = document.getElementById('reader-progress-wrap');
 
-  // Use native reader, not iframe
-  if (iframeEl) iframeEl.style.display = 'none';
-  if (nativeEl) nativeEl.style.display = 'flex';
-  if (loadEl)   loadEl.style.display = 'block';
-  if (contEl)   contEl.style.display = 'none';
-  if (progWrap) progWrap.style.display = 'none';
+  if (!silent) {
+    if (iframeEl) { iframeEl.style.display = 'none'; iframeEl.src = ''; }
+    if (subEl)    subEl.textContent = 'Hayom Yom';
+    if (loadEl)   loadEl.style.display = 'block';
+    if (contEl)   contEl.style.display = 'none';
+    const d0 = new Date(); d0.setDate(d0.getDate() + (dayOffset || 0));
+    const tdate = (d0.getMonth()+1) + '/' + d0.getDate() + '/' + d0.getFullYear();
+    if (extEl) {
+      extEl.href = 'https://www.chabad.org/dailystudy/hayomyom.asp?tdate=' + tdate;
+      extEl.style.display = 'flex';
+    }
+    _hayomYomInjectLangToggle();
+  }
 
-  const extUrl = 'https://www.chabad.org/dailystudy/hayomyom.asp?tdate='
-    + (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
-  document.getElementById('chabad-panel-extlink').href = extUrl;
-  document.getElementById('chabad-panel-extlink').style.display = 'flex';
-
-  // Get Hebrew date from Hebcal
-  let hebrewDate = null;
+  // ── Get Hebrew date ──────────────────────────────────────────────────────
+  let hm, hd;
   try {
-    const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    const hcal = await fetch('https://www.hebcal.com/converter?cfg=json&date=' + iso + '&g2h=1&strict=1').then(r=>r.json());
-    hebrewDate = { month: hcal.hm, day: hcal.hd };
-  } catch(e) {}
-
-  if (!hebrewDate) {
-    if (contEl) { contEl.innerHTML = '<p style="padding:24px;text-align:center;color:var(--t3);">Could not determine Hebrew date.</p>'; contEl.style.display = 'block'; }
-    if (loadEl) loadEl.style.display = 'none';
+    const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+    const url = 'https://www.hebcal.com/converter?cfg=json'
+      + '&gy=' + d.getFullYear() + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1';
+    const heb = await (await fetch(url)).json();
+    hm = heb.hm; hd = heb.hd;
+  } catch(e) {
+    if (!silent) _hayomYomError('Could not determine Hebrew date.');
     return;
   }
 
-  // Look up in Firebase — key is Month_Day
-  let entry = null;
-  try {
-    const { getApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const _db = getFirestore(getApp('[DEFAULT]'));
-    const monthKey = hebrewDate.month.replace(/'/g, '').replace(/\s+/g, '_');
-    const key = monthKey + '_' + hebrewDate.day;
-    document.getElementById('chabad-panel-sub').textContent = hebrewDate.day + ' ' + hebrewDate.month;
-    const snap = await getDoc(doc(_db, 'hayomYom', key));
-    if (snap.exists()) entry = snap.data();
-  } catch(e) {}
+  // ── Build Firestore key(s) ─────────────────────────────────────────────
+  const keys = _hayomYomKeys(hm, hd);
+  if (!keys.length) { if (!silent) _hayomYomError('Unknown month: ' + hm); return; }
 
-  if (!entry) {
-    if (contEl) { contEl.innerHTML = '<p style="padding:24px;text-align:center;color:var(--t3);">No entry found for ' + hebrewDate.day + ' ' + hebrewDate.month + '.</p>'; contEl.style.display = 'block'; }
-    if (loadEl) loadEl.style.display = 'none';
+  // ── Fetch from Firestore ───────────────────────────────────────────────
+  let docs = [];
+  try {
+    for (const key of keys) {
+      const snap = await fsGet(fsDoc(fsDb, 'hayomYom', key));
+      if (snap.exists()) docs.push({ key, ...snap.data() });
+    }
+  } catch(e) {
+    console.error('Hayom Yom Firestore error:', e);
+    if (!silent) _hayomYomError('Could not load Hayom Yom.');
     return;
   }
 
-  // Render
-  const lang = localStorage.getItem('chitas_lang_extra_hayomYom') || 'both';
-  const HE = "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
-  const color = def.color || '#F59E0B';
+  if (!docs.length) { if (!silent) _hayomYomError('No entry for ' + hm + ' ' + hd); return; }
+  if (silent) return;
 
-  let langToggle = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    langToggle += '<button onclick="localStorage.setItem(\'chitas_lang_extra_hayomYom\',\'' + l + '\');_loadHayomYomIframe()"'
-      + ' style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
-      + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);') + '">' + lb + '</button>';
-  });
-  langToggle += '</div>';
+  // ── Render ─────────────────────────────────────────────────────────────
+  const lang = window._hayomYomLang || localStorage.getItem('hayomYomLang') || 'both';
+  const isChaiElul    = keys[0] === 'Chai_18_Elul';
+  const isNonLeapAdar = hm === 'Adar';
+  const dateLabel = isChaiElul ? 'Chai Elul · ' + hd + ' ' + hm : hd + ' ' + hm;
 
-  const heading = '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'
-    + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + color + '80;margin-bottom:3px;">הַיּוֹם יוֹם</p>'
-    + '<p style="font-size:17px;font-weight:800;color:' + color + ';">' + hebrewDate.day + ' ' + hebrewDate.month + '</p>'
+  let html = '<div style="max-width:680px;margin:0 auto;padding-bottom:40px;">'
+    + '<div style="margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);">'
+    + '<p style="font-size:12px;font-weight:700;color:' + COLOR + ';letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;">' + dateLabel + '</p>'
+    + '<p style="font-size:22px;font-weight:900;color:var(--t1);font-family:\'Playfair Display\',serif;letter-spacing:-.3px;">Hayom Yom</p>'
     + '</div>';
 
-  let content = '';
-  const en = (entry.english || '').trim();
-  const he = (entry.hebrew || '').trim();
+  docs.forEach((data, idx) => {
+    if (isNonLeapAdar && docs.length === 2) {
+      html += '<p style="font-size:11px;font-weight:700;color:' + COLOR + ';letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">' + (idx === 0 ? 'Adar I' : 'Adar II') + '</p>';
+    }
+    if ((lang === 'he' || lang === 'both') && data.hebrew && data.hebrew.trim()) {
+      html += '<p class="rf-body" style="direction:rtl;text-align:justify;text-align-last:right;'
+        + 'font-family:' + HE_FONT + ';--rf-sz:21px;--rf-lh:2.0;color:var(--t1);'
+        + (lang === 'both' ? 'margin-bottom:16px;' : '') + '">'
+        + data.hebrew.replace(/\n/g, '<br>') + '</p>';
+    }
+    if (lang === 'both' && data.hebrew && data.hebrew.trim() && data.english && data.english.trim()) {
+      html += '<div style="height:1px;background:var(--border);margin:4px 0 18px;"></div>';
+    }
+    if ((lang === 'en' || lang === 'both') && data.english && data.english.trim()) {
+      html += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);text-align:justify;">'
+        + data.english.replace(/\n/g, '<br>') + '</p>';
+    }
+    if (isNonLeapAdar && idx === 0 && docs.length === 2) {
+      html += '<div style="height:1px;background:var(--border);margin:24px 0;"></div>';
+    }
+  });
 
-  if (lang === 'both' && en && he) {
-    content = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0;align-items:start;">'
-      + '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.8;color:var(--t1);">' + en + '</p>'
-      + '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.9;color:var(--t1);">' + he + '</p>'
-      + '</div>';
-  } else if (lang === 'he' || !en) {
-    content = '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.9;color:var(--t1);">' + he + '</p>';
-  } else {
-    content = '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.8;color:var(--t1);">' + en + '</p>';
-  }
+  html += '</div>';
 
-  const attribution = '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid var(--border);">Hayom Yom · Compiled by the Lubavitcher Rebbe</p>';
-
-  if (contEl) {
-    contEl.innerHTML = langToggle + heading + content + attribution;
-    contEl.style.display = 'block';
-  }
   if (loadEl) loadEl.style.display = 'none';
+  if (contEl) { contEl.innerHTML = html; contEl.style.display = 'block'; }
+  _restoreScrollAfterRender('extra_hayomYom', _getSavedScrollPos('extra_hayomYom'));
+}
 
-  // Mark button
-  const markBtn   = document.getElementById('chabad-mark-btn');
-  const markLabel = document.getElementById('chabad-mark-label');
-  if (markBtn) {
-    markBtn.style.background = color;
-    markBtn.style.border = 'none';
-    markBtn.style.color = '#fff';
-    markBtn.dataset.sectionId = 'hayomYom';
-    if (markLabel) markLabel.textContent = 'Mark Complete';
+// ── Lang toggle ─────────────────────────────────────────────────────────────
+function _hayomYomInjectLangToggle() {
+  const opts = document.getElementById('rs-section-opts');
+  if (!opts) return;
+  const lang = window._hayomYomLang || localStorage.getItem('hayomYomLang') || 'both';
+  const btn = (val, label) => {
+    const a = val === lang;
+    return '<button onclick="_hayomYomSetLang(\'' + val + '\')" style="flex:1;padding:7px 4px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:' + (a?'700':'600') + ';font-family:inherit;background:' + (a?'var(--card)':'transparent') + ';color:' + (a?'var(--t1)':'var(--t3)') + ';transition:all .15s;">' + label + '</button>';
+  };
+  opts.innerHTML = '<div><p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Language</p>'
+    + '<div style="display:flex;background:var(--surface);border-radius:10px;padding:3px;">'
+    + btn('he','Hebrew') + btn('both','Both') + btn('en','English')
+    + '</div></div>';
+}
+
+window._hayomYomSetLang = function(lang) {
+  window._hayomYomLang = lang;
+  try { localStorage.setItem('hayomYomLang', lang); } catch(e) {}
+  _hayomYomInjectLangToggle();
+  _loadHayomYomNative(false);
+};
+
+// ── Error state ─────────────────────────────────────────────────────────────
+function _hayomYomError(msg) {
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'none';
+  if (contEl) {
+    contEl.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--t3);"><p style="font-size:32px;margin-bottom:12px;">📖</p><p style="font-size:15px;">' + msg + '</p></div>';
+    contEl.style.display = 'block';
   }
 }
 
