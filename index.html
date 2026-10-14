@@ -1590,6 +1590,7 @@ window._fsGetDoc = getDoc;
 <script src="/js/tehillim.js"></script>
 <script src="/js/holidays-data.js"></script>
 <script src="/js/progress.js"></script>
+<script src="/js/learning-stats.js"></script>
 <script>
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║                    CHITAS DAILY — chitas.html                    ║
@@ -6379,19 +6380,10 @@ async function renderLeaders() {
 // ════════════════════════════════════════════════════════════════════
 // ── STATS ─────────────────────────────────────────────────────────────────────
 function renderStats() {
-  // ── Real lifetime counts (accumulated at mark-done time) ─────────────────
-  const lt = user.lifetime || {};
-  const hasRealData = (lt.verses || lt.psalms || lt.halachos || lt.tanyaBlocks);
-
-  // Section-level completion counts (for days-done bars)
-  const ids = ['chumash','tehillim','tanya','rambam'];
-  const counts = {chumash:0, tehillim:0, tanya:0, rambam:0};
-  ids.forEach(id => { if (user.done?.[id]) counts[id]++; });
-  Object.values(user.pastDone || {}).forEach(day => {
-    ids.forEach(id => { if (day[id]) counts[id]++; });
-  });
-
+  const ids = SECTION_IDS;
   const today = new Date();
+  // Everything below is derived from the days you marked (js/learning-stats.js)
+  const ls = learningStats(user, today, user.rambamTrack);
 
   // Streaks
   const streak       = user.streak || 0;
@@ -6452,40 +6444,65 @@ function renderStats() {
   // ── Streak color ──────────────────────────────────────────────────────────
   const sc = streak >= 30 ? '#FF4757' : streak >= 7 ? '#FF6B35' : '#F0A500';
 
-  // ── Section cards — real data if available, days-done otherwise ──────────
+  // ── What you've learned — real milestones of learning, not just clicks ──
+  const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+  const isMitzvos = user.rambamTrack === 'm';
+  const rambamPct = Math.min(100, Math.round(ls.rambamChapters / RAMBAM_TOTAL_CHAPTERS * 100));
+  const lastParsha = ls.parshiyos[ls.parshiyos.length - 1];
   const sections = [
-    { label:'Chumash',  sub:'Torah portions', color:'#F0A500',
-      val:  lt.verses   || counts.chumash,
-      unit: lt.verses   ? 'verses learned' : 'portions completed',
+    { label:'Chumash', color:'#F0A500', val: ls.parshiyos.length,
+      unit: ls.parshiyos.length === 1 ? 'full parsha' : 'full parshiyos',
+      sub: lastParsha ? 'Latest: ' + escapeHtml(lastParsha) : 'Learn all 7 aliyos in a week',
       icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/>' },
-    { label:'Tehillim', sub:'Daily Psalms',    color:'#4A9EFF',
-      val:  lt.psalmChaps || counts.tehillim,
-      unit: lt.psalmChaps ? (lt.psalms ? lt.psalmChaps + ' chapters · ' + lt.psalms + ' verses' : 'psalm chapters') : 'portions completed',
+    { label:'Tehillim', color:'#4A9EFF', val: ls.tehillimBooks,
+      unit: ls.tehillimBooks === 1 ? 'time through all of Tehillim' : 'times through all of Tehillim',
+      sub: 'A full Hebrew month of daily Tehillim = once through',
       icon:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>' },
-    { label:'Tanya',    sub:'Daily learning',  color:'#A855F7',
-      val:  lt.tanyaChaps || counts.tanya,
-      unit: lt.tanyaChaps ? 'chapters completed' : 'days learned',
+    { label:'Tanya', color:'#A855F7', val: ls.sections.tanya.total,
+      unit: ls.sections.tanya.total === 1 ? 'day of Tanya' : 'days of Tanya',
+      sub: 'The yearly Chitas cycle',
       icon:'<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>' },
-    { label:'Rambam',   sub:'Halachah Yomi',   color:'#1DB954',
-      val:  lt.halachos  || lt.rambamChaps || counts.rambam,
-      unit: lt.halachos  ? (lt.rambamChaps ? lt.rambamChaps + ' chapters · ' + lt.halachos + ' halachos' : 'halachos learned') : 'days learned',
-      icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>' },
+    isMitzvos
+      ? { label:'Sefer HaMitzvos', color:'#1DB954', val: ls.sections.rambam.total,
+          unit: ls.sections.rambam.total === 1 ? 'day learned' : 'days learned', sub: 'The daily mitzvos',
+          icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>' }
+      : { label:'Rambam', color:'#1DB954', val: ls.rambamChapters,
+          unit: 'of 1,000 chapters', sub: rambamPct + '% of the Mishneh Torah', bar: rambamPct,
+          icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>' },
   ];
 
   const sectionCardsHTML = sections.map(s =>
     '<div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px 14px 12px;position:relative;overflow:hidden;">' +
-      '<div style="position:absolute;top:0;right:0;width:40px;height:40px;background:' + s.color + '08;border-radius:0 14px 0 40px;"></div>' +
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
         '<div style="width:28px;height:28px;border-radius:8px;background:' + s.color + '15;border:1px solid ' + s.color + '30;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="' + s.color + '" stroke-width="1.8" stroke-linecap="round">' + s.icon + '</svg>' +
         '</div>' +
-        '<div><p style="font-size:12px;font-weight:800;color:var(--t1);line-height:1.2;">' + s.label + '</p>' +
-        '<p style="font-size:9px;color:var(--t3);">' + s.sub + '</p></div>' +
+        '<p style="font-size:12px;font-weight:800;color:var(--t1);line-height:1.2;">' + s.label + '</p>' +
       '</div>' +
       '<p class="stats-num" data-target="' + s.val + '" style="font-size:32px;font-weight:900;color:' + s.color + ';line-height:1;letter-spacing:-1px;margin-bottom:3px;">0</p>' +
-      '<p style="font-size:9px;color:var(--t3);font-weight:600;">' + s.unit + '</p>' +
+      '<p style="font-size:10px;color:var(--t2);font-weight:700;">' + s.unit + '</p>' +
+      (s.bar != null ? '<div style="height:4px;border-radius:2px;background:var(--border);margin-top:7px;overflow:hidden;"><div style="height:100%;width:' + s.bar + '%;background:' + s.color + ';"></div></div>' : '') +
+      '<p style="font-size:9px;color:var(--t3);margin-top:6px;line-height:1.35;">' + s.sub + '</p>' +
     '</div>'
   ).join('');
+
+  // ── Last 30 days, per section — where you're steady and where you slip ──
+  const SECTION_NAMES = { chumash:'Chumash', tehillim:'Tehillim', tanya:'Tanya', rambam: isMitzvos ? 'Sefer HaMitzvos' : 'Rambam' };
+  const SECTION_HEX = { chumash:'#F0A500', tehillim:'#4A9EFF', tanya:'#A855F7', rambam:'#1DB954' };
+  const consistencyHTML =
+    '<div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;">' +
+      ids.map(id => {
+        const n = ls.sections[id].last30;
+        return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">' +
+          '<p style="width:92px;font-size:11px;font-weight:700;color:var(--t2);">' + SECTION_NAMES[id] + '</p>' +
+          '<div style="flex:1;height:8px;border-radius:4px;background:var(--border);overflow:hidden;"><div style="height:100%;width:' + Math.round(n / 30 * 100) + '%;background:' + SECTION_HEX[id] + ';border-radius:4px;"></div></div>' +
+          '<p style="width:40px;text-align:right;font-size:11px;font-weight:800;color:var(--t1);">' + n + '<span style="color:var(--t3);font-weight:600;">/30</span></p>' +
+        '</div>';
+      }).join('') +
+      (ls.needsAttention
+        ? '<p id="needs-attention" style="font-size:11px;color:var(--t2);margin-top:4px;padding-top:9px;border-top:1px solid var(--border);line-height:1.45;">💡 <b>' + SECTION_NAMES[ls.needsAttention] + '</b> is the one you miss most. Try doing it first tomorrow.</p>'
+        : '') +
+    '</div>';
 
   // ── Build HTML ────────────────────────────────────────────────────────────
   document.getElementById('stats-content').innerHTML =
@@ -6501,7 +6518,7 @@ function renderStats() {
           '<p style="font-size:11px;color:var(--t3);margin-top:5px;">Best ever: <b style="color:var(--t2);">' + bestStreak + ' days</b></p>' +
         '</div>' +
         '<div style="text-align:right;">' +
-          '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);opacity:.8;margin-bottom:6px;">This month</p>' +
+          '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);opacity:.8;margin-bottom:6px;">Last 4 weeks</p>' +
           '<p style="font-size:30px;font-weight:900;color:var(--t1);line-height:1;">' + activeDays + '<span style="font-size:13px;font-weight:600;color:var(--t3);margin-left:3px;">/28</span></p>' +
           '<p style="font-size:11px;color:var(--t3);margin-top:5px;">days learned</p>' +
         '</div>' +
@@ -6524,9 +6541,13 @@ function renderStats() {
       '</div>' +
     '</div>' +
 
-    // Section learning totals — 2x2 grid
-    '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:14px 0 8px;">Learning totals</p>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">' + sectionCardsHTML + '</div>' +
+    // What you've learned — 2x2 grid
+    '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:14px 0 8px;">What you\'ve learned</p>' +
+    '<div id="learned-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">' + sectionCardsHTML + '</div>' +
+
+    // Consistency per section
+    '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:14px 0 8px;">Last 30 days</p>' +
+    consistencyHTML +
 
     // Calendar
     '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:14px 0 8px;">Activity — last 10 weeks <span style="font-weight:500;text-transform:none;letter-spacing:0;">(tap any day)</span></p>' +

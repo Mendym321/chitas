@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v5';
+const VERSION     = 'v6';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
@@ -31,6 +31,7 @@ const SHELL_URLS = [
   '/js/tehillim.js',
   '/js/holidays-data.js',
   '/js/progress.js',
+  '/js/learning-stats.js',
 ];
 
 // ── Install: cache the app shell ──────────────────────────────────────────────
