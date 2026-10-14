@@ -14,7 +14,7 @@ The app looks polished and the **readers** (Chumash with Rashi, Rambam, Tanya, T
 |---|---|
 | **Accountable** | You can tap ✓ on the home screen without opening anything. Streaks can never pass 9 days (bug). Shabbos breaks streaks for anyone who doesn't use a phone on Shabbos. |
 | **Quiz** | Every quiz is **fake**: the same hardcoded questions about the Mishkan, every day. The real AI quiz server (`api/quiz.js`) exists but the app never calls it. The weekly quiz can't be opened at all. |
-| **Actually learn** | The hand-typed aliyah table has 41 ranges that **differ from Hebcal**. At least 2 are definitely typos; the rest still need checking against Chabad.org (§3.4). Tehillim days 1–2 are split wrong. Several Tanya chapter intros are factually wrong. |
+| **Actually learn** | The hand-typed aliyah table has 41 ranges that differ from Hebcal, and spot-checks against Chabad.org confirm **Hebcal is right** (§3.4). Tehillim days 1–2 are split wrong. Several Tanya chapter intros are factually wrong. |
 | **App Store** | Missing: Sign in with Apple, in-app account deletion, privacy policy, native features (Apple rejects plain website wrappers). There is also a privacy leak to fix first. |
 
 Over time, building with a chat AI added a lot of extra features (Likkutei Sichos translation mode, Sha'ar HaBitachon, Daf Yomi, Sotah, Likkutei Torah…). Meanwhile the core Chitas loop was left with placeholders. **Recommendation: freeze extra features, fix the core, and make quizzes real.**
@@ -60,7 +60,7 @@ fonts/, icons/         Assets
 
 ### 3.4 Chumash table: needs verification against Chabad.org
 The app ignores Hebcal's aliyah data and uses two hand-typed tables: `PARSHA_SCHEDULE` (line 2631) and `PARSHA_ALIYOT` (line 2686). Compared against the `@hebcal/core` + `@hebcal/leyning` libraries:
-- **41 aliyah ranges differ from Hebcal.** Hebcal is a general standard, **not** Chabad's custom, so a difference isn't automatically an error. Chabad.org could not be reached from the review environment, so these have **not** been checked against Chabad yet.
+- **41 aliyah ranges differ from Hebcal.** **Verified against Chabad.org (Oct 2026):** 5 spot-checks (Vayeshev 7, Ki Tisa 1, Tzav 2, Nasso 5, Ki Teitzei 3) all match **Hebcal**, not the app's table. So the table is wrong, and Hebcal can be trusted for Chabad's Chitas.
 - **Definite typos** (wrong under any custom, because the same verses land in two parshiyos): **Vayeshev aliyah 7** = Genesis 41:1–14, which is Miketz's opening, so Vayeshev never reaches 40:1–23. **Vayishlach aliyah 7** ends at 37:1, which is also Vayeshev's first verse.
 - **Need checking** (differ from Hebcal): all 7 of Tzav, Ki Tisa, Vayakhel-Pekudei; Nasso 4–7; Ki Teitzei 3–7; Terumah 2–3; Tazria 1–2; Behar-Bechukotai 3–4; Chukat-Balak 1–2; Nitzavim 7.
 - Git history shows the table was added on 2026-03-29 and changed once afterward (Tazria-Metzora, 2026-04-15). That fix agrees with Hebcal.
@@ -69,7 +69,7 @@ The app ignores Hebcal's aliyah data and uses two hand-typed tables: `PARSHA_SCH
 - The table **ends September 2027.** After that, Chumash breaks completely.
 - It only knows the Diaspora schedule (`tzid=America/New_York`, `i=off` is hardcoded). Users in Israel get the wrong parsha some weeks.
 
-**Fix:** first verify the disputed aliyos on Chabad.org. If Chabad matches Hebcal, compute everything with `@hebcal/core` (free, offline, every year, Israel and Diaspora). If Chabad differs, keep a small table of **only the Chabad exceptions** on top of Hebcal, and add a test for each one.
+**Fix:** delete both tables and compute aliyos with `@hebcal/core` + `@hebcal/leyning` (free, offline, every year, Israel and Diaspora). Add tests that lock in the 5 Chabad.org-verified dates above.
 
 ### 3.5 Tehillim cycle is off on days 1–2
 `TEH_CYCLE` (line 5618) has day 1 = Psalms 1–8 and day 2 = 9–17. The standard monthly division is **1–9** and **10–17**. It also doesn't handle a 29-day month: on the 29th, you also say day 30's chapters (145–150). The home screen gets Tehillim from Hebcal, but the reader uses this table, so the two can disagree.
