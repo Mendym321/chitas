@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta name="theme-color" content="#F0A500"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -662,6 +662,12 @@ window._fb = {
     } catch(e) { console.error('saveUser:', e); }
   },
 
+  // Replace the whole user document (used by Reset progress — a normal
+  // merge-save would leave old history behind)
+  async replaceUser(uid, data) {
+    await setDoc(doc(db, 'users', uid), { ...data, updatedAt: serverTimestamp() });
+  },
+
   // Load user data from Firestore
   async loadUser(uid) {
     try {
@@ -948,7 +954,7 @@ window._fsGetDoc = getDoc;
                 <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
                   <div style="width:28px;height:28px;border-radius:50%;background:#F0A50018;border:1px solid #F0A50035;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#F0A500;">R</div>
                   <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">The Rebbe</span>
-                  <span style="font-size:11px;color:var(--t3);">Psalm 124</span>
+                  <span style="font-size:11px;color:var(--t3);">His kapitel</span>
                 </div>
               </div>
             </div>
@@ -1102,7 +1108,7 @@ window._fsGetDoc = getDoc;
         </div>
         <div style="flex:1;">
           <p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px;">The Rebbe</p>
-          <p id="ob-rebbe-sub" style="font-size:12px;color:var(--t3);">Psalm 124 · included</p>
+          <p id="ob-rebbe-sub" style="font-size:12px;color:var(--t3);">Included in Tehillim</p>
         </div>
         <button id="ob-rebbe-toggle" onclick="obToggleRebbe()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;">
           <div id="ob-rebbe-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
@@ -1114,7 +1120,7 @@ window._fsGetDoc = getDoc;
         </div>
         <div style="flex:1;">
           <p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px;">The Rebbetzin</p>
-          <p id="ob-rebbetzin-sub" style="font-size:12px;color:var(--t3);">Psalm 125 · included</p>
+          <p id="ob-rebbetzin-sub" style="font-size:12px;color:var(--t3);">Included in Tehillim</p>
         </div>
         <button id="ob-rebbetzin-toggle" onclick="obToggleRebbetzin()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;">
           <div id="ob-rebbetzin-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
@@ -1645,8 +1651,15 @@ function avatarColor(name) {
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
+// Make text safe to put inside HTML. Use it for ANYTHING typed by a user or
+// loaded from the database (names, cities, dictionary entries…) — otherwise
+// text like "<img onerror=…>" would run as code on other people's phones.
+function escapeHtml(text) {
+  return String(text ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
 function letterAvatar(name, size=32, fontSize=14) {
-  const letter = (name || '?')[0].toUpperCase();
+  const letter = escapeHtml((name || '?')[0].toUpperCase());
   const [bg, fg] = avatarColor(name || '?');
   return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};
     display:flex;align-items:center;justify-content:center;
@@ -1654,6 +1667,10 @@ function letterAvatar(name, size=32, fontSize=14) {
 }
 
 const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{},tehillimPeople:[],tehillimFixedOpts:{rebbe:true,rebbetzin:true},extraTracks:[],lifetime:{verses:0,psalms:0,psalmChaps:0,tanyaChaps:0,tanyaChapsSeen:{},halachos:0,rambamChaps:0}};
+// A fresh, independent copy every time — {...BLANK} would share BLANK's inner
+// objects (done, pastDone…), so changing one user would change the template.
+function blankUser() { return JSON.parse(JSON.stringify(BLANK)); }
+
 let user = (() => {
   try {
     // Try current key first
@@ -1667,8 +1684,8 @@ let user = (() => {
       // Don't remove v77 yet — keep as backup
       return parsed;
     }
-    return BLANK;
-  } catch { return BLANK; }
+    return blankUser();
+  } catch { return blankUser(); }
 })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
@@ -1831,7 +1848,7 @@ async function onSignedIn(fbUser) {
         return s ? JSON.parse(s) : null;
       } catch { return null; }
     })();
-    const merged = { ...BLANK, ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
+    const merged = { ...blankUser(), ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
     if (local && local.uid === fbUser.uid) {
       // If local data is more recent/higher, prefer it for key stats
       if ((local.streak || 0) > (merged.streak || 0)) merged.streak = local.streak;
@@ -1860,11 +1877,6 @@ async function onSignedIn(fbUser) {
   }
 }
 
-function obNext1() {
-  // name comes from Google — just advance
-  document.getElementById('ob-step1').style.display = 'none';
-  document.getElementById('ob-step2').style.display = 'block';
-}
 
 function obNext3() {
   if (!selectedTrack) return;
@@ -1898,41 +1910,7 @@ function obToggleRebbetzin() {
   if (sub) sub.textContent = _obRebbetzinOn ? 'Included in Tehillim' : 'Not included';
 }
 
-function obAddTehillimPerson() {
-  const input = document.getElementById('ob-teh-name');
-  const name = input.value.trim();
-  if (!name) return;
-  const person = { label: name, heDay: '', heMonth: '', heYear: '' };
-  _obTehPeople.push(person);
-  // Save to user immediately so modal shows the entry right away
-  if (!user.tehillimPeople) user.tehillimPeople = [];
-  user.tehillimPeople.push(person);
-  saveUser();
-  input.value = '';
-  const list = document.getElementById('ob-teh-people');
-  list.innerHTML = _obTehPeople.map((p, j) =>
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(74,158,255,.08);border-radius:8px;">' +
-    '<span style="font-size:13px;color:var(--t1);">' + p.label + '</span>' +
-    '<button onclick="obRemoveTehPerson(' + j + ')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 4px;">×</button>' +
-    '</div>'
-  ).join('');
-  input.focus();
-}
 
-function obRemoveTehPerson(i) {
-  _obTehPeople.splice(i, 1);
-  // Stay in sync with user object
-  if (user.tehillimPeople) user.tehillimPeople.splice(i, 1);
-  saveUser();
-  const list = document.getElementById('ob-teh-people');
-  if (!list) return;
-  list.innerHTML = _obTehPeople.map((p, j) =>
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(74,158,255,.08);border-radius:8px;">' +
-    '<span style="font-size:13px;color:var(--t1);">' + p.label + '</span>' +
-    '<button onclick="obRemoveTehPerson(' + j + ')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 4px;">×</button>' +
-    '</div>'
-  ).join('');
-}
 
 function obNext2() {
   document.getElementById('ob-step2').style.display = 'none';
@@ -1950,7 +1928,6 @@ const TEHILLIM_FIXED = [
   { label: 'Rebbetzin', heDay: 25, heMonth: 'Adar', heYear: 5661 },
 ];
 
-function _hebMonthNum(m) { return HEB_MONTHS.indexOf(m) + 1; }
 
 async function _calcTehillimChapter(person) {
   // Strategy: convert the person's Hebrew birthday to Gregorian using Hebcal,
@@ -2075,8 +2052,8 @@ async function _renderPersonalPsalms() {
 
     // Chapter heading — person name + psalm number (static size, not scaled)
     const pHeadText = isHe
-      ? '\u05E4\u05E8\u05E7 ' + _toHebrewNumeral(p.chapter) + ' \u2013 ' + p.label
-      : 'Psalm ' + p.chapter + ' \u2013 ' + p.label;
+      ? '\u05E4\u05E8\u05E7 ' + _toHebrewNumeral(p.chapter) + ' \u2013 ' + escapeHtml(p.label)
+      : 'Psalm ' + p.chapter + ' \u2013 ' + escapeHtml(p.label);
     const pHeadAlign = isHe ? 'text-align:right;direction:rtl;' : '';
     const pHeadFont = isHe ? 'font-family:' + HE + ';' : '';
     h += '<div style="margin-top:20px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);' + pHeadAlign + '">'
@@ -2328,48 +2305,8 @@ window._tpmConvertEngToHeb = async function() {
   }
 };
 
-window._tpmUpdateDrumStyle = function(col) {
-  const itemH = 32;
-  const centerIdx = col.scrollTop / itemH;
-  col.querySelectorAll('.drum-item').forEach((item, i) => {
-    const dist = Math.abs(i - centerIdx);
-    if (dist < 0.5) {
-      item.style.opacity = '1';
-      item.style.fontSize = '16px';
-      item.style.fontWeight = '600';
-      item.style.color = 'var(--t1)';
-    } else if (dist < 1.5) {
-      item.style.opacity = '0.55';
-      item.style.fontSize = '14px';
-      item.style.fontWeight = '400';
-      item.style.color = 'var(--t2)';
-    } else if (dist < 2.5) {
-      item.style.opacity = '0.25';
-      item.style.fontSize = '13px';
-      item.style.fontWeight = '400';
-      item.style.color = 'var(--t3)';
-    } else {
-      item.style.opacity = '0.1';
-      item.style.fontSize = '12px';
-      item.style.fontWeight = '400';
-      item.style.color = 'var(--t3)';
-    }
-  });
-};
 
 // Scroll a drum column to a specific value
-window._tpmScrollTo = function(colId, val) {
-  const col = document.getElementById(colId);
-  if (!col) return;
-  const items = col.querySelectorAll('.drum-item');
-  for (let i = 0; i < items.length; i++) {
-    if (String(items[i].dataset.val) === String(val)) {
-      col.scrollTop = i * 32;
-      setTimeout(() => window._tpmUpdateDrumStyle(col), 20);
-      break;
-    }
-  }
-};
 
 // Turn the Rebbe's / Rebbetzin's chapter on or off.
 // Called with 'Rebbe'/'Rebbetzin' (people manager) or 'rebbe'/'rebbetzin' (profile).
@@ -2417,8 +2354,8 @@ function _renderTpmList() {
           +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
           + '</div>'
           + '<div style="flex:1;min-width:0;">'
-          +   '<p style="font-size:14px;font-weight:600;color:var(--t1);">' + p.label + '</p>'
-          +   '<p style="font-size:11px;color:var(--t3);">' + p.heDay + ' ' + p.heMonth + ' ' + p.heYear + '</p>'
+          +   '<p style="font-size:14px;font-weight:600;color:var(--t1);">' + escapeHtml(p.label) + '</p>'
+          +   '<p style="font-size:11px;color:var(--t3);">' + escapeHtml(p.heDay + ' ' + p.heMonth + ' ' + p.heYear) + '</p>'
           + '</div>'
           + '<div style="display:flex;gap:6px;">'
           +   '<button onclick="_editTehillimPerson(' + i + ')" style="padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Edit</button>'
@@ -2578,12 +2515,6 @@ async function fetchHebcal() {
   const sun = new Date(today); sun.setDate(today.getDate() - dow);
   const sat = new Date(today); sat.setDate(today.getDate() + (6 - dow));
   const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  // Add timezone so dates are correct for users outside UTC
-  const tzOffset = -new Date().getTimezoneOffset(); // minutes, positive = east
-  const tzSign = tzOffset >= 0 ? '+' : '-';
-  const tzHH = String(Math.floor(Math.abs(tzOffset)/60)).padStart(2,'0');
-  const tzMM = String(Math.abs(tzOffset)%60).padStart(2,'0');
-  const tzParam = encodeURIComponent('UTC' + tzSign + tzHH + ':' + tzMM);
   const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=${fmt(sun)}&end=${fmt(sat)}&lg=s&i=off&tzid=America/New_York`;
   const r = await fetch(url); if(!r.ok) throw new Error('Hebcal');
   return r.json();
@@ -2933,38 +2864,6 @@ function updateStats() {
   renderWeekStrip();
 }
 
-function renderSections() {
-  document.getElementById('skeletons').style.display = 'none';
-  const list = document.getElementById('sections-list');
-  list.style.display = 'block';
-  const sections = Object.values(schedule);
-
-  list.innerHTML = sections.map((s,i) => {
-    const done = !!user.done[s.id];
-    return `
-    <div id="card-${s.id}" onclick="openChabadPanel('${s.id}')" style="background:var(--card);border:1.5px solid ${done?s.color+'80':'var(--border)'};border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:${i*.06}s;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='var(--card)'" onmousedown="this.style.transform='scale(.985)'" onmouseup="this.style.transform=''" ontouchstart="this.style.background='var(--hi)'" ontouchend="this.style.background='var(--card)';this.style.transform=''">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div id="icon-${s.id}" style="width:44px;height:44px;border-radius:13px;background:${s.color}18;border:1px solid ${s.color}35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${s.color};transition:all .3s;pointer-events:none;">
-          ${icon(s.icon,21)}
-        </div>
-        <div style="flex:1;min-width:0;pointer-events:none;">
-          <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">${s.label}</p>
-          <p style="font-size:12px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.subtitle}</p>
-        </div>
-        <!-- Chevron — signals tappability -->
-        <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);pointer-events:none;margin-right:2px;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">
-          
-          <button id="tick-${s.id}" onclick="showConfirm('${s.id}', false)" style="width:36px;height:36px;border-radius:10px;background:${done?s.color+'28':'var(--surface)'};border:1px solid ${done?s.color+'55':'var(--border)'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${done?'#1DB954':'var(--t3)'};" ${done?'disabled':''}>
-            ${icon('check',18)}
-          </button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  updateProgressRing();
-}
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 11 · XP / LEVEL SYSTEM
@@ -3056,9 +2955,6 @@ async function rebuildScheduleForOffset() {
     const rsun = new Date(d); rsun.setDate(d.getDate() - rdow);
     const rsat = new Date(d); rsat.setDate(d.getDate() + (6 - rdow));
     const rfmt = x => x.getFullYear() + '-' + String(x.getMonth()+1).padStart(2,'0') + '-' + String(x.getDate()).padStart(2,'0');
-    const rTzOffset = -d.getTimezoneOffset();
-    const rTzSign = rTzOffset >= 0 ? '+' : '-';
-    const rTzParam = encodeURIComponent('UTC' + rTzSign + String(Math.floor(Math.abs(rTzOffset)/60)).padStart(2,'0') + ':' + String(Math.abs(rTzOffset)%60).padStart(2,'0'));
     const r = await fetch('https://www.hebcal.com/hebcal?v=1&cfg=json&s=on&leyning=on&dps=on&dr3=on&dr1=on&dsm=on&d=on&start=' + rfmt(rsun) + '&end=' + rfmt(rsat) + '&lg=s&i=off&tzid=America/New_York');
     const cal = await r.json();
     p = parseHebcalForDate(cal, d);
@@ -3401,38 +3297,6 @@ const QUIZZES_ENABLED = false;
 
 let quizState = { sectionId: null, questions: [], current: 0, score: 0, answered: false };
 
-function buildQuizPrompt(s) {
-  // Build a prompt specific to today's section content
-  const hints = {
-    chumash: `Today's Torah portion: ${s.subtitle}. The user just read this aliya on Chabad.org.`,
-    tanya:   `Today's Tanya: ${s.subtitle}. The user just read this chapter on Chabad.org.`,
-    rambam:  `Today's Rambam: ${s.subtitle}. The user just read these halachos on Chabad.org.`,
-  };
-  return `You are a quiz generator for a daily Jewish learning app. Generate exactly 3 multiple-choice questions to test comprehension of today's learning.
-
-Context: ${hints[s.id] || s.subtitle}
-
-Rules:
-- Questions must be specific to the actual content (not generic)
-- Each question has exactly 4 options (A, B, C, D)
-- Exactly one correct answer per question
-- Questions should test real understanding, not just trivia
-- Keep questions concise and clear
-- For Chumash: ask about events, characters, or halachos in the specific aliya
-- For Tanya: ask about concepts, teachings, or the main idea of the chapter
-- For Rambam: ask about the specific halacha or ruling covered today
-
-Respond ONLY with a valid JSON array, no other text:
-[
-  {
-    "q": "Question text here?",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "answer": 0
-  }
-]
-
-The "answer" field is the 0-based index of the correct option.`;
-}
 
 async function openQuiz(sectionId) {
   const s = schedule[sectionId];
@@ -3558,30 +3422,6 @@ function renderWeeklyQuizCard() {
 
 let weeklyQuizState = { questions: [], current: 0, score: 0, answered: false };
 
-function buildWeeklyPrompt() {
-  const subs = [];
-  if (schedule?.chumash) subs.push('Chumash (Torah): ' + schedule.chumash.subtitle);
-  if (schedule?.tanya)   subs.push('Tanya: ' + schedule.tanya.subtitle);
-  if (schedule?.rambam)  subs.push('Rambam: ' + schedule.rambam.subtitle);
-
-  return `You are a quiz generator for a weekly Jewish learning review app.
-Generate exactly 10 multiple-choice questions testing the user's knowledge from this week's learning.
-Cover all three subjects roughly evenly (about 3-4 questions each).
-
-This week's learning includes:
-${subs.map((s,i) => (i+1) + '. ' + s).join('\n')}
-
-Rules:
-- Questions must be specific to the actual content, not generic
-- Each question has exactly 4 options (A B C D)  
-- Exactly one correct answer per question
-- Vary difficulty: mix easier recall and deeper comprehension
-- Keep questions concise and clear
-- Tag each question with its subject
-
-Respond ONLY with a valid JSON array, no markdown, no backticks:
-[{"q":"...","options":["...","...","...","..."],"answer":0,"subject":"Chumash"},...]`;
-}
 
 async function openWeeklyQuiz() {
   const week = getWeekNumber();
@@ -4199,53 +4039,8 @@ function celebrateAllDone() {
 
 
 // ── 4. WELCOME BACK ──────────────────────────────────────────────────────────
-function checkWelcomeBack() {
-  const lastDate = user.lastDate;
-  if (!lastDate) return;
-  const last = new Date(lastDate);
-  const today = new Date();
-  const diffDays = Math.floor((today - last) / (1000 * 60 * 60 * 24));
-  if (diffDays >= 2 && diffDays <= 30) {
-    const alreadyShown = sessionStorage.getItem('chitas_welcomed_back');
-    if (alreadyShown) return;
-    sessionStorage.setItem('chitas_welcomed_back', '1');
-    setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10,17 15,12 10,7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>', title: 'Good to have you back', sub: diffDays === 2 ? 'You missed yesterday. No big deal — today is what counts.' : 'It has been ' + diffDays + ' days. Pick up where you left off.', color: '#4A9EFF', btns: [{ label: "Let's go", primary: true }, { label: 'Maybe later', primary: false }] }), 800);
-  }
-}
 
 // ── 5. WEEKLY SUMMARY ────────────────────────────────────────────────────────
-function checkWeeklySummary() {
-  const dow = new Date().getDay(); // 5 = Friday
-  if (dow !== 5) return;
-  const key = 'chitas_weekly_summary_' + getWeekNumber();
-  if (sessionStorage.getItem(key)) return;
-  sessionStorage.setItem(key, '1');
-
-  // Count days done this week
-  let daysDone = 0;
-  const today = new Date();
-  for (let i = 0; i < 5; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const iso = dateISO(d);
-    const isToday = i === 0;
-    const dayData = isToday ? user.done : (user.pastDone?.[iso] || {});
-    const count = ['chumash','tehillim','tanya','rambam'].filter(id => dayData[id]).length;
-    if (count > 0) daysDone++;
-  }
-  if (daysDone === 0) return; // nothing to summarize
-
-  const msgs = {
-    5: { title: 'Perfect week', sub: 'Five for five. Every single day this week.' },
-    4: { title: '4 out of 5', sub: 'Strong week. One slip — but four strong days.' },
-    3: { title: '3 days this week', sub: 'More than half the week. Building momentum.' },
-    2: { title: '2 days this week', sub: 'A start. Show up more next week.' },
-    1: { title: '1 day this week', sub: "You came. That's something. Come back tomorrow." },
-  };
-  const m = msgs[daysDone] || msgs[1];
-
-  setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', title: m.title, sub: m.sub + (user.streak > 0 ? ' Streak: ' + user.streak + ' days.' : ''), color: '#A855F7', btns: [{ label: 'Good Shabbos', primary: true }] }), 1200);
-}
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 19 · ONBOARDING TICKER  (animated word ticker on landing screen)
@@ -4613,7 +4408,7 @@ function onReaderScroll() {
       return;
     }
     // SHB uses its own per-unit key (handled in _shbSaveProgress)
-    if (sid === 'shaarHaBitachon') return;
+    if (sid === 'shaarHaBitachon') { _shbSaveProgress(_shbGetProgress().unitId, curScrollTop, false); return; }
 
     // Core daily sections save as-is; extra tracks get 'extra_' prefix
     if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
@@ -6477,7 +6272,9 @@ function closeChabadPanel() {
     if (activeSid === 'likkuteiSichos' && window._lsInReader) {
       const it = window._lsSichos && window._lsSichos[window._lsCurIdx];
       if (it) { try { localStorage.setItem('ls_s_'+it.page+'_'+it.vol, String(Math.round(reader.scrollTop))); } catch {} }
-    } else if (activeSid !== 'shaarHaBitachon') {
+    } else if (activeSid === 'shaarHaBitachon') {
+      _shbSaveScroll(); // saves the place to the cloud too
+    } else {
       // Core daily sections save as-is; extra tracks get 'extra_' prefix
       if (activeSid === 'chumash' || activeSid === 'rambam' || activeSid === 'tehillim' || activeSid === 'tanya') {
         _saveScrollPos(activeSid, reader.scrollTop);
@@ -6564,8 +6361,8 @@ async function renderLeaders() {
       <div style="width:20px;text-align:center;font-size:12px;font-weight:800;color:${podium[i]||'var(--t3)'};flex-shrink:0;">${i+1}</div>
       ${letterAvatar(p.name||'?', 34, 14)}
       <div style="flex:1;min-width:0;">
-        <p style="font-weight:700;font-size:14px;color:${isMe?'var(--gold)':'var(--t1)'};">${lbName(p.name||'Anonymous')}${isMe?' (You)':''}</p>
-        <p style="font-size:11px;color:var(--t3);">${p.city||''}</p>
+        <p style="font-weight:700;font-size:14px;color:${isMe?'var(--gold)':'var(--t1)'};">${escapeHtml(lbName(p.name||'Anonymous'))}${isMe?' (You)':''}</p>
+        <p style="font-size:11px;color:var(--t3);">${escapeHtml(p.city||'')}</p>
       </div>
       <div style="text-align:right;flex-shrink:0;">
         ${lbMode === 'xp'
@@ -6924,7 +6721,7 @@ function toggleTheme() {
 // ── SIGN OUT ───────────────────────────────────────────────────────────────────
 async function signOut() {
   if (window._fb) await window._fb.signOut().catch(()=>{});
-  user = {...BLANK};
+  user = blankUser();
   try { localStorage.removeItem('chitas_v78'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
@@ -6950,10 +6747,24 @@ function shareApp() {
   }
 }
 
-function resetProgress() {
-  if (!confirm('Reset all your progress?')) return;
-  user = {...BLANK, name:user.name, rambamTrack:user.rambamTrack};
-  saveUser();
+async function resetProgress() {
+  if (!confirm('Reset all your progress? Your streak, points and history will be erased. Your settings stay.')) return;
+  // Keep who you are and your settings; erase everything else
+  const keepAdmin = { isAdmin: user.isAdmin, role: user.role };
+  const keep = { uid: user.uid, name: user.name, photoURL: user.photoURL, city: user.city,
+    rambamTrack: user.rambamTrack, tehillimPeople: user.tehillimPeople, tehillimFixedOpts: user.tehillimFixedOpts,
+    extraTracks: user.extraTracks, ...(user.isAdmin ? { isAdmin: user.isAdmin } : {}), ...(user.role ? { role: user.role } : {}) };
+  user = { ...blankUser(), ...keep, lastDate: dateISO(new Date()) };
+  try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch {}
+  if (user.uid && window._fb?.replaceUser) {
+    // Keep account fields the app doesn't normally save (e.g. the admin flag)
+    const account = {};
+    if (keepAdmin.isAdmin) account.isAdmin = keepAdmin.isAdmin;
+    if (keepAdmin.role) account.role = keepAdmin.role;
+    try { await window._fb.replaceUser(user.uid, { ..._userPayload(), ...account }); }
+    catch (e) { fire('Could not reset online — check your connection', 'xp'); return; }
+  }
+  fire('Progress reset', 'xp');
   updateStats();
   updateHeader();
   renderLeaders();
@@ -7647,11 +7458,6 @@ async function _loadDafYomi() {
 }
 
 
-function _renderDafYomi(title, allHe, allEn, rashiHe, rashiEn, tosafotHe, tosafotEn, color) {
-  // Cache everything — toggle buttons just call _rerenderDaf()
-  window._dafData = { title, allHe, allEn, rashiHe, rashiEn: rashiEn||[], tosafotHe, tosafotEn: tosafotEn||[], color };
-  _rerenderDaf();
-}
 
 function _rerenderDaf() {
   const dat = window._dafData;
@@ -8201,7 +8007,7 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
     // Section heading if multiple refs
     if (results.length > 1) {
       v += '<div style="margin:20px 0 10px;padding:8px 12px;background:' + GREEN + '14;border-left:4px solid ' + GREEN + '99;border-radius:0 6px 6px 0;">'
-        + '<p style="font-size:13px;font-weight:700;color:' + GREEN + ';">' + res.title + '</p>'
+        + '<p style="font-size:13px;font-weight:700;color:' + GREEN + ';">' + res.ref.replace('Sefer HaMitzvot, ', '') + '</p>'
         + '</div>';
     }
 
@@ -8729,53 +8535,6 @@ function _updateProfileExtras() {
   _renderPsExtraTracks();
 }
 
-function _renderPsTehillim() {
-  const el = document.getElementById('ps-tehillim-people');
-  if (!el) return;
-  const opts = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
-  const people = user.tehillimPeople || [];
-
-  const GRIP = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>';
-  const TRASH = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>';
-  const PLUS  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
-
-  let html = '';
-
-  // Fixed people
-  [['rebbe','Rebbe','11 Nissan'],['rebbetzin','Rebbetzin','25 Adar']].forEach(([key,label,dates]) => {
-    const on = opts[key] !== false;
-    html += '<div class="ps-row">'
-      + '<div class="ps-icon" style="background:rgba(74,158,255,.08);color:#4A9EFF;">'
-      +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>'
-      + '</div>'
-      + '<div style="flex:1;min-width:0;">'
-      +   '<p class="ps-row-label">' + label + '</p>'
-      +   '<p class="ps-row-sub">' + (on ? 'Included in Tehillim' : 'Not included') + '</p>'
-      + '</div>'
-      + '<button onclick="_toggleTehillimFixed(\'' + key + '\');_updateProfileExtras();" style="width:40px;height:24px;border-radius:12px;border:none;background:' + (on ? '#4A9EFF' : 'var(--border)') + ';position:relative;cursor:pointer;transition:background .15s;flex-shrink:0;">'
-      +   '<div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;' + (on ? 'right:3px' : 'left:3px') + ';transition:all .15s;"></div>'
-      + '</button>'
-      + '</div>';
-  });
-
-  // User people with drag handles
-  people.forEach((p, i) => {
-    html += '<div id="ps-person-row-' + i + '" data-idx="' + i + '" class="ps-row">'
-      + '<div class="ps-drag-handle" id="ps-person-handle-' + i + '" ontouchstart="_tpmTouchStart(event,' + i + ')" ontouchmove="_tpmTouchMove(event)" ontouchend="_tpmTouchEnd(event)">' + GRIP + '</div>'
-      + '<div class="ps-icon" style="background:rgba(74,158,255,.08);color:#4A9EFF;">'
-      +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'
-      + '</div>'
-      + '<div style="flex:1;min-width:0;">'
-      +   '<p class="ps-row-label">' + p.label + '</p>'
-      +   '<p class="ps-row-sub">' + p.heDay + ' ' + p.heMonth + ' ' + p.heYear + '</p>'
-      + '</div>'
-      + '<button onclick="_deleteTehillimPerson(' + i + ');_updateProfileExtras();_renderPersonalPsalms();" class="ps-remove-btn">' + TRASH + '</button>'
-      + '</div>';
-  });
-
-  el.innerHTML = html
-    + '<button onclick="_openTehillimPeopleManager()" class="ps-add-btn">' + PLUS + 'Add person</button>';
-}
 
 function _renderPsExtraTracks() {
   const el = document.getElementById('ps-extra-tracks-list');
@@ -8942,7 +8701,7 @@ function bootApp() {
         // Local has activity from today that hasn't synced yet — keep it
         // but pull non-activity fields from remote (name, city, track, etc.)
         user = {
-          ...BLANK,
+          ...blankUser(),
           ...remote,
           uid: fbUser.uid,
           photoURL: fbUser.photoURL || '',
@@ -8958,7 +8717,7 @@ function bootApp() {
         // Remote is equal or newer — use it, but always take max for key stats
         // (protects against Firestore having stale streak:0 for existing users)
         user = {
-          ...BLANK,
+          ...blankUser(),
           ...remote,
           uid: fbUser.uid,
           photoURL: fbUser.photoURL || '',
@@ -9161,10 +8920,10 @@ function _lsTransWordClick(e) {
 
   const isAdmin = user?.isAdmin || user?.role === 'admin';
   popup.innerHTML =
-    '<div class="ls-tp-word">' + word + '</div>'
-    + '<div class="ls-tp-trans">' + (entry.translation || '') + '</div>'
-    + (entry.notes ? '<div class="ls-tp-notes">' + entry.notes + '</div>' : '')
-    + (isAdmin ? '<button onclick="_lsDictModalOpen(\'' + word + '\')" style="margin-top:8px;font-size:11px;font-weight:700;color:var(--t3);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">Edit</button>' : '');
+    '<div class="ls-tp-word">' + escapeHtml(word) + '</div>'
+    + '<div class="ls-tp-trans">' + escapeHtml(entry.translation || '') + '</div>'
+    + (entry.notes ? '<div class="ls-tp-notes">' + escapeHtml(entry.notes) + '</div>' : '')
+    + (isAdmin ? '<button onclick="_lsDictModalOpen(decodeURIComponent(\'' + encodeURIComponent(word) + '\'))" style="margin-top:8px;font-size:11px;font-weight:700;color:var(--t3);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">Edit</button>' : '');
 
   popup.style.display = 'block';
   _positionPopup(popup, span);
@@ -9263,7 +9022,7 @@ const _SEFARIA_BOOKS = {
   'במדבר':'Numbers','נשא':'Numbers','בהעלותך':'Numbers','שלח':'Numbers','קרח':'Numbers',
   'חקת':'Numbers','בלק':'Numbers','פינחס':'Numbers','מטות':'Numbers','מסעי':'Numbers',
   'דברים':'Deuteronomy','ואתחנן':'Deuteronomy','עקב':'Deuteronomy','ראה':'Deuteronomy',
-  'שופטים':'Deuteronomy','כי תצא':'Deuteronomy','כי תבא':'Deuteronomy','נצבים':'Deuteronomy',
+  /* 'שופטים' = the book of Judges (see Prophets below) */ 'כי תצא':'Deuteronomy','כי תבא':'Deuteronomy','נצבים':'Deuteronomy',
   'וילך':'Deuteronomy','האזינו':'Deuteronomy','וזאת הברכה':'Deuteronomy',
   // Prophets
   'יהושע':'Joshua','שופטים':'Judges','שמואל':'Samuel','מלכים':'Kings',
@@ -9740,16 +9499,16 @@ function _shbGetProgress() {
   return user.shbProgress || { unitId: 'intro', scrollY: 0 };
 }
 
-function _shbSaveProgress(unitId, scrollY) {
+function _shbSaveProgress(unitId, scrollY, syncToCloud = true) {
   user.shbProgress = { unitId, scrollY: Math.round(scrollY), lastSeen: Date.now() };
-  saveUser();
+  if (syncToCloud) saveUser();
+  else try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch {}
 }
 
 function _shbSaveScroll() {
-  const cont = document.getElementById('native-reader-content');
-  if (!cont) return;
-  const prog = _shbGetProgress();
-  _shbSaveProgress(prog.unitId, cont.scrollTop);
+  const reader = document.getElementById('native-reader');
+  if (!reader) return;
+  _shbSaveProgress(_shbGetProgress().unitId, reader.scrollTop);
 }
 
 // Cache of fetched unit data
@@ -9864,8 +9623,8 @@ async function _shbRenderUnit(unit, unitIdx, restoreScroll = 0) {
   if (contEl) {
     contEl.innerHTML = navBar + langToggle + heading + v + attribution + summaryPlaceholder;
     contEl.style.display = 'block';
-    if (restoreScroll > 0) requestAnimationFrame(() => { contEl.scrollTop = restoreScroll; });
-    contEl.onscroll = () => _shbSaveProgress(unit.id, contEl.scrollTop);
+    const reader = document.getElementById('native-reader');
+    if (reader) requestAnimationFrame(() => { reader.scrollTop = restoreScroll > 0 ? restoreScroll : 0; });
     // Fetch summary async — don't block render
     _shbLoadSummary(unit.id, summaryId, color);
   }
@@ -9902,7 +9661,7 @@ async function _shbLoadSummary(unitId, elId, color) {
 
     // Build collapsible summary card
     const pointsHtml = (points || []).map(p =>
-      '<li style="margin-bottom:8px;line-height:1.55;color:var(--t2);font-size:13px;">' + p + '</li>'
+      '<li style="margin-bottom:8px;line-height:1.55;color:var(--t2);font-size:13px;">' + escapeHtml(p) + '</li>'
     ).join('');
 
     el.innerHTML =
@@ -9919,7 +9678,7 @@ async function _shbLoadSummary(unitId, elId, color) {
       + '</button>'
       // Collapsed by default — user taps to reveal
       + '<div style="display:none;padding:0 16px 16px;">'
-      + (summary ? '<p style="font-size:13px;line-height:1.6;color:var(--t2);margin-bottom:14px;">' + summary + '</p>' : '')
+      + (summary ? '<p style="font-size:13px;line-height:1.6;color:var(--t2);margin-bottom:14px;">' + escapeHtml(summary) + '</p>' : '')
       + (pointsHtml ? '<ul style="margin:0;padding-left:18px;">' + pointsHtml + '</ul>' : '')
       + '</div>'
       + '</div>';
@@ -9952,8 +9711,8 @@ function _shbCompleteUnit(unit, unitIdx) {
   _shbSaveProgress(nextUnit.id, 0);
   _shbRenderUnit(nextUnit, unitIdx + 1, 0);
   // Scroll to top
-  const contEl = document.getElementById('native-reader-content');
-  if (contEl) contEl.scrollTop = 0;
+  const reader = document.getElementById('native-reader');
+  if (reader) reader.scrollTop = 0;
 }
 
 // ════════════════════════════════════════════════════════════════════════════

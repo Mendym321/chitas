@@ -103,6 +103,22 @@ await check('catching up yesterday restores a 2-day streak', () => {
 
 await check('week strip shows 7 days', () => document.querySelectorAll('#week-strip button').length, 7);
 
+await check('a malicious name/city on the leaderboard is shown as text, not run', async () => {
+  window.__hacked = false;
+  user = { ...user, uid: 'u1', name: '<img src=x onerror="window.__hacked=true">', city: '<b onmouseover=x>NYC</b>' };
+  await renderLeaders();
+  await new Promise(r => setTimeout(r, 100));
+  const html = document.getElementById('leaders-list').innerHTML;
+  return [window.__hacked, html.includes('&lt;img'), document.querySelectorAll('#leaders-list img, #leaders-list b[onmouseover]').length];
+}, [false, true, 0]);
+
+await check('Personal Tehillim builds its list without crashing (offline → no chapters yet)', async () => {
+  user.tehillimFixedOpts = { rebbe: true, rebbetzin: false };
+  user.tehillimPeople = [{ label: 'Savta', heDay: 5, heMonth: 'Nissan', heYear: 5700 }];
+  const people = await _buildPersonalPsalms();
+  return people.map(p => p.label);
+}, ['Rebbe', 'Savta']);
+
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }
 else console.log('  ✓ no uncaught JavaScript errors');

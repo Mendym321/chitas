@@ -6,6 +6,31 @@ Line numbers refer to `index.html` unless another file is named.
 
 ---
 
+## 0. Status (updated as we go)
+
+### ⏳ Waiting on you: please check these
+1. **Tehillim on a 29-day month:** on Chabad.org, does **Fri Jan 8, 2027 (29 Teves)** show Tehillim **140–150** or only **140–144**? (The app shows 140–150.)
+2. **Firestore Security Rules:** paste them from the Firebase console so they can be reviewed and saved in this repo (§4.1, §4.3, §4.5).
+3. **`dach-dev`:** is that Firebase project (the Likkutei Sichos text + fonts) yours? (§6.2)
+4. **Hayom Yom text:** where did the English in Firestore come from? (§6.2)
+5. **`cache/{date}` in Firestore:** does something outside this repo write it (e.g. a Firebase Function)? If not, the app's `loadDailyCache` call can be removed (§7).
+
+### ✅ Fixed so far (branch `claude/adoring-dijkstra-p9ri1h`)
+- §3.3 Streak capped at 9 → new streak rules, with Shabbos/Yom Tov never breaking it (`js/progress.js`)
+- §3.4 Chumash aliyos → generated from Hebcal with Chabad's holiday rules
+- §3.5 Tehillim day 1–2 split, plus finishing Tehillim in 29-day months
+- §3.6 Five crashing functions
+- §3.8 Reset progress now really resets, including the cloud
+- §4.2 Names, cities, and dictionary text are escaped (shown as plain text, never run as code)
+- §7: lifetime and Sha'ar HaBitachon progress now saved to the cloud; Sha'ar HaBitachon place-saving; Sefer HaMitzvos "undefined" headings; the duplicate Shoftim entry; the toast's +150 mismatch; the calendar missing this week; pinch-zoom; the hardcoded "Psalm 124"; dead code
+- Points and home screen redesigned (see `DESIGN.md`)
+- Placeholder quizzes hidden until real AI quizzes are connected (§3.1)
+
+### Still open
+§3.1/3.2 real quizzes · §3.7 "learned it" accountability (now partly addressed by the design: quizzes will be the proof layer) · §4.1/4.3/4.4 Firestore rules and API security · §5 App Store · §6.1 Tanya intros
+
+---
+
 ## 1. The short version
 
 The app looks polished and the **readers** (Chumash with Rashi, Rambam, Tanya, Tehillim) are real, working, and nicely done. But the four things your goal depends on are mostly not working:
