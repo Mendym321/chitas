@@ -8,7 +8,7 @@ export const LEVELS = {
 
 const CHUMASH_REF = /^(Genesis|Exodus|Leviticus|Numbers|Deuteronomy) \d{1,3}:\d{1,3}-\d{1,3}:\d{1,3}$/;
 const RAMBAM_REF  = /^Mishneh Torah, [A-Za-z' ,\-]{2,60} \d{1,3}$/;
-const TANYA_SLUG  = /^Tanya,[A-Za-z_;,.'\- ]{2,80}\.\d{1,3}$/;
+export const TANYA_SLUG = /^Tanya,[A-Za-z_;,.'\- ]{2,80}\.\d{1,3}$/;
 
 // Check what the app asked for. Returns { section, level, refs, key } or { error }.
 // `key` identifies the exact passage + level, so everyone shares one cached quiz.

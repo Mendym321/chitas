@@ -144,6 +144,15 @@ await check('Rambam translator\'s notes become tappable numbers that open in pla
   return [btns.length, notes, first, closed, !!window.__hacked, document.getElementById('native-reader-content').textContent.includes('on the seventh day')];
 }, [2, ['See Shabbos 2a.', '<b>'], ['block', 'See Shabbos 2a.'], 'none', false, true]);
 
+await check('Tanya: AI summary is labeled and shown as text', () => {
+  window._tanyaData = { blocks: [{ type: 'intro', text: 'The Alter Rebbe continues <img src=x onerror="window.__hacked=true">' }, { he: 'שלום', en: 'Peace', isHagahah: false }],
+    chapterLabel: 'Likkutei Amarim · Chapter 1', chapterNum: 1, isFirstSegment: false };
+  window.__hacked = false;
+  _renderTanyaContent();
+  const t = document.getElementById('native-reader-content').textContent;
+  return [t.includes('AI-written'), t.includes('<img'), !!window.__hacked];
+}, [true, true, false]);
+
 // Pretend /api/quiz: remembers what the app sent, answers with 4 questions
 let quizRequest = null;
 await page.route('**/api/quiz', route => {

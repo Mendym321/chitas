@@ -1,7 +1,8 @@
 /**
- * End-to-end test of api/quiz.js with pretend Sefaria, Claude and Firebase
- * (no internet or API keys needed). Checks sign-in, the quote check, saving
- * the quiz so it's shared, and the daily limit.
+ * End-to-end tests of api/quiz.js and api/tanya-enhance.js with pretend
+ * Sefaria, Claude and Firebase (no internet or API keys needed). Checks
+ * sign-in, the quote check, verbatim Tanya text, saving results so they're
+ * shared, admin-only regenerate, and the daily limits.
  * Run:  cd tools && npm run test:api
  */
 import { mock } from 'node:test';
@@ -19,6 +20,7 @@ mock.module('../api/_lib/firebase.js', { namedExports: {
     runTransaction: fn => fn({ get: r => r.get(), set: (r, v) => r.set(v) }),
   }),
   verifyUser: async req => (req.headers.authorization || '').match(/^Bearer token-(\w+)$/)?.[1] || null,
+  isAdmin: uid => uid === 'admin',
 }});
 
 // ── Pretend Claude: answers with 5 questions, one with a made-up quote ──────
@@ -34,9 +36,10 @@ const claude = createServer((req, res) => {
   let body = ''; req.on('data', c => body += c); req.on('end', () => {
     claudeCalls++;
     claude.lastRequest = JSON.parse(body);
+    const answer = JSON.stringify(claude.lastRequest.system.includes('Tanya reader') ? fakeSplits : fakeQuiz);
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
       id: 'msg_test', type: 'message', role: 'assistant', model: 'claude-opus-5-5',
-      content: [{ type: 'text', text: JSON.stringify(fakeQuiz) }],
+      content: [{ type: 'text', text: answer }],
       stop_reason: 'end_turn', usage: { input_tokens: 10, output_tokens: 10 },
     }));
   });
@@ -44,11 +47,21 @@ const claude = createServer((req, res) => {
 process.env.ANTHROPIC_BASE_URL = 'http://localhost:' + claude.address().port;
 process.env.ANTHROPIC_API_KEY = 'test-key';
 
+// Pretend Claude for Tanya: one good split, one made-up start, a summary
+const fakeSplits = { summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
+  { index: 1, splits: [{ he: 'נפש אחת היא', en: 'One soul comes' }, { he: 'מילים שלא קיימות', en: 'The second soul' }] },
+  { index: 2, splits: [] },
+]};
+
 // ── Pretend Sefaria ──────────────────────────────────────────────────────────
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, opts) => {
   const u = String(url);
   if (!u.includes('sefaria.org')) return realFetch(url, opts);
+  if (u.includes('/api/texts/Tanya')) return new Response(JSON.stringify({
+    he: ['ראשון', 'והנה בכל נפש ישראל יש שתי נפשות. נפש אחת היא מצד הקליפה. ונפש השנית היא חלק אלוק ממעל ממש.', '<small>הגה. הערה</small>'],
+    text: ['First', 'Every Jew has two souls. One soul comes from the kelipah. The second soul is truly a part of G-d above.', '<small>Note: a gloss</small>'],
+  }), { headers: { 'content-type': 'application/json' } });
   const text = u.includes('Rashi')
     ? ['<b>a garden</b> Rashi explains<sup class="footnote-marker">1</sup><i class="footnote">a note</i> the garden.']
     : ['And the Lord God formed man of dust of the ground.', 'And the Lord God planted a garden in Eden from the east, and there He put the man whom He had formed.', 'And a river went out of Eden to water the garden.'];
@@ -56,11 +69,17 @@ globalThis.fetch = async (url, opts) => {
 };
 
 const { default: handler } = await import('../api/quiz.js');
+const { default: tanyaHandler } = await import('../api/tanya-enhance.js');
+const fakeRes = () => { const r = { status(s) { r.code = s; return r; }, json(j) { r.body = j; return r; } }; return r; };
 async function call(body, token = 'token-u1', method = 'POST') {
-  let status, json;
-  const res = { status(s) { status = s; return this; }, json(j) { json = j; return this; } };
+  const res = fakeRes();
   await handler({ method, body, headers: token ? { authorization: 'Bearer ' + token } : {} }, res);
-  return { status, json };
+  return { status: res.code, json: res.body };
+}
+async function tanya(query, token = 'token-u1') {
+  const res = fakeRes();
+  await tanyaHandler({ method: 'GET', query, headers: token ? { authorization: 'Bearer ' + token } : {} }, res);
+  return { status: res.code, json: res.body };
 }
 
 let failed = 0;
@@ -91,6 +110,23 @@ for (let i = 1; i <= 19; i++) await call({ ...BODY, refs: ['Genesis 2:' + (i + 4
 check('21st new quiz in a day → 429', (await call({ ...BODY, refs: ['Genesis 3:1-3:21'] })).status, 429);
 check('…but saved quizzes still work', (await call(BODY)).status, 200);
 
+console.log('Tanya enhance:');
+const T = { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: '2', endVerse: '3' };
+check('bad slug → 400', (await tanya({ ...T, chapterSlug: 'x' })).status, 400);
+check('not signed in and nothing saved → 401', (await tanya(T, null)).status, 401);
+const calls0 = claudeCalls;
+const t1 = await tanya(T);
+check('signed in → 200', t1.status, 200);
+check('split at the real start only; the made-up one is ignored', t1.json.blocks.map(b => b.en),
+  ['Every Jew has two souls.', 'One soul comes from the kelipah. The second soul is truly a part of G-d above.', 'Note: a gloss']);
+check('Hebrew is the exact original text', t1.json.blocks.slice(0, 2).map(b => b.he).join(' '),
+  'והנה בכל נפש ישראל יש שתי נפשות. נפש אחת היא מצד הקליפה. ונפש השנית היא חלק אלוק ממעל ממש.');
+check('the Alter Rebbe\'s gloss (hagahah) is marked', t1.json.blocks.map(b => b.isHagahah), [false, false, true]);
+check('summary returned', t1.json.context, 'The Alter Rebbe continues explaining the two souls.');
+check('next person (even signed out) gets the saved one, no AI call', [(await tanya(T, null)).json.source, claudeCalls - calls0], ['cache', 1]);
+check('regenerate (bust) by a normal user → 403', (await tanya({ ...T, bust: '1' })).status, 403);
+check('regenerate by an admin → regenerated', (await tanya({ ...T, bust: '1' }, 'token-admin')).json.source, 'regenerated');
+
 claude.close();
-console.log(failed ? `\n${failed} FAILED` : '\nAll quiz API tests passed');
+console.log(failed ? `\n${failed} FAILED` : '\nAll API tests passed');
 process.exit(failed ? 1 : 0);

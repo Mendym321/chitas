@@ -13,6 +13,11 @@ Line numbers refer to `index.html` unless another file is named.
 2. **`dach-dev`:** is that Firebase project (the Likkutei Sichos text + fonts) yours? (§6.2)
 3. **Hayom Yom text:** where did the English in Firestore come from? (§6.2)
 4. **`cache/{date}` in Firestore:** does something outside this repo write it (e.g. a Firebase Function)? If not, the app's `loadDailyCache` call can be removed (§7).
+5. **Vercel environment variables** (Project → Settings → Environment Variables), needed by the quiz and Tanya routes:
+   - `ANTHROPIC_API_KEY`: your Claude API key
+   - `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`: from a Firebase service-account key (Firebase console → Project settings → Service accounts)
+   - `ADMIN_UIDS`: your own Firebase user id (comma-separated if more than one); only these can force-regenerate Tanya
+   The server writes to the new Firestore collections `quiz_cache`, `quiz_usage`, `tanya_usage` (and `tanya_enhanced`). Your Security Rules should NOT let the app write to these; the server's admin key ignores the rules.
 
 ### ✅ Fixed so far (branch `claude/adoring-dijkstra-p9ri1h`)
 - §3.3 Streak capped at 9 → new streak rules, with Shabbos/Yom Tov never breaking it (`js/progress.js`)
@@ -23,10 +28,14 @@ Line numbers refer to `index.html` unless another file is named.
 - §4.2 Names, cities, and dictionary text are escaped (shown as plain text, never run as code)
 - §7: lifetime and Sha'ar HaBitachon progress now saved to the cloud; Sha'ar HaBitachon place-saving; Sefer HaMitzvos "undefined" headings; the duplicate Shoftim entry; the toast's +150 mismatch; the calendar missing this week; pinch-zoom; the hardcoded "Psalm 124"; dead code
 - Points and home screen redesigned (see `DESIGN.md`)
-- Placeholder quizzes hidden until real AI quizzes are connected (§3.1)
+- §3.1 Real quizzes: Quick review (4) / Deep dive (6) on exactly today's portion; every answer is checked against a quote from the text, with an explanation; misses reviewed at the end (`api/quiz.js`)
+- §4.4 AI routes need a signed-in user, have daily limits, and share saved results; `bust` is admin-only; open CORS removed; the unscheduled, spoofable `api/cron-tanya.js` removed
+- §6.1 Tanya: the hand-written chapter intros (several wrong) removed; the summary is AI-written and labeled so; sentence splitting can no longer change the text (`api/_lib/tanya-split.js`)
+- Progress tab: real learning stats (full parshiyos, times through Tehillim, Rambam chapters of 1,000, last-30-days per section) (`js/learning-stats.js`)
+- Rambam: translator's footnotes are back, as tappable numbers that open in place
 
 ### Still open
-§3.1/3.2 real quizzes · §3.7 "learned it" accountability (now partly addressed by the design: quizzes will be the proof layer) · §4.1/4.3/4.4 Firestore rules and API security · §5 App Store · §6.1 Tanya intros
+§3.2 weekly quiz (still placeholder questions, and unreachable; idea: a weekly review built from the questions you missed) · §3.7 "learned it" accountability (quizzes are now the proof layer) · §4.1/4.3 Firestore rules · §5 App Store
 
 ---
 

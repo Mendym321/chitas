@@ -25,3 +25,9 @@ export async function verifyUser(req) {
   try { app(); return (await getAuth().verifyIdToken(m[1])).uid; }
   catch { return null; }
 }
+
+// Admins (can force-regenerate cached AI output). Set ADMIN_UIDS on Vercel to a
+// comma-separated list of Firebase uids — kept on the server so it can't be faked.
+export function isAdmin(uid) {
+  return !!uid && (process.env.ADMIN_UIDS || '').split(',').map(s => s.trim()).includes(uid);
+}
