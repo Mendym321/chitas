@@ -58,7 +58,7 @@ fonts/, icons/         Assets
 ### 3.3 Streaks can never go above 9 days
 `recalcStreak()` (line 9095) only looks back `MAX_DAYS_BACK + 1` = 8 days. Simulated: a user with 60 perfect days in a row gets **streak = 9**. So the 30-day (+500 XP) and 100-day (+2000 XP) celebrations can never happen, the leaderboard "Streak" tab is capped at 9, and the onboarding screen promising a "47 day streak" isn't possible.
 
-### 3.4 Chumash table ✅ FIXED (tables now generated from Hebcal: `tools/generate-chumash-data.mjs`, tested in `tools/test-chumash.mjs`; holiday weeks verified on Chabad.org except Simchas Torah on a weekday)
+### 3.4 Chumash table ✅ FIXED (tables now generated from Hebcal: `tools/generate-chumash-data.mjs`, tested in `tools/test-chumash.mjs`; all holiday weeks incl. Simchas Torah verified on Chabad.org)
 The app ignores Hebcal's aliyah data and uses two hand-typed tables: `PARSHA_SCHEDULE` (line 2631) and `PARSHA_ALIYOT` (line 2686). Compared against the `@hebcal/core` + `@hebcal/leyning` libraries:
 - **41 aliyah ranges differ from Hebcal.** **Verified against Chabad.org (Oct 2026):** 5 spot-checks (Vayeshev 7, Ki Tisa 1, Tzav 2, Nasso 5, Ki Teitzei 3) all match **Hebcal**, not the app's table. So the table is wrong, and Hebcal can be trusted for Chabad's Chitas.
 - **Definite typos** (wrong under any custom, because the same verses land in two parshiyos): **Vayeshev aliyah 7** = Genesis 41:1–14, which is Miketz's opening, so Vayeshev never reaches 40:1–23. **Vayishlach aliyah 7** ends at 37:1, which is also Vayeshev's first verse.

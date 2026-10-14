@@ -38,6 +38,8 @@ check('Sep 29 2026 Sukkos week → Vezos 3',           getChumashAliyaRef(day('2
 check('Apr 20 2027 Pesach week → Acharei 3',         getChumashAliyaRef(day('2027-04-20')), 'Leviticus 16:25-16:34');
 check('Oct 4 2026  Simchas Torah → all Vezos + Bereishis 1',
       getChumashAliyaRef(day('2026-10-04')), 'Deuteronomy 33:1-34:12|Genesis 1:1-2:3');
+check('Oct 15 2025 Wednesday Simchas Torah → Vezos 4-7 + Bereishis 1-4',
+      getChumashAliyaRef(day('2025-10-15')), 'Deuteronomy 33:18-34:12|Genesis 1:1-4:18');
 check('Oct 5 2026  day after → Bereishis 2',         getChumashAliyaRef(day('2026-10-05')), 'Genesis 2:4-2:19');
 check('label on Sukkos week', getChumashDayLabel(day('2026-09-29')), 'Vezot Haberakhah · Aliya 3');
 

@@ -78,17 +78,20 @@ aliyot[VEZOS] = [1, 2, 3, 4, 5, 6, 7].map(n => {
 
 // ── 3. Simchas Torah (Diaspora, 23 Tishrei) — day-by-day exceptions ─────────
 // Vezos Habracha is read on Simchas Torah, so from that day the upcoming
-// parsha becomes Bereishis. Learn Vezos Habracha, then start Bereishis and
-// "catch up" through that weekday's aliyah, so tomorrow is back on track.
-// Earlier days of that same week are still Vezos Habracha (verified for a
-// Sunday Simchas Torah on Chabad.org).
+// parsha becomes Bereishis. Finish the rest of Vezos Habracha, then start
+// Bereishis and "catch up" through that weekday's aliyah, so tomorrow is back
+// on track. Earlier days of that same week are still Vezos Habracha.
+// (Verified on Chabad.org for a Sunday and a Wednesday Simchas Torah.)
 // Multiple refs are joined with "|".
 const dayOverrides = {};
 for (let y = FIRST_HEBREW_YEAR; y <= LAST_HEBREW_YEAR; y++) {
   const st = new HDate(23, months.TISHREI, y).greg();
   const dow = st.getDay();
-  const bereishisEnd = aliyot.Bereishit[dow].split('-')[1]; // e.g. "2:3"
-  dayOverrides[iso(st)] = 'Deuteronomy 33:1-34:12|Genesis 1:1-' + bereishisEnd;
+  // Finish the REST of Vezos Habracha (from today's aliyah to the end) —
+  // earlier aliyos were already learned this week. On a Sunday that's all of it.
+  const vezosStart   = aliyot[VEZOS][dow].split(' ')[1].split('-')[0]; // e.g. "33:18"
+  const bereishisEnd = aliyot.Bereishit[dow].split('-')[1];            // e.g. "4:18"
+  dayOverrides[iso(st)] = 'Deuteronomy ' + vezosStart + '-34:12|Genesis 1:1-' + bereishisEnd;
   for (let back = 1; back <= dow; back++) {
     const d = new Date(st); d.setDate(st.getDate() - back);
     dayOverrides[iso(d)] = aliyot[VEZOS][d.getDay()];
