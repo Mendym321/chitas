@@ -17,6 +17,10 @@ Line numbers refer to `index.html` unless another file is named.
    - `ANTHROPIC_API_KEY`: your Claude API key
    - `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`: from a Firebase service-account key (Firebase console → Project settings → Service accounts)
    - `ADMIN_UIDS`: your own Firebase user id (comma-separated if more than one); only these can force-regenerate Tanya
+6. **Sign in with Apple** (the App Store requires it next to Google sign-in). The code is ready; switch it on with `APPLE_SIGNIN_ENABLED = true` in `index.html` after:
+   - Apple Developer account → Certificates, IDs & Profiles: create a **Services ID** (e.g. `com.yourname.chitas.signin`) with "Sign in with Apple" enabled. Its return URL is `https://chitas-daily.firebaseapp.com/__/auth/handler`. Also create a **Key** with Sign in with Apple enabled.
+   - Firebase console → Authentication → Sign-in method → **Apple** → enable, and paste the Services ID, Team ID, Key ID and the private key.
+   Note: once the app is wrapped as a real iOS app, Google sign-in inside an app web view is blocked by Google, so sign-in will need the native plugins then (part of the App Store work, §5).
    The server writes to the new Firestore collections `quiz_cache`, `quiz_usage`, `tanya_usage` (and `tanya_enhanced`). Your Security Rules should NOT let the app write to these; the server's admin key ignores the rules.
 
 ### ✅ Fixed so far (branch `claude/adoring-dijkstra-p9ri1h`)
@@ -33,6 +37,8 @@ Line numbers refer to `index.html` unless another file is named.
 - §6.1 Tanya: the hand-written chapter intros (several wrong) removed; the summary is AI-written and labeled so; sentence splitting can no longer change the text (`api/_lib/tanya-split.js`)
 - Progress tab: real learning stats (full parshiyos, times through Tehillim, Rambam chapters of 1,000, last-30-days per section) (`js/learning-stats.js`)
 - Rambam: translator's footnotes are back, as tappable numbers that open in place
+- Onboarding: one welcome screen instead of ten; no account needed to start (progress is kept on the phone and combined with the account on sign-in, `js/account-merge.js`); sign-in is offered when it helps (after the first section, quizzes, leaderboard); Rambam track is asked the first time Rambam is opened; city is optional in the profile only
+- Progress tab activity grid: one colour by how much was learned; Shabbos/Yom Tov shown as rest days, not misses
 
 ### Still open
 §3.2 weekly quiz (still placeholder questions, and unreachable; idea: a weekly review built from the questions you missed) · §3.7 "learned it" accountability (quizzes are now the proof layer) · §4.1/4.3 Firestore rules · §5 App Store

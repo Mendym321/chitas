@@ -452,6 +452,9 @@
   border: 1px solid rgba(29,185,84,.45); background: rgba(29,185,84,.12); color: #1DB954; cursor: pointer;
 }
 .rambam-fn.active { background: #1DB954; color: #000; }
+#ob-welcome .ob-points p { display:flex; gap:12px; align-items:center; font-size:14px; color:var(--t2); padding:9px 0; border-bottom:1px solid var(--border); }
+#ob-welcome .ob-points p:last-child { border-bottom:none; }
+#ob-welcome .ob-points span { font-size:18px; width:24px; text-align:center; flex-shrink:0; }
 #ls-trans-popup {
   position: fixed;
   z-index: 1200;
@@ -608,7 +611,7 @@
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut }
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -652,11 +655,24 @@ window._fb = {
       return result.user;
     } catch(e) {
       // Fallback to redirect on mobile browsers that block popups
-      if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+      if (e.code === 'auth/popup-blocked') {
         await signInWithRedirect(auth, gProvider);
       } else {
         throw e;
       }
+    }
+  },
+
+  // Sign in with Apple (needs the Apple provider set up in Firebase — see AUDIT.md)
+  async signInApple() {
+    const provider = new OAuthProvider('apple.com');
+    provider.addScope('email');
+    provider.addScope('name');
+    try {
+      return (await signInWithPopup(auth, provider)).user;
+    } catch(e) {
+      if (e.code === 'auth/popup-blocked') { await signInWithRedirect(auth, provider); return null; }
+      throw e;
     }
   },
 
@@ -775,8 +791,8 @@ window._fsGetDoc = getDoc;
   <div id="onboarding" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;">
     <div style="max-width:360px;width:100%;">
 
-      <!-- Step 0: Animated landing page -->
-      <div id="ob-step0" style="position:relative;z-index:1;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
+      <!-- Welcome: the only onboarding screen. No account needed to start. -->
+      <div id="ob-welcome" style="position:relative;z-index:1;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
 
         <!-- Logo -->
         <div style="width:88px;height:88px;margin:0 auto 32px;position:relative;animation:logoReveal .7s cubic-bezier(.22,1,.36,1) both;">
@@ -795,368 +811,42 @@ window._fsGetDoc = getDoc;
           </div>
         </div>
 
-        <!-- Title -->
-        <div style="animation:titleReveal .6s .35s ease both;margin-bottom:48px;">
-          <h1 style="font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:var(--t1);line-height:.88;letter-spacing:-2px;margin-bottom:0;">
+        <div style="animation:titleReveal .6s .25s ease both;margin-bottom:18px;">
+          <h1 style="font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:var(--t1);line-height:.88;letter-spacing:-2px;">
             Chitas<br>
-            <span id="ob-gold-title" style="background:linear-gradient(135deg,#F0A500 0%,#FFB830 50%,#F0A500 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;">Daily</span>
+            <span style="background:linear-gradient(135deg,#F0A500 0%,#FFB830 50%,#F0A500 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;">Daily</span>
           </h1>
         </div>
+        <p style="font-size:15px;color:var(--t2);line-height:1.5;margin-bottom:28px;max-width:300px;animation:titleReveal .5s .4s ease both;">Chumash, Tehillim, Tanya &amp; Rambam: today's portions, ready to learn.</p>
 
-        <!-- Big ticker — the hero -->
-        <div style="animation:titleReveal .5s .55s ease both;margin-bottom:16px;width:100%;">
-          <div style="height:64px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
-            <p id="ob-ticker-word" style="font-size:42px;font-weight:900;color:var(--t1);position:absolute;letter-spacing:-1px;font-family:'DM Sans',sans-serif;"></p>
-          </div>
-          <p id="ob-ticker-sub" style="font-size:13px;color:var(--t3);min-height:18px;transition:opacity .2s;margin-top:4px;"></p>
+        <div class="ob-points" style="width:100%;text-align:left;margin-bottom:36px;animation:up .5s .55s ease both;">
+          <p><span>📖</span>Read right here, in Hebrew, English or both</p>
+          <p><span>🔥</span>A streak that never breaks for Shabbos or Yom Tov</p>
+          <p><span>✅</span>Short quizzes so the learning sticks</p>
         </div>
 
-        <!-- Progress dots -->
-        <div id="ob-ticker-dots" style="display:flex;gap:7px;justify-content:center;margin-bottom:52px;animation:titleReveal .4s .7s ease both;">
-        </div>
-
-        <!-- CTA -->
-        <div style="width:100%;animation:up .5s .85s ease both;">
-          <button onclick="document.getElementById('ob-step0').style.display='none';document.getElementById('ob-showcase').style.display='flex';stopObTicker();obShowcaseStart();"
-            style="width:100%;padding:18px;border-radius:16px;background:linear-gradient(135deg,#F0A500,#E09000);border:none;color:#000;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:12px;animation:glowPulse 3s 1.4s ease infinite;letter-spacing:-.3px;">
-            Get Started
+        <div style="width:100%;animation:up .5s .7s ease both;">
+          <button onclick="obStartGuest()" style="width:100%;padding:18px;border-radius:16px;background:linear-gradient(135deg,#F0A500,#E09000);border:none;color:#000;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;letter-spacing:-.3px;">
+            Start learning
           </button>
-          <p style="font-size:11px;color:var(--t3);">Free · Syncs across all your devices</p>
+          <button onclick="openSignIn('returning')" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:none;color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">I already have an account</button>
+          <p style="font-size:11px;color:var(--t3);margin-top:6px;">Free · No account needed to start</p>
         </div>
-
-      </div>
-
-      <!-- ── FEATURE SHOWCASE ── -->
-      <div id="ob-showcase" style="display:none;flex-direction:column;height:100vh;max-height:100vh;overflow:hidden;padding:0 20px;">
-
-        <!-- Header row -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0 8px;flex-shrink:0;">
-          <button onclick="document.getElementById('ob-showcase').style.display='none';document.getElementById('ob-step0').style.display='flex';" style="background:none;border:none;color:var(--t3);font-size:13px;font-family:inherit;cursor:pointer;">← Back</button>
-          <button onclick="obShowcaseSkip();" style="background:none;border:none;color:var(--t3);font-size:13px;font-family:inherit;cursor:pointer;">Skip →</button>
-        </div>
-
-        <!-- Cards viewport — fixed height, cards absolutely positioned inside -->
-        <div style="flex:1;position:relative;overflow:hidden;min-height:0;" id="ob-sc-viewport">
-
-          <!-- Card 1: Real section cards mockup -->
-          <div class="ob-sc-card" id="ob-sc-0" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;animation:fadeUp .4s ease both;overflow:hidden;">
-            <div style="width:100%;margin-bottom:14px;">
-              <!-- Exact replica of real section cards -->
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:11px 14px;margin-bottom:8px;">
-                <div style="display:flex;align-items:center;gap:14px;">
-                  <div style="width:44px;height:44px;border-radius:13px;background:#F0A50018;border:1px solid #F0A50035;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#F0A500;">
-                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-                  </div>
-                  <div style="flex:1;min-width:0;">
-                    <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">Chumash</p>
-                    <p style="font-size:12px;color:var(--t3);">Vayikra · Aliya 1 · with Rashi</p>
-                  </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                </div>
-              </div>
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:11px 14px;margin-bottom:8px;">
-                <div style="display:flex;align-items:center;gap:14px;">
-                  <div style="width:44px;height:44px;border-radius:13px;background:#4A9EFF18;border:1px solid #4A9EFF35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4A9EFF;">
-                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                  </div>
-                  <div style="flex:1;min-width:0;">
-                    <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">Tehillim</p>
-                    <p style="font-size:12px;color:var(--t3);">Today's chapters · Book 1</p>
-                  </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                </div>
-              </div>
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:11px 14px;margin-bottom:8px;">
-                <div style="display:flex;align-items:center;gap:14px;">
-                  <div style="width:44px;height:44px;border-radius:13px;background:#A855F718;border:1px solid #A855F735;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#A855F7;">
-                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                  </div>
-                  <div style="flex:1;min-width:0;">
-                    <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">Tanya</p>
-                    <p style="font-size:12px;color:var(--t3);">Chapter 32 · Likutei Amarim</p>
-                  </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                </div>
-              </div>
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:15px 16px;">
-                <div style="display:flex;align-items:center;gap:14px;">
-                  <div style="width:44px;height:44px;border-radius:13px;background:#1DB95418;border:1px solid #1DB95435;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1DB954;">
-                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-                  </div>
-                  <div style="flex:1;min-width:0;">
-                    <p style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:2px;">Rambam</p>
-                    <p style="font-size:12px;color:var(--t3);">Hilchos Teshuvah · 3 chapters</p>
-                  </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--t3);flex-shrink:0;"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                </div>
-              </div>
-            </div>
-            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">Your daily Chitas</h2>
-            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Chumash, Tehillim, Tanya & Rambam — every day. Hebrew, English, or both. With Rashi.</p>
-          </div>
-
-          <!-- Card 2: Streak + progress — real progress card style -->
-          <div class="ob-sc-card" id="ob-sc-1" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;overflow:hidden;">
-            <div style="width:100%;margin-bottom:14px;">
-              <!-- Real progress card replica -->
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;margin-bottom:10px;">
-                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-                  <!-- Progress ring -->
-                  <svg width="52" height="52" viewBox="0 0 52 52" style="flex-shrink:0;transform:rotate(-90deg);">
-                    <circle cx="26" cy="26" r="23" fill="none" stroke="var(--border)" stroke-width="3.5"/>
-                    <circle cx="26" cy="26" r="23" fill="none" stroke="#F0A500" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="108 144.5"/>
-                  </svg>
-                  <div style="flex:1;">
-                    <p style="font-weight:800;font-size:16px;color:var(--t1);margin-bottom:2px;">Today's Learning</p>
-                    <p style="font-size:12px;color:var(--t3);">1 section remaining</p>
-                  </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                  <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-                    <div style="width:8px;height:8px;border-radius:50%;background:#F0A500;flex-shrink:0;"></div>
-                    <span style="font-size:12px;font-weight:700;color:var(--t1);">Chumash</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
-                  </div>
-                  <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-                    <div style="width:8px;height:8px;border-radius:50%;background:#4A9EFF;flex-shrink:0;"></div>
-                    <span style="font-size:12px;font-weight:700;color:var(--t1);">Tehillim</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
-                  </div>
-                  <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-                    <div style="width:8px;height:8px;border-radius:50%;background:#A855F7;flex-shrink:0;"></div>
-                    <span style="font-size:12px;font-weight:700;color:var(--t1);">Tanya</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><path d="M20 6L9 17l-5-5"/></svg>
-                  </div>
-                  <div style="background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-                    <div style="width:8px;height:8px;border-radius:50%;background:#1DB954;flex-shrink:0;"></div>
-                    <span style="font-size:12px;font-weight:700;color:var(--t3);">Rambam</span>
-                  </div>
-                </div>
-              </div>
-              <!-- Streak card -->
-              <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="#F0A500"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
-                <div>
-                  <p style="font-size:28px;font-weight:900;color:var(--gold);line-height:1;letter-spacing:-1px;">47 <span style="font-size:13px;font-weight:700;color:var(--t3);">day streak</span></p>
-                  <p style="font-size:11px;color:var(--t3);margin-top:2px;">Best: 47 days · 2,840 points</p>
-                </div>
-              </div>
-            </div>
-            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">Track every day</h2>
-            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Streaks, points and milestones. Shabbos and Yom Tov never break your streak.</p>
-          </div>
-
-          <!-- Card 3: Personal Tehillim -->
-          <div class="ob-sc-card" id="ob-sc-2" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;overflow:hidden;">
-            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;margin-bottom:14px;">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
-                <div style="width:44px;height:44px;border-radius:13px;background:#4A9EFF18;border:1px solid #4A9EFF35;display:flex;align-items:center;justify-content:center;color:#4A9EFF;">
-                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                </div>
-                <div>
-                  <p style="font-size:14px;font-weight:800;color:var(--t1);">Tehillim</p>
-                  <p style="font-size:11px;color:var(--t3);">+ personal chapters</p>
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:#A855F718;border:1px solid #A855F735;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#A855F7;">S</div>
-                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">Savta Miriam</span>
-                  <span style="font-size:11px;color:var(--t3);">Psalm 83</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:#1DB95418;border:1px solid #1DB95435;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#1DB954;">M</div>
-                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">Menachem Dovid</span>
-                  <span style="font-size:11px;color:var(--t3);">Psalm 12</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 12px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:#F0A50018;border:1px solid #F0A50035;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#F0A500;">R</div>
-                  <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;">The Rebbe</span>
-                  <span style="font-size:11px;color:var(--t3);">His kapitel</span>
-                </div>
-              </div>
-            </div>
-            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">Tehillim for your people</h2>
-            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Add names and birthdays. The right psalm is calculated and added to your daily Tehillim automatically.</p>
-          </div>
-
-          <!-- Card 4: Likkutei Sichos translation mode -->
-          <div class="ob-sc-card" id="ob-sc-3" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;overflow:hidden;">
-            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;margin-bottom:14px;">
-              <!-- LS section header -->
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
-                <div style="width:44px;height:44px;border-radius:13px;background:#8B5CF618;border:1px solid #8B5CF635;display:flex;align-items:center;justify-content:center;color:#8B5CF6;">
-                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-                </div>
-                <div>
-                  <p style="font-size:14px;font-weight:800;color:var(--t1);">לקוטי שיחות</p>
-                  <p style="font-size:11px;color:var(--t3);">Behaaloscha · Vol. 2</p>
-                </div>
-              </div>
-              <!-- Sicha text with purple squiggles -->
-              <div style="direction:rtl;font-family:'Frank Ruhl Libre',serif;font-size:14px;line-height:2;color:var(--t1);margin-bottom:14px;">
-                <span>אין דער הפטרה פון </span><span style="background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3'%3E%3Cpath d='M0 2.5 Q1.5 0 3 2.5 Q4.5 5 6 2.5' stroke='%238B5CF6' stroke-width='1.2' fill='none'/%3E%3C/svg%3E\");background-repeat:repeat-x;background-position:bottom;background-size:6px 3px;padding-bottom:3px;">פרשתנו</span><span> שטייט: </span><span style="background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3'%3E%3Cpath d='M0 2.5 Q1.5 0 3 2.5 Q4.5 5 6 2.5' stroke='%234A9EFF' stroke-width='1.2' fill='none'/%3E%3C/svg%3E\");background-repeat:repeat-x;background-position:bottom;background-size:6px 3px;padding-bottom:3px;">ראיתי והנה מנורת זהב</span>
-              </div>
-              <!-- Translation mode toggle -->
-              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-radius:10px;padding:10px 12px;">
-                <div>
-                  <p style="font-size:12px;font-weight:700;color:#8B5CF6;">Translation Mode</p>
-                  <p style="font-size:10px;color:var(--t3);">Tap words for instant translation</p>
-                </div>
-                <div style="width:36px;height:20px;border-radius:10px;background:#8B5CF6;position:relative;flex-shrink:0;">
-                  <div style="position:absolute;top:3px;left:19px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
-                </div>
-              </div>
-            </div>
-            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">Learn Likkutei Sichos</h2>
-            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">The Rebbe's sichos on this week's parsha. Turn on Translation Mode — tap any word or quoted verse for an instant explanation.</p>
-          </div>
-
-          <!-- Card 5: Extra learning + leaderboard -->
-          <div class="ob-sc-card" id="ob-sc-4" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 0 8px;overflow:hidden;">
-            <div style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;margin-bottom:14px;">
-              <!-- Extra tracks -->
-              <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
-                <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Additional learning</p>
-                <div style="display:flex;flex-wrap:wrap;gap:7px;">
-                  <div style="padding:5px 11px;border-radius:8px;background:#F0A50014;border:1px solid #F0A50030;"><span style="font-size:11px;font-weight:700;color:#F0A500;">Daf Yomi</span></div>
-                  <div style="padding:5px 11px;border-radius:8px;background:#8B5CF614;border:1px solid #8B5CF630;"><span style="font-size:11px;font-weight:700;color:#8B5CF6;">Likkutei Sichos</span></div>
-                  <div style="padding:5px 11px;border-radius:8px;background:#1DB95414;border:1px solid #1DB95430;"><span style="font-size:11px;font-weight:700;color:#1DB954;">Mishnah Yomi</span></div>
-                  <div style="padding:5px 11px;border-radius:8px;background:#4A9EFF14;border:1px solid #4A9EFF30;"><span style="font-size:11px;font-weight:700;color:#4A9EFF;">Hayom Yom</span></div>
-                </div>
-              </div>
-              <!-- Leaderboard -->
-              <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">Leaderboard</p>
-              <div style="display:flex;flex-direction:column;gap:7px;">
-                <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
-                  <div style="width:20px;height:20px;border-radius:50%;background:#F0A50018;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gold);">1</div>
-                  <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Mendel K.</p><p style="font-size:10px;color:var(--t3);">Crown Heights</p></div>
-                  <span style="font-size:11px;font-weight:700;color:var(--gold);">2,840 pts</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
-                  <div style="width:20px;height:20px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--t2);">2</div>
-                  <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Rivka S.</p><p style="font-size:10px;color:var(--t3);">Monsey</p></div>
-                  <span style="font-size:11px;font-weight:700;color:var(--t2);">2,210 pts</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:9px;">
-                  <div style="width:20px;height:20px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--t2);">3</div>
-                  <div style="flex:1;"><p style="font-size:12px;font-weight:700;color:var(--t1);">Yosef L.</p><p style="font-size:10px;color:var(--t3);">Tzfas</p></div>
-                  <span style="font-size:11px;font-weight:700;color:var(--t2);">1,990 pts</span>
-                </div>
-              </div>
-            </div>
-            <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">More to learn, together</h2>
-            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Add Daf Yomi, Likkutei Sichos and more. See where you rank among daily learners worldwide.</p>
-          </div>
-
-        </div><!-- /viewport -->
-
-        <!-- Fixed footer: dots + next -->
-        <div style="padding:16px 0 calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-          <div style="display:flex;gap:6px;align-items:center;" id="ob-sc-dots">
-            <div class="ob-sc-dot" id="ob-sc-dot-0" style="width:20px;height:6px;border-radius:3px;background:var(--gold);transition:all .3s;"></div>
-            <div class="ob-sc-dot" id="ob-sc-dot-1" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
-            <div class="ob-sc-dot" id="ob-sc-dot-2" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
-            <div class="ob-sc-dot" id="ob-sc-dot-3" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
-            <div class="ob-sc-dot" id="ob-sc-dot-4" style="width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;"></div>
-          </div>
-          <button id="ob-sc-next-btn" onclick="obShowcaseNext();" style="padding:14px 28px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">
-            Next →
-          </button>
-        </div>
-
-      </div><!-- /ob-showcase -->
-
-            <!-- Step 1: Sign in -->
-      <div id="ob-step1" style="display:none;">
-        <button onclick="document.getElementById('ob-step1').style.display='none';document.getElementById('ob-showcase').style.display='flex';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
-        <h2 style="font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Sign in to save progress</h2>
-        <p style="color:var(--t2);font-size:14px;margin-bottom:28px;line-height:1.5;">Your streak and points sync<br>across all your devices.</p>
-        <!-- Google sign-in -->
-        <button id="ob-google-btn" onclick="signInWithGoogle()" style="width:100%;padding:14px;border-radius:12px;background:#fff;border:1.5px solid #ddd;color:#222;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;font-family:inherit;margin-bottom:12px;">
-          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>
-          Continue with Google
-        </button>
-        <p id="ob-signin-error" style="display:none;color:var(--red);font-size:12px;text-align:center;margin-top:8px;"></p>
-        <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:16px;">Your progress syncs across all your devices</p>
-      </div>
-
-      <!-- Step 2: City (no age — just for leaderboard location flavour) -->
-      <div id="ob-step2" style="display:none;">
-        <button onclick="document.getElementById('ob-step1').style.display='';document.getElementById('ob-step2').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
-        <div style="display:flex;gap:6px;align-items:center;margin-bottom:24px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);transition:all .2s;"></div><div style="width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .2s;"></div><div style="width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .2s;"></div>
-    </div>
-    <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Where are you learning from?</h2>
-        <p style="color:var(--t2);font-size:13px;margin-bottom:28px;line-height:1.6;">Shows on the leaderboard next to your name.<br><span style="color:var(--t3);">Skip if you prefer.</span></p>
-        <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">City</label>
-        <input id="ob-city" class="ob-input" placeholder="e.g. Crown Heights" autocomplete="off"/>
-        <button onclick="obNext2()" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;">Continue →</button>
-        <button onclick="obNext2()" style="width:100%;padding:11px;border-radius:12px;background:transparent;border:none;color:var(--t3);font-size:13px;margin-top:6px;">Skip →</button>
-      </div>
-
-      <!-- Step 3: Rambam track -->
-      <div id="ob-step3" style="display:none;">
-        <button onclick="document.getElementById('ob-step2').style.display='';document.getElementById('ob-step3').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 20px;font-family:inherit;">← Back</button>
-        <div style="display:flex;gap:6px;align-items:center;margin-bottom:24px;">
-      <div style="width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .2s;"></div><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);transition:all .2s;"></div><div style="width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .2s;"></div>
-    </div>
-    <h2 style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;">Rambam Track</h2>
-        <p style="color:var(--t2);font-size:13px;margin-bottom:24px;line-height:1.5;">Which daily Rambam cycle are you following?</p>
-        <div id="track-options"></div>
-        <button id="ob-start" onclick="obNext3()" style="width:100%;padding:14px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--t3);font-size:15px;font-weight:800;margin-top:8px;transition:all .2s;">Continue →</button>
-      </div>
-
-      <!-- ── ONBOARDING STEP 4: Tehillim ── -->
-      <div id="ob-step4" style="display:none;">
-        <button onclick="document.getElementById('ob-step3').style.display='';document.getElementById('ob-step4').style.display='none';" style="background:none;border:none;color:var(--t3);font-size:13px;padding:0 0 16px;font-family:inherit;">← Back</button>
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:20px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div>
-      <div style="width:6px;height:6px;border-radius:50%;background:var(--border);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
-    </div>
-    <h2 style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;color:var(--t1);margin-bottom:6px;">Your Tehillim</h2>
-    <p style="color:var(--t2);font-size:13px;margin-bottom:22px;line-height:1.6;">After each day's Tehillim, personal chapters for the people in your life will appear automatically.</p>
-
-    <!-- Rebbe & Rebbetzin toggles — matches app profile style -->
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;">
-      <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);">
-        <div style="width:32px;height:32px;border-radius:10px;background:rgba(74,158,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4A9EFF;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        </div>
-        <div style="flex:1;">
-          <p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px;">The Rebbe</p>
-          <p id="ob-rebbe-sub" style="font-size:12px;color:var(--t3);">Included in Tehillim</p>
-        </div>
-        <button id="ob-rebbe-toggle" onclick="obToggleRebbe()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;">
-          <div id="ob-rebbe-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
-        </button>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;">
-        <div style="width:32px;height:32px;border-radius:10px;background:rgba(74,158,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4A9EFF;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        </div>
-        <div style="flex:1;">
-          <p style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px;">The Rebbetzin</p>
-          <p id="ob-rebbetzin-sub" style="font-size:12px;color:var(--t3);">Included in Tehillim</p>
-        </div>
-        <button id="ob-rebbetzin-toggle" onclick="obToggleRebbetzin()" style="width:44px;height:26px;border-radius:13px;border:none;background:#4A9EFF;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;">
-          <div id="ob-rebbetzin-knob" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;transition:all .15s;"></div>
-        </button>
-      </div>
-    </div>
-
-    <!-- Add people — opens the same modal used in profile -->
-    <button onclick="_openTehillimPeopleManager()" style="width:100%;padding:13px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add family &amp; friends
-    </button>
-
-    <button onclick="obStart()" style="width:100%;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:10px;">Start Learning →</button>
-    <button onclick="obStart()" style="width:100%;padding:12px;border-radius:14px;background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer;font-family:inherit;">Skip for now</button>
       </div>
     </div>
   </div>
+  <!-- ── SIGN-IN SHEET ── (asked only when an account is needed: saving a streak, quizzes, leaderboard) -->
+  <div id="signin-sheet" onclick="if(event.target.id==='signin-sheet')closeSignIn()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:22px 22px 0 0;padding:24px 22px calc(22px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:up .25s ease both;">
+      <p id="signin-title" style="font-size:20px;font-weight:900;color:var(--t1);margin-bottom:6px;"></p>
+      <p id="signin-sub" style="font-size:13.5px;color:var(--t3);line-height:1.5;margin-bottom:20px;"></p>
+      <button id="signin-apple-btn" onclick="signInWith('apple')" style="display:none;width:100%;padding:14px;border-radius:14px;background:#000;border:1px solid #333;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;align-items:center;justify-content:center;gap:10px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.87-.76-1.47.02-2.83.86-3.59 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.24 2.73 2.2 1.1-.04 1.51-.7 2.84-.7 1.32 0 1.7.7 2.86.68 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.41 1.2-2.47-.03-.01-2.3-.88-2.29-3.52zM14.2 6.13c.6-.74 1.01-1.75.9-2.77-.87.04-1.93.58-2.55 1.31-.56.65-1.05 1.69-.92 2.69.97.07 1.96-.49 2.57-1.23z"/></svg> Continue with Apple</button>
+      <button id="ob-google-btn" onclick="signInWith('google')" style="width:100%;padding:14px;border-radius:14px;background:#fff;border:1px solid #ddd;color:#1f1f1f;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;"><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continue with Google</button>
+      <p id="ob-signin-error" style="display:none;font-size:12px;color:#FF4757;text-align:center;margin-top:10px;"></p>
+      <button onclick="closeSignIn()" style="width:100%;padding:12px;margin-top:8px;border-radius:14px;background:transparent;border:none;color:var(--t3);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Not now</button>
+    </div>
+  </div>
+
   <!-- ── MAIN APP ── -->
   <div id="main-app" style="display:none;">
 
@@ -1477,6 +1167,11 @@ window._fsGetDoc = getDoc;
       <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Settings</p>
 
       <!-- City — show input if not set -->
+      <div id="ps-guest-row" style="display:none;background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.3);border-radius:12px;padding:14px 16px;margin-bottom:8px;">
+        <p style="font-size:13.5px;font-weight:800;color:var(--t1);margin-bottom:3px;">Your progress is only on this phone</p>
+        <p style="font-size:12px;color:var(--t3);line-height:1.45;margin-bottom:10px;">Sign in to back it up and use it on all your devices.</p>
+        <button onclick="closeProfileSheet();openSignIn('save')" style="padding:10px 18px;border-radius:10px;background:var(--gold);border:none;color:#000;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">Sign in</button>
+      </div>
       <div id="ps-city-row" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 16px;margin-bottom:8px;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
           <span style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
@@ -1562,7 +1257,7 @@ window._fsGetDoc = getDoc;
     <div style="padding:0 24px 48px;">
       <div class="ps-label">Account</div>
       <div class="ps-card">
-        <button onclick="signOut();closeProfileSheet();" class="ps-row" style="width:100%;background:transparent;border:none;cursor:pointer;font-family:inherit;text-align:left;">
+        <button id="ps-signout-row" onclick="signOut();closeProfileSheet();" class="ps-row" style="width:100%;background:transparent;border:none;cursor:pointer;font-family:inherit;text-align:left;">
           <span class="ps-icon" style="background:var(--surface);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </span>
@@ -1609,6 +1304,7 @@ window._fsGetDoc = getDoc;
 <script src="/js/tehillim.js"></script>
 <script src="/js/holidays-data.js"></script>
 <script src="/js/progress.js"></script>
+<script src="/js/account-merge.js"></script>
 <script src="/js/learning-stats.js"></script>
 <script>
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -1801,143 +1497,75 @@ function fire(msg, type='gold') {
   toastTimer = setTimeout(()=>{ t.style.display='none'; }, 3000);
 }
 
-// ── ONBOARDING ────────────────────────────────────────────────────────────────
-let selectedTrack = '';
+// ── ONBOARDING & SIGN-IN ──────────────────────────────────────────────────────
+// One welcome screen, then straight to today's learning. No account is needed
+// to start; we ask people to sign in only when it helps them (saving a streak,
+// quizzes, the leaderboard). Everything they did signed out is kept
+// (js/account-merge.js). Sign-in is handled in ONE place: authHandler in bootApp().
 
-function buildTrackOptions() {
-  const el = document.getElementById('track-options');
-  el.innerHTML = Object.entries(RAMBAM_TRACKS).map(([id,t]) => `
-    <div onclick="selectTrack('${id}')" id="track-${id}" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .15s;">
-      <div style="width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--t3);">${icon('rambam',18)}</div>
-      <div><p style="font-weight:700;font-size:14px;color:var(--t1);">${t.label}</p><p style="font-size:11px;color:var(--t3);margin-top:2px;">${t.sub}</p></div>
-    </div>
-  `).join('');
+// Turn on once Sign in with Apple is set up in Firebase + Apple Developer
+// (steps in AUDIT.md). The App Store requires it when Google sign-in is offered.
+const APPLE_SIGNIN_ENABLED = false;
+
+const SIGNIN_REASONS = {
+  returning:   ['Welcome back', 'Sign in to pick up right where you left off.'],
+  streak:      ['Keep your streak safe', 'Sign in so your progress is saved and syncs to all your devices. Everything you\'ve done so far comes with you.'],
+  quiz:        ['Sign in to take quizzes', 'Quizzes are written fresh for each portion, so they need an account.'],
+  leaderboard: ['Join the leaderboard', 'Sign in to see where you stand among daily learners.'],
+  save:        ['Save your progress', 'Sign in so your learning is backed up and syncs to all your devices.'],
+};
+
+function isGuest() { return !user.uid; }
+
+function openSignIn(reason) {
+  const [title, sub] = SIGNIN_REASONS[reason] || SIGNIN_REASONS.save;
+  document.getElementById('signin-title').textContent = title;
+  document.getElementById('signin-sub').textContent = sub;
+  document.getElementById('signin-apple-btn').style.display = APPLE_SIGNIN_ENABLED ? 'flex' : 'none';
+  document.getElementById('ob-signin-error').style.display = 'none';
+  document.getElementById('signin-sheet').style.display = 'flex';
 }
 
-function selectTrack(id) {
-  selectedTrack = id;
-  Object.keys(RAMBAM_TRACKS).forEach(k => {
-    const el = document.getElementById(`track-${k}`);
-    if (k === id) {
-      el.style.background = 'rgba(240,165,0,.12)';
-      el.style.borderColor = '#F0A500';
-      el.querySelector('p').style.color = '#F0A500';
-    } else {
-      el.style.background = 'var(--card)';
-      el.style.borderColor = 'var(--border)';
-      el.querySelector('p').style.color = 'var(--t1)';
-    }
-  });
-  const btn = document.getElementById('ob-start');
-  btn.style.background = '#F0A500';
-  btn.style.borderColor = '#F0A500';
-  btn.style.color = '#000';
+function closeSignIn() {
+  document.getElementById('signin-sheet').style.display = 'none';
 }
 
-// ════════════════════════════════════════════════════════════════════
-// ZONE 6 · FIREBASE AUTH  (Google sign-in, onSignedIn, Firestore sync)
-// ════════════════════════════════════════════════════════════════════
-// ── FIREBASE AUTH ────────────────────────────────────────────────────────────
-async function signInWithGoogle() {
-  const btn = document.getElementById('ob-google-btn');
+async function signInWith(provider) {
   const err = document.getElementById('ob-signin-error');
-  btn.disabled = true;
-  btn.textContent = 'Signing in…';
+  const btns = document.querySelectorAll('#signin-sheet button');
+  btns.forEach(b => b.disabled = true);
   err.style.display = 'none';
   try {
-    const fbUser = await window._fb.signInGoogle();
-    await onSignedIn(fbUser);
-  } catch(e) {
+    await (provider === 'apple' ? window._fb.signInApple() : window._fb.signInGoogle());
+    // authHandler (bootApp) takes it from here: merges progress and opens the app
+  } catch (e) {
     console.error('sign in error:', e);
-    err.textContent = 'Sign in failed — please try again';
-    err.style.display = 'block';
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continue with Google`;
-  }
-}
-
-async function onSignedIn(fbUser) {
-  // Try to load existing data from Firestore
-  const remote = await window._fb.loadUser(fbUser.uid);
-  if (remote && remote.rambamTrack) {
-    // Merge: take the higher value for streak/xp/total in case local is ahead of Firestore
-    // Check both current and previous localStorage key — users may have data under old key
-    const local = (() => {
-      try {
-        const s = localStorage.getItem('chitas_v78') || localStorage.getItem('chitas_v77');
-        return s ? JSON.parse(s) : null;
-      } catch { return null; }
-    })();
-    const merged = { ...blankUser(), ...remote, uid: fbUser.uid, photoURL: fbUser.photoURL || '' };
-    if (local && local.uid === fbUser.uid) {
-      // If local data is more recent/higher, prefer it for key stats
-      if ((local.streak || 0) > (merged.streak || 0)) merged.streak = local.streak;
-      if ((local.xp || 0) > (merged.xp || 0)) merged.xp = local.xp;
-      if ((local.total || 0) > (merged.total || 0)) merged.total = local.total;
-      if ((local.longestStreak || 0) > (merged.longestStreak || 0)) merged.longestStreak = local.longestStreak;
+    if (e?.code !== 'auth/popup-closed-by-user' && e?.code !== 'auth/cancelled-popup-request') {
+      err.textContent = e?.code === 'auth/operation-not-allowed'
+        ? 'This sign-in option isn\'t set up yet. Please use another one.'
+        : 'Sign in didn\'t work. Please try again.';
+      err.style.display = 'block';
     }
-    user = merged;
-    try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
-    // Write merged data back to Firestore so leaderboard reflects current streak
-    saveUser();
-    document.getElementById('onboarding').style.display = 'none';
-    document.getElementById('ob-bg-glow').style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
-    init();
-  } else {
-    // New user — keep going through onboarding to get name + track
-    user.uid = fbUser.uid;
-    user.name = fbUser.displayName || '';
-    user.photoURL = fbUser.photoURL || '';
-    // Pre-fill name input and skip to step 2 (city)
-    document.getElementById('ob-step1').style.display = 'none';
-    document.getElementById('ob-step2').style.display = 'block';
-    const cityEl = document.getElementById('ob-city');
-    if (cityEl) cityEl.focus();
+  } finally {
+    btns.forEach(b => b.disabled = false);
   }
 }
 
-
-function obNext3() {
-  if (!selectedTrack) return;
-  document.getElementById('ob-step3').style.display = 'none';
-  document.getElementById('ob-step4').style.display = 'block';
+// "Start learning": a local profile on this phone. Rambam track defaults to
+// 3 chapters and is asked the first time Rambam is opened.
+function obStartGuest() {
+  user = { ...blankUser(), started: true, rambamTrack: '3', rambamTrackAsked: false };
+  saveUser();
+  _showMainApp();
+  showLoaderSafe();
+  init();
 }
 
-// Tehillim step state
-let _obRebbeOn = true, _obRebbetzinOn = true;
-const _obTehPeople = [];
-
-function obToggleRebbe() {
-  _obRebbeOn = !_obRebbeOn;
-  const btn = document.getElementById('ob-rebbe-toggle');
-  const knob = document.getElementById('ob-rebbe-knob');
-  const sub = document.getElementById('ob-rebbe-sub');
-  btn.style.background = _obRebbeOn ? '#4A9EFF' : 'var(--border)';
-  knob.style.right = _obRebbeOn ? '3px' : '';
-  knob.style.left  = _obRebbeOn ? '' : '3px';
-  if (sub) sub.textContent = _obRebbeOn ? 'Included in Tehillim' : 'Not included';
+function _showMainApp() {
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('ob-bg-glow').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
 }
-
-function obToggleRebbetzin() {
-  _obRebbetzinOn = !_obRebbetzinOn;
-  const btn = document.getElementById('ob-rebbetzin-toggle');
-  const knob = document.getElementById('ob-rebbetzin-knob');
-  const sub = document.getElementById('ob-rebbetzin-sub');
-  btn.style.background = _obRebbetzinOn ? '#4A9EFF' : 'var(--border)';
-  knob.style.right = _obRebbetzinOn ? '3px' : '';
-  knob.style.left  = _obRebbetzinOn ? '' : '3px';
-  if (sub) sub.textContent = _obRebbetzinOn ? 'Included in Tehillim' : 'Not included';
-}
-
-
-
-function obNext2() {
-  document.getElementById('ob-step2').style.display = 'none';
-  document.getElementById('ob-step3').style.display = 'block';
-  buildTrackOptions();
-}
-
 
 // ── Tehillim personal chapter helpers ────────────────────────────────────────
 const HEB_MONTHS = ['Nissan','Iyar','Sivan','Tammuz','Av','Elul','Tishrei','Cheshvan','Kislev','Tevet','Shevat','Adar','Adar II'];
@@ -2492,26 +2120,6 @@ function _deleteTehillimPerson(idx) {
   _renderPersonalPsalms();
 }
 
-function obStart() {
-  if (!selectedTrack) return;
-  const city = document.getElementById('ob-city').value.trim();
-  user.city         = city;
-  user.rambamTrack  = selectedTrack;
-  if (!user.name && window._fb?.getCurrentUser?.()?.displayName) {
-    user.name = window._fb.getCurrentUser().displayName;
-  }
-  // Save Tehillim prefs from onboarding step 4
-  user.tehillimFixedOpts = { rebbe: _obRebbeOn, rebbetzin: _obRebbetzinOn };
-  if (_obTehPeople.length) {
-    user.tehillimPeople = [...(user.tehillimPeople || []), ..._obTehPeople];
-  }
-  saveUser();
-  document.getElementById('onboarding').style.display = 'none';
-  document.getElementById('ob-bg-glow').style.display = 'none';
-  document.getElementById('main-app').style.display = 'block';
-  showLoaderSafe();
-  init();
-}
 
 // ob-name removed (name comes from Google)
 
@@ -3277,6 +2885,13 @@ function markDone(id) {
   celebrateSection(id);
   if (r.completedNow) setTimeout(celebrateAllDone, 300);
   if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
+
+  // Signed out: after the first section, offer to save their progress (once)
+  if (isGuest() && !user.signinPrompted) {
+    user.signinPrompted = true;
+    saveUser();
+    setTimeout(() => openSignIn('streak'), 1800);
+  }
 }
 
 // Real learning totals for the Progress tab (verses, psalms, halachos…)
@@ -3337,6 +2952,7 @@ function _quizLevelDone(sectionId, level) {
 function openQuiz(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
+  if (isGuest()) { openSignIn('quiz'); return; }
   quizState = { sectionId, level: null, questions: [], current: 0, score: 0, answered: false, missed: [] };
   document.getElementById('quiz-title').textContent = s.label + ' Quiz';
   document.getElementById('quiz-subtitle').textContent = s.subtitle;
@@ -4121,137 +3737,6 @@ function celebrateAllDone() {
 // ── 4. WELCOME BACK ──────────────────────────────────────────────────────────
 
 // ── 5. WEEKLY SUMMARY ────────────────────────────────────────────────────────
-
-// ════════════════════════════════════════════════════════════════════
-// ZONE 19 · ONBOARDING TICKER  (animated word ticker on landing screen)
-// ════════════════════════════════════════════════════════════════════
-// ── FEATURE SHOWCASE (between landing and sign-in) ────────────────────────────
-let _obScIdx = 0;
-const _OB_SC_COUNT = 5;
-
-function obShowcaseStart() {
-  _obScIdx = 0;
-  _obScShow(0);
-}
-
-function _obScShow(idx) {
-  for (let i = 0; i < _OB_SC_COUNT; i++) {
-    const card = document.getElementById('ob-sc-' + i);
-    if (!card) continue;
-    if (i === idx) {
-      card.style.display = 'flex';
-      card.style.animation = 'fadeUp .35s ease both';
-    } else {
-      card.style.display = 'none';
-    }
-    const dot = document.getElementById('ob-sc-dot-' + i);
-    if (dot) {
-      dot.style.width = i === idx ? '20px' : '6px';
-      dot.style.background = i === idx ? 'var(--gold)' : 'var(--border)';
-    }
-  }
-  const btn = document.getElementById('ob-sc-next-btn');
-  if (btn) btn.textContent = idx === _OB_SC_COUNT - 1 ? 'Get Started →' : 'Next →';
-  // Scroll viewport back to top on card change
-  const vp = document.getElementById('ob-sc-viewport');
-  if (vp) vp.scrollTop = 0;
-}
-
-function obShowcaseNext() {
-  if (_obScIdx < _OB_SC_COUNT - 1) {
-    _obScIdx++;
-    _obScShow(_obScIdx);
-  } else {
-    obShowcaseSkip();
-  }
-}
-
-function obShowcaseSkip() {
-  document.getElementById('ob-showcase').style.display = 'none';
-  document.getElementById('ob-step1').style.display = 'block';
-}
-
-
-let _obTickerTimer = null;
-let _obTickerIdx = 0;
-const OB_TICKER_ITEMS = [
-  { word: 'Learn',    gold: false, sub: 'Chumash, Tehillim, Tanya & Rambam' },
-  { word: 'Streak',  gold: false, sub: 'Build a daily habit. Watch it grow.' },
-  { word: 'Quiz',    gold: true,  sub: 'Test yourself. Lock in what you learned.' },
-  { word: 'Compete', gold: false, sub: 'See where you rank on the leaderboard.' },
-  { word: 'Share',   gold: false, sub: 'Challenge friends with your weekly score.' },
-];
-
-function buildTickerDots() {
-  const dotsEl = document.getElementById('ob-ticker-dots');
-  if (!dotsEl || dotsEl.children.length) return;
-  OB_TICKER_ITEMS.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.style.cssText = 'width:5px;height:5px;border-radius:50%;background:rgba(240,165,0,0.2);transition:all .3s;';
-    d.id = 'ob-dot-' + i;
-    dotsEl.appendChild(d);
-  });
-}
-
-function updateTickerDots(idx) {
-  OB_TICKER_ITEMS.forEach((_, i) => {
-    const d = document.getElementById('ob-dot-' + i);
-    if (!d) return;
-    if (i === idx) {
-      d.style.background = '#F0A500';
-      d.style.transform = 'scale(1.4)';
-    } else {
-      d.style.background = 'rgba(240,165,0,0.2)';
-      d.style.transform = 'scale(1)';
-    }
-  });
-}
-
-function runObTicker() {
-  const wordEl = document.getElementById('ob-ticker-word');
-  const subEl  = document.getElementById('ob-ticker-sub');
-  if (!wordEl || !subEl) return;
-
-  const item = OB_TICKER_ITEMS[_obTickerIdx];
-
-  wordEl.style.animation = 'tickerExitUp .25s cubic-bezier(.4,0,1,1) forwards';
-  subEl.style.opacity = '0';
-
-  setTimeout(() => {
-    wordEl.textContent = item.word;
-    if (item.gold) {
-      wordEl.style.background = 'linear-gradient(135deg,#F0A500,#FFB830)';
-      wordEl.style.webkitBackgroundClip = 'text';
-      wordEl.style.webkitTextFillColor = 'transparent';
-      wordEl.style.backgroundClip = 'text';
-    } else {
-      wordEl.style.background = '';
-      wordEl.style.webkitBackgroundClip = '';
-      wordEl.style.webkitTextFillColor = '';
-      wordEl.style.backgroundClip = '';
-      wordEl.style.color = 'var(--t1)';
-    }
-    wordEl.style.animation = 'tickerEnterDown .3s cubic-bezier(0,0,.2,1) forwards';
-    subEl.textContent = item.sub;
-    subEl.style.opacity = '1';
-    updateTickerDots(_obTickerIdx);
-    _obTickerIdx = (_obTickerIdx + 1) % OB_TICKER_ITEMS.length;
-  }, 240);
-}
-
-function startObTicker() {
-  buildTickerDots();
-  runObTicker();
-  _obTickerTimer = setInterval(runObTicker, 1100);
-}
-
-function stopObTicker() {
-  clearInterval(_obTickerTimer);
-}
-
-// Start ticker after landing animates in
-setTimeout(startObTicker, 1000);
-
 
 function closeQuiz() {
   document.getElementById('quiz-panel').style.display = 'none';
@@ -5808,6 +5293,8 @@ function _setTanyaLang(lang) {
 function openChabadPanel(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
+  // New learners pick their Rambam track the first time they open it
+  if (sectionId === 'rambam' && user.rambamTrackAsked === false) { changeTrack({ firstTime: true }); return; }
 
   markDoneUnlocked = false;
 
@@ -6352,6 +5839,15 @@ function switchLb(mode) {
 
 async function renderLeaders() {
   const list = document.getElementById('leaders-list');
+  if (isGuest()) {
+    list.innerHTML = '<div style="text-align:center;padding:36px 12px;">'
+      + '<div style="font-size:34px;margin-bottom:10px;">🏆</div>'
+      + '<p style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:6px;">Learn together</p>'
+      + '<p style="font-size:13px;color:var(--t3);line-height:1.5;margin-bottom:18px;">Sign in to see where you stand among daily learners.</p>'
+      + '<button onclick="openSignIn(\'leaderboard\')" style="padding:12px 22px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Sign in</button>'
+      + '</div>';
+    return;
+  }
   list.innerHTML = '<p style="text-align:center;color:var(--t3);font-size:13px;padding:32px 0;">Loading…</p>';
 
   let all = [];
@@ -6444,20 +5940,26 @@ function renderStats() {
     calDays.push({ iso, done, isT, isFuture, d });
   }
 
-  // Color: 0=empty, 1=one section, 2=two, 3=three, 4=all four (perfect day)
-  const sectionColors = ['#F0A500','#4A9EFF','#A855F7','#1DB954'];
+  // One colour, darker the more you learned (all 4 = solid gold). Shabbos /
+  // Yom Tov you didn't mark are calm grey with a dot, never "missed".
+  const SHADES = ['', 'rgba(240,165,0,.25)', 'rgba(240,165,0,.45)', 'rgba(240,165,0,.7)', '#F0A500'];
+  const NAMES = { chumash: 'Chumash', tehillim: 'Tehillim', tanya: 'Tanya', rambam: 'Rambam' };
   const calHTML = calDays.map(day => {
-    if (day.isFuture) {
-      return '<div style="width:100%;aspect-ratio:1;border-radius:3px;background:var(--border);opacity:0.2;"></div>';
-    }
+    const base = 'width:100%;aspect-ratio:1;border-radius:4px;';
+    if (day.isFuture) return '<div style="' + base + 'background:var(--border);opacity:.2;"></div>';
     const n = day.done.length;
-    const bg = n === 0 ? 'var(--border)' : n === 4 ? 'var(--gold)' : sectionColors[n-1];
-    const op = n === 0 ? '0.25' : n === 1 ? '0.6' : n === 2 ? '0.75' : n === 3 ? '0.9' : '1';
-    const border = day.isT ? '1.5px solid var(--gold)' : '1.5px solid transparent';
-    // Days within reach (last 7) open on the Learn tab; older days just show
+    const rest = n === 0 && isRestDay(day.d);
+    const bg = n ? SHADES[n] : 'var(--border)';
+    const border = day.isT ? 'box-shadow:0 0 0 1.5px var(--gold) inset;' : '';
+    const label = day.d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ': '
+      + (n ? day.done.map(id => NAMES[id]).join(', ') : rest ? 'Shabbos / Yom Tov' : 'nothing marked');
+    // Last 7 days open on the Learn tab; older days say what was learned
     const offset = Math.round((new Date(day.iso + 'T12:00') - new Date(dateISO(today) + 'T12:00')) / 86400000);
-    const canOpen = offset >= -MAX_DAYS_BACK;
-    return '<div ' + (canOpen ? 'onclick="switchTab(\'learn\');goToDay(' + offset + ')" ' : '') + 'title="' + day.iso + '" style="width:100%;aspect-ratio:1;border-radius:3px;background:' + bg + ';opacity:' + op + ';border:' + border + ';cursor:' + (canOpen ? 'pointer' : 'default') + ';transition:opacity .15s;" onmouseenter="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'' + op + '\'"></div>';
+    const tap = offset >= -MAX_DAYS_BACK
+      ? "switchTab('learn');goToDay(" + offset + ")"
+      : "fire('" + label.replace(/'/g, "\\'") + "','xp')";
+    return '<div class="cal-day" onclick="' + tap + '" title="' + label + '" style="' + base + 'background:' + bg + ';' + (n ? '' : 'opacity:' + (rest ? '.35' : '.6') + ';') + border + 'cursor:pointer;display:flex;align-items:center;justify-content:center;">'
+      + (rest ? '<span style="width:4px;height:4px;border-radius:50%;background:var(--t3);"></span>' : '') + '</div>';
   }).join('');
 
   // Day-of-week labels
@@ -6578,13 +6080,11 @@ function renderStats() {
     '<div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px;">' +
       '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;">' + dayLabels + '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">' + calHTML + '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);">' +
-        '<p style="font-size:9px;color:var(--t3);font-weight:600;flex:1;">Sections:</p>' +
-        '<div style="width:10px;height:10px;border-radius:2px;background:var(--border);opacity:.4;"></div><p style="font-size:9px;color:var(--t3);">0</p>' +
-        '<div style="width:10px;height:10px;border-radius:2px;background:#F0A500;opacity:.6;"></div><p style="font-size:9px;color:var(--t3);">1</p>' +
-        '<div style="width:10px;height:10px;border-radius:2px;background:#4A9EFF;opacity:.75;"></div><p style="font-size:9px;color:var(--t3);">2</p>' +
-        '<div style="width:10px;height:10px;border-radius:2px;background:#A855F7;opacity:.9;"></div><p style="font-size:9px;color:var(--t3);">3</p>' +
-        '<div style="width:10px;height:10px;border-radius:2px;background:var(--gold);"></div><p style="font-size:9px;color:var(--t3);">All ✓</p>' +
+      '<div style="display:flex;align-items:center;gap:5px;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);">' +
+        '<p style="font-size:9px;color:var(--t3);font-weight:600;margin-right:3px;">Less</p>' +
+        [0,1,2,3,4].map(i => '<div style="width:10px;height:10px;border-radius:2px;background:' + (i ? SHADES[i] : 'var(--border)') + ';' + (i ? '' : 'opacity:.6;') + '"></div>').join('') +
+        '<p style="font-size:9px;color:var(--t3);font-weight:600;margin-left:3px;flex:1;">More</p>' +
+        '<span style="width:4px;height:4px;border-radius:50%;background:var(--t3);"></span><p style="font-size:9px;color:var(--t3);">Shabbos / Yom Tov</p>' +
       '</div>' +
     '</div>' +
 
@@ -6614,7 +6114,9 @@ function renderStats() {
 // ════════════════════════════════════════════════════════════════════
 function openProfileSheet() {
   document.getElementById('profile-sheet-avatar').innerHTML = letterAvatar(user.name || '?', 48, 18);
-  document.getElementById('profile-sheet-name').textContent = user.name || 'Anonymous';
+  document.getElementById('profile-sheet-name').textContent = isGuest() ? 'Not signed in' : (user.name || 'Anonymous');
+  document.getElementById('ps-guest-row').style.display = isGuest() ? 'block' : 'none';
+  document.getElementById('ps-signout-row').style.display = isGuest() ? 'none' : 'flex';
   document.getElementById('profile-sheet-city').textContent = user.city || '';
   const transEl = document.getElementById('ps-chumash-trans');
   if (transEl) transEl.textContent = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Metsudah';
@@ -6628,9 +6130,9 @@ function openProfileSheet() {
   if (cityLabel) cityLabel.style.color = user.city ? 'var(--t1)' : 'var(--t3)';
   const cityInput = document.getElementById('ps-city-input');
   if (cityInput) cityInput.value = user.city || '';
-  // Notification dot — show if no city
+  // Notification dot — signed out (progress only on this phone)
   const dot = document.getElementById('avatar-dot');
-  if (dot) dot.style.display = user.city ? 'none' : 'block';
+  if (dot) dot.style.display = isGuest() ? 'block' : 'none';
   // Progress at a glance
   document.getElementById('ps-streak').textContent = user.streak || 0;
   document.getElementById('ps-days').textContent = user.total || 0;
@@ -6668,9 +6170,10 @@ function closeProfileSheet() {
 }
 
 
-function changeTrack() {
+function changeTrack(opts = {}) {
   const existing = document.getElementById('rambam-track-modal');
   if (existing) { existing.remove(); return; }
+  const firstTime = !!opts.firstTime;
 
   const TRACKS = {
     '3': { label: '3 Chapters / Day', sub: 'Completes Mishneh Torah yearly' },
@@ -6688,7 +6191,7 @@ function changeTrack() {
   const rows = Object.entries(TRACKS).map(([id, t], i) => {
     const active = user.rambamTrack === id;
     const border = i < 2 ? 'border-bottom:1px solid var(--border);' : '';
-    return '<button onclick="selectTrackInline(\'' + id + '\')" '
+    return '<button onclick="selectTrackInline(\'' + id + '\'' + (firstTime ? ',true' : '') + ')" '
       + 'style="width:100%;padding:14px 16px;background:transparent;border:none;' + border
       + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
       + '<div style="text-align:left;">'
@@ -6701,7 +6204,9 @@ function changeTrack() {
 
   modal.innerHTML = '<div class="ps-modal-sheet">'
     + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
-    +   '<div><p class="ps-modal-title">Rambam track</p><p class="ps-modal-sub">Daily Mishneh Torah learning</p></div>'
+    +   (firstTime
+          ? '<div><p class="ps-modal-title">Which Rambam do you learn?</p><p class="ps-modal-sub">You can change this anytime in your profile</p></div>'
+          : '<div><p class="ps-modal-title">Rambam track</p><p class="ps-modal-sub">Daily Mishneh Torah learning</p></div>')
     +   '<button onclick="document.getElementById(\'rambam-track-modal\').remove()" class="ps-modal-close">×</button>'
     + '</div>'
     + '<div style="padding:12px 20px 20px;">'
@@ -6714,9 +6219,18 @@ function changeTrack() {
   document.body.appendChild(modal);
 }
 
-function selectTrackInline(newTrack) {
+async function selectTrackInline(newTrack, firstTime) {
   document.getElementById('rambam-track-modal')?.remove();
   document.getElementById('inline-track-picker')?.remove();
+  if (firstTime) {
+    user.rambamTrackAsked = true;
+    const changed = newTrack !== user.rambamTrack;
+    user.rambamTrack = newTrack;
+    saveUser();
+    if (changed) await init();      // load the chosen track's chapters
+    openChabadPanel('rambam');
+    return;
+  }
   if (newTrack === user.rambamTrack) {
     // Already on this track — just close the picker
     document.getElementById('inline-track-picker')?.remove();
@@ -6770,12 +6284,6 @@ async function signOut() {
   try { localStorage.removeItem('chitas_v78'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
-  document.getElementById('ob-step1').style.display = 'block';
-  document.getElementById('ob-step2').style.display = 'none';
-  document.getElementById('ob-step3').style.display = 'none';
-  // Reset google button
-  const btn = document.getElementById('ob-google-btn');
-  if (btn) { btn.disabled = false; btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continue with Google`; }
   fire('Signed out 👋', 'xp');
 }
 
@@ -8701,20 +8209,22 @@ function showLoaderSafe() {
 function bootApp() {
   // Show app immediately from localStorage if we have a local user.
   // This avoids a blank screen while Firebase auth resolves.
-  if (user.uid && user.rambamTrack) {
-    document.getElementById('onboarding').style.display = 'none';
-    document.getElementById('ob-bg-glow').style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
+  if ((user.uid && user.rambamTrack) || user.started) {
+    _showMainApp();
     // Don't call init() yet — wait for Firestore sync below so we have
     // fresh data before the day-rollover logic runs (FIX 1 + FIX 2)
   }
 
   // FIX 1: ALWAYS load from Firestore when auth resolves — even if we already
   // have local data. This is the only way cross-device sync works reliably.
+  // This is also the ONE place that handles signing in (from any button).
+  let guestInitDone = false;
   const authHandler = async (fbUser) => {
     if (!fbUser) {
-      // Not signed in — if we somehow have local data, show onboarding
-      if (!user.uid || !user.rambamTrack) {
+      if (isGuest() && user.started) {
+        // Using the app signed out: everything lives on this phone
+        if (!guestInitDone) { guestInitDone = true; _showMainApp(); showLoaderSafe(); init(); }
+      } else if (!user.uid || !user.rambamTrack) {
         document.getElementById('onboarding').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
       }
@@ -8724,6 +8234,30 @@ function bootApp() {
     // Always fetch from Firestore — this is the source of truth
 
     const remote = await window._fb.loadUser(fbUser.uid);
+
+    // Just signed in on a phone with no account yet (signed-out progress, or a
+    // fresh install): combine what's here with the account, without losing
+    // days or counting points twice (js/account-merge.js)
+    if (isGuest()) {
+      const wasGuest = !!user.started;
+      const merged = mergeGuestIntoAccount(wasGuest ? user : blankUser(), remote, new Date());
+      user = {
+        ...blankUser(), ...merged,
+        uid: fbUser.uid,
+        name: merged.name || fbUser.displayName || '',
+        photoURL: fbUser.photoURL || '',
+      };
+      if (remote?.rambamTrack) user.rambamTrackAsked = true;   // the account already has a track
+      else if (!user.rambamTrack) { user.rambamTrack = '3'; user.rambamTrackAsked = false; }
+      try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
+      saveUser();
+      closeSignIn();
+      _showMainApp();
+      showLoaderSafe();
+      await init();
+      if (wasGuest) fire(remote ? 'Signed in · progress combined ✓' : 'Signed in · progress saved ✓', 'gold');
+      return;
+    }
 
 
     if (remote) { // Firestore doc exists — restore regardless of rambamTrack

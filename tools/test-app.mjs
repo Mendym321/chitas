@@ -190,6 +190,79 @@ await check('quiz request sends today\'s exact Chumash ref and the sign-in token
 console.log(quizRequest.auth === 'Bearer tok123' && quizRequest.body.section === 'chumash' && quizRequest.body.level === 'quick'
   ? '  ✓ …with section, level and token' : (failed++, '  ✗ quiz request was ' + JSON.stringify(quizRequest)));
 
+// ── A brand-new visitor, in a fresh page ───────────────────────────────────
+console.log('New visitor (signed out):');
+const page2 = await browser.newPage();
+page2.on('pageerror', e => pageErrors.push(e.message));
+await page2.route(u => !u.href.startsWith(url), r => r.abort());
+await page2.goto(url, { waitUntil: 'load' });
+async function check2(name, fn, expected) {
+  let actual;
+  try { actual = await page2.evaluate(fn); } catch (e) { actual = 'THREW: ' + e.message.split('\n')[0]; }
+  if (JSON.stringify(actual) === JSON.stringify(expected)) console.log('  ✓', name);
+  else { failed++; console.log('  ✗', name, '\n      expected:', expected, '\n      got:     ', actual); }
+}
+
+await check2('first visit shows ONE welcome screen (no forced sign-in)', () => {
+  const vis = id => { const e = document.getElementById(id); return !!e && getComputedStyle(e).display !== 'none'; };
+  return [vis('onboarding'), vis('ob-welcome'), vis('main-app'), document.querySelectorAll('#onboarding button').length];
+}, [true, true, false, 2]);
+
+await check2('"Start learning" opens the app right away, Rambam defaults to 3 chapters', async () => {
+  obStartGuest();
+  await new Promise(r => setTimeout(r, 300));
+  const vis = id => getComputedStyle(document.getElementById(id)).display !== 'none';
+  return [vis('main-app'), vis('onboarding'), user.uid, user.started, user.rambamTrack, user.rambamTrackAsked];
+}, [true, false, '', true, '3', false]);
+
+await check2('first time opening Rambam asks which track you learn', () => {
+  schedule = schedule || {};
+  schedule.rambam = schedule.rambam || { id: 'rambam', label: 'Rambam', color: '#1DB954', subtitle: '', chabadUrl: '' };
+  openChabadPanel('rambam');
+  const m = document.getElementById('rambam-track-modal');
+  const r = [!!m, !!m && m.textContent.includes('Which Rambam do you learn?')];
+  m?.remove();
+  return r;
+}, [true, true]);
+
+await check2('quiz while signed out → asks to sign in (not an error)', () => {
+  schedule.chumash = schedule.chumash || { id: 'chumash', label: 'Chumash', color: '#F0A500', subtitle: '' };
+  openQuiz('chumash');
+  const r = [getComputedStyle(document.getElementById('signin-sheet')).display, document.getElementById('signin-title').textContent];
+  closeSignIn();
+  return r;
+}, ['flex', 'Sign in to take quizzes']);
+
+await check2('after the first section, offers (once) to save progress', async () => {
+  schedule.tehillim = schedule.tehillim || { id: 'tehillim', label: 'Tehillim', color: '#4A9EFF', subtitle: '' };
+  markDone('tehillim');
+  await new Promise(r => setTimeout(r, 2100));
+  const r = [user.xp, document.getElementById('signin-title').textContent, user.signinPrompted];
+  closeSignIn();
+  return r;
+}, [10, 'Keep your streak safe', true]);
+
+await check2('profile says progress is only on this phone, no "Sign out"', () => {
+  openProfileSheet();
+  const vis = id => getComputedStyle(document.getElementById(id)).display !== 'none';
+  const r = [vis('ps-guest-row'), vis('ps-signout-row')];
+  closeProfileSheet();
+  return r;
+}, [true, false]);
+
+await check2('signing in keeps what was done signed out and adds the account\'s history', async () => {
+  const y = new Date(); y.setDate(y.getDate() - 3);
+  const iso = dateISO(y);
+  window._fb = { ...(window._fb || {}),
+    loadUser: async () => ({ name: 'Mendy', rambamTrack: '1', xp: 200, lastDate: iso, done: {}, pastDone: { [iso]: { chumash: true } } }),
+    saveUser: async () => {}, getIdToken: async () => 't', fetchLeaderboard: async () => [] };
+  await new Promise(r => setTimeout(r, 120)); // bootApp registers its sign-in handler once _fb exists
+  openSignIn('streak');
+  await window._fb._onAuthReady({ uid: 'acc1', displayName: 'Mendy C', photoURL: '' });
+  return [user.uid, user.name, user.rambamTrack, user.rambamTrackAsked, user.xp, !!user.done.tehillim, !!user.pastDone[iso]?.chumash,
+    getComputedStyle(document.getElementById('signin-sheet')).display];
+}, ['acc1', 'Mendy', '1', true, 210, true, true, 'none']);
+
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }
 else console.log('  ✓ no uncaught JavaScript errors');
