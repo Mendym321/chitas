@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "generate": "node generate-chumash-data.mjs",
-    "test": "node test-chumash.mjs",
+    "test": "node test-chumash.mjs && node test-tehillim.mjs",
     "test:app": "node test-app.mjs"
   },
   "devDependencies": {

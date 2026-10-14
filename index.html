@@ -1630,6 +1630,7 @@ window._fsGetDoc = getDoc;
 
 <script src="/js/chumash-data.js"></script>
 <script src="/js/chumash.js"></script>
+<script src="/js/tehillim.js"></script>
 <script>
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║                    CHITAS DAILY — chitas.html                    ║
@@ -2832,7 +2833,7 @@ async function init() {
                   sefariaRef: chumashRef },
 
       tehillim: { id:'tehillim', label:'Tehillim', icon:'music',  color:'#4A9EFF', xp:25, quizzable:false,
-                  subtitle: p.tehTitle || `Psalms ${p.tehChapters.join(', ')}`,
+                  subtitle: getTehillimForDate(today).label,
                   chabadUrl: `${base}/tehillim.asp?tdate=${civDate}`,
                   sefariaRef: tehRef },
 
@@ -3164,7 +3165,7 @@ async function rebuildScheduleForOffset() {
       s.sefariaRef = getChumashAliyaRef(d) || p?.aliyaRef || null;
     }
     if (s.id === 'tehillim') {
-      s.subtitle = p?.tehTitle || 'Daily Psalms';
+      s.subtitle = getTehillimForDate(d).label;
       // Rebuild sefariaRef from tehTitle for past days
       if (p?.tehTitle) {
         const m = p.tehTitle.match(/(\d+)(?:[\s\-–]+?(\d+))?/);
@@ -5506,27 +5507,12 @@ async function _loadTehillimNative(sectionId, silent) {
   }
 
   try {
-    // 30-day Tehillim cycle keyed by Hebrew calendar day number
-    const TEH_CYCLE = {
-      1:'Psalms.1-8',    2:'Psalms.9-17',   3:'Psalms.18-22',  4:'Psalms.23-28',
-      5:'Psalms.29-34',  6:'Psalms.35-38',   7:'Psalms.39-43',  8:'Psalms.44-48',
-      9:'Psalms.49-54',  10:'Psalms.55-59',  11:'Psalms.60-65', 12:'Psalms.66-68',
-      13:'Psalms.69-71', 14:'Psalms.72-76',  15:'Psalms.77-78', 16:'Psalms.79-82',
-      17:'Psalms.83-87', 18:'Psalms.88-89',  19:'Psalms.90-96', 20:'Psalms.97-103',
-      21:'Psalms.104-105',22:'Psalms.106-107',23:'Psalms.108-112',24:'Psalms.113-118',
-      25:'Psalms.119:1-96',26:'Psalms.119:97-176',27:'Psalms.120-134',
-      28:'Psalms.135-139',29:'Psalms.140-144',30:'Psalms.145-150'
-    };
-
-    // Get Hebrew day number for the viewed day
+    // Monthly cycle lives in js/tehillim.js (shared with the home screen, tested)
     const viewedDay = new Date();
     viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
-    const hebDay = parseInt(
-      new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric' }).format(viewedDay)
-    );
-    const dayNum = hebDay > 30 ? 30 : hebDay;
-    const ref = TEH_CYCLE[dayNum];
-    if (!ref) return false;
+    const { day: dayNum, ref, label: tehLabel } = getTehillimForDate(viewedDay);
+    // Days 25–26 are part of Psalm 119 — verse numbers start where the range starts
+    const startVerse = parseInt((ref.match(/:(\d+)-/) || [])[1] || '1', 10);
 
     // Fetch with Koren version (same as Chumash) — single range fetch
     const korenVen = encodeURIComponent('The Koren Jerusalem Bible');
@@ -5578,14 +5564,13 @@ async function _loadTehillimNative(sectionId, silent) {
     for (let c = 0; c < maxCh; c++) {
       chapters.push({
         psalmNum: psalmNums[c] || (psalmNums[0] + c),
+        startVerse: c === 0 ? startVerse : 1,
         he: heChapters[c] || [],
         en: enChapters[c] || [],
       });
     }
 
-    const psalmLabel = psalmNums.length > 1
-      ? 'Psalms ' + psalmNums[0] + '–' + psalmNums[psalmNums.length-1]
-      : 'Psalm ' + (psalmNums[0] || dayNum);
+    const psalmLabel = tehLabel;
 
     const subEl = document.getElementById('chabad-panel-sub');
     if (subEl) subEl.textContent = psalmLabel;
@@ -5683,7 +5668,7 @@ function _renderTehillimContent() {
 
     const verseHTML = verses.map((vText, i) => {
       if (!vText) return '';
-      const vNum = i + 1;
+      const vNum = (ch.startVerse || 1) + i;
       const mark = '<sup style="font-size:9px;font-weight:700;color:rgba(74,158,255,.65);margin-' + (isHe ? 'left' : 'right') + ':2px;">' + vNum + '</sup>';
       return mark + vText;
     }).join(' '); // em-space between verses

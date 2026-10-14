@@ -71,7 +71,7 @@ The app ignores Hebcal's aliyah data and uses two hand-typed tables: `PARSHA_SCH
 
 **Fix:** delete both tables and compute aliyos with `@hebcal/core` + `@hebcal/leyning` (free, offline, every year, Israel and Diaspora). Add tests that lock in the 5 Chabad.org-verified dates above.
 
-### 3.5 Tehillim cycle is off on days 1–2
+### 3.5 Tehillim cycle is off on days 1–2 ✅ FIXED (`js/tehillim.js`, tested in `tools/test-tehillim.mjs`; 29-day-month rule awaiting Chabad.org check)
 `TEH_CYCLE` (line 5618) has day 1 = Psalms 1–8 and day 2 = 9–17. The standard monthly division is **1–9** and **10–17**. It also doesn't handle a 29-day month: on the 29th, you also say day 30's chapters (145–150). The home screen gets Tehillim from Hebcal, but the reader uses this table, so the two can disagree.
 
 ### 3.6 Functions that don't exist (these crash) ✅ FIXED (tested in `tools/test-app.mjs`)

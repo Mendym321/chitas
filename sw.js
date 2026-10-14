@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v3';
+const VERSION     = 'v4';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
@@ -28,6 +28,7 @@ const SHELL_URLS = [
   '/manifest.json',
   '/js/chumash-data.js',
   '/js/chumash.js',
+  '/js/tehillim.js',
 ];
 
 // ── Install: cache the app shell ──────────────────────────────────────────────
