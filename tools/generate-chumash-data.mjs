@@ -9,7 +9,7 @@
  * Run:  cd tools && npm install && npm run generate
  */
 import { writeFileSync } from 'node:fs';
-import { HDate, Sedra, months } from '@hebcal/core';
+import { HDate, Sedra, months, HebrewCalendar, flags } from '@hebcal/core';
 import { getLeyningForParsha } from '@hebcal/leyning';
 
 const FIRST_HEBREW_YEAR = 5786; // Sept 2025
@@ -113,6 +113,17 @@ const PARSHA_ALIYOT = ${JSON.stringify(aliyot, null, 1)};
 const CHUMASH_DAY_OVERRIDES = ${JSON.stringify(dayOverrides, null, 1)};
 `;
 writeFileSync(new URL('../js/chumash-data.js', import.meta.url), out);
+
+// ── 5. Yom Tov days (no phone use) — streaks are never broken by these or Shabbos
+const yomTov = HebrewCalendar.calendar({ start, end, il: false, noMinorFast: true, noModern: true,
+  noRoshChodesh: true, noSpecialShabbat: true })
+  .filter(e => e.getFlags() & flags.CHAG)
+  .map(e => iso(e.getDate().greg()));
+writeFileSync(new URL('../js/holidays-data.js', import.meta.url), `// ⚠️ GENERATED FILE — do not edit by hand. Source: tools/generate-chumash-data.mjs
+// Yom Tov days (Diaspora), ${FIRST_HEBREW_YEAR}–${LAST_HEBREW_YEAR}. Used so Shabbos/Yom Tov never break a streak.
+const YOM_TOV_DATES = ${JSON.stringify(yomTov)};
+`);
+console.log(`Wrote js/holidays-data.js: ${yomTov.length} Yom Tov days`);
 
 console.log(`Wrote js/chumash-data.js: ${Object.keys(schedule).length} weeks, ${Object.keys(aliyot).length} parshiyos`);
 console.log(`\nHoliday weeks:\n  ` + holidayWeeks.slice(0, 12).join('\n  '));

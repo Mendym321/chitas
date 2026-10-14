@@ -38,16 +38,16 @@ let failed = 0;
 async function check(name, fn, expected) {
   let actual;
   try { actual = await page.evaluate(fn); } catch (e) { actual = 'THREW: ' + e.message.split('\n')[0]; }
-  if (actual === expected) console.log('  ✓', name);
+  if (JSON.stringify(actual) === JSON.stringify(expected)) console.log('  ✓', name); // compares contents, so lists work too
   else { failed++; console.log('  ✗', name, '\n      expected:', expected, '\n      got:     ', actual); }
 }
 
 console.log('App smoke tests:');
 
 await check('_refreshUI() updates the screen without crashing', () => {
-  user.xp = 123; _refreshUI();
-  return document.getElementById('stat-xp-inline').textContent;
-}, '123');
+  user.streak = 12; _refreshUI();
+  return document.getElementById('streak-pill-num').textContent;
+}, '12');
 
 await check('when the schedule can\'t load, the error message shows', async () => {
   await init(); // internet is blocked, so this takes the error path
@@ -83,6 +83,25 @@ await check('Mark Done in the reader saves the section and closes the reader', (
   showConfirm('tehillim', true); // what the reader's Mark Done button calls
   return user.done.tehillim === true && document.getElementById('chabad-panel').style.display;
 }, 'none');
+
+await check('points: finishing all 4 sections = 50, unmarking one takes back 20', () => {
+  user = { ...user, xp: 0, done: {}, pastDone: {}, streak: 0 };
+  ['chumash', 'tehillim', 'tanya', 'rambam'].forEach(markDone);
+  const full = user.xp, streakFull = user.streak;
+  unmarkDone('rambam');
+  return [full, streakFull, user.xp, user.streak];
+}, [50, 1, 30, 0]);
+
+await check('catching up yesterday restores a 2-day streak', () => {
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  user = { ...user, xp: 0, pastDone: {}, done: { chumash: true, tehillim: true, tanya: true, rambam: true } };
+  dayOffset = -1;
+  ['chumash', 'tehillim', 'tanya', 'rambam'].forEach(id => markDonePast(id, dateISO(y)));
+  dayOffset = 0;
+  return [user.streak, user.total, user.xp];
+}, [2, 2, 50]);
+
+await check('week strip shows 7 days', () => document.querySelectorAll('#week-strip button').length, 7);
 
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }

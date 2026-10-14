@@ -914,12 +914,12 @@ window._fsGetDoc = getDoc;
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="#F0A500"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
                 <div>
                   <p style="font-size:28px;font-weight:900;color:var(--gold);line-height:1;letter-spacing:-1px;">47 <span style="font-size:13px;font-weight:700;color:var(--t3);">day streak</span></p>
-                  <p style="font-size:11px;color:var(--t3);margin-top:2px;">Best: 47 days · 2,840 XP</p>
+                  <p style="font-size:11px;color:var(--t3);margin-top:2px;">Best: 47 days · 2,840 points</p>
                 </div>
               </div>
             </div>
             <h2 style="font-size:22px;font-weight:900;color:var(--t1);letter-spacing:-.5px;margin-bottom:6px;text-align:center;">Track every day</h2>
-            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Streaks, XP, levels and medals. See your progress and build a real daily habit.</p>
+            <p style="font-size:13px;color:var(--t2);line-height:1.5;text-align:center;max-width:280px;">Streaks, points and milestones. Shabbos and Yom Tov never break your streak.</p>
           </div>
 
           <!-- Card 3: Personal Tehillim -->
@@ -1140,9 +1140,14 @@ window._fsGetDoc = getDoc;
     <div style="padding:22px 20px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div style="flex:1;min-width:0;">
         <p id="heb-date-label" style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;">Loading…</p>
-        <h2 id="greeting" style="font-family:'DM Sans',sans-serif;font-size:24px;font-weight:900;color:var(--t1);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Good morning</h2>
+        <h2 id="greeting" style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--t1);line-height:1.15;">Good morning</h2>
         <p id="greeting-nudge" style="font-size:12px;color:var(--t3);margin-top:3px;"></p>
       </div>
+      <!-- Streak — always visible; tap to see how points & streaks work -->
+      <button id="streak-pill" onclick="openPointsInfo()" title="Your streak" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);color:var(--t1);font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
+        <span id="streak-pill-num">0</span>
+      </button>
       <!-- Avatar — top right, taps to open profile -->
       <button id="avatar-tab-btn" onclick="openProfileSheet()" style="flex-shrink:0;background:none;border:none;cursor:pointer;padding:0;" title="Profile">
         <div id="avatar-tab" style="position:relative;">
@@ -1152,18 +1157,6 @@ window._fsGetDoc = getDoc;
       </button>
     </div>
 
-    <!-- XP Bar — slim, under header -->
-    <div style="padding:10px 20px 0;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-        <span id="xp-label" style="font-size:11px;color:var(--t3);">0 XP</span>
-        <span id="xp-next" style="font-size:11px;color:var(--t3);">Lv1</span>
-      </div>
-      <div style="height:3px;background:var(--border);border-radius:99px;">
-        <div id="xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:99px;transition:width 1s cubic-bezier(.22,1,.36,1);"></div>
-      </div>
-    </div>
-    <!-- Hidden level-num for JS compat -->
-    <span id="level-num" style="display:none;">1</span>
 
     <!-- 3 tabs: Learn · Stats · Leaders -->
     <div style="display:flex;gap:6px;padding:14px 20px 0;">
@@ -1171,7 +1164,7 @@ window._fsGetDoc = getDoc;
         <svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Learn
       </button>
       <button class="nav-tab" data-tab="stats" onclick="switchTab('stats')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
-        <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Stats
+        <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Progress
       </button>
       <button class="nav-tab" data-tab="leaders" onclick="switchTab('leaders')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
         <svg width="16" height="16" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M5 3h14v7a7 7 0 01-14 0V3z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M5 7H2a3 3 0 003 3M19 7h3a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Leaders
@@ -1180,46 +1173,26 @@ window._fsGetDoc = getDoc;
 
     <!-- ── LEARN TAB ── -->
     <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
-      <!-- Progress ring -->
-      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:16px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;transition:border-color .4s;" id="progress-card">
-        <svg width="54" height="54" viewBox="0 0 58 58" style="flex-shrink:0;">
-          <circle cx="29" cy="29" r="23" fill="none" stroke="var(--border)" stroke-width="5"/>
-          <circle id="ring-circle" cx="29" cy="29" r="23" fill="none" stroke="var(--gold)" stroke-width="5"
-            stroke-dasharray="0 144.5" stroke-linecap="round"
-            style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dasharray .7s cubic-bezier(.22,1,.36,1)"/>
-          <text id="ring-text" x="29" y="34" text-anchor="middle" fill="var(--t1)" font-size="13" font-weight="800" font-family="DM Sans,sans-serif">0/4</text>
+      <!-- Today card — one segment per Chitas section (see DESIGN.md) -->
+      <div id="progress-card" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:16px 18px;margin-bottom:12px;display:flex;align-items:center;gap:16px;transition:border-color .4s;">
+        <svg width="60" height="60" viewBox="0 0 60 60" style="flex-shrink:0;transform:rotate(-90deg);">
+          <circle id="today-seg-0" cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="6" stroke-dasharray="32.7 118.1" stroke-dashoffset="-2.5" style="transition:stroke .4s ease;"/>
+          <circle id="today-seg-1" cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="6" stroke-dasharray="32.7 118.1" stroke-dashoffset="-40.2" style="transition:stroke .4s ease;"/>
+          <circle id="today-seg-2" cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="6" stroke-dasharray="32.7 118.1" stroke-dashoffset="-77.9" style="transition:stroke .4s ease;"/>
+          <circle id="today-seg-3" cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="6" stroke-dasharray="32.7 118.1" stroke-dashoffset="-115.6" style="transition:stroke .4s ease;"/>
         </svg>
         <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;">
-            <p id="progress-title" style="font-weight:700;font-size:15px;color:var(--t1);">Fetching schedule…</p>
-            <!-- Level badge replaces duplicate avatar -->
-            <div style="background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.3);border-radius:10px;padding:3px 9px;flex-shrink:0;">
-              <span style="font-size:9px;font-weight:800;color:rgba(240,165,0,.7);letter-spacing:.1em;">LVL</span>
-              <span id="header-avatar" style="font-size:15px;font-weight:900;color:var(--gold);margin-left:3px;"></span>
-            </div>
-          </div>
-          <p id="progress-sub" style="font-size:12px;color:var(--t2);margin-bottom:7px;">Connecting to Hebcal…</p>
-          <!-- Streak + XP — more prominent -->
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="display:flex;align-items:center;gap:5px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
-              <span id="stat-streak-inline" style="font-size:15px;font-weight:900;color:var(--t1);letter-spacing:-.5px;">0</span>
-              <span style="font-size:11px;color:var(--t3);font-weight:600;">streak</span>
-            </div>
-            <div style="width:1px;height:14px;background:var(--border);"></div>
-            <div style="display:flex;align-items:center;gap:5px;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="#F0A500"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>
-              <span id="stat-xp-inline" style="font-size:15px;font-weight:900;color:var(--t1);letter-spacing:-.5px;">0</span>
-              <span style="font-size:11px;color:var(--t3);font-weight:600;">XP</span>
-            </div>
-          </div>
+          <p id="progress-title" style="font-weight:800;font-size:16px;color:var(--t1);margin-bottom:2px;">Today's Chitas</p>
+          <p id="progress-sub" style="font-size:13px;color:var(--t2);">Loading today's learning…</p>
+          <button onclick="openPointsInfo()" style="margin-top:6px;padding:0;background:none;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#F0A500"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>
+            <span id="today-points" style="font-size:12px;font-weight:700;color:var(--t2);">0 points this week</span>
+          </button>
         </div>
       </div>
 
-      <!-- Hidden stat elements still needed for JS updates -->
-      <span id="stat-streak" style="display:none;">0</span>
-      <span id="stat-days" style="display:none;">0</span>
-      <span id="stat-xp" style="display:none;">0</span>
+      <!-- Last 7 days — tap a day to view or catch up -->
+      <div id="week-strip" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;"></div>
 
       <!-- API error -->
       <div id="api-error" style="display:none;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.25);border-radius:14px;padding:12px 16px;margin-bottom:16px;gap:10px;align-items:flex-start;color:var(--red);">
@@ -1227,21 +1200,13 @@ window._fsGetDoc = getDoc;
         <div><p style="font-size:13px;font-weight:700;margin-bottom:2px;">Could not reach Hebcal</p><p style="font-size:11px;color:var(--t3);">Check your connection. Buttons still open Chabad.org.</p></div>
       </div>
 
-      <!-- Day Navigator -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;">
-        <button id="day-nav-prev" onclick="navDay(-1)" style="width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2);flex-shrink:0;transition:all .15s;">
-          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div style="flex:1;text-align:center;">
-          <p id="day-nav-label" style="font-size:14px;font-weight:800;color:var(--t1);">Today</p>
-          <p id="day-nav-date" style="font-size:11px;color:var(--t3);margin-top:1px;"></p>
-        </div>
-        <button id="day-nav-next" onclick="navDay(1)" style="width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2);flex-shrink:0;transition:all .15s;opacity:0.3;pointer-events:none;">
-          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
+      <!-- Shown only when viewing a past day -->
+      <div id="day-banner" style="display:none;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;padding:10px 14px;border-radius:12px;background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.3);">
+        <p id="day-banner-text" style="font-size:13px;font-weight:700;color:var(--gold);"></p>
+        <button onclick="goToDay(0)" style="padding:6px 12px;border-radius:9px;background:var(--gold);border:none;color:#000;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">Back to today</button>
       </div>
 
-      <!-- Skeleton loaders -->
+      <!-- Skeleton loaders -->      <!-- Skeleton loaders -->
       <span id="hebcal-link" style="display:none;"></span>
       <div id="skeletons">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:17px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:center;opacity:.4;animation:up .35s ease both;"><div style="width:44px;height:44px;border-radius:13px;background:var(--surface);flex-shrink:0;"></div><div style="flex:1;"><div class="skel" style="height:13px;width:38%;margin-bottom:8px;"></div><div class="skel" style="height:10px;width:60%;"></div></div></div>
@@ -1473,28 +1438,14 @@ window._fsGetDoc = getDoc;
         <svg width="14" height="14" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <!-- Level bar — compact, no redundancy with stats tab -->
+    <!-- Your progress at a glance -->
     <div style="padding:14px 24px;border-bottom:1px solid var(--border);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;">Level</span>
-          <span id="ps-level" style="font-size:16px;font-weight:900;color:var(--gold);">1</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span style="display:flex;align-items:center;gap:4px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
-            <span id="ps-streak" style="font-size:13px;font-weight:800;color:var(--t1);">0</span>
-          </span>
-          <span style="display:flex;align-items:center;gap:4px;">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="#F0A500"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>
-            <span id="ps-xp" style="font-size:13px;font-weight:800;color:var(--gold);">0</span>
-          </span>
-        </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;">
+        <div><p id="ps-streak" style="font-size:20px;font-weight:900;color:#FF4757;">0</p><p style="font-size:10px;color:var(--t3);font-weight:600;">day streak</p></div>
+        <div><p id="ps-days" style="font-size:20px;font-weight:900;color:#1DB954;">0</p><p style="font-size:10px;color:var(--t3);font-weight:600;">Chitas days</p></div>
+        <div><p id="ps-xp" style="font-size:20px;font-weight:900;color:var(--gold);">0</p><p style="font-size:10px;color:var(--t3);font-weight:600;">points</p></div>
       </div>
-      <div style="height:5px;background:var(--surface);border-radius:3px;overflow:hidden;">
-        <div id="ps-xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:3px;transition:width .8s ease;"></div>
-      </div>
-      <p id="ps-xp-next" style="font-size:10px;color:var(--t3);margin-top:4px;text-align:right;"></p>
+      <p id="ps-next" style="font-size:11px;color:var(--t3);margin-top:10px;text-align:center;"></p>
     </div>
     <!-- Settings -->
     <div style="padding:0 24px 8px;">
@@ -1631,6 +1582,8 @@ window._fsGetDoc = getDoc;
 <script src="/js/chumash-data.js"></script>
 <script src="/js/chumash.js"></script>
 <script src="/js/tehillim.js"></script>
+<script src="/js/holidays-data.js"></script>
+<script src="/js/progress.js"></script>
 <script>
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║                    CHITAS DAILY — chitas.html                    ║
@@ -1700,7 +1653,7 @@ function letterAvatar(name, size=32, fontSize=14) {
     font-size:${fontSize}px;font-weight:800;color:${fg};flex-shrink:0;font-family:'DM Sans',sans-serif;">${letter}</div>`;
 }
 
-const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,perfectDays:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{},tehillimPeople:[],tehillimFixedOpts:{rebbe:true,rebbetzin:true},extraTracks:[],lifetime:{verses:0,psalms:0,psalmChaps:0,tanyaChaps:0,tanyaChapsSeen:{},halachos:0,rambamChaps:0}};
+const BLANK = {uid:'',name:'',photoURL:'',city:'',rambamTrack:'',streak:0,longestStreak:0,total:0,xp:0,quizTotal:0,quizCorrect:0,done:{},quizDone:{},lastDate:null,pastDone:{},pastQuizDone:{},weeklyQuizDone:{},tehillimPeople:[],tehillimFixedOpts:{rebbe:true,rebbetzin:true},extraTracks:[],lifetime:{verses:0,psalms:0,psalmChaps:0,tanyaChaps:0,tanyaChapsSeen:{},halachos:0,rambamChaps:0}};
 let user = (() => {
   try {
     // Try current key first
@@ -1766,7 +1719,6 @@ function _userPayload() {
     longestStreak: user.longestStreak || 0,
     total: user.total,
     xp: user.xp,
-    perfectDays: user.perfectDays || 0,
     quizTotal: user.quizTotal || 0,
     quizCorrect: user.quizCorrect || 0,
     lastDate: user.lastDate || null,
@@ -1778,6 +1730,10 @@ function _userPayload() {
     tehillimPeople: user.tehillimPeople || [],
     tehillimFixedOpts: user.tehillimFixedOpts || {},
     extraTracks: user.extraTracks || [],
+    // These used to live only on the phone, so they were lost on a new device
+    lifetime: user.lifetime || {},
+    shbProgress: user.shbProgress || null,
+    shbCompleted: user.shbCompleted || 0,
   };
 }
 
@@ -2750,6 +2706,7 @@ async function init() {
     saveUser();
   }
 
+  recalcStreak(); // always derive streak + totals from history (js/progress.js)
   updateHeader();
   updateStats();
   renderLeaders();
@@ -2894,31 +2851,62 @@ function setGreeting() {
   const greetEl = document.getElementById('greeting');
   if (greetEl) greetEl.textContent = firstName ? tod + ', ' + firstName : tod;
 
-  // Contextual nudge — one line, useful, never generic
+  // One helpful line — never generic
   const nudgeEl = document.getElementById('greeting-nudge');
   if (!nudgeEl) return;
-  const ids = ['chumash','tehillim','tanya','rambam'];
-  const doneSections = ids.filter(id => user.done?.[id]).length;
-  const allDone = doneSections === 4;
-  const noneDone = doneSections === 0;
-
+  const now = new Date();
+  const n = sectionsDone(user.done);
+  const st = computeStreak(user, now);
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
   let nudge = '';
-  if (allDone) {
-    nudge = user.streak > 1 ? user.streak + '-day streak — keep it going.' : 'All done for today.';
-  } else if (doneSections > 0) {
-    const left = 4 - doneSections;
-    nudge = left === 1 ? 'One section left for today.' : left + ' sections left today.';
-  } else if (user.streak > 0) {
-    nudge = 'Day ' + (user.total + 1) + ' — your streak is at ' + user.streak + '.';
-  } else if (user.total > 0) {
-    nudge = 'Good to have you back.';
-  }
-  // Day-of-week context
-  const dow = new Date().getDay();
-  if (dow === 5 && !allDone) nudge = 'Erev Shabbos — finish before candle lighting.';
-  if (dow === 0 && noneDone && user.streak > 0) nudge = 'New week. Keep the streak alive.';
-
+  if (n === 4) nudge = st.current > 1 ? st.current + ' days in a row. See you tomorrow.' : 'Chitas done for today.';
+  else if (isRestDay(yesterday) && !isChitasDay(dayDone(user, yesterday, now)) && (user.total || 0) > 0)
+    nudge = (yesterday.getDay() === 6 ? "Learned Shabbos's" : "Learned Yom Tov's") + ' Chitas? Tap it below to mark it.';
+  else if (st.atRisk) nudge = 'Finish today to keep your ' + st.current + '-day streak.';
+  else if (n > 0) nudge = (4 - n) + ' of 4 left today.';
+  else if ((user.total || 0) > 0) nudge = 'Good to have you back.';
+  if (now.getDay() === 5 && n < 4) nudge = 'Erev Shabbos — finish before candle lighting.';
   nudgeEl.textContent = nudge;
+}
+
+// "How points work" — every rule in plain words (opened from 🔥 or ⭐)
+function openPointsInfo() {
+  document.getElementById('points-info-modal')?.remove();
+  const st = computeStreak(user, new Date());
+  const next = nextMilestone(st.current);
+  const row = (label, value) => '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:14px;"><span style="color:var(--t2);">' + label + '</span><b style="color:var(--t1);">' + value + '</b></div>';
+  const modal = document.createElement('div');
+  modal.id = 'points-info-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:88vh;overflow-y:auto;">'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
+    +   '<div><p class="ps-modal-title">🔥 ' + st.current + '-day streak</p><p class="ps-modal-sub">Best: ' + Math.max(user.longestStreak || 0, st.current) + ' · ' + (user.total || 0) + ' Chitas days</p></div>'
+    +   '<button onclick="this.closest(\'#points-info-modal\').remove()" class="ps-modal-close">×</button>'
+    + '</div>'
+    + '<div style="padding:16px 20px 28px;">'
+    +   '<p class="ps-label">How your streak works</p>'
+    +   '<div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:18px;">'
+    +     '<p>• A <b style="color:var(--t1);">Chitas day</b> = all four: Chumash, Tehillim, Tanya and Rambam.</p>'
+    +     '<p>• Your streak counts Chitas days in a row.</p>'
+    +     '<p>• <b style="color:var(--t1);">Shabbos and Yom Tov never break it</b> — mark them after, and they count too.</p>'
+    +     '<p>• Missed marking a day? Tap it in the week strip (up to 7 days back).</p>'
+    +     (next ? '<p>• Next milestone: <b style="color:var(--t1);">' + next + ' days</b> (' + (next - st.current) + ' to go).</p>' : '')
+    +   '</div>'
+    +   '<p class="ps-label">How points work</p>'
+    +   '<div style="margin-bottom:6px;">'
+    +     row('Each Chitas section', '+' + POINTS.section)
+    +     row('Finish all four', '+' + POINTS.chitasDay + ' bonus')
+    +     row('Extra learning (Daf Yomi, Hayom Yom…)', '+' + POINTS.extra)
+    +     (QUIZZES_ENABLED ? row('Each correct quiz answer', '+' + POINTS.quizCorrect) : '')
+    +   '</div>'
+    +   '<p style="font-size:12px;color:var(--t3);margin-top:10px;">A full Chitas day is ' + (4 * POINTS.section + POINTS.chitasDay) + ' points. Unmarking takes the points back.</p>'
+    +   '<div style="display:flex;justify-content:space-between;margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--border);font-size:14px;">'
+    +     '<span style="color:var(--t2);">This week</span><b style="color:var(--gold);">' + weekPoints(user, new Date()) + ' points</b></div>'
+    +   '<div style="display:flex;justify-content:space-between;margin-top:8px;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--border);font-size:14px;">'
+    +     '<span style="color:var(--t2);">All time</span><b style="color:var(--gold);">' + (user.xp || 0) + ' points</b></div>'
+    + '</div></div>';
+  document.body.appendChild(modal);
 }
 
 // Single call to refresh all stat displays after any user state change
@@ -2930,21 +2918,8 @@ function _refreshUI() {
 }
 
 function updateHeader() {
-  const level    = levelFromXp(user.xp);
-  const inLevel  = xpInCurrentLevel(user.xp);
-  const needed   = xpNeededForLvl(level);
-  const pct      = Math.round(inLevel / needed * 100);
-
-  document.getElementById('level-num').textContent  = level;
-  document.getElementById('xp-label').textContent   = user.xp + ' XP';
-  document.getElementById('xp-next').textContent    = 'Lv' + level + ' · ' + inLevel + '/' + needed;
-  document.getElementById('xp-bar').style.width     = pct + '%';
-
-  // Avatar
-  // Level badge in progress card
-  const ha = document.getElementById('header-avatar');
-  if (ha) ha.textContent = level;
-  // Avatar tab (top-right profile button)
+  const pill = document.getElementById('streak-pill-num');
+  if (pill) pill.textContent = user.streak || 0;
   const at = document.getElementById('avatar-tab');
   if (at) at.innerHTML = letterAvatar(user.name, 34, 14);
   const dot = document.getElementById('avatar-dot');
@@ -2953,10 +2928,9 @@ function updateHeader() {
 }
 
 function updateStats() {
-  const si = document.getElementById('stat-streak-inline');
-  const xi = document.getElementById('stat-xp-inline');
-  if (si) si.textContent = user.streak;
-  if (xi) xi.textContent = user.xp;
+  const pts = document.getElementById('today-points');
+  if (pts) pts.textContent = weekPoints(user, new Date()) + ' points this week';
+  renderWeekStrip();
 }
 
 function renderSections() {
@@ -2996,32 +2970,6 @@ function renderSections() {
 // ZONE 11 · XP / LEVEL SYSTEM
 // ════════════════════════════════════════════════════════════════════
 // ── XP / LEVEL SYSTEM ────────────────────────────────────────────────────────
-// Scaling levels: each level takes ~40% more XP than the last
-// Level 1→2: 100 XP, 2→3: 140, 3→4: 196, 4→5: 274, 5→6: 384...
-function xpNeededForLvl(level) {
-  // Round to nearest 50 for clean numbers
-  return Math.round(100 * Math.pow(1.5, level - 1) / 50) * 50;
-}
-
-function xpForLevel(level) {
-  // Total XP needed to reach this level from level 1
-  let total = 0;
-  for (let i = 1; i < level; i++) {
-    total += xpNeededForLvl(i);
-  }
-  return total;
-}
-
-function levelFromXp(xp) {
-  let level = 1;
-  while (xp >= xpForLevel(level + 1)) level++;
-  return level;
-}
-
-function xpInCurrentLevel(xp) {
-  const level = levelFromXp(xp);
-  return xp - xpForLevel(level);
-}
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 12 · DAY NAVIGATOR  (prev/next day, date display)
@@ -3057,37 +3005,14 @@ function navDay(delta) {
 
 
 function updateDayNav() {
-  const d = new Date();
-  d.setDate(d.getDate() + dayOffset);
-  let label;
-  if (dayOffset === 0) label = 'Today';
-  else if (dayOffset === -1) label = 'Yesterday';
-  else {
-    const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
-    label = weekday === 'Saturday' ? 'Shabbos' : weekday;
+  const banner = document.getElementById('day-banner');
+  if (banner) {
+    banner.style.display = dayOffset === 0 ? 'none' : 'flex';
+    const d = new Date(); d.setDate(d.getDate() + dayOffset);
+    const name = dayOffset === -1 ? 'Yesterday' : d.getDay() === 6 ? 'Shabbos' : d.toLocaleDateString('en-US', { weekday: 'long' });
+    document.getElementById('day-banner-text').textContent = 'Viewing ' + name + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
-  document.getElementById('day-nav-label').textContent = label;
-  document.getElementById('day-nav-label').style.color = dayOffset === 0 ? 'var(--t1)' : 'var(--gold)';
-
-  // Date subtitle — e.g. "Mar 15"
-  const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  document.getElementById('day-nav-date').textContent = dateStr;
-
-  // Prev arrow — disable at max
-  const prev = document.getElementById('day-nav-prev');
-  if (dayOffset <= -MAX_DAYS_BACK) {
-    prev.style.opacity = '0.3'; prev.style.pointerEvents = 'none';
-  } else {
-    prev.style.opacity = '1'; prev.style.pointerEvents = '';
-  }
-
-  // Next arrow — disable on today
-  const next = document.getElementById('day-nav-next');
-  if (dayOffset >= 0) {
-    next.style.opacity = '0.3'; next.style.pointerEvents = 'none';
-  } else {
-    next.style.opacity = '1'; next.style.pointerEvents = '';
-  }
+  if (schedule) updateProgressRing(); else renderWeekStrip();
 }
 
 async function rebuildScheduleForOffset() {
@@ -3241,7 +3166,7 @@ function renderSectionsForOffset(iso) {
     const cardStyle = 'background:var(--card);border:1.5px solid ' + (done ? s.color+'70' : 'var(--border)') + ';border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:' + (i*.06) + 's;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;';
     const iconStyle = 'width:44px;height:44px;border-radius:13px;background:' + s.color + '18;border:1px solid ' + s.color + '35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + s.color + ';pointer-events:none;';
     const quizDoneToday = isToday && (user.quizDone||{})[s.id];
-    const quizBtn = s.quizzable
+    const quizBtn = (s.quizzable && QUIZZES_ENABLED)
       ? '<button onclick="event.stopPropagation();' + (isToday ? 'openQuiz(\'' + s.id + '\')' : '') + '" style="width:34px;height:34px;border-radius:10px;background:' + (quizDoneToday ? 'rgba(29,185,84,.12)' : 'var(--surface)') + ';border:1px solid ' + (quizDoneToday ? 'rgba(29,185,84,.35)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (quizDoneToday ? '#1DB954' : 'var(--t3)') + ';flex-shrink:0;" title="Quiz"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg></button>'
       : '';
     // Always confirm before marking done; always allow unmark
@@ -3284,28 +3209,56 @@ function renderSectionsForOffset(iso) {
   if (addBtn) addBtn.style.display = 'block';
 }
 
+const SECTION_COLORS = { chumash: '#F0A500', tehillim: '#4A9EFF', tanya: '#A855F7', rambam: '#1DB954' };
+
 function updateProgressRing() {
-  const sections = schedule ? Object.values(schedule) : [];
-  const doneCount = sections.filter(s => user.done[s.id]).length;
-  const allDone   = sections.length > 0 && doneCount === sections.length;
-  const pct = sections.length ? doneCount/sections.length : 0;
-  const circle = document.getElementById('ring-circle');
-  circle.setAttribute('stroke-dasharray', `${pct*144.5} 144.5`);
-  circle.setAttribute('stroke', allDone ? '#1DB954' : '#F0A500');
-  document.getElementById('ring-text').textContent = `${doneCount}/${sections.length||4}`;
-  const card = document.getElementById('progress-card');
-  card.style.borderColor = allDone ? 'rgba(29,185,84,.5)' : 'var(--border)';
-  document.getElementById('progress-title').style.color = allDone ? '#1DB954' : 'var(--t1)';
-  document.getElementById('progress-title').textContent = allDone ? "All done for today" : "Today's Learning";
-  // Update avatar in header if present
-  const at = document.getElementById('avatar-tab');
-  if (at) at.innerHTML = letterAvatar(user.name, 34, 14);
-  // Show dot if no city
-  const dot = document.getElementById('avatar-dot');
-  if (dot) dot.style.display = (!user.city) ? 'block' : 'none';
-  document.getElementById('progress-sub').textContent = allDone
-    ? `${user.streak}-day streak · All done for today`
-    : `${sections.length - doneCount} section${sections.length-doneCount!==1?'s':''} remaining`;
+  // Shows the day being viewed (today, or a past day when catching up)
+  const iso = _viewedISO();
+  const done = dayOffset === 0 ? (user.done || {}) : ((user.pastDone || {})[iso] || {});
+  SECTION_IDS.forEach((id, i) => {
+    const seg = document.getElementById('today-seg-' + i);
+    if (seg) seg.setAttribute('stroke', done[id] ? SECTION_COLORS[id] : 'var(--border)');
+  });
+  const n = sectionsDone(done);
+  const allDone = n === 4;
+  const title = document.getElementById('progress-title');
+  const sub = document.getElementById('progress-sub');
+  document.getElementById('progress-card').style.borderColor = allDone ? 'rgba(29,185,84,.5)' : 'var(--border)';
+  title.style.color = allDone ? '#1DB954' : 'var(--t1)';
+  title.textContent = dayOffset === 0 ? (allDone ? 'Chitas done today ✓' : "Today's Chitas")
+                                      : (allDone ? 'Chitas day ✓' : 'Catching up');
+  sub.textContent = allDone ? '🔥 ' + user.streak + '-day streak' : n + ' of 4 done';
+  renderWeekStrip();
+}
+
+// Last 7 days: full gold = Chitas day, partial = some sections, 🕯 = Shabbos/Yom Tov
+function renderWeekStrip() {
+  const el = document.getElementById('week-strip');
+  if (!el) return;
+  const today = new Date();
+  const LETTERS = ['S','M','T','W','T','F','ש'];
+  let html = '';
+  for (let off = -6; off <= 0; off++) {
+    const d = new Date(today); d.setDate(today.getDate() + off);
+    const done = dayDone(user, d, today);
+    const n = sectionsDone(done);
+    const rest = isRestDay(d);
+    const viewing = off === dayOffset;
+    const fill = n === 4 ? 'var(--gold)' : 'var(--surface)';
+    const ring = n === 4 ? 'var(--gold)' : n > 0 ? 'rgba(240,165,0,.55)' : 'var(--border)';
+    const mark = n === 4 ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>'
+               : n > 0 ? '<span style="font-size:10px;font-weight:800;color:var(--gold);">' + n + '/4</span>'
+               : rest ? '<span style="font-size:13px;line-height:1;">🕯️</span>' : '';
+    html += '<button onclick="goToDay(' + off + ')" title="' + d.toDateString() + '" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;border-radius:12px;border:1.5px solid ' + (viewing ? 'var(--gold)' : 'transparent') + ';background:' + (viewing ? 'rgba(240,165,0,.08)' : 'transparent') + ';cursor:pointer;font-family:inherit;">'
+      + '<span style="font-size:10px;font-weight:700;color:' + (off === 0 ? 'var(--t1)' : 'var(--t3)') + ';">' + (off === 0 ? 'Today' : LETTERS[d.getDay()]) + '</span>'
+      + '<span style="width:28px;height:28px;border-radius:50%;background:' + fill + ';border:2px solid ' + ring + ';display:flex;align-items:center;justify-content:center;">' + mark + '</span>'
+      + '</button>';
+  }
+  el.innerHTML = html;
+}
+
+function goToDay(offset) {
+  if (offset !== dayOffset) navDay(offset - dayOffset);
 }
 
 function showConfirm(sectionId, fromReader) {
@@ -3329,92 +3282,89 @@ function showConfirmPast(id, iso) {
   renderSectionsForOffset(iso);
 }
 
-function unmarkDonePast(id, iso) {
-  if (!schedule) return;
-  if (!user.pastDone?.[iso]?.[id]) return;
-  const s = schedule[id];
-  user.xp = Math.max(0, user.xp - s.xp);
-  // If all were done for that day, undo total/xp bonus
-  const ids = ['chumash','tehillim','tanya','rambam'];
-  const wasAllDone = ids.every(x => user.pastDone[iso][x]);
-  if (wasAllDone) {
-    user.total = Math.max(0, user.total - 1);
-    user.xp    = Math.max(0, user.xp - 50);
-  }
-  user.pastDone[iso][id] = false;
-  saveUser();
+// ── Marking progress ──────────────────────────────────────────────────────────
+// EVERY mark / unmark (today, past days, extra learning) goes through
+// _changeDay. Points, streak and totals are then recomputed from the rules in
+// js/progress.js — so they can never drift out of sync. See DESIGN.md.
+function _changeDay(iso, change) {
+  const now = new Date();
+  const isToday = iso === dateISO(now);
+  if (!user.pastDone) user.pastDone = {};
+  if (!isToday && !user.pastDone[iso]) user.pastDone[iso] = {};
+  if (!user.done) user.done = {};
+  const day = isToday ? user.done : user.pastDone[iso];
+
+  const before = { ...day };
+  const streakBefore = computeStreak(user, now).current;
+  const totalBefore = countChitasDays(user, now);
+
+  change(day);
+
+  const delta = pointsForDay(day) - pointsForDay(before);
+  user.xp = Math.max(0, (user.xp || 0) + delta);
+  if (isToday) user.lastDate = iso;
+  recalcStreak();
+  saveUserCritical();
   _refreshUI();
-  const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
-  renderSectionsForOffset(dateISO(d2));
-  fire('Unmarked ' + s.label, 'xp');
+  return {
+    delta,
+    completedNow: !isChitasDay(before) && isChitasDay(day),
+    streakMilestone: milestoneReached(streakBefore, user.streak),
+    daysMilestone: milestoneReached(totalBefore, user.total),
+  };
+}
+
+function _viewedISO() {
+  const d = new Date(); d.setDate(d.getDate() + dayOffset);
+  return dateISO(d);
+}
+
+function _pointsText(delta) {
+  return (delta > 0 ? '+' : '') + delta + ' points';
+}
+
+function unmarkDonePast(id, iso) {
+  if (!schedule || !user.pastDone?.[iso]?.[id]) return;
+  const r = _changeDay(iso, day => { day[id] = false; });
+  renderSectionsForOffset(_viewedISO());
+  fire('Unmarked ' + schedule[id].label + ' · ' + _pointsText(r.delta), 'xp');
 }
 
 function unmarkDone(id) {
-  if (!user.done[id] || !schedule) return;
-  const s = schedule[id];
-  // Deduct XP — but don't go below 0
-  user.xp = Math.max(0, user.xp - s.xp);
-  // If all were done (streak was counted), undo that too
-  const ids = ['chumash','tehillim','tanya','rambam'];
-  const wasAllDone = ids.every(x => user.done[x]);
-  if (wasAllDone) {
-    user.streak = Math.max(0, user.streak - 1);
-    user.total  = Math.max(0, user.total - 1);
-    user.xp     = Math.max(0, user.xp - 50);
-  }
-  user.done[id] = false;
-  user.lastDate = dateISO(new Date());
-  saveUser();
-  _refreshUI();
-  // Re-render sections
-  const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
-  renderSectionsForOffset(dateISO(d2));
-  fire('Unmarked ' + s.label, 'xp');
+  if (!schedule || !user.done[id]) return;
+  const r = _changeDay(dateISO(new Date()), day => { day[id] = false; });
+  renderSectionsForOffset(_viewedISO());
+  fire('Unmarked ' + schedule[id].label + ' · ' + _pointsText(r.delta), 'xp');
 }
 
 function markDonePast(id, iso) {
-  if (!schedule) return;
-  if (!user.pastDone) user.pastDone = {};
-  if (!user.pastDone[iso]) user.pastDone[iso] = {};
-  if (user.pastDone[iso][id]) return; // already done
-
-  const s = schedule[id];
-  user.pastDone[iso][id] = true;
-  user.xp += s.xp;
-
-  const ids = ['chumash','tehillim','tanya','rambam'];
-  const allNow = ids.every(x => user.pastDone[iso][x]);
-  if (allNow) {
-    user.total++;
-    user.xp += 50;
-    // Recalc streak — this past day may repair a broken chain
-    const newStreak = recalcStreak();
-    saveUser();
-    updateStats();
-    updateHeader();
-    updateProgressRing();
-      renderStats();
-    // Show a moment if streak jumped meaningfully
-    const streakMsg = newStreak > 1 ? newStreak + '-day streak' : 'Day complete';
-    fire(streakMsg + ' · +' + (s.xp + 50) + ' XP', 'gold');
-  } else {
-    fire('+' + s.xp + ' XP', 'xp');
-    saveUser();
-    updateStats();
-    updateHeader();
-    updateProgressRing();
-      renderStats();
-  }
-  const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
-  renderSectionsForOffset(dateISO(d2));
+  if (!schedule || user.pastDone?.[iso]?.[id]) return;
+  const r = _changeDay(iso, day => { day[id] = true; });
+  fire(r.completedNow ? 'Day caught up ✓ · 🔥 ' + user.streak + ' · ' + _pointsText(r.delta)
+                      : _pointsText(r.delta), r.completedNow ? 'gold' : 'xp');
+  renderSectionsForOffset(_viewedISO());
+  if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
 }
 
 function markDone(id) {
   if (user.done[id] || !schedule) return;
   const s = schedule[id];
-  user.done[id] = true;
+  _addLifetimeCounts(id);
+  const r = _changeDay(dateISO(new Date()), day => { day[id] = true; });
 
-  // ── Accumulate exact lifetime counts from real loaded data ──────────────
+  // Clear saved scroll for today so this section's next open starts from top
+  try { localStorage.removeItem(_scrollKey(id)); } catch(e) {}
+
+  if (r.completedNow) fire('Chitas done today! 🔥 ' + user.streak + ' · ' + _pointsText(r.delta), 'gold');
+  else fire(_pointsText(r.delta), 'xp');
+
+  celebrateSection(id);
+  if (r.completedNow) setTimeout(celebrateAllDone, 300);
+  if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
+}
+
+// Real learning totals for the Progress tab (verses, psalms, halachos…)
+function _addLifetimeCounts(id) {
   if (!user.lifetime) user.lifetime = {verses:0, psalms:0, tanyaBlocks:0, halachos:0};
   if (id === 'chumash' && window._chumashData?.torahChunks) {
     const v = window._chumashData.torahChunks.reduce((sum, ch) => sum + Math.max(ch.en.length, ch.he.length), 0);
@@ -3426,7 +3376,7 @@ function markDone(id) {
     user.lifetime.psalmChaps = (user.lifetime.psalmChaps || 0) + window._tehillimData.chapters.length;
   }
   if (id === 'tanya' && window._tanyaData?.chapterNum) {
-    // Track unique chapters completed (a chapter spans multiple days — count it once when first seen)
+    // A chapter spans multiple days — count it once, when first seen
     if (!user.lifetime.tanyaChapsSeen) user.lifetime.tanyaChapsSeen = {};
     const ch = window._tanyaData.chapterNum;
     if (!user.lifetime.tanyaChapsSeen[ch]) {
@@ -3439,58 +3389,16 @@ function markDone(id) {
     user.lifetime.halachos = (user.lifetime.halachos || 0) + h;
     user.lifetime.rambamChaps = (user.lifetime.rambamChaps || 0) + window._rambamData.chapters.length;
   }
-  // ── End accumulation ────────────────────────────────────────────────────
-  const xpBefore = user.xp;
-  user.xp += s.xp;
-  user.lastDate = dateISO(new Date());
-
-  const ids = ['chumash','tehillim','tanya','rambam'];
-  const allNow = ids.every(x => user.done[x]);
-  if (allNow) {
-    recalcStreak(); // recalc instead of blind increment — handles retroactive repairs
-    user.total++;
-    user.xp += 50;
-    user.perfectDays = (user.perfectDays || 0) + 1;
-    const dayMsgs = ['Day ' + user.total + ' complete', 'All done for today', user.streak + '-day streak'];
-    fire(dayMsgs[user.total % dayMsgs.length] + ' · +' + (s.xp+150) + ' XP', 'gold');
-  } else {
-    fire(`+${s.xp} XP`,'xp');
-  }
-  saveUserCritical(); // FIX 3: awaitable so rapid taps don't race
-  // Clear saved scroll for today so this section's next open starts from top
-  try { localStorage.removeItem(_scrollKey(id)); } catch(e) {}
-
-  // Update tick button
-  const tick = document.getElementById(`tick-${id}`);
-  if (tick) {
-    tick.style.background = '#1DB95428';
-    tick.style.borderColor = '#1DB95455';
-    tick.style.color = '#1DB954';
-    tick.disabled = true;
-  }
-  const card = document.getElementById(`card-${id}`);
-  if (card) card.style.borderColor = s.color+'80';
-  const ic = document.getElementById(`icon-${id}`);
-  if (ic) { ic.style.background=s.color+'33'; ic.style.borderColor=s.color+'66'; ic.style.color=s.color; }
-  const lbl = card?.querySelector('p');
-  if (lbl) lbl.style.color = s.color;
-
-  // Celebrations
-  celebrateSection(id);
-
-  if (allNow) {
-    setTimeout(celebrateAllDone, 300);
-    celebrateStreakMilestone(user.streak);
-  }
-  checkLevelUp(xpBefore, user.xp);
-
-  _refreshUI();
 }
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 14 · QUIZ (section quiz — questions, answers, results)
 // ════════════════════════════════════════════════════════════════════
 // ── QUIZ ─────────────────────────────────────────────────────────────────────
+// Quizzes were hardcoded placeholder questions (same every day). Hidden until
+// the real AI quiz (api/quiz.js) is connected — then set this to true.
+const QUIZZES_ENABLED = false;
+
 let quizState = { sectionId: null, questions: [], current: 0, score: 0, answered: false };
 
 function buildQuizPrompt(s) {
@@ -3805,7 +3713,7 @@ function showWeeklyResults() {
   const { score, questions } = weeklyQuizState;
   const total = questions.length;
   const week = getWeekNumber();
-  const xpEarned = Math.round((score / total) * 100);
+  const xpEarned = score * POINTS.quizCorrect;
   const pct = Math.round((score / total) * 100);
 
   // Save result
@@ -4249,64 +4157,46 @@ document.getElementById('moment-modal')?.addEventListener('click', e => {
 });
 
 // ── 1. STREAK MILESTONE ──────────────────────────────────────────────────────
+// Streak milestones (MILESTONES in js/progress.js) — celebrated once, no bonus points
 function celebrateStreakMilestone(streak) {
-  const milestones = {
-    3:  { icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#FF6B35"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>', title: '3 days in a row', sub: 'A habit starts at 3. Keep showing up.', xp: '' },
-    7:  { icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>', title: 'One full week', sub: "Seven days straight. You're building something real.", xp: '' },
-    14: { icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>', title: 'Two weeks', sub: 'Two weeks of daily Chitas. This is a real streak.', xp: '' },
-    30: { icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#F0A500"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>', title: '30 days', sub: 'A full month of learning. This is the real thing.', xp: '+500 bonus XP' },
-    100:{ icon: '<svg width="52" height="52" viewBox="0 0 24 24" fill="#F0A500"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>', title: '100 days', sub: "One hundred days of Chitas. That's extraordinary.", xp: '+2000 bonus XP' },
+  const MESSAGES = {
+    3:    'A habit starts at 3. Keep showing up.',
+    7:    "A full week of Chitas. You're building something real.",
+    18:   'Chai — 18 days of Chitas in a row.',
+    30:   'A full month. This is the real thing.',
+    50:   'Fifty days. Chitas is part of your day now.',
+    100:  "One hundred days. That's extraordinary.",
+    180:  'Half a year of daily Chitas.',
+    365:  'A full year of Chitas, every day. Mazel tov!',
+    500:  'Five hundred days.',
+    1000: 'One thousand days of Chitas.',
   };
-  const m = milestones[streak];
-  if (!m) return;
-  launchConfetti(streak >= 30 ? 150 : 100);
-  // Haptic pattern scales with milestone size
-  if      (streak >= 100) vibrate([100, 50, 100, 50, 200]); // epic
-  else if (streak >= 30)  vibrate([80, 40, 80, 40, 160]);   // major
-  else if (streak >= 7)   vibrate([60, 30, 120]);            // weekly
-  else                    vibrate([40, 20, 80]);              // 3-day
-  // Bonus XP for big milestones
-  if (streak === 30)  { user.xp += 500;  saveUser(); }
-  if (streak === 100) { user.xp += 2000; saveUser(); }
-  setTimeout(() => showMoment({ icon: m.icon, title: m.title, sub: m.sub, xp: m.xp, color: streak >= 30 ? '#F0A500' : '#FF4757', btns: [{ label: 'Keep it going', primary: true }] }), 600);
+  if (!MESSAGES[streak]) return;
+  const big = streak >= 30;
+  launchConfetti(big ? 150 : 100);
+  vibrate(big ? [80, 40, 80, 40, 160] : [60, 30, 120]);
+  const flame = '<svg width="52" height="52" viewBox="0 0 24 24" fill="' + (big ? '#F0A500' : '#FF4757') + '"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>';
+  setTimeout(() => showMoment({ icon: flame, title: streak + '-day streak', sub: MESSAGES[streak], xp: '',
+    color: big ? '#F0A500' : '#FF4757', btns: [{ label: 'Keep it going', primary: true }] }), 900);
 }
 
 // ── 2. PERFECT DAY ───────────────────────────────────────────────────────────
 function celebrateAllDone() {
-  vibrate([60, 40, 60, 40, 120]); // triple pulse — day complete celebration
+  vibrate([60, 40, 60, 40, 120]); // triple pulse — day complete
   launchConfetti(80);
-  const isFirstPerfect = (user.perfectDays || 0) === 1;
-  // Streak burst on header
-  const streakEl = document.getElementById('stat-streak');
-  if (streakEl) { streakEl.style.animation = 'streakBurst .5s ease'; setTimeout(() => { streakEl.style.animation = ''; }, 600); }
+  const pill = document.getElementById('streak-pill');
+  if (pill) { pill.style.animation = 'streakBurst .5s ease'; setTimeout(() => { pill.style.animation = ''; }, 600); }
 
-  if (isFirstPerfect) {
-    // First ever perfect day — big moment
-    setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>', title: 'Perfect day', sub: 'All four sections. Every single one.', xp: '+150 XP', color: '#1DB954', btns: [{ label: 'Nice', primary: true }] }), 800);
+  if (user.total === 1) {
+    // Very first Chitas day — a real moment
+    setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>',
+      title: 'Your first Chitas day', sub: 'Chumash, Tehillim, Tanya and Rambam — all four. Come back tomorrow to start a streak.',
+      xp: '', color: '#1DB954', btns: [{ label: 'Amazing', primary: true }] }), 800);
   } else {
-    celebrateBanner('All done for today');
+    celebrateBanner('Chitas done today · 🔥 ' + user.streak);
   }
 }
 
-// ── 3. LEVEL UP ──────────────────────────────────────────────────────────────
-function checkLevelUp(xpBefore, xpAfter) {
-  const levelBefore = levelFromXp(xpBefore);
-  const levelAfter  = levelFromXp(xpAfter);
-  if (levelAfter <= levelBefore) return;
-  launchConfetti(60);
-  vibrate([50, 30, 50, 30, 150]); // level up — rising pattern
-  setTimeout(() => {
-    // Show level up modal with number ticker
-    showMoment({
-      icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>',
-      title: 'Level up',
-      sub: levelAfter < 5 ? 'Keep at it.' : levelAfter < 10 ? 'You know what you are doing.' : 'Seriously impressive.',
-      color: '#F0A500',
-      btns: [{ label: 'Keep learning', primary: true }],
-      levelTicker: { from: levelBefore, to: levelAfter },
-    });
-  }, 400);
-}
 
 // ── 4. WELCOME BACK ──────────────────────────────────────────────────────────
 function checkWelcomeBack() {
@@ -4599,7 +4489,7 @@ function showQuizResults() {
   const { score, questions, sectionId } = quizState;
   const s = schedule[sectionId];
   const total = questions.length;
-  const xpEarned = score * 35;
+  const xpEarned = score * POINTS.quizCorrect;
   const pct = Math.round((score / total) * 100);
 
   // Guard: quizDone may not exist on old saved state
@@ -6201,7 +6091,7 @@ function openChabadPanel(sectionId) {
 
   // ── Quiz button — show for quizzable sections always ──
   const quizBtn = document.getElementById('chabad-quiz-btn');
-  if (s.quizzable) {
+  if (s.quizzable && QUIZZES_ENABLED) {
     quizBtn.style.display = 'flex';
     quizBtn.onclick = () => { closeChabadPanel(); openQuiz(sectionId); };
     if (!user.quizDone) user.quizDone = {};
@@ -6710,7 +6600,6 @@ function renderStats() {
   const streak       = user.streak || 0;
   const bestStreak   = Math.max(user.longestStreak || 0, streak);
   const totalDays    = user.total || 0;
-  const perfectDays  = user.perfectDays || 0;
 
   // Consistency — last 28 days
   let activeDays = 0;
@@ -6722,7 +6611,6 @@ function renderStats() {
   }
 
   // Quiz accuracy
-  const quizAcc = user.quizTotal > 0 ? Math.round(user.quizCorrect / user.quizTotal * 100) : null;
 
   // ── Calendar grid — 10 weeks (70 days), oldest first ──────────────────────
   // Snap to start of current week (Sunday)
@@ -6730,10 +6618,11 @@ function renderStats() {
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - dow);
 
+  // 9 past weeks + this week (Sun → Shabbos), so today is always shown
   const calDays = [];
-  for (let i = 69; i >= 0; i--) {
+  for (let i = -63; i <= 6; i++) {
     const d = new Date(weekStart);
-    d.setDate(weekStart.getDate() - i);
+    d.setDate(weekStart.getDate() + i);
     const iso = dateISO(d);
     const isT = iso === dateISO(today);
     const isFuture = d > today;
@@ -6752,8 +6641,10 @@ function renderStats() {
     const bg = n === 0 ? 'var(--border)' : n === 4 ? 'var(--gold)' : sectionColors[n-1];
     const op = n === 0 ? '0.25' : n === 1 ? '0.6' : n === 2 ? '0.75' : n === 3 ? '0.9' : '1';
     const border = day.isT ? '1.5px solid var(--gold)' : '1.5px solid transparent';
-    const offset = -(69 - calDays.indexOf(day)); // negative dayOffset to navigate there
-    return '<div onclick="navDay(' + (-(69 - calDays.indexOf(day))) + ')" title="' + day.iso + '" style="width:100%;aspect-ratio:1;border-radius:3px;background:' + bg + ';opacity:' + op + ';border:' + border + ';cursor:pointer;transition:opacity .15s;" onmouseenter="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'' + op + '\'"></div>';
+    // Days within reach (last 7) open on the Learn tab; older days just show
+    const offset = Math.round((new Date(day.iso + 'T12:00') - new Date(dateISO(today) + 'T12:00')) / 86400000);
+    const canOpen = offset >= -MAX_DAYS_BACK;
+    return '<div ' + (canOpen ? 'onclick="switchTab(\'learn\');goToDay(' + offset + ')" ' : '') + 'title="' + day.iso + '" style="width:100%;aspect-ratio:1;border-radius:3px;background:' + bg + ';opacity:' + op + ';border:' + border + ';cursor:' + (canOpen ? 'pointer' : 'default') + ';transition:opacity .15s;" onmouseenter="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'' + op + '\'"></div>';
   }).join('');
 
   // Day-of-week labels
@@ -6820,18 +6711,18 @@ function renderStats() {
       '</div>' +
       '<div style="display:flex;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid var(--border);">' +
         '<div style="flex:1;text-align:center;">' +
-          '<p style="font-size:18px;font-weight:900;color:var(--t1);">' + totalDays + '</p>' +
-          '<p style="font-size:9px;color:var(--t3);font-weight:600;">total days</p>' +
+          '<p style="font-size:18px;font-weight:900;color:#1DB954;">' + totalDays + '</p>' +
+          '<p style="font-size:9px;color:var(--t3);font-weight:600;">Chitas days</p>' +
         '</div>' +
         '<div style="width:1px;background:var(--border);"></div>' +
         '<div style="flex:1;text-align:center;">' +
-          '<p style="font-size:18px;font-weight:900;color:var(--t1);">' + perfectDays + '</p>' +
-          '<p style="font-size:9px;color:var(--t3);font-weight:600;">perfect days</p>' +
+          '<p style="font-size:18px;font-weight:900;color:var(--gold);">' + weekPoints(user, today) + '</p>' +
+          '<p style="font-size:9px;color:var(--t3);font-weight:600;">points this week</p>' +
         '</div>' +
         '<div style="width:1px;background:var(--border);"></div>' +
         '<div style="flex:1;text-align:center;">' +
-          '<p style="font-size:18px;font-weight:900;color:' + (quizAcc !== null ? (quizAcc>=80?'#1DB954':quizAcc>=60?'#F0A500':'#FF4757') : 'var(--t3)') + ';">' + (quizAcc !== null ? quizAcc+'%' : '—') + '</p>' +
-          '<p style="font-size:9px;color:var(--t3);font-weight:600;">quiz accuracy</p>' +
+          '<p style="font-size:18px;font-weight:900;color:var(--gold);">' + (user.xp || 0) + '</p>' +
+          '<p style="font-size:9px;color:var(--t3);font-weight:600;">points all time</p>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -6883,8 +6774,6 @@ function openProfileSheet() {
   document.getElementById('profile-sheet-avatar').innerHTML = letterAvatar(user.name || '?', 48, 18);
   document.getElementById('profile-sheet-name').textContent = user.name || 'Anonymous';
   document.getElementById('profile-sheet-city').textContent = user.city || '';
-  document.getElementById('ps-streak').textContent = user.streak;
-  document.getElementById('ps-xp').textContent = user.xp;
   const transEl = document.getElementById('ps-chumash-trans');
   if (transEl) transEl.textContent = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Metsudah';
   document.getElementById('ps-track').textContent = RAMBAM_TRACKS[user.rambamTrack]?.label || '';
@@ -6900,18 +6789,13 @@ function openProfileSheet() {
   // Notification dot — show if no city
   const dot = document.getElementById('avatar-dot');
   if (dot) dot.style.display = user.city ? 'none' : 'block';
-  // Populate compact level bar
-  const psLevel = levelFromXp(user.xp);
-  const psInLevel = xpInCurrentLevel(user.xp);
-  const psNeeded = xpNeededForLvl(psLevel);
-  const el = document.getElementById('ps-level');
-  if (el) el.textContent = psLevel;
-  const bar = document.getElementById('ps-xp-bar');
-  if (bar) bar.style.width = Math.round(psInLevel/psNeeded*100) + '%';
-  const next = document.getElementById('ps-xp-next');
-  if (next) next.textContent = psInLevel + ' / ' + psNeeded + ' XP';
-  document.getElementById('ps-streak').textContent = user.streak;
-  document.getElementById('ps-xp').textContent = user.xp;
+  // Progress at a glance
+  document.getElementById('ps-streak').textContent = user.streak || 0;
+  document.getElementById('ps-days').textContent = user.total || 0;
+  document.getElementById('ps-xp').textContent = user.xp || 0;
+  const next = nextMilestone(user.streak || 0);
+  document.getElementById('ps-next').textContent = next
+    ? 'Next milestone: ' + next + '-day streak · ' + (next - (user.streak || 0)) + ' to go' : '';
   document.getElementById('profile-sheet').style.display = 'flex';
 }
 
@@ -6941,44 +6825,6 @@ function closeProfileSheet() {
   document.getElementById('profile-sheet').style.display = 'none';
 }
 
-function renderProfileSheetContent() {
-  const level = levelFromXp(user.xp);
-  const xpInLevel = xpInCurrentLevel(user.xp);
-  const xpNeeded = xpNeededForLvl(level);
-  // Activity grid 28 days
-  const today = new Date();
-  let gridHTML = '';
-  for (let i = 27; i >= 0; i--) {
-    const d = new Date(today); d.setDate(d.getDate() - i);
-    const iso = dateISO(d);
-    const isToday = i === 0;
-    const dayData = isToday ? user.done : (user.pastDone?.[iso] || {});
-    const count = ['chumash','tehillim','tanya','rambam'].filter(id => dayData[id]).length;
-    const opacity = count === 0 ? '0.07' : count === 1 ? '0.3' : count === 2 ? '0.55' : count === 3 ? '0.8' : '1';
-    const border = isToday ? '1.5px solid var(--gold)' : '1.5px solid transparent';
-    gridHTML += '<div style="width:100%;aspect-ratio:1;border-radius:4px;background:var(--gold);opacity:' + opacity + ';border:' + border + ';"></div>';
-  }
-
-  document.getElementById('profile-sheet-content').innerHTML =
-    // Level bar
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
-        '<span style="font-size:13px;font-weight:700;color:var(--t1);">Level ' + level + '</span>' +
-        '<span style="font-size:12px;color:var(--t3);">' + xpInLevel + ' / 100 XP</span>' +
-      '</div>' +
-      '<div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;">' +
-        '<div style="height:100%;width:' + Math.round(xpInLevel/xpNeeded*100) + '%;background:linear-gradient(90deg,#F0A500,#FFB830);border-radius:3px;transition:width .8s ease;"></div>' +
-      '</div>' +
-    '</div>' +
-    // Activity grid
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-        '<p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;">Activity</p>' +
-        '<p style="font-size:11px;color:var(--t3);">28 days</p>' +
-      '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">' + gridHTML + '</div>' +
-    '</div>';
-}
 
 function changeTrack() {
   const existing = document.getElementById('rambam-track-modal');
@@ -7481,15 +7327,12 @@ async function _loadExtraSubtitle(id) {
   }
 }
 
-// Mark done / unmark for extra tracks (no XP)
+// Mark done / unmark for extra tracks (POINTS.extra each)
 function markExtraDone(id) {
-  if (!user.done) user.done = {};
-  user.done[id] = true;
-  user.lastDate = dateISO(new Date());
-  saveUser();
+  const r = _changeDay(dateISO(new Date()), day => { day[id] = true; });
+  fire(_pointsText(r.delta), 'xp');
   vibrate([40, 30, 80]);
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   // Animate card
   const card = document.getElementById('extra-card-' + id);
   if (card) {
@@ -7503,25 +7346,20 @@ function markExtraDone(id) {
 }
 
 function unmarkExtraDone(id) {
-  if (!user.done) return;
-  user.done[id] = false;
-  saveUser();
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+  if (!user.done?.[id]) return;
+  _changeDay(dateISO(new Date()), day => { day[id] = false; });
+  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
 }
 
 function markExtraDonePast(id, iso) {
-  if (!user.pastDone) user.pastDone = {};
-  if (!user.pastDone[iso]) user.pastDone[iso] = {};
-  user.pastDone[iso][id] = true;
-  saveUser();
+  const r = _changeDay(iso, day => { day[id] = true; });
+  fire(_pointsText(r.delta), 'xp');
   _renderExtraTrackCards(iso, false);
 }
 
 function unmarkExtraDonePast(id, iso) {
-  if (!user.pastDone?.[iso]) return;
-  user.pastDone[iso][id] = false;
-  saveUser();
+  if (!user.pastDone?.[iso]?.[id]) return;
+  _changeDay(iso, day => { day[id] = false; });
   _renderExtraTrackCards(iso, false);
 }
 
@@ -8966,39 +8804,15 @@ function _renderPsExtraTracks() {
 }
 
 
-// ── Streak recalculation ─────────────────────────────────────────────────────
-// Walk backwards from today counting consecutive days where all 4 sections done.
-// Checks: today's user.done, then pastDone[iso] for each prior day.
-// Called after any completion (today or past) so streak always reflects reality.
+// ── Streak + totals ───────────────────────────────────────────────────────────
+// Rules live in js/progress.js (tested). This just stores the results on the
+// user so they're saved and shown on the leaderboard.
 function recalcStreak() {
-  const ids = ['chumash','tehillim','tanya','rambam'];
   const today = new Date();
-  let streak = 0;
-
-  for (let offset = 0; offset <= MAX_DAYS_BACK + 1; offset++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - offset);
-    const iso = dateISO(d);
-
-    let allDone;
-    if (offset === 0) {
-      // Today
-      allDone = ids.every(x => user.done?.[x]);
-    } else {
-      // Past day
-      allDone = ids.every(x => user.pastDone?.[iso]?.[x]);
-    }
-
-    if (allDone) {
-      streak++;
-    } else {
-      break; // chain broken — stop counting
-    }
-  }
-
-  user.streak = streak;
-  if (streak > (user.longestStreak || 0)) user.longestStreak = streak;
-  return streak;
+  user.streak = computeStreak(user, today).current;
+  user.longestStreak = Math.max(user.longestStreak || 0, user.streak);
+  user.total = countChitasDays(user, today);
+  return user.streak;
 }
 
 
