@@ -23,7 +23,7 @@ export function cleanSefariaHtml(s) {
     if (mk) { i += mk[0].length; continue; }
     out += s[i++];
   }
-  return out.replace(/<[^>]+>/g, '')
+  return out.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/\s+/g, ' ').trim();
 }

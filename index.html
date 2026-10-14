@@ -441,7 +441,7 @@
 }
 /* Rambam English: the Rambam's words bold, the translator's additions lighter */
 .rb-en b { font-weight: 700; color: var(--t1); }
-.rb-en.rb-marked, .rb-en .rb-add { font-weight: 400; color: var(--t2); }
+.rb-en .rb-add { font-weight: 400; color: var(--t2); }
 .rb-en.rb-plain { font-weight: 400; color: var(--t1); }
 /* Week strip (renderWeekStrip) */
 .wk-day { display:flex; flex-direction:column; align-items:center; gap:5px; padding:4px 0 2px; background:none; border:none; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent; }
@@ -478,9 +478,11 @@
   border: 1px solid rgba(29,185,84,.45); background: rgba(29,185,84,.12); color: #1DB954; cursor: pointer;
 }
 .rambam-fn.active { background: #1DB954; color: #000; }
-#ob-welcome .ob-points p { display:flex; gap:12px; align-items:center; font-size:14px; color:var(--t2); padding:9px 0; border-bottom:1px solid var(--border); }
-#ob-welcome .ob-points p:last-child { border-bottom:none; }
-#ob-welcome .ob-points span { width:24px; display:flex; justify-content:center; flex-shrink:0; }
+#ob-welcome .ob-point { display:flex; gap:14px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border); }
+#ob-welcome .ob-point:last-child { border-bottom:none; }
+#ob-welcome .ob-point > span { width:24px; display:flex; justify-content:center; flex-shrink:0; padding-top:2px; }
+#ob-welcome .ob-pt-title { font-size:15px; font-weight:800; color:var(--t1); margin-bottom:2px; }
+#ob-welcome .ob-pt-sub { font-size:13px; color:var(--t3); line-height:1.45; }
 #ls-trans-popup {
   position: fixed;
   z-index: 1200;
@@ -835,12 +837,12 @@ window._fsGetDoc = getDoc;
             <span style="background:linear-gradient(135deg,#F0A500 0%,#FFB830 50%,#F0A500 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;">Daily</span>
           </h1>
         </div>
-        <p style="font-size:15px;color:var(--t2);line-height:1.5;margin-bottom:28px;max-width:300px;animation:titleReveal .5s .4s ease both;">Chumash, Tehillim, Tanya &amp; Rambam: today's portions, ready to learn.</p>
+        <p style="font-size:15px;color:var(--t2);line-height:1.5;margin-bottom:28px;max-width:300px;animation:titleReveal .5s .4s ease both;">Learn it, track it, remember it.</p>
 
         <div class="ob-points" style="width:100%;text-align:left;margin-bottom:36px;animation:up .5s .55s ease both;">
-          <p><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>Read right here, in Hebrew, English or both</p>
-          <p><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>See your week at a glance and catch up on any day you missed</p>
-          <p><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></span>Quick quizzes on what you just learned</p>
+          <div class="ob-point"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><div><p class="ob-pt-title">Your daily Chitas, beautifully laid out</p><p class="ob-pt-sub">Chumash, Tehillim, Tanya and Rambam, easy to read in Hebrew, English or both</p></div></div>
+          <div class="ob-point"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8.5 14.5l2 2 4-4"/></svg></span><div><p class="ob-pt-title">Stay accountable</p><p class="ob-pt-sub">Track each day's learning and catch up on anything you missed</p></div></div>
+          <div class="ob-point"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></span><div><p class="ob-pt-title">Test your knowledge</p><p class="ob-pt-sub">Short quizzes on what you just learned</p></div></div>
         </div>
 
         <div style="width:100%;animation:up .5s .7s ease both;">
@@ -3587,7 +3589,7 @@ function _cleanHtml(s, notes){
   function keepNote(inner){
     if(!notes)return'';
     // DOMParser turns &amp; etc. into real characters (it never runs scripts or loads images)
-    const text=new DOMParser().parseFromString(inner,'text/html').body.textContent.replace(/\s+/g,' ').trim();
+    const text=new DOMParser().parseFromString(inner.replace(/<br\s*\/?>/gi,' '),'text/html').body.textContent.replace(/\s+/g,' ').trim();
     if(!text)return'';
     notes.push(text);
     return FN_OPEN+(notes.length-1)+FN_CLOSE;
@@ -3622,7 +3624,8 @@ function _cleanHtml(s, notes){
     return out;
   }
   s=removeFn(s);
-  s=s.replace(/<(?!\/?b\b)[^>]+>/g,'');
+  s=s.replace(/<br\s*\/?>/gi,' ');                 // line breaks between sentences → a space
+  s=s.replace(/<(?!\/?b>|\/?b\s|\/?i>)[^>]+>/g,''); // keep <b> and plain <i> (e.g. transliterated words)
   return s.replace(/\s+/g,' ').trim();
 }
 function _flatHtml(x){
@@ -4035,12 +4038,21 @@ function _rambamChapterTitle(ref) {
   return ref;
 }
 
+const RAMBAM_EN_VERSION = 'Mishneh Torah, trans. by Eliyahu Touger. Jerusalem, Moznaim Pub. c1986-c2007';
+
 async function _fetchRambamChapter(ref) {
   const enc = encodeURIComponent(ref);
-  // v3 API for English (Touger translation)
+  // The translator's footnotes are kept (one list per chapter) and shown as
+  // tappable numbers in the text
+  const notes = [];
+
+  // v3 API for English — ask for the Touger translation by name (it carries the
+  // translator's footnotes and, in many books, [brackets] around his added words);
+  // fall back to Sefaria's default English if that version isn't there
+  const v3 = version => fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=' + encodeURIComponent(version) + '&fill_in_missing_segments=1')
+    .then(r => r.json()).then(d => (d?.versions || []).some(v => flatV3(v.text).some(Boolean)) ? d : null).catch(() => null);
   const [enRes, heRes] = await Promise.all([
-    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1')
-      .then(r => r.json()).catch(() => null),
+    v3('english|' + RAMBAM_EN_VERSION).then(d => d || v3('english')),
     fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0&lang=he')
       .then(r => r.json()).catch(() => null),
   ]);
@@ -4050,9 +4062,6 @@ async function _fetchRambamChapter(ref) {
   // or a nested array (range fetch — we take index 0 = first chapter).
   // Since we now always fetch one chapter at a time via _expandRambamRefs,
   // text should always be flat. But guard against nesting just in case.
-  // The translator's footnotes are kept (one list per chapter) and shown as
-  // tappable numbers in the text
-  const notes = [];
   function flatV3(x) {
     if (!x) return [];
     // Nested: first element is itself an array → this is a multi-chapter response
@@ -4071,6 +4080,7 @@ async function _fetchRambamChapter(ref) {
   }
 
   const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+  notes.length = 0; // the version check above may have collected some
   const enSegs = flatV3(engVersion?.text || []);
 
   // Hebrew from standard API — same nesting guard as flatV3
@@ -4114,20 +4124,16 @@ function _renderRambamContent() {
                    'יז','יח','יט','כ','כא'];
 
   // Touger translation: the Rambam's own words vs the translator's additions.
-  //  - If Sefaria marks the Rambam's words with <b>, those are bold and
-  //    everything else (the translator's words) is lighter.
-  //  - Otherwise, if the translator's words are in [brackets], those are lighter.
-  //  - Otherwise the text is shown plainly.
+  // Sefaria's copy marks the translator's added words (and sources) with
+  // [square brackets] in many books, e.g. "liable [to death]". Those are shown
+  // lighter, without the brackets, and the Rambam's words bold — like Chabad.org.
+  // Some books (e.g. Robbery and Lost Property) have no brackets on Sefaria, so
+  // there's nothing to tell the two apart: that text is shown in regular weight.
   function styleBrackets(text) {
     if (!text) return '';
-    if (/<b\b/i.test(text)) {
-      return '<span class="rb-en rb-marked">' + text.replace(/\[([^\]]+)\]/g, '<span class="rb-add">[$1]</span>') + '</span>';
-    }
-    if (/\[[^\]]+\]/.test(text)) {
-      return '<span class="rb-en">' + text.split(/\[([^\]]+)\]/).map((part, i) =>
-        !part ? '' : i % 2 === 0 ? '<b>' + part + '</b>' : '<span class="rb-add">' + part + '</span>').join('') + '</span>';
-    }
-    return '<span class="rb-en rb-plain">' + text + '</span>';
+    if (!/\[[^\]]+\]/.test(text)) return '<span class="rb-en rb-plain">' + text + '</span>';
+    return '<span class="rb-en">' + text.split(/\[([^\]]+)\]/).map((part, i) =>
+      !part ? '' : i % 2 === 0 ? '<b>' + part + '</b>' : '<span class="rb-add">' + part + '</span>').join('') + '</span>';
   }
 
   // Lang toggle

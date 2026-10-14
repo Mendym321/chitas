@@ -35,9 +35,9 @@ await page.route(u => !u.href.startsWith(url), r => r.abort()); // block the int
 await page.goto(url, { waitUntil: 'load' });
 
 let failed = 0;
-async function check(name, fn, expected) {
+async function check(name, fn, expected, arg) {
   let actual;
-  try { actual = await page.evaluate(fn); } catch (e) { actual = 'THREW: ' + e.message.split('\n')[0]; }
+  try { actual = await page.evaluate(fn, arg); } catch (e) { actual = 'THREW: ' + e.message.split('\n')[0]; }
   if (JSON.stringify(actual) === JSON.stringify(expected)) console.log('  ✓', name); // compares contents, so lists work too
   else { failed++; console.log('  ✗', name, '\n      expected:', expected, '\n      got:     ', actual); }
 }
@@ -169,18 +169,32 @@ await check('Tanya: AI summary is labeled and shown as text', () => {
   return [t.includes('AI-written'), t.includes('<img'), !!window.__hacked];
 }, [true, true, false]);
 
-await check('Rambam: the Rambam\'s words (Sefaria <b>) bold, the translator\'s words not', () => {
+// Real Sefaria text (Touger translation) — see tools/fixtures/rambam-touger.json
+const RAMBAM = JSON.parse(await readFile(new URL('./fixtures/rambam-touger.json', import.meta.url), 'utf8'));
+await check('Rambam (real Sefaria text): sentences don\'t run together; transliterations stay italic', ({ robbery }) => {
+  const en = _cleanHtml(robbery, []);
+  return [en.includes('take it." Even if'), en.includes('<i>p\'rutah</i>'), en.includes('<br')];
+}, [true, true, false], { robbery: RAMBAM.robbery_13_1 });
+
+await check('Rambam (real Sefaria text): [bracketed] translator\'s words lighter, the Rambam\'s words bold, footnotes tappable', ({ sabbath }) => {
   const notes = [];
-  const en = _cleanHtml('<b>It is a positive commandment to rest</b> on the seventh day,<sup class="footnote-marker">1</sup><i class="footnote extra">A note.</i> <b>as it says</b> [Exodus 23:12]', notes);
+  const en = _cleanHtml(sabbath, notes);
   window._rambamData = { chapters: [{ title: 'Shabbos 1', chapter: 1, en: [en], he: ['ש'], notes }] };
   localStorage.setItem('chitas_lang_rambam', 'en');
   _renderRambamContent();
   const root = document.querySelector('#native-reader-content .rb-en');
-  const w = el => getComputedStyle(el).fontWeight;
-  const plainNode = [...root.childNodes].find(n => n.nodeType === 3 && n.textContent.includes('seventh day'));
-  const span = document.createElement('span'); plainNode.replaceWith(span); span.appendChild(plainNode);
-  return [+w(root.querySelector('b')) >= 700, +w(span) < 600, notes, document.querySelectorAll('#native-reader-content .rambam-fn').length];
-}, [true, true, ['A note.'], 1]);
+  const add = root.querySelector('.rb-add'), bold = root.querySelector('b');
+  return [add.textContent, +getComputedStyle(add).fontWeight < 600, +getComputedStyle(bold).fontWeight >= 700,
+          root.textContent.includes('['), notes.length, notes[1].includes('Maggid Mishneh'),
+          document.querySelectorAll('#native-reader-content .rambam-fn').length];
+}, ['for performing such an act.', true, true, false, 2, true, 2], { sabbath: RAMBAM.sabbath_sample });
+
+await check('Rambam (real Sefaria text): a book with no brackets is shown in regular weight, not all bold', ({ robbery }) => {
+  window._rambamData = { chapters: [{ title: 'Robbery 13', chapter: 13, en: [_cleanHtml(robbery, [])], he: ['א'], notes: [] }] };
+  _renderRambamContent();
+  const root = document.querySelector('#native-reader-content .rb-en');
+  return [root.classList.contains('rb-plain'), +getComputedStyle(root).fontWeight < 600];
+}, [true, true], { robbery: RAMBAM.robbery_13_1 });
 
 // Pretend /api/quiz: remembers what the app sent, answers with 4 questions
 let quizRequest = null;
