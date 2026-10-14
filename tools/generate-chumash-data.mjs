@@ -40,11 +40,13 @@ for (let d = new Date(start); d < end; d.setDate(d.getDate() + 7)) {
   shabbosim.push({ iso: iso(d), hdate: hd, hebcal: res.parsha, name: res.chag ? null : appName(res.parsha) });
 }
 
-// A Shabbos that is Yom Tov has no weekly parsha. Chabad custom (verified on
-// Chabad.org, Oct 2026):
-//  • Shabbos is Yom Kippur / Sukkos / Shemini Atzeres → learn VEZOS HABRACHA
-//  • Any other Yom Tov (Rosh Hashana, Pesach, Shavuos) → learn the NEXT parsha
-//    (it is then learned again the following week)
+// THE RULE: Chitas always learns the parsha that will be read NEXT in shul.
+//  • Shabbos is Yom Tov → shul reads the holiday portion, so the upcoming
+//    parsha is still the next one: learn it this week, and repeat it next week.
+//  • After Haazinu, the next parsha read is Vezos Habracha — on Simchas Torah.
+//    So weeks whose Shabbos is Yom Kippur / Sukkos / Shemini Atzeres learn it.
+//  • Simchas Torah itself: see section 3 below.
+// (Verified against Chabad.org, Oct 2026.)
 const VEZOS = 'Vezot Haberakhah';
 const schedule = {};
 const holidayWeeks = [];
@@ -75,9 +77,11 @@ aliyot[VEZOS] = [1, 2, 3, 4, 5, 6, 7].map(n => {
 });
 
 // ── 3. Simchas Torah (Diaspora, 23 Tishrei) — day-by-day exceptions ─────────
-// On Simchas Torah: finish ALL of Vezos Habracha, then Bereishis from the
-// start through that weekday's aliyah (verified for a Sunday on Chabad.org).
-// Earlier days of that same week are still Vezos Habracha.
+// Vezos Habracha is read on Simchas Torah, so from that day the upcoming
+// parsha becomes Bereishis. Learn Vezos Habracha, then start Bereishis and
+// "catch up" through that weekday's aliyah, so tomorrow is back on track.
+// Earlier days of that same week are still Vezos Habracha (verified for a
+// Sunday Simchas Torah on Chabad.org).
 // Multiple refs are joined with "|".
 const dayOverrides = {};
 for (let y = FIRST_HEBREW_YEAR; y <= LAST_HEBREW_YEAR; y++) {
