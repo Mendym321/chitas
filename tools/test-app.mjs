@@ -57,7 +57,7 @@ await check('when the schedule can\'t load, the error message shows', async () =
 await check('sign out finishes and shows a message', async () => {
   await signOut();
   return document.getElementById('toast').textContent;
-}, 'Signed out 👋');
+}, 'Signed out');
 
 await check('Rebbe toggle in Personal Tehillim turns him off', () => {
   user.tehillimFixedOpts = { rebbe: true, rebbetzin: true };

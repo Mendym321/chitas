@@ -443,6 +443,16 @@
 .rb-en b { font-weight: 700; color: var(--t1); }
 .rb-en.rb-marked, .rb-en .rb-add { font-weight: 400; color: var(--t2); }
 .rb-en.rb-plain { font-weight: 400; color: var(--t1); }
+/* Week strip (renderWeekStrip) */
+.wk-day { display:flex; flex-direction:column; align-items:center; gap:5px; padding:4px 0 2px; background:none; border:none; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent; }
+.wk-letter { font-size:11px; font-weight:600; color:var(--t3); letter-spacing:.02em; }
+.wk-letter.today { color:var(--gold); font-weight:800; }
+.wk-ring { position:relative; width:36px; height:36px; }
+.wk-num { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:var(--t2); }
+.wk-num.full { color:var(--t1); font-weight:800; }
+.wk-num.rest { color:var(--t3); }
+.wk-dot { width:4px; height:4px; border-radius:50%; background:transparent; }
+.wk-dot.on { background:var(--gold); }
 #rambam-note-popup {
   position: fixed; z-index: 1200; background: var(--card); border: 1px solid var(--border);
   border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.35); padding: 12px 15px;
@@ -458,7 +468,7 @@
 .rambam-fn.active { background: #1DB954; color: #000; }
 #ob-welcome .ob-points p { display:flex; gap:12px; align-items:center; font-size:14px; color:var(--t2); padding:9px 0; border-bottom:1px solid var(--border); }
 #ob-welcome .ob-points p:last-child { border-bottom:none; }
-#ob-welcome .ob-points span { font-size:18px; width:24px; text-align:center; flex-shrink:0; }
+#ob-welcome .ob-points span { width:24px; display:flex; justify-content:center; flex-shrink:0; }
 #ls-trans-popup {
   position: fixed;
   z-index: 1200;
@@ -816,9 +826,9 @@ window._fsGetDoc = getDoc;
         <p style="font-size:15px;color:var(--t2);line-height:1.5;margin-bottom:28px;max-width:300px;animation:titleReveal .5s .4s ease both;">Chumash, Tehillim, Tanya &amp; Rambam: today's portions, ready to learn.</p>
 
         <div class="ob-points" style="width:100%;text-align:left;margin-bottom:36px;animation:up .5s .55s ease both;">
-          <p><span>📖</span>Read right here, in Hebrew, English or both</p>
-          <p><span>🔥</span>A streak that never breaks for Shabbos or Yom Tov</p>
-          <p><span>✅</span>Short quizzes so the learning sticks</p>
+          <p><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>Read right here, in Hebrew, English or both</p>
+          <p><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s-5 6-5 11a5 5 0 0010 0c0-5-5-11-5-11z"/></svg></span>A streak that never breaks for Shabbos or Yom Tov</p>
+          <p><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></span>Short quizzes so the learning sticks</p>
         </div>
 
         <div style="width:100%;animation:up .5s .7s ease both;">
@@ -896,7 +906,7 @@ window._fsGetDoc = getDoc;
       </div>
 
       <!-- Last 7 days — tap a day to view or catch up -->
-      <div id="week-strip" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;"></div>
+      <div id="week-strip" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:14px;"></div>
 
       <!-- API error -->
       <div id="api-error" style="display:none;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.25);border-radius:14px;padding:12px 16px;margin-bottom:16px;gap:10px;align-items:flex-start;color:var(--red);">
@@ -1360,6 +1370,7 @@ const SVG_ICONS = {
   bolt:   '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>',
   check:  '<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   ext:    '<path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" fill="none"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8"/>',
+  search: '<circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
   quiz:   '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/>',
 };
 function icon(name, size=20, color='currentColor') {
@@ -2669,31 +2680,43 @@ function updateProgressRing() {
   title.style.color = allDone ? '#1DB954' : 'var(--t1)';
   title.textContent = dayOffset === 0 ? (allDone ? 'Chitas done today ✓' : "Today's Chitas")
                                       : (allDone ? 'Chitas day ✓' : 'Catching up');
-  sub.textContent = allDone ? '🔥 ' + user.streak + '-day streak' : n + ' of 4 done';
+  sub.textContent = allDone ? user.streak + '-day streak' : n + ' of 4 done';
   renderWeekStrip();
 }
 
-// Last 7 days: full gold = Chitas day, partial = some sections, 🕯 = Shabbos/Yom Tov
+// Last 7 days: each day is a small version of the Today ring (one segment per
+// section, in its colour) with the date inside. Shabbos / Yom Tov you didn't
+// mark get a calm dashed ring. The day you're viewing has a gold dot under it.
 function renderWeekStrip() {
   const el = document.getElementById('week-strip');
   if (!el) return;
   const today = new Date();
-  const LETTERS = ['S','M','T','W','T','F','ש'];
+  const LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const R = 14, C = 2 * Math.PI * R, GAP = 3, SEG = C / 4 - GAP;
   let html = '';
   for (let off = -6; off <= 0; off++) {
     const d = new Date(today); d.setDate(today.getDate() + off);
     const done = dayDone(user, d, today);
     const n = sectionsDone(done);
-    const rest = isRestDay(d);
+    const rest = isRestDay(d) && n === 0;
     const viewing = off === dayOffset;
-    const fill = n === 4 ? 'var(--gold)' : 'var(--surface)';
-    const ring = n === 4 ? 'var(--gold)' : n > 0 ? 'rgba(240,165,0,.55)' : 'var(--border)';
-    const mark = n === 4 ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>'
-               : n > 0 ? '<span style="font-size:10px;font-weight:800;color:var(--gold);">' + n + '/4</span>'
-               : rest ? '<span style="font-size:13px;line-height:1;">🕯️</span>' : '';
-    html += '<button onclick="goToDay(' + off + ')" title="' + d.toDateString() + '" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;border-radius:12px;border:1.5px solid ' + (viewing ? 'var(--gold)' : 'transparent') + ';background:' + (viewing ? 'rgba(240,165,0,.08)' : 'transparent') + ';cursor:pointer;font-family:inherit;">'
-      + '<span style="font-size:10px;font-weight:700;color:' + (off === 0 ? 'var(--t1)' : 'var(--t3)') + ';">' + (off === 0 ? 'Today' : LETTERS[d.getDay()]) + '</span>'
-      + '<span style="width:28px;height:28px;border-radius:50%;background:' + fill + ';border:2px solid ' + ring + ';display:flex;align-items:center;justify-content:center;">' + mark + '</span>'
+    const isToday = off === 0;
+    const ring = rest
+      ? '<circle cx="18" cy="18" r="' + R + '" fill="none" stroke="var(--border)" stroke-width="2" stroke-dasharray="2 3"/>'
+      : SECTION_IDS.map((id, k) =>
+          '<circle cx="18" cy="18" r="' + R + '" fill="none" stroke-width="3.5" stroke-linecap="butt"'
+          + ' stroke="' + (done[id] ? SECTION_COLORS[id] : 'var(--border)') + '"'
+          + ' stroke-dasharray="' + SEG.toFixed(2) + ' ' + (C - SEG).toFixed(2) + '"'
+          + ' stroke-dashoffset="' + (-(k * (SEG + GAP)) - GAP / 2).toFixed(2) + '"/>').join('');
+    const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+      + (rest ? ' (Shabbos / Yom Tov)' : ' · ' + n + ' of 4');
+    html += '<button class="wk-day" onclick="goToDay(' + off + ')" aria-label="' + label + '" title="' + label + '">'
+      + '<span class="wk-letter' + (isToday ? ' today' : '') + '">' + LETTERS[d.getDay()] + '</span>'
+      + '<span class="wk-ring">'
+      +   '<svg width="36" height="36" viewBox="0 0 36 36" style="transform:rotate(-90deg);">' + ring + '</svg>'
+      +   '<span class="wk-num' + (n === 4 ? ' full' : '') + (rest ? ' rest' : '') + '">' + d.getDate() + '</span>'
+      + '</span>'
+      + '<span class="wk-dot' + (viewing ? ' on' : '') + '"></span>'
       + '</button>';
   }
   el.innerHTML = html;
@@ -2878,7 +2901,7 @@ function openQuiz(sectionId) {
     const L = QUIZ_LEVELS[level], done = _quizLevelDone(sectionId, level);
     const score = done ? user.quizDone[sectionId][level] : null;
     return '<button onclick="_startQuiz(\'' + level + '\')" class="quiz-level" style="width:100%;text-align:left;padding:16px;border-radius:16px;background:var(--card);border:1.5px solid var(--border);cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:14px;">'
-      + '<div style="width:44px;height:44px;border-radius:12px;background:' + s.color + '18;border:1px solid ' + s.color + '40;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">' + (level === 'quick' ? '⚡' : '🔍') + '</div>'
+      + '<div style="width:44px;height:44px;border-radius:12px;background:' + s.color + '18;border:1px solid ' + s.color + '40;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + s.color + ';">' + icon(level === 'quick' ? 'bolt' : 'search', 20) + '</div>'
       + '<div style="flex:1;min-width:0;">'
       +   '<p style="font-size:15px;font-weight:800;color:var(--t1);">' + L.label + ' <span style="font-size:12px;font-weight:600;color:var(--t3);">· ' + L.count + ' questions</span></p>'
       +   '<p style="font-size:12px;color:var(--t3);margin-top:2px;line-height:1.4;">' + L.desc + '</p>'
@@ -2909,10 +2932,10 @@ async function _quizPassage(sectionId) {
   return null;
 }
 
-function _quizMessage(icon, title, text, retry) {
+function _quizMessage(iconName, title, text, retry) {
   document.getElementById('quiz-body').innerHTML =
     '<div style="text-align:center;padding-top:60px;animation:fadeUp .3s ease both;">'
-    + '<div style="font-size:40px;margin-bottom:14px;">' + icon + '</div>'
+    + '<div style="display:flex;justify-content:center;margin-bottom:14px;color:var(--t3);">' + icon(iconName, 36) + '</div>'
     + '<p style="font-size:17px;font-weight:800;color:var(--t1);margin-bottom:6px;">' + escapeHtml(title) + '</p>'
     + '<p style="font-size:13px;color:var(--t3);line-height:1.5;margin-bottom:24px;">' + escapeHtml(text) + '</p>'
     + (retry ? '<button onclick="openQuiz(quizState.sectionId)" style="padding:12px 22px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Back</button>' : '')
@@ -2929,9 +2952,9 @@ async function _startQuiz(level) {
     + '</div>';
 
   const token = await window._fb?.getIdToken?.().catch(() => null);
-  if (!token) return _quizMessage('🔑', 'Sign in to take quizzes', 'Quizzes are made fresh for each portion, so they need an account.', true);
+  if (!token) return _quizMessage('quiz', 'Sign in to take quizzes', 'Quizzes are made fresh for each portion, so they need an account.', true);
   const passage = await _quizPassage(sid).catch(() => null);
-  if (!passage) return _quizMessage('📡', 'Couldn\'t load today\'s text', 'Check your connection and try again.', true);
+  if (!passage) return _quizMessage('ext', 'Couldn\'t load today\'s text', 'Check your connection and try again.', true);
 
   let data = null, status = 0;
   try {
@@ -2945,7 +2968,7 @@ async function _startQuiz(level) {
   } catch (e) { /* offline */ }
   if (quizState.sectionId !== sid || quizState.level !== level) return; // closed or switched meanwhile
   if (!data?.questions?.length) {
-    return _quizMessage('😕', status ? 'No quiz this time' : 'You\'re offline',
+    return _quizMessage('quiz', status ? 'No quiz this time' : 'You\'re offline',
       data?.error || 'Check your connection and try again.', true);
   }
   quizState.questions = data.questions;
@@ -3116,7 +3139,7 @@ function celebrateAllDone() {
       title: 'Your first Chitas day', sub: 'Chumash, Tehillim, Tanya and Rambam — all four. Come back tomorrow to start a streak.',
       xp: '', color: '#1DB954', btns: [{ label: 'Amazing', primary: true }] }), 800);
   } else {
-    celebrateBanner('Chitas done today · 🔥 ' + user.streak);
+    celebrateBanner('Chitas done today · ' + user.streak + '-day streak');
   }
 }
 
@@ -3232,7 +3255,6 @@ function showQuizResults() {
   document.getElementById('quiz-score-text').textContent = `${score}/${total}`;
   document.getElementById('quiz-score-badge').style.display = 'block';
 
-  const emoji = score === total ? '🎯' : pct >= 60 ? '👍' : '📖';
   const msg = score === total ? 'Every one right!' : pct >= 60 ? 'Nicely done' : 'Worth another look at the text';
 
   const review = missed.length
@@ -3248,7 +3270,6 @@ function showQuizResults() {
   const other = level === 'quick' ? 'deep' : 'quick';
   document.getElementById('quiz-body').innerHTML = `
     <div style="text-align:center;padding-top:28px;animation:fadeUp .35s ease both;">
-      <div style="font-size:46px;margin-bottom:12px;">${emoji}</div>
       <p style="font-size:24px;font-weight:900;color:var(--t1);margin-bottom:4px;">${score} / ${total}</p>
       <p style="font-size:14px;color:var(--t2);margin-bottom:4px;">${msg}</p>
       <div style="height:22px;"></div>
@@ -3468,7 +3489,7 @@ function unlockMarkDone() {
 // ZONE 21 · CHUMASH NATIVE READER
 //   Fetches Koren Torah + Metsudah Rashi from Sefaria.
 //   Two-column layout, Hebrew/Both/English toggle.
-//   ⚠️  All functions prefixed _ to avoid naming conflicts.
+//   NOTE: All functions prefixed _ to avoid naming conflicts.
 //   TODO: Add Tanya reader here (same pattern, flowing prose)
 //   TODO: Add Rambam reader here (same pattern, Touger translation)
 // ════════════════════════════════════════════════════════════════════
@@ -4970,7 +4991,7 @@ function _buildSettingsSectionOpts(sectionId) {
         + '</button></div>';
       // Admin: add word button
       if (user?.isAdmin || user?.role === 'admin') {
-        html += '<button onclick="closeReaderSettings();_lsDictModalOpen(\'\')" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;">➕ Add word to dictionary</button>';
+        html += '<button onclick="closeReaderSettings();_lsDictModalOpen(\'\')" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;">+ Add word to dictionary</button>';
       }
     }
 
@@ -5319,7 +5340,7 @@ function renderStats() {
         '</div>';
       }).join('') +
       (ls.needsAttention
-        ? '<p id="needs-attention" style="font-size:11px;color:var(--t2);margin-top:4px;padding-top:9px;border-top:1px solid var(--border);line-height:1.45;">💡 <b>' + SECTION_NAMES[ls.needsAttention] + '</b> is the one you miss most. Try doing it first tomorrow.</p>'
+        ? '<p id="needs-attention" style="font-size:11px;color:var(--t2);margin-top:4px;padding-top:9px;border-top:1px solid var(--border);line-height:1.45;"><b>' + SECTION_NAMES[ls.needsAttention] + '</b> is the one you miss most. Try doing it first tomorrow.</p>'
         : '') +
     '</div>';
 
@@ -5577,18 +5598,18 @@ async function signOut() {
   try { localStorage.removeItem('chitas_v78'); } catch{}
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
-  fire('Signed out 👋', 'xp');
+  fire('Signed out', 'xp');
 }
 
 // ── SHARE ─────────────────────────────────────────────────────────────────────
 function shareApp() {
-  const text = `I'm learning Chitas daily — Chumash, Tehillim, Tanya & Rambam every day. 🔥 ${user.streak}-day streak! Join me on Chitas Daily.`;
+  const text = `I'm learning Chitas daily — Chumash, Tehillim, Tanya & Rambam every day. ${user.streak}-day streak. Join me on Chitas Daily.`;
   if (navigator.share) {
     navigator.share({ title: 'Chitas Daily', text, url: window.location.href })
       .catch(() => {});
   } else {
     navigator.clipboard.writeText(text + '\n' + window.location.href)
-      .then(() => fire('Copied to clipboard! 📋', 'gold'))
+      .then(() => fire('Copied to clipboard', 'gold'))
       .catch(() => fire('Share: ' + window.location.href, 'xp'));
   }
 }
@@ -6636,7 +6657,7 @@ function _hayomYomError(msg) {
   const contEl = document.getElementById('native-reader-content');
   if (loadEl) loadEl.style.display = 'none';
   if (contEl) {
-    contEl.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--t3);"><p style="font-size:32px;margin-bottom:12px;">📖</p><p style="font-size:15px;">' + msg + '</p></div>';
+    contEl.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--t3);"><div style="display:flex;justify-content:center;margin-bottom:12px;color:var(--t3);">' + icon('book', 32) + '</div><p style="font-size:15px;">' + msg + '</p></div>';
     contEl.style.display = 'block';
   }
 }
@@ -8574,7 +8595,7 @@ function _shbCompleteUnit(unit, unitIdx) {
     if (!user.shbCompleted) user.shbCompleted = 0;
     user.shbCompleted++;
     saveUser();
-    fire('🌟 Sha\'ar HaBitachon complete!', 'gold');
+    fire('Sha\'ar HaBitachon complete', 'gold');
     closeChabadPanel();
     return;
   }
