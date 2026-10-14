@@ -24,7 +24,7 @@ check('1 Cheshvan 5787 (Oct 12 2026) → 1–9', getTehillimForDate(day('2026-10
 console.log('Tehillim — cycle rules:');
 check('2 Cheshvan → 10–17',        getTehillimForDate(day('2026-10-13')).ref, 'Psalms.10-17');
 check('label reads nicely',        getTehillimForDate(day('2026-10-12')).label, 'Psalms 1–9');
-check('29 Teves (29-day month) → 140–150 to finish Tehillim',
+check('29 Teves 5787 (29-day month) → 140–150 (verified on Chabad.org)',
                                    getTehillimForDate(day('2027-01-08')).ref, 'Psalms.140-150');
 
 // Every day: the app's Hebrew day must match Hebcal's, and short months finish the book

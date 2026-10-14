@@ -9,11 +9,10 @@ Line numbers refer to `index.html` unless another file is named.
 ## 0. Status (updated as we go)
 
 ### ⏳ Waiting on you: please check these
-1. **Tehillim on a 29-day month:** on Chabad.org, does **Fri Jan 8, 2027 (29 Teves)** show Tehillim **140–150** or only **140–144**? (The app shows 140–150.)
-2. **Firestore Security Rules:** paste them from the Firebase console so they can be reviewed and saved in this repo (§4.1, §4.3, §4.5).
-3. **`dach-dev`:** is that Firebase project (the Likkutei Sichos text + fonts) yours? (§6.2)
-4. **Hayom Yom text:** where did the English in Firestore come from? (§6.2)
-5. **`cache/{date}` in Firestore:** does something outside this repo write it (e.g. a Firebase Function)? If not, the app's `loadDailyCache` call can be removed (§7).
+1. **Firestore Security Rules:** paste them from the Firebase console so they can be reviewed and saved in this repo (§4.1, §4.3, §4.5).
+2. **`dach-dev`:** is that Firebase project (the Likkutei Sichos text + fonts) yours? (§6.2)
+3. **Hayom Yom text:** where did the English in Firestore come from? (§6.2)
+4. **`cache/{date}` in Firestore:** does something outside this repo write it (e.g. a Firebase Function)? If not, the app's `loadDailyCache` call can be removed (§7).
 
 ### ✅ Fixed so far (branch `claude/adoring-dijkstra-p9ri1h`)
 - §3.3 Streak capped at 9 → new streak rules, with Shabbos/Yom Tov never breaking it (`js/progress.js`)
@@ -96,7 +95,7 @@ The app ignores Hebcal's aliyah data and uses two hand-typed tables: `PARSHA_SCH
 
 **Fix:** delete both tables and compute aliyos with `@hebcal/core` + `@hebcal/leyning` (free, offline, every year, Israel and Diaspora). Add tests that lock in the 5 Chabad.org-verified dates above.
 
-### 3.5 Tehillim cycle is off on days 1–2 ✅ FIXED (`js/tehillim.js`, tested in `tools/test-tehillim.mjs`; 29-day-month rule awaiting Chabad.org check)
+### 3.5 Tehillim cycle is off on days 1–2 ✅ FIXED (`js/tehillim.js`, tested in `tools/test-tehillim.mjs`; 29-day-month rule verified on Chabad.org)
 `TEH_CYCLE` (line 5618) has day 1 = Psalms 1–8 and day 2 = 9–17. The standard monthly division is **1–9** and **10–17**. It also doesn't handle a 29-day month: on the 29th, you also say day 30's chapters (145–150). The home screen gets Tehillim from Hebcal, but the reader uses this table, so the two can disagree.
 
 ### 3.6 Functions that don't exist (these crash) ✅ FIXED (tested in `tools/test-app.mjs`)

@@ -30,6 +30,7 @@ check('Feb 21 2027 Ki Tisa 1',    getChumashAliyaRef(day('2027-02-21')), 'Exodus
 check('Mar 22 2027 Tzav 2',       getChumashAliyaRef(day('2027-03-22')), 'Leviticus 6:12-7:10');
 check('Jun 17 2027 Nasso 5',      getChumashAliyaRef(day('2027-06-17')), 'Numbers 7:1-7:41');
 check('Sep 7 2027  Ki Teitzei 3', getChumashAliyaRef(day('2027-09-07')), 'Deuteronomy 22:8-23:7');
+check('Jan 8 2027  Va\'eira 6',    getChumashAliyaRef(day('2027-01-08')), 'Exodus 8:19-9:16');
 
 console.log('Chabad.org verified holiday weeks:');
 check('Sep 8 2026  Rosh Hashana week → Haazinu 3',   getChumashAliyaRef(day('2026-09-08')), 'Deuteronomy 32:13-32:18');
