@@ -189,6 +189,16 @@ await check('Rambam (real Sefaria text): [bracketed] translator\'s words lighter
           document.querySelectorAll('#native-reader-content .rambam-fn').length];
 }, ['for performing such an act.', true, true, false, 2, true, 2], { sabbath: RAMBAM.sabbath_sample });
 
+await check('Rambam (real Sefaria text, Ishus 1:2): added words lighter, footnotes tappable, transliterations italic', ({ ishus }) => {
+  const notes = [];
+  window._rambamData = { chapters: [{ title: 'Ishus 1', chapter: 1, en: [_cleanHtml(ishus, notes)], he: ['א'], notes }] };
+  _renderRambamContent();
+  const root = document.querySelector('#native-reader-content .rb-en');
+  const adds = [...root.querySelectorAll('.rb-add')].map(e => e.textContent);
+  return [adds.slice(0, 3), notes.length, document.querySelectorAll('#native-reader-content .rambam-fn').length,
+          !!root.querySelector('b i, i'), root.textContent.includes('[')];
+}, [['one of', 'the transfer of', 'the transfer of a'], 2, 2, true, false], { ishus: RAMBAM.marriage_1_2 });
+
 await check('Rambam (real Sefaria text): a book with no brackets is shown in regular weight, not all bold', ({ robbery }) => {
   window._rambamData = { chapters: [{ title: 'Robbery 13', chapter: 13, en: [_cleanHtml(robbery, [])], he: ['א'], notes: [] }] };
   _renderRambamContent();

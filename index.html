@@ -1009,7 +1009,7 @@ window._fsGetDoc = getDoc;
     </button>
     <div style="flex:1;min-width:0;">
       <p id="chabad-panel-title" style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
-      <p id="chabad-panel-sub" style="font-size:11px;color:var(--t3);">via Chabad.org</p>
+      <p id="chabad-panel-sub" style="font-size:11px;color:var(--t3);"></p>
     </div>
     <!-- Settings button — only shown for native reader sections -->
     <button id="reader-font-controls" onclick="openReaderSettings()" title="Reader settings" style="display:none;width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--t2);cursor:pointer;flex-shrink:0;transition:background .12s;" onmouseenter="this.style.background='var(--hi)'" onmouseleave="this.style.background='var(--card)'">
@@ -4787,7 +4787,7 @@ function openChabadPanel(sectionId) {
 
   // Header
   document.getElementById('chabad-panel-title').textContent = s.label;
-  document.getElementById('chabad-panel-sub').textContent = s.subtitle || 'via Chabad.org';
+  document.getElementById('chabad-panel-sub').textContent = s.subtitle || '';
   document.getElementById('chabad-panel-extlink').href = s.chabadUrl;
 
   // Show panel
