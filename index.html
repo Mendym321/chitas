@@ -2805,12 +2805,7 @@ async function init() {
 
     schedule = {
       chumash:  { id:'chumash',  label:'Chumash',  icon:'scroll', color:'#F0A500', xp:25, quizzable:true,
-                  subtitle: (() => {
-                    const pn = parshaForToday || p.parshaName;
-                    const dow = today.getDay();
-                    const aliya = dow === 6 ? 'Shabbos' : 'Aliya ' + (dow === 0 ? 1 : dow + 1);
-                    return pn ? pn + ' · ' + aliya : aliya;
-                  })(),
+                  subtitle: getChumashDayLabel(today),
                   chabadUrl: `${base}/torahreading.asp?tdate=${civDate}`,
                   sefariaRef: chumashRef },
 
@@ -3139,16 +3134,9 @@ async function rebuildScheduleForOffset() {
     const pastDow = d.getDay();
     const pastAliya = pastDow === 6 ? 'Shabbos' : 'Aliya ' + (pastDow === 0 ? 1 : pastDow + 1);
     if (s.id === 'chumash') {
-      s.subtitle = p?.parshaName ? p.parshaName + (pastDow === 6 ? ' · Shabbos' : ' · Aliya ' + p.aliyaNum) : pastAliya;
-      // For past days, also try Sefaria calendar for the aliyah ref
-      // If Hebcal has leyning use it; otherwise fall back to Sefaria
-      if (!p?.aliyaRef) {
-        // Fetch Sefaria calendar for this past date to get aliyot
-        // Use hardcoded schedule — reliable regardless of holiday overrides
-        s.sefariaRef = getChumashAliyaRef(d) || p?.aliyaRef || null;
-      } else {
-        s.sefariaRef = getChumashAliyaRef(d) || p.aliyaRef;
-      }
+      // js/chumash.js is the single tested source (handles Chabad holiday weeks)
+      s.subtitle = getChumashDayLabel(d);
+      s.sefariaRef = getChumashAliyaRef(d) || p?.aliyaRef || null;
     }
     if (s.id === 'tehillim') {
       s.subtitle = p?.tehTitle || 'Daily Psalms';
@@ -5020,6 +5008,10 @@ function _renderChumashContent() {
 
   // Render chapter by chapter — each chunk knows its own chapter number
   // and startVerse, so verse numbering is always correct
+  // Show the book name in headings only when a day spans two books (Simchas Torah)
+  const bookOf = chunk => chunk.ref.split(' ')[0];
+  const multiBook = new Set(torahChunks.map(bookOf)).size > 1;
+
   torahChunks.forEach((chunk, chunkIdx) => {
     // Chapter heading — always shown, style matches Tanya/Rambam
     {
@@ -5028,7 +5020,7 @@ function _renderChumashContent() {
          + 'border-left:4px solid var(--gold);border-radius:0 8px 8px 0;">'
          + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;'
          + 'color:rgba(240,165,0,.55);margin-bottom:3px;">Chumash</p>'
-         + '<p class="rf-header" style="font-size:17px;font-weight:800;color:var(--gold);">Chapter ' + chunk.chapter + '</p>'
+         + '<p class="rf-header" style="font-size:17px;font-weight:800;color:var(--gold);">' + (multiBook ? bookOf(chunk) + ' ' : 'Chapter ') + chunk.chapter + '</p>'
          + '</div>';
     }
 
@@ -5118,10 +5110,14 @@ async function _loadChumashNative(sectionId, silent) {
       return false;
     }
 
-    // Fetch Torah and Rashi in parallel
+    // Fetch Torah and Rashi in parallel. A day can have several refs joined
+    // by "|" (Simchas Torah: end of Devarim + start of Bereishis).
+    const transKeyword = (CHUMASH_TRANSLATIONS.find(t => t.id === (localStorage.getItem('chitas_chumash_translation') || 'metsudah')) || CHUMASH_TRANSLATIONS[0]).keyword;
+    const refs = aliyahRef.split('|');
+    const joinChunks = parts => ({ chunks: parts.flatMap(p => p.chunks), versionTitle: parts[0]?.versionTitle || '' });
     const [torah, rashi] = await Promise.all([
-      _fetchChumashText(aliyahRef, (CHUMASH_TRANSLATIONS.find(t => t.id === (localStorage.getItem('chitas_chumash_translation') || 'metsudah')) || CHUMASH_TRANSLATIONS[0]).keyword),
-      _fetchChumashText('Rashi on ' + aliyahRef, 'metsudah').catch(() => ({ chunks: [], versionTitle: '' })),
+      Promise.all(refs.map(r => _fetchChumashText(r, transKeyword))).then(joinChunks),
+      Promise.all(refs.map(r => _fetchChumashText('Rashi on ' + r, 'metsudah').catch(() => ({ chunks: [], versionTitle: '' })))).then(joinChunks),
     ]);
 
     if (!torah.chunks.length) return false;

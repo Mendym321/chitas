@@ -13,7 +13,8 @@ vm.createContext(ctx);
 for (const f of ['../js/chumash-data.js', '../js/chumash.js']) {
   vm.runInContext(readFileSync(new URL(f, import.meta.url), 'utf8'), ctx);
 }
-const { getChumashAliyaRef, getParshaForDate } = vm.runInContext('({ getChumashAliyaRef, getParshaForDate })', ctx);
+const { getChumashAliyaRef, getParshaForDate, getChumashDayLabel } =
+  vm.runInContext('({ getChumashAliyaRef, getParshaForDate, getChumashDayLabel })', ctx);
 
 let failed = 0;
 function check(name, actual, expected) {
@@ -30,9 +31,21 @@ check('Mar 22 2027 Tzav 2',       getChumashAliyaRef(day('2027-03-22')), 'Leviti
 check('Jun 17 2027 Nasso 5',      getChumashAliyaRef(day('2027-06-17')), 'Numbers 7:1-7:41');
 check('Sep 7 2027  Ki Teitzei 3', getChumashAliyaRef(day('2027-09-07')), 'Deuteronomy 22:8-23:7');
 
+console.log('Chabad.org verified holiday weeks:');
+check('Sep 8 2026  Rosh Hashana week → Haazinu 3',   getChumashAliyaRef(day('2026-09-08')), 'Deuteronomy 32:13-32:18');
+check('Sep 22 2026 after Yom Kippur → Vezos 3',      getChumashAliyaRef(day('2026-09-22')), 'Deuteronomy 33:13-33:17');
+check('Sep 29 2026 Sukkos week → Vezos 3',           getChumashAliyaRef(day('2026-09-29')), 'Deuteronomy 33:13-33:17');
+check('Apr 20 2027 Pesach week → Acharei 3',         getChumashAliyaRef(day('2027-04-20')), 'Leviticus 16:25-16:34');
+check('Oct 4 2026  Simchas Torah → all Vezos + Bereishis 1',
+      getChumashAliyaRef(day('2026-10-04')), 'Deuteronomy 33:1-34:12|Genesis 1:1-2:3');
+check('Oct 5 2026  day after → Bereishis 2',         getChumashAliyaRef(day('2026-10-05')), 'Genesis 2:4-2:19');
+check('label on Sukkos week', getChumashDayLabel(day('2026-09-29')), 'Vezot Haberakhah · Aliya 3');
+
 // ── Safety rules for every single day ───────────────────────────────────────
 console.log('Every day Oct 2025 – Aug 2046:');
-const RANGE = /^(Genesis|Exodus|Leviticus|Numbers|Deuteronomy) \d+:\d+-\d+:\d+$/;
+const ONE = '(Genesis|Exodus|Leviticus|Numbers|Deuteronomy) \\d+:\\d+-\\d+:\\d+';
+const RANGE = new RegExp('^' + ONE + '(\\|' + ONE + ')*$'); // several refs joined by "|"
+
 let missing = [], badFormat = [];
 for (let d = day('2025-10-01'); d < day('2046-08-01'); d.setDate(d.getDate() + 1)) {
   const ref = getChumashAliyaRef(d);
@@ -40,7 +53,7 @@ for (let d = day('2025-10-01'); d < day('2046-08-01'); d.setDate(d.getDate() + 1
   else if (!RANGE.test(ref)) badFormat.push(ref);
 }
 check('has a Chumash portion', missing.slice(0, 3).join(', '), '');
-check('every ref is "Book ch:v-ch:v"', badFormat.slice(0, 3).join(', '), '');
+check('every ref is "Book ch:v-ch:v" (or several joined by |)', badFormat.slice(0, 3).join(', '), '');
 
 // The parsha name is shared with other features (Likkutei Sichos, subtitles)
 check('uses app spelling ("Bereishit")', getParshaForDate(day('2026-10-10')), 'Bereishit');
