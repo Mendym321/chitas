@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { createHash } from 'node:crypto';
 import { getDb, verifyUser } from './_lib/firebase.js';
+import { takeDailyQuota } from './_lib/quota.js';
 import { englishSegments, tanyaSegments } from './_lib/sefaria.js';
 import { LEVELS, validateQuizRequest, checkQuestions } from './_lib/quiz-core.js';
 
@@ -73,19 +74,6 @@ async function fetchPassage(req) {
   return { label: 'Chumash with Rashi', text: parts.join('\n\n') };
 }
 
-// Count a NEW quiz against the user's daily limit. false = over the limit.
-async function takeQuota(db, uid) {
-  const today = new Date().toISOString().slice(0, 10);
-  const ref = db.collection('quiz_usage').doc(uid);
-  return db.runTransaction(async tx => {
-    const d = (await tx.get(ref)).data() || {};
-    const count = d.date === today ? d.count || 0 : 0;
-    if (count >= NEW_QUIZZES_PER_DAY) return false;
-    tx.set(ref, { date: today, count: count + 1 });
-    return true;
-  });
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
@@ -102,7 +90,7 @@ export default async function handler(req, res) {
     if (hit.exists) return res.status(200).json({ questions: hit.data().questions, level: q.level, cached: true });
   } catch (e) { console.warn('quiz cache read:', e.message); }
 
-  if (!(await takeQuota(db, uid))) return res.status(429).json({ error: 'That\'s a lot of quizzes for one day — try again tomorrow' });
+  if (!(await takeDailyQuota(db, uid, 'quiz', NEW_QUIZZES_PER_DAY))) return res.status(429).json({ error: 'That\'s a lot of quizzes for one day — try again tomorrow' });
 
   let passage;
   try { passage = await fetchPassage(q); }
