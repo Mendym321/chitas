@@ -74,7 +74,7 @@ The app ignores Hebcal's aliyah data and uses two hand-typed tables: `PARSHA_SCH
 ### 3.5 Tehillim cycle is off on days 1–2
 `TEH_CYCLE` (line 5618) has day 1 = Psalms 1–8 and day 2 = 9–17. The standard monthly division is **1–9** and **10–17**. It also doesn't handle a 29-day month: on the 29th, you also say day 30's chapters (145–150). The home screen gets Tehillim from Hebcal, but the reader uses this table, so the two can disagree.
 
-### 3.6 Functions that don't exist (these crash)
+### 3.6 Functions that don't exist (these crash) ✅ FIXED (tested in `tools/test-app.mjs`)
 | Called | Where | Effect |
 |---|---|---|
 | `_refreshUI()` | 3036 | **Calls itself forever** → crashes ("Maximum call stack"). It runs at the end of every Mark Done (3602), so the reader doesn't close and the list doesn't refresh. |
