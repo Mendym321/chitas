@@ -88,3 +88,12 @@ function milestoneReached(before, after) {
 function nextMilestone(n) {
   return MILESTONES.find(m => m > n) || null;
 }
+
+// Chitas days so far this week (Sunday → today)
+function chitasDaysThisWeek(user, today) {
+  let n = 0;
+  for (let d = _addDays(today, -today.getDay()); progressISO(d) <= progressISO(today); d = _addDays(d, 1)) {
+    if (isChitasDay(dayDone(user, d, today))) n++;
+  }
+  return n;
+}

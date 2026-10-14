@@ -103,14 +103,14 @@ await check('catching up yesterday restores a 2-day streak', () => {
 
 await check('week strip shows 7 days', () => document.querySelectorAll('#week-strip button').length, 7);
 
-await check('a malicious name/city on the leaderboard is shown as text, not run', async () => {
+await check('a malicious name is shown as text, not run (header + profile)', async () => {
   window.__hacked = false;
   user = { ...user, uid: 'u1', name: '<img src=x onerror="window.__hacked=true">', city: '<b onmouseover=x>NYC</b>' };
-  await renderLeaders();
+  updateHeader(); openProfileSheet();
   await new Promise(r => setTimeout(r, 100));
-  const html = document.getElementById('leaders-list').innerHTML;
-  return [window.__hacked, html.includes('&lt;img'), document.querySelectorAll('#leaders-list img, #leaders-list b[onmouseover]').length];
-}, [false, true, 0]);
+  closeProfileSheet();
+  return [window.__hacked, document.querySelectorAll('#avatar-tab img, #profile-sheet img, #profile-sheet b[onmouseover]').length];
+}, [false, 0]);
 
 await check('Personal Tehillim builds its list without crashing (offline → no chapters yet)', async () => {
   user.tehillimFixedOpts = { rebbe: true, rebbetzin: false };
@@ -153,6 +153,19 @@ await check('Tanya: AI summary is labeled and shown as text', () => {
   return [t.includes('AI-written'), t.includes('<img'), !!window.__hacked];
 }, [true, true, false]);
 
+await check('Rambam: the Rambam\'s words (Sefaria <b>) bold, the translator\'s words not', () => {
+  const notes = [];
+  const en = _cleanHtml('<b>It is a positive commandment to rest</b> on the seventh day,<sup class="footnote-marker">1</sup><i class="footnote extra">A note.</i> <b>as it says</b> [Exodus 23:12]', notes);
+  window._rambamData = { chapters: [{ title: 'Shabbos 1', chapter: 1, en: [en], he: ['ש'], notes }] };
+  localStorage.setItem('chitas_lang_rambam', 'en');
+  _renderRambamContent();
+  const root = document.querySelector('#native-reader-content .rb-en');
+  const w = el => getComputedStyle(el).fontWeight;
+  const plainNode = [...root.childNodes].find(n => n.nodeType === 3 && n.textContent.includes('seventh day'));
+  const span = document.createElement('span'); plainNode.replaceWith(span); span.appendChild(plainNode);
+  return [+w(root.querySelector('b')) >= 700, +w(span) < 600, notes, document.querySelectorAll('#native-reader-content .rambam-fn').length];
+}, [true, true, ['A note.'], 1]);
+
 // Pretend /api/quiz: remembers what the app sent, answers with 4 questions
 let quizRequest = null;
 await page.route('**/api/quiz', route => {
@@ -168,7 +181,7 @@ await page.route('**/api/quiz', route => {
 await check('quiz: pick a level, answer 4, see explanations and a review of misses', async () => {
   window.__hacked = false;
   window._fb = { saveUser: async () => {}, ...(window._fb || {}), getIdToken: async () => 'tok123' };
-  user = { ...user, xp: 0, quizDone: {} };
+  user = { ...user, xp: 0, quizDone: {}, quizTotal: 0, quizCorrect: 0 };
   dayOffset = 0;
   openQuiz('chumash');
   const levels = document.querySelectorAll('#quiz-body .quiz-level').length;
@@ -180,10 +193,10 @@ await check('quiz: pick a level, answer 4, see explanations and a review of miss
   nextQuestion(); selectAnswer(3);                    // right
   nextQuestion();
   const missed = [...document.querySelectorAll('.quiz-missed')].map(e => e.textContent.includes('Q2'));
-  const xp1 = user.xp;
-  await _startQuiz('quick'); [2, 0, 1, 3].forEach((a, i) => { selectAnswer(a); nextQuestion(); }); // retry: no extra points
-  return [levels, explained, missed, xp1, user.xp, user.quizDone.chumash, !!window.__hacked];
-}, [2, true, [true], 15, 15, { quick: 3 }, false]);
+  const first = [user.quizTotal, user.quizCorrect];
+  await _startQuiz('quick'); [2, 0, 1, 3].forEach((a, i) => { selectAnswer(a); nextQuestion(); }); // a retry is for learning; not counted again
+  return [levels, explained, missed, first, [user.quizTotal, user.quizCorrect], user.quizDone.chumash, !!window.__hacked];
+}, [2, true, [true], [4, 3], [4, 3], { quick: 3 }, false]);
 
 await check('quiz request sends today\'s exact Chumash ref and the sign-in token',
   () => getChumashAliyaRef(new Date()).split('|'), quizRequest && quizRequest.body.refs);

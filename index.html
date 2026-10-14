@@ -439,6 +439,10 @@
 .ls-pasuk-quote:active, .ls-pasuk-quote.active {
   background-color: rgba(74,158,255,.12);
 }
+/* Rambam English: the Rambam's words bold, the translator's additions lighter */
+.rb-en b { font-weight: 700; color: var(--t1); }
+.rb-en.rb-marked, .rb-en .rb-add { font-weight: 400; color: var(--t2); }
+.rb-en.rb-plain { font-weight: 400; color: var(--t1); }
 #rambam-note-popup {
   position: fixed; z-index: 1200; background: var(--card); border: 1px solid var(--border);
   border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.35); padding: 12px 15px;
@@ -613,7 +617,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp }
+import { getFirestore, doc, setDoc, getDoc, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -705,14 +709,6 @@ window._fb = {
     } catch(e) { console.error('loadUser:', e); return null; }
   },
 
-  // Fetch leaderboard (top 50 by xp or streak)
-  async fetchLeaderboard(field = 'xp') {
-    try {
-      const q = query(collection(db, 'users'), orderBy(field, 'desc'), limit(50));
-      const snap = await getDocs(q);
-      return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
-    } catch(e) { console.error('fetchLeaderboard:', e); return []; }
-  },
 
   // Auth state listener
   onAuthStateChanged(cb) {
@@ -835,7 +831,7 @@ window._fsGetDoc = getDoc;
       </div>
     </div>
   </div>
-  <!-- ── SIGN-IN SHEET ── (asked only when an account is needed: saving a streak, quizzes, leaderboard) -->
+  <!-- ── SIGN-IN SHEET ── (asked only when an account is needed: saving progress, quizzes) -->
   <div id="signin-sheet" onclick="if(event.target.id==='signin-sheet')closeSignIn()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;">
     <div style="background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:22px 22px 0 0;padding:24px 22px calc(22px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:up .25s ease both;">
       <p id="signin-title" style="font-size:20px;font-weight:900;color:var(--t1);margin-bottom:6px;"></p>
@@ -857,31 +853,28 @@ window._fsGetDoc = getDoc;
         <h2 id="greeting" style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--t1);line-height:1.15;">Good morning</h2>
         <p id="greeting-nudge" style="font-size:12px;color:var(--t3);margin-top:3px;"></p>
       </div>
-      <!-- Streak — always visible; tap to see how points & streaks work -->
-      <button id="streak-pill" onclick="openPointsInfo()" title="Your streak" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);color:var(--t1);font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;">
+      <!-- Streak — always visible; tap to see how the streak works -->
+      <button id="streak-pill" onclick="openStreakInfo()" title="Your streak" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);color:var(--t1);font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="#FF4757"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>
         <span id="streak-pill-num">0</span>
       </button>
       <!-- Avatar — top right, taps to open profile -->
       <button id="avatar-tab-btn" onclick="openProfileSheet()" style="flex-shrink:0;background:none;border:none;cursor:pointer;padding:0;" title="Profile">
         <div id="avatar-tab" style="position:relative;">
-          <!-- Notification dot if city not set -->
+          <!-- Dot while signed out (progress is only on this phone) -->
           <div id="avatar-dot" style="display:none;position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:50%;background:#FF4757;border:2px solid var(--bg);z-index:1;"></div>
         </div>
       </button>
     </div>
 
 
-    <!-- 3 tabs: Learn · Stats · Leaders -->
+    <!-- 2 tabs: Learn · Progress -->
     <div style="display:flex;gap:6px;padding:14px 20px 0;">
       <button class="nav-tab active" data-tab="learn" onclick="switchTab('learn')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--gold);background:var(--gold);color:#000;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
         <svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Learn
       </button>
       <button class="nav-tab" data-tab="stats" onclick="switchTab('stats')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
         <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Progress
-      </button>
-      <button class="nav-tab" data-tab="leaders" onclick="switchTab('leaders')" style="flex:1;padding:9px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.06em;transition:all .15s;">
-        <svg width="16" height="16" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M5 3h14v7a7 7 0 01-14 0V3z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M5 7H2a3 3 0 003 3M19 7h3a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Leaders
       </button>
     </div>
 
@@ -898,10 +891,7 @@ window._fsGetDoc = getDoc;
         <div style="flex:1;min-width:0;">
           <p id="progress-title" style="font-weight:800;font-size:16px;color:var(--t1);margin-bottom:2px;">Today's Chitas</p>
           <p id="progress-sub" style="font-size:13px;color:var(--t2);">Loading today's learning…</p>
-          <button onclick="openPointsInfo()" style="margin-top:6px;padding:0;background:none;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#F0A500"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>
-            <span id="today-points" style="font-size:12px;font-weight:700;color:var(--t2);">0 points this week</span>
-          </button>
+          <p id="week-summary" style="margin-top:6px;font-size:12px;font-weight:700;color:var(--t3);"></p>
         </div>
       </div>
 
@@ -948,7 +938,6 @@ window._fsGetDoc = getDoc;
       </div>
 
       <!-- Weekly quiz card -->
-      <div id="weekly-quiz-card" style="display:none;margin-top:6px;margin-bottom:4px;"></div>
 
     </div>
 
@@ -960,20 +949,6 @@ window._fsGetDoc = getDoc;
     <!-- Profile sheet hidden elements -->
     <div id="tab-profile" style="display:none;"></div>
 
-    <!-- ── LEADERS TAB ── -->
-    <div id="tab-leaders" class="screen" style="padding:20px 20px 0;">
-      <!-- Tab switcher -->
-      <div style="display:flex;gap:8px;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:4px;">
-        <button id="lb-tab-xp" onclick="switchLb('xp')" style="flex:1;padding:8px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--gold);color:#000;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>Points
-        </button>
-        <button id="lb-tab-streak" onclick="switchLb('streak')" style="flex:1;padding:8px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:var(--t3);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>Streak
-        </button>
-      </div>
-      <div id="leaders-list"></div>
-      
-    </div>
 
 
 
@@ -1000,22 +975,6 @@ window._fsGetDoc = getDoc;
 </div>
 
 <!-- Weekly Quiz panel -->
-<div id="weekly-quiz-panel" style="position:fixed;inset:0;z-index:998;background:var(--bg);display:none;flex-direction:column;overflow-y:auto;">
-  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:1;">
-    <button onclick="closeWeeklyQuiz()" style="width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-    </button>
-    <div style="flex:1;">
-      <p id="wq-title" style="font-size:17px;font-weight:900;color:var(--t1);">Weekly Quiz</p>
-      <p id="wq-subtitle" style="font-size:11px;color:var(--t3);margin-top:1px;">This week's Chumash, Tanya & Rambam</p>
-    </div>
-    <div id="wq-score-badge" style="display:none;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.4);border-radius:10px;padding:4px 10px;">
-      <p id="wq-score-text" style="font-size:12px;font-weight:700;color:var(--gold);"></p>
-    </div>
-  </div>
-  <div id="wq-body" style="flex:1;padding:24px 20px;max-width:430px;margin:0 auto;width:100%;"></div>
-</div>
-
 <!-- Reader panel — native text for Chumash/Tanya/Rambam, iframe for Tehillim -->
 <div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;" onclick="_closeSettingsOnOutsideClick(event)">
 
@@ -1084,10 +1043,10 @@ window._fsGetDoc = getDoc;
   <!-- Bottom bar — always visible, compact -->
   <div id="reader-bottom-bar" style="padding:8px 14px 12px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
     <div style="display:flex;gap:8px;">
-      <!-- Mark done — left half, shows points -->
+      <!-- Mark done — left half -->
       <button id="chabad-mark-btn" style="flex:1;padding:12px;border-radius:14px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
         <span id="chabad-mark-label" style="font-size:14px;font-weight:800;">Mark Done</span>
-        <span id="chabad-mark-xp" style="font-size:11px;font-weight:700;opacity:.7;">+10 points</span>
+        <span id="chabad-mark-xp" style="display:none;"></span>
       </button>
       <!-- Quiz — right half, equal size -->
       <button id="chabad-quiz-btn" style="display:none;flex:1;padding:12px;border-radius:14px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
@@ -1158,7 +1117,7 @@ window._fsGetDoc = getDoc;
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;">
         <div><p id="ps-streak" style="font-size:20px;font-weight:900;color:#FF4757;">0</p><p style="font-size:10px;color:var(--t3);font-weight:600;">day streak</p></div>
         <div><p id="ps-days" style="font-size:20px;font-weight:900;color:#1DB954;">0</p><p style="font-size:10px;color:var(--t3);font-weight:600;">Chitas days</p></div>
-        <div><p id="ps-xp" style="font-size:20px;font-weight:900;color:var(--gold);">0</p><p style="font-size:10px;color:var(--t3);font-weight:600;">points</p></div>
+        <div><p id="ps-best" style="font-size:20px;font-weight:900;color:var(--gold);">0</p><p style="font-size:10px;color:var(--t3);font-weight:600;">best streak</p></div>
       </div>
       <p id="ps-next" style="font-size:11px;color:var(--t3);margin-top:10px;text-align:center;"></p>
     </div>
@@ -1274,26 +1233,6 @@ window._fsGetDoc = getDoc;
   </div>
 </div>
 
-<!-- Motzei Shabbos weekly quiz popup -->
-<div id="motzei-popup" onclick="if(event.target.id==='motzei-popup')this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:24px;">
-  <div style="background:var(--surface);border:1px solid rgba(255,255,255,.07);border-radius:32px;padding:36px 28px 28px;width:100%;max-width:360px;text-align:center;animation:momentSlide .45s cubic-bezier(.22,1,.36,1);box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;overflow:hidden;">
-    <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;border-radius:50%;background:#A855F7;filter:blur(40px);opacity:.25;pointer-events:none;"></div>
-    <div style="width:72px;height:72px;border-radius:22px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:iconBounce .5s .2s cubic-bezier(.22,1,.36,1) both;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.6" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-    </div>
-    <p style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:8px;letter-spacing:-.3px;position:relative;">Weekly Quiz</p>
-    <p style="font-size:14px;color:var(--t2);line-height:1.55;margin-bottom:28px;position:relative;">Shabbos is over. Test your knowledge from this week's Chumash, Tanya and Rambam.</p>
-    <button onclick="document.getElementById('motzei-popup').style.display='none';openWeeklyQuiz();"
-      style="width:100%;padding:15px;border-radius:14px;background:#A855F7;border:none;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;box-shadow:0 4px 20px rgba(168,85,247,.4);position:relative;">
-      Take the quiz
-    </button>
-    <button onclick="document.getElementById('motzei-popup').style.display='none';"
-      style="width:100%;padding:13px;border-radius:14px;background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--t3);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;position:relative;">
-      Maybe later
-    </button>
-  </div>
-</div>
-
 <!-- Toast -->
 <div id="toast"></div>
 <div id="confetti-container"></div>
@@ -1325,8 +1264,6 @@ window._fsGetDoc = getDoc;
 // ║  ZONE 12 · DAY NAVIGATOR            ~line 1261                  ║
 // ║  ZONE 13 · MARK DONE / UNMARK       ~line 1484                  ║
 // ║  ZONE 14 · QUIZ (section)           ~line 1671                  ║
-// ║  ZONE 15 · WEEKLY QUIZ              ~line 1752                  ║
-// ║  ZONE 16 · SHARE CARD (canvas)      ~line 2041                  ║
 // ║  ZONE 17 · CELEBRATIONS             ~line 2291                  ║
 // ║  ZONE 18 · MOMENT MODALS            ~line 2345                  ║
 // ║  ZONE 19 · ONBOARDING TICKER        ~line 2515                  ║
@@ -1345,14 +1282,6 @@ window._fsGetDoc = getDoc;
 // ZONE 1 · STATE & CONSTANTS
 // ════════════════════════════════════════════════════════════════════
 // ── STATE ─────────────────────────────────────────────────────────────────────
-// Format name for leaderboard: "Mendel Moskovitz" → "Mendel M."
-function lbName(fullName) {
-  if (!fullName) return 'Anonymous';
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0];
-  return parts[0] + ' ' + parts[parts.length - 1][0] + '.';
-}
-
 // Letter avatar — first letter of first name, deterministic color from name
 const AVATAR_COLORS = [
   ['#F0A500','#000'],['#4A9EFF','#000'],['#1DB954','#000'],
@@ -1500,7 +1429,7 @@ function fire(msg, type='gold') {
 // ── ONBOARDING & SIGN-IN ──────────────────────────────────────────────────────
 // One welcome screen, then straight to today's learning. No account is needed
 // to start; we ask people to sign in only when it helps them (saving a streak,
-// quizzes, the leaderboard). Everything they did signed out is kept
+// quizzes). Everything they did signed out is kept
 // (js/account-merge.js). Sign-in is handled in ONE place: authHandler in bootApp().
 
 // Turn on once Sign in with Apple is set up in Firebase + Apple Developer
@@ -1511,7 +1440,6 @@ const SIGNIN_REASONS = {
   returning:   ['Welcome back', 'Sign in to pick up right where you left off.'],
   streak:      ['Keep your streak safe', 'Sign in so your progress is saved and syncs to all your devices. Everything you\'ve done so far comes with you.'],
   quiz:        ['Sign in to take quizzes', 'Quizzes are written fresh for each portion, so they need an account.'],
-  leaderboard: ['Join the leaderboard', 'Sign in to see where you stand among daily learners.'],
   save:        ['Save your progress', 'Sign in so your learning is backed up and syncs to all your devices.'],
 };
 
@@ -2268,7 +2196,6 @@ async function init() {
   recalcStreak(); // always derive streak + totals from history (js/progress.js)
   updateHeader();
   updateStats();
-  renderLeaders();
   renderStats();
 
   try {
@@ -2428,42 +2355,33 @@ function setGreeting() {
   nudgeEl.textContent = nudge;
 }
 
-// "How points work" — every rule in plain words (opened from 🔥 or ⭐)
-function openPointsInfo() {
-  document.getElementById('points-info-modal')?.remove();
-  const st = computeStreak(user, new Date());
+// "How your streak works" — the rules in plain words (opened from the streak pill)
+function openStreakInfo() {
+  document.getElementById('streak-info-modal')?.remove();
+  const today = new Date();
+  const st = computeStreak(user, today);
   const next = nextMilestone(st.current);
-  const row = (label, value) => '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:14px;"><span style="color:var(--t2);">' + label + '</span><b style="color:var(--t1);">' + value + '</b></div>';
+  const stat = (n, label) => '<div style="flex:1;text-align:center;"><p style="font-size:22px;font-weight:900;color:var(--t1);">' + n + '</p><p style="font-size:11px;color:var(--t3);font-weight:600;">' + label + '</p></div>';
   const modal = document.createElement('div');
-  modal.id = 'points-info-modal';
+  modal.id = 'streak-info-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
   modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:88vh;overflow-y:auto;">'
     + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
-    +   '<div><p class="ps-modal-title">🔥 ' + st.current + '-day streak</p><p class="ps-modal-sub">Best: ' + Math.max(user.longestStreak || 0, st.current) + ' · ' + (user.total || 0) + ' Chitas days</p></div>'
-    +   '<button onclick="this.closest(\'#points-info-modal\').remove()" class="ps-modal-close">×</button>'
+    +   '<div><p class="ps-modal-title">' + st.current + '-day streak</p><p class="ps-modal-sub">Chitas days in a row</p></div>'
+    +   '<button onclick="this.closest(\'#streak-info-modal\').remove()" class="ps-modal-close">×</button>'
     + '</div>'
     + '<div style="padding:16px 20px 28px;">'
+    +   '<div style="display:flex;gap:8px;padding:14px 0;margin-bottom:14px;border-radius:14px;background:var(--card);border:1px solid var(--border);">'
+    +     stat(Math.max(user.longestStreak || 0, st.current), 'best streak') + stat(user.total || 0, 'Chitas days') + stat(chitasDaysThisWeek(user, today), 'this week')
+    +   '</div>'
     +   '<p class="ps-label">How your streak works</p>'
-    +   '<div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:18px;">'
-    +     '<p>• A <b style="color:var(--t1);">Chitas day</b> = all four: Chumash, Tehillim, Tanya and Rambam.</p>'
-    +     '<p>• Your streak counts Chitas days in a row.</p>'
-    +     '<p>• <b style="color:var(--t1);">Shabbos and Yom Tov never break it</b> — mark them after, and they count too.</p>'
-    +     '<p>• Missed marking a day? Tap it in the week strip (up to 7 days back).</p>'
-    +     (next ? '<p>• Next milestone: <b style="color:var(--t1);">' + next + ' days</b> (' + (next - st.current) + ' to go).</p>' : '')
+    +   '<div style="font-size:13.5px;color:var(--t2);line-height:1.65;">'
+    +     '<p>A <b style="color:var(--t1);">Chitas day</b> means all four: Chumash, Tehillim, Tanya and Rambam.</p>'
+    +     '<p style="margin-top:8px;">Your streak counts Chitas days in a row. <b style="color:var(--t1);">Shabbos and Yom Tov never break it</b>; mark them afterwards and they count too.</p>'
+    +     '<p style="margin-top:8px;">Missed marking a day? Tap it in the week strip, up to 7 days back.</p>'
+    +     (next ? '<p style="margin-top:8px;">Next milestone: <b style="color:var(--t1);">' + next + ' days</b>, ' + (next - st.current) + ' to go.</p>' : '')
     +   '</div>'
-    +   '<p class="ps-label">How points work</p>'
-    +   '<div style="margin-bottom:6px;">'
-    +     row('Each Chitas section', '+' + POINTS.section)
-    +     row('Finish all four', '+' + POINTS.chitasDay + ' bonus')
-    +     row('Extra learning (Daf Yomi, Hayom Yom…)', '+' + POINTS.extra)
-    +     (QUIZZES_ENABLED ? row('Each correct quiz answer', '+' + POINTS.quizCorrect) : '')
-    +   '</div>'
-    +   '<p style="font-size:12px;color:var(--t3);margin-top:10px;">A full Chitas day is ' + (4 * POINTS.section + POINTS.chitasDay) + ' points. Unmarking takes the points back.</p>'
-    +   '<div style="display:flex;justify-content:space-between;margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--border);font-size:14px;">'
-    +     '<span style="color:var(--t2);">This week</span><b style="color:var(--gold);">' + weekPoints(user, new Date()) + ' points</b></div>'
-    +   '<div style="display:flex;justify-content:space-between;margin-top:8px;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--border);font-size:14px;">'
-    +     '<span style="color:var(--t2);">All time</span><b style="color:var(--gold);">' + (user.xp || 0) + ' points</b></div>'
     + '</div></div>';
   document.body.appendChild(modal);
 }
@@ -2482,13 +2400,13 @@ function updateHeader() {
   const at = document.getElementById('avatar-tab');
   if (at) at.innerHTML = letterAvatar(user.name, 34, 14);
   const dot = document.getElementById('avatar-dot');
-  if (dot) dot.style.display = (!user.city) ? 'block' : 'none';
+  if (dot) dot.style.display = isGuest() ? 'block' : 'none';
   setGreeting();
 }
 
 function updateStats() {
-  const pts = document.getElementById('today-points');
-  if (pts) pts.textContent = weekPoints(user, new Date()) + ' points this week';
+  const ws = document.getElementById('week-summary');
+  if (ws) { const n = chitasDaysThisWeek(user, new Date()); ws.textContent = n === 1 ? '1 full Chitas day this week' : n + ' full Chitas days this week'; }
   renderWeekStrip();
 }
 
@@ -2843,29 +2761,26 @@ function _viewedISO() {
   return dateISO(d);
 }
 
-function _pointsText(delta) {
-  return (delta > 0 ? '+' : '') + delta + ' points';
-}
+
 
 function unmarkDonePast(id, iso) {
   if (!schedule || !user.pastDone?.[iso]?.[id]) return;
   const r = _changeDay(iso, day => { day[id] = false; });
   renderSectionsForOffset(_viewedISO());
-  fire('Unmarked ' + schedule[id].label + ' · ' + _pointsText(r.delta), 'xp');
+  fire('Unmarked ' + schedule[id].label, 'xp');
 }
 
 function unmarkDone(id) {
   if (!schedule || !user.done[id]) return;
   const r = _changeDay(dateISO(new Date()), day => { day[id] = false; });
   renderSectionsForOffset(_viewedISO());
-  fire('Unmarked ' + schedule[id].label + ' · ' + _pointsText(r.delta), 'xp');
+  fire('Unmarked ' + schedule[id].label, 'xp');
 }
 
 function markDonePast(id, iso) {
   if (!schedule || user.pastDone?.[iso]?.[id]) return;
   const r = _changeDay(iso, day => { day[id] = true; });
-  fire(r.completedNow ? 'Day caught up ✓ · 🔥 ' + user.streak + ' · ' + _pointsText(r.delta)
-                      : _pointsText(r.delta), r.completedNow ? 'gold' : 'xp');
+  fire(r.completedNow ? 'Day caught up · ' + user.streak + '-day streak' : schedule[id].label + ' marked', r.completedNow ? 'gold' : 'xp');
   renderSectionsForOffset(_viewedISO());
   if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
 }
@@ -2879,8 +2794,8 @@ function markDone(id) {
   // Clear saved scroll for today so this section's next open starts from top
   try { localStorage.removeItem(_scrollKey(id)); } catch(e) {}
 
-  if (r.completedNow) fire('Chitas done today! 🔥 ' + user.streak + ' · ' + _pointsText(r.delta), 'gold');
-  else fire(_pointsText(r.delta), 'xp');
+  if (r.completedNow) fire('Chitas done today · ' + user.streak + '-day streak', 'gold');
+  else fire(s.label + ' done', 'xp');
 
   celebrateSection(id);
   if (r.completedNow) setTimeout(celebrateAllDone, 300);
@@ -2968,7 +2883,7 @@ function openQuiz(sectionId) {
       +   '<p style="font-size:15px;font-weight:800;color:var(--t1);">' + L.label + ' <span style="font-size:12px;font-weight:600;color:var(--t3);">· ' + L.count + ' questions</span></p>'
       +   '<p style="font-size:12px;color:var(--t3);margin-top:2px;line-height:1.4;">' + L.desc + '</p>'
       +   '<p style="font-size:11px;font-weight:700;margin-top:6px;color:' + (done ? '#1DB954' : 'var(--gold)') + ';">'
-      +     (done ? '✓ Done today · ' + score + '/' + L.count : 'Up to +' + L.count * POINTS.quizCorrect + ' points') + '</p>'
+      +     (done ? 'Done today · ' + score + '/' + L.count : 'Not taken yet today') + '</p>'
       + '</div></button>';
   };
   document.getElementById('quiz-body').innerHTML =
@@ -3035,534 +2950,6 @@ async function _startQuiz(level) {
   }
   quizState.questions = data.questions;
   renderQuestion();
-}
-
-// ════════════════════════════════════════════════════════════════════
-// ZONE 15 · WEEKLY QUIZ  (Motzei Shabbos popup, results, share card)
-// ════════════════════════════════════════════════════════════════════
-// ── WEEKLY QUIZ ───────────────────────────────────────────────────────────────
-
-function getWeekNumber() {
-  // ISO week number — consistent across devices
-  const d = new Date();
-  d.setHours(0,0,0,0);
-  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-  const week1 = new Date(d.getFullYear(), 0, 4);
-  return d.getFullYear() + '-W' + String(1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7)).padStart(2,'0');
-}
-
-function isWeeklyQuizAvailable() {
-  // Available Fri (5), Sat night/Sun (0), all day Sun
-  const now = new Date();
-  const dow = now.getDay();
-  const hour = now.getHours();
-  // Friday all day, Saturday from 7pm (Motzei Shabbos), Sunday all day
-  return dow === 5 || dow === 0 || (dow === 6 && hour >= 19);
-}
-
-function checkMotzeiShabbosPopup() {
-  // Show a gentle popup on Sat night/Sunday if weekly quiz not yet done
-  const now = new Date();
-  const dow = now.getDay();
-  const hour = now.getHours();
-  const isMoztei = (dow === 6 && hour >= 19) || dow === 0;
-  if (!isMoztei) return;
-  if (!isWeeklyQuizAvailable()) return;
-
-  const week = getWeekNumber();
-  if (!user.weeklyQuizDone) user.weeklyQuizDone = {};
-  if (user.weeklyQuizDone[week]) return; // already done
-
-  // Only show once per session
-  if (sessionStorage.getItem('wq_popup_shown_' + week)) return;
-  sessionStorage.setItem('wq_popup_shown_' + week, '1');
-
-  // Small delay so app loads first
-  setTimeout(() => {
-    const popup = document.getElementById('motzei-popup');
-    if (popup) popup.style.display = 'flex';
-  }, 2000);
-}
-
-function renderWeeklyQuizCard() {
-  const card = document.getElementById('weekly-quiz-card');
-  if (!card || !schedule) return;
-  if (!isWeeklyQuizAvailable()) { card.style.display = 'none'; return; }
-
-  const week = getWeekNumber();
-  if (!user.weeklyQuizDone) user.weeklyQuizDone = {};
-  const done = !!user.weeklyQuizDone[week];
-
-  card.style.display = 'block';
-  card.innerHTML = `
-    <div onclick="${done ? '' : 'openWeeklyQuiz()'}" style="background:linear-gradient(135deg,rgba(240,165,0,.12),rgba(168,85,247,.08));border:1.5px solid ${done ? 'rgba(29,185,84,.4)' : 'rgba(240,165,0,.35)'};border-radius:16px;padding:16px;cursor:${done ? 'default' : 'pointer'};transition:all .15s;">
-      <div style="display:flex;align-items:center;gap:14px;">
-         <div style="width:44px;height:44px;border-radius:13px;background:${done ? 'rgba(29,185,84,.15)' : 'rgba(240,165,0,.15)'};border:1px solid ${done ? 'rgba(29,185,84,.3)' : 'rgba(240,165,0,.3)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">
-          ${done ? '✅' : '📋'}
-        </div>
-        <div style="flex:1;min-width:0;">
-          <p style="font-weight:800;font-size:15px;color:${done ? '#1DB954' : 'var(--gold)'};margin-bottom:2px;">
-            ${done ? 'Weekly Quiz Done' : 'Weekly Quiz'}
-          </p>
-          <p style="font-size:12px;color:var(--t3);">
-            ${done
-              ? 'Score: ' + (user.weeklyQuizDone[week].score || 0) + '/10 · ' + user.weeklyQuizDone[week].xp + ' XP earned'
-              : "Test this week's Chumash, Tanya & Rambam · +100 XP"
-            }
-          </p>
-        </div>
-        ${done ? '' : '<svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--t3);"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
-      </div>
-    </div>`;
-}
-
-let weeklyQuizState = { questions: [], current: 0, score: 0, answered: false };
-
-
-async function openWeeklyQuiz() {
-  const week = getWeekNumber();
-  if (!user.weeklyQuizDone) user.weeklyQuizDone = {};
-  // Already done — just show results
-  if (user.weeklyQuizDone[week]) { openWeeklyQuizResults(); return; }
-
-  weeklyQuizState = { questions: [], current: 0, score: 0, answered: false };
-
-  document.getElementById('wq-score-badge').style.display = 'none';
-  document.getElementById('wq-body').innerHTML = `
-    <div style="text-align:center;padding-top:60px;">
-      <div class="spinner" style="margin:0 auto;color:var(--gold);"></div>
-      <p style="color:var(--t3);font-size:13px;margin-top:16px;">Generating your weekly quiz…</p>
-    </div>`;
-  document.getElementById('weekly-quiz-panel').style.display = 'flex';
-
-  // NOTE: Direct Anthropic API calls are blocked by CORS from browsers.
-  // Weekly quiz uses curated questions for now. A Vercel API route proxy is needed for live AI questions.
-  const WEEKLY_DUMMY = [
-    { q: "What is the primary topic of this week's parasha?", options: ["The Mishkan and its vessels", "The Exodus from Egypt", "Receiving the Torah at Sinai", "The Twelve Spies"], answer: 0, subject: "Chumash" },
-    { q: "Which craftsman was divinely appointed to lead the Mishkan's construction?", options: ["Moshe", "Aharon", "Betzalel", "Itamar"], answer: 2, subject: "Chumash" },
-    { q: "What material was contributed by the women for the Mishkan?", options: ["Gold jewelry", "Mirrors of copper", "Blue wool", "Cedar wood"], answer: 1, subject: "Chumash" },
-    { q: "According to the Alter Rebbe in this week's Tanya, where does the divine soul originate?", options: ["The world of Beriah", "Under G-d's throne of glory", "The world of Atzilut", "The soul of Adam"], answer: 1, subject: "Tanya" },
-    { q: "What does the Tanya teach about the relationship between the two souls?", options: ["They coexist peacefully", "The animal soul always wins", "They are in constant struggle", "They are actually one soul"], answer: 2, subject: "Tanya" },
-    { q: "This week's Tanya discusses the concept of Beinoni. What defines a Beinoni?", options: ["Never sins in thought word or deed", "Controls actions but not thoughts", "Has no evil inclination", "Is perfectly righteous"], answer: 1, subject: "Tanya" },
-    { q: "What area of halacha does this week's Rambam cover?", options: ["Laws of Shabbat", "Laws of prayer", "The halachos in this week's chapters", "Laws of blessings"], answer: 2, subject: "Rambam" },
-    { q: "According to the Rambam, what is the source of these laws in the Torah?", options: ["Rabbinic ordinance", "A Torah-level commandment", "A custom", "Not specified"], answer: 1, subject: "Rambam" },
-    { q: "How many chapters of Rambam are covered this week in the 3-chapter track?", options: ["One", "Two", "Three", "Four"], answer: 2, subject: "Rambam" },
-    { q: "Which of the following best describes Chitas as a daily learning program?", options: ["Only Chumash and Tehillim", "Chumash, Tehillim, Tanya and Rambam", "Torah, Mishnah and Gemara", "Only Chassidic texts"], answer: 1, subject: "Chumash" },
-  ];
-  weeklyQuizState.questions = WEEKLY_DUMMY;
-  // Simulate loading
-  await new Promise(r => setTimeout(r, 800));
-  renderWeeklyQuestion();
-}
-
-function closeWeeklyQuiz() {
-  document.getElementById('weekly-quiz-panel').style.display = 'none';
-  weeklyQuizState = { questions: [], current: 0, score: 0, answered: false };
-}
-
-function renderWeeklyQuestion() {
-  const { questions, current } = weeklyQuizState;
-  const q = questions[current];
-  if (!q) return;
-  const total = questions.length;
-  const subjectColor = {Chumash:'#F0A500',Tanya:'#A855F7',Rambam:'#4A9EFF'}[q.subject] || '#F0A500';
-
-  document.getElementById('wq-body').innerHTML = `
-    <div style="animation:fadeUp .3s ease both;">
-      <!-- Progress dots -->
-      <div style="display:flex;gap:4px;margin-bottom:20px;">
-        ${Array.from({length:total},(_,i) => '<div style="flex:1;height:4px;border-radius:2px;background:' + (i<current?'var(--gold)':i===current?'rgba(240,165,0,.5)':'var(--border)') + ';"></div>').join('')}
-      </div>
-      <!-- Subject tag -->
-      <div style="display:inline-block;padding:3px 10px;border-radius:20px;background:${subjectColor}22;border:1px solid ${subjectColor}44;margin-bottom:12px;">
-        <span style="font-size:10px;font-weight:700;color:${subjectColor};text-transform:uppercase;letter-spacing:.08em;">${q.subject || 'Question'}</span>
-      </div>
-      <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Question ${current+1} of ${total}</p>
-      <p style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5;margin-bottom:24px;">${q.q}</p>
-      <div id="wq-options">
-        ${q.options.map((opt,i) => '<button onclick="selectWeeklyAnswer(' + i + ')" id="wqopt-' + i + '" style="width:100%;text-align:left;padding:14px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:all .15s;"><span style="width:26px;height:26px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--t3);flex-shrink:0;">' + ['A','B','C','D'][i] + '</span>' + opt + '</button>').join('')}
-      </div>
-    </div>`;
-}
-
-function selectWeeklyAnswer(idx) {
-  if (weeklyQuizState.answered) return;
-  weeklyQuizState.answered = true;
-  const { questions, current } = weeklyQuizState;
-  const q = questions[current];
-  const correct = q.answer;
-  const isRight = idx === correct;
-  if (isRight) {
-    weeklyQuizState.score++;
-    vibrate([30, 20, 60]);
-  } else {
-    vibrate([80]);
-  }
-
-  // Color options
-  q.options.forEach((_,i) => {
-    const btn = document.getElementById('wqopt-' + i);
-    if (!btn) return;
-    btn.style.cursor = 'default';
-    if (i === correct) {
-      btn.style.background = 'rgba(29,185,84,.15)';
-      btn.style.borderColor = '#1DB954';
-      btn.style.color = '#1DB954';
-    } else if (i === idx && !isRight) {
-      btn.style.background = 'rgba(255,71,87,.15)';
-      btn.style.borderColor = '#FF4757';
-      btn.style.color = '#FF4757';
-    } else {
-      btn.style.opacity = '0.4';
-    }
-  });
-
-  // Next button
-  const isLast = current === questions.length - 1;
-  const fb = document.createElement('div');
-  fb.style.cssText = 'margin-top:20px;display:flex;align-items:center;justify-content:space-between;animation:fadeUp .2s ease both;';
-  fb.innerHTML = isRight
-    ? '<p style="color:#1DB954;font-weight:700;font-size:14px;">Correct</p>'
-    : '<p style="color:#FF4757;font-weight:700;font-size:14px;">Incorrect</p>';
-  const nextBtn = document.createElement('button');
-  nextBtn.style.cssText = 'padding:12px 22px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;';
-  nextBtn.textContent = isLast ? 'See Results' : 'Next >';
-  nextBtn.onclick = () => {
-    if (isLast) {
-      showWeeklyResults();
-    } else {
-      weeklyQuizState.current++;
-      weeklyQuizState.answered = false;
-      renderWeeklyQuestion();
-    }
-  };
-  fb.appendChild(nextBtn);
-  document.getElementById('wq-body').appendChild(fb);
-
-  // Update score badge — show question progress, not score
-  const totalQ = weeklyQuizState.questions.length;
-  document.getElementById('wq-score-text').textContent = (current+1) + ' of ' + totalQ;
-  document.getElementById('wq-score-badge').style.display = 'block';
-}
-
-function showWeeklyResults() {
-  const { score, questions } = weeklyQuizState;
-  const total = questions.length;
-  const week = getWeekNumber();
-  const xpEarned = score * POINTS.quizCorrect;
-  const pct = Math.round((score / total) * 100);
-
-  // Save result
-  if (!user.weeklyQuizDone) user.weeklyQuizDone = {};
-  if (!user.weeklyQuizDone[week]) {
-    user.weeklyQuizDone[week] = { score, total, xp: xpEarned, week };
-    user.xp += xpEarned;
-    user.quizTotal  = (user.quizTotal  || 0) + total;
-    user.quizCorrect = (user.quizCorrect || 0) + score;
-    saveUser();
-    updateHeader();
-    updateStats();
-  }
-
-  const emoji = score === total ? '🎯' : score >= total * 0.8 ? '🔥' : score >= total * 0.6 ? '👍' : '📖';
-  const msg   = score === total ? 'Perfect score!' : score >= 8 ? 'Excellent!' : score >= 6 ? 'Good work!' : 'Keep learning!';
-
-  // Wordle-style squares
-  const squares = questions.map((q, i) => {
-    const subColor = {Chumash:'#F0A500',Tanya:'#A855F7',Rambam:'#4A9EFF'}[q.subject] || '#F0A500';
-    // We don't have per-question tracking so use score proportion
-    return '<span style="display:inline-block;width:24px;height:24px;border-radius:5px;margin:2px;background:' + subColor + ';opacity:' + (i < score ? '1' : '0.2') + ';"></span>';
-  }).join('');
-
-  document.getElementById('wq-body').innerHTML = `
-    <div style="text-align:center;padding-top:24px;animation:fadeUp .35s ease both;">
-      <div style="font-size:48px;margin-bottom:16px;">${emoji}</div>
-      <p style="font-size:28px;font-weight:900;color:var(--t1);margin-bottom:6px;">${score} / ${total}</p>
-      <p style="font-size:16px;color:var(--t2);margin-bottom:4px;">${msg}</p>
-      <p style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:28px;">+${xpEarned} XP earned</p>
-
-
-
-      <!-- Share card preview + buttons -->
-      <div id="wq-share-preview" style="margin-bottom:16px;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);"></div>
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button onclick="shareWeeklyCard(${score},${total},'whatsapp')" style="flex:1;padding:12px 8px;border-radius:14px;background:#25D366;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.122.558 4.118 1.535 5.849L.057 23.5l5.797-1.524A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.882 0-3.645-.516-5.148-1.414l-.368-.219-3.441.905.921-3.36-.239-.384A9.96 9.96 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-          WhatsApp
-        </button>
-        <button onclick="shareWeeklyCard(${score},${total},'other')" style="flex:1;padding:12px 8px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
-          <svg width="15" height="15" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Share
-        </button>
-      </div>
-      <button onclick="closeWeeklyQuiz();renderWeeklyQuizCard();renderSectionsForOffset(dateISO(new Date()));" style="width:100%;padding:13px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done ✓</button>
-    </div>`;
-  // Draw the share card preview after DOM updates
-  setTimeout(() => renderSharePreview(score, total), 80);
-}
-
-function openWeeklyQuizResults() {
-  // Re-show results for an already-completed week
-  const week = getWeekNumber();
-  const saved = user.weeklyQuizDone?.[week];
-  if (!saved) return;
-  weeklyQuizState.score = saved.score;
-  weeklyQuizState.questions = Array(saved.total).fill({subject:'Chumash'});
-  document.getElementById('weekly-quiz-panel').style.display = 'flex';
-  showWeeklyResults();
-}
-
-// ════════════════════════════════════════════════════════════════════
-// ZONE 16 · SHARE CARD  (canvas image for WhatsApp/social)
-// ════════════════════════════════════════════════════════════════════
-// ── SHARE CARD (canvas-drawn image) ──────────────────────────────────────────
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.lineTo(x+w-r, y);
-  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
-  ctx.lineTo(x+w, y+h-r);
-  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-  ctx.lineTo(x+r, y+h);
-  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
-  ctx.lineTo(x, y+r);
-  ctx.quadraticCurveTo(x, y, x+r, y);
-  ctx.closePath();
-}
-
-function drawShareCard(score, total) {
-  const pct     = Math.round(score / total * 100);
-  const weekNum = getWeekNumber().split('-W')[1];
-  const W = 600, H = 800;
-  const R = 36; // corner radius
-  const c = document.createElement('canvas');
-  c.width = W * 2; c.height = H * 2; // retina
-  const ctx = c.getContext('2d');
-  ctx.scale(2, 2);
-
-  // ── Background: deep navy with subtle texture ──
-  ctx.fillStyle = '#080810';
-  ctx.fillRect(0, 0, W, H);
-
-  // Layered radial glows for depth
-  const g1 = ctx.createRadialGradient(W*0.3, H*0.15, 0, W*0.3, H*0.15, W*0.6);
-  g1.addColorStop(0, 'rgba(240,165,0,0.14)'); g1.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = g1; ctx.fillRect(0, 0, W, H);
-
-  const g2 = ctx.createRadialGradient(W*0.75, H*0.7, 0, W*0.75, H*0.7, W*0.5);
-  g2.addColorStop(0, 'rgba(168,85,247,0.1)'); g2.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
-
-  // Card border with glow
-  ctx.save();
-  ctx.shadowColor = 'rgba(240,165,0,0.3)';
-  ctx.shadowBlur = 20;
-  ctx.strokeStyle = 'rgba(240,165,0,0.5)';
-  ctx.lineWidth = 1.5;
-  roundRect(ctx, 16, 16, W-32, H-32, R); ctx.stroke();
-  ctx.restore();
-
-  // Inner card surface
-  const cardGrad = ctx.createLinearGradient(0, 0, W, H);
-  cardGrad.addColorStop(0, 'rgba(255,255,255,0.03)');
-  cardGrad.addColorStop(1, 'rgba(255,255,255,0.01)');
-  ctx.fillStyle = cardGrad;
-  roundRect(ctx, 16, 16, W-32, H-32, R); ctx.fill();
-
-  // ── TOP SECTION ──
-  // Small dot decorations
-  ctx.fillStyle = 'rgba(240,165,0,0.4)';
-  ctx.beginPath(); ctx.arc(52, 54, 4, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = 'rgba(240,165,0,0.2)';
-  ctx.beginPath(); ctx.arc(52, 54, 8, 0, Math.PI*2); ctx.fill();
-
-  // App name
-  ctx.fillStyle = 'rgba(240,165,0,0.85)';
-  ctx.font = 'bold 11px sans-serif';
-  ctx.letterSpacing = '4px';
-  ctx.textAlign = 'left';
-  ctx.fillText('CHITAS DAILY', 70, 59);
-
-  // Week pill top-right
-  ctx.fillStyle = 'rgba(240,165,0,0.12)';
-  roundRect(ctx, W-110, 36, 90, 28, 14); ctx.fill();
-  ctx.strokeStyle = 'rgba(240,165,0,0.3)'; ctx.lineWidth = 1;
-  roundRect(ctx, W-110, 36, 90, 28, 14); ctx.stroke();
-  ctx.fillStyle = 'rgba(240,165,0,0.7)';
-  ctx.font = 'bold 11px sans-serif';
-  ctx.letterSpacing = '1px';
-  ctx.textAlign = 'center';
-  ctx.fillText('WEEK ' + weekNum, W-65, 55);
-
-  // ── SCORE HERO ──
-  // Large background score circle
-  const scoreGlow = ctx.createRadialGradient(W/2, 195, 0, W/2, 195, 120);
-  scoreGlow.addColorStop(0, 'rgba(240,165,0,0.15)');
-  scoreGlow.addColorStop(1, 'rgba(240,165,0,0)');
-  ctx.fillStyle = scoreGlow; ctx.fillRect(0, 0, W, H);
-
-  ctx.save();
-  ctx.shadowColor = '#F0A500';
-  ctx.shadowBlur = 30;
-  ctx.fillStyle = '#F0F0F5';
-  ctx.font = 'bold 108px sans-serif';
-  ctx.letterSpacing = '-4px';
-  ctx.textAlign = 'center';
-  ctx.fillText(score + '/' + total, W/2, 190);
-  ctx.restore();
-
-  // Pct badge
-  const badgeX = W/2 - 64, badgeY = 208, badgeW = 128, badgeH = 34;
-  const badgeFill = ctx.createLinearGradient(badgeX, 0, badgeX+badgeW, 0);
-  badgeFill.addColorStop(0, '#F0A500'); badgeFill.addColorStop(1, '#D08000');
-  ctx.fillStyle = badgeFill;
-  roundRect(ctx, badgeX, badgeY, badgeW, badgeH, badgeH/2); ctx.fill();
-  ctx.fillStyle = '#000';
-  ctx.font = 'bold 14px sans-serif';
-  ctx.letterSpacing = '0px';
-  ctx.fillText(pct + '% correct', W/2, 230);
-
-  // ── DIVIDER ──
-  const divGrad = ctx.createLinearGradient(60, 0, W-60, 0);
-  divGrad.addColorStop(0, 'rgba(255,255,255,0)');
-  divGrad.addColorStop(0.5, 'rgba(255,255,255,0.12)');
-  divGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.strokeStyle = divGrad; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(60, 262); ctx.lineTo(W-60, 262); ctx.stroke();
-
-  // ── SUBJECT BARS ──
-  const subjects = [
-    { label: 'Chumash', icon: 'C', color: '#F0A500', q: 4 },
-    { label: 'Tanya',   icon: 'T', color: '#A855F7', q: 3 },
-    { label: 'Rambam',  icon: 'R', color: '#4A9EFF', q: 3 },
-  ];
-  let scoreLeft = score;
-  subjects.forEach((s, i) => {
-    const y = 290 + i * 92;
-    const correct = i < subjects.length-1
-      ? Math.min(s.q, Math.round((score/total) * s.q))
-      : Math.max(0, Math.min(s.q, scoreLeft));
-    scoreLeft -= correct;
-    const pctBar = correct / s.q;
-
-    // Subject icon circle
-    ctx.fillStyle = s.color + '22';
-    ctx.beginPath(); ctx.arc(58, y+20, 18, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = s.color + '55'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(58, y+20, 18, 0, Math.PI*2); ctx.stroke();
-    ctx.fillStyle = s.color;
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(s.icon, 58, y+25);
-
-    // Label
-    ctx.fillStyle = '#F0F0F5';
-    ctx.font = 'bold 15px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(s.label, 86, y+16);
-
-    // Score fraction
-    ctx.fillStyle = s.color;
-    ctx.font = 'bold 15px sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(correct + ' / ' + s.q, W-50, y+16);
-
-    // Track background
-    ctx.fillStyle = 'rgba(255,255,255,0.06)';
-    roundRect(ctx, 86, y+26, W-136, 12, 6); ctx.fill();
-
-    // Filled bar with glow
-    if (pctBar > 0) {
-      ctx.save();
-      ctx.shadowColor = s.color;
-      ctx.shadowBlur = 8;
-      const barGrad = ctx.createLinearGradient(86, 0, 86+(W-136)*pctBar, 0);
-      barGrad.addColorStop(0, s.color + 'DD');
-      barGrad.addColorStop(1, s.color);
-      ctx.fillStyle = barGrad;
-      roundRect(ctx, 86, y+26, (W-136)*pctBar, 12, 6); ctx.fill();
-      ctx.restore();
-    }
-
-    // Dot markers for each question
-    for (let d = 0; d < s.q; d++) {
-      const dotX = 86 + ((W-136)/s.q) * d + (W-136)/s.q/2;
-      ctx.fillStyle = d < correct ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)';
-      ctx.beginPath(); ctx.arc(dotX, y+32, 2, 0, Math.PI*2); ctx.fill();
-    }
-  });
-
-  // ── BOTTOM SECTION ──
-  // Divider
-  ctx.strokeStyle = divGrad; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(60, 574); ctx.lineTo(W-60, 574); ctx.stroke();
-
-  // Message
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.font = '16px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.letterSpacing = '0px';
-  ctx.fillText("Can you beat me on this week's quiz?", W/2, 614);
-
-  // URL pill
-  const urlX = W/2 - 110, urlY = 630, urlW = 220, urlH = 36;
-  ctx.fillStyle = 'rgba(240,165,0,0.1)';
-  roundRect(ctx, urlX, urlY, urlW, urlH, urlH/2); ctx.fill();
-  ctx.strokeStyle = 'rgba(240,165,0,0.4)'; ctx.lineWidth = 1;
-  roundRect(ctx, urlX, urlY, urlW, urlH, urlH/2); ctx.stroke();
-  ctx.fillStyle = '#F0A500';
-  ctx.font = 'bold 14px sans-serif';
-  ctx.fillText('chitas.vercel.app', W/2, 653);
-
-  // Tagline
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  ctx.font = '11px sans-serif';
-  ctx.letterSpacing = '1px';
-  ctx.fillText('CHUMASH · TEHILLIM · TANYA · RAMBAM', W/2, 694);
-
-  c.style.width = W + 'px';
-  return c.toDataURL('image/png');
-}
-
-function renderSharePreview(score, total) {
-  const preview = document.getElementById('wq-share-preview');
-  if (!preview) return;
-  const dataUrl = drawShareCard(score, total);
-  preview.innerHTML = '<img src="' + dataUrl + '" style="width:100%;display:block;border-radius:16px;"/>';
-}
-
-async function shareWeeklyCard(score, total, method) {
-  const dataUrl = drawShareCard(score, total);
-  const appUrl = window.location.href;
-  const fallbackText = 'I scored ' + score + '/' + total + ' on this week\'s Chitas Daily quiz! ' + appUrl;
-
-  // Convert to file for native share
-  try {
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    const file = new File([blob], 'chitas-quiz.png', { type: 'image/png' });
-
-    if (method === 'whatsapp') {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], text: fallbackText });
-      } else {
-        window.open('https://wa.me/?text=' + encodeURIComponent(fallbackText), '_blank');
-      }
-    } else {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], text: fallbackText });
-      } else {
-        // Download as fallback
-        const a = document.createElement('a');
-        a.href = dataUrl; a.download = 'chitas-quiz.png'; a.click();
-        fire('Image saved — share it on WhatsApp!', 'gold');
-      }
-    }
-  } catch(e) {
-    // Final fallback — just open WhatsApp with text
-    window.open('https://wa.me/?text=' + encodeURIComponent(fallbackText), '_blank');
-  }
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -3830,14 +3217,11 @@ function showQuizResults() {
   const total = questions.length;
   const pct = Math.round((score / total) * 100);
 
-  // Points: once per section, per level, per day (retries are for learning)
+  // Saved once per section, per level, per day (retries are for learning)
   if (!user.quizDone) user.quizDone = {};
-  const alreadyDone = _quizLevelDone(sectionId, level);
-  const earned = alreadyDone ? 0 : score * POINTS.quizCorrect;
-  if (!alreadyDone) {
+  if (!_quizLevelDone(sectionId, level)) {
     const prev = user.quizDone[sectionId];
     user.quizDone[sectionId] = { ...(prev && typeof prev === 'object' ? prev : {}), [level]: score };
-    user.xp = (user.xp || 0) + earned;
     user.quizTotal   = (user.quizTotal   || 0) + total;
     user.quizCorrect = (user.quizCorrect || 0) + score;
     saveUser();
@@ -3850,9 +3234,6 @@ function showQuizResults() {
 
   const emoji = score === total ? '🎯' : pct >= 60 ? '👍' : '📖';
   const msg = score === total ? 'Every one right!' : pct >= 60 ? 'Nicely done' : 'Worth another look at the text';
-  const pointsLine = alreadyDone
-    ? '<p style="font-size:13px;color:var(--t3);margin-bottom:24px;">Points for this level were already counted today</p>'
-    : '<p style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:24px;">' + _pointsText(earned) + '</p>';
 
   const review = missed.length
     ? '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:4px 0 8px;text-align:left;">Review what you missed</p>'
@@ -3870,7 +3251,7 @@ function showQuizResults() {
       <div style="font-size:46px;margin-bottom:12px;">${emoji}</div>
       <p style="font-size:24px;font-weight:900;color:var(--t1);margin-bottom:4px;">${score} / ${total}</p>
       <p style="font-size:14px;color:var(--t2);margin-bottom:4px;">${msg}</p>
-      ${pointsLine}
+      <div style="height:22px;"></div>
       <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin-bottom:22px;">
         <div style="height:100%;width:${pct}%;background:${s.color};border-radius:4px;"></div>
       </div>
@@ -4076,7 +3457,7 @@ function unlockMarkDone() {
       const ml = document.getElementById('chabad-mark-label');
       const mx = document.getElementById('chabad-mark-xp');
       if (ml) ml.textContent = sid === 'tehillim' ? 'Mark Read' : 'Mark Done';
-      if (mx) mx.textContent = _pointsText(POINTS.section);
+
       markBtn.onclick = () => showConfirm(sid, true);
     }
   }
@@ -4122,17 +3503,17 @@ function _cleanHtml(s, notes){
       return j;
     }
     while(i<str.length){
-      const sm=str.slice(i).match(/^<sup\b[^>]*class="footnote-marker"[^>]*>/);
+      const sm=str.slice(i,i+300).match(/^<sup\b[^>]*class="[^"]*\bfootnote-marker\b[^"]*"[^>]*>/);
       if(sm){
         const as=str.indexOf('</sup>',i+sm[0].length);
         if(as!==-1){
           const asc=as+6,rest=str.slice(asc).trimStart();
-          const fm=rest.match(/^<i\b[^>]*class="footnote"[^>]*>/);
+          const fm=rest.match(/^<i\b[^>]*class="(?:[^"]*\s)?footnote(?:\s[^"]*)?"[^>]*>/);
           if(fm){const st=asc+str.slice(asc).indexOf(fm[0])+fm[0].length;i=skipClose(st);out+=keepNote(str.slice(st,i-4));continue;}
           i=asc;continue;
         }
       }
-      const fm=str.slice(i).match(/^<i\b[^>]*class="footnote"[^>]*>/);
+      const fm=str.slice(i,i+300).match(/^<i\b[^>]*class="(?:[^"]*\s)?footnote(?:\s[^"]*)?"[^>]*>/);
       if(fm){const st=i+fm[0].length;i=skipClose(st);out+=keepNote(str.slice(st,i-4));continue;}
       out+=str[i];i++;
     }
@@ -4630,26 +4011,21 @@ function _renderRambamContent() {
                    'יא','יב','יג','יד','יה','יו',
                    'יז','יח','יט','כ','כא'];
 
-  // Touger translation: Sefaria already wraps the actual Rambam words in <b> tags.
-  // [bracketed] text is the translator's addition — make it muted and lighter.
-  // _cleanHtml already preserves <b> tags, so we just need to style the brackets.
+  // Touger translation: the Rambam's own words vs the translator's additions.
+  //  - If Sefaria marks the Rambam's words with <b>, those are bold and
+  //    everything else (the translator's words) is lighter.
+  //  - Otherwise, if the translator's words are in [brackets], those are lighter.
+  //  - Otherwise the text is shown plainly.
   function styleBrackets(text) {
     if (!text) return '';
-    // Split the text on [bracket] groups.
-    // Everything outside brackets = bold (actual Rambam words).
-    // Everything inside brackets = normal weight, muted (translator additions).
-    const parts = text.split(/\[([^\]]+)\]/);
-    // parts alternates: outside, inside, outside, inside...
-    return parts.map((part, i) => {
-      if (!part) return '';
-      if (i % 2 === 0) {
-        // Outside bracket — bold, primary color
-        return '<b style="font-weight:700;color:var(--t1);">' + part + '</b>';
-      } else {
-        // Inside bracket — normal, muted
-        return '<span style="font-weight:400;color:var(--t2);">' + part + '</span>';
-      }
-    }).join('');
+    if (/<b\b/i.test(text)) {
+      return '<span class="rb-en rb-marked">' + text.replace(/\[([^\]]+)\]/g, '<span class="rb-add">[$1]</span>') + '</span>';
+    }
+    if (/\[[^\]]+\]/.test(text)) {
+      return '<span class="rb-en">' + text.split(/\[([^\]]+)\]/).map((part, i) =>
+        !part ? '' : i % 2 === 0 ? '<b>' + part + '</b>' : '<span class="rb-add">' + part + '</span>').join('') + '</span>';
+    }
+    return '<span class="rb-en rb-plain">' + text + '</span>';
   }
 
   // Lang toggle
@@ -5391,7 +4767,7 @@ function openChabadPanel(sectionId) {
     markBtn.style.color = s.color === '#F0A500' ? '#000' : '#fff';
     markBtn.style.cursor = 'pointer';
     if (markLabel) markLabel.textContent = sectionId === 'tehillim' ? 'Mark Read' : 'Mark Done';
-    if (markXp)    markXp.textContent    = _pointsText(POINTS.section);
+
     markBtn.onclick = () => showConfirm(sectionId, true);
   }
 
@@ -5813,89 +5189,6 @@ function closeChabadPanel() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// ZONE 22 · MEDALS  (worlds, unlocks, hero + collapsed rows)
-// ════════════════════════════════════════════════════════════════════
-// ── MEDALS ────────────────────────────────────────────────────────────────────
-
-// ════════════════════════════════════════════════════════════════════
-// ZONE 23 · LEADERBOARD  (top 50 by XP or streak, Firestore)
-// ════════════════════════════════════════════════════════════════════
-// ── LEADERS ───────────────────────────────────────────────────────────────────
-let lbMode = 'xp'; // 'xp' | 'streak'
-
-function switchLb(mode) {
-  lbMode = mode;
-  const xpBtn = document.getElementById('lb-tab-xp');
-  const stBtn = document.getElementById('lb-tab-streak');
-  if (mode === 'xp') {
-    xpBtn.style.background = 'var(--gold)'; xpBtn.style.color = '#000';
-    stBtn.style.background = 'transparent'; stBtn.style.color = 'var(--t3)';
-  } else {
-    stBtn.style.background = '#FF4757'; stBtn.style.color = '#fff';
-    xpBtn.style.background = 'transparent'; xpBtn.style.color = 'var(--t3)';
-  }
-  renderLeaders();
-}
-
-async function renderLeaders() {
-  const list = document.getElementById('leaders-list');
-  if (isGuest()) {
-    list.innerHTML = '<div style="text-align:center;padding:36px 12px;">'
-      + '<div style="font-size:34px;margin-bottom:10px;">🏆</div>'
-      + '<p style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:6px;">Learn together</p>'
-      + '<p style="font-size:13px;color:var(--t3);line-height:1.5;margin-bottom:18px;">Sign in to see where you stand among daily learners.</p>'
-      + '<button onclick="openSignIn(\'leaderboard\')" style="padding:12px 22px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Sign in</button>'
-      + '</div>';
-    return;
-  }
-  list.innerHTML = '<p style="text-align:center;color:var(--t3);font-size:13px;padding:32px 0;">Loading…</p>';
-
-  let all = [];
-  if (window._fb && user.uid) {
-    all = await window._fb.fetchLeaderboard(lbMode);
-  }
-
-  // Make sure current user is in the list even if not yet synced
-  const meInList = all.find(p => p.uid === user.uid);
-  if (!meInList && user.name) {
-    all.push({ uid: user.uid, name: user.name, city: user.city, streak: user.streak, total: user.total, xp: user.xp });
-    all.sort((a,b) => lbMode === 'xp' ? b.xp - a.xp : b.streak - a.streak);
-  }
-
-  if (!all.length) {
-    list.innerHTML = '<p style="text-align:center;color:var(--t3);font-size:13px;padding:32px 0;">No one here yet — you could be first.</p>';
-    return;
-  }
-
-  const myRank = all.findIndex(p => p.uid === user.uid);
-  const rankHeader = myRank >= 0
-    ? '<div style="background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">' +
-      '<span style="font-size:13px;color:var(--t2);">Your rank</span>' +
-      '<span style="font-size:16px;font-weight:900;color:var(--gold);">#' + (myRank+1) + '</span>' +
-      '</div>'
-    : '';
-
-  const podium = ['#F0A500','#C0C0C0','#CD7F32'];
-  list.innerHTML = rankHeader + all.map((p, i) => {
-    const isMe = p.uid === user.uid;
-    return `<div style="display:flex;align-items:center;gap:10px;background:${isMe?'rgba(240,165,0,.1)':'var(--card)'};border:1.5px solid ${isMe?'rgba(240,165,0,.4)':'var(--border)'};border-radius:14px;padding:11px 13px;margin-bottom:8px;animation:up .28s ease both;animation-delay:${i*.04}s;">
-      <div style="width:20px;text-align:center;font-size:12px;font-weight:800;color:${podium[i]||'var(--t3)'};flex-shrink:0;">${i+1}</div>
-      ${letterAvatar(p.name||'?', 34, 14)}
-      <div style="flex:1;min-width:0;">
-        <p style="font-weight:700;font-size:14px;color:${isMe?'var(--gold)':'var(--t1)'};">${escapeHtml(lbName(p.name||'Anonymous'))}${isMe?' (You)':''}</p>
-        <p style="font-size:11px;color:var(--t3);">${escapeHtml(p.city||'')}</p>
-      </div>
-      <div style="text-align:right;flex-shrink:0;">
-        ${lbMode === 'xp'
-          ? `<p style="font-size:16px;font-weight:800;color:var(--gold);">${p.xp||0} <span style="font-size:11px;font-weight:600;color:var(--t3);">XP</span></p><p style="font-size:10px;color:var(--t3);">${p.total||0} days</p>`
-          : `<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">${icon('flame',12)} <span style="font-size:16px;font-weight:800;color:var(--t1);">${p.streak||0}</span></div><p style="font-size:10px;color:var(--t3);">day streak</p>`
-        }
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ════════════════════════════════════════════════════════════════════
 // ZONE 24 · STATS TAB  (streak hero, activity grid, section breakdown)
 // ════════════════════════════════════════════════════════════════════
 // ── STATS ─────────────────────────────────────────────────────────────────────
@@ -6056,13 +5349,13 @@ function renderStats() {
         '</div>' +
         '<div style="width:1px;background:var(--border);"></div>' +
         '<div style="flex:1;text-align:center;">' +
-          '<p style="font-size:18px;font-weight:900;color:var(--gold);">' + weekPoints(user, today) + '</p>' +
-          '<p style="font-size:9px;color:var(--t3);font-weight:600;">points this week</p>' +
+          '<p style="font-size:18px;font-weight:900;color:var(--gold);">' + chitasDaysThisWeek(user, today) + '</p>' +
+          '<p style="font-size:9px;color:var(--t3);font-weight:600;">Chitas days this week</p>' +
         '</div>' +
         '<div style="width:1px;background:var(--border);"></div>' +
         '<div style="flex:1;text-align:center;">' +
-          '<p style="font-size:18px;font-weight:900;color:var(--gold);">' + (user.xp || 0) + '</p>' +
-          '<p style="font-size:9px;color:var(--t3);font-weight:600;">points all time</p>' +
+          '<p style="font-size:18px;font-weight:900;color:var(--t1);">' + (user.quizTotal ? Math.round(100 * (user.quizCorrect || 0) / user.quizTotal) + '%' : '–') + '</p>' +
+          '<p style="font-size:9px;color:var(--t3);font-weight:600;">quiz answers right</p>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -6136,7 +5429,7 @@ function openProfileSheet() {
   // Progress at a glance
   document.getElementById('ps-streak').textContent = user.streak || 0;
   document.getElementById('ps-days').textContent = user.total || 0;
-  document.getElementById('ps-xp').textContent = user.xp || 0;
+  document.getElementById('ps-best').textContent = Math.max(user.longestStreak || 0, user.streak || 0);
   const next = nextMilestone(user.streak || 0);
   document.getElementById('ps-next').textContent = next
     ? 'Next milestone: ' + next + '-day streak · ' + (next - (user.streak || 0)) + ' to go' : '';
@@ -6301,7 +5594,7 @@ function shareApp() {
 }
 
 async function resetProgress() {
-  if (!confirm('Reset all your progress? Your streak, points and history will be erased. Your settings stay.')) return;
+  if (!confirm('Reset all your progress? Your streak and history will be erased. Your settings stay.')) return;
   // Keep who you are and your settings; erase everything else
   const keepAdmin = { isAdmin: user.isAdmin, role: user.role };
   const keep = { uid: user.uid, name: user.name, photoURL: user.photoURL, city: user.city,
@@ -6320,7 +5613,6 @@ async function resetProgress() {
   fire('Progress reset', 'xp');
   updateStats();
   updateHeader();
-  renderLeaders();
   renderStats();
   if (schedule) renderSectionsForOffset(dateISO(new Date()));
 }
@@ -6340,7 +5632,6 @@ function switchTab(id) {
     b.style.color = active ? '#000' : 'var(--t2)';
   });
   if (id === 'stats')   { renderStats(); }
-  if (id === 'leaders') renderLeaders();
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -6693,10 +5984,10 @@ async function _loadExtraSubtitle(id) {
   }
 }
 
-// Mark done / unmark for extra tracks (POINTS.extra each)
+// Mark done / unmark for extra tracks
 function markExtraDone(id) {
-  const r = _changeDay(dateISO(new Date()), day => { day[id] = true; });
-  fire(_pointsText(r.delta), 'xp');
+  _changeDay(dateISO(new Date()), day => { day[id] = true; });
+  fire((EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done', 'xp');
   vibrate([40, 30, 80]);
   _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   // Animate card
@@ -6718,8 +6009,8 @@ function unmarkExtraDone(id) {
 }
 
 function markExtraDonePast(id, iso) {
-  const r = _changeDay(iso, day => { day[id] = true; });
-  fire(_pointsText(r.delta), 'xp');
+  _changeDay(iso, day => { day[id] = true; });
+  fire((EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' marked', 'xp');
   _renderExtraTrackCards(iso, false);
 }
 
@@ -6820,7 +6111,7 @@ function _openExtraTracksMenu() {
 
   modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:85vh;">'
     + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
-    +   '<div><p class="ps-modal-title">More learning</p><p class="ps-modal-sub">Tap to add · no points, just learning</p></div>'
+    +   '<div><p class="ps-modal-title">More learning</p><p class="ps-modal-sub">Tap to add</p></div>'
     +   '<button onclick="_closeExtraMenu()" class="ps-modal-close">×</button>'
     + '</div>'
     + '<div style="overflow-y:auto;flex:1;padding:12px 20px 24px;">'
@@ -8120,7 +7411,7 @@ function _renderPsExtraTracks() {
 
 // ── Streak + totals ───────────────────────────────────────────────────────────
 // Rules live in js/progress.js (tested). This just stores the results on the
-// user so they're saved and shown on the leaderboard.
+// user so they're saved.
 function recalcStreak() {
   const today = new Date();
   user.streak = computeStreak(user, today).current;
@@ -8310,7 +7601,7 @@ function bootApp() {
       }
 
       try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
-      // Write back to Firestore so leaderboard reflects current streak
+      // Write back to Firestore so the cloud copy is current
       // (fire-and-forget — don't block app startup)
       if (user.uid) saveUser();
       document.getElementById('onboarding').style.display = 'none';
