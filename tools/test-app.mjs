@@ -144,6 +144,43 @@ await check('Rambam translator\'s notes become tappable numbers that open in pla
   return [btns.length, notes, first, closed, !!window.__hacked, document.getElementById('native-reader-content').textContent.includes('on the seventh day')];
 }, [2, ['See Shabbos 2a.', '<b>'], ['block', 'See Shabbos 2a.'], 'none', false, true]);
 
+// Pretend /api/quiz: remembers what the app sent, answers with 4 questions
+let quizRequest = null;
+await page.route('**/api/quiz', route => {
+  quizRequest = { body: route.request().postDataJSON(), auth: route.request().headers().authorization };
+  route.fulfill({ json: { level: 'quick', questions: [
+    { q: 'Q1 <img src=x onerror="window.__hacked=true">', options: ['a', 'b', 'c', 'd'], answer: 2, explanation: 'Because of c.', quote: 'the line about c' },
+    { q: 'Q2', options: ['a', 'b', 'c', 'd'], answer: 0, explanation: 'E2', quote: 'q2' },
+    { q: 'Q3', options: ['a', 'b', 'c', 'd'], answer: 1, explanation: 'E3', quote: 'q3' },
+    { q: 'Q4', options: ['a', 'b', 'c', 'd'], answer: 3, explanation: 'E4', quote: 'q4' },
+  ] } });
+});
+
+await check('quiz: pick a level, answer 4, see explanations and a review of misses', async () => {
+  window.__hacked = false;
+  window._fb = { saveUser: async () => {}, ...(window._fb || {}), getIdToken: async () => 'tok123' };
+  user = { ...user, xp: 0, quizDone: {} };
+  dayOffset = 0;
+  openQuiz('chumash');
+  const levels = document.querySelectorAll('#quiz-body .quiz-level').length;
+  await _startQuiz('quick');
+  selectAnswer(2);                                    // right
+  const explained = document.getElementById('quiz-feedback').textContent.includes('Because of c.');
+  nextQuestion(); selectAnswer(1);                    // wrong (answer is 0)
+  nextQuestion(); selectAnswer(1);                    // right
+  nextQuestion(); selectAnswer(3);                    // right
+  nextQuestion();
+  const missed = [...document.querySelectorAll('.quiz-missed')].map(e => e.textContent.includes('Q2'));
+  const xp1 = user.xp;
+  await _startQuiz('quick'); [2, 0, 1, 3].forEach((a, i) => { selectAnswer(a); nextQuestion(); }); // retry: no extra points
+  return [levels, explained, missed, xp1, user.xp, user.quizDone.chumash, !!window.__hacked];
+}, [2, true, [true], 15, 15, { quick: 3 }, false]);
+
+await check('quiz request sends today\'s exact Chumash ref and the sign-in token',
+  () => getChumashAliyaRef(new Date()).split('|'), quizRequest && quizRequest.body.refs);
+console.log(quizRequest.auth === 'Bearer tok123' && quizRequest.body.section === 'chumash' && quizRequest.body.level === 'quick'
+  ? '  ✓ …with section, level and token' : (failed++, '  ✗ quiz request was ' + JSON.stringify(quizRequest)));
+
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }
 else console.log('  ✓ no uncaught JavaScript errors');

@@ -705,6 +705,11 @@ window._fb = {
 
   getCurrentUser() {
     return auth.currentUser;
+  },
+
+  // Proof of who's signed in, for our own API routes (e.g. /api/quiz)
+  async getIdToken() {
+    return auth.currentUser ? auth.currentUser.getIdToken() : null;
   }
 };
 
@@ -1397,7 +1402,7 @@ window._fsGetDoc = getDoc;
       <!-- Quiz — right half, equal size -->
       <button id="chabad-quiz-btn" style="display:none;flex:1;padding:12px;border-radius:14px;background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.4);color:#A855F7;cursor:pointer;font-family:inherit;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
         <span style="font-size:14px;font-weight:800;">Quiz</span>
-        <span style="font-size:11px;font-weight:700;opacity:.7;">+35 XP</span>
+        <span style="font-size:11px;font-weight:700;opacity:.7;">Test yourself</span>
       </button>
     </div>
   </div>
@@ -3077,7 +3082,7 @@ function renderSectionsForOffset(iso) {
     const cardStyle = 'background:var(--card);border:1.5px solid ' + (done ? s.color+'70' : 'var(--border)') + ';border-radius:16px;padding:15px 16px;margin-bottom:10px;animation:up .32s ease both;animation-delay:' + (i*.06) + 's;transition:all .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;';
     const iconStyle = 'width:44px;height:44px;border-radius:13px;background:' + s.color + '18;border:1px solid ' + s.color + '35;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + s.color + ';pointer-events:none;';
     const quizDoneToday = isToday && (user.quizDone||{})[s.id];
-    const quizBtn = (s.quizzable && QUIZZES_ENABLED)
+    const quizBtn = (isToday && _quizzable(s.id))
       ? '<button onclick="event.stopPropagation();' + (isToday ? 'openQuiz(\'' + s.id + '\')' : '') + '" style="width:34px;height:34px;border-radius:10px;background:' + (quizDoneToday ? 'rgba(29,185,84,.12)' : 'var(--surface)') + ';border:1px solid ' + (quizDoneToday ? 'rgba(29,185,84,.35)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;color:' + (quizDoneToday ? '#1DB954' : 'var(--t3)') + ';flex-shrink:0;" title="Quiz"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg></button>'
       : '';
     // Always confirm before marking done; always allow unmark
@@ -3306,53 +3311,113 @@ function _addLifetimeCounts(id) {
 // ZONE 14 · QUIZ (section quiz — questions, answers, results)
 // ════════════════════════════════════════════════════════════════════
 // ── QUIZ ─────────────────────────────────────────────────────────────────────
-// Quizzes were hardcoded placeholder questions (same every day). Hidden until
-// the real AI quiz (api/quiz.js) is connected — then set this to true.
-const QUIZZES_ENABLED = false;
+// Real quizzes on exactly today's portion, made by /api/quiz (see api/quiz.js).
+// Two levels: Quick review (4 questions) and Deep dive (6). Every question has
+// an explanation and the line from the text that answers it.
+const QUIZZES_ENABLED = true;
+const QUIZ_LEVELS = {
+  quick: { label: 'Quick review', count: 4, desc: 'The main points — a few minutes' },
+  deep:  { label: 'Deep dive',    count: 6, desc: 'Why it says what it says — Rashi, reasoning, the fine points' },
+};
 
-let quizState = { sectionId: null, questions: [], current: 0, score: 0, answered: false };
+let quizState = { sectionId: null, level: null, questions: [], current: 0, score: 0, answered: false, missed: [] };
 
+// Which section can be quizzed (Sefer HaMitzvos has no chapter text to quiz on)
+function _quizzable(sectionId) {
+  return QUIZZES_ENABLED && ['chumash', 'tanya', 'rambam'].includes(sectionId)
+    && !(sectionId === 'rambam' && user.rambamTrack === 'm');
+}
 
-async function openQuiz(sectionId) {
+// Points are given once per section, per level, per day
+function _quizLevelDone(sectionId, level) {
+  const d = (user.quizDone || {})[sectionId];
+  return !!(d && typeof d === 'object' && d[level] != null);
+}
+
+function openQuiz(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
-
-  quizState = { sectionId, questions: [], current: 0, score: 0, answered: false };
-
+  quizState = { sectionId, level: null, questions: [], current: 0, score: 0, answered: false, missed: [] };
   document.getElementById('quiz-title').textContent = s.label + ' Quiz';
   document.getElementById('quiz-subtitle').textContent = s.subtitle;
   document.getElementById('quiz-score-badge').style.display = 'none';
   document.getElementById('quiz-panel').style.display = 'flex';
 
-  // Show loading state
-  document.getElementById('quiz-body').innerHTML = `
-    <div style="text-align:center;padding-top:60px;">
-      <div class="spinner" style="margin:0 auto;color:${s.color};"></div>
-      <p style="color:var(--t3);font-size:13px;margin-top:16px;">Generating your quiz…</p>
-    </div>`;
-
-  // DUMMY questions — replace with live API call once connection confirmed working
-  const DUMMY = {
-    chumash: [
-      { q: "What was the primary subject of today's aliya?", options: ["Building the Mishkan", "The Ten Commandments", "Laws of Shabbat", "The Golden Calf"], answer: 0 },
-      { q: "Which craftsman was appointed to lead the construction?", options: ["Moshe", "Aharon", "Betzalel", "Chiram"], answer: 2 },
-      { q: "What material was NOT used in the construction described?", options: ["Gold", "Silver", "Iron", "Copper"], answer: 2 },
-    ],
-    tanya: [
-      { q: "What is the main concept discussed in today's Tanya?", options: ["The two souls in man", "The nature of Teshuva", "Love and fear of G-d", "The hidden light"], answer: 0 },
-      { q: "According to today's chapter, where does the divine soul originate?", options: ["The heart", "The mind", "Under G-d's throne of glory", "The world of Atzilut"], answer: 2 },
-      { q: "What does the Alter Rebbe compare the relationship between body and soul to?", options: ["A king and his servant", "A flame and its wick", "A tree and its roots", "Water and its vessel"], answer: 1 },
-    ],
-    rambam: [
-      { q: "What is the central halacha covered in today's Rambam?", options: ["Laws of Shabbat", "Laws of prayer", "Laws covered in today's chapter", "Laws of tzitzis"], answer: 2 },
-      { q: "How many positive commandments are discussed today?", options: ["One", "Two", "Three", "Four"], answer: 0 },
-      { q: "What is the Rambam's ruling on someone who performs this act unintentionally?", options: ["No consequence", "Brings a korban", "Must repeat the act", "Asks a rabbi"], answer: 1 },
-    ],
+  const card = (level) => {
+    const L = QUIZ_LEVELS[level], done = _quizLevelDone(sectionId, level);
+    const score = done ? user.quizDone[sectionId][level] : null;
+    return '<button onclick="_startQuiz(\'' + level + '\')" class="quiz-level" style="width:100%;text-align:left;padding:16px;border-radius:16px;background:var(--card);border:1.5px solid var(--border);cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:14px;">'
+      + '<div style="width:44px;height:44px;border-radius:12px;background:' + s.color + '18;border:1px solid ' + s.color + '40;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">' + (level === 'quick' ? '⚡' : '🔍') + '</div>'
+      + '<div style="flex:1;min-width:0;">'
+      +   '<p style="font-size:15px;font-weight:800;color:var(--t1);">' + L.label + ' <span style="font-size:12px;font-weight:600;color:var(--t3);">· ' + L.count + ' questions</span></p>'
+      +   '<p style="font-size:12px;color:var(--t3);margin-top:2px;line-height:1.4;">' + L.desc + '</p>'
+      +   '<p style="font-size:11px;font-weight:700;margin-top:6px;color:' + (done ? '#1DB954' : 'var(--gold)') + ';">'
+      +     (done ? '✓ Done today · ' + score + '/' + L.count : 'Up to +' + L.count * POINTS.quizCorrect + ' points') + '</p>'
+      + '</div></button>';
   };
+  document.getElementById('quiz-body').innerHTML =
+    '<div style="animation:fadeUp .3s ease both;">'
+    + '<p style="font-size:20px;font-weight:900;color:var(--t1);margin-bottom:6px;">How deep today?</p>'
+    + '<p style="font-size:13px;color:var(--t3);margin-bottom:22px;line-height:1.5;">Questions come straight from today\'s ' + escapeHtml(s.label) + ', and each answer shows you the line it\'s from.</p>'
+    + card('quick') + card('deep')
+    + '</div>';
+}
 
-  // Simulate a short loading delay so the spinner is visible
-  await new Promise(r => setTimeout(r, 1200));
-  quizState.questions = DUMMY[sectionId] || DUMMY.chumash;
+// Which passage the quiz is about — the same one the reader shows today
+async function _quizPassage(sectionId) {
+  if (sectionId === 'chumash') return { refs: getChumashAliyaRef(new Date()).split('|') };
+  if (sectionId === 'rambam') {
+    if (!window._rambamData?.chapters?.length) await _loadRambamNative('rambam', true);
+    const refs = (window._rambamData?.chapters || []).map(c => c.ref).filter(Boolean).slice(0, 3);
+    return refs.length ? { refs } : null;
+  }
+  if (sectionId === 'tanya') {
+    if (!window._tanyaData?.quizRef) await _loadTanyaNative('tanya', true);
+    return window._tanyaData?.quizRef ? { tanya: window._tanyaData.quizRef } : null;
+  }
+  return null;
+}
+
+function _quizMessage(icon, title, text, retry) {
+  document.getElementById('quiz-body').innerHTML =
+    '<div style="text-align:center;padding-top:60px;animation:fadeUp .3s ease both;">'
+    + '<div style="font-size:40px;margin-bottom:14px;">' + icon + '</div>'
+    + '<p style="font-size:17px;font-weight:800;color:var(--t1);margin-bottom:6px;">' + escapeHtml(title) + '</p>'
+    + '<p style="font-size:13px;color:var(--t3);line-height:1.5;margin-bottom:24px;">' + escapeHtml(text) + '</p>'
+    + (retry ? '<button onclick="openQuiz(quizState.sectionId)" style="padding:12px 22px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Back</button>' : '')
+    + '</div>';
+}
+
+async function _startQuiz(level) {
+  const sid = quizState.sectionId, s = schedule[sid];
+  quizState = { ...quizState, level, questions: [], current: 0, score: 0, answered: false, missed: [] };
+  document.getElementById('quiz-body').innerHTML =
+    '<div style="text-align:center;padding-top:60px;">'
+    + '<div class="spinner" style="margin:0 auto;color:' + s.color + ';"></div>'
+    + '<p style="color:var(--t3);font-size:13px;margin-top:16px;">Writing your ' + QUIZ_LEVELS[level].label.toLowerCase() + '… <br><span style="font-size:11px;">The first quiz on a portion takes up to a minute.</span></p>'
+    + '</div>';
+
+  const token = await window._fb?.getIdToken?.().catch(() => null);
+  if (!token) return _quizMessage('🔑', 'Sign in to take quizzes', 'Quizzes are made fresh for each portion, so they need an account.', true);
+  const passage = await _quizPassage(sid).catch(() => null);
+  if (!passage) return _quizMessage('📡', 'Couldn\'t load today\'s text', 'Check your connection and try again.', true);
+
+  let data = null, status = 0;
+  try {
+    const r = await fetch('/api/quiz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ section: sid, level, ...passage }),
+    });
+    status = r.status;
+    data = await r.json().catch(() => null);
+  } catch (e) { /* offline */ }
+  if (quizState.sectionId !== sid || quizState.level !== level) return; // closed or switched meanwhile
+  if (!data?.questions?.length) {
+    return _quizMessage('😕', status ? 'No quiz this time' : 'You\'re offline',
+      data?.error || 'Check your connection and try again.', true);
+  }
+  quizState.questions = data.questions;
   renderQuestion();
 }
 
@@ -4190,7 +4255,7 @@ setTimeout(startObTicker, 1000);
 
 function closeQuiz() {
   document.getElementById('quiz-panel').style.display = 'none';
-  quizState = { sectionId: null, questions: [], current: 0, score: 0, answered: false };
+  quizState = { sectionId: null, level: null, questions: [], current: 0, score: 0, answered: false, missed: [] };
 }
 
 function renderQuestion() {
@@ -4202,27 +4267,19 @@ function renderQuestion() {
 
   document.getElementById('quiz-body').innerHTML = `
     <div style="animation:fadeUp .3s ease both;">
-      <!-- Progress -->
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:24px;">
         ${Array.from({length:total},(_,i) => `
           <div style="flex:1;height:4px;border-radius:2px;background:${i<current?s.color:i===current?s.color+'60':'var(--border)'};" ></div>
         `).join('')}
       </div>
-
-      <!-- Question number -->
-      <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Question ${current+1} of ${total}</p>
-
-      <!-- Question text -->
-      <p style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5;margin-bottom:28px;">${q.q}</p>
-
-      <!-- Options -->
+      <p style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">${QUIZ_LEVELS[quizState.level].label} · Question ${current+1} of ${total}</p>
+      <p style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5;margin-bottom:24px;">${escapeHtml(q.q)}</p>
       <div id="options-list">
         ${q.options.map((opt, i) => `
-          <button onclick="selectAnswer(${i})"
-            id="opt-${i}"
+          <button onclick="selectAnswer(${i})" id="opt-${i}"
             style="width:100%;text-align:left;padding:14px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:all .15s;">
             <span style="width:26px;height:26px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--t3);flex-shrink:0;">${['A','B','C','D'][i]}</span>
-            ${opt}
+            ${escapeHtml(opt)}
           </button>
         `).join('')}
       </div>
@@ -4239,14 +4296,9 @@ function selectAnswer(idx) {
   const correct = q.answer;
   const isRight = idx === correct;
 
-  if (isRight) {
-    quizState.score++;
-    vibrate([30, 20, 60]); // correct — rising double tap
-  } else {
-    vibrate([80]);          // wrong — single buzz
-  }
+  if (isRight) { quizState.score++; vibrate([30, 20, 60]); }
+  else { quizState.missed.push({ ...q, picked: idx }); vibrate([80]); }
 
-  // Color the buttons
   q.options.forEach((_, i) => {
     const btn = document.getElementById(`opt-${i}`);
     if (!btn) return;
@@ -4255,10 +4307,7 @@ function selectAnswer(idx) {
       btn.style.background = 'rgba(29,185,84,.15)';
       btn.style.borderColor = '#1DB954';
       btn.style.color = '#1DB954';
-      btn.querySelector('span').style.background = '#1DB95430';
-      btn.querySelector('span').style.borderColor = '#1DB954';
-      btn.querySelector('span').style.color = '#1DB954';
-    } else if (i === idx && !isRight) {
+    } else if (i === idx) {
       btn.style.background = 'rgba(255,71,87,.15)';
       btn.style.borderColor = '#FF4757';
       btn.style.color = '#FF4757';
@@ -4267,103 +4316,86 @@ function selectAnswer(idx) {
     }
   });
 
-  // Show feedback + Next button
-  const feedback = isRight
-    ? `<p style="color:#1DB954;font-weight:700;font-size:14px;margin-bottom:0;">Correct</p>`
-    : `<p style="color:#FF4757;font-weight:700;font-size:14px;margin-bottom:0;">Incorrect</p>`;
-
+  // Teach, don't just grade: why it's right + the line from the text
   const isLast = current === questions.length - 1;
-  const nextLabel = isLast ? 'See Results' : 'Next >';
-
-  const feedbackDiv = document.createElement('div');
-  feedbackDiv.style.cssText = 'margin-top:20px;display:flex;align-items:center;justify-content:space-between;animation:fadeUp .2s ease both;';
-  feedbackDiv.innerHTML = `
-    ${feedback}
-    <button onclick="nextQuestion()" style="padding:12px 22px;border-radius:12px;background:${s.color};border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">${nextLabel}</button>`;
-  document.getElementById('quiz-body').querySelector('div').appendChild(feedbackDiv);
+  const fb = document.createElement('div');
+  fb.id = 'quiz-feedback';
+  fb.style.cssText = 'margin-top:14px;animation:fadeUp .2s ease both;';
+  fb.innerHTML =
+    '<div style="background:var(--card);border:1.5px solid ' + (isRight ? 'rgba(29,185,84,.35)' : 'rgba(255,71,87,.3)') + ';border-radius:14px;padding:14px 15px;margin-bottom:14px;">'
+    + '<p style="font-size:14px;font-weight:800;color:' + (isRight ? '#1DB954' : '#FF4757') + ';margin-bottom:6px;">' + (isRight ? 'Correct' : 'Not quite') + '</p>'
+    + '<p style="font-size:13.5px;color:var(--t1);line-height:1.55;">' + escapeHtml(q.explanation || '') + '</p>'
+    + (q.quote ? '<p style="font-size:12.5px;color:var(--t2);line-height:1.5;margin-top:9px;padding-left:10px;border-left:3px solid ' + s.color + ';font-style:italic;">“' + escapeHtml(q.quote) + '”</p>' : '')
+    + '</div>'
+    + '<button onclick="nextQuestion()" style="width:100%;padding:14px;border-radius:14px;background:' + s.color + ';border:none;color:#000;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">' + (isLast ? 'See results' : 'Next') + '</button>';
+  document.getElementById('quiz-body').querySelector('div').appendChild(fb);
+  fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function nextQuestion() {
-  const { questions, sectionId } = quizState;
   quizState.current++;
   quizState.answered = false;
-
-  if (quizState.current >= questions.length) {
-    showQuizResults();
-  } else {
-    renderQuestion();
-  }
+  if (quizState.current >= quizState.questions.length) showQuizResults();
+  else renderQuestion();
 }
 
 function showQuizResults() {
-  const { score, questions, sectionId } = quizState;
+  const { score, questions, sectionId, level, missed } = quizState;
   const s = schedule[sectionId];
   const total = questions.length;
-  const xpEarned = score * POINTS.quizCorrect;
   const pct = Math.round((score / total) * 100);
 
-  // Guard: quizDone may not exist on old saved state
+  // Points: once per section, per level, per day (retries are for learning)
   if (!user.quizDone) user.quizDone = {};
-
-  const alreadyDone = !!user.quizDone[sectionId];
+  const alreadyDone = _quizLevelDone(sectionId, level);
+  const earned = alreadyDone ? 0 : score * POINTS.quizCorrect;
   if (!alreadyDone) {
-    user.xp += xpEarned;
-    user.quizDone[sectionId] = true;
-    // Track quiz accuracy for medal system
-    user.quizTotal  = (user.quizTotal  || 0) + total;
+    const prev = user.quizDone[sectionId];
+    user.quizDone[sectionId] = { ...(prev && typeof prev === 'object' ? prev : {}), [level]: score };
+    user.xp = (user.xp || 0) + earned;
+    user.quizTotal   = (user.quizTotal   || 0) + total;
     user.quizCorrect = (user.quizCorrect || 0) + score;
     saveUser();
     updateHeader();
     updateStats();
   }
 
-  // Update score badge in header
   document.getElementById('quiz-score-text').textContent = `${score}/${total}`;
   document.getElementById('quiz-score-badge').style.display = 'block';
 
-  const sid = sectionId; // capture for use in inline handlers below
-  const emoji = score === total ? '🎯' : score >= total * 0.6 ? '👍' : '📖';
-  const msg = score === total ? 'Perfect score!' : score >= total * 0.6 ? 'Good job' : 'Keep studying';
-  const xpLine = (!alreadyDone && xpEarned > 0)
-    ? `<p style="font-size:13px;color:#A855F7;font-weight:700;margin-bottom:32px;">+${xpEarned} XP earned</p>`
-    : `<p style="font-size:13px;color:var(--t3);margin-bottom:32px;">${xpEarned === 0 ? 'No XP this time' : 'Already counted today'}</p>`;
+  const emoji = score === total ? '🎯' : pct >= 60 ? '👍' : '📖';
+  const msg = score === total ? 'Every one right!' : pct >= 60 ? 'Nicely done' : 'Worth another look at the text';
+  const pointsLine = alreadyDone
+    ? '<p style="font-size:13px;color:var(--t3);margin-bottom:24px;">Points for this level were already counted today</p>'
+    : '<p style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:24px;">' + _pointsText(earned) + '</p>';
 
+  const review = missed.length
+    ? '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin:4px 0 8px;text-align:left;">Review what you missed</p>'
+      + missed.map(m =>
+        '<div class="quiz-missed" style="text-align:left;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:8px;">'
+        + '<p style="font-size:13.5px;font-weight:700;color:var(--t1);line-height:1.45;margin-bottom:6px;">' + escapeHtml(m.q) + '</p>'
+        + '<p style="font-size:12.5px;color:#1DB954;font-weight:700;margin-bottom:4px;">✓ ' + escapeHtml(m.options[m.answer]) + '</p>'
+        + '<p style="font-size:12.5px;color:var(--t2);line-height:1.5;">' + escapeHtml(m.explanation || '') + '</p>'
+        + '</div>').join('')
+    : '';
+
+  const other = level === 'quick' ? 'deep' : 'quick';
   document.getElementById('quiz-body').innerHTML = `
-    <div style="text-align:center;padding-top:40px;animation:fadeUp .35s ease both;">
-      <div style="font-size:48px;margin-bottom:16px;">${emoji}</div>
-      <p style="font-size:22px;font-weight:800;color:var(--t1);margin-bottom:6px;">${score} / ${total}</p>
+    <div style="text-align:center;padding-top:28px;animation:fadeUp .35s ease both;">
+      <div style="font-size:46px;margin-bottom:12px;">${emoji}</div>
+      <p style="font-size:24px;font-weight:900;color:var(--t1);margin-bottom:4px;">${score} / ${total}</p>
       <p style="font-size:14px;color:var(--t2);margin-bottom:4px;">${msg}</p>
-      ${xpLine}
-
-      <!-- Score bar -->
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-          <span style="font-size:12px;color:var(--t3);">Score</span>
-          <span style="font-size:12px;font-weight:700;color:${s.color};">${pct}%</span>
-        </div>
-        <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">
-          <div style="height:100%;width:${pct}%;background:${s.color};border-radius:4px;transition:width .8s cubic-bezier(.22,1,.36,1);"></div>
-        </div>
+      ${pointsLine}
+      <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin-bottom:22px;">
+        <div style="height:100%;width:${pct}%;background:${s.color};border-radius:4px;"></div>
       </div>
-
-      <div style="display:flex;gap:10px;">
-        ${!alreadyDone ? `<button id="retry-btn" style="flex:1;padding:13px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Try Again</button>` : ''}
-        <button id="done-btn" style="flex:1;padding:13px;border-radius:14px;background:${s.color};border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done ✓</button>
+      ${review}
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button onclick="_startQuiz('${other}')" style="flex:1;padding:13px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Try ${QUIZ_LEVELS[other].label}</button>
+        <button id="done-btn" style="flex:1;padding:13px;border-radius:14px;background:${s.color};border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Done</button>
       </div>
-      ${alreadyDone ? '' : `<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:12px;">You can retry to learn — XP only counted once</p>`}
     </div>`;
-
-  // Attach handlers AFTER innerHTML is set
-  if (!alreadyDone) document.getElementById('retry-btn').onclick = () => retryQuiz(sid);
   document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSectionsForOffset(dateISO(new Date())); };
-}
-
-function retryQuiz(sid) {
-  quizState.current = 0;
-  quizState.score = 0;
-  quizState.answered = false;
-  document.getElementById('quiz-score-badge').style.display = 'none';
-  renderQuestion();
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -5641,7 +5673,8 @@ async function _loadTanyaNative(sectionId, silent) {
                         /^<small>/i.test(enPortion[i] || '');
       blocks.push({ he: heRaw, en: enRaw, lit: '', isHagahah });
     }
-    window._tanyaData = { blocks, chapterLabel, chapterNum: tp.chapter, isFirstSegment, isApproximate };
+    const quizRef = { chapterSlug, startVerse: startV, endVerse: endV !== allHe.length ? endV : null };
+    window._tanyaData = { blocks, chapterLabel, chapterNum: tp.chapter, isFirstSegment, isApproximate, quizRef };
     if (!silent) {
       _renderTanyaContent();
       if (loadEl) loadEl.style.display = 'none';
@@ -5944,7 +5977,7 @@ function openChabadPanel(sectionId) {
 
   // ── Quiz button — show for quizzable sections always ──
   const quizBtn = document.getElementById('chabad-quiz-btn');
-  if (s.quizzable && QUIZZES_ENABLED) {
+  if (_quizzable(sectionId) && (dayOffset || 0) === 0) { // quizzes are on today's portion
     quizBtn.style.display = 'flex';
     quizBtn.onclick = () => { closeChabadPanel(); openQuiz(sectionId); };
     if (!user.quizDone) user.quizDone = {};
@@ -5952,11 +5985,12 @@ function openChabadPanel(sectionId) {
       quizBtn.style.background = 'rgba(29,185,84,.15)';
       quizBtn.style.borderColor = 'rgba(29,185,84,.4)';
       quizBtn.style.color = '#1DB954';
-      quizBtn.innerHTML = quizBtn.innerHTML.replace(/Quiz.*/, 'Retake');
+      quizBtn.querySelector('span:last-child').textContent = 'Done today ✓';
     } else {
       quizBtn.style.background = 'rgba(168,85,247,.15)';
       quizBtn.style.borderColor = 'rgba(168,85,247,.4)';
       quizBtn.style.color = '#A855F7';
+      quizBtn.querySelector('span:last-child').textContent = 'Test yourself';
     }
   } else {
     quizBtn.style.display = 'none';

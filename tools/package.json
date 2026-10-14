@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "generate": "node generate-chumash-data.mjs",
-    "test": "node test-chumash.mjs && node test-tehillim.mjs && node test-progress.mjs && node test-learning-stats.mjs",
-    "test:app": "node test-app.mjs"
+    "test": "node test-chumash.mjs && node test-tehillim.mjs && node test-progress.mjs && node test-learning-stats.mjs && node test-quiz-core.mjs",
+    "test:app": "node test-app.mjs",
+    "test:api": "node --experimental-test-module-mocks --no-warnings test-quiz-api.mjs"
   },
   "devDependencies": {
     "@hebcal/core": "6.14.2",
