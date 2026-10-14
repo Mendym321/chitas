@@ -453,6 +453,18 @@
 .wk-num.rest { color:var(--t3); }
 .wk-dot { width:4px; height:4px; border-radius:50%; background:transparent; }
 .wk-dot.on { background:var(--gold); }
+/* Reader: day bar + up next */
+#reader-daybar { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+#reader-daybar button { display:flex; align-items:center; gap:4px; min-width:92px; padding:6px 8px; border-radius:9px; background:none; border:none; color:var(--t2); font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; }
+#reader-daybar button#rd-next { justify-content:flex-end; }
+#reader-daybar button:disabled { visibility:hidden; }
+#rd-label { font-size:12px; font-weight:800; color:var(--t1); text-align:center; flex:1; }
+#rd-label.past { color:var(--gold); }
+#reader-next .rn-done { font-size:12px; font-weight:700; color:#1DB954; margin:2px 2px 8px; }
+#reader-next .rn-row { display:flex; gap:8px; }
+#reader-next button { padding:13px; border-radius:14px; font-size:14px; font-weight:800; font-family:inherit; cursor:pointer; }
+#reader-next .rn-go { flex:2; border:none; color:#000; }
+#reader-next .rn-home { flex:1; background:var(--card); border:1.5px solid var(--border); color:var(--t2); }
 #rambam-note-popup {
   position: fixed; z-index: 1200; background: var(--card); border: 1px solid var(--border);
   border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.35); padding: 12px 15px;
@@ -1009,6 +1021,13 @@ window._fsGetDoc = getDoc;
     </a>
   </div>
 
+  <!-- Day bar: move through the same subject day by day (last 7 days → today) -->
+  <div id="reader-daybar" style="display:none;">
+    <button id="rd-prev" onclick="_readerGoDay(-1)" aria-label="Previous day"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span id="rd-prev-label"></span></button>
+    <span id="rd-label"></span>
+    <button id="rd-next" onclick="_readerGoDay(1)" aria-label="Next day"><span id="rd-next-label"></span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+  </div>
+
   <!-- Reader settings popover — slides down from header, z-index above content but below header -->
   <div id="reader-settings-popover" style="display:none;position:absolute;top:67px;right:12px;z-index:10;width:260px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.35);padding:14px 16px;flex-direction:column;gap:16px;animation:up .18s ease both;">
     <!-- Font size row -->
@@ -1052,7 +1071,9 @@ window._fsGetDoc = getDoc;
 
   <!-- Bottom bar — always visible, compact -->
   <div id="reader-bottom-bar" style="padding:8px 14px 12px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
-    <div style="display:flex;gap:8px;">
+    <!-- After Mark Done: what to learn next (filled by _showReaderNext) -->
+    <div id="reader-next" style="display:none;"></div>
+    <div id="reader-actions" style="display:flex;gap:8px;">
       <!-- Mark done — left half -->
       <button id="chabad-mark-btn" style="flex:1;padding:12px;border-radius:14px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
         <span id="chabad-mark-label" style="font-size:14px;font-weight:800;">Mark Done</span>
@@ -2722,6 +2743,71 @@ function renderWeekStrip() {
   el.innerHTML = html;
 }
 
+// "Today", "Yesterday", or the weekday ("Shabbos" for Saturday)
+function _dayName(off) {
+  if (off === 0) return 'Today';
+  if (off === -1) return 'Yesterday';
+  const d = new Date(); d.setDate(d.getDate() + off);
+  return d.getDay() === 6 ? 'Shabbos' : d.toLocaleDateString('en-US', { weekday: 'long' });
+}
+
+// The day bar in the reader (only for the four Chitas sections)
+function _updateReaderDayBar(sectionId) {
+  const bar = document.getElementById('reader-daybar');
+  if (!bar) return;
+  if (!SECTION_IDS.includes(sectionId)) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  const d = new Date(); d.setDate(d.getDate() + dayOffset);
+  const label = document.getElementById('rd-label');
+  label.textContent = dayOffset === 0 ? 'Today' : _dayName(dayOffset) + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  label.className = dayOffset === 0 ? '' : 'past';
+  const prev = document.getElementById('rd-prev'), next = document.getElementById('rd-next');
+  prev.disabled = dayOffset <= -MAX_DAYS_BACK;
+  next.disabled = dayOffset >= 0;
+  document.getElementById('rd-prev-label').textContent = prev.disabled ? '' : _dayName(dayOffset - 1);
+  document.getElementById('rd-next-label').textContent = next.disabled ? '' : _dayName(dayOffset + 1);
+}
+
+// What to learn after marking a section done. In order:
+//  1. catching up — the same subject on a later day that isn't done yet
+//  2. the next unfinished section of the same day
+//  3. today's unfinished sections (when the day you finished was a past one)
+function _nextStep(sectionId) {
+  const today = new Date();
+  const dayAt = off => { const d = new Date(today); d.setDate(today.getDate() + off); return dayDone(user, d, today); };
+  for (let off = dayOffset + 1; off <= 0; off++) {
+    if (!dayAt(off)[sectionId]) return { off, id: sectionId, label: (off === 0 ? "Today's " : _dayName(off) + "'s ") + schedule[sectionId].label };
+  }
+  const order = SECTION_IDS.slice(SECTION_IDS.indexOf(sectionId) + 1).concat(SECTION_IDS.slice(0, SECTION_IDS.indexOf(sectionId)));
+  const here = dayAt(dayOffset);
+  for (const id of order) if (!here[id] && schedule[id]) return { off: dayOffset, id, label: (dayOffset === 0 ? '' : _dayName(dayOffset) + "'s ") + schedule[id].label };
+  if (dayOffset !== 0) {
+    const t = dayAt(0);
+    for (const id of SECTION_IDS) if (!t[id] && schedule[id]) return { off: 0, id, label: "Today's " + schedule[id].label };
+  }
+  return null;
+}
+
+function _showReaderNext(sectionId) {
+  const next = _nextStep(sectionId);
+  const box = document.getElementById('reader-next');
+  const color = next ? (SECTION_COLORS[next.id] || 'var(--gold)') : '#1DB954';
+  box.innerHTML = '<p class="rn-done">' + escapeHtml(schedule[sectionId].label) + ' done' + (next ? '' : ' · Chitas complete') + '</p>'
+    + '<div class="rn-row">'
+    + (next ? '<button class="rn-go" style="background:' + color + ';" onclick="_goNext(' + next.off + ',\'' + next.id + '\')">Next: ' + escapeHtml(next.label) + '</button>' : '')
+    + '<button class="rn-home" ' + (next ? '' : 'style="flex:1;"') + ' onclick="closeChabadPanel()">' + (next ? 'Home' : 'Back to Home') + '</button>'
+    + '</div>';
+  box.style.display = 'block';
+  document.getElementById('reader-actions').style.display = 'none';
+}
+
+function _goNext(off, id) {
+  if (off === dayOffset) { openChabadPanel(id); return; }
+  closeChabadPanel();
+  goToDay(off);
+  setTimeout(() => openChabadPanel(id), 80);
+}
+
 function goToDay(offset) {
   if (offset !== dayOffset) navDay(offset - dayOffset);
 }
@@ -2731,15 +2817,10 @@ function showConfirm(sectionId, fromReader) {
   const isToday = dayOffset === 0;
   const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
   const iso = dateISO(d2);
-  if (isToday) {
-    markDone(sectionId);
-    if (fromReader) closeChabadPanel();
-    renderSectionsForOffset(iso);
-  } else {
-    markDonePast(sectionId, iso);
-    if (fromReader) closeChabadPanel();
-    renderSectionsForOffset(iso);
-  }
+  if (isToday) markDone(sectionId);
+  else markDonePast(sectionId, iso);
+  renderSectionsForOffset(iso);
+  if (fromReader) _showReaderNext(sectionId);
 }
 
 function showConfirmPast(id, iso) {
@@ -4694,6 +4775,9 @@ function openChabadPanel(sectionId) {
   if (sectionId === 'rambam' && user.rambamTrackAsked === false) { changeTrack({ firstTime: true }); return; }
 
   markDoneUnlocked = false;
+  document.getElementById('reader-next').style.display = 'none';
+  document.getElementById('reader-actions').style.display = 'flex';
+  _updateReaderDayBar(sectionId);
 
   // Header
   document.getElementById('chabad-panel-title').textContent = s.label;
@@ -5802,11 +5886,14 @@ async function _bustTanyaCache() {
     hintEl('right').classList.remove('show');
   }
 
+  let fromEdge = false;
   document.addEventListener('touchstart', e => {
     const reader = getReader();
     if (!reader || reader.style.display === 'none') return;
     // Only handle touches that start on or within the reader
     if (!reader.contains(e.target)) return;
+    // A swipe from the left edge closes the reader (like "back" on iPhone)
+    fromEdge = e.touches[0].clientX < 24;
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     touchCurX   = touchStartX;
@@ -5833,6 +5920,7 @@ async function _bustTanyaCache() {
       }
     }
     if (!swiping) return;
+    if (fromEdge) return; // edge swipe = close, no day hints
 
     updateHints(dx);
   }, { passive: true });
@@ -5844,6 +5932,7 @@ async function _bustTanyaCache() {
     const dx = touchCurX - touchStartX;
     clearHints();
     swiping = false;
+    if (fromEdge) { fromEdge = false; if (dx > 80) closeChabadPanel(); return; }
 
     // Check threshold and direction
     if (dx > THRESHOLD && dayOffset > -MAX_DAYS_BACK) {
@@ -5856,6 +5945,13 @@ async function _bustTanyaCache() {
       swipeTransition(reader, 'left', () => navDay(1));
     }
   }, { passive: true });
+
+  // The ‹ › buttons in the reader's day bar use the same transition
+  window._readerGoDay = delta => {
+    const next = dayOffset + delta;
+    if (next > 0 || next < -MAX_DAYS_BACK) return;
+    swipeTransition(getReader(), delta < 0 ? 'right' : 'left', () => navDay(delta));
+  };
 
   function swipeTransition(reader, dir, action) {
     // Get current section before nav changes anything

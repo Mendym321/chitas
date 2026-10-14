@@ -74,15 +74,31 @@ await check('Likkutei Sichos card shows this week\'s parsha', async () => {
   return el.textContent.startsWith('Sichos · ');
 }, true);
 
-await check('Mark Done in the reader saves the section and closes the reader', () => {
-  const sec = (id, color) => ({ id, label: id, icon: 'book', color, xp: 25, subtitle: '', chabadUrl: '' });
+await check('Mark Done in the reader saves it and offers the next section of the day', () => {
+  const sec = (id, color) => ({ id, label: id[0].toUpperCase() + id.slice(1), icon: 'book', color, xp: 25, subtitle: '', chabadUrl: '' });
   schedule = { chumash: sec('chumash', '#F0A500'), tehillim: sec('tehillim', '#4A9EFF'),
                tanya: sec('tanya', '#A855F7'), rambam: sec('rambam', '#1DB954') };
-  user.done = {}; dayOffset = 0;
+  user.done = {}; user.pastDone = {}; dayOffset = 0;
   document.getElementById('chabad-panel').style.display = 'flex';
   showConfirm('tehillim', true); // what the reader's Mark Done button calls
-  return user.done.tehillim === true && document.getElementById('chabad-panel').style.display;
-}, 'none');
+  return [user.done.tehillim === true, document.getElementById('chabad-panel').style.display,
+          document.querySelector('#reader-next .rn-go')?.textContent];
+}, [true, 'flex', 'Next: Tanya']);
+
+await check('catching up: after yesterday\'s Chumash, next is today\'s Chumash', () => {
+  user.done = {}; user.pastDone = {}; dayOffset = -1;
+  showConfirm('chumash', true);
+  const r = document.querySelector('#reader-next .rn-go')?.textContent;
+  dayOffset = 0;
+  return r;
+}, "Next: Today's Chumash");
+
+await check('reader day bar: yesterday can go back or forward; today can\'t go forward', () => {
+  dayOffset = -1; _updateReaderDayBar('chumash');
+  const y = [document.getElementById('rd-label').textContent.startsWith('Yesterday'), document.getElementById('rd-next').disabled, document.getElementById('rd-next-label').textContent];
+  dayOffset = 0; _updateReaderDayBar('chumash');
+  return [...y, document.getElementById('rd-next').disabled, document.getElementById('rd-label').textContent];
+}, [true, false, 'Today', true, 'Today']);
 
 await check('points: finishing all 4 sections = 50, unmarking one takes back 20', () => {
   user = { ...user, xp: 0, done: {}, pastDone: {}, streak: 0 };
