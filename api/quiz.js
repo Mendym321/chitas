@@ -1,513 +1,127 @@
 /**
- * Vercel Serverless Function: /api/quiz
+ * POST /api/quiz — a short quiz on exactly what the user learned today.
  *
- * Fetches exact content from Sefaria/Hebcal → generates questions via Claude Haiku
- * → verifies answers are grounded in the actual text.
+ * Body:  { section: 'chumash'|'tanya'|'rambam', level: 'quick'|'deep',
+ *          refs: [...] (Chumash/Rambam) | tanya: { chapterSlug, startVerse, endVerse } }
+ * Header: Authorization: Bearer <Firebase ID token>   (signed-in users only)
+ * Returns: { questions: [{ q, options[4], answer, explanation, quote }], level }
  *
- * POST /api/quiz
- * Body: { type, sectionId, rambamTrack, difficulty, date, weekSubs }
- * Returns: { questions, cacheKey, refs, sectionLabel }
+ * How it stays accurate and cheap:
+ *  - The server fetches the text itself from Sefaria (the app only says WHICH passage).
+ *  - Claude must quote the line that proves each answer; questions whose quote
+ *    isn't really in the text are dropped (api/_lib/quiz-core.js).
+ *  - One quiz per passage + level is saved in Firestore and shared by everyone,
+ *    so most requests never call the AI. New quizzes are limited per user per day.
  */
+import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
+import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import { createHash } from 'node:crypto';
+import { getDb, verifyUser } from './_lib/firebase.js';
+import { takeDailyQuota } from './_lib/quota.js';
+import { englishSegments, tanyaSegments } from './_lib/sefaria.js';
+import { LEVELS, validateQuizRequest, checkQuestions } from './_lib/quiz-core.js';
 
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const SEFARIA = 'https://www.sefaria.org';
-const HEBCAL  = 'https://www.hebcal.com';
+export const config = { maxDuration: 60 };
 
-// ── Text cleaning ──────────────────────────────────────────────────────────────
+const MODEL = 'claude-opus-5-5';
+const CACHE_VERSION = 'v1';          // bump to regenerate every saved quiz
+const NEW_QUIZZES_PER_DAY = 20;      // per user; saved quizzes don't count
+const MAX_CHARS = 16000;             // keep the passage a sensible size
 
-function cleanSefariaHtml(s) {
-  if (!s) return '';
-  function removeFootnotes(str) {
-    let result = '', i = 0;
-    function skipClose(from) {
-      let depth = 1, j = from;
-      while (j < str.length && depth > 0) {
-        const o = str.indexOf('<i', j), c = str.indexOf('</i>', j);
-        if (o !== -1 && (c === -1 || o < c)) { depth++; j = o + 2; }
-        else if (c !== -1) { depth--; j = c + 4; }
-        else break;
-      }
-      return j;
-    }
-    while (i < str.length) {
-      const supM = str.slice(i).match(/^<sup\b[^>]*class="footnote-marker"[^>]*>/);
-      if (supM) {
-        const afterSup = str.indexOf('</sup>', i + supM[0].length);
-        if (afterSup !== -1) {
-          const afterSupClose = afterSup + 6;
-          const rest = str.slice(afterSupClose).trimStart();
-          const fiM = rest.match(/^<i\b[^>]*class="footnote"[^>]*>/);
-          if (fiM) { i = skipClose(afterSupClose + str.slice(afterSupClose).indexOf(fiM[0]) + fiM[0].length); continue; }
-          i = afterSupClose; continue;
-        }
-      }
-      const fiM = str.slice(i).match(/^<i\b[^>]*class="footnote"[^>]*>/);
-      if (fiM) { i = skipClose(i + fiM[0].length); continue; }
-      result += str[i]; i++;
-    }
-    return result;
+const QuizSchema = z.object({
+  questions: z.array(z.object({
+    question: z.string(),
+    options: z.array(z.string()),
+    correctIndex: z.number().int(),
+    explanation: z.string(),
+    quote: z.string(),
+  })),
+});
+
+const SYSTEM = `You write short multiple-choice quizzes for people doing Chitas, the daily Chabad learning cycle (Chumash with Rashi, Tanya, Rambam). The quiz comes right after they finish today's portion, to help them remember and understand it.
+
+Rules for every question:
+- It must be answerable from the passage alone, not from outside knowledge.
+- "quote": copy 5–25 consecutive words from the passage, exactly as written, that show the answer is right.
+- Exactly 4 options with one correct answer ("correctIndex" is 0–3). Wrong options should tempt someone who skimmed but be clearly wrong to someone who read carefully. No "all of the above" or "none of the above".
+- "explanation": 1–2 warm, plain sentences that teach why the answer is right, pointing back to the text.
+- Spread the questions across the whole passage, in the order it is learned.
+- Write respectfully, the way the passage itself does (for example "G-d" if it writes that).`;
+
+const LEVEL_TEXT = {
+  quick: `Level: Quick review. Write ${LEVELS.quick.count} questions on the main points — what happened or was said, who did what, what the law is, the central idea. Keep the wording simple and direct.`,
+  deep: `Level: Deep dive. Write ${LEVELS.deep.count} questions that test understanding, not just recall — why something is so; for Chumash, what Rashi is bothered by and how he answers; for Tanya, the reasoning and the analogies; for Rambam, how similar cases differ and why. Make the wrong options close but wrong.`,
+};
+
+async function fetchPassage(req) {
+  if (req.section === 'tanya') {
+    const t = req.tanya;
+    return { label: 'Tanya', text: (await tanyaSegments(t.chapterSlug, t.startVerse, t.endVerse)).join('\n') };
   }
-  s = removeFootnotes(s);
-  s = s.replace(/<[^>]+>/g, '').replace(/  +/g, ' ').trim();
-  return s;
-}
-
-function flattenText(x) {
-  if (!x) return [];
-  if (typeof x === 'string') { const s = cleanSefariaHtml(x); return s ? [s] : []; }
-  if (Array.isArray(x)) return x.flatMap(flattenText);
-  return [];
-}
-
-function expandRefs(refs) {
-  const out = [];
-  (refs || []).forEach(ref => {
-    if (!ref) return;
-    const m = ref.match(/^(.+?)\s+(\d+)-(\d+)$/);
-    if (m) { for (let i = parseInt(m[2]); i <= parseInt(m[3]); i++) out.push(m[1] + ' ' + i); }
-    else out.push(ref);
-  });
-  return [...new Set(out)];
-}
-
-// ── Sefaria fetcher ────────────────────────────────────────────────────────────
-
-async function fetchSefariaText(ref) {
-  const url = `${SEFARIA}/api/v3/texts/${encodeURIComponent(ref)}?version=english&fill_in_missing_segments=1`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`Sefaria ${r.status} for "${ref}"`);
-  const d = await r.json();
-  const eng = (d.versions || []).find(v => v.language === 'en') || d.versions?.[0];
-  if (!eng?.text) throw new Error(`No English text for "${ref}"`);
-  return { ref: d.ref || ref, segments: flattenText(eng.text) };
-}
-
-// ── Content fetchers ───────────────────────────────────────────────────────────
-
-async function fetchChumash(dateObj) {
-  const dow = dateObj.getDay();
-  const sat = new Date(dateObj); sat.setDate(dateObj.getDate() + (6 - dow));
-  const sun = new Date(sat); sun.setDate(sat.getDate() - 6);
-  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-
-  const hd = await fetch(`${HEBCAL}/hebcal?v=1&cfg=json&s=on&leyning=on&start=${fmt(sun)}&end=${fmt(sat)}&lg=s`).then(r => r.json());
-  const pItem = (hd.items || []).find(i => i.category === 'parashat' && i.leyning);
-  if (!pItem) throw new Error('No parsha leyning');
-
-  const aliyahNum = dow === 6 ? 7 : dow + 1;
-  const aliyahRef = (pItem.leyning[String(aliyahNum)] || '').trim();
-  if (!aliyahRef) throw new Error(`No aliyah ${aliyahNum}`);
-
-  const [torah, rashi] = await Promise.all([
-    fetchSefariaText(aliyahRef),
-    fetchSefariaText(`Rashi on ${aliyahRef}`).catch(() => ({ ref: '', segments: [] })),
-  ]);
-
-  const interleaved = torah.segments.map((verse, i) => {
-    const r = rashi.segments[i] || '';
-    return `[Verse ${i+1}] ${verse}${r ? `\n[Rashi on verse ${i+1}] ${r}` : ''}`;
-  }).join('\n\n');
-
-  return {
-    sectionLabel: `${(pItem.title||'').replace('Parashat ','')} — Aliya ${aliyahNum}`,
-    ref: aliyahRef,
-    refs: [aliyahRef],
-    cacheKey: `quiz:chumash:${aliyahRef}`,
-    text: interleaved.slice(0, 6000),
-    hasRashi: rashi.segments.length > 0,
-  };
-}
-
-async function fetchTanya(dateObj) {
-  // Use /api/tanya-boundary (server-side, respects date params correctly)
-  const iso = dateObj.toISOString().slice(0, 10);
-  const boundary = await fetch(`https://chitas.vercel.app/api/tanya-boundary?date=${iso}`)
-    .then(r => r.json()).catch(() => null);
-
-  if (!boundary?.today) throw new Error('Tanya boundary not found');
-
-  // Parse refs using the url slug method (same as the app)
-  function parseTanyaUrl(url) {
-    if (!url) return null;
-    const m = url.match(/\.([0-9]+)\.([0-9]+)$/);
-    if (!m) return null;
-    return { chapterSlug: url.slice(0, url.lastIndexOf('.')), chapter: parseInt(m[1]), verse: parseInt(m[2]) };
+  if (req.section === 'rambam') {
+    const parts = await Promise.all(req.refs.map(async r => r + '\n' + (await englishSegments(r)).map((h, i) => `(${i + 1}) ${h}`).join('\n')));
+    return { label: 'Rambam (Mishneh Torah)', text: parts.join('\n\n') };
   }
-
-  const t = parseTanyaUrl(boundary.todayUrl);
-  const n = parseTanyaUrl(boundary.tomorrowUrl);
-
-  // Fetch the chapter
-  const chapterSlug = t ? t.chapterSlug : boundary.today.replace(/:\d+$/, '').replace(/ /g, '_');
-  const chRes = await fetch(`${SEFARIA}/api/texts/${encodeURIComponent(chapterSlug)}?lang=bi&context=0&commentary=0`)
-    .then(r => r.json()).catch(() => null);
-
-  function flatRaw(x) {
-    if (!x) return [];
-    if (typeof x === 'string') return x ? [cleanSefariaHtml(x)] : [];
-    if (Array.isArray(x)) return x.flatMap(flatRaw);
-    return [];
-  }
-
-  const allEn = flatRaw(chRes?.text || []);
-  const startV = t ? t.verse : 1;
-  const sameChapter = n && t && t.chapterSlug === n.chapterSlug;
-  const endV = sameChapter && n.verse > startV ? n.verse - 1 : allEn.length;
-  const portion = allEn.slice(startV - 1, endV);
-  const portionRef = `${(boundary.today || '').replace(/:\d+$/, '')}:${startV}-${endV}`;
-
-  return {
-    sectionLabel: boundary.displayEn || boundary.today,
-    ref: portionRef,
-    refs: [portionRef],
-    cacheKey: `quiz:tanya:${portionRef}`,
-    text: portion.join('\n\n').slice(0, 5000),
-  };
+  // Chumash: each verse followed by Rashi on it, when Sefaria has it
+  const parts = await Promise.all(req.refs.map(async ref => {
+    const [verses, rashi] = await Promise.all([
+      englishSegments(ref),
+      englishSegments('Rashi on ' + ref).catch(() => []),
+    ]);
+    return ref + '\n' + verses.join('\n') + (rashi.length ? '\n\nRashi on ' + ref + ':\n' + rashi.join('\n') : '');
+  }));
+  return { label: 'Chumash with Rashi', text: parts.join('\n\n') };
 }
-
-async function fetchRambam(dateObj, track) {
-  // Use Hebcal single-day fetch — correctly returns per-day chapters
-  const iso = dateObj.toISOString().slice(0, 10);
-  const hebData = await fetch(
-    `${HEBCAL}/hebcal?v=1&cfg=json&dps=on&dr3=on&dr1=on&d=on&start=${iso}&end=${iso}&lg=s`
-  ).then(r => r.json()).catch(() => null);
-
-  const items = hebData?.items || [];
-  const cat = track === '1' ? 'dailyRambam1' : 'dailyRambam3';
-  const item = items.find(i => i.category === cat);
-
-  if (!item) throw new Error(`No Rambam item (${cat}) for ${iso}`);
-
-  // Extract refs — same logic as the app
-  let refs = [];
-  if (item.refs?.length) {
-    refs = item.refs;
-  } else if (item.memo?.includes('sefaria.org/')) {
-    const urls = item.memo.match(/https:\/\/www\.sefaria\.org\/[^\s]+/g) || [];
-    refs = urls.flatMap(url => {
-      try {
-        const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
-        const clean = path.replace(/_/g, ' ');
-        const dot = clean.lastIndexOf('.');
-        const ref = dot === -1 ? clean : clean.slice(0, dot) + ' ' + clean.slice(dot + 1);
-        return expandRefs([ref]);
-      } catch(e) { return []; }
-    });
-  } else if (item.link?.includes('sefaria.org/')) {
-    const path = decodeURIComponent(item.link.split('sefaria.org/').pop().split('?')[0]);
-    const clean = path.replace(/_/g, ' ');
-    const dot = clean.lastIndexOf('.');
-    refs = expandRefs([dot === -1 ? clean : clean.slice(0, dot) + ' ' + clean.slice(dot + 1)]);
-  } else if (item.title) {
-    refs = expandRefs(['Mishneh Torah, ' + item.title]);
-  }
-
-  if (!refs.length) throw new Error('No Rambam refs for ' + iso);
-
-  const texts = await Promise.all(refs.map(ref => fetchSefariaText(ref).catch(() => ({ ref, segments: [] }))));
-  const combined = texts.map(t => `[${t.ref}]\n${t.segments.join('\n')}`).join('\n\n---\n\n');
-
-  return {
-    sectionLabel: item.title || refs.join(', '),
-    ref: refs.join('|'),
-    refs,
-    cacheKey: `quiz:rambam:${refs.join('|')}`,
-    text: combined.slice(0, 6000),
-  };
-}
-
-async function fetchMitzvos(dateObj) {
-  const iso = dateObj.toISOString().slice(0, 10);
-  const hd = await fetch(`${HEBCAL}/hebcal?v=1&cfg=json&dsm=on&d=on&start=${iso}&end=${iso}&lg=s`).then(r => r.json());
-  const mItem = (hd.items || []).find(i => i.category === 'seferHaMitzvot' || (i.title||'').match(/P\d+|N\d+/));
-  if (!mItem) throw new Error('Sefer HaMitzvos not found');
-
-  const title = mItem.title || '';
-  const allPos = [...title.matchAll(/P(\d+)/g)].map(m => `Sefer HaMitzvot, Positive Commandments ${m[1]}`);
-  const allNeg = [...title.matchAll(/N(\d+)/g)].map(m => `Sefer HaMitzvot, Negative Commandments ${m[1]}`);
-  const refs = [...allPos, ...allNeg];
-
-  const texts = await Promise.all(refs.map(ref => fetchSefariaText(ref).catch(() => null)));
-  const fetched = refs.map((ref, i) => texts[i] ? `[${ref}]\n${texts[i].segments.join('\n')}` : null).filter(Boolean);
-  const text = fetched.length
-    ? fetched.join('\n\n').slice(0, 3000)
-    : `Today's mitzvah: ${title}. Generate questions based on accurate knowledge of this mitzvah.`;
-
-  return {
-    sectionLabel: title,
-    ref: title.replace(/\s+/g, '_'),
-    refs,
-    cacheKey: `quiz:mitzvos:${title.replace(/\s+/g,'_')}`,
-    text,
-  };
-}
-
-// ── Prompts ────────────────────────────────────────────────────────────────────
-
-const SHARED_STYLE = `
-FORMAT (non-negotiable):
-- Question: 12 words max. Answer choices: 7 words max. Cut ruthlessly.
-- 4 answer choices per question. Exactly one is correct.
-- Never start a question with "According to", "Based on", or "Which of the following"
-
-PLAIN LANGUAGE — this is critical:
-- Write like you're texting a friend who just learned this, not like an academic
-- Questions and answers must sound natural when read out loud
-- Never copy phrasing from the source text — Sefaria translations are stiff and formal, always rewrite
-- Forbidden words/phrases: "halachically", "obligated", "incumbent upon", "one who", "thereof", "thereby", "sanctified", "designated", "in the case of", "with regard to"
-- Use instead: "has to", "needs to", "counts as", "if someone", "about", "for"
-- Technical terms: only keep them if the question is specifically testing that term. Otherwise swap for plain English.
-  - "atonement offering" → "offering to make things right"
-  - "transgressed" → "broke the rule" or "did something wrong"
-  - "liable" → "has to bring" or "is responsible"
-  - "blemished" → "has a defect"
-  - "divine soul" → "G-dly soul"
-  - "intellectual faculty" → "mind" or "thinking"
-
-REWRITING EXAMPLES — question wording:
-✗ "What is one who transgresses this prohibition obligated to bring?"
-✓ "Shimon broke this rule — what does he have to bring?"
-✗ "With regard to which case does the ruling change?"
-✓ "When does the rule flip?"
-✗ "What does the Alter Rebbe say regarding the nature of the soul?"
-✓ "What does the Alter Rebbe say the soul is like?"
-
-REWRITING EXAMPLES — answer wording:
-✗ "A guilt offering brought on the altar"
-✓ "A guilt offering"
-✗ "The animal must be without blemish and designated for that purpose"
-✓ "It has to be perfect and set aside for this"
-✗ "The neshamah illuminates the body through speech and action"
-✓ "The soul shines through what you say and do"
-✗ "Both intellectual and emotional faculties must be engaged"
-✓ "Your mind and heart both need to be in it"
-
-WRONG ANSWERS must be:
-- Plausible to someone who skimmed — not obviously absurd
-- Things a real learner might genuinely mix up
-- Wrong in substance, not just wording
-
-SPECIFICITY (the #1 failure mode):
-- Every question must be answerable ONLY by someone who read THIS specific section today
-- If a learner could answer it from general knowledge, rewrite it
-- Anchor to: the specific analogy used, the specific case covered, the specific condition stated
-
-TARGET READER: Paid reasonable attention. Gets 3 of 4 right. Misses one because they weren't careful enough.
-GOAL: Correct answer = "yes, I remember learning that." Wrong answer = "I should have caught that."
-`;
-
-function chumashPrompt(c, diff) {
-  return `You write quiz questions for a daily Chumash app. The learner just read this aliyah and Rashi.
-
-CONTENT — ${c.sectionLabel}:
-${c.text}
-
-Write exactly 4 questions. Each must come from a DIFFERENT verse or case.
-
-Q1 — Main ruling or event: Frame as a scenario with a name. "Reuven does X — what does he have to do?"
-Q2 — A condition or exception: When does the rule change? What one detail flips the outcome?
-Q3 — A Rashi: Ask about what it actually says or teaches — not "what does Rashi say on verse N." Example: "Rashi says the word X here means — what?"
-Q4 — A second law or case from a different part of the aliyah.
-
-ACCURACY: Every correct answer must be explicitly stated in the text above.
-
-VOICE CHECK before finalizing: Read each question and answer out loud. If it sounds stiff, academic, or like a legal document — rewrite it in plain spoken English.
-
-${SHARED_STYLE}
-
-Respond ONLY with a JSON array, no markdown:
-[{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
-}
-
-function tanyaPrompt(c, diff) {
-  return `You write quiz questions for a daily Tanya app. The learner just read this section of Chassidus.
-
-CONTENT — ${c.sectionLabel}:
-${c.text}
-
-Tanya teaches about the soul, avodah, and the inner life — not halacha. Frame questions around ideas, not rulings.
-
-Write exactly 3 questions:
-Q1 — The central teaching: What is the main point the Alter Rebbe is making here?
-Q2 — The reason or logic: WHY does the Alter Rebbe say this is true? What's the inner logic?
-Q3 — If there's a second idea, test that. If one sustained idea, ask about a key term or the analogy used.
-
-ACCURACY: Every correct answer must appear in the text above.
-WRONG ANSWERS: Use real Chassidus/Kabbalistic concepts that sound plausible but are NOT what this specific section teaches.
-
-VOICE CHECK before finalizing: Tanya uses complex philosophical language — your job is to translate the idea into plain English that anyone can understand. Read each question and answer out loud. If it sounds like a philosophy textbook, rewrite it. "The soul's animating principle interfaces with the body's faculties" → "The soul connects to the body through..."
-
-${SHARED_STYLE}
-
-Respond ONLY with a JSON array, no markdown:
-[{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
-}
-
-function rambamPrompt(c, diff) {
-  return `You write quiz questions for a daily Rambam app. The learner just read these halachos.
-
-CONTENT — ${c.sectionLabel}:
-${c.text}
-
-Write exactly 5 questions — one per distinct halacha or ruling. No two questions about the same case.
-
-Mix question types:
-- Scenario: "Reuven does X — is it permitted?"
-- Condition: "What changes if Y is present?"
-- Reason: "Why does the Rambam require Z?"
-
-ACCURACY: Halacha is exact. Every correct answer must match precisely what the Rambam writes above.
-
-${SHARED_STYLE}
-
-Respond ONLY with a JSON array, no markdown:
-[{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
-}
-
-function mitzvosPrompt(c, diff) {
-  return `You write quiz questions for a daily Sefer HaMitzvos app. The learner just read today's mitzvah.
-
-CONTENT — ${c.sectionLabel}:
-${c.text}
-
-Write exactly 2 questions:
-Q1 — What this mitzvah requires or prohibits.
-Q2 — The Torah source, when it applies, or the most interesting specific detail.
-
-${SHARED_STYLE}
-
-Respond ONLY with a JSON array, no markdown:
-[{"q":"...","options":["...","...","...","..."],"answer":0},...]`;
-}
-
-function weeklyPrompt(sections, diff) {
-  const content = sections.map(s => `=== ${s.label} ===\n${s.text}`).join('\n\n');
-  return `You write end-of-week review quiz questions for a Jewish learning app.
-
-THIS WEEK'S LEARNING:
-${content}
-
-Write exactly 10 questions: 3–4 from Chumash, 3 from Tanya, 3–4 from Rambam.
-Tag each question with "subject": "Chumash", "Tanya", or "Rambam".
-
-Pick the most memorable or surprising thing from each section.
-
-ACCURACY: Every correct answer must come from the content above.
-
-${SHARED_STYLE}
-
-Respond ONLY with a JSON array, no markdown:
-[{"q":"...","options":["...","...","...","..."],"answer":0,"subject":"Chumash"},...]`;
-}
-
-// ── Verifier ───────────────────────────────────────────────────────────────────
-
-async function verifyQuestions(questions, text) {
-  const prompt = `You are a Jewish learning content verifier. Check that every quiz question is grounded in the source text.
-
-SOURCE TEXT:
-${text.slice(0, 4000)}
-
-QUESTIONS TO CHECK:
-${JSON.stringify(questions, null, 2)}
-
-For each question: is the correct answer explicitly stated in the source text?
-If YES — keep exactly as-is.
-If NO — fix it by rewriting the question or changing the answer to one that IS in the text.
-
-Do not change the number of questions or JSON structure.
-Respond ONLY with the JSON array, no markdown.`;
-
-  try {
-    const verified = await callClaude(prompt, 1200);
-    if (Array.isArray(verified) && verified.length === questions.length) return verified;
-  } catch(e) {
-    console.error('Verifier failed, using originals:', e.message);
-  }
-  return questions;
-}
-
-// ── Claude caller ──────────────────────────────────────────────────────────────
-
-async function callClaude(prompt, maxTokens = 1500) {
-  if (!ANTHROPIC_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
-
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: maxTokens,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
-
-  if (!resp.ok) throw new Error(`Anthropic ${resp.status}: ${(await resp.text()).slice(0,200)}`);
-  const data = await resp.json();
-  const text = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
-  const parsed = JSON.parse(text);
-  if (!Array.isArray(parsed) || !parsed.length) throw new Error('Empty/invalid response');
-  const valid = parsed.every(q =>
-    q.q && Array.isArray(q.options) && q.options.length === 4 &&
-    typeof q.answer === 'number' && q.answer >= 0 && q.answer <= 3
-  );
-  if (!valid) throw new Error('Malformed question structure');
-  return parsed;
-}
-
-// ── Handler ────────────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  const { type = 'daily', sectionId, rambamTrack = '3', difficulty = 'standard', date, weekSubs } = req.body || {};
-  const dateObj = date ? new Date(date + 'T12:00:00') : new Date();
+  const uid = await verifyUser(req);
+  if (!uid) return res.status(401).json({ error: 'Please sign in to take quizzes' });
 
+  const q = validateQuizRequest(req.body);
+  if (q.error) return res.status(400).json({ error: q.error });
+
+  const db = getDb();
+  const cacheDoc = db.collection('quiz_cache').doc(createHash('sha256').update(q.key + '|' + CACHE_VERSION).digest('hex').slice(0, 40));
   try {
-    if (type === 'weekly') {
-      if (!weekSubs?.length) return res.status(400).json({ error: 'weekSubs required' });
-      const cacheKey = `quiz:weekly:${weekSubs.map(s=>s.ref||s.label).join('|')}:${difficulty}`;
-      const questions = await callClaude(weeklyPrompt(weekSubs, difficulty), 2000);
-      return res.status(200).json({ questions, cacheKey });
-    }
+    const hit = await cacheDoc.get();
+    if (hit.exists) return res.status(200).json({ questions: hit.data().questions, level: q.level, cached: true });
+  } catch (e) { console.warn('quiz cache read:', e.message); }
 
-    if (!sectionId) return res.status(400).json({ error: 'sectionId required' });
+  if (!(await takeDailyQuota(db, uid, 'quiz', NEW_QUIZZES_PER_DAY))) return res.status(429).json({ error: 'That\'s a lot of quizzes for one day — try again tomorrow' });
 
-    let content;
-    if      (sectionId === 'chumash') content = await fetchChumash(dateObj);
-    else if (sectionId === 'tanya')   content = await fetchTanya(dateObj);
-    else if (sectionId === 'rambam')  content = await fetchRambam(dateObj, rambamTrack);
-    else if (sectionId === 'mitzvos') content = await fetchMitzvos(dateObj);
-    else return res.status(400).json({ error: 'Invalid sectionId' });
+  let passage;
+  try { passage = await fetchPassage(q); }
+  catch (e) { console.error('quiz passage:', e.message); return res.status(502).json({ error: 'Couldn\'t load today\'s text' }); }
+  if (passage.text.length < 80) return res.status(502).json({ error: 'Couldn\'t load today\'s text' });
+  const text = passage.text.slice(0, MAX_CHARS);
 
-    const cacheKey = `${content.cacheKey}:${difficulty}`;
-
-    let prompt;
-    if      (sectionId === 'chumash') prompt = chumashPrompt(content, difficulty);
-    else if (sectionId === 'tanya')   prompt = tanyaPrompt(content, difficulty);
-    else if (sectionId === 'rambam')  prompt = rambamPrompt(content, difficulty);
-    else if (sectionId === 'mitzvos') prompt = mitzvosPrompt(content, difficulty);
-
-    let questions = await callClaude(prompt, 2000);
-    questions = await verifyQuestions(questions, content.text);
-
-    return res.status(200).json({
-      questions,
-      cacheKey,
-      refs: content.refs,
-      sectionLabel: content.sectionLabel,
+  let questions;
+  try {
+    const client = new Anthropic(); // reads ANTHROPIC_API_KEY
+    const response = await client.messages.parse({
+      model: MODEL,
+      max_tokens: 16000,
+      system: SYSTEM,
+      output_config: { effort: 'medium', format: zodOutputFormat(QuizSchema) },
+      messages: [{ role: 'user', content: `${LEVEL_TEXT[q.level]}\n\nToday's ${passage.label}:\n<passage>\n${text}\n</passage>` }],
     });
-
-  } catch(err) {
-    console.error('Quiz error:', err);
-    return res.status(500).json({ error: 'Quiz generation failed', detail: err.message });
+    if (response.stop_reason === 'refusal' || !response.parsed_output) throw new Error('no quiz returned (' + response.stop_reason + ')');
+    questions = checkQuestions(response.parsed_output.questions, text, q.level);
+  } catch (e) {
+    console.error('quiz generate:', e.message);
+    return res.status(502).json({ error: 'Couldn\'t make a quiz right now — try again in a minute' });
   }
+
+  if (questions.length < LEVELS[q.level].min) {
+    console.warn('quiz: only', questions.length, 'questions passed the checks for', q.key);
+    return res.status(502).json({ error: 'Couldn\'t make a good quiz for this one — try the other level' });
+  }
+
+  // Awaited: Vercel may freeze the function as soon as the reply is sent
+  await cacheDoc.set({ key: q.key, questions, model: MODEL, createdAt: new Date().toISOString() })
+    .catch(e => console.warn('quiz cache write:', e.message));
+  return res.status(200).json({ questions, level: q.level });
 }

@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v2';
+const VERSION     = 'v6';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
@@ -26,6 +26,12 @@ const SHELL_URLS = [
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/manifest.json',
+  '/js/chumash-data.js',
+  '/js/chumash.js',
+  '/js/tehillim.js',
+  '/js/holidays-data.js',
+  '/js/progress.js',
+  '/js/learning-stats.js',
 ];
 
 // ── Install: cache the app shell ──────────────────────────────────────────────
@@ -69,8 +75,8 @@ self.addEventListener('fetch', event => {
 
   // App shell files — network first for HTML (get latest), cache first for static assets
   if (isShellRequest(url)) {
-    // HTML: always try network first so deployments propagate immediately
-    if (url.pathname === '/') {
+    // HTML + app scripts: network first so deployments propagate immediately
+    if (url.pathname === '/' || url.pathname.startsWith('/js/')) {
       event.respondWith(networkFirstWithCache(request, SHELL_CACHE, 60 * 60 * 24));
     } else {
       // Fonts/icons: cache first (they never change)
@@ -108,6 +114,7 @@ function isShellRequest(url) {
     url.pathname === '/' ||
     url.pathname.startsWith('/fonts/') ||
     url.pathname.startsWith('/icons/') ||
+    url.pathname.startsWith('/js/') ||
     url.pathname === '/manifest.json'
   );
 }
