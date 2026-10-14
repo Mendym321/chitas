@@ -128,7 +128,23 @@ await check('Progress tab shows learning stats (Rambam out of 1,000, last-30-day
   return [grid.includes('of 1,000 chapters'), !!document.getElementById('needs-attention')?.textContent.includes('Rambam')];
 }, [true, true]);
 
-const unexpected =pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
+await check('Rambam translator\'s notes become tappable numbers that open in place', () => {
+  // The shape Sefaria sends: a marker <sup> followed by the note in <i class="footnote"> (which can nest <i>)
+  const notes = [];
+  const en = _cleanHtml('<b>One must</b> [rest]<sup class="footnote-marker">1</sup><i class="footnote">See <i>Shabbos</i> 2a.</i> on the seventh day.<sup class="footnote-marker">2</sup><i class="footnote">&lt;b&gt;<img src=x onerror="window.__hacked=true"></i>', notes);
+  window._rambamData = { chapters: [{ ref: 'Mishneh Torah, Sabbath 1', title: 'Shabbos 1', chapter: 1, en: [en], he: ['שבת'], notes }] };
+  localStorage.setItem('chitas_lang_rambam', 'en');
+  _renderRambamContent();
+  const btns = document.querySelectorAll('#native-reader-content .rambam-fn');
+  btns[0].click();
+  const popup = document.getElementById('rambam-note-popup');
+  const first = [popup.style.display, popup.querySelector('.rn-text').textContent];
+  btns[0].click(); // tap again → closes
+  const closed = popup.style.display;
+  return [btns.length, notes, first, closed, !!window.__hacked, document.getElementById('native-reader-content').textContent.includes('on the seventh day')];
+}, [2, ['See Shabbos 2a.', '<b>'], ['block', 'See Shabbos 2a.'], 'none', false, true]);
+
+const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }
 else console.log('  ✓ no uncaught JavaScript errors');
 
