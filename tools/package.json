@@ -1,0 +1,14 @@
+{
+  "name": "chitas-tools",
+  "private": true,
+  "description": "Developer scripts (not deployed). Run from this folder.",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate-chumash-data.mjs",
+    "test": "node test-chumash.mjs"
+  },
+  "devDependencies": {
+    "@hebcal/core": "6.14.2",
+    "@hebcal/leyning": "10.1.0"
+  }
+}
