@@ -18,16 +18,24 @@ function app() {
 export function getDb() { app(); return getFirestore(); }
 
 // The signed-in user making the request, from "Authorization: Bearer <Firebase ID token>".
-// Returns the uid, or null when the token is missing or invalid.
-export async function verifyUser(req) {
+// Returns { uid, email }, or null when the token is missing or invalid.
+export async function verifyUserToken(req) {
   const m = (req.headers.authorization || '').match(/^Bearer (.+)$/);
   if (!m) return null;
-  try { app(); return (await getAuth().verifyIdToken(m[1])).uid; }
+  try { app(); const t = await getAuth().verifyIdToken(m[1]); return { uid: t.uid, email: t.email || '' }; }
   catch { return null; }
 }
 
+// Just the uid (or null)
+export async function verifyUser(req) {
+  return (await verifyUserToken(req))?.uid || null;
+}
+
 // Admins (can force-regenerate cached AI output). Set ADMIN_UIDS on Vercel to a
-// comma-separated list of Firebase uids — kept on the server so it can't be faked.
-export function isAdmin(uid) {
-  return !!uid && (process.env.ADMIN_UIDS || '').split(',').map(s => s.trim()).includes(uid);
+// comma-separated list of Firebase uids and/or sign-in emails — kept on the
+// server so it can't be faked. `who` is what verifyUserToken returned.
+export function isAdmin(who) {
+  if (!who?.uid) return false;
+  const list = (process.env.ADMIN_UIDS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  return list.includes(who.uid.toLowerCase()) || (!!who.email && list.includes(who.email.toLowerCase()));
 }
