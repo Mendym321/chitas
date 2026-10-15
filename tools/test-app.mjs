@@ -35,9 +35,9 @@ await page.route(u => !u.href.startsWith(url), r => r.abort()); // block the int
 await page.goto(url, { waitUntil: 'load' });
 
 let failed = 0;
-async function check(name, fn, expected) {
+async function check(name, fn, expected, arg) {
   let actual;
-  try { actual = await page.evaluate(fn); } catch (e) { actual = 'THREW: ' + e.message.split('\n')[0]; }
+  try { actual = await page.evaluate(fn, arg); } catch (e) { actual = 'THREW: ' + e.message.split('\n')[0]; }
   if (JSON.stringify(actual) === JSON.stringify(expected)) console.log('  ✓', name); // compares contents, so lists work too
   else { failed++; console.log('  ✗', name, '\n      expected:', expected, '\n      got:     ', actual); }
 }
@@ -57,7 +57,7 @@ await check('when the schedule can\'t load, the error message shows', async () =
 await check('sign out finishes and shows a message', async () => {
   await signOut();
   return document.getElementById('toast').textContent;
-}, 'Signed out 👋');
+}, 'Signed out');
 
 await check('Rebbe toggle in Personal Tehillim turns him off', () => {
   user.tehillimFixedOpts = { rebbe: true, rebbetzin: true };
@@ -74,15 +74,31 @@ await check('Likkutei Sichos card shows this week\'s parsha', async () => {
   return el.textContent.startsWith('Sichos · ');
 }, true);
 
-await check('Mark Done in the reader saves the section and closes the reader', () => {
-  const sec = (id, color) => ({ id, label: id, icon: 'book', color, xp: 25, subtitle: '', chabadUrl: '' });
+await check('Mark Done in the reader saves it and offers the next section of the day', () => {
+  const sec = (id, color) => ({ id, label: id[0].toUpperCase() + id.slice(1), icon: 'book', color, xp: 25, subtitle: '', chabadUrl: '' });
   schedule = { chumash: sec('chumash', '#F0A500'), tehillim: sec('tehillim', '#4A9EFF'),
                tanya: sec('tanya', '#A855F7'), rambam: sec('rambam', '#1DB954') };
-  user.done = {}; dayOffset = 0;
+  user.done = {}; user.pastDone = {}; dayOffset = 0;
   document.getElementById('chabad-panel').style.display = 'flex';
   showConfirm('tehillim', true); // what the reader's Mark Done button calls
-  return user.done.tehillim === true && document.getElementById('chabad-panel').style.display;
-}, 'none');
+  return [user.done.tehillim === true, document.getElementById('chabad-panel').style.display,
+          document.querySelector('#reader-next .rn-go')?.textContent];
+}, [true, 'flex', 'Next: Tanya']);
+
+await check('catching up: after yesterday\'s Chumash, next is today\'s Chumash', () => {
+  user.done = {}; user.pastDone = {}; dayOffset = -1;
+  showConfirm('chumash', true);
+  const r = document.querySelector('#reader-next .rn-go')?.textContent;
+  dayOffset = 0;
+  return r;
+}, "Next: Today's Chumash");
+
+await check('reader day bar: yesterday can go back or forward; today can\'t go forward', () => {
+  dayOffset = -1; _updateReaderDayBar('chumash');
+  const y = [document.getElementById('rd-label').textContent.startsWith('Yesterday'), document.getElementById('rd-next').disabled, document.getElementById('rd-next-label').textContent];
+  dayOffset = 0; _updateReaderDayBar('chumash');
+  return [...y, document.getElementById('rd-next').disabled, document.getElementById('rd-label').textContent];
+}, [true, false, 'Today', true, 'Today']);
 
 await check('points: finishing all 4 sections = 50, unmarking one takes back 20', () => {
   user = { ...user, xp: 0, done: {}, pastDone: {}, streak: 0 };
@@ -103,14 +119,14 @@ await check('catching up yesterday restores a 2-day streak', () => {
 
 await check('week strip shows 7 days', () => document.querySelectorAll('#week-strip button').length, 7);
 
-await check('a malicious name/city on the leaderboard is shown as text, not run', async () => {
+await check('a malicious name is shown as text, not run (header + profile)', async () => {
   window.__hacked = false;
   user = { ...user, uid: 'u1', name: '<img src=x onerror="window.__hacked=true">', city: '<b onmouseover=x>NYC</b>' };
-  await renderLeaders();
+  updateHeader(); openProfileSheet();
   await new Promise(r => setTimeout(r, 100));
-  const html = document.getElementById('leaders-list').innerHTML;
-  return [window.__hacked, html.includes('&lt;img'), document.querySelectorAll('#leaders-list img, #leaders-list b[onmouseover]').length];
-}, [false, true, 0]);
+  closeProfileSheet();
+  return [window.__hacked, document.querySelectorAll('#avatar-tab img, #profile-sheet img, #profile-sheet b[onmouseover]').length];
+}, [false, 0]);
 
 await check('Personal Tehillim builds its list without crashing (offline → no chapters yet)', async () => {
   user.tehillimFixedOpts = { rebbe: true, rebbetzin: false };
@@ -153,6 +169,52 @@ await check('Tanya: AI summary is labeled and shown as text', () => {
   return [t.includes('AI-written'), t.includes('<img'), !!window.__hacked];
 }, [true, true, false]);
 
+// Real Sefaria text (Touger translation) — see tools/fixtures/rambam-touger.json
+const RAMBAM = JSON.parse(await readFile(new URL('./fixtures/rambam-touger.json', import.meta.url), 'utf8'));
+await check('Rambam (real Sefaria text): sentences don\'t run together; transliterations stay italic', ({ robbery }) => {
+  const en = _cleanHtml(robbery, []);
+  return [en.includes('take it." Even if'), en.includes('<i>p\'rutah</i>'), en.includes('<br')];
+}, [true, true, false], { robbery: RAMBAM.robbery_13_1 });
+
+await check('Rambam (real Sefaria text): [bracketed] translator\'s words lighter, the Rambam\'s words bold, footnotes tappable', ({ sabbath }) => {
+  const notes = [];
+  const en = _cleanHtml(sabbath, notes);
+  window._rambamData = { chapters: [{ title: 'Shabbos 1', chapter: 1, en: [en], he: ['ש'], notes }] };
+  localStorage.setItem('chitas_lang_rambam', 'en');
+  _renderRambamContent();
+  const root = document.querySelector('#native-reader-content .rb-en');
+  const add = root.querySelector('.rb-add'), bold = root.querySelector('b');
+  return [add.textContent, +getComputedStyle(add).fontWeight < 600, +getComputedStyle(bold).fontWeight >= 700,
+          root.textContent.includes('['), notes.length, notes[1].includes('Maggid Mishneh'),
+          document.querySelectorAll('#native-reader-content .rambam-fn').length];
+}, ['for performing such an act.', true, true, false, 2, true, 2], { sabbath: RAMBAM.sabbath_sample });
+
+await check('Rambam (real Sefaria text, Ishus 1:2): added words lighter, footnotes tappable, transliterations italic', ({ ishus }) => {
+  const notes = [];
+  window._rambamData = { chapters: [{ title: 'Ishus 1', chapter: 1, en: [_cleanHtml(ishus, notes)], he: ['א'], notes }] };
+  _renderRambamContent();
+  const root = document.querySelector('#native-reader-content .rb-en');
+  const adds = [...root.querySelectorAll('.rb-add')].map(e => e.textContent);
+  return [adds.slice(0, 3), notes.length, document.querySelectorAll('#native-reader-content .rambam-fn').length,
+          !!root.querySelector('b i, i'), root.textContent.includes('[')];
+}, [['one of', 'the transfer of', 'the transfer of a'], 2, 2, true, false], { ishus: RAMBAM.marriage_1_2 });
+
+await check('Rambam (real Sefaria text): a book with no brackets is shown in regular weight, not all bold', ({ robbery }) => {
+  window._rambamData = { chapters: [{ title: 'Robbery 13', chapter: 13, en: [_cleanHtml(robbery, [])], he: ['א'], notes: [] }] };
+  _renderRambamContent();
+  const root = document.querySelector('#native-reader-content .rb-en');
+  return [root.classList.contains('rb-plain'), +getComputedStyle(root).fontWeight < 600];
+}, [true, true], { robbery: RAMBAM.robbery_13_1 });
+
+await check('Tehillim looks like a printed Tehillim: chapter "יח.", day "יום ג", Hebrew verse letters', () => {
+  window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר', 'יְהוָה'], en: [] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
+  localStorage.setItem('chitas_lang_tehillim', 'he');
+  _renderTehillimContent();
+  const c = document.getElementById('native-reader-content');
+  return [c.querySelector('.th-ch-num').textContent, c.querySelector('.th-day').textContent,
+          [...c.querySelectorAll('.th-v')].map(e => e.textContent), getComputedStyle(c.querySelector('.th-text')).textAlign];
+}, ['יח.', 'יום ג', ['א', 'ב', 'ג'], 'justify']);
+
 // Pretend /api/quiz: remembers what the app sent, answers with 4 questions
 let quizRequest = null;
 await page.route('**/api/quiz', route => {
@@ -168,7 +230,7 @@ await page.route('**/api/quiz', route => {
 await check('quiz: pick a level, answer 4, see explanations and a review of misses', async () => {
   window.__hacked = false;
   window._fb = { saveUser: async () => {}, ...(window._fb || {}), getIdToken: async () => 'tok123' };
-  user = { ...user, xp: 0, quizDone: {} };
+  user = { ...user, xp: 0, quizDone: {}, quizTotal: 0, quizCorrect: 0 };
   dayOffset = 0;
   openQuiz('chumash');
   const levels = document.querySelectorAll('#quiz-body .quiz-level').length;
@@ -180,15 +242,88 @@ await check('quiz: pick a level, answer 4, see explanations and a review of miss
   nextQuestion(); selectAnswer(3);                    // right
   nextQuestion();
   const missed = [...document.querySelectorAll('.quiz-missed')].map(e => e.textContent.includes('Q2'));
-  const xp1 = user.xp;
-  await _startQuiz('quick'); [2, 0, 1, 3].forEach((a, i) => { selectAnswer(a); nextQuestion(); }); // retry: no extra points
-  return [levels, explained, missed, xp1, user.xp, user.quizDone.chumash, !!window.__hacked];
-}, [2, true, [true], 15, 15, { quick: 3 }, false]);
+  const first = [user.quizTotal, user.quizCorrect];
+  await _startQuiz('quick'); [2, 0, 1, 3].forEach((a, i) => { selectAnswer(a); nextQuestion(); }); // a retry is for learning; not counted again
+  return [levels, explained, missed, first, [user.quizTotal, user.quizCorrect], user.quizDone.chumash, !!window.__hacked];
+}, [2, true, [true], [4, 3], [4, 3], { quick: 3 }, false]);
 
 await check('quiz request sends today\'s exact Chumash ref and the sign-in token',
   () => getChumashAliyaRef(new Date()).split('|'), quizRequest && quizRequest.body.refs);
 console.log(quizRequest.auth === 'Bearer tok123' && quizRequest.body.section === 'chumash' && quizRequest.body.level === 'quick'
   ? '  ✓ …with section, level and token' : (failed++, '  ✗ quiz request was ' + JSON.stringify(quizRequest)));
+
+// ── A brand-new visitor, in a fresh page ───────────────────────────────────
+console.log('New visitor (signed out):');
+const page2 = await browser.newPage();
+page2.on('pageerror', e => pageErrors.push(e.message));
+await page2.route(u => !u.href.startsWith(url), r => r.abort());
+await page2.goto(url, { waitUntil: 'load' });
+async function check2(name, fn, expected) {
+  let actual;
+  try { actual = await page2.evaluate(fn); } catch (e) { actual = 'THREW: ' + e.message.split('\n')[0]; }
+  if (JSON.stringify(actual) === JSON.stringify(expected)) console.log('  ✓', name);
+  else { failed++; console.log('  ✗', name, '\n      expected:', expected, '\n      got:     ', actual); }
+}
+
+await check2('first visit shows ONE welcome screen (no forced sign-in)', () => {
+  const vis = id => { const e = document.getElementById(id); return !!e && getComputedStyle(e).display !== 'none'; };
+  return [vis('onboarding'), vis('ob-welcome'), vis('main-app'), document.querySelectorAll('#onboarding button').length];
+}, [true, true, false, 2]);
+
+await check2('"Start learning" opens the app right away, Rambam defaults to 3 chapters', async () => {
+  obStartGuest();
+  await new Promise(r => setTimeout(r, 300));
+  const vis = id => getComputedStyle(document.getElementById(id)).display !== 'none';
+  return [vis('main-app'), vis('onboarding'), user.uid, user.started, user.rambamTrack, user.rambamTrackAsked];
+}, [true, false, '', true, '3', false]);
+
+await check2('first time opening Rambam asks which track you learn', () => {
+  schedule = schedule || {};
+  schedule.rambam = schedule.rambam || { id: 'rambam', label: 'Rambam', color: '#1DB954', subtitle: '', chabadUrl: '' };
+  openChabadPanel('rambam');
+  const m = document.getElementById('rambam-track-modal');
+  const r = [!!m, !!m && m.textContent.includes('Which Rambam do you learn?')];
+  m?.remove();
+  return r;
+}, [true, true]);
+
+await check2('quiz while signed out → asks to sign in (not an error)', () => {
+  schedule.chumash = schedule.chumash || { id: 'chumash', label: 'Chumash', color: '#F0A500', subtitle: '' };
+  openQuiz('chumash');
+  const r = [getComputedStyle(document.getElementById('signin-sheet')).display, document.getElementById('signin-title').textContent];
+  closeSignIn();
+  return r;
+}, ['flex', 'Sign in to take quizzes']);
+
+await check2('after the first section, offers (once) to save progress', async () => {
+  schedule.tehillim = schedule.tehillim || { id: 'tehillim', label: 'Tehillim', color: '#4A9EFF', subtitle: '' };
+  markDone('tehillim');
+  await new Promise(r => setTimeout(r, 2100));
+  const r = [user.xp, document.getElementById('signin-title').textContent, user.signinPrompted];
+  closeSignIn();
+  return r;
+}, [10, 'Keep your streak safe', true]);
+
+await check2('profile says progress is only on this phone, no "Sign out"', () => {
+  openProfileSheet();
+  const vis = id => getComputedStyle(document.getElementById(id)).display !== 'none';
+  const r = [vis('ps-guest-row'), vis('ps-signout-row')];
+  closeProfileSheet();
+  return r;
+}, [true, false]);
+
+await check2('signing in keeps what was done signed out and adds the account\'s history', async () => {
+  const y = new Date(); y.setDate(y.getDate() - 3);
+  const iso = dateISO(y);
+  window._fb = { ...(window._fb || {}),
+    loadUser: async () => ({ name: 'Mendy', rambamTrack: '1', xp: 200, lastDate: iso, done: {}, pastDone: { [iso]: { chumash: true } } }),
+    saveUser: async () => {}, getIdToken: async () => 't', fetchLeaderboard: async () => [] };
+  await new Promise(r => setTimeout(r, 120)); // bootApp registers its sign-in handler once _fb exists
+  openSignIn('streak');
+  await window._fb._onAuthReady({ uid: 'acc1', displayName: 'Mendy C', photoURL: '' });
+  return [user.uid, user.name, user.rambamTrack, user.rambamTrackAsked, user.xp, !!user.done.tehillim, !!user.pastDone[iso]?.chumash,
+    getComputedStyle(document.getElementById('signin-sheet')).display];
+}, ['acc1', 'Mendy', '1', true, 210, true, true, 'none']);
 
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }

@@ -2,6 +2,10 @@
 
 This explains **why** the points, streak, and home screen work the way they do. If you change one of them later, read this first.
 
+> **Update (Oct 2026): points and the leaderboard were removed.** Without a leaderboard, points measured nothing that Chitas days, the streak and the learning stats don't show better, and a public leaderboard needs report/block tools for the App Store. What stays: the streak (Shabbos/Yom Tov never break it), Chitas days, the Today ring, the week strip of mini rings, learning stats, and quiz scores. The points rules below are kept as history. Internally `user.xp` is still computed so old data isn't lost, but it isn't shown anywhere.
+>
+> **Reader navigation:** days are moved through with the day bar in the reader (‹ › arrows, last 7 days → today); a swipe in the middle of the screen does the same, and a swipe from the left edge closes the reader. After Mark Done, the reader offers the next step: the same subject on a later day when catching up, otherwise the next section of the day, otherwise today's unfinished sections.
+
 ## What the best apps teach us
 
 | App | What it does well | What we take |
