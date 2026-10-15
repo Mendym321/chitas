@@ -206,6 +206,15 @@ await check('Rambam (real Sefaria text): a book with no brackets is shown in reg
   return [root.classList.contains('rb-plain'), +getComputedStyle(root).fontWeight < 600];
 }, [true, true], { robbery: RAMBAM.robbery_13_1 });
 
+await check('Tehillim looks like a printed Tehillim: chapter "יח.", day "יום ג", Hebrew verse letters', () => {
+  window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר', 'יְהוָה'], en: [] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
+  localStorage.setItem('chitas_lang_tehillim', 'he');
+  _renderTehillimContent();
+  const c = document.getElementById('native-reader-content');
+  return [c.querySelector('.th-ch-num').textContent, c.querySelector('.th-day').textContent,
+          [...c.querySelectorAll('.th-v')].map(e => e.textContent), getComputedStyle(c.querySelector('.th-text')).textAlign];
+}, ['יח.', 'יום ג', ['א', 'ב', 'ג'], 'justify']);
+
 // Pretend /api/quiz: remembers what the app sent, answers with 4 questions
 let quizRequest = null;
 await page.route('**/api/quiz', route => {
