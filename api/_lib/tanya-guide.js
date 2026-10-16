@@ -9,7 +9,7 @@
 // separate from the text.
 //
 // Prepared once per portion, the first time anyone opens it, then saved in
-// Firestore and shared by everyone (see /api/tanya-enhance).
+// Firestore for good and shared by everyone (see /api/tanya-enhance).
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
@@ -82,31 +82,43 @@ async function askAI({ book, chapterNum, startVerse, heSegs, enSegs, before, pre
   return response.parsed_output;
 }
 
-// ── Build (or read) the guide for one portion ─────────────────────────────────
-// Returns { guide, source } (source 'cache' or 'generated'), { refused: <status> }
-// when mayGenerate says no, or { busy: true } while someone else prepares it.
-export async function getGuide(db, chapterSlug, startVerse, endVerse, { bust = false, mayGenerate = async () => true } = {}) {
-  const cacheDoc = db.collection('tanya_enhanced').doc(guideDocId(chapterSlug, startVerse, endVerse));
-  if (!bust) {
-    try {
-      const hit = await cacheDoc.get();
-      if (hit.exists && hit.data().blocks?.length) return { guide: hit.data(), source: 'cache' };
-    } catch (e) { console.warn('tanya cache read:', e.message); }
-  }
-  const allowed = await mayGenerate();
-  if (allowed !== true) return { refused: allowed };
+// ── Read, or prepare, the guide for one portion ───────────────────────────────
+// A portion is { chapterSlug, startVerse, endVerse } (endVerse null = to the end
+// of the chapter). Guides are saved by these text coordinates, not by date, so
+// a portion that comes round again (next year, or the same range in another
+// cycle) is never prepared twice.
+const guideDoc = (db, p) => db.collection('tanya_enhanced').doc(guideDocId(p.chapterSlug, p.startVerse, p.endVerse));
 
-  // One preparation at a time per portion: if someone else is preparing it
-  // right now, say "busy" (the app asks again shortly) instead of paying twice
-  const lock = db.collection('tanya_locks').doc(guideDocId(chapterSlug, startVerse, endVerse));
-  try { await lock.create({ at: Date.now() }); }
+export async function readGuide(db, p) {
+  try {
+    const hit = await guideDoc(db, p).get();
+    if (hit.exists && hit.data().blocks?.length) return hit.data();
+  } catch (e) { console.warn('tanya cache read:', e.message); }
+  return null;
+}
+
+const PREPARING_FOR = 5 * 60 * 1000;   // longer than a run can last (maxDuration)
+const WAIT_AFTER_FAILURE = 10 * 60 * 1000;
+
+// Start preparing a portion, one run at a time (a lock in Firestore):
+//   { state: 'started', done }   done = promise of the guide (saved when it resolves)
+//   { state: 'busy' }            someone else is preparing it right now
+//   { state: 'failed', error }   the last try failed a few minutes ago; not retried
+//                                yet, so a lasting problem can't keep costing money
+export async function startPreparing(db, p, { force = false } = {}) {
+  const lock = db.collection('tanya_locks').doc(guideDocId(p.chapterSlug, p.startVerse, p.endVerse));
+  try { await lock.create({ at: Date.now(), state: 'preparing' }); }
   catch {
     const held = (await lock.get().catch(() => null))?.data?.();
-    if (held && Date.now() - held.at < 120000) return { busy: true };
-    await lock.set({ at: Date.now() });            // an old lock left by a failed run
+    const age = Date.now() - (held?.at || 0);
+    if (!force && held?.state === 'preparing' && age < PREPARING_FOR) return { state: 'busy' };
+    if (!force && held?.state === 'failed' && age < WAIT_AFTER_FAILURE) return { state: 'failed', error: held.error || 'failed' };
+    await lock.set({ at: Date.now(), state: 'preparing' });
   }
-  try { return await generate(db, cacheDoc, chapterSlug, startVerse, endVerse); }
-  finally { await lock.delete().catch(() => {}); }
+  const done = generate(db, guideDoc(db, p), p.chapterSlug, p.startVerse, p.endVerse).then(
+    async guide => { await lock.delete().catch(() => {}); return guide; },
+    async err => { console.error('tanya guide:', err.message); await lock.set({ at: Date.now(), state: 'failed', error: err.message }).catch(() => {}); throw err; });
+  return { state: 'started', done };
 }
 
 async function generate(db, cacheDoc, chapterSlug, startVerse, endVerse) {
@@ -152,6 +164,6 @@ async function generate(db, cacheDoc, chapterSlug, startVerse, endVerse) {
     summary: String(ai.summary || '').trim(),
     notes, blocks, model: MODEL, generatedAt: new Date().toISOString(),
   };
-  await cacheDoc.set(guide).catch(err => console.warn('tanya cache write:', err.message));
-  return { guide, source: 'generated' };
+  await cacheDoc.set(guide);   // if saving fails, this counts as a failed run (no paying again right away)
+  return guide;
 }

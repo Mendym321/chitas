@@ -4522,40 +4522,43 @@ async function _loadTanyaNative(sectionId, silent) {
       if (contEl) contEl.style.display = 'block';
     }
 
-    // Fire enhance API in background — same chapterSlug + verse range the client used
-    // This guarantees the cache key matches perfectly (same coordinates, same Sefaria fetch)
+    // The guide is asked for by DATE: the server works out the portion itself.
+    // 202 = being prepared (the first person to open a day's Tanya starts it,
+    // about half a minute): ask again every few seconds. Anything else that
+    // isn't the guide: say why, in place of the guide.
     const _enhDayOffset = dayOffset;
-    const _enhUrl = '/api/tanya-enhance'
-      + '?chapterSlug=' + encodeURIComponent(chapterSlug)
-      + '&startVerse=' + startV
-      + (endV !== allHe.length ? '&endVerse=' + endV : '');
-
-    // The first person to open a portion prepares it (about half a minute);
-    // 202 = someone else is preparing it right now, so ask again shortly
+    const _enhUrl = '/api/tanya-enhance?date=' + dateStr;
     const _tanyaShown = () => document.getElementById('chabad-panel')?.style.display !== 'none'
       && document.getElementById('chabad-mark-btn')?.dataset?.sectionId === 'tanya' && dayOffset === _enhDayOffset;
+    const _guideUpdate = changes => {
+      window._tanyaData = { ...window._tanyaData, ...changes };
+      if (_tanyaShown()) {
+        const pos = document.getElementById('native-reader')?.scrollTop || 0;
+        _renderTanyaContent();
+        _restoreScrollAfterRender('tanya', pos);
+      }
+    };
     const _askGuide = tries => fetch(_enhUrl)
-      .then(r => r.status === 202 ? { preparing: true } : r.ok ? r.json() : null)
-      .catch(() => null)
-      .then(enhRes => {
+      .then(async r => ({ status: r.status, body: await r.json().catch(() => ({})) }))
+      .catch(() => ({ status: 0, body: { error: 'no connection' } }))
+      .then(({ status, body }) => {
         if (dayOffset !== _enhDayOffset) return; // user navigated away
-        if (enhRes?.preparing && tries > 0) { setTimeout(() => _askGuide(tries - 1), 15000); return; }
-        window._tanyaData = { ...window._tanyaData, guidePending: false };
-        if (enhRes?.blocks?.length) {
-          // The guide's text is plain text: escape it (footnote markers survive)
-          const blocks = enhRes.blocks.map(b => ({ he: escapeHtml(b.he), en: escapeHtml(b.en), isHagahah: b.isHagahah === true, heading: b.heading || '' }));
-          const guide = { intro: enhRes.intro || '', recap: enhRes.recap || '', summary: enhRes.summary || enhRes.context || '' };
-          window._tanyaData = { ...window._tanyaData, blocks, notes: enhRes.notes || [], guide };
+        if (status === 202) {
+          if (tries > 0) { setTimeout(() => _askGuide(tries - 1), 8000); return; }
+          return _guideUpdate({ guidePending: false, guideError: 'still being prepared; open Tanya again in a minute' });
         }
-        if (_tanyaShown()) {
-          const pos = document.getElementById('native-reader')?.scrollTop || 0;
-          _renderTanyaContent();
-          _restoreScrollAfterRender('tanya', pos);
+        if (status !== 200 || !body?.blocks?.length) {
+          console.warn('Tanya guide:', status, body?.error);
+          return _guideUpdate({ guidePending: false, guideError: (body?.error || 'not available') + (status ? ' (' + status + ')' : '') });
         }
+        // The guide's text is plain text: escape it (footnote markers survive)
+        const blocks = body.blocks.map(b => ({ he: escapeHtml(b.he), en: escapeHtml(b.en), isHagahah: b.isHagahah === true, heading: b.heading || '' }));
+        _guideUpdate({ guidePending: false, guideError: '', blocks, notes: body.notes || [],
+          guide: { intro: body.intro || '', recap: body.recap || '', summary: body.summary || '' } });
       });
     window._tanyaData.guidePending = true;
     if (!silent) _renderTanyaContent();
-    _askGuide(6);
+    _askGuide(40);
 
     // Restore scroll — rAF loop handles both slow paints and the enhance re-render
     _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
@@ -4612,6 +4615,7 @@ function _renderTanyaContent() {
   // The guide card (or a note while it's being prepared)
   const g = d.guide;
   if (guideOn && !g && d.guidePending) t += '<div class="tz-guide"><p class="tz-ai" style="margin:0;">Preparing today\'s guide: the portion in small pieces, with an introduction and the flow. This takes about half a minute the first time.</p></div>';
+  if (guideOn && !g && !d.guidePending && d.guideError) t += '<div class="tz-guide"><p class="tz-ai" style="margin:0;">The guide isn\'t available right now: ' + escapeHtml(d.guideError) + '. Here is the plain text.</p></div>';
   if (guideOn && g && (g.intro || g.recap || g.summary)) {
     t += '<div class="tz-guide">'
       + (g.intro ? '<p class="tz-gl">About this chapter</p><p class="tz-gt">' + escapeHtml(g.intro) + '</p>' : '')

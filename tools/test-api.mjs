@@ -26,6 +26,11 @@ mock.module('../api/_lib/firebase.js', { namedExports: {
   isAdmin: who => who?.uid === 'admin',
 }});
 
+// ── Pretend Vercel background work: collect it so tests can wait for it ──────
+const background = [];
+mock.module('@vercel/functions', { namedExports: { waitUntil: p => background.push(p) } });
+const finishBackground = () => Promise.allSettled(background.splice(0));
+
 // ── Pretend Claude: answers with 5 questions, one with a made-up quote ──────
 let claudeCalls = 0;
 const fakeQuiz = { questions: [
@@ -127,25 +132,30 @@ check('21st new quiz in a day → 429', (await call({ ...BODY, refs: ['Genesis 3
 check('…but saved quizzes still work', (await call(BODY)).status, 200);
 
 console.log('Tanya enhance:');
-// Today's real portion on the (pretend) schedule, as the app would ask for it
+// Today on the (pretend) schedule: chapter 1 from verse 2 to its end
 const todayNY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 const P = await tanyaPortion(todayNY);
-const T = { chapterSlug: P.chapterSlug, startVerse: String(P.startVerse), ...(P.endVerse ? { endVerse: String(P.endVerse) } : {}) };
 check('portion coordinates match the app (ends before tomorrow\'s start / runs to chapter end)',
-  [await tanyaPortion('2031-03-01'), await tanyaPortion('2031-03-02')],
-  [{ chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 2, endVerse: 2 }, { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 3, endVerse: null }]);
-check('bad slug → 400', (await tanya({ ...T, chapterSlug: 'x' })).status, 400);
+  [await tanyaPortion('2031-03-01'), await tanyaPortion('2031-03-02'), P],
+  [{ chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 2, endVerse: 2 }, { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 3, endVerse: null },
+   { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 2, endVerse: null }]);
+const T = { date: todayNY };
+check('bad date → 400', (await tanya({ date: 'tomorrow' })).status, 400);
 const calls0 = claudeCalls;
-check('a portion not on the schedule is never prepared (no AI cost)', [(await tanya({ chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.30', startVerse: '1' }, null)).status, claudeCalls - calls0], [403, 0]);
-// Someone else is preparing it right now → 202, no second AI call
+check('a date far from today is never prepared (no AI cost)', [(await tanya({ date: '2020-01-01' }, null)).status, claudeCalls - calls0], [403, 0]);
+
 const { guideDocId } = await import('../api/_lib/tanya-guide.js');
 const lockKey = 'tanya_locks/' + guideDocId(P.chapterSlug, P.startVerse, P.endVerse);
-store.set(lockKey, { at: Date.now() });
-check('while someone else prepares it → 202, no second AI call', [(await tanya(T, null)).status, claudeCalls - calls0], [202, 0]);
-store.set(lockKey, { at: Date.now() - 600000 });   // a stale lock from a failed run is ignored
+store.set(lockKey, { at: Date.now(), state: 'preparing' });
+check('while someone else prepares it → 202, no second AI call', [(await tanya(T, null)).status, background.length, claudeCalls - calls0], [202, 0, 0]);
+store.set(lockKey, { at: Date.now() - 600000, state: 'preparing' });   // a stale lock from a run that died is ignored
+
+const tFirst = await tanya(T, null);
+check('first person (signed out) → 202 at once, preparing in the background', [tFirst.status, tFirst.json.preparing, background.length], [202, true, 1]);
+await finishBackground();
+check('…one AI call, and the lock is released', [claudeCalls - calls0, store.has(lockKey)], [1, false]);
 const t1 = await tanya(T, null);
-check('first person (signed out) prepares today\'s portion → 200, one AI call', [t1.status, t1.json.source, claudeCalls - calls0], [200, 'generated', 1]);
-check('the lock is released afterwards', store.has(lockKey), false);
+check('asking again → the saved guide (no AI call), with the portion it is for', [t1.status, t1.json.source, t1.json.startVerse, claudeCalls - calls0], [200, 'cache', 2, 1]);
 check('split at the real start only (vowels ignored); the made-up one is ignored', t1.json.blocks.map(b => b.en.replace(/\uE000\d+\uE001/g, '[n]')),
   ['Every Jew has two souls.[n]', 'One soul comes from the kelipah. The second soul is truly a part of G-d above.', 'a gloss']);
 check('Hebrew is the exact original text', t1.json.blocks.slice(0, 2).map(b => b.he).join(' '),
@@ -155,9 +165,20 @@ check('headings: on the segment and on the cut that was found', t1.json.blocks.m
 check('translator\'s footnote kept as a note', t1.json.notes, ['See ch. 2.']);
 check('mid-chapter: recap and summary, no chapter intro', [t1.json.recap, t1.json.summary, t1.json.intro], ['So far: every Jew has two souls.', 'The Alter Rebbe continues explaining the two souls.', '']);
 check('the AI read the text without footnote markers', claude.lastRequest.messages[0].content.includes('\uE000'), false);
-check('everyone after gets the saved one, no AI call', [(await tanya(T, null)).json.source, claudeCalls - calls0], ['cache', 1]);
-check('regenerate (bust) by a normal user → 403', (await tanya({ ...T, bust: '1' })).status, 403);
-check('regenerate by an admin → regenerated', (await tanya({ ...T, bust: '1' }, 'token-admin')).json.source, 'regenerated');
+
+// A failed run is not retried right away (a lasting problem can't keep costing money)
+const tmrwDate = new Date(todayNY + 'T12:00:00Z'); tmrwDate.setUTCDate(tmrwDate.getUTCDate() + 1);
+const tomorrowISO = tmrwDate.toISOString().slice(0, 10);
+const realFetch2 = globalThis.fetch;
+globalThis.fetch = async (u, o) => String(u).includes('/api/texts/') ? new Response('{}', { headers: { 'content-type': 'application/json' } }) : realFetch2(u, o);
+const f1 = await tanya({ date: tomorrowISO }, null); await finishBackground();
+const f2 = await tanya({ date: tomorrowISO }, null);
+globalThis.fetch = realFetch2;
+check('a failed run → the next ask says why (502), without trying again', [f1.status, f2.status, /failed/.test(f2.json.error), background.length], [202, 502, true, 0]);
+
+check('prepare again (bust) by a normal user → 403', (await tanya({ ...T, bust: '1' })).status, 403);
+const b1 = await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
+check('prepare again by an admin → prepared again', [b1.status, claudeCalls - calls0], [202, 2]);
 
 claude.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll API tests passed');
