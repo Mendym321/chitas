@@ -325,6 +325,17 @@ await check2('signing in keeps what was done signed out and adds the account\'s 
     getComputedStyle(document.getElementById('signin-sheet')).display];
 }, ['acc1', 'Mendy', '1', true, 210, true, true, 'none']);
 
+// ── Firebase blocked (ad blocker / offline): the app must still start ─────
+console.log('Firebase blocked:');
+const page3 = await browser.newPage();
+await page3.route(u => !u.href.startsWith(url), r => r.abort());
+await page3.addInitScript(() => localStorage.setItem('chitas_v78', JSON.stringify({ uid: 'u1', name: 'M', rambamTrack: '3', done: {}, pastDone: {} })));
+await page3.goto(url, { waitUntil: 'load' });
+await page3.waitForTimeout(4500);
+const started = await page3.evaluate(() => getComputedStyle(document.getElementById('main-app')).display !== 'none' && (schedule !== null || document.body.innerText.includes('Schedule unavailable')));
+if (started) console.log('  ✓ a signed-in user\'s app still opens when Firebase can\'t load');
+else { failed++; console.log('  ✗ app stuck on Loading when Firebase can\'t load'); }
+
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }
 else console.log('  ✓ no uncaught JavaScript errors');

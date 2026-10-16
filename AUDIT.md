@@ -9,7 +9,7 @@ Line numbers refer to `index.html` unless another file is named.
 ## 0. Status (updated as we go)
 
 ### ⏳ Waiting on you: please check these
-1. **Firestore Security Rules:** paste them from the Firebase console so they can be reviewed and saved in this repo (§4.1, §4.3, §4.5).
+1. **Firestore Security Rules:** written and tested (`firestore.rules`, `tools/test-rules.mjs`, 20 checks on the Firestore emulator). **Publish them**: Firebase console → Firestore Database → Rules → paste `firestore.rules` → Publish. The old test-mode rules let anyone read or change everything and stop working on Nov 12, 2026 (§4.1, §4.3, §4.5).
 2. **`dach-dev`:** is that Firebase project (the Likkutei Sichos text + fonts) yours? (§6.2)
 3. **Hayom Yom text:** where did the English in Firestore come from? (§6.2)
 4. **`cache/{date}` in Firestore:** does something outside this repo write it (e.g. a Firebase Function)? If not, the app's `loadDailyCache` call can be removed (§7).

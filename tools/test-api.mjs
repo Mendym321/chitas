@@ -20,7 +20,8 @@ mock.module('../api/_lib/firebase.js', { namedExports: {
     runTransaction: fn => fn({ get: r => r.get(), set: (r, v) => r.set(v) }),
   }),
   verifyUser: async req => (req.headers.authorization || '').match(/^Bearer token-(\w+)$/)?.[1] || null,
-  isAdmin: uid => uid === 'admin',
+  verifyUserToken: async req => { const u = (req.headers.authorization || '').match(/^Bearer token-(\w+)$/)?.[1]; return u ? { uid: u, email: u + '@example.com' } : null; },
+  isAdmin: who => who?.uid === 'admin',
 }});
 
 // ── Pretend Claude: answers with 5 questions, one with a made-up quote ──────

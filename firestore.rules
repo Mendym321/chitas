@@ -1,0 +1,54 @@
+rules_version = '2';
+
+// Security rules for the Chitas Daily Firestore database.
+// Paste into Firebase console → Firestore Database → Rules → Publish.
+// Tested by tools/test-rules.mjs (runs against the Firestore emulator).
+//
+// Note: the server (api/*.js) uses the Admin SDK, which ignores these rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    // An admin is someone whose own user document has isAdmin: true
+    // (set by hand in the Firebase console — the app can't set it, see below).
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true;
+    }
+
+    // ── Each person's own progress ──────────────────────────────────────────
+    // Only you can read or write your document, and you can't make yourself
+    // an admin: isAdmin / role must stay exactly as they were.
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+        && !('isAdmin' in request.resource.data) && !('role' in request.resource.data);
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.get('isAdmin', null) == resource.data.get('isAdmin', null)
+        && request.resource.data.get('role', null) == resource.data.get('role', null);
+      allow delete: if false;
+    }
+
+    // ── Shared learning content: anyone can read, only admins can edit ──────
+    match /lsDict/{word} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /hayomYom/{day} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /shbSummaries/{unit} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /cache/{day} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Everything else (quiz_cache, quiz_usage, tanya_usage, tanya_enhanced, …)
+    // is only for the server. Nothing in the app reads or writes it.
+  }
+}

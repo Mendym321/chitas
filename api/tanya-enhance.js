@@ -10,12 +10,12 @@
  *
  * Saved in Firestore per portion and shared by everyone. Making a NEW one needs
  * a signed-in user (Authorization: Bearer <Firebase ID token>) and counts toward
- * a daily limit. &bust=1 (regenerate) is for admins only (ADMIN_UIDS).
+ * a daily limit. &bust=1 (regenerate) is for admins only (ADMIN_UIDS: uids or emails).
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
-import { getDb, verifyUser, isAdmin } from './_lib/firebase.js';
+import { getDb, verifyUserToken, isAdmin } from './_lib/firebase.js';
 import { takeDailyQuota } from './_lib/quota.js';
 import { applySplits } from './_lib/tanya-split.js';
 import { TANYA_SLUG } from './_lib/quiz-core.js';
@@ -138,9 +138,10 @@ export default async function handler(req, res) {
 
   const db = getDb();
   const cacheDoc = db.collection('tanya_enhanced').doc(docId(chapterSlug, startVerse, endVerse));
-  const uid = await verifyUser(req);
+  const who = await verifyUserToken(req);
+  const uid = who?.uid || null;
   const bust = req.query.bust === '1';
-  if (bust && !isAdmin(uid)) return res.status(403).json({ error: 'admins only' });
+  if (bust && !isAdmin(who)) return res.status(403).json({ error: 'admins only' });
 
   if (!bust) {
     try {
