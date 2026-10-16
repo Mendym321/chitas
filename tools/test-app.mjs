@@ -161,14 +161,27 @@ await check('Rambam translator\'s notes become tappable numbers that open in pla
   return [btns.length, notes, first, closed, !!window.__hacked, document.getElementById('native-reader-content').textContent.includes('on the seventh day')];
 }, [2, ['See Shabbos 2a.', '<b>'], ['block', 'See Shabbos 2a.'], 'none', false, true]);
 
-await check('Tanya: AI summary is labeled and shown as text', () => {
-  window._tanyaData = { blocks: [{ type: 'intro', text: 'The Alter Rebbe continues <img src=x onerror="window.__hacked=true">' }, { he: 'שלום', en: 'Peace', isHagahah: false }],
-    chapterLabel: 'Likkutei Amarim · Chapter 1', chapterNum: 1, isFirstSegment: false };
+await check('Tanya: guide labeled and shown as text; headings, opening word, hagahah, footnotes', () => {
+  const N = '\uE000' + '0' + '\uE001';
+  window._tanyaData = { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.41', chapterLabel: 'Likkutei Amarim · Chapter 41', chapterNum: 41, isFirstSegment: true,
+    guide: { intro: 'About <img src=x onerror="window.__hacked=true">', recap: '', summary: 'Today the Alter Rebbe explains.' },
+    notes: ['Jeremiah 23:24.'],
+    blocks: [{ he: 'בְּרַם, צָרִיךְ', en: 'One must' + N, isHagahah: false, heading: 'The root' },
+             { he: 'הגהה טקסט', en: 'A note', isHagahah: true }] };
   window.__hacked = false;
+  localStorage.setItem('chitas_lang_tanya', 'both');
+  localStorage.removeItem('chitas_tanya_guide'); localStorage.removeItem('chitas_tanya_nikud');
   _renderTanyaContent();
-  const t = document.getElementById('native-reader-content').textContent;
-  return [t.includes('AI-written'), t.includes('<img'), !!window.__hacked];
-}, [true, true, false]);
+  const c = document.getElementById('native-reader-content');
+  const on = [c.textContent.includes('AI-written'), c.textContent.includes('<img'), !!window.__hacked, c.querySelector('.tz-ch')?.textContent,
+    c.querySelector('.tz-h')?.textContent, c.querySelector('.tz-open')?.textContent, !!c.querySelector('.tz-hag .tz-he'), c.querySelectorAll('.tanya-fn').length];
+  c.querySelector('.tanya-fn').click();
+  const note = document.getElementById('rambam-note-popup').querySelector('.rn-text')?.textContent;
+  _toggleTanyaOpt('guide'); _toggleTanyaOpt('nikud');
+  const off = [!!c.querySelector('.tz-guide'), !!c.querySelector('.tz-h'), c.querySelector('.tz-open')?.textContent];
+  localStorage.removeItem('chitas_tanya_guide'); localStorage.removeItem('chitas_tanya_nikud');
+  return [on, note, off];
+}, [[true, true, false, 'פרק מא', 'The root', 'בְּרַם,', true, 1], 'Jeremiah 23:24.', [false, false, 'ברם,']]);
 
 // Real Sefaria text (Touger translation) — see tools/fixtures/rambam-touger.json
 const RAMBAM = JSON.parse(await readFile(new URL('./fixtures/rambam-touger.json', import.meta.url), 'utf8'));
