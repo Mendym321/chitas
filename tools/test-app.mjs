@@ -345,6 +345,19 @@ const started = await page3.evaluate(() => getComputedStyle(document.getElementB
 if (started) console.log('  ✓ a signed-in user\'s app still opens when Firebase can\'t load');
 else { failed++; console.log('  ✗ app stuck on Loading when Firebase can\'t load'); }
 
+// Signed in, but the cloud copy of progress never answers (e.g. a blocker on the database)
+const page4 = await browser.newPage();
+await page4.route(u => !u.href.startsWith(url), r => r.abort());
+await page4.addInitScript(() => {
+  localStorage.setItem('chitas_v78', JSON.stringify({ uid: 'u1', name: 'M', rambamTrack: '3', done: {}, pastDone: {} }));
+  setTimeout(() => { window._fb = { loadUser: () => new Promise(() => {}), saveUser: async () => {}, loadDailyCache: async () => null, getIdToken: async () => null, getCurrentUser: () => ({ uid: 'u1' }), _authReady: true, _authUser: { uid: 'u1' } }; }, 300);
+});
+await page4.goto(url, { waitUntil: 'load' });
+await page4.waitForTimeout(6000);
+const shown = await page4.evaluate(() => getComputedStyle(document.getElementById('main-app')).opacity === '1' && getComputedStyle(document.getElementById('rescue')).display === 'none');
+if (shown) console.log('  ✓ app shows (not a blank screen) when the cloud never answers');
+else { failed++; console.log('  ✗ blank screen when the cloud never answers'); }
+
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }
 else console.log('  ✓ no uncaught JavaScript errors');

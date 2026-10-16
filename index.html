@@ -791,6 +791,42 @@ window._fsGetDoc = getDoc;
 </script>
 </head>
 <body>
+<!-- Rescue screen: shown only if the app fails to start (see the script below) -->
+<div id="rescue" style="display:none;position:fixed;inset:0;z-index:100000;background:#0E0E10;color:#F4F4F5;font:15px/1.5 -apple-system,system-ui,sans-serif;padding:48px 24px;overflow:auto;">
+  <p style="font-size:22px;font-weight:700;margin-bottom:8px;">The app didn't start</p>
+  <p style="color:#A1A1AA;margin-bottom:20px;">Something on this device is stopping it. Your learning is safe. Try "Repair" first.</p>
+  <button onclick="__rescueRepair()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#E3B341;color:#111;font-size:16px;font-weight:600;margin-bottom:10px;">Repair and reload</button>
+  <button onclick="location.reload()" style="width:100%;padding:14px;border-radius:14px;border:1px solid #2A2A2E;background:none;color:#F4F4F5;font-size:16px;margin-bottom:24px;">Just reload</button>
+  <p style="color:#71717A;font-size:13px;margin-bottom:6px;">If it keeps happening, send this to the developer:</p>
+  <pre id="rescue-details" style="white-space:pre-wrap;font-size:12px;color:#A1A1AA;background:#1C1C1F;border-radius:12px;padding:12px;"></pre>
+</div>
+<script>
+  // Collect errors from the start, and show the rescue screen if the app
+  // still isn't on screen after 12 seconds. (Kept tiny and old-browser safe.)
+  window.__bootErrors = [];
+  window.addEventListener('error', function (e) { window.__bootErrors.push((e.message || 'error') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '')); });
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; window.__bootErrors.push('Promise: ' + (r && (r.message || r))); });
+  function __appVisible() {
+    var ob = document.getElementById('onboarding'), m = document.getElementById('main-app');
+    var obOn = ob && getComputedStyle(ob).display !== 'none';
+    var mOn = m && getComputedStyle(m).display !== 'none' && getComputedStyle(m).opacity !== '0';
+    return obOn || mOn;
+  }
+  setTimeout(function () {
+    if (__appVisible()) return;
+    document.getElementById('rescue-details').textContent =
+      (window.__bootErrors.join('\n') || 'No error message') + '\n\n' + navigator.userAgent + '\nsigned in: ' + !!(window._fb && window._fb._authUser) + ', firebase loaded: ' + !!window._fb;
+    document.getElementById('rescue').style.display = 'block';
+  }, 12000);
+  // Repair: drop the offline copy (service worker + caches) — keeps your saved progress
+  function __rescueRepair() {
+    var done = function () { location.reload(); };
+    var jobs = [];
+    if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+    if (window.caches) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+    Promise.all(jobs).then(done, done);
+  }
+</script>
 <div id="app-loader" role="status" aria-label="Loading">
   <!-- Book fills from bottom, then empties, loops -->
   <div class="ldr-book-wrap">
@@ -7332,7 +7368,7 @@ function showLoader() {
 }
 function hideLoader() {
   const el = document.getElementById('app-loader');
-  if (!el || !el.classList.contains('visible')) return;
+  if (!el || !el.classList.contains('visible')) { document.getElementById('main-app')?.classList.add('ready'); return; }
   el.classList.add('hiding');
   setTimeout(() => {
     el.classList.remove('visible', 'hiding');
@@ -7352,6 +7388,7 @@ function bootApp() {
   // This avoids a blank screen while Firebase auth resolves.
   if ((user.uid && user.rambamTrack) || user.started) {
     _showMainApp();
+    showLoaderSafe(); // never an invisible app while we wait
     // Don't call init() yet — wait for Firestore sync below so we have
     // fresh data before the day-rollover logic runs (FIX 1 + FIX 2)
   }
@@ -7372,9 +7409,16 @@ function bootApp() {
       return;
     }
 
-    // Always fetch from Firestore — this is the source of truth
-
-    const remote = await window._fb.loadUser(fbUser.uid);
+    // Always fetch from Firestore — this is the source of truth.
+    // If the cloud doesn't answer within 4 seconds (blocked, offline, slow),
+    // start from what's saved on this phone, then sync when it answers.
+    const remotePromise = window._fb.loadUser(fbUser.uid);
+    const quick = await Promise.race([remotePromise.then(r => ({ r })), new Promise(res => setTimeout(() => res(null), 4000))]);
+    if (!quick && ((user.uid && user.rambamTrack) || user.started) && !guestInitDone) {
+      console.warn('Cloud progress slow — starting from saved progress');
+      guestInitDone = true; _showMainApp(); showLoaderSafe(); init();
+    }
+    const remote = quick ? quick.r : await remotePromise;
 
     // Just signed in on a phone with no account yet (signed-out progress, or a
     // fresh install): combine what's here with the account, without losing
