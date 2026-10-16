@@ -464,6 +464,9 @@
 .th-text { text-align:justify; text-indent:1.6em; color:var(--t1); --rf-sz:16px; --rf-lh:1.65; font-size:var(--rf-sz); line-height:var(--rf-lh); }
 .th-chapter.he .th-text { font-family:'OTSiddur','Shlomo','Noto Serif Hebrew',serif; --rf-sz:21px; --rf-lh:1.62; text-align-last:right; }
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
+.th-pair { margin-bottom:12px; }
+.th-pair .th-text { text-indent:0; margin-bottom:3px; }
+.th-en { direction:ltr; text-align:left; font-size:14px; line-height:1.55; color:var(--t2); }
 /* Reader: day bar + up next */
 #reader-daybar { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
 #reader-daybar button { display:flex; align-items:center; gap:4px; min-width:92px; padding:6px 8px; border-radius:9px; background:none; border:none; color:var(--t2); font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; }
@@ -4379,17 +4382,18 @@ function _renderTehillimContent() {
   const el = document.getElementById('native-reader-content');
   if (!el) return;
   const BLUE = '#4A9EFF';
-  const isHe = lang === 'he';
+  const isHe = lang !== 'en'; // Hebrew and Both use the Hebrew layout
 
   // Lang toggle
   let t = '<div style="display:flex;gap:6px;margin-bottom:18px;">';
-  [['he','עברית'], ['en','English']].forEach(([l, lb]) => {
+  [['he','עברית'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
     const a = lang === l;
     t += '<button onclick="_setTehillimLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
        + (a ? 'background:' + BLUE + ';color:#fff;border-color:' + BLUE + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
        + '">' + lb + '</button>';
   });
   t += '</div>';
+  const isBoth = lang === 'both';
 
   // Small label for the range (the printed page has none, but it helps orientation)
   const top = '<p class="th-range">Tehillim · Day ' + dayNum + ' · ' + escapeHtml(psalmLabel || '') + '</p>';
@@ -4400,7 +4404,15 @@ function _renderTehillimContent() {
     v += '<div class="th-chapter' + (isHe ? ' he' : '') + '">'
       + '<p class="th-ch-num">' + (isHe ? _toHebrewNumeral(ch.psalmNum) + '.' : 'Psalm ' + ch.psalmNum) + '</p>';
     if (chIdx === 0 && dayNum) v += '<p class="th-day">' + (isHe ? 'יום ' + _toHebrewNumeral(dayNum) : 'Day ' + dayNum) + '</p>';
-    if (verses.length) {
+    if (isBoth) {
+      // Each passuk in Hebrew, with its English right under it
+      v += ch.he.map((text, i) => {
+        if (!text) return '';
+        const n = (ch.startVerse || 1) + i;
+        return '<div class="th-pair"><p class="th-text rf-body"><span class="th-v">' + _toHebrewNumeral(n) + '</span>' + text + '</p>'
+          + (ch.en[i] ? '<p class="th-en">' + ch.en[i] + '</p>' : '') + '</div>';
+      }).join('');
+    } else if (verses.length) {
       v += '<p class="th-text rf-body">' + verses.map((text, i) => {
         if (!text) return '';
         const n = (ch.startVerse || 1) + i;
@@ -5374,9 +5386,9 @@ function renderStats() {
       unit: ls.parshiyos.length === 1 ? 'full parsha' : 'full parshiyos',
       sub: lastParsha ? 'Latest: ' + escapeHtml(lastParsha) : 'Learn all 7 aliyos in a week',
       icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/>' },
-    { label:'Tehillim', color:'#4A9EFF', val: ls.tehillimBooks,
-      unit: ls.tehillimBooks === 1 ? 'time through all of Tehillim' : 'times through all of Tehillim',
-      sub: 'A full Hebrew month of daily Tehillim = once through',
+    { label:'Tehillim', color:'#4A9EFF', val: Math.floor(ls.tehillimChapters),
+      unit: Math.floor(ls.tehillimChapters) === 1 ? 'chapter of Tehillim' : 'chapters of Tehillim',
+      sub: ls.tehillimBooks ? 'Including ' + ls.tehillimBooks + ' full month' + (ls.tehillimBooks === 1 ? '' : 's') : 'Said with the monthly cycle',
       icon:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>' },
     { label:'Tanya', color:'#A855F7', val: ls.sections.tanya.total,
       unit: ls.sections.tanya.total === 1 ? 'day of Tanya' : 'days of Tanya',

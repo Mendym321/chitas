@@ -40,6 +40,10 @@ check('started on 4 Tishrei (missed 3 Tishrei) → that month does not count',
 check('current month not over yet → not counted',
   learningStats(userWith(Object.fromEntries(range('2026-10-12', '2026-10-13').map(d => [d, ['tehillim']]))), TODAY, '3').tehillimBooks, 0);
 
+console.log('Chapters of Tehillim:');
+check('1–30 Tishrei all said = all 150 chapters', learningStats(userWith(Object.fromEntries(tishrei.map(d => [d, ['tehillim']]))), TODAY, '3').tehillimChapters, 150);
+check('days 1 and 2 (1–9, 10–17) = 17 chapters', learningStats(userWith({ '2026-09-12': ['tehillim'], '2026-09-13': ['tehillim'] }), TODAY, '3').tehillimChapters, 17);
+
 console.log('Parshiyos completed:');
 const bereishisWeek = range('2026-10-04', '2026-10-10'); // Sun–Shabbos, parshas Bereishis
 check('all 7 aliyos of Bereishis → counted',

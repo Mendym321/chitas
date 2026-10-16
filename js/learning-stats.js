@@ -73,6 +73,10 @@ function learningStats(user, today, rambamTrack) {
     if (monthOver && m.firstDay === 1 && m.done === m.count) tehillimBooks++;
   }
 
+  // Chapters of Tehillim said (from each day's portion you marked)
+  let tehillimChapters = 0;
+  for (const d of days) if (did(d, 'tehillim')) tehillimChapters += tehillimChapterCount(getTehillimForDate(d).ref);
+
   // Rambam: chapters per day depends on your track
   const perDay = rambamTrack === '1' ? 1 : rambamTrack === 'm' ? 0 : 3;
   const rambamChapters = sections.rambam.total * perDay;
@@ -82,5 +86,5 @@ function learningStats(user, today, rambamTrack) {
   const weakest = ranked[0], strongest = ranked[ranked.length - 1];
   const needsAttention = sections[strongest].last30 - sections[weakest].last30 >= 3 ? weakest : null;
 
-  return { sections, parshiyos, tehillimBooks, rambamChapters, rambamPerDay: perDay, needsAttention };
+  return { sections, parshiyos, tehillimBooks, tehillimChapters, rambamChapters, rambamPerDay: perDay, needsAttention };
 }
