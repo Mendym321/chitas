@@ -13,6 +13,8 @@ const store = new Map();
 const docRef = (col, id) => ({
   async get() { const k = col + '/' + id; return { exists: store.has(k), data: () => store.get(k) }; },
   async set(v) { store.set(col + '/' + id, v); },
+  async create(v) { const k = col + '/' + id; if (store.has(k)) throw new Error('ALREADY_EXISTS'); store.set(k, v); },
+  async delete() { store.delete(col + '/' + id); },
 });
 mock.module('../api/_lib/firebase.js', { namedExports: {
   getDb: () => ({
@@ -23,6 +25,11 @@ mock.module('../api/_lib/firebase.js', { namedExports: {
   verifyUserToken: async req => { const u = (req.headers.authorization || '').match(/^Bearer token-(\w+)$/)?.[1]; return u ? { uid: u, email: u + '@example.com' } : null; },
   isAdmin: who => who?.uid === 'admin',
 }});
+
+// ── Pretend Vercel background work: collect it so tests can wait for it ──────
+const background = [];
+mock.module('@vercel/functions', { namedExports: { waitUntil: p => background.push(p) } });
+const finishBackground = () => Promise.allSettled(background.splice(0));
 
 // ── Pretend Claude: answers with 5 questions, one with a made-up quote ──────
 let claudeCalls = 0;
@@ -37,7 +44,7 @@ const claude = createServer((req, res) => {
   let body = ''; req.on('data', c => body += c); req.on('end', () => {
     claudeCalls++;
     claude.lastRequest = JSON.parse(body);
-    const answer = JSON.stringify(claude.lastRequest.system.includes('Tanya reader') ? fakeSplits : fakeQuiz);
+    const answer = JSON.stringify(claude.lastRequest.system.includes('PIECES') ? fakeSplits : fakeQuiz);
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
       id: 'msg_test', type: 'message', role: 'assistant', model: 'claude-opus-5-5',
       content: [{ type: 'text', text: answer }],
@@ -48,10 +55,11 @@ const claude = createServer((req, res) => {
 process.env.ANTHROPIC_BASE_URL = 'http://localhost:' + claude.address().port;
 process.env.ANTHROPIC_API_KEY = 'test-key';
 
-// Pretend Claude for Tanya: one good split, one made-up start, a summary
-const fakeSplits = { summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
-  { index: 1, splits: [{ he: 'נפש אחת היא', en: 'One soul comes' }, { he: 'מילים שלא קיימות', en: 'The second soul' }] },
-  { index: 2, splits: [] },
+// Pretend Claude for Tanya: a good split (typed without vowels, with a heading),
+// a made-up start, a recap and a summary
+const fakeSplits = { chapterIntro: 'should be dropped mid-chapter', recap: 'So far: every Jew has two souls.', summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
+  { index: 1, heading: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', heading: 'The first soul' }, { he: 'מילים שלא קיימות', en: 'The second soul', heading: 'never shown' }] },
+  { index: 2, heading: '', splits: [] },
 ]};
 
 // ── Pretend Sefaria ──────────────────────────────────────────────────────────
@@ -59,9 +67,20 @@ const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, opts) => {
   const u = String(url);
   if (!u.includes('sefaria.org')) return realFetch(url, opts);
+  if (u.includes('/api/calendars')) {
+    // Tanya Yomi: chapter 1 from verse 2 every day except the 3rd day, which is chapter 2
+    // …and today is always chapter 1 from verse 2 to its end (tomorrow starts chapter 2)
+    const [, y, m, d] = u.match(/year=(\d+)&month=(\d+)&day=(\d+)/).map(Number);
+    const iso = y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const now = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+    const tmrw = new Date(now + 'T12:00:00Z'); tmrw.setUTCDate(tmrw.getUTCDate() + 1);
+    const day = d;
+    const url = iso === now ? 'Tanya,_Part_I;_Likkutei_Amarim.1.2' : iso === tmrw.toISOString().slice(0, 10) ? 'Tanya,_Part_I;_Likkutei_Amarim.2.1' : day % 3 === 0 ? 'Tanya,_Part_I;_Likkutei_Amarim.2.1' : 'Tanya,_Part_I;_Likkutei_Amarim.1.' + (day % 3 === 1 ? 2 : 3);
+    return new Response(JSON.stringify({ calendar_items: [{ title: { en: 'Tanya Yomi' }, url }] }), { headers: { 'content-type': 'application/json' } });
+  }
   if (u.includes('/api/texts/Tanya')) return new Response(JSON.stringify({
-    he: ['ראשון', 'והנה בכל נפש ישראל יש שתי נפשות. נפש אחת היא מצד הקליפה. ונפש השנית היא חלק אלוק ממעל ממש.', '<small>הגה. הערה</small>'],
-    text: ['First', 'Every Jew has two souls. One soul comes from the kelipah. The second soul is truly a part of G-d above.', '<small>Note: a gloss</small>'],
+    he: ['ראשון', 'וְהִנֵּה בְּכָל נֶפֶשׁ יִשְׂרָאֵל יֵשׁ שְׁתֵּי נְפָשׁוֹת. נֶפֶשׁ אַחַת הִיא מִצַּד הַקְּלִיפָּה. ונפש השנית היא חלק אלוק ממעל ממש.', '<small>הגהה<br>הערה</small>'],
+    text: ['First', 'Every Jew has two souls.<sup class="footnote-marker">1</sup><i class="footnote"> See ch. <i>2</i>.</i> One soul comes from the kelipah. The second soul is truly a part of G-d above.', '<small>NOTE: a gloss</small>'],
   }), { headers: { 'content-type': 'application/json' } });
   const text = u.includes('Rashi')
     ? ['<b>a garden</b> Rashi explains<sup class="footnote-marker">1</sup><i class="footnote">a note</i> the garden.']
@@ -71,6 +90,7 @@ globalThis.fetch = async (url, opts) => {
 
 const { default: handler } = await import('../api/quiz.js');
 const { default: tanyaHandler } = await import('../api/tanya-enhance.js');
+const { tanyaPortion } = await import('../api/_lib/tanya-portion.js');
 const fakeRes = () => { const r = { status(s) { r.code = s; return r; }, json(j) { r.body = j; return r; } }; return r; };
 async function call(body, token = 'token-u1', method = 'POST') {
   const res = fakeRes();
@@ -112,21 +132,53 @@ check('21st new quiz in a day → 429', (await call({ ...BODY, refs: ['Genesis 3
 check('…but saved quizzes still work', (await call(BODY)).status, 200);
 
 console.log('Tanya enhance:');
-const T = { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: '2', endVerse: '3' };
-check('bad slug → 400', (await tanya({ ...T, chapterSlug: 'x' })).status, 400);
-check('not signed in and nothing saved → 401', (await tanya(T, null)).status, 401);
+// Today on the (pretend) schedule: chapter 1 from verse 2 to its end
+const todayNY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+const P = await tanyaPortion(todayNY);
+check('portion coordinates match the app (ends before tomorrow\'s start / runs to chapter end)',
+  [await tanyaPortion('2031-03-01'), await tanyaPortion('2031-03-02'), P],
+  [{ chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 2, endVerse: 2 }, { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 3, endVerse: null },
+   { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 2, endVerse: null }]);
+const T = { date: todayNY };
+check('bad date → 400', (await tanya({ date: 'tomorrow' })).status, 400);
 const calls0 = claudeCalls;
-const t1 = await tanya(T);
-check('signed in → 200', t1.status, 200);
-check('split at the real start only; the made-up one is ignored', t1.json.blocks.map(b => b.en),
-  ['Every Jew has two souls.', 'One soul comes from the kelipah. The second soul is truly a part of G-d above.', 'Note: a gloss']);
+check('a date far from today is never prepared (no AI cost)', [(await tanya({ date: '2020-01-01' }, null)).status, claudeCalls - calls0], [403, 0]);
+
+const { guideDocId } = await import('../api/_lib/tanya-guide.js');
+const lockKey = 'tanya_locks/' + guideDocId(P.chapterSlug, P.startVerse, P.endVerse);
+store.set(lockKey, { at: Date.now(), state: 'preparing' });
+check('while someone else prepares it → 202, no second AI call', [(await tanya(T, null)).status, background.length, claudeCalls - calls0], [202, 0, 0]);
+store.set(lockKey, { at: Date.now() - 600000, state: 'preparing' });   // a stale lock from a run that died is ignored
+
+const tFirst = await tanya(T, null);
+check('first person (signed out) → 202 at once, preparing in the background', [tFirst.status, tFirst.json.preparing, background.length], [202, true, 1]);
+await finishBackground();
+check('…one AI call, and the lock is released', [claudeCalls - calls0, store.has(lockKey)], [1, false]);
+const t1 = await tanya(T, null);
+check('asking again → the saved guide (no AI call), with the portion it is for', [t1.status, t1.json.source, t1.json.startVerse, claudeCalls - calls0], [200, 'cache', 2, 1]);
+check('split at the real start only (vowels ignored); the made-up one is ignored', t1.json.blocks.map(b => b.en.replace(/\uE000\d+\uE001/g, '[n]')),
+  ['Every Jew has two souls.[n]', 'One soul comes from the kelipah. The second soul is truly a part of G-d above.', 'a gloss']);
 check('Hebrew is the exact original text', t1.json.blocks.slice(0, 2).map(b => b.he).join(' '),
-  'והנה בכל נפש ישראל יש שתי נפשות. נפש אחת היא מצד הקליפה. ונפש השנית היא חלק אלוק ממעל ממש.');
-check('the Alter Rebbe\'s gloss (hagahah) is marked', t1.json.blocks.map(b => b.isHagahah), [false, false, true]);
-check('summary returned', t1.json.context, 'The Alter Rebbe continues explaining the two souls.');
-check('next person (even signed out) gets the saved one, no AI call', [(await tanya(T, null)).json.source, claudeCalls - calls0], ['cache', 1]);
-check('regenerate (bust) by a normal user → 403', (await tanya({ ...T, bust: '1' })).status, 403);
-check('regenerate by an admin → regenerated', (await tanya({ ...T, bust: '1' }, 'token-admin')).json.source, 'regenerated');
+  'וְהִנֵּה בְּכָל נֶפֶשׁ יִשְׂרָאֵל יֵשׁ שְׁתֵּי נְפָשׁוֹת. נֶפֶשׁ אַחַת הִיא מִצַּד הַקְּלִיפָּה. ונפש השנית היא חלק אלוק ממעל ממש.');
+check('the Alter Rebbe\'s gloss (hagahah) is marked, without its label', [t1.json.blocks.map(b => b.isHagahah), t1.json.blocks[2].he], [[false, false, true], 'הערה']);
+check('headings: on the segment and on the cut that was found', t1.json.blocks.map(b => b.heading || ''), ['Two souls', 'The first soul', '']);
+check('translator\'s footnote kept as a note', t1.json.notes, ['See ch. 2.']);
+check('mid-chapter: recap and summary, no chapter intro', [t1.json.recap, t1.json.summary, t1.json.intro], ['So far: every Jew has two souls.', 'The Alter Rebbe continues explaining the two souls.', '']);
+check('the AI read the text without footnote markers', claude.lastRequest.messages[0].content.includes('\uE000'), false);
+
+// A failed run is not retried right away (a lasting problem can't keep costing money)
+const tmrwDate = new Date(todayNY + 'T12:00:00Z'); tmrwDate.setUTCDate(tmrwDate.getUTCDate() + 1);
+const tomorrowISO = tmrwDate.toISOString().slice(0, 10);
+const realFetch2 = globalThis.fetch;
+globalThis.fetch = async (u, o) => String(u).includes('/api/texts/') ? new Response('{}', { headers: { 'content-type': 'application/json' } }) : realFetch2(u, o);
+const f1 = await tanya({ date: tomorrowISO }, null); await finishBackground();
+const f2 = await tanya({ date: tomorrowISO }, null);
+globalThis.fetch = realFetch2;
+check('a failed run → the next ask says why (502), without trying again', [f1.status, f2.status, /failed/.test(f2.json.error), background.length], [202, 502, true, 0]);
+
+check('prepare again (bust) by a normal user → 403', (await tanya({ ...T, bust: '1' })).status, 403);
+const b1 = await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
+check('prepare again by an admin → prepared again', [b1.status, claudeCalls - calls0], [202, 2]);
 
 claude.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll API tests passed');

@@ -4,12 +4,21 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 
+// The private key as pasted into Vercel: with "\n" written out or real line
+// breaks, and with or without the quote marks it has in the Firebase JSON file
+export function cleanPrivateKey(raw) {
+  return String(raw || '').trim().replace(/^"(.*)"$/s, '$1').replace(/\\n/g, '\n');
+}
+
 function app() {
   if (!getApps().length) {
+    // Say exactly which setting is missing (names only, never values)
+    const missing = ['FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EMAIL', 'FIREBASE_PRIVATE_KEY'].filter(k => !String(process.env[k] || '').trim());
+    if (missing.length) throw new Error('missing in Vercel for this environment: ' + missing.join(', '));
     initializeApp({ credential: cert({
-      projectId:   process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey:  (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+      projectId:   process.env.FIREBASE_PROJECT_ID.trim(),
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL.trim(),
+      privateKey:  cleanPrivateKey(process.env.FIREBASE_PRIVATE_KEY),
     })});
   }
   return getApps()[0];
