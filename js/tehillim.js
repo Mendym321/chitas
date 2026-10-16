@@ -30,3 +30,12 @@ function getTehillimForDate(d) {
   const label = ref.replace('Psalms.', 'Psalms ').replace('-', '–');
   return { day, ref, label };
 }
+
+// How many chapters a day's Tehillim is ('Psalms.10-17' → 8). The two days
+// that split Psalm 119 count as half a chapter each.
+function tehillimChapterCount(ref) {
+  const m = String(ref).match(/^Psalms\.(\d+)(?::\d+)?-(\d+)(?::\d+)?$/);
+  if (!m) return 0;
+  if (ref.includes(':')) return 0.5;
+  return +m[2] - +m[1] + 1;
+}

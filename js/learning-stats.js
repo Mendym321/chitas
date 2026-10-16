@@ -73,6 +73,10 @@ function learningStats(user, today, rambamTrack) {
     if (monthOver && m.firstDay === 1 && m.done === m.count) tehillimBooks++;
   }
 
+  // Chapters of Tehillim said (from each day's portion you marked)
+  let tehillimChapters = 0;
+  for (const d of days) if (did(d, 'tehillim')) tehillimChapters += tehillimChapterCount(getTehillimForDate(d).ref);
+
   // Rambam: chapters per day depends on your track
   const perDay = rambamTrack === '1' ? 1 : rambamTrack === 'm' ? 0 : 3;
   const rambamChapters = sections.rambam.total * perDay;
@@ -82,5 +86,132 @@ function learningStats(user, today, rambamTrack) {
   const weakest = ranked[0], strongest = ranked[ranked.length - 1];
   const needsAttention = sections[strongest].last30 - sections[weakest].last30 >= 3 ? weakest : null;
 
-  return { sections, parshiyos, tehillimBooks, rambamChapters, rambamPerDay: perDay, needsAttention };
+  return { sections, parshiyos, tehillimBooks, tehillimChapters, rambamChapters, rambamPerDay: perDay, needsAttention };
+}
+
+// ── "Your learning": totals, consistency, highlights ──────────────────────────
+// Needs js/learning-data.js (pesukim per chapter, halachos per day) too.
+
+// Pesukim in a Chumash ref: "Genesis 1:1-2:3", or several joined by "|"
+function chumashVerseCount(ref) {
+  return String(ref || '').split('|').reduce((sum, r) => {
+    const m = r.trim().match(/^(\w+) (\d+):(\d+)-(\d+):(\d+)$/);
+    const lens = m && typeof TORAH_CHAPTER_LENGTHS !== 'undefined' && TORAH_CHAPTER_LENGTHS[m[1]];
+    if (!lens) return sum;
+    const [c1, v1, c2, v2] = [+m[2], +m[3], +m[4], +m[5]];
+    if (c1 === c2) return sum + (v2 - v1 + 1);
+    let n = (lens[c1 - 1] || 0) - v1 + 1 + v2;
+    for (let c = c1 + 1; c < c2; c++) n += lens[c - 1] || 0;
+    return sum + n;
+  }, 0);
+}
+
+// Halachos learned on a day for a Rambam track ('3' or '1'); 0 if unknown
+let _rambamDaily = null;
+function rambamHalachosOn(d, track) {
+  if (typeof RAMBAM_DAILY_HALACHOS === 'undefined' || (track !== '3' && track !== '1')) return 0;
+  if (!_rambamDaily) _rambamDaily = { '3': RAMBAM_DAILY_HALACHOS.three.split(',').map(Number), '1': RAMBAM_DAILY_HALACHOS.one.split(',').map(Number) };
+  const i = Math.round((new Date(progressISO(d) + 'T12:00:00') - new Date(RAMBAM_DAILY_HALACHOS.start + 'T12:00:00')) / 86400000);
+  return _rambamDaily[track][i] || 0;
+}
+
+// Runs of days in a row (Shabbos/Yom Tov you didn't mark don't break a run).
+// isDone(d) → did the thing that day. Returns { current, best, bestEnd }.
+function _runs(days, today, isDone) {
+  let run = 0, best = 0, bestEnd = null;
+  for (const d of days) {
+    if (isDone(d)) { run++; if (run > best) { best = run; bestEnd = new Date(d); } }
+    else if (!isRestDay(d) && progressISO(d) !== progressISO(today)) run = 0; // today isn't over yet
+  }
+  return { current: run, best, bestEnd };
+}
+
+// The browser's Hebrew calendar spells months its own way; use the usual Chabad spellings
+const _MONTH_SPELLING = { Tishri: 'Tishrei', Heshvan: 'Cheshvan', Tevet: 'Teves', Nisan: 'Nissan', Tamuz: 'Tammuz', 'Adar I': 'Adar I', 'Adar II': 'Adar II' };
+function hebMonthSpelling(text) {
+  return text.replace(/Tishri|Heshvan|Tevet|Nisan|Tamuz/g, m => _MONTH_SPELLING[m]);
+}
+function _hebMonthName(d) {
+  return hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { month: 'long', year: 'numeric' }).format(d)
+    .replace(/^(\D+?)\s*(\d+)$/, '$1 $2'));
+}
+
+// Everything the "Your learning" screen shows
+function learningOverview(user, today, rambamTrack) {
+  const days = _historyDays(user, today);
+  const base = learningStats(user, today, rambamTrack);
+  const did = (d, id) => !!dayDone(user, d, today)[id];
+  const isFull = d => isChitasDay(dayDone(user, d, today));
+
+  // Totals
+  let pesukim = 0, halachos = 0;
+  for (const d of days) {
+    if (did(d, 'chumash')) pesukim += chumashVerseCount(getChumashAliyaRef(d));
+    if (did(d, 'rambam')) halachos += rambamHalachosOn(d, rambamTrack);
+  }
+  const tanyaChapters = Object.values(user.tanyaLog || {});
+  const totals = {
+    pesukim, parshiyos: base.parshiyos.length,
+    tehillimChapters: Math.floor(base.tehillimChapters), tehillimBooks: base.tehillimBooks,
+    tanyaDays: base.sections.tanya.total, tanyaLatest: tanyaChapters.length ? Math.max(...tanyaChapters) : null,
+    rambamChapters: base.rambamChapters, rambamHalachos: halachos,
+    seferHamitzvosDays: rambamTrack === 'm' ? base.sections.rambam.total : 0,
+  };
+
+  // Consistency
+  const overall = _runs(days, today, isFull);
+  const per = {};
+  for (const id of SECTION_IDS) per[id] = { ..._runs(days, today, d => did(d, id)), last30: base.sections[id].last30 };
+  let counted = 0, full = 0;
+  for (const d of days) {
+    if ((today - d) / 86400000 >= 30) continue;
+    if (isFull(d)) { full++; counted++; } else if (!isRestDay(d)) counted++;
+  }
+  const consistency = {
+    streak: overall.current, best: overall.best, bestEnd: overall.bestEnd,
+    pct30: counted ? Math.round(100 * full / counted) : 0, per,
+  };
+
+  return { totals, consistency, highlights: _highlights(user, today, days, base, per, overall, rambamTrack), needsAttention: base.needsAttention };
+}
+
+const _SECTION_NAME = { chumash: 'Chumash', tehillim: 'Tehillim', tanya: 'Tanya', rambam: 'Rambam' };
+const _WEEKDAYS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Shabbos'];
+
+function _highlights(user, today, days, base, per, overall, rambamTrack) {
+  const out = [];
+  const did = (d, id) => !!dayDone(user, d, today)[id];
+
+  // 1. Your longest run going right now (a week or more)
+  const top = SECTION_IDS.map(id => [id, per[id].current]).sort((a, b) => b[1] - a[1])[0];
+  if (top && top[1] >= 7) {
+    const isBest = top[1] >= per[top[0]].best;
+    out.push({ title: _SECTION_NAME[top[0]] + ' every day for ' + top[1] + ' days', sub: isBest ? 'Your longest run yet' : 'Your best is ' + per[top[0]].best + ' days' });
+  }
+
+  // 2. The most recent full parsha
+  if (base.parshiyos.length) {
+    const name = base.parshiyos[base.parshiyos.length - 1];
+    out.push({ title: 'Learned all of Parshas ' + name, sub: base.parshiyos.length === 1 ? 'Your first full parsha' : base.parshiyos.length + ' full parshiyos so far' });
+  }
+
+  // 3. Best month (most full Chitas days)
+  const months = {};
+  for (const d of days) if (isChitasDay(dayDone(user, d, today))) { const k = _hebMonthName(d); months[k] = (months[k] || 0) + 1; }
+  const bestMonth = Object.entries(months).sort((a, b) => b[1] - a[1])[0];
+  if (bestMonth && bestMonth[1] >= 5) out.push({ title: 'Best month: ' + bestMonth[0], sub: bestMonth[1] + ' full Chitas days' });
+
+  // 4. One gentle nudge: a weekday the weakest section keeps slipping on
+  const weakest = base.needsAttention;
+  if (weakest) {
+    const misses = [0, 0, 0, 0, 0, 0, 0], seen = [0, 0, 0, 0, 0, 0, 0];
+    for (const d of days) {
+      if ((today - d) / 86400000 >= 56 || isRestDay(d) || progressISO(d) === progressISO(today)) continue;
+      seen[d.getDay()]++; if (!did(d, weakest)) misses[d.getDay()]++;
+    }
+    const w = misses.indexOf(Math.max(...misses));
+    if (misses[w] >= 3) out.push({ title: _SECTION_NAME[weakest] + ' slips on ' + _WEEKDAYS[w], sub: 'Missed ' + misses[w] + ' of the last ' + seen[w] + '. Try it earlier in the day.', nudge: true });
+    else out.push({ title: _SECTION_NAME[weakest] + ' is the one you miss most', sub: per[weakest].last30 + ' of the last 30 days', nudge: true });
+  }
+  return out.slice(0, 4);
 }

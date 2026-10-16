@@ -135,14 +135,15 @@ await check('Personal Tehillim builds its list without crashing (offline → no 
   return people.map(p => p.label);
 }, ['Rebbe', 'Savta']);
 
-await check('Progress tab shows learning stats (Rambam out of 1,000, last-30-days bars)', () => {
+await check('Your learning: totals (halachos of Rambam), consistency bars and a nudge for the section you miss', () => {
   const pastDone = {};
   for (let i = 1; i <= 10; i++) { const d = new Date(); d.setDate(d.getDate() - i); pastDone[dateISO(d)] = { chumash: true, tehillim: true, tanya: true, rambam: i <= 2 }; }
   user = { ...user, rambamTrack: '3', done: {}, pastDone };
   renderStats();
-  const grid = document.getElementById('learned-grid').textContent;
-  return [grid.includes('of 1,000 chapters'), !!document.getElementById('needs-attention')?.textContent.includes('Rambam')];
-}, [true, true]);
+  const c = document.getElementById('stats-content').textContent;
+  return [document.getElementById('learned-grid').textContent.includes('halachos of Rambam'),
+          document.querySelectorAll('#stats-content .cbar').length, /Rambam (slips|is the one you miss most)/.test(c)];
+}, [true, 4, true]);
 
 await check('Rambam translator\'s notes become tappable numbers that open in place', () => {
   // The shape Sefaria sends: a marker <sup> followed by the note in <i class="footnote"> (which can nest <i>)
@@ -205,6 +206,14 @@ await check('Rambam (real Sefaria text): a book with no brackets is shown in reg
   const root = document.querySelector('#native-reader-content .rb-en');
   return [root.classList.contains('rb-plain'), +getComputedStyle(root).fontWeight < 600];
 }, [true, true], { robbery: RAMBAM.robbery_13_1 });
+
+await check('Tehillim "Both": each passuk in Hebrew with its English under it', () => {
+  window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
+  localStorage.setItem('chitas_lang_tehillim', 'both');
+  _renderTehillimContent();
+  const pairs = [...document.querySelectorAll('#native-reader-content .th-pair')];
+  return pairs.map(p => [p.querySelector('.th-v').textContent, p.querySelector('.th-en').textContent]);
+}, [['א', 'For the leader'], ['ב', 'And he said']]);
 
 await check('Tehillim looks like a printed Tehillim: chapter "יח.", day "יום ג", Hebrew verse letters', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר', 'יְהוָה'], en: [] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
@@ -335,6 +344,19 @@ await page3.waitForTimeout(4500);
 const started = await page3.evaluate(() => getComputedStyle(document.getElementById('main-app')).display !== 'none' && (schedule !== null || document.body.innerText.includes('Schedule unavailable')));
 if (started) console.log('  ✓ a signed-in user\'s app still opens when Firebase can\'t load');
 else { failed++; console.log('  ✗ app stuck on Loading when Firebase can\'t load'); }
+
+// Signed in, but the cloud copy of progress never answers (e.g. a blocker on the database)
+const page4 = await browser.newPage();
+await page4.route(u => !u.href.startsWith(url), r => r.abort());
+await page4.addInitScript(() => {
+  localStorage.setItem('chitas_v78', JSON.stringify({ uid: 'u1', name: 'M', rambamTrack: '3', done: {}, pastDone: {} }));
+  setTimeout(() => { window._fb = { loadUser: () => new Promise(() => {}), saveUser: async () => {}, loadDailyCache: async () => null, getIdToken: async () => null, getCurrentUser: () => ({ uid: 'u1' }), _authReady: true, _authUser: { uid: 'u1' } }; }, 300);
+});
+await page4.goto(url, { waitUntil: 'load' });
+await page4.waitForTimeout(6000);
+const shown = await page4.evaluate(() => getComputedStyle(document.getElementById('main-app')).opacity === '1' && getComputedStyle(document.getElementById('rescue')).display === 'none');
+if (shown) console.log('  ✓ app shows (not a blank screen) when the cloud never answers');
+else { failed++; console.log('  ✗ blank screen when the cloud never answers'); }
 
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }
