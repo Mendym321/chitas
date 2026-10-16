@@ -135,14 +135,15 @@ await check('Personal Tehillim builds its list without crashing (offline → no 
   return people.map(p => p.label);
 }, ['Rebbe', 'Savta']);
 
-await check('Progress tab shows learning stats (Rambam out of 1,000, last-30-days bars)', () => {
+await check('Your learning: totals (halachos of Rambam), consistency bars and a nudge for the section you miss', () => {
   const pastDone = {};
   for (let i = 1; i <= 10; i++) { const d = new Date(); d.setDate(d.getDate() - i); pastDone[dateISO(d)] = { chumash: true, tehillim: true, tanya: true, rambam: i <= 2 }; }
   user = { ...user, rambamTrack: '3', done: {}, pastDone };
   renderStats();
-  const grid = document.getElementById('learned-grid').textContent;
-  return [grid.includes('of 1,000 chapters'), !!document.getElementById('needs-attention')?.textContent.includes('Rambam')];
-}, [true, true]);
+  const c = document.getElementById('stats-content').textContent;
+  return [document.getElementById('learned-grid').textContent.includes('halachos of Rambam'),
+          document.querySelectorAll('#stats-content .cbar').length, /Rambam (slips|is the one you miss most)/.test(c)];
+}, [true, 4, true]);
 
 await check('Rambam translator\'s notes become tappable numbers that open in place', () => {
   // The shape Sefaria sends: a marker <sup> followed by the note in <i class="footnote"> (which can nest <i>)

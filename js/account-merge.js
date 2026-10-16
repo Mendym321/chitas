@@ -54,5 +54,6 @@ function mergeGuestIntoAccount(guest, remote, today) {
     longestStreak: Math.max(remote.longestStreak || 0, guest.longestStreak || 0),
     tehillimPeople: people,
     extraTracks: [...new Set([...(remote.extraTracks || []), ...(guest.extraTracks || [])])],
+    tanyaLog: { ...(remote.tanyaLog || {}), ...(guest.tanyaLog || {}) },
   };
 }
