@@ -7741,6 +7741,18 @@ function bootApp() {
     }
   };
 
+  // Safety net: if Firebase hasn't answered in 3 seconds (blocked by an ad
+  // blocker, no internet, slow network), start from what's saved on this phone.
+  // When Firebase does arrive, authHandler syncs as usual.
+  setTimeout(() => {
+    if (window._fb?._authReady || guestInitDone) return;
+    if ((user.uid && user.rambamTrack) || user.started) {
+      guestInitDone = true;
+      console.warn('Firebase not ready after 3s — starting from saved progress');
+      _showMainApp(); showLoaderSafe(); init();
+    }
+  }, 3000);
+
   // _fb may not exist yet (Firebase module loads async) — poll briefly
   const tryRegister = () => {
     if (window._fb) {
