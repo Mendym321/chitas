@@ -5,19 +5,22 @@
  * in small Hebrew/English pieces, a chapter intro or "so far" recap, a summary,
  * flow headings and the translator's footnotes. The text is never rewritten.
  *
- * Usually already prepared by the daily job (/api/tanya-prepare), so anyone
- * gets it. Making a NEW one on demand needs a signed-in user (Authorization:
- * Bearer <Firebase ID token>) and counts toward a daily limit. &bust=1
- * (regenerate) is for admins only (ADMIN_UIDS: uids or emails).
+ * Costs nothing unless someone learns: the first person to open a portion
+ * (signed in or not) prepares it, and it's saved for everyone after. Only a
+ * portion that is really on the Tanya Yomi schedule (the last week, for
+ * catching up, through tomorrow) can be prepared, so at most about one a day.
+ * While someone else is preparing it, the answer is 202 (ask again shortly).
+ * &bust=1 (regenerate any portion) is for admins only (ADMIN_UIDS).
  */
 import { getDb, verifyUserToken, isAdmin } from './_lib/firebase.js';
-import { takeDailyQuota } from './_lib/quota.js';
 import { getGuide } from './_lib/tanya-guide.js';
+import { scheduledPortions, samePortion } from './_lib/tanya-portion.js';
 import { TANYA_SLUG } from './_lib/quiz-core.js';
 
 export const config = { maxDuration: 60 };
 
-const NEW_PER_DAY = 10;             // per user; saved portions don't count
+// Today's date in New York (the app's schedule follows US Eastern time)
+const todayNY = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
@@ -30,20 +33,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'bad chapterSlug / verse range' });
 
   const db = getDb();
-  const who = await verifyUserToken(req);
   const bust = req.query.bust === '1';
-  if (bust && !isAdmin(who)) return res.status(403).json({ error: 'admins only' });
+  if (bust && !isAdmin(await verifyUserToken(req))) return res.status(403).json({ error: 'admins only' });
 
   try {
+    const asked = { chapterSlug, startVerse, endVerse };
     const r = await getGuide(db, chapterSlug, startVerse, endVerse, {
       bust,
-      mayGenerate: async () => {
-        if (!who?.uid) return 401;
-        if (!bust && !(await takeDailyQuota(db, who.uid, 'tanya', NEW_PER_DAY))) return 429;
-        return true;
-      },
+      mayGenerate: async () => bust || (await scheduledPortions(todayNY())).some(p => samePortion(p, asked)) || 403,
     });
-    if (r.refused) return res.status(r.refused).json({ error: r.refused === 401 ? 'sign in needed' : 'daily limit' });
+    if (r.refused) return res.status(r.refused).json({ error: 'not on the Tanya Yomi schedule' });
+    if (r.busy) return res.status(202).json({ preparing: true });
     const g = r.guide;
     return res.status(200).json({
       chapterSlug, startVerse, endVerse,

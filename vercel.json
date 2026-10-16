@@ -1,5 +1,0 @@
-{
-  "crons": [
-    { "path": "/api/tanya-prepare", "schedule": "15 4 * * *" }
-  ]
-}

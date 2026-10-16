@@ -13,6 +13,8 @@ const store = new Map();
 const docRef = (col, id) => ({
   async get() { const k = col + '/' + id; return { exists: store.has(k), data: () => store.get(k) }; },
   async set(v) { store.set(col + '/' + id, v); },
+  async create(v) { const k = col + '/' + id; if (store.has(k)) throw new Error('ALREADY_EXISTS'); store.set(k, v); },
+  async delete() { store.delete(col + '/' + id); },
 });
 mock.module('../api/_lib/firebase.js', { namedExports: {
   getDb: () => ({
@@ -62,8 +64,13 @@ globalThis.fetch = async (url, opts) => {
   if (!u.includes('sefaria.org')) return realFetch(url, opts);
   if (u.includes('/api/calendars')) {
     // Tanya Yomi: chapter 1 from verse 2 every day except the 3rd day, which is chapter 2
-    const day = +u.match(/day=(\d+)/)[1];
-    const url = day % 3 === 0 ? 'Tanya,_Part_I;_Likkutei_Amarim.2.1' : 'Tanya,_Part_I;_Likkutei_Amarim.1.' + (day % 3 === 1 ? 2 : 3);
+    // …and today is always chapter 1 from verse 2 to its end (tomorrow starts chapter 2)
+    const [, y, m, d] = u.match(/year=(\d+)&month=(\d+)&day=(\d+)/).map(Number);
+    const iso = y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const now = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+    const tmrw = new Date(now + 'T12:00:00Z'); tmrw.setUTCDate(tmrw.getUTCDate() + 1);
+    const day = d;
+    const url = iso === now ? 'Tanya,_Part_I;_Likkutei_Amarim.1.2' : iso === tmrw.toISOString().slice(0, 10) ? 'Tanya,_Part_I;_Likkutei_Amarim.2.1' : day % 3 === 0 ? 'Tanya,_Part_I;_Likkutei_Amarim.2.1' : 'Tanya,_Part_I;_Likkutei_Amarim.1.' + (day % 3 === 1 ? 2 : 3);
     return new Response(JSON.stringify({ calendar_items: [{ title: { en: 'Tanya Yomi' }, url }] }), { headers: { 'content-type': 'application/json' } });
   }
   if (u.includes('/api/texts/Tanya')) return new Response(JSON.stringify({
@@ -78,7 +85,6 @@ globalThis.fetch = async (url, opts) => {
 
 const { default: handler } = await import('../api/quiz.js');
 const { default: tanyaHandler } = await import('../api/tanya-enhance.js');
-const { default: prepareHandler } = await import('../api/tanya-prepare.js');
 const { tanyaPortion } = await import('../api/_lib/tanya-portion.js');
 const fakeRes = () => { const r = { status(s) { r.code = s; return r; }, json(j) { r.body = j; return r; } }; return r; };
 async function call(body, token = 'token-u1', method = 'POST') {
@@ -121,12 +127,25 @@ check('21st new quiz in a day → 429', (await call({ ...BODY, refs: ['Genesis 3
 check('…but saved quizzes still work', (await call(BODY)).status, 200);
 
 console.log('Tanya enhance:');
-const T = { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: '2', endVerse: '3' };
+// Today's real portion on the (pretend) schedule, as the app would ask for it
+const todayNY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+const P = await tanyaPortion(todayNY);
+const T = { chapterSlug: P.chapterSlug, startVerse: String(P.startVerse), ...(P.endVerse ? { endVerse: String(P.endVerse) } : {}) };
+check('portion coordinates match the app (ends before tomorrow\'s start / runs to chapter end)',
+  [await tanyaPortion('2031-03-01'), await tanyaPortion('2031-03-02')],
+  [{ chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 2, endVerse: 2 }, { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 3, endVerse: null }]);
 check('bad slug → 400', (await tanya({ ...T, chapterSlug: 'x' })).status, 400);
-check('not signed in and nothing saved → 401', (await tanya(T, null)).status, 401);
 const calls0 = claudeCalls;
-const t1 = await tanya(T);
-check('signed in → 200', t1.status, 200);
+check('a portion not on the schedule is never prepared (no AI cost)', [(await tanya({ chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.30', startVerse: '1' }, null)).status, claudeCalls - calls0], [403, 0]);
+// Someone else is preparing it right now → 202, no second AI call
+const { guideDocId } = await import('../api/_lib/tanya-guide.js');
+const lockKey = 'tanya_locks/' + guideDocId(P.chapterSlug, P.startVerse, P.endVerse);
+store.set(lockKey, { at: Date.now() });
+check('while someone else prepares it → 202, no second AI call', [(await tanya(T, null)).status, claudeCalls - calls0], [202, 0]);
+store.set(lockKey, { at: Date.now() - 600000 });   // a stale lock from a failed run is ignored
+const t1 = await tanya(T, null);
+check('first person (signed out) prepares today\'s portion → 200, one AI call', [t1.status, t1.json.source, claudeCalls - calls0], [200, 'generated', 1]);
+check('the lock is released afterwards', store.has(lockKey), false);
 check('split at the real start only (vowels ignored); the made-up one is ignored', t1.json.blocks.map(b => b.en.replace(/\uE000\d+\uE001/g, '[n]')),
   ['Every Jew has two souls.[n]', 'One soul comes from the kelipah. The second soul is truly a part of G-d above.', 'a gloss']);
 check('Hebrew is the exact original text', t1.json.blocks.slice(0, 2).map(b => b.he).join(' '),
@@ -136,23 +155,9 @@ check('headings: on the segment and on the cut that was found', t1.json.blocks.m
 check('translator\'s footnote kept as a note', t1.json.notes, ['See ch. 2.']);
 check('mid-chapter: recap and summary, no chapter intro', [t1.json.recap, t1.json.summary, t1.json.intro], ['So far: every Jew has two souls.', 'The Alter Rebbe continues explaining the two souls.', '']);
 check('the AI read the text without footnote markers', claude.lastRequest.messages[0].content.includes('\uE000'), false);
-check('next person (even signed out) gets the saved one, no AI call', [(await tanya(T, null)).json.source, claudeCalls - calls0], ['cache', 1]);
+check('everyone after gets the saved one, no AI call', [(await tanya(T, null)).json.source, claudeCalls - calls0], ['cache', 1]);
 check('regenerate (bust) by a normal user → 403', (await tanya({ ...T, bust: '1' })).status, 403);
 check('regenerate by an admin → regenerated', (await tanya({ ...T, bust: '1' }, 'token-admin')).json.source, 'regenerated');
-
-console.log('Tanya daily job:');
-const prep = async auth => { const res = fakeRes(); await prepareHandler({ method: 'GET', query: {}, headers: auth ? { authorization: auth } : {} }, res); return { status: res.code, json: res.body }; };
-process.env.CRON_SECRET = 'cron-secret';
-check('without the secret → 401', [(await prep(null)).status, (await prep('Bearer wrong')).status], [401, 401]);
-check('portion coordinates match the app (ends before tomorrow\'s start)', await tanyaPortion('2026-10-01'), { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 2, endVerse: 2 });
-check('portion that runs to the chapter end has no endVerse', await tanyaPortion('2026-10-02'), { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', startVerse: 3, endVerse: null });
-const job = await prep('Bearer cron-secret');
-check('with the secret: prepares today and 2 days ahead', [job.status, job.json.results.length, job.json.results.every(r => ['generated', 'cache'].includes(r.status))], [200, 3, true]);
-const p0 = await tanyaPortion(job.json.results[0].date);
-const callsBefore = claudeCalls;
-const opened = await tanya({ chapterSlug: p0.chapterSlug, startVerse: String(p0.startVerse), ...(p0.endVerse ? { endVerse: String(p0.endVerse) } : {}) }, null);
-check('a signed-out person then gets the prepared guide, no AI call', [opened.status, opened.json.source, claudeCalls - callsBefore], [200, 'cache', 0]);
-check('running the job again prepares nothing new', (await prep('Bearer cron-secret')).json.results.map(r => r.status), ['cache', 'cache', 'cache']);
 
 claude.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll API tests passed');

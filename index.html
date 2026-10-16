@@ -493,7 +493,7 @@
    little because its letters run small. Hebrew (rtl / lang="he") is untouched. */
 :where(#native-reader-content) :where(.rf-body, .rf-hagahah, .th-en):not([style*="rtl"]):not([lang="he"]) { font-family: var(--read-font); font-size-adjust: 0.47; }
 .th-chapter.he .th-text { font-size-adjust: none; }
-/* ── Tanya: printed-Tanya look (Shlomo square letters, justified, centred heading) ── */
+/* ── Tanya: printed-Tanya look (Vilna square letters, justified, centred heading) ── */
 .tz-seg { display:flex; background:var(--card2); border-radius:11px; padding:3px; margin-bottom:10px; }
 .tz-seg button { flex:1; border:none; background:none; padding:7px 4px; border-radius:9px; font:600 13px var(--ui-font); color:var(--t2); cursor:pointer; }
 .tz-seg button.on { background:var(--card); color:var(--t1); box-shadow:0 1px 3px rgba(0,0,0,.14); }
@@ -502,7 +502,7 @@
 .tz-opt.on { border-color:color-mix(in srgb, var(--purple) 50%, transparent); color:var(--purple); background:color-mix(in srgb, var(--purple) 10%, transparent); }
 .tz-head { text-align:center; margin:4px 0 22px; }
 .tz-part { font-family:var(--he-font); font-size:15px; color:var(--t3); direction:rtl; }
-.tz-ch { display:flex; align-items:center; justify-content:center; gap:14px; font-family:'Shlomo','Frank Ruhl Libre',serif; font-size:30px; line-height:1.25; color:var(--t1); direction:rtl; }
+.tz-ch { display:flex; align-items:center; justify-content:center; gap:14px; font-family:'Vilna','Frank Ruhl Libre',serif; font-weight:700; font-size:32px; line-height:1.25; color:var(--t1); direction:rtl; }
 .tz-ch::before, .tz-ch::after { content:''; width:44px; height:1px; background:color-mix(in srgb, var(--purple) 55%, transparent); }
 .tz-en-label { font-size:12px; color:var(--t3); margin-top:3px; }
 .tz-guide { background:var(--card); border-radius:16px; padding:14px 16px 12px; margin-bottom:24px; }
@@ -513,14 +513,14 @@
 .tz-h { display:flex; align-items:center; gap:10px; font:600 13px var(--ui-font); color:var(--purple); margin:26px 0 10px; }
 .tz-h::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--purple) 22%, transparent); }
 .tz-p { margin-bottom:16px; }
-.tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Shlomo','Frank Ruhl Libre','Noto Serif Hebrew',serif; --rf-sz:18px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
+.tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
 .tz-en { font-family:var(--read-font); --rf-sz:16px; --rf-lh:1.5; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
 .tz-p.both .tz-en { --rf-sz:15px; color:var(--t2); margin-top:5px; }
 .tz-open { font-size:1.7em; font-weight:700; line-height:1; }
 .tz-hag { margin:4px 0 20px; padding:10px 0 4px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
-.tz-hl { text-align:center; font-family:'Shlomo',serif; font-size:15px; color:var(--t3); margin-bottom:6px; }
+.tz-hl { text-align:center; font-family:'Vilna',serif; font-weight:700; font-size:15px; color:var(--t3); margin-bottom:6px; }
 .tz-hag .tz-p { margin-bottom:10px; }
-.tz-hag .tz-he { --rf-sz:15.5px; }
+.tz-hag .tz-he { --rf-sz:17px; }
 .tz-hag .tz-en { --rf-sz:14px; color:var(--t2); }
 #rambam-note-popup {
   position: fixed; z-index: 1200; background: var(--card); border: 1px solid var(--border);
@@ -4530,25 +4530,32 @@ async function _loadTanyaNative(sectionId, silent) {
       + '&startVerse=' + startV
       + (endV !== allHe.length ? '&endVerse=' + endV : '');
 
-    Promise.resolve(window._fb?.getIdToken?.()).catch(() => null)
-      .then(token => fetch(_enhUrl, token ? { headers: { Authorization: 'Bearer ' + token } } : {}))
-      .then(r => r.ok ? r.json() : null)
+    // The first person to open a portion prepares it (about half a minute);
+    // 202 = someone else is preparing it right now, so ask again shortly
+    const _tanyaShown = () => document.getElementById('chabad-panel')?.style.display !== 'none'
+      && document.getElementById('chabad-mark-btn')?.dataset?.sectionId === 'tanya' && dayOffset === _enhDayOffset;
+    const _askGuide = tries => fetch(_enhUrl)
+      .then(r => r.status === 202 ? { preparing: true } : r.ok ? r.json() : null)
       .catch(() => null)
       .then(enhRes => {
-        if (!enhRes?.blocks?.length) return;
         if (dayOffset !== _enhDayOffset) return; // user navigated away
-        // The guide's text is plain text: escape it (footnote markers survive)
-        const blocks = enhRes.blocks.map(b => ({ he: escapeHtml(b.he), en: escapeHtml(b.en), isHagahah: b.isHagahah === true, heading: b.heading || '' }));
-        const guide = { intro: enhRes.intro || '', recap: enhRes.recap || '', summary: enhRes.summary || enhRes.context || '' };
-        window._tanyaData = { ...window._tanyaData, blocks, notes: enhRes.notes || [], guide };
-        const panel = document.getElementById('chabad-panel');
-        const markBtn = document.getElementById('chabad-mark-btn');
-        if (panel?.style.display !== 'none' && markBtn?.dataset?.sectionId === 'tanya') {
+        if (enhRes?.preparing && tries > 0) { setTimeout(() => _askGuide(tries - 1), 15000); return; }
+        window._tanyaData = { ...window._tanyaData, guidePending: false };
+        if (enhRes?.blocks?.length) {
+          // The guide's text is plain text: escape it (footnote markers survive)
+          const blocks = enhRes.blocks.map(b => ({ he: escapeHtml(b.he), en: escapeHtml(b.en), isHagahah: b.isHagahah === true, heading: b.heading || '' }));
+          const guide = { intro: enhRes.intro || '', recap: enhRes.recap || '', summary: enhRes.summary || enhRes.context || '' };
+          window._tanyaData = { ...window._tanyaData, blocks, notes: enhRes.notes || [], guide };
+        }
+        if (_tanyaShown()) {
+          const pos = document.getElementById('native-reader')?.scrollTop || 0;
           _renderTanyaContent();
-          // Re-register restore so rAF loop picks up the new content height
-          _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
+          _restoreScrollAfterRender('tanya', pos);
         }
       });
+    window._tanyaData.guidePending = true;
+    if (!silent) _renderTanyaContent();
+    _askGuide(6);
 
     // Restore scroll — rAF loop handles both slow paints and the enhance re-render
     _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
@@ -4561,7 +4568,7 @@ async function _loadTanyaNative(sectionId, silent) {
 }
 
 // Tanya in the look of a printed Tanya: the part and chapter centred on top,
-// the chapter's opening word large, justified square letters (Shlomo), the
+// the chapter's opening word large, justified square letters (Vilna), the
 // Alter Rebbe's hagahos set apart. Around it, the guide (when on): what the
 // chapter is about or what it said so far, a summary of today, and small
 // headings that show the flow. Hebrew, English, or both (Hebrew, then its
@@ -4602,8 +4609,9 @@ function _renderTanyaContent() {
     + (part && num ? '<p class="tz-part" lang="he">' + part[1] + '</p><p class="tz-ch" lang="he">' + part[2] + ' ' + _toHebrewNumeral(num) + '</p>' : '')
     + '<p class="tz-en-label">' + escapeHtml(chapterLabel || '') + '</p></div>';
 
-  // The guide card
+  // The guide card (or a note while it's being prepared)
   const g = d.guide;
+  if (guideOn && !g && d.guidePending) t += '<div class="tz-guide"><p class="tz-ai" style="margin:0;">Preparing today\'s guide: the portion in small pieces, with an introduction and the flow. This takes about half a minute the first time.</p></div>';
   if (guideOn && g && (g.intro || g.recap || g.summary)) {
     t += '<div class="tz-guide">'
       + (g.intro ? '<p class="tz-gl">About this chapter</p><p class="tz-gt">' + escapeHtml(g.intro) + '</p>' : '')

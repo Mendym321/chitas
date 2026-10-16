@@ -8,8 +8,8 @@
 // AI writes (intro, recap, summary, headings) is shown in the app as the guide,
 // separate from the text.
 //
-// Saved in Firestore per portion and shared by everyone. Used by
-// /api/tanya-enhance (on demand) and /api/tanya-prepare (daily, ahead of time).
+// Prepared once per portion, the first time anyone opens it, then saved in
+// Firestore and shared by everyone (see /api/tanya-enhance).
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
@@ -83,7 +83,8 @@ async function askAI({ book, chapterNum, startVerse, heSegs, enSegs, before, pre
 }
 
 // ── Build (or read) the guide for one portion ─────────────────────────────────
-// Returns { guide, source } — source is 'cache' or 'generated'.
+// Returns { guide, source } (source 'cache' or 'generated'), { refused: <status> }
+// when mayGenerate says no, or { busy: true } while someone else prepares it.
 export async function getGuide(db, chapterSlug, startVerse, endVerse, { bust = false, mayGenerate = async () => true } = {}) {
   const cacheDoc = db.collection('tanya_enhanced').doc(guideDocId(chapterSlug, startVerse, endVerse));
   if (!bust) {
@@ -95,6 +96,20 @@ export async function getGuide(db, chapterSlug, startVerse, endVerse, { bust = f
   const allowed = await mayGenerate();
   if (allowed !== true) return { refused: allowed };
 
+  // One preparation at a time per portion: if someone else is preparing it
+  // right now, say "busy" (the app asks again shortly) instead of paying twice
+  const lock = db.collection('tanya_locks').doc(guideDocId(chapterSlug, startVerse, endVerse));
+  try { await lock.create({ at: Date.now() }); }
+  catch {
+    const held = (await lock.get().catch(() => null))?.data?.();
+    if (held && Date.now() - held.at < 120000) return { busy: true };
+    await lock.set({ at: Date.now() });            // an old lock left by a failed run
+  }
+  try { return await generate(db, cacheDoc, chapterSlug, startVerse, endVerse); }
+  finally { await lock.delete().catch(() => {}); }
+}
+
+async function generate(db, cacheDoc, chapterSlug, startVerse, endVerse) {
   const { allHe, allEn } = await fetchChapter(chapterSlug);
   const s = startVerse - 1, e = endVerse ?? Math.max(allHe.length, allEn.length);
   const rawHe = allHe.slice(s, e), rawEn = allEn.slice(s, e);
