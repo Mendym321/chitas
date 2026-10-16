@@ -47,24 +47,25 @@
      phone's setting or the in-app choice. Text sizes: 12 · 13 · 15 · 17 · 22 · 28.
      Corner radius: 10 (small) · 14 (controls) · 20 (cards). */
   :root {
-    --ui-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --bg: #0E0E10; --surface: #161618; --card: #1C1C1F; --card2: #26262A;
-    --border: #2A2A2E; --hi: #3A3A40;
-    --gold: #E3B341; --green: #34C759; --blue: #5B9BF8;
+    --ui-font: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --he-font: "Frank Ruhl Libre", "Noto Serif Hebrew", serif;
+    --bg: #12110F; --surface: #191715; --card: #1E1C19; --card2: #2A2723;
+    --border: #2E2B27; --hi: #423E38;
+    --gold: #EBA937; --green: #34C759; --blue: #5B9BF8;
     --red: #FF5B5B; --purple: #A78BFA; --ok: #34C759;
-    --t1: #F4F4F5; --t2: #A1A1AA; --t3: #71717A;
+    --t1: #F5F2EC; --t2: #ADA69C; --t3: #7D766C;
   }
   /* Light mode override */
   html.light {
-    --bg: #F2F2F7; --surface: #F9F9FB; --card: #FFFFFF; --card2: #F0F0F4;
-    --border: #E3E3E8; --hi: #D1D1D6; --gold: #B98611; --ok: #2FB350;
-    --t1: #111113; --t2: #5F5F66; --t3: #8E8E93;
+    --bg: #F5F2EB; --surface: #FAF8F3; --card: #FFFEFB; --card2: #F0ECE3;
+    --border: #E6E0D4; --hi: #D4CDBF; --gold: #B07A12; --ok: #2FB350;
+    --t1: #1C1915; --t2: #5C564D; --t3: #8C857A;
   }
   @media (prefers-color-scheme: light) {
     html:not(.dark) {
-      --bg: #F2F2F7; --surface: #F9F9FB; --card: #FFFFFF; --card2: #F0F0F4;
-      --border: #E3E3E8; --hi: #D1D1D6; --gold: #B98611; --ok: #2FB350;
-      --t1: #111113; --t2: #5F5F66; --t3: #8E8E93;
+      --bg: #F5F2EB; --surface: #FAF8F3; --card: #FFFEFB; --card2: #F0ECE3;
+      --border: #E6E0D4; --hi: #D4CDBF; --gold: #B07A12; --ok: #2FB350;
+      --t1: #1C1915; --t2: #5C564D; --t3: #8C857A;
     }
   }
   html, body { background: var(--bg); color: var(--t1); font-family: var(--ui-font); font-size: 15px; line-height: 1.45; min-height: 100vh; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
@@ -80,12 +81,13 @@
   .lrow { display: flex; align-items: center; gap: 12px; padding: 13px 14px 13px 16px; cursor: pointer; user-select: none; -webkit-user-select: none; background: var(--card); transition: background .12s; }
   .lrow + .lrow, .group > * + * > .lrow { border-top: 1px solid var(--border); }
   .lrow:active { background: var(--card2); }
-  .lrow-ic { width: 36px; height: 36px; border-radius: 10px; background: var(--card2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; pointer-events: none; }
+  .lrow-ic { width: 36px; height: 36px; border-radius: 10px; background: color-mix(in srgb, currentColor 14%, transparent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; pointer-events: none; }
   .lrow-t { flex: 1; min-width: 0; pointer-events: none; }
   .lrow-t p:first-child { font-size: 16px; font-weight: 600; color: var(--t1); }
   .lrow-t p:last-child { font-size: 13px; color: var(--t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .check { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--hi); background: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; color: transparent; transition: background .15s, border-color .15s; }
-  .check.on { background: var(--ok); border-color: var(--ok); color: #0E0E10; }
+  .check.on { background: var(--c, var(--ok)); border-color: var(--c, var(--ok)); color: #fff; }
+  .lrow-he { font-family: var(--he-font); font-size: 15px; font-weight: 500; color: var(--t3); margin-left: 7px; }
   .tabbar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; display: flex; justify-content: space-around; padding: 8px 8px calc(10px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border); z-index: 100; }
   .tabbar button { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 500; color: var(--t3); padding: 4px 0; }
   .tabbar button.on { color: var(--t1); font-weight: 600; }
@@ -2318,7 +2320,10 @@ function setGreeting() {
   // Title: "Today", or the day you're catching up on
   const greetEl = document.getElementById('greeting');
   const tab = document.querySelector('.screen.active')?.id;
-  if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Your learning' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? 'Today' : _dayName(dayOffset);
+  const hour = new Date().getHours();
+  const firstName = (user.name || '').split(' ')[0];
+  const hello = (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening') + (firstName ? ', ' + firstName : '');
+  if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Your learning' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? hello : _dayName(dayOffset);
 }
 
 // "How your streak works" — the rules in plain words (opened from the streak pill)
@@ -2574,9 +2579,9 @@ function renderSectionsForOffset(iso) {
     const tickAction = done
       ? (isToday ? 'unmarkDone(\'' + s.id + '\')' : 'unmarkDonePast(\'' + s.id + '\',\'' + iso + '\')')
       : (isToday ? 'showConfirm(\'' + s.id + '\',false)' : 'showConfirmPast(\'' + s.id + '\',\'' + iso + '\')');
-    return '<div class="lrow" id="card-' + s.id + '" onclick="openChabadPanel(\'' + s.id + '\')">'
+    return '<div class="lrow" id="card-' + s.id + '" style="--c:' + (SECTION_COLORS[s.id] || s.color) + ';" onclick="openChabadPanel(\'' + s.id + '\')">'
       + '<div class="lrow-ic" id="icon-' + s.id + '" style="color:' + s.color + ';">' + icon(s.icon, 19) + '</div>'
-      + '<div class="lrow-t"><p>' + s.label + '</p><p>' + s.subtitle + '</p></div>'
+      + '<div class="lrow-t"><p>' + s.label + (SECTION_HE[s.id] ? '<span class="lrow-he" lang="he">' + SECTION_HE[s.id] + '</span>' : '') + '</p><p>' + s.subtitle + '</p></div>'
       + '<button class="check' + (done ? ' on' : '') + '" id="tick-' + s.id + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + s.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
       + '</div>';
   }).join('');
@@ -2593,6 +2598,7 @@ function renderSectionsForOffset(iso) {
 }
 
 const SECTION_COLORS = { chumash: '#E3B341', tehillim: '#5B9BF8', tanya: '#A78BFA', rambam: '#3FB86B' };
+const SECTION_HE = { chumash: 'חומש', tehillim: 'תהלים', tanya: 'תניא', rambam: 'רמב״ם' };
 
 function updateProgressRing() {
   // Shows the day being viewed (today, or a past day when catching up)
@@ -5811,7 +5817,7 @@ function _renderExtraTrackCards(iso, isToday) {
       + '<div class="extra-card-delete-bg" id="extra-del-bg-' + id + '" style="opacity:0;">'
       +   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'
       + '</div>'
-      + '<div class="lrow" id="extra-card-' + id + '" onclick="openExtraReader(\'' + id + '\')">'
+      + '<div class="lrow" id="extra-card-' + id + '" style="--c:' + def.color + ';" onclick="openExtraReader(\'' + id + '\')">'
       +   '<div class="lrow-ic" style="color:' + def.color + ';"><svg width="19" height="19" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg></div>'
       +   '<div class="lrow-t"><p>' + def.label + '</p><p id="extra-sub-' + id + '">Loading…</p></div>'
       +   '<button class="check' + (done ? ' on' : '') + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + def.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
