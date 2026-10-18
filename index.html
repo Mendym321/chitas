@@ -13,7 +13,7 @@
 <title>Chitas Daily</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 @font-face {
   font-family: 'Taamey Frank CLM';
@@ -47,24 +47,26 @@
      phone's setting or the in-app choice. Text sizes: 12 · 13 · 15 · 17 · 22 · 28.
      Corner radius: 10 (small) · 14 (controls) · 20 (cards). */
   :root {
-    --ui-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --bg: #0E0E10; --surface: #161618; --card: #1C1C1F; --card2: #26262A;
-    --border: #2A2A2E; --hi: #3A3A40;
-    --gold: #E3B341; --green: #34C759; --blue: #5B9BF8;
+    --ui-font: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --he-font: "Frank Ruhl Libre", "Noto Serif Hebrew", serif;
+    --read-font: "Crimson Pro", Georgia, "Times New Roman", serif;   /* English reading text */
+    --bg: #12110F; --surface: #191715; --card: #1E1C19; --card2: #2A2723;
+    --border: #2E2B27; --hi: #423E38;
+    --gold: #EBA937; --green: #34C759; --blue: #5B9BF8;
     --red: #FF5B5B; --purple: #A78BFA; --ok: #34C759;
-    --t1: #F4F4F5; --t2: #A1A1AA; --t3: #71717A;
+    --t1: #F5F2EC; --t2: #ADA69C; --t3: #7D766C;
   }
   /* Light mode override */
   html.light {
-    --bg: #F2F2F7; --surface: #F9F9FB; --card: #FFFFFF; --card2: #F0F0F4;
-    --border: #E3E3E8; --hi: #D1D1D6; --gold: #B98611; --ok: #2FB350;
-    --t1: #111113; --t2: #5F5F66; --t3: #8E8E93;
+    --bg: #F5F2EB; --surface: #FAF8F3; --card: #FFFEFB; --card2: #F0ECE3;
+    --border: #E6E0D4; --hi: #D4CDBF; --gold: #B07A12; --ok: #2FB350;
+    --t1: #1C1915; --t2: #5C564D; --t3: #8C857A;
   }
   @media (prefers-color-scheme: light) {
     html:not(.dark) {
-      --bg: #F2F2F7; --surface: #F9F9FB; --card: #FFFFFF; --card2: #F0F0F4;
-      --border: #E3E3E8; --hi: #D1D1D6; --gold: #B98611; --ok: #2FB350;
-      --t1: #111113; --t2: #5F5F66; --t3: #8E8E93;
+      --bg: #F5F2EB; --surface: #FAF8F3; --card: #FFFEFB; --card2: #F0ECE3;
+      --border: #E6E0D4; --hi: #D4CDBF; --gold: #B07A12; --ok: #2FB350;
+      --t1: #1C1915; --t2: #5C564D; --t3: #8C857A;
     }
   }
   html, body { background: var(--bg); color: var(--t1); font-family: var(--ui-font); font-size: 15px; line-height: 1.45; min-height: 100vh; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
@@ -80,12 +82,13 @@
   .lrow { display: flex; align-items: center; gap: 12px; padding: 13px 14px 13px 16px; cursor: pointer; user-select: none; -webkit-user-select: none; background: var(--card); transition: background .12s; }
   .lrow + .lrow, .group > * + * > .lrow { border-top: 1px solid var(--border); }
   .lrow:active { background: var(--card2); }
-  .lrow-ic { width: 36px; height: 36px; border-radius: 10px; background: var(--card2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; pointer-events: none; }
+  .lrow-ic { width: 36px; height: 36px; border-radius: 10px; background: color-mix(in srgb, currentColor 14%, transparent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; pointer-events: none; }
   .lrow-t { flex: 1; min-width: 0; pointer-events: none; }
   .lrow-t p:first-child { font-size: 16px; font-weight: 600; color: var(--t1); }
   .lrow-t p:last-child { font-size: 13px; color: var(--t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .check { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--hi); background: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; color: transparent; transition: background .15s, border-color .15s; }
-  .check.on { background: var(--ok); border-color: var(--ok); color: #0E0E10; }
+  .check.on { background: var(--c, var(--ok)); border-color: var(--c, var(--ok)); color: #fff; }
+  .lrow-he { font-family: var(--he-font); font-size: 15px; font-weight: 500; color: var(--t3); margin-left: 7px; }
   .tabbar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; display: flex; justify-content: space-around; padding: 8px 8px calc(10px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border); z-index: 100; }
   .tabbar button { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 500; color: var(--t3); padding: 4px 0; }
   .tabbar button.on { color: var(--t1); font-weight: 600; }
@@ -473,7 +476,7 @@
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
 .th-pair { margin-bottom:12px; }
 .th-pair .th-text { text-indent:0; margin-bottom:3px; }
-.th-en { direction:ltr; text-align:left; font-size:14px; line-height:1.55; color:var(--t2); }
+.th-en { direction:ltr; text-align:left; font-size:15px; line-height:1.5; color:var(--t2); }
 /* Reader: day bar + up next */
 #reader-daybar { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
 #reader-daybar button { display:flex; align-items:center; gap:4px; min-width:92px; padding:6px 8px; border-radius:9px; background:none; border:none; color:var(--t2); font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; }
@@ -486,6 +489,43 @@
 #reader-next button { padding:13px; border-radius:14px; font-size:14px; font-weight:800; font-family:inherit; cursor:pointer; }
 #reader-next .rn-go { flex:2; border:none; color:#000; }
 #reader-next .rn-home { flex:1; background:var(--card); border:1.5px solid var(--border); color:var(--t2); }
+/* English reading text in every reader: a book serif (Crimson Pro), sized up a
+   little because its letters run small. Hebrew (rtl / lang="he") is untouched. */
+:where(#native-reader-content) :where(.rf-body, .rf-hagahah, .th-en):not([style*="rtl"]):not([lang="he"]) { font-family: var(--read-font); font-size-adjust: 0.47; }
+.th-chapter.he .th-text { font-size-adjust: none; }
+/* ── Tanya: printed-Tanya look (Vilna square letters, justified, centred heading) ── */
+.tz-seg { display:flex; background:var(--card2); border-radius:11px; padding:3px; margin-bottom:10px; }
+.tz-seg button { flex:1; border:none; background:none; padding:7px 4px; border-radius:9px; font:600 13px var(--ui-font); color:var(--t2); cursor:pointer; }
+.tz-seg button.on { background:var(--card); color:var(--t1); box-shadow:0 1px 3px rgba(0,0,0,.14); }
+.tz-opts { display:flex; gap:8px; margin-bottom:22px; }
+.tz-opt { border:1px solid var(--border); background:none; border-radius:20px; padding:5px 12px; font:600 12px var(--ui-font); color:var(--t3); cursor:pointer; }
+.tz-opt.on { border-color:color-mix(in srgb, var(--purple) 50%, transparent); color:var(--purple); background:color-mix(in srgb, var(--purple) 10%, transparent); }
+.tz-head { text-align:center; margin:4px 0 22px; }
+.tz-part { font-family:var(--he-font); font-size:15px; color:var(--t3); direction:rtl; }
+.tz-ch { display:flex; align-items:center; justify-content:center; gap:14px; font-family:'Vilna','Frank Ruhl Libre',serif; font-weight:700; font-size:32px; line-height:1.25; color:var(--t1); direction:rtl; }
+.tz-ch::before, .tz-ch::after { content:''; width:44px; height:1px; background:color-mix(in srgb, var(--purple) 55%, transparent); }
+.tz-en-label { font-size:12px; color:var(--t3); margin-top:3px; }
+.tz-guide { background:var(--card); border-radius:16px; padding:14px 16px 12px; margin-bottom:24px; }
+.tz-gl { font:700 11px var(--ui-font); letter-spacing:.07em; text-transform:uppercase; color:var(--purple); margin-bottom:3px; }
+.tz-gt { font-family:var(--read-font); font-size:17px; line-height:1.5; color:var(--t1); }
+.tz-gt + .tz-gl { margin-top:12px; }
+
+.tz-ai { font-size:11px; color:var(--t3); margin-top:10px; }
+.tz-h { display:flex; align-items:center; gap:10px; font:600 13px var(--ui-font); color:var(--purple); margin:26px 0 10px; }
+.tz-h::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--purple) 22%, transparent); }
+.tz-p { margin-bottom:16px; }
+.tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
+.tz-en { font-family:var(--read-font); --rf-sz:16px; --rf-lh:1.5; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
+.tz-p.both { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+.tz-p.both .tz-en { --rf-sz:14.5px; }
+.tz-p.both .tz-he { --rf-sz:18px; text-align:right; }   /* a narrow column: no stretched gaps */
+.tz-synopsis { margin:28px 0 0; }
+.tz-open { font-size:1.7em; font-weight:700; line-height:1; }
+.tz-hag { margin:4px 0 20px; padding:10px 0 4px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.tz-hl { text-align:center; font-family:'Vilna',serif; font-weight:700; font-size:15px; color:var(--t3); margin-bottom:6px; }
+.tz-hag .tz-p { margin-bottom:10px; }
+.tz-hag .tz-he { --rf-sz:17px; }
+.tz-hag .tz-en { --rf-sz:14px; color:var(--t2); }
 #rambam-note-popup {
   position: fixed; z-index: 1200; background: var(--card); border: 1px solid var(--border);
   border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.35); padding: 12px 15px;
@@ -499,6 +539,8 @@
   border: 1px solid rgba(29,185,84,.45); background: rgba(29,185,84,.12); color: #1DB954; cursor: pointer;
 }
 .rambam-fn.active { background: #1DB954; color: #000; }
+.tanya-fn { border-color: color-mix(in srgb, var(--purple) 45%, transparent); background: color-mix(in srgb, var(--purple) 12%, transparent); color: var(--purple); }
+.tanya-fn.active { background: var(--purple); color: #fff; }
 #ob-welcome .ob-point { display:flex; gap:14px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border); }
 #ob-welcome .ob-point:last-child { border-bottom:none; }
 #ob-welcome .ob-point > span { width:24px; display:flex; justify-content:center; flex-shrink:0; padding-top:2px; }
@@ -2318,7 +2360,10 @@ function setGreeting() {
   // Title: "Today", or the day you're catching up on
   const greetEl = document.getElementById('greeting');
   const tab = document.querySelector('.screen.active')?.id;
-  if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Your learning' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? 'Today' : _dayName(dayOffset);
+  const hour = new Date().getHours();
+  const firstName = (user.name || '').split(' ')[0];
+  const hello = (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening') + (firstName ? ', ' + firstName : '');
+  if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Your learning' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? hello : _dayName(dayOffset);
 }
 
 // "How your streak works" — the rules in plain words (opened from the streak pill)
@@ -2574,9 +2619,9 @@ function renderSectionsForOffset(iso) {
     const tickAction = done
       ? (isToday ? 'unmarkDone(\'' + s.id + '\')' : 'unmarkDonePast(\'' + s.id + '\',\'' + iso + '\')')
       : (isToday ? 'showConfirm(\'' + s.id + '\',false)' : 'showConfirmPast(\'' + s.id + '\',\'' + iso + '\')');
-    return '<div class="lrow" id="card-' + s.id + '" onclick="openChabadPanel(\'' + s.id + '\')">'
+    return '<div class="lrow" id="card-' + s.id + '" style="--c:' + (SECTION_COLORS[s.id] || s.color) + ';" onclick="openChabadPanel(\'' + s.id + '\')">'
       + '<div class="lrow-ic" id="icon-' + s.id + '" style="color:' + s.color + ';">' + icon(s.icon, 19) + '</div>'
-      + '<div class="lrow-t"><p>' + s.label + '</p><p>' + s.subtitle + '</p></div>'
+      + '<div class="lrow-t"><p>' + s.label + (SECTION_HE[s.id] ? '<span class="lrow-he" lang="he">' + SECTION_HE[s.id] + '</span>' : '') + '</p><p>' + s.subtitle + '</p></div>'
       + '<button class="check' + (done ? ' on' : '') + '" id="tick-' + s.id + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + s.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
       + '</div>';
   }).join('');
@@ -2593,6 +2638,7 @@ function renderSectionsForOffset(iso) {
 }
 
 const SECTION_COLORS = { chumash: '#E3B341', tehillim: '#5B9BF8', tanya: '#A78BFA', rambam: '#3FB86B' };
+const SECTION_HE = { chumash: 'חומש', tehillim: 'תהלים', tanya: 'תניא', rambam: 'רמב״ם' };
 
 function updateProgressRing() {
   // Shows the day being viewed (today, or a past day when catching up)
@@ -3320,10 +3366,12 @@ function onReaderScroll() {
 
   // Save scroll position — debounced 300ms
   if (_scrollSaveTimer) clearTimeout(_scrollSaveTimer);
+  const sidAtScroll = window._readerActiveSid, dayAtScroll = window._readerActiveDay;
   _scrollSaveTimer = setTimeout(() => {
-    // Only save if the active section is set — prevents transient bleed during switches
+    // Only save for the section + day that was scrolled — a switch in the
+    // meantime must not save one section's place under another
     const sid = window._readerActiveSid;
-    if (!sid) return;
+    if (!sid || sid !== sidAtScroll || window._readerActiveDay !== dayAtScroll) return;
     const curScrollTop = reader.scrollTop;
     if (curScrollTop < 80) return; // don't save near-top positions
 
@@ -3353,7 +3401,7 @@ window._pendingScrollRestore = {}; // { sectionId: targetPixels }
 // Keys are date-scoped so today's position doesn't collide with yesterday's
 // (yesterday's Chumash has different content than today's, restoring a deep
 // scroll position into a shorter piece of content is nonsensical).
-function _scrollKey(sectionId) {
+function _scrollKey(sectionId, off = dayOffset) {
   if (sectionId === 'extra_likkuteiTorah') {
     const d = new Date();
     const day = d.getDay();
@@ -3361,12 +3409,14 @@ function _scrollKey(sectionId) {
     monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
     return 'scroll_extra_likkuteiTorah_week_' + monday.toISOString().slice(0, 10);
   }
-  return 'scroll_' + sectionId + '_' + dateISO(new Date());
+  const d = new Date(); d.setDate(d.getDate() + (off || 0));
+  return 'scroll_' + sectionId + '_' + dateISO(d);
 }
 
 function _saveScrollPos(sectionId, pos) {
   try {
-    localStorage.setItem(_scrollKey(sectionId), String(Math.round(pos)));
+    // Saved under the section + day the reader is SHOWING (not whatever day is current now)
+    localStorage.setItem(_scrollKey(sectionId, window._readerActiveDay ?? dayOffset), String(Math.round(pos)));
     _pruneScrollKeys();
   } catch(e) {}
 }
@@ -3406,10 +3456,13 @@ function _pruneScrollKeys() {
  *     the loop re-runs — so enhance upgrades never leave us at position 0.
  */
 function _restoreScrollAfterRender(sectionId, targetPos) {
+  // Only the section on screen may claim the reader and move its scroll
+  if (window._readerOpenFor !== (sectionId.startsWith('extra_') ? sectionId.slice(6) : sectionId)) return;
   // Mark this section as the active owner — future scroll saves attribute correctly.
   // Normalise: sectionId may be 'chumash' or 'extra_dafYomi' — active sid uses the raw
   // dataset value ('chumash' / 'dafYomi') so it matches chabad-mark-btn.dataset.sectionId.
   window._readerActiveSid = sectionId.startsWith('extra_') ? sectionId.slice(6) : sectionId;
+  window._readerActiveDay = dayOffset;
 
   if (!targetPos || targetPos <= 0) return;
   window._pendingScrollRestore[sectionId] = targetPos;
@@ -3625,6 +3678,7 @@ async function _fetchChumashText(ref, keyword){
 
 
 function _renderChumashContent() {
+  if (window._readerOpenFor !== 'chumash') return;   // another section is on screen
   const { torahChunks, rashiMap } = window._chumashData || {};
   if (!torahChunks || !torahChunks.length) return;
   const lang = localStorage.getItem('chitas_lang_chumash') || 'both';
@@ -4018,6 +4072,7 @@ async function _fetchRambamChapter(ref) {
 }
 
 function _renderRambamContent() {
+  if (window._readerOpenFor !== 'rambam') return;   // another section is on screen
   const { chapters } = window._rambamData || {};
   if (!chapters || !chapters.length) return;
   const lang = localStorage.getItem('chitas_lang_rambam') || 'both';
@@ -4271,6 +4326,7 @@ function _toHebrewNumeral(n) {
 // of the month ("יום ג") where the day starts, small Hebrew-letter verse
 // markers inline, justified text with a first-line indent, OT Siddur font.
 function _renderTehillimContent() {
+  if (window._readerOpenFor !== 'tehillim') return;   // another section is on screen
   const { chapters, psalmLabel, dayNum } = window._tehillimData || {};
   if (!chapters || !chapters.length) return;
   const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
@@ -4280,14 +4336,10 @@ function _renderTehillimContent() {
   const isHe = lang !== 'en'; // Hebrew and Both use the Hebrew layout
 
   // Lang toggle
-  let t = '<div style="display:flex;gap:6px;margin-bottom:18px;">';
-  [['he','עברית'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    t += '<button onclick="_setTehillimLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
-       + (a ? 'background:' + BLUE + ';color:#fff;border-color:' + BLUE + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-       + '">' + lb + '</button>';
-  });
-  t += '</div>';
+  let t = '<div class="tz-seg" style="margin-bottom:18px;">'
+    + [['he','עברית'], ['both','Both'], ['en','English']].map(([l, lb]) =>
+        '<button class="' + (lang === l ? 'on' : '') + '" onclick="_setTehillimLang(\'' + l + '\')">' + lb + '</button>').join('')
+    + '</div>';
   const isBoth = lang === 'both';
 
   // Small label for the range (the printed page has none, but it helps orientation)
@@ -4382,7 +4434,10 @@ async function _loadTanyaNative(sectionId, silent) {
     if (!tp) return false;
 
     const chapterRef = tp.base + ' ' + tp.chapter;
-    const chapterLabel = tp.base.replace(/^Tanya,?\s*/i, '').replace(/Part\s+[IVX]+;\s*/i, '') + ' \u00b7 Chapter ' + tp.chapter;
+    const partName = tp.base.replace(/^Tanya,?\s*/i, '').replace(/Part\s+[IVX]+;\s*/i, '');
+    // Iggeret HaKodesh is made of epistles, Kuntres Acharon of essays
+    const unit = /Iggeret HaKodesh/i.test(partName) ? 'Epistle' : /Kuntres Acharon/i.test(partName) ? 'Essay' : 'Chapter';
+    const chapterLabel = partName + ' \u00b7 ' + unit + ' ' + tp.chapter;
     const enc = encodeURIComponent(chapterRef);
 
     const panelSection = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
@@ -4467,62 +4522,63 @@ async function _loadTanyaNative(sectionId, silent) {
     if (!hePortion.length && !enPortion.length) return false;
 
     const maxLen = Math.max(hePortion.length, enPortion.length);
+    const notes = [];   // the translator's footnotes, shown as tappable numbers
     for (let i = 0; i < maxLen; i++) {
-      const heRaw = _cleanHtml(hePortion[i] || '');
-      const enRaw = _cleanHtml(enPortion[i] || '');
-      // Hagahot: Alter Rebbe's own notes — marked in Tanya text with הגה. prefix
-      // or square brackets, or <small> tags in Sefaria's HTML
-      const isHagahah = /^הגה\./.test(heRaw) || // הגה.
-                        /^\[/.test(heRaw) ||
-                        /^<small>/i.test(hePortion[i] || '') ||
-                        /^<small>/i.test(enPortion[i] || '');
-      blocks.push({ he: heRaw, en: enRaw, lit: '', isHagahah });
+      // A hagahah (the Alter Rebbe's own note) is in <small> in Sefaria's HTML;
+      // its "הגהה" / "NOTE:" label is dropped because we label it ourselves
+      const isHagahah = /^\s*<small>/i.test(hePortion[i] || '') || /^\s*<small>/i.test(enPortion[i] || '') || /^הגהה/.test(_cleanHtml(hePortion[i] || ''));
+      const he = _cleanHtml(hePortion[i] || '').replace(/^הגהה\s*/, '');
+      const en = _cleanHtml(enPortion[i] || '', notes).replace(/^NOTE:\s*/i, '');
+      blocks.push({ he, en, isHagahah });
     }
     const quizRef = { chapterSlug, startVerse: startV, endVerse: endV !== allHe.length ? endV : null };
-    window._tanyaData = { blocks, chapterLabel, chapterNum: tp.chapter, isFirstSegment, isApproximate, quizRef };
+    window._tanyaData = { blocks, notes, guide: null, chapterSlug, chapterLabel, chapterNum: tp.chapter, isFirstSegment, isApproximate, quizRef };
     if (!silent) {
       _renderTanyaContent();
       if (loadEl) loadEl.style.display = 'none';
       if (contEl) contEl.style.display = 'block';
     }
 
-    // Fire enhance API in background — same chapterSlug + verse range the client used
-    // This guarantees the cache key matches perfectly (same coordinates, same Sefaria fetch)
+    // The guide is asked for by DATE: the server works out the portion itself.
+    // 202 = being prepared (the first person to open a day's Tanya starts it,
+    // about half a minute): ask again every few seconds. Anything else that
+    // isn't the guide: say why, in place of the guide.
     const _enhDayOffset = dayOffset;
-    const _enhUrl = '/api/tanya-enhance'
-      + '?chapterSlug=' + encodeURIComponent(chapterSlug)
-      + '&startVerse=' + startV
-      + (endV !== allHe.length ? '&endVerse=' + endV : '');
-
-    Promise.resolve(window._fb?.getIdToken?.()).catch(() => null)
-      .then(token => fetch(_enhUrl, token ? { headers: { Authorization: 'Bearer ' + token } } : {}))
-      .then(r => r.ok ? r.json() : null)
-      .catch(() => null)
-      .then(enhRes => {
-        if (!enhRes?.blocks?.length) return;
+    const _enhUrl = '/api/tanya-enhance?date=' + dateStr;
+    const _tanyaShown = () => document.getElementById('chabad-panel')?.style.display !== 'none'
+      && document.getElementById('chabad-mark-btn')?.dataset?.sectionId === 'tanya' && dayOffset === _enhDayOffset;
+    const _guideUpdate = changes => {
+      window._tanyaData = { ...window._tanyaData, ...changes };
+      if (_tanyaShown()) {
+        const pos = document.getElementById('native-reader')?.scrollTop || 0;
+        _renderTanyaContent();
+        _restoreScrollAfterRender('tanya', pos);
+      }
+    };
+    const _askGuide = tries => fetch(_enhUrl)
+      .then(async r => ({ status: r.status, body: await r.json().catch(() => ({})) }))
+      .catch(() => ({ status: 0, body: { error: 'no connection' } }))
+      .then(({ status, body }) => {
         if (dayOffset !== _enhDayOffset) return; // user navigated away
-        const enhBlocks = [];
-        if (enhRes.context) enhBlocks.push({ type: 'intro', text: enhRes.context });
-        enhRes.blocks.forEach(b => {
-          const he = b.he || '';
-          const en = b.en || '';
-          const isHagahah = b.isHagahah === true
-            || /^הגה\./.test(he) || /^\[/.test(he)
-            || /^<small>/i.test(he) || /^<small>/i.test(en);
-          enhBlocks.push({ he, en, lit: '', isHagahah });
-        });
-        window._tanyaData = { ...window._tanyaData, blocks: enhBlocks };
-        const panel = document.getElementById('chabad-panel');
-        const markBtn = document.getElementById('chabad-mark-btn');
-        if (panel?.style.display !== 'none' && markBtn?.dataset?.sectionId === 'tanya') {
-          _renderTanyaContent();
-          // Re-register restore so rAF loop picks up the new content height
-          _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
+        if (status === 202) {
+          if (tries > 0) { setTimeout(() => _askGuide(tries - 1), 8000); return; }
+          return _guideUpdate({ guidePending: false, guideError: 'still being prepared; open Tanya again in a minute' });
         }
+        if (status !== 200 || !body?.blocks?.length) {
+          console.warn('Tanya guide:', status, body?.error);
+          return _guideUpdate({ guidePending: false, guideError: (body?.error || 'not available') + (status ? ' (' + status + ')' : '') });
+        }
+        // The guide's text is plain text: escape it (footnote markers survive)
+        const blocks = body.blocks.map(b => ({ he: escapeHtml(b.he), en: escapeHtml(b.en), isHagahah: b.isHagahah === true, heading: b.heading || '' }));
+        _guideUpdate({ guidePending: false, guideError: '', blocks, notes: body.notes || [],
+          guide: { intro: body.intro || '', recap: body.recap || '', summary: body.summary || '' } });
       });
+    window._tanyaData.guidePending = true;
+    if (!silent) _renderTanyaContent();
+    _askGuide(40);
 
     // Restore scroll — rAF loop handles both slow paints and the enhance re-render
-    _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
+    if (!silent) _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
     return true;
 
   } catch(e) {
@@ -4531,133 +4587,120 @@ async function _loadTanyaNative(sectionId, silent) {
   }
 }
 
+// Tanya in the look of a printed Tanya: the part and chapter centred on top,
+// the chapter's opening word large, justified square letters (Vilna), the
+// Alter Rebbe's hagahos set apart. Around it, the guide (when on): what the
+// chapter is about or what it said so far, a summary of today, and small
+// headings that show the flow. Hebrew, English, or both (Hebrew, then its
+// English underneath, piece by piece).
+const TANYA_PARTS = [
+  [/Likkutei_Amarim/, 'ליקוטי אמרים', 'פרק', 'Likkutei Amarim'],
+  [/Shaar_HaYichud/, 'שער היחוד והאמונה', 'פרק', 'Shaar HaYichud VehaEmunah'],
+  [/Iggeret_HaTeshuvah/, 'אגרת התשובה', 'פרק', 'Iggeret HaTeshuvah'],
+  [/Iggeret_HaKodesh/, 'אגרת הקודש', 'אגרת', 'Iggeret HaKodesh'],
+  [/Kuntres_Acharon/, 'קונטרס אחרון', 'סימן', 'Kuntres Acharon'],
+];
+
 function _renderTanyaContent() {
-  const { blocks, chapterLabel } = window._tanyaData || {};
+  if (window._readerOpenFor !== 'tanya') return;   // another section is on screen
+  const d = window._tanyaData || {};
+  const { blocks, chapterLabel } = d;
   if (!blocks || !blocks.length) return;
-  const lang = localStorage.getItem('chitas_lang_tanya') || 'both';
-  const litOn = localStorage.getItem('chitas_tanya_lit') !== 'off';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
+  const lang = localStorage.getItem('chitas_lang_tanya') || 'both';
+  const guideOn = localStorage.getItem('chitas_tanya_guide') !== 'off';
+  const nikud = localStorage.getItem('chitas_tanya_nikud') !== 'off';
+  const fixHe = h => nikud ? h : h.replace(/[֑-ֽֿ-ׇ]/g, '');
+  const fixEn = e => _tanyaNoteMarkers(e);
 
-  const HE = "'OTSiddur','Shlomo','Noto Serif Hebrew',serif";
-  const PURPLE = '#A855F7';
-  const hasLit = blocks.some(b => b.lit);
+  // Controls: language, then the guide and nekudos switches
+  let t = '<div class="tz-seg" role="tablist">'
+    + [['he', 'עברית'], ['both', 'Both'], ['en', 'English']].map(([l, lb]) =>
+        '<button class="' + (lang === l ? 'on' : '') + '" onclick="_setTanyaLang(\'' + l + '\')">' + lb + '</button>').join('')
+    + '</div><div class="tz-opts">'
+    + '<button class="tz-opt' + (guideOn ? ' on' : '') + '" onclick="_toggleTanyaOpt(\'guide\')">Guide</button>'
+    + (lang !== 'en' ? '<button class="tz-opt' + (nikud ? ' on' : '') + '" onclick="_toggleTanyaOpt(\'nikud\')">נקודות</button>' : '')
+    + '</div>';
 
-  // Lang toggle
-  let t = '<div style="display:flex;gap:6px;margin-bottom:12px;">';
-  [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    t += '<button onclick="_setTanyaLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;'
-       + (a ? 'background:' + PURPLE + ';color:#fff;border-color:' + PURPLE + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-       + '">' + lb + '</button>';
-  });
-  t += '</div>';
+  // Heading: part and chapter, like the top of a printed page
+  const part = TANYA_PARTS.find(([re]) => re.test(d.chapterSlug || ''));
+  const num = +d.chapterNum;
+  t += '<div class="tz-head">'
+    + (part && num ? '<p class="tz-part" lang="he">' + part[1] + '</p><p class="tz-ch" lang="he">' + part[2] + ' ' + _toHebrewNumeral(num) + '</p>' : '')
+    + '<p class="tz-en-label">' + escapeHtml(chapterLabel || '') + '</p></div>';
 
-  // Lessons in Tanya toggle — only show if we have commentary
-  if (hasLit) {
-    t += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:8px 12px;background:rgba(168,85,247,.11);border-radius:10px;cursor:pointer;" onclick="_toggleTanyaLit()">'
-      + '<div style="width:32px;height:18px;border-radius:9px;background:' + (litOn ? PURPLE : 'var(--border)') + ';position:relative;transition:background .15s;flex-shrink:0;">'
-      + '<div style="width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;' + (litOn ? 'right:2px;' : 'left:2px;') + 'transition:all .15s;"></div></div>'
-      + '<span style="font-size:12px;font-weight:700;color:' + (litOn ? PURPLE : 'var(--t3)') + ';">Lessons in Tanya</span>'
+  // The guide card (or a note while it's being prepared)
+  const g = d.guide;
+  if (guideOn && !g && d.guidePending) t += '<div class="tz-guide"><p class="tz-ai" style="margin:0;">Preparing today\'s guide: the portion in small pieces, with an introduction and the flow. This takes about half a minute the first time.</p></div>';
+  if (guideOn && !g && !d.guidePending && d.guideError) t += '<div class="tz-guide"><p class="tz-ai" style="margin:0;">The guide isn\'t available right now: ' + escapeHtml(d.guideError) + '. Here is the plain text.</p></div>';
+  // Before the text: context that leads into today (first day of a chapter: what
+  // it's about; other days: what it has said so far)
+  if (guideOn && g && (g.intro || g.recap)) {
+    t += '<div class="tz-guide">'
+      + (g.intro ? '<p class="tz-gl">About this chapter</p><p class="tz-gt">' + escapeHtml(g.intro) + '</p>' : '')
+      + (g.recap ? '<p class="tz-gl">So far in this chapter</p><p class="tz-gt">' + escapeHtml(g.recap) + '</p>' : '')
       + '</div>';
   }
 
-  // Chapter heading:
-  // - Always show gray "Chapter X" subtitle under the panel title (via chabad-panel-sub)
-  // - Only show the colored banner on the FIRST day of a new chapter
-  const isFirstSegment = window._tanyaData?.isFirstSegment !== false;
+  // One piece: Hebrew and/or English
+  const piece = (b, opening) => {
+    let he = fixHe(b.he || '');
+    if (opening) he = he.replace(/^((?:<[^>]+>)*)([^\s<]+)((?:<\/[^>]+>)*)/, '$1<span class="tz-open">$2</span>$3');
+    const heP = he ? '<p class="tz-he rf-body" lang="he">' + he + '</p>' : '';
+    const enP = b.en ? '<p class="tz-en rf-body">' + fixEn(b.en) + '</p>' : '';
+    if (lang === 'he') return heP ? '<div class="tz-p">' + heP + '</div>' : '';
+    if (lang === 'en') return enP ? '<div class="tz-p">' + enP + '</div>' : '';
+    return '<div class="tz-p both">' + (enP || '<p></p>') + (heP || '<p></p>') + '</div>';
+  };
 
-  const heading = isFirstSegment
-    // First day of chapter — colored purple banner
-    ? '<div style="margin-bottom:18px;padding:10px 14px;background:rgba(168,85,247,.13);'
-        + 'border-left:3px solid ' + PURPLE + ';border-radius:0 8px 8px 0;">'
-        + '<p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(168,85,247,.55);margin-bottom:3px;">Tanya</p>'
-        + '<p class="rf-header" style="font-size:17px;font-weight:800;color:' + PURPLE + ';line-height:1.3;">' + chapterLabel + '</p>'
-        + '</div>'
-    // Mid-chapter — just a subtle gray label, no banner
-    : '<p style="font-size:11px;color:var(--t3);margin-bottom:16px;font-weight:600;">' + chapterLabel + '</p>';
-
-  let v = '';
-  blocks.forEach((block) => {
-    // Intro block
-    if (block.type === 'intro') {
-      v += '<div style="margin-bottom:18px;padding:11px 15px;background:rgba(168,85,247,.11);border-left:4px solid rgba(168,85,247,.6);border-radius:0 7px 7px 0;">'
-         + '<p style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:5px;">Summary <span style="font-weight:600;letter-spacing:.04em;text-transform:none;opacity:.8;">· AI-written, check the text</span></p>'
-         + '<p style="font-size:13px;line-height:1.92;color:var(--t2);font-style:italic;">' + escapeHtml(block.text) + '</p>'
-         + '</div>';
-      return;
-    }
-
-    const { he, en, lit, isHagahah } = block;
-    if (!he && !en) return;
-
-    // Hagahot — group consecutive hagahah sentences into ONE box (no repeated headers)
-    if (isHagahah) {
-      const HE_SMALL = "'OTSiddur','Shlomo','Noto Serif Hebrew',serif";
-      const prevBlock = blocks[blocks.indexOf(block) - 1];
-      const nextBlock = blocks[blocks.indexOf(block) + 1];
-      const isFirst = !prevBlock || !prevBlock.isHagahah;
-      const isLast  = !nextBlock || !nextBlock.isHagahah;
-
-      // Open the container only on the first sentence of a hagahah run
-      if (isFirst) {
-        v += '<div class="tanya-hagahah" style="margin:10px 0 14px;border-left:4px solid rgba(168,85,247,.6);background:rgba(168,85,247,.10);border-radius:0 10px 10px 0;overflow:hidden;">'
-          + '<div style="padding:8px 14px 6px;border-bottom:1px solid rgba(168,85,247,.18);display:flex;align-items:center;gap:6px;">'
-          + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.7)" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
-          + '<p style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(168,85,247,.65);">הגהה · Note</p>'
-          + '</div>'
-          + '<div style="padding:10px 14px 12px;display:flex;flex-direction:column;gap:8px;">';
-      }
-
-      // Each sentence — side by side in both mode, no italics
-      if (lang === 'both' && en && he) {
-        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">';
-        v += '<p class="rf-hagahah" style="--rf-sz:13px;--rf-lh:1.82;color:var(--t2);">' + en + '</p>';
-        v += '<p class="rf-hagahah" style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';--rf-sz:16px;--rf-lh:2.1;color:var(--t2);">' + he + '</p>';
-        v += '</div>';
-      } else if (lang === 'en' || (lang === 'both' && !he)) {
-        v += '<p class="rf-hagahah" style="--rf-sz:13px;--rf-lh:1.82;color:var(--t2);">' + en + '</p>';
-      } else {
-        v += '<p class="rf-hagahah" style="direction:rtl;text-align:right;font-family:' + HE_SMALL + ';--rf-sz:16px;--rf-lh:2.1;color:var(--t2);">' + he + '</p>';
-      }
-
-      // Close the container only after the last sentence of the run
-      if (isLast) {
-        v += '</div></div>';
-      }
-      return;
-    }
-
-    // Regular body — no dividing line, just paragraph spacing
-    if (lang === 'both') {
-      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:6px 0 10px;align-items:start;">';
-      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.85;color:var(--t1);">' + (en||'') + '</p>';
-      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.85;color:var(--t1);">' + (he||'') + '</p>';
-      v += '</div>';
-    } else if (lang === 'he') {
-      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.85;color:var(--t1);padding:4px 0 8px;">' + (he||'') + '</p>';
-    } else {
-      v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.85;color:var(--t1);padding:4px 0 8px;">' + (en||'') + '</p>';
-    }
-
-    // Lessons in Tanya commentary — shown below each paragraph
-    if (litOn && lit) {
-      v += '<div style="margin-bottom:6px;padding:10px 14px;background:rgba(168,85,247,.11);border-left:4px solid rgba(168,85,247,.6);border-radius:0 6px 6px 0;">'
-        + '<p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(168,85,247,.5);margin-bottom:5px;">Lessons in Tanya</p>'
-        + '<p style="font-size:13px;line-height:1.92;color:var(--t2);">' + lit + '</p>'
-        + '</div>';
-    }
+  let v = '', inHag = false, opened = false;
+  blocks.forEach(b => {
+    if (!b.he && !b.en) return;
+    if (b.isHagahah && !inHag) { v += '<div class="tz-hag"><p class="tz-hl" lang="he">הגהה</p>'; inHag = true; }
+    if (!b.isHagahah && inHag) { v += '</div>'; inHag = false; }
+    if (guideOn && b.heading && !b.isHagahah) v += '<p class="tz-h">' + escapeHtml(b.heading) + '</p>';
+    const opening = d.isFirstSegment && !opened && !b.isHagahah;
+    if (!b.isHagahah) opened = true;
+    v += piece(b, opening);
   });
+  if (inHag) v += '</div>';
 
-  el.innerHTML = t + heading + v
+  // After the text: the synopsis, tying today together
+  if (guideOn && g?.summary) {
+    v += '<div class="tz-guide tz-synopsis"><p class="tz-gl">Today\'s Tanya in brief</p><p class="tz-gt">' + escapeHtml(g.summary) + '</p>'
+      + '<p class="tz-ai">The guide is AI-written to help you follow the flow; the text is the Alter Rebbe\'s.</p></div>';
+  }
+
+  el.innerHTML = t + v
     + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s Tanya —</p>'
-    + (window._tanyaData?.isApproximate ? '<p style="font-size:11px;color:var(--t3);text-align:center;padding:12px 0 4px;opacity:.6;">Today\'s portion shown approximately</p>' : '')
+    + (d.isApproximate ? '<p style="font-size:11px;color:var(--t3);text-align:center;padding:12px 0 4px;opacity:.6;">Today\'s portion shown approximately</p>' : '')
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
-function _toggleTanyaLit() {
-  const on = localStorage.getItem('chitas_tanya_lit') !== 'off';
-  localStorage.setItem('chitas_tanya_lit', on ? 'off' : 'on');
+// The translator's footnotes in Tanya: same tappable numbers and bubble as Rambam
+function _tanyaNoteMarkers(html) {
+  return html.replace(new RegExp(FN_OPEN + '(\\d+)' + FN_CLOSE, 'g'), (_, n) =>
+    '<button type="button" class="rambam-fn tanya-fn" aria-label="Note ' + (+n + 1) + '" onclick="_showTanyaNote(event,' + n + ')">' + (+n + 1) + '</button>');
+}
+
+function _showTanyaNote(e, n) {
+  e.stopPropagation();
+  const btn = e.currentTarget;
+  const popup = document.getElementById('rambam-note-popup');
+  const note = window._tanyaData?.notes?.[n];
+  if (!popup || !note) return;
+  const wasOpen = btn.classList.contains('active');
+  _hideRambamNote();
+  if (wasOpen) return;
+  btn.classList.add('active');
+  popup.innerHTML = '<p class="rn-label" style="color:var(--purple);">Translator\'s note ' + (n + 1) + '</p><p class="rn-text">' + escapeHtml(note) + '</p>';
+  _positionPopup(popup, btn);
+}
+
+function _toggleTanyaOpt(name) {
+  const key = 'chitas_tanya_' + name;
+  localStorage.setItem(key, localStorage.getItem(key) === 'off' ? 'on' : 'off');
   const pos = document.getElementById('native-reader')?.scrollTop || 0;
   _renderTanyaContent();
   _restoreScrollAfterRender('tanya', pos);
@@ -4676,6 +4719,20 @@ function openChabadPanel(sectionId) {
   if (!s) return;
   // New learners pick their Rambam track the first time they open it
   if (sectionId === 'rambam' && user.rambamTrackAsked === false) { changeTrack({ firstTime: true }); return; }
+
+  // What the reader is showing, set FIRST: only this section may draw into the
+  // reader or move its scroll (a background preload or a slow load of a
+  // section you already left must not)
+  window._readerOpenFor = sectionId;
+
+  // Switching straight from another section or day: keep its place, then start
+  // this one fresh (its own saved place, if any, is restored once it loads)
+  if (window._readerActiveSid) {
+    _flushReaderScroll();
+    window._readerActiveSid = null; window._readerActiveDay = null; window._pendingScrollRestore = {};
+  }
+  const _rd = document.getElementById('native-reader');
+  if (_rd) _rd.scrollTop = 0;
 
   markDoneUnlocked = false;
   document.getElementById('reader-next').style.display = 'none';
@@ -5145,22 +5202,9 @@ function _closeSettingsOnOutsideClick(e) {
   }
 }
 
-function closeChabadPanel() {
-  // Allow LS to intercept (e.g. X while reading a sicha → back to list)
-  if (window._lsHandleClose && window._lsHandleClose()) return;
-  // Clean up any LS chrome
-  document.getElementById('ls-nav-bar')?.remove();
-  document.getElementById('ls-fn-popup')?.remove();
-  document.getElementById('ls-set-modal')?.remove();
-  // Clean up translation mode UI
-  _lsHideTransPopup();
-  const wrap = document.getElementById('ls-body-wrap');
-  if (wrap) wrap.removeEventListener('click', _lsWrapClick);
-  // Reset progress bar to gold
-  const _lspb = document.getElementById('reader-progress-bar');
-  if (_lspb) _lspb.style.background = 'var(--gold)';
-
-  // Flush any pending debounced save immediately — but ONLY under the still-active sid
+// Save the reader's place for the section + day it is showing (on close, or
+// before switching to another section or day inside the reader)
+function _flushReaderScroll() {
   if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
   const reader = document.getElementById('native-reader');
   const activeSid = window._readerActiveSid;
@@ -5181,8 +5225,30 @@ function closeChabadPanel() {
     }
   }
 
+}
+
+function closeChabadPanel() {
+  // Allow LS to intercept (e.g. X while reading a sicha → back to list)
+  if (window._lsHandleClose && window._lsHandleClose()) return;
+  // Clean up any LS chrome
+  document.getElementById('ls-nav-bar')?.remove();
+  document.getElementById('ls-fn-popup')?.remove();
+  document.getElementById('ls-set-modal')?.remove();
+  // Clean up translation mode UI
+  _lsHideTransPopup();
+  const wrap = document.getElementById('ls-body-wrap');
+  if (wrap) wrap.removeEventListener('click', _lsWrapClick);
+  // Reset progress bar to gold
+  const _lspb = document.getElementById('reader-progress-bar');
+  if (_lspb) _lspb.style.background = 'var(--gold)';
+
+  _flushReaderScroll();
+  const reader = document.getElementById('native-reader');
+
   // Clear active section — nothing owns the reader until the next open sets it
   window._readerActiveSid = null;
+  window._readerActiveDay = null;
+  window._readerOpenFor = null;
   window._pendingScrollRestore = {};
 
   document.getElementById('chabad-panel').style.display = 'none';
@@ -5811,7 +5877,7 @@ function _renderExtraTrackCards(iso, isToday) {
       + '<div class="extra-card-delete-bg" id="extra-del-bg-' + id + '" style="opacity:0;">'
       +   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'
       + '</div>'
-      + '<div class="lrow" id="extra-card-' + id + '" onclick="openExtraReader(\'' + id + '\')">'
+      + '<div class="lrow" id="extra-card-' + id + '" style="--c:' + def.color + ';" onclick="openExtraReader(\'' + id + '\')">'
       +   '<div class="lrow-ic" style="color:' + def.color + ';"><svg width="19" height="19" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg></div>'
       +   '<div class="lrow-t"><p>' + def.label + '</p><p id="extra-sub-' + id + '">Loading…</p></div>'
       +   '<button class="check' + (done ? ' on' : '') + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + def.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
@@ -6058,6 +6124,15 @@ function _toggleExtraTrack(id) {
 async function openExtraReader(id) {
   const def = EXTRA_TRACK_DEFS[id];
   if (!def) return;
+
+  window._readerOpenFor = id;
+  // Same as a section: keep the place of what was open, start this one fresh
+  if (window._readerActiveSid) {
+    _flushReaderScroll();
+    window._readerActiveSid = null; window._readerActiveDay = null; window._pendingScrollRestore = {};
+  }
+  const _rd = document.getElementById('native-reader');
+  if (_rd) _rd.scrollTop = 0;
 
   // Use the same panel as regular sections
   markDoneUnlocked = false;
