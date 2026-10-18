@@ -13,7 +13,7 @@
 <title>Chitas Daily</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 @font-face {
   font-family: 'Taamey Frank CLM';
@@ -98,7 +98,7 @@
   .check { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--hi); background: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; color: transparent; transition: background .15s, border-color .15s; }
   .check.on { background: var(--c, var(--ok)); border-color: var(--c, var(--ok)); color: #fff; }
   .lrow-he { font-family: var(--he-font); font-size: 15px; font-weight: 500; color: var(--t3); margin-left: 7px; }
-  .tabbar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; display: flex; justify-content: space-around; padding: 8px 8px calc(10px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border); z-index: 100; }
+  .tabbar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; display: flex; justify-content: space-around; padding: 8px 8px calc(10px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--border); z-index: 100; }
   .tabbar button { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size:var(--fs-1); font-weight: 500; color: var(--t3); padding: 4px 0; }
   .tabbar button.on { color: var(--t1); font-weight: 600; }
   .tabbar svg { width: 24px; height: 24px; }
@@ -132,7 +132,7 @@
   @keyframes cardSlide { 0%{transform:translateX(-28px);opacity:0} 100%{transform:translateX(0);opacity:1} }
   @keyframes quizPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.015)} }
   @keyframes dotBlink { 0%,100%{opacity:.3} 50%{opacity:1} }
-  .ob-bg-glow { position:fixed;inset:0;pointer-events:none;z-index:0;
+  .ob-bg-glow { display:none !important; position:fixed;inset:0;pointer-events:none;z-index:0;
     background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,154,58,.12) 0%, transparent 70%); }
   @keyframes flamePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
   @keyframes checkPop { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.3)} 100%{transform:scale(1);opacity:1} }
@@ -469,6 +469,22 @@
 .rb-en .rb-add { font-weight: 400; color: var(--t2); }
 .rb-en.rb-plain { font-weight: 400; color: var(--t1); }
 /* Week strip (renderWeekStrip) */
+/* Today, on one page: the week, the day's line, the sections between thin rules */
+#week-strip { display:grid; grid-template-columns:repeat(7,1fr); padding:4px 0 14px; margin-bottom:14px; border-bottom:1px solid var(--border); }
+#progress-card { margin-bottom:6px; }
+.day-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+#progress-title { font-family:var(--title-font); font-size:var(--fs-4); font-weight:500; color:var(--t1); }
+#streak-pill { padding:0; background:none; border:none; font:var(--fs-2) var(--ui-font); color:var(--t2); white-space:nowrap; cursor:pointer; }
+#streak-pill b { color:var(--t1); font-weight:600; }
+.day-line { display:flex; gap:4px; margin:10px 0 8px; }
+.day-line i { flex:1; height:4px; border-radius:2px; background:var(--border); transition:background .4s ease; }
+#progress-sub { font-size:var(--fs-2); color:var(--t2); }
+#tab-learn .group { background:none; border-radius:0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:visible; }
+#tab-learn .lrow { background:none; padding-left:0; padding-right:0; }
+#tab-learn #skeletons, #tab-learn #sections-list { margin-top:14px; }
+.tab-glyph { display:block; width:24px; height:24px; }
+.tab-av { position:relative; display:grid; place-items:center; width:24px; height:24px; border-radius:50%; border:1.6px solid currentColor; font:600 12px var(--ui-font); line-height:1; }
+#avatar-dot { position:absolute; top:-3px; right:-3px; width:8px; height:8px; border-radius:50%; background:var(--gold); border:2px solid var(--bg); }
 .wk-day { display:flex; flex-direction:column; align-items:center; gap:6px; padding:2px 0 4px; background:none; border:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .wk-letter { font-size:var(--fs-1); font-weight:500; color:var(--t3); }
 .wk-day.on .wk-letter { color:var(--gold); font-weight:700; }
@@ -555,11 +571,24 @@
 .rambam-fn.active { background: #6E9150; color: #000; }
 .tanya-fn { border-color: color-mix(in srgb, var(--purple) 45%, transparent); background: color-mix(in srgb, var(--purple) 12%, transparent); color: var(--purple); }
 .tanya-fn.active { background: var(--purple); color: #fff; }
-#ob-welcome .ob-point { display:flex; gap:14px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border); }
-#ob-welcome .ob-point:last-child { border-bottom:none; }
-#ob-welcome .ob-point > span { width:24px; display:flex; justify-content:center; flex-shrink:0; padding-top:2px; }
-#ob-welcome .ob-pt-title { font-size:var(--fs-3); font-weight:800; color:var(--t1); margin-bottom:2px; }
-#ob-welcome .ob-pt-sub { font-size:var(--fs-2); color:var(--t3); line-height:1.45; }
+/* The day complete: four inks draw together into one gold line */
+.day-rule { display:flex; gap:12px; width:180px; animation: dayGap .7s .15s cubic-bezier(.2,.7,.2,1) forwards; }
+.day-rule i { flex:1; height:3px; border-radius:2px; background:var(--c); animation: dayGold .5s .75s ease forwards; }
+.day-he { font-family:var(--he-font); font-size:30px; color:var(--gold); margin-top:14px; line-height:1; }
+@keyframes dayGap { to { gap:0; } }
+@keyframes dayGold { to { background:var(--gold); } }
+@media (prefers-reduced-motion: reduce) { .day-rule { animation:none; gap:0; } .day-rule i { animation:none; background:var(--gold); } }
+#ob-welcome { position:relative; z-index:1; min-height:86vh; display:flex; flex-direction:column; justify-content:space-between; gap:36px; padding:12px 0; text-align:left; }
+#ob-welcome .ob-date { font-size:var(--fs-2); color:var(--t2); }
+#ob-welcome .ob-marks { display:flex; gap:14px; margin-top:14px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+#ob-welcome .ob-verse { margin:0; }
+#ob-welcome .ob-he { font-family:var(--he-font); font-size:30px; line-height:1.45; direction:rtl; text-align:right; color:var(--t1); }
+#ob-welcome .ob-en { font-family:var(--read-font); font-size:var(--fs-4); line-height:1.45; color:var(--t2); margin-top:14px; font-style:italic; }
+#ob-welcome figcaption { font-size:var(--fs-1); color:var(--t3); margin-top:10px; }
+#ob-welcome .ob-name { font-family:var(--title-font); font-size:44px; font-weight:500; line-height:1; color:var(--t1); }
+#ob-welcome .ob-what { font-size:var(--fs-3); color:var(--t2); line-height:1.5; margin:10px 0 22px; }
+#ob-welcome .ob-link { display:block; width:100%; margin-top:10px; padding:12px; background:none; border:none; color:var(--t1); font:600 var(--fs-2) var(--ui-font); cursor:pointer; }
+#ob-welcome .ob-fine { font-size:var(--fs-1); color:var(--t3); text-align:center; }
 #ls-trans-popup {
   position: fixed;
   z-index: 1200;
@@ -925,47 +954,38 @@ window._fsGetDoc = getDoc;
     <div style="max-width:360px;width:100%;">
 
       <!-- Welcome: the only onboarding screen. No account needed to start. -->
-      <div id="ob-welcome" style="position:relative;z-index:1;min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
-
-        <!-- Logo -->
-        <div style="width:88px;height:88px;margin:0 auto 32px;position:relative;animation:logoReveal .7s cubic-bezier(.22,1,.36,1) both;">
-          <svg width="88" height="88" viewBox="0 0 88 88" style="position:absolute;inset:0;animation:spin 18s linear infinite;">
-            <circle cx="44" cy="44" r="42" fill="none" stroke="rgba(201,154,58,0.1)" stroke-width="1" stroke-dasharray="3 8"/>
-            <circle cx="44" cy="3" r="2.5" fill="rgba(201,154,58,0.45)"/>
-          </svg>
-          <svg width="88" height="88" viewBox="0 0 88 88" style="position:absolute;inset:0;animation:spin 11s linear infinite reverse;">
-            <circle cx="44" cy="44" r="32" fill="none" stroke="rgba(201,154,58,0.18)" stroke-width="1.5" stroke-dasharray="2 6"/>
-            <circle cx="44" cy="12" r="2" fill="rgba(201,154,58,0.6)"/>
-          </svg>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-            <div style="width:56px;height:56px;border-radius:var(--r-m);background:linear-gradient(145deg,rgba(201,154,58,.2),rgba(201,154,58,.05));border:1.5px solid rgba(201,154,58,.4);display:flex;align-items:center;justify-content:center;">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C99A3A" stroke-width="1.7" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
-            </div>
-          </div>
+      <!-- The first thing anyone sees: the day, and the verse the Tanya is built on -->
+      <div id="ob-welcome">
+        <div>
+          <p class="ob-date" id="ob-date"></p>
+          <div class="ob-marks" id="ob-marks" aria-hidden="true"></div>
         </div>
-
-        <div style="animation:titleReveal .6s .25s ease both;margin-bottom:18px;">
-          <h1 style="font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:var(--t1);line-height:.88;letter-spacing:-2px;">
-            Chitas<br>
-            <span style="background:linear-gradient(135deg,#C99A3A 0%,#FFB830 50%,#C99A3A 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;">Daily</span>
-          </h1>
-        </div>
-        <p style="font-size:var(--fs-3);color:var(--t2);line-height:1.5;margin-bottom:28px;max-width:300px;animation:titleReveal .5s .4s ease both;">Learn it, track it, remember it.</p>
-
-        <div class="ob-points" style="width:100%;text-align:left;margin-bottom:36px;animation:up .5s .55s ease both;">
-          <div class="ob-point"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C99A3A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><div><p class="ob-pt-title">Your daily Chitas, beautifully laid out</p><p class="ob-pt-sub">Chumash, Tehillim, Tanya and Rambam, easy to read in Hebrew, English or both</p></div></div>
-          <div class="ob-point"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C99A3A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8.5 14.5l2 2 4-4"/></svg></span><div><p class="ob-pt-title">Stay accountable</p><p class="ob-pt-sub">Track each day's learning and catch up on anything you missed</p></div></div>
-          <div class="ob-point"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C99A3A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></span><div><p class="ob-pt-title">Test your knowledge</p><p class="ob-pt-sub">Short quizzes on what you just learned</p></div></div>
-        </div>
-
-        <div style="width:100%;animation:up .5s .7s ease both;">
-          <button onclick="obStartGuest()" style="width:100%;padding:18px;border-radius:var(--r-m);background:linear-gradient(135deg,#C99A3A,#E09000);border:none;color:#000;font-size:var(--fs-4);font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;letter-spacing:-.3px;">
-            Start learning
-          </button>
-          <button onclick="openSignIn('returning')" style="width:100%;padding:12px;border-radius:var(--r-m);background:transparent;border:none;color:var(--t2);font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;">I already have an account</button>
-          <p style="font-size:var(--fs-1);color:var(--t3);margin-top:6px;">Free · No account needed to start</p>
+        <figure class="ob-verse">
+          <p class="ob-he" lang="he">כִּי קָרוֹב אֵלֶיךָ הַדָּבָר מְאֹד, בְּפִיךָ וּבִלְבָבְךָ לַעֲשׂוֹתוֹ</p>
+          <p class="ob-en">For the matter is very near to you, in your mouth and in your heart, that you may do it.</p>
+          <figcaption>Devarim 30:14, the verse the Tanya is built on</figcaption>
+        </figure>
+        <div>
+          <h1 class="ob-name">Chitas</h1>
+          <p class="ob-what">Chumash, Tehillim, Tanya and Rambam, every day. Beautifully laid out, with your learning kept.</p>
+          <button class="btn-primary" onclick="obStartGuest()" style="width:100%;">Begin today's Chitas</button>
+          <button class="ob-link" onclick="openSignIn('returning')">I already have an account</button>
+          <p class="ob-fine">Free. No account needed to start.</p>
         </div>
       </div>
+      <script>
+        // The landing page's date (with the Hebrew date) and the four sections' glyphs
+        document.addEventListener('DOMContentLoaded', () => {
+          const d = new Date();
+          const parts = Object.fromEntries(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(d).map(x => [x.type, x.value]));
+          const month = ({ Tishri: 'Tishrei', Heshvan: 'Cheshvan', Tevet: 'Teves', Nisan: 'Nissan', Tamuz: 'Tammuz' })[parts.month] || parts.month;
+          const el = document.getElementById('ob-date');
+          if (el) el.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + parts.day + ' ' + month;
+          const m = document.getElementById('ob-marks');
+          if (m && typeof icon === 'function') m.innerHTML = [['torah', 'chumash'], ['kinor', 'tehillim'], ['flame', 'tanya'], ['books', 'rambam']]
+            .map(([g, c]) => '<span style="color:var(--c-' + c + ')">' + icon(g, 22) + '</span>').join('');
+        });
+      </script>
     </div>
   </div>
   <!-- ── SIGN-IN SHEET ── (asked only when an account is needed: saving progress, quizzes) -->
@@ -989,49 +1009,35 @@ window._fsGetDoc = getDoc;
         <p id="heb-date-label" class="t-caption">Loading…</p>
         <h1 id="greeting" class="t-title">Today</h1>
       </div>
-      <button id="avatar-tab-btn" onclick="openProfileSheet()" style="flex-shrink:0;background:none;border:none;cursor:pointer;padding:0 0 2px;" title="Profile">
-        <div id="avatar-tab" style="position:relative;">
-          <!-- Dot while signed out (progress is only on this phone) -->
-          <div id="avatar-dot" style="display:none;position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);z-index:1;"></div>
-        </div>
-      </button>
     </div>
 
     <!-- Bottom tab bar -->
     <nav class="tabbar" id="tabbar">
       <button class="nav-tab on" data-tab="learn" onclick="switchTab('learn')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5v14z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg>Today
+        <svg viewBox="0 0 24 24" style="transform:rotate(-90deg)"><circle id="tab-seg-0" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-0.9"/><circle id="tab-seg-1" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-14.2"/><circle id="tab-seg-2" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-27.6"/><circle id="tab-seg-3" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-40.9"/></svg>Today
       </button>
       <button class="nav-tab" data-tab="stats" onclick="switchTab('stats')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progress
+        <span class="tab-glyph" id="tab-books"></span>Learning
       </button>
       <button class="nav-tab" data-tab="profile" onclick="switchTab('profile')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profile
+        <span class="tab-av"><span id="avatar-tab"></span><span id="avatar-dot" style="display:none;"></span></span>Profile
       </button>
     </nav>
 
     <!-- ── LEARN TAB ── -->
     <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
-      <!-- Today card — one segment per Chitas section (see DESIGN.md) -->
-      <div id="progress-card" class="card" style="padding:18px;margin-bottom:10px;display:flex;align-items:center;gap:18px;">
-        <svg width="64" height="64" viewBox="0 0 60 60" style="flex-shrink:0;transform:rotate(-90deg);">
-          <circle id="today-seg-0" cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="6.5" stroke-dasharray="32.7 118.1" stroke-dashoffset="-2.5" style="transition:stroke .4s ease;"/>
-          <circle id="today-seg-1" cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="6.5" stroke-dasharray="32.7 118.1" stroke-dashoffset="-40.2" style="transition:stroke .4s ease;"/>
-          <circle id="today-seg-2" cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="6.5" stroke-dasharray="32.7 118.1" stroke-dashoffset="-77.9" style="transition:stroke .4s ease;"/>
-          <circle id="today-seg-3" cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="6.5" stroke-dasharray="32.7 118.1" stroke-dashoffset="-115.6" style="transition:stroke .4s ease;"/>
-        </svg>
-        <div style="flex:1;min-width:0;">
-          <p id="progress-title" style="font-family:var(--title-font);font-weight:500;font-size:var(--fs-5);line-height:1.15;color:var(--t1);">Loading…</p>
-          <p id="progress-sub" style="font-size:var(--fs-3);color:var(--t2);margin-top:1px;"></p>
-          <button id="streak-pill" onclick="openStreakInfo()" style="margin-top:8px;padding:0;background:none;border:none;display:flex;gap:14px;font-size:var(--fs-2);color:var(--t2);text-align:left;">
-            <span><b id="streak-pill-num" style="color:var(--t1);font-weight:600;">0</b>-day streak</span>
-            <span id="week-summary"></span>
-          </button>
-        </div>
-      </div>
+      <!-- The last 7 days: tap a day to read it or catch up -->
+      <div id="week-strip"></div>
 
-      <!-- Last 7 days — tap a day to view or catch up -->
-      <div id="week-strip" class="card" style="display:grid;grid-template-columns:repeat(7,1fr);padding:12px 8px 8px;margin-bottom:6px;"></div>
+      <!-- Today's Chitas: what's done, and the four sections' inks as one line that fills -->
+      <div id="progress-card">
+        <div class="day-head">
+          <p id="progress-title">Loading…</p>
+          <button id="streak-pill" onclick="openStreakInfo()"><b id="streak-pill-num">0</b> days in a row<span id="week-summary"></span></button>
+        </div>
+        <div class="day-line"><i id="today-seg-0"></i><i id="today-seg-1"></i><i id="today-seg-2"></i><i id="today-seg-3"></i></div>
+        <p id="progress-sub"></p>
+      </div>
 
       <!-- API error -->
       <div id="api-error" style="display:none;background:rgba(192,86,74,.08);border:1px solid rgba(192,86,74,.25);border-radius:var(--r-m);padding:12px 16px;margin-bottom:16px;gap:10px;align-items:flex-start;color:var(--red);">
@@ -1047,7 +1053,6 @@ window._fsGetDoc = getDoc;
 
       <!-- Skeleton loaders -->      <!-- Skeleton loaders -->
       <span id="hebcal-link" style="display:none;"></span>
-      <p class="t-sec">Chitas</p>
       <div id="skeletons" class="group" style="opacity:.5;">
         <div class="lrow"><div class="lrow-ic"></div><div class="lrow-t"><p>&nbsp;</p><p>&nbsp;</p></div></div>
         <div class="lrow"><div class="lrow-ic"></div><div class="lrow-t"><p>&nbsp;</p><p>&nbsp;</p></div></div>
@@ -1254,16 +1259,16 @@ window._fsGetDoc = getDoc;
 <!-- Confirm done modal — kept as stub; showConfirm bypasses this and marks done directly -->
 
 <!-- ── MOMENT MODAL — centered celebration popup ── -->
-<div id="moment-modal" onclick="if(event.target.id==='moment-modal')closeMoment()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.75);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:24px;">
-  <div id="moment-card" style="background:var(--surface);border:1px solid rgba(255,255,255,.07);border-radius:32px;padding:36px 28px 28px;width:100%;max-width:360px;text-align:center;animation:momentSlide .45s cubic-bezier(.22,1,.36,1);box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;overflow:hidden;">
+<div id="moment-modal" onclick="if(event.target.id==='moment-modal')closeMoment()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px;">
+  <div id="moment-card" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-m);padding:32px 24px 22px;width:100%;max-width:360px;text-align:center;animation:momentSlide .45s cubic-bezier(.22,1,.36,1);box-shadow:0 20px 50px rgba(0,0,0,.28);position:relative;overflow:hidden;">
     <!-- Background glow — color set by JS -->
-    <div id="moment-glow" style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;border-radius:50%;pointer-events:none;filter:blur(40px);opacity:.35;"></div>
+    <div id="moment-glow" style="display:none;position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;border-radius:50%;pointer-events:none;filter:blur(40px);opacity:.35;"></div>
     <!-- Icon -->
-    <div id="moment-icon" style="width:80px;height:80px;border-radius:var(--r-m);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;position:relative;animation:iconBounce .5s .2s cubic-bezier(.22,1,.36,1) both;"></div>
+    <div id="moment-icon" style="margin:0 auto 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;"></div>
     <!-- Content -->
-    <p id="moment-title" style="font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:var(--t1);line-height:1.05;margin-bottom:10px;letter-spacing:-.5px;position:relative;"></p>
+    <p id="moment-title" style="font-family:var(--title-font);font-size:var(--fs-6);font-weight:500;color:var(--t1);line-height:1.1;margin-bottom:10px;position:relative;"></p>
     <p id="moment-sub" style="font-size:var(--fs-3);color:var(--t2);line-height:1.55;margin-bottom:8px;position:relative;"></p>
-    <p id="moment-xp" style="font-size:var(--fs-2);font-weight:800;color:var(--gold);margin-bottom:28px;position:relative;letter-spacing:.02em;"></p>
+    <p id="moment-xp" style="font-size:var(--fs-2);font-weight:600;color:var(--gold);margin-bottom:24px;position:relative;"></p>
     <div id="moment-btns" style="display:flex;flex-direction:column;gap:10px;position:relative;"></div>
   </div>
 </div>
@@ -1938,7 +1943,6 @@ function _toggleTehillimFixed(label) {
   opts[key] = opts[key] === false; // flip
   user.tehillimFixedOpts = opts;
   saveUser();
-  vibrate(25);
 
   // Update the switch in the people manager, if it's open
   const btn = document.getElementById('tpm-toggle-' + key);
@@ -2034,7 +2038,6 @@ window._tpmTouchEnd = function(e) {
     people.splice(targetIdx, 0, item);
     user.tehillimPeople = people;
     saveUser();
-    vibrate(25);
     _renderTpmList();
     _renderPersonalPsalms();
   }
@@ -2057,7 +2060,6 @@ function _addTehillimPerson() {
     user.tehillimPeople.push(person);
   }
   saveUser();
-  vibrate([30, 20, 60]);
   document.getElementById('tehillim-people-modal')?.remove();
   _renderPersonalPsalms();
 }
@@ -2428,7 +2430,9 @@ function updateHeader() {
   const pill = document.getElementById('streak-pill-num');
   if (pill) pill.textContent = user.streak || 0;
   const at = document.getElementById('avatar-tab');
-  if (at) at.innerHTML = letterAvatar(user.name, 34, 14);
+  if (at) at.textContent = ((user.name || '').trim()[0] || '·').toUpperCase();
+  const tb = document.getElementById('tab-books');
+  if (tb && !tb.firstChild) tb.innerHTML = icon('books', 24);
   const dot = document.getElementById('avatar-dot');
   if (dot) dot.style.display = isGuest() ? 'block' : 'none';
   setGreeting();
@@ -2436,7 +2440,7 @@ function updateHeader() {
 
 function updateStats() {
   const ws = document.getElementById('week-summary');
-  if (ws) { const n = chitasDaysThisWeek(user, new Date()); ws.innerHTML = '<b style="color:var(--t1);font-weight:600;">' + n + '</b> this week'; }
+  if (ws) { const n = chitasDaysThisWeek(user, new Date()); ws.textContent = ' · ' + n + ' this week'; }
   renderWeekStrip();
 }
 
@@ -2665,7 +2669,9 @@ function updateProgressRing() {
   const done = dayOffset === 0 ? (user.done || {}) : ((user.pastDone || {})[iso] || {});
   SECTION_IDS.forEach((id, i) => {
     const seg = document.getElementById('today-seg-' + i);
-    if (seg) seg.setAttribute('stroke', done[id] ? SECTION_COLORS[id] : 'var(--border)');
+    if (seg) seg.style.background = done[id] ? SECTION_COLORS[id] : '';
+    const tseg = document.getElementById('tab-seg-' + i);    // the Today tab's little ring
+    if (tseg) { tseg.setAttribute('stroke-opacity', done[id] ? '1' : '.3'); tseg.setAttribute('stroke', done[id] ? SECTION_COLORS[id] : 'currentColor'); }
   });
   const n = sectionsDone(done);
   const allDone = n === 4;
@@ -2698,7 +2704,7 @@ function renderWeekStrip() {
     const shape = n === 4
       ? '<circle cx="13" cy="13" r="10" fill="var(--gold)"/><path d="M8.5 13.2l3 3 6-6.4" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
       : rest
-        ? '<circle cx="13" cy="13" r="10" fill="none" stroke="var(--hi)" stroke-width="2" stroke-dasharray="2 3"/>'
+        ? '<rect x="7.5" y="5.5" width="11" height="15" rx="1.5" fill="none" stroke="var(--t3)" stroke-width="1.6"/><path d="M10.5 5.5v15" stroke="var(--t3)" stroke-width="1.6"/>'
         : '<circle cx="13" cy="13" r="10" fill="none" stroke="var(--border)" stroke-width="3"/>'
           + (n ? '<circle cx="13" cy="13" r="10" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + (C * n / 4).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 13 13)"/>' : '');
     const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + (rest ? ' (Shabbos / Yom Tov)' : ' · ' + n + ' of 4');
@@ -2852,7 +2858,7 @@ function markDonePast(id, iso) {
   if (!schedule || user.pastDone?.[iso]?.[id]) return;
   _logTanya(id, iso);
   const r = _changeDay(iso, day => { day[id] = true; });
-  fire(r.completedNow ? 'Day caught up · ' + user.streak + '-day streak' : schedule[id].label + ' marked', r.completedNow ? 'gold' : 'xp');
+  fire(r.completedNow ? 'Day caught up. ' + user.streak + ' days in a row, nice!' : 'Nice! ' + schedule[id].label + ' marked.', r.completedNow ? 'gold' : 'xp');
   renderSectionsForOffset(_viewedISO());
   if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
 }
@@ -2874,12 +2880,12 @@ function markDone(id) {
   // Clear saved scroll for today so this section's next open starts from top
   try { localStorage.removeItem(_scrollKey(id)); } catch(e) {}
 
-  if (r.completedNow) fire('Chitas done today · ' + user.streak + '-day streak', 'gold');
-  else fire(s.label + ' done', 'xp');
+  if (!r.completedNow) fire('Nice! ' + s.label + ' done.', 'xp');
 
   celebrateSection(id);
-  if (r.completedNow) setTimeout(celebrateAllDone, 300);
-  if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
+  // The day complete is its own moment (with the milestone's line, if one was reached)
+  if (r.completedNow) celebrateAllDone(r.streakMilestone);
+  else if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
 
   // Signed out: after the first section, offer to save their progress (once)
   if (isGuest() && !user.signinPrompted) {
@@ -3068,22 +3074,16 @@ function celebrateBanner(msg) {
   setTimeout(() => { el.style.display = 'none'; el.style.animation = ''; }, 3200);
 }
 
+// Touch feedback: only three moments in the app use it (a section learned, the
+// day complete, a milestone). Off with the switch in Profile. Android only for
+// now; iPhone browsers don't allow it.
 function vibrate(pattern) {
+  if (user?.haptics === false) return;
   try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
 }
 
 function celebrateSection(sectionId) {
-  vibrate([40, 30, 80]); // double tap — satisfying confirmation
-  // Quick satisfying pop on the card
-  const card = document.getElementById('card-' + sectionId);
-  if (card) {
-    const col = window.schedule?.[sectionId]?.color || '#C99A3A';
-    card.style.transition = 'transform .15s ease, box-shadow .3s ease, border-color .3s ease';
-    card.style.transform = 'scale(1.02)';
-    card.style.boxShadow = '0 0 20px ' + col + '55';
-    card.style.borderColor = col + '70';
-    setTimeout(() => { card.style.transform = ''; card.style.boxShadow = ''; }, 400);
-  }
+  vibrate([10]); // one light tap
   // Tick animation
   const tick = document.getElementById('tick-' + sectionId);
   if (tick) tick.style.animation = 'checkPop .4s ease';
@@ -3095,15 +3095,8 @@ function celebrateSection(sectionId) {
 // ── MOMENT MODAL SYSTEM ─────────────────────────────────────────────────────
 function showMoment(opts) {
   const { icon, title, sub, xp, btns, color } = opts;
-  const c = color || '#C99A3A';
   // Icon
-  const iconEl = document.getElementById('moment-icon');
-  iconEl.innerHTML = icon;
-  iconEl.style.background = c + '1A';
-  iconEl.style.border = '1.5px solid ' + c + '40';
-  iconEl.style.boxShadow = '0 4px 24px ' + c + '30';
-  // Glow
-  document.getElementById('moment-glow').style.background = c;
+  document.getElementById('moment-icon').innerHTML = icon;
   // Text
   document.getElementById('moment-title').textContent = title;
   document.getElementById('moment-sub').textContent = sub;
@@ -3114,11 +3107,8 @@ function showMoment(opts) {
   (btns || [{ label: 'Keep going', primary: true }]).forEach(b => {
     const btn = document.createElement('button');
     btn.textContent = b.label;
-    if (b.primary) {
-      btn.style.cssText = 'width:100%;padding:15px;border-radius:var(--r-m);font-size:var(--fs-3);font-weight:800;cursor:pointer;font-family:inherit;border:none;background:' + c + ';color:' + (c === '#C99A3A' || c === '#6E9150' ? '#000' : '#fff') + ';box-shadow:0 4px 20px ' + c + '44;';
-    } else {
-      btn.style.cssText = 'width:100%;padding:13px;border-radius:var(--r-m);font-size:var(--fs-2);font-weight:600;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--t3);';
-    }
+    btn.className = b.primary ? 'btn-primary' : 'btn-quiet';
+    btn.style.width = '100%';
     btn.onclick = () => { closeMoment(); if (b.action) b.action(); };
     btnsEl.appendChild(btn);
   });
@@ -3159,47 +3149,40 @@ document.getElementById('moment-modal')?.addEventListener('click', e => {
   if (e.target.id === 'moment-modal') closeMoment();
 });
 
-// ── 1. STREAK MILESTONE ──────────────────────────────────────────────────────
-// Streak milestones (MILESTONES in js/progress.js) — celebrated once, no bonus points
+// ── 1. MILESTONES ────────────────────────────────────────────────────────────
+// Streak milestones (MILESTONES in js/progress.js) — celebrated once
+const MILESTONE_LINES = {
+  3:    'A habit starts at 3. Keep showing up!',
+  7:    "A full week of Chitas. You're building something real.",
+  18:   'Chai: 18 days of Chitas in a row.',
+  30:   'A full month. This is the real thing.',
+  50:   'Fifty days. Chitas is part of your day now.',
+  100:  "One hundred days. That's extraordinary.",
+  180:  'Half a year of daily Chitas.',
+  365:  'A full year of Chitas, every day. Mazel tov!',
+  500:  'Five hundred days.',
+  1000: 'One thousand days of Chitas.',
+};
 function celebrateStreakMilestone(streak) {
-  const MESSAGES = {
-    3:    'A habit starts at 3. Keep showing up.',
-    7:    "A full week of Chitas. You're building something real.",
-    18:   'Chai — 18 days of Chitas in a row.',
-    30:   'A full month. This is the real thing.',
-    50:   'Fifty days. Chitas is part of your day now.',
-    100:  "One hundred days. That's extraordinary.",
-    180:  'Half a year of daily Chitas.',
-    365:  'A full year of Chitas, every day. Mazel tov!',
-    500:  'Five hundred days.',
-    1000: 'One thousand days of Chitas.',
-  };
-  if (!MESSAGES[streak]) return;
-  const big = streak >= 30;
-  launchConfetti(big ? 150 : 100);
-  vibrate(big ? [80, 40, 80, 40, 160] : [60, 30, 120]);
-  const flame = '<svg width="52" height="52" viewBox="0 0 24 24" fill="' + (big ? '#C99A3A' : '#C0564A') + '"><path d="M12 2s-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 01-2-2c0-2 2-5 2-5s2 3 2 5a2 2 0 01-2 2z"/></svg>';
-  setTimeout(() => showMoment({ icon: flame, title: streak + '-day streak', sub: MESSAGES[streak], xp: '',
-    color: big ? '#C99A3A' : '#C0564A', btns: [{ label: 'Keep it going', primary: true }] }), 900);
+  if (!MILESTONE_LINES[streak]) return;
+  vibrate([40]);
+  setTimeout(() => showMoment({ icon: '<span style="color:var(--gold)">' + icon('flame', 44) + '</span>',
+    title: streak + ' days in a row', sub: MILESTONE_LINES[streak], xp: '', btns: [{ label: 'Keep it up', primary: true }] }), 600);
 }
 
-// ── 2. PERFECT DAY ───────────────────────────────────────────────────────────
-function celebrateAllDone() {
-  vibrate([60, 40, 60, 40, 120]); // triple pulse — day complete
-  launchConfetti(80);
-  const pill = document.getElementById('streak-pill');
-  if (pill) { pill.style.animation = 'streakBurst .5s ease'; setTimeout(() => { pill.style.animation = ''; }, 600); }
-
-  if (user.total === 1) {
-    // Very first Chitas day — a real moment
-    setTimeout(() => showMoment({ icon: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#6E9150" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>',
-      title: 'Your first Chitas day', sub: 'Chumash, Tehillim, Tanya and Rambam — all four. Come back tomorrow to start a streak.',
-      xp: '', color: '#6E9150', btns: [{ label: 'Amazing', primary: true }] }), 800);
-  } else {
-    celebrateBanner('Chitas done today · ' + user.streak + '-day streak');
-  }
+// ── 2. THE DAY COMPLETE ──────────────────────────────────────────────────────
+// The one daily celebration: the four sections' inks draw into one gold line
+function celebrateAllDone(milestone) {
+  vibrate([12, 70, 12]);
+  const rule = '<div class="day-rule">' + SECTION_IDS.map(id => '<i style="--c:var(--c-' + id + ')"></i>').join('') + '</div>'
+    + '<p class="day-he" lang="he">חת״ת</p>';
+  const days = user.total || 1;
+  const sub = milestone && MILESTONE_LINES[milestone] ? MILESTONE_LINES[milestone]
+    : days === 1 ? "That's awesome. Your first Chitas day, keep it up!" : "That's awesome. " + days + ' days of Chitas, keep it up!';
+  setTimeout(() => showMoment({ icon: rule, title: 'All four done', sub,
+    xp: (user.streak || 0) > 1 ? user.streak + ' days in a row' : '',
+    btns: [{ label: 'See you tomorrow', primary: false }] }), 250);
 }
-
 
 // ── 4. WELCOME BACK ──────────────────────────────────────────────────────────
 
@@ -3248,8 +3231,8 @@ function selectAnswer(idx) {
   const correct = q.answer;
   const isRight = idx === correct;
 
-  if (isRight) { quizState.score++; vibrate([30, 20, 60]); }
-  else { quizState.missed.push({ ...q, picked: idx }); vibrate([80]); }
+  if (isRight) { quizState.score++; }
+  else { quizState.missed.push({ ...q, picked: idx }); }
 
   q.options.forEach((_, i) => {
     const btn = document.getElementById(`opt-${i}`);
@@ -3525,7 +3508,6 @@ let markDoneUnlocked = false;
 function unlockMarkDone() {
   if (markDoneUnlocked) return;
   markDoneUnlocked = true;
-  vibrate(20); // subtle — signals you've reached the end
   const hint = document.getElementById('scroll-hint');
   if (hint) hint.style.display = 'none';
   // Re-style the mark done button to show it's active
@@ -5600,8 +5582,6 @@ function switchTab(id) {
   const g = document.getElementById('greeting');
   if (g) g.textContent = id === 'stats' ? 'Your learning' : id === 'profile' ? 'Profile' : (dayOffset === 0 ? 'Today' : _dayName(dayOffset));
   if (id === 'profile') renderProfile();
-  const av = document.getElementById('avatar-tab-btn');
-  if (av) av.style.visibility = id === 'profile' ? 'hidden' : 'visible';
   window.scrollTo(0, 0);
   if (id === 'stats')   { renderStats(); }
 }
@@ -5804,11 +5784,9 @@ async function _bustTanyaCache() {
     // Check threshold and direction
     if (dx > THRESHOLD && dayOffset > -MAX_DAYS_BACK) {
       // Swiped right (finger moves right) — go to previous day
-      vibrate(25); // light tap confirms gesture
       swipeTransition(reader, 'right', () => navDay(-1));
     } else if (dx < -THRESHOLD && dayOffset < 0) {
       // Swiped left (finger moves left) — go to next day (toward today)
-      vibrate(25); // light tap confirms gesture
       swipeTransition(reader, 'left', () => navDay(1));
     }
   }, { passive: true });
@@ -5948,8 +5926,8 @@ async function _loadExtraSubtitle(id) {
 // Mark done / unmark for extra tracks
 function markExtraDone(id) {
   _changeDay(dateISO(new Date()), day => { day[id] = true; });
-  fire((EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done', 'xp');
-  vibrate([40, 30, 80]);
+  fire('Nice! ' + (EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done.', 'xp');
+  vibrate([10]);
   _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   // Animate card
   const card = document.getElementById('extra-card-' + id);
@@ -6097,7 +6075,6 @@ function _toggleExtraTrack(id) {
     user.extraTracks.splice(idx, 1);
   }
   saveUser();
-  vibrate(25);
 
   // Update tile visual immediately in modal
   const on = user.extraTracks.includes(id);
@@ -6542,7 +6519,7 @@ async function _loadHayomYomNative(silent) {
   let html = '<div style="max-width:680px;margin:0 auto;padding-bottom:40px;">'
     + '<div style="margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);">'
     + '<p style="font-size:var(--fs-1);font-weight:700;color:' + COLOR + ';margin-bottom:3px;">' + dateLabel + '</p>'
-    + '<p style="font-size:22px;font-weight:900;color:var(--t1);font-family:\'Playfair Display\',serif;letter-spacing:-.3px;">Hayom Yom</p>'
+    + '<p style="font-size:var(--fs-5);font-weight:500;color:var(--t1);font-family:var(--title-font);">Hayom Yom</p>'
     + '</div>';
 
   docs.forEach((data, idx) => {
@@ -7219,7 +7196,6 @@ function _attachExtraSwipeDelete() {
         card.style.transition = 'transform .25s ease, opacity .2s ease';
         card.style.transform = 'translateX(-110%)';
         card.style.opacity = '0';
-        vibrate([40, 30, 80]);
         setTimeout(() => _removeExtraTrack(id), 220);
       } else {
         card.style.transition = 'transform .2s ease';
