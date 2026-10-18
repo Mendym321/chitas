@@ -44,7 +44,7 @@ const claude = createServer((req, res) => {
   let body = ''; req.on('data', c => body += c); req.on('end', () => {
     claudeCalls++;
     claude.lastRequest = JSON.parse(body);
-    const answer = JSON.stringify(claude.lastRequest.system.includes('PIECES') ? fakeSplits : fakeQuiz);
+    const answer = JSON.stringify(claude.lastRequest.system.includes('PIECES') ? (tanyaAnswers.shift() || fakeSplits) : fakeQuiz);
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
       id: 'msg_test', type: 'message', role: 'assistant', model: 'claude-opus-5-5',
       content: [{ type: 'text', text: answer }],
@@ -55,6 +55,7 @@ const claude = createServer((req, res) => {
 process.env.ANTHROPIC_BASE_URL = 'http://localhost:' + claude.address().port;
 process.env.ANTHROPIC_API_KEY = 'test-key';
 
+const tanyaAnswers = [];   // queued answers for particular tests (then fakeSplits)
 // Pretend Claude for Tanya: a good split (typed without vowels, with a heading),
 // a made-up start, a recap and a summary
 const fakeSplits = { chapterIntro: 'should be dropped mid-chapter', recap: 'So far: every Jew has two souls.', summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
@@ -177,9 +178,19 @@ const f2 = await tanya({ date: tomorrowISO }, null);
 globalThis.fetch = realFetch2;
 check('a failed run → the next ask says why (502), without trying again', [f1.status, f2.status, /failed/.test(f2.json.error), background.length], [202, 502, true, 0]);
 
+// The AI numbered segments by the chapter (2, 3) instead of 1, 2 → still lined up
+const byChapter = JSON.parse(JSON.stringify(fakeSplits)); byChapter.segments.forEach(x => { x.index += P.startVerse - 1; });
+// …and a first answer with no cuts or headings → asked once more, the better one kept
+tanyaAnswers.push({ ...fakeSplits, segments: [] }, byChapter);
+const callsR = claudeCalls;
+await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
+const r1 = await tanya(T, null);
+check('poor first answer → asked once more; chapter-numbered segments still line up', [claudeCalls - callsR, r1.json.blocks.map(b => b.heading || '')], [2, ['Two souls', 'The first soul', '']]);
+
 check('prepare again (bust) by a normal user → 403', (await tanya({ ...T, bust: '1' })).status, 403);
+const callsB = claudeCalls;
 const b1 = await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
-check('prepare again by an admin → prepared again', [b1.status, claudeCalls - calls0], [202, 2]);
+check('prepare again by an admin → prepared again', [b1.status, claudeCalls - callsB], [202, 1]);
 
 claude.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll API tests passed');
