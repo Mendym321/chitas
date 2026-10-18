@@ -3456,6 +3456,8 @@ function _pruneScrollKeys() {
  *     the loop re-runs — so enhance upgrades never leave us at position 0.
  */
 function _restoreScrollAfterRender(sectionId, targetPos) {
+  // Only the section on screen may claim the reader and move its scroll
+  if (window._readerOpenFor !== (sectionId.startsWith('extra_') ? sectionId.slice(6) : sectionId)) return;
   // Mark this section as the active owner — future scroll saves attribute correctly.
   // Normalise: sectionId may be 'chumash' or 'extra_dafYomi' — active sid uses the raw
   // dataset value ('chumash' / 'dafYomi') so it matches chabad-mark-btn.dataset.sectionId.
@@ -3676,6 +3678,7 @@ async function _fetchChumashText(ref, keyword){
 
 
 function _renderChumashContent() {
+  if (window._readerOpenFor !== 'chumash') return;   // another section is on screen
   const { torahChunks, rashiMap } = window._chumashData || {};
   if (!torahChunks || !torahChunks.length) return;
   const lang = localStorage.getItem('chitas_lang_chumash') || 'both';
@@ -4069,6 +4072,7 @@ async function _fetchRambamChapter(ref) {
 }
 
 function _renderRambamContent() {
+  if (window._readerOpenFor !== 'rambam') return;   // another section is on screen
   const { chapters } = window._rambamData || {};
   if (!chapters || !chapters.length) return;
   const lang = localStorage.getItem('chitas_lang_rambam') || 'both';
@@ -4322,6 +4326,7 @@ function _toHebrewNumeral(n) {
 // of the month ("יום ג") where the day starts, small Hebrew-letter verse
 // markers inline, justified text with a first-line indent, OT Siddur font.
 function _renderTehillimContent() {
+  if (window._readerOpenFor !== 'tehillim') return;   // another section is on screen
   const { chapters, psalmLabel, dayNum } = window._tehillimData || {};
   if (!chapters || !chapters.length) return;
   const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
@@ -4573,7 +4578,7 @@ async function _loadTanyaNative(sectionId, silent) {
     _askGuide(40);
 
     // Restore scroll — rAF loop handles both slow paints and the enhance re-render
-    _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
+    if (!silent) _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
     return true;
 
   } catch(e) {
@@ -4597,6 +4602,7 @@ const TANYA_PARTS = [
 ];
 
 function _renderTanyaContent() {
+  if (window._readerOpenFor !== 'tanya') return;   // another section is on screen
   const d = window._tanyaData || {};
   const { blocks, chapterLabel } = d;
   if (!blocks || !blocks.length) return;
@@ -4713,6 +4719,11 @@ function openChabadPanel(sectionId) {
   if (!s) return;
   // New learners pick their Rambam track the first time they open it
   if (sectionId === 'rambam' && user.rambamTrackAsked === false) { changeTrack({ firstTime: true }); return; }
+
+  // What the reader is showing, set FIRST: only this section may draw into the
+  // reader or move its scroll (a background preload or a slow load of a
+  // section you already left must not)
+  window._readerOpenFor = sectionId;
 
   // Switching straight from another section or day: keep its place, then start
   // this one fresh (its own saved place, if any, is restored once it loads)
@@ -5237,6 +5248,7 @@ function closeChabadPanel() {
   // Clear active section — nothing owns the reader until the next open sets it
   window._readerActiveSid = null;
   window._readerActiveDay = null;
+  window._readerOpenFor = null;
   window._pendingScrollRestore = {};
 
   document.getElementById('chabad-panel').style.display = 'none';
@@ -6113,6 +6125,7 @@ async function openExtraReader(id) {
   const def = EXTRA_TRACK_DEFS[id];
   if (!def) return;
 
+  window._readerOpenFor = id;
   // Same as a section: keep the place of what was open, start this one fresh
   if (window._readerActiveSid) {
     _flushReaderScroll();
