@@ -18,7 +18,7 @@ import { cleanTanyaHtml, isHagahahHtml, withoutNotes } from './tanya-text.js';
 
 export const MODEL = 'claude-opus-5-5';
 const SEFARIA = 'https://www.sefaria.org';
-const CACHE_VERSION = 'v6';          // v6 = plainer guide: in short, words to know
+const CACHE_VERSION = 'v7';          // v7 = lead-in context, headings, synopsis at the end
 
 export function guideDocId(slug, startVerse, endVerse) {
   return Buffer.from(`slug:${slug}|${startVerse}|${endVerse ?? 'end'}|${CACHE_VERSION}`).toString('base64url');
@@ -42,8 +42,6 @@ export async function fetchChapter(chapterSlug) {
 
 // ── What the AI is asked ──────────────────────────────────────────────────────
 const GuideSchema = z.object({
-  keyIdea: z.string(),
-  terms: z.array(z.object({ term: z.string(), meaning: z.string() })),
   chapterIntro: z.string(),
   recap: z.string(),
   summary: z.string(),
@@ -60,17 +58,13 @@ const SYSTEM = `You prepare the daily Tanya portion for people who learn it ever
 
 2. HEADINGS. To show the flow, give a short heading (2 to 6 plain English words, sentence case, no final period) where a new step of the argument begins: for example "The question", "Love is not enough on its own", "A proof from the verse", "Back to the main point". Put it on the segment ("heading", for a step that starts with the segment) or on a cut ("heading" in that split). Use one roughly every 3 to 6 pieces; use "" everywhere else.
 
-3. "keyIdea": today's main point in ONE short, plain sentence (under 20 words) that a beginner would remember, e.g. "Permitted things can be raised up to holiness; forbidden things cannot."
+3. "chapterIntro": only when the portion starts at the beginning of the chapter. 2 to 3 short sentences that set the scene: where the previous chapter left off, and what question or subject this chapter takes up. End by leading into today's opening (e.g. "Today he begins by..."). Otherwise "".
 
-4. "terms": the 2 to 5 hardest words or ideas in today's text that a beginner may not know (Kabbalah and Chassidus terms like "kelipat nogah", "Atzilut", "malchut", "bittul", or Hebrew/Aramaic names of works). For each, "meaning" in at most 12 plain words, e.g. kelipat nogah: "the mixed realm that is neither holy nor evil, and can be raised up". Use the spelling the English translation uses. [] if there are none.
+4. "recap": only when the portion starts in the middle of the chapter. 2 to 3 short sentences: what the chapter has said so far, ending with where today picks up (e.g. "Today he answers this by..."), so the reader starts with the thread in hand. Otherwise "".
 
-5. "chapterIntro": only when the portion starts at the beginning of the chapter: 2 short sentences on what this chapter is about and how it continues from the previous one. Otherwise "".
+5. "summary": the synopsis, read AFTER the text: 2 to 3 short sentences that tie today's portion together, how it moved from start to finish and where it landed.
 
-6. "recap": only when the portion starts in the middle of the chapter: 1 to 2 short sentences on what the chapter has said so far, so today makes sense. Otherwise "".
-
-7. "summary": 2 to 3 short sentences on how today's portion gets to its point, in order.
-
-HOW TO WRITE THE GUIDE. The reader is a beginner who learns every day but is not a scholar. Write the way a good teacher speaks to a student: plain, warm, everyday English. Keep sentences short (under 20 words). Bring in at most one new term per sentence, and only if needed; prefer saying what it means ("the part of G-d's creation that can be raised up") over naming it. Don't repeat the meanings listed in "terms". Headings are plain English, with no untranslated Hebrew words. Stay precise and faithful to the text: no forward references to later portions, no invented sources, no sermonizing.`;
+HOW TO WRITE THE GUIDE. Its only job is to help the reader follow the flow of today's Tanya. Write the way a good teacher speaks to a student: plain, warm, everyday English, short sentences (under 20 words). Use the text's own key terms only when needed, and then say what they mean in a few plain words in passing. Headings are plain English, with no untranslated Hebrew words. Stay precise and faithful to the text: no forward references to later portions, no invented sources, no sermonizing.`;
 
 async function askAI({ book, chapterNum, startVerse, heSegs, enSegs, before, previous }) {
   const parts = [`${book}, chapter ${chapterNum}. ${startVerse > 1 ? `Today's portion starts in the middle of the chapter, at segment ${startVerse}.` : "Today's portion starts at the beginning of the chapter."}`];
@@ -85,8 +79,11 @@ async function askAI({ book, chapterNum, startVerse, heSegs, enSegs, before, pre
     messages: [{ role: 'user', content: parts.join('\n\n') }],
   });
   if (response.stop_reason === 'refusal' || !response.parsed_output) throw new Error('no result (' + response.stop_reason + ')');
-  return response.parsed_output;
+  return { ...response.parsed_output, usage: response.usage };
 }
+
+// What one run cost, from the tokens it used (Opus 5.5: $4 per million in, $20 per million out)
+const costOf = u => u ? Math.round(((u.input_tokens || 0) * 4 + (u.output_tokens || 0) * 20) / 1e6 * 10000) / 10000 : null;
 
 // ── Read, or prepare, the guide for one portion ───────────────────────────────
 // A portion is { chapterSlug, startVerse, endVerse } (endVerse null = to the end
@@ -165,12 +162,12 @@ async function generate(db, cacheDoc, chapterSlug, startVerse, endVerse) {
 
   const guide = {
     slug: chapterSlug, startVerse, endVerse: endVerse ?? 'end',
-    keyIdea: String(ai.keyIdea || '').trim(),
-    terms: (ai.terms || []).map(t => ({ term: String(t.term || '').trim(), meaning: String(t.meaning || '').trim() })).filter(t => t.term && t.meaning).slice(0, 6),
     intro: startVerse === 1 ? String(ai.chapterIntro || '').trim() : '',
     recap: startVerse > 1 ? String(ai.recap || '').trim() : '',
     summary: String(ai.summary || '').trim(),
     notes, blocks, model: MODEL, generatedAt: new Date().toISOString(),
+    // Kept so the real cost can be checked in Firebase (collection tanya_enhanced)
+    usage: { inputTokens: ai.usage?.input_tokens ?? null, outputTokens: ai.usage?.output_tokens ?? null, costUSD: costOf(ai.usage) },
   };
   await cacheDoc.set(guide);   // if saving fails, this counts as a failed run (no paying again right away)
   return guide;

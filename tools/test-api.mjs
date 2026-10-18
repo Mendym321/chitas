@@ -57,7 +57,7 @@ process.env.ANTHROPIC_API_KEY = 'test-key';
 
 // Pretend Claude for Tanya: a good split (typed without vowels, with a heading),
 // a made-up start, a recap and a summary
-const fakeSplits = { keyIdea: 'Every Jew has two souls.', terms: [{ term: 'kelipah', meaning: 'the shell that hides holiness' }, { term: '', meaning: 'dropped' }], chapterIntro: 'should be dropped mid-chapter', recap: 'So far: every Jew has two souls.', summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
+const fakeSplits = { chapterIntro: 'should be dropped mid-chapter', recap: 'So far: every Jew has two souls.', summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
   { index: 1, heading: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', heading: 'The first soul' }, { he: 'מילים שלא קיימות', en: 'The second soul', heading: 'never shown' }] },
   { index: 2, heading: '', splits: [] },
 ]};
@@ -164,7 +164,7 @@ check('the Alter Rebbe\'s gloss (hagahah) is marked, without its label', [t1.jso
 check('headings: on the segment and on the cut that was found', t1.json.blocks.map(b => b.heading || ''), ['Two souls', 'The first soul', '']);
 check('translator\'s footnote kept as a note', t1.json.notes, ['See ch. 2.']);
 check('mid-chapter: recap and summary, no chapter intro', [t1.json.recap, t1.json.summary, t1.json.intro], ['So far: every Jew has two souls.', 'The Alter Rebbe continues explaining the two souls.', '']);
-check('in short + words to know (empty ones dropped)', [t1.json.keyIdea, t1.json.terms], ['Every Jew has two souls.', [{ term: 'kelipah', meaning: 'the shell that hides holiness' }]]);
+check('the real cost of each guide is kept with it', t1.json.source === 'cache' && typeof store.get('tanya_enhanced/' + guideDocId(P.chapterSlug, P.startVerse, P.endVerse)).usage?.costUSD, 'number');
 check('the AI read the text without footnote markers', claude.lastRequest.messages[0].content.includes('\uE000'), false);
 
 // A failed run is not retried right away (a lasting problem can't keep costing money)

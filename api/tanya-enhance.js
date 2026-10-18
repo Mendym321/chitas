@@ -63,7 +63,6 @@ export default async function handler(req, res) {
 
 const reply = (p, g, source) => ({
   ...p, source,
-  keyIdea: g.keyIdea || '', terms: g.terms || [],
   intro: g.intro || '', recap: g.recap || '', summary: g.summary || '',
   notes: g.notes || [], blocks: g.blocks,
 });

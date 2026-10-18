@@ -508,20 +508,18 @@
 .tz-guide { background:var(--card); border-radius:16px; padding:14px 16px 12px; margin-bottom:24px; }
 .tz-gl { font:700 11px var(--ui-font); letter-spacing:.07em; text-transform:uppercase; color:var(--purple); margin-bottom:3px; }
 .tz-gt { font-family:var(--read-font); font-size:17px; line-height:1.5; color:var(--t1); }
-.tz-gt + .tz-gl, .tz-terms + .tz-gl { margin-top:12px; }
-.tz-key { font-weight:600; }
-.tz-terms { font-family:var(--read-font); font-size:16px; line-height:1.4; color:var(--t1); }
-.tz-terms dt { font-weight:600; display:inline; }
-.tz-terms dt::after { content:': '; }
-.tz-terms dd { display:inline; margin:0; color:var(--t2); }
-.tz-terms dd::after { content:''; display:block; margin-bottom:5px; }
+.tz-gt + .tz-gl { margin-top:12px; }
+
 .tz-ai { font-size:11px; color:var(--t3); margin-top:10px; }
 .tz-h { display:flex; align-items:center; gap:10px; font:600 13px var(--ui-font); color:var(--purple); margin:26px 0 10px; }
 .tz-h::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--purple) 22%, transparent); }
 .tz-p { margin-bottom:16px; }
 .tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
 .tz-en { font-family:var(--read-font); --rf-sz:16px; --rf-lh:1.5; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
-.tz-p.both .tz-en { --rf-sz:15px; color:var(--t2); margin-top:5px; }
+.tz-p.both { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+.tz-p.both .tz-en { --rf-sz:14.5px; }
+.tz-p.both .tz-he { --rf-sz:18px; text-align:right; }   /* a narrow column: no stretched gaps */
+.tz-synopsis { margin:28px 0 0; }
 .tz-open { font-size:1.7em; font-weight:700; line-height:1; }
 .tz-hag { margin:4px 0 20px; padding:10px 0 4px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
 .tz-hl { text-align:center; font-family:'Vilna',serif; font-weight:700; font-size:15px; color:var(--t3); margin-bottom:6px; }
@@ -4568,7 +4566,7 @@ async function _loadTanyaNative(sectionId, silent) {
         // The guide's text is plain text: escape it (footnote markers survive)
         const blocks = body.blocks.map(b => ({ he: escapeHtml(b.he), en: escapeHtml(b.en), isHagahah: b.isHagahah === true, heading: b.heading || '' }));
         _guideUpdate({ guidePending: false, guideError: '', blocks, notes: body.notes || [],
-          guide: { keyIdea: body.keyIdea || '', terms: body.terms || [], intro: body.intro || '', recap: body.recap || '', summary: body.summary || '' } });
+          guide: { intro: body.intro || '', recap: body.recap || '', summary: body.summary || '' } });
       });
     window._tanyaData.guidePending = true;
     if (!silent) _renderTanyaContent();
@@ -4630,15 +4628,13 @@ function _renderTanyaContent() {
   const g = d.guide;
   if (guideOn && !g && d.guidePending) t += '<div class="tz-guide"><p class="tz-ai" style="margin:0;">Preparing today\'s guide: the portion in small pieces, with an introduction and the flow. This takes about half a minute the first time.</p></div>';
   if (guideOn && !g && !d.guidePending && d.guideError) t += '<div class="tz-guide"><p class="tz-ai" style="margin:0;">The guide isn\'t available right now: ' + escapeHtml(d.guideError) + '. Here is the plain text.</p></div>';
-  if (guideOn && g && (g.keyIdea || g.intro || g.recap || g.summary)) {
-    const terms = (g.terms || []).filter(x => x.term && x.meaning);
+  // Before the text: context that leads into today (first day of a chapter: what
+  // it's about; other days: what it has said so far)
+  if (guideOn && g && (g.intro || g.recap)) {
     t += '<div class="tz-guide">'
-      + (g.keyIdea ? '<p class="tz-gl">In short</p><p class="tz-gt tz-key">' + escapeHtml(g.keyIdea) + '</p>' : '')
       + (g.intro ? '<p class="tz-gl">About this chapter</p><p class="tz-gt">' + escapeHtml(g.intro) + '</p>' : '')
       + (g.recap ? '<p class="tz-gl">So far in this chapter</p><p class="tz-gt">' + escapeHtml(g.recap) + '</p>' : '')
-      + (g.summary ? '<p class="tz-gl">Today</p><p class="tz-gt">' + escapeHtml(g.summary) + '</p>' : '')
-      + (terms.length ? '<p class="tz-gl">Words to know</p><dl class="tz-terms">' + terms.map(x => '<dt>' + escapeHtml(x.term) + '</dt><dd>' + escapeHtml(x.meaning) + '</dd>').join('') + '</dl>' : '')
-      + '<p class="tz-ai">The guide is AI-written to help you follow; the text is the Alter Rebbe\'s.</p></div>';
+      + '</div>';
   }
 
   // One piece: Hebrew and/or English
@@ -4649,7 +4645,7 @@ function _renderTanyaContent() {
     const enP = b.en ? '<p class="tz-en rf-body">' + fixEn(b.en) + '</p>' : '';
     if (lang === 'he') return heP ? '<div class="tz-p">' + heP + '</div>' : '';
     if (lang === 'en') return enP ? '<div class="tz-p">' + enP + '</div>' : '';
-    return '<div class="tz-p both">' + heP + enP + '</div>';
+    return '<div class="tz-p both">' + (enP || '<p></p>') + (heP || '<p></p>') + '</div>';
   };
 
   let v = '', inHag = false, opened = false;
@@ -4663,6 +4659,12 @@ function _renderTanyaContent() {
     v += piece(b, opening);
   });
   if (inHag) v += '</div>';
+
+  // After the text: the synopsis, tying today together
+  if (guideOn && g?.summary) {
+    v += '<div class="tz-guide tz-synopsis"><p class="tz-gl">Today\'s Tanya in brief</p><p class="tz-gt">' + escapeHtml(g.summary) + '</p>'
+      + '<p class="tz-ai">The guide is AI-written to help you follow the flow; the text is the Alter Rebbe\'s.</p></div>';
+  }
 
   el.innerHTML = t + v
     + '<p style="font-size:11px;color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s Tanya —</p>'
