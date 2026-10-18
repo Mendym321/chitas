@@ -161,6 +161,25 @@ await check('Rambam translator\'s notes become tappable numbers that open in pla
   return [btns.length, notes, first, closed, !!window.__hacked, document.getElementById('native-reader-content').textContent.includes('on the seventh day')];
 }, [2, ['See Shabbos 2a.', '<b>'], ['block', 'See Shabbos 2a.'], 'none', false, true]);
 
+await check('reader: switching section or day keeps each place separately (no leaking)', async () => {
+  Object.keys(localStorage).filter(k => k.startsWith('scroll_')).forEach(k => localStorage.removeItem(k));
+  const reader = document.getElementById('native-reader');
+  const panel = document.getElementById('chabad-panel');
+  const tall = () => { const c = document.getElementById('native-reader-content'); c.style.display = 'block'; c.innerHTML = '<div style="height:5000px"></div>'; reader.style.display = 'block'; };
+  // Reading today's Tanya, scrolled far down
+  dayOffset = 0; panel.style.display = 'flex'; tall();
+  _restoreScrollAfterRender('tanya', 0); reader.scrollTop = 1500;
+  // "Next: Chumash" straight from the reader
+  openChabadPanel('chumash'); tall();
+  const afterSwitch = reader.scrollTop;
+  const chumashSaved = _getSavedScrollPos('chumash');
+  const tanyaSaved = _getSavedScrollPos('tanya');
+  // Yesterday's Tanya has its own place, not today's
+  dayOffset = -1; const yesterday = _getSavedScrollPos('tanya'); dayOffset = 0;
+  closeChabadPanel();
+  return [afterSwitch, chumashSaved, tanyaSaved, yesterday];
+}, [0, 0, 1500, 0]);
+
 await check('Tanya: guide labeled and shown as text; headings, opening word, hagahah, footnotes', () => {
   const N = '\uE000' + '0' + '\uE001';
   window._tanyaData = { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.41', chapterLabel: 'Likkutei Amarim · Chapter 41', chapterNum: 41, isFirstSegment: true,

@@ -508,7 +508,13 @@
 .tz-guide { background:var(--card); border-radius:16px; padding:14px 16px 12px; margin-bottom:24px; }
 .tz-gl { font:700 11px var(--ui-font); letter-spacing:.07em; text-transform:uppercase; color:var(--purple); margin-bottom:3px; }
 .tz-gt { font-family:var(--read-font); font-size:17px; line-height:1.5; color:var(--t1); }
-.tz-gt + .tz-gl { margin-top:12px; }
+.tz-gt + .tz-gl, .tz-terms + .tz-gl { margin-top:12px; }
+.tz-key { font-weight:600; }
+.tz-terms { font-family:var(--read-font); font-size:16px; line-height:1.4; color:var(--t1); }
+.tz-terms dt { font-weight:600; display:inline; }
+.tz-terms dt::after { content:': '; }
+.tz-terms dd { display:inline; margin:0; color:var(--t2); }
+.tz-terms dd::after { content:''; display:block; margin-bottom:5px; }
 .tz-ai { font-size:11px; color:var(--t3); margin-top:10px; }
 .tz-h { display:flex; align-items:center; gap:10px; font:600 13px var(--ui-font); color:var(--purple); margin:26px 0 10px; }
 .tz-h::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--purple) 22%, transparent); }
@@ -3362,10 +3368,12 @@ function onReaderScroll() {
 
   // Save scroll position — debounced 300ms
   if (_scrollSaveTimer) clearTimeout(_scrollSaveTimer);
+  const sidAtScroll = window._readerActiveSid, dayAtScroll = window._readerActiveDay;
   _scrollSaveTimer = setTimeout(() => {
-    // Only save if the active section is set — prevents transient bleed during switches
+    // Only save for the section + day that was scrolled — a switch in the
+    // meantime must not save one section's place under another
     const sid = window._readerActiveSid;
-    if (!sid) return;
+    if (!sid || sid !== sidAtScroll || window._readerActiveDay !== dayAtScroll) return;
     const curScrollTop = reader.scrollTop;
     if (curScrollTop < 80) return; // don't save near-top positions
 
@@ -3395,7 +3403,7 @@ window._pendingScrollRestore = {}; // { sectionId: targetPixels }
 // Keys are date-scoped so today's position doesn't collide with yesterday's
 // (yesterday's Chumash has different content than today's, restoring a deep
 // scroll position into a shorter piece of content is nonsensical).
-function _scrollKey(sectionId) {
+function _scrollKey(sectionId, off = dayOffset) {
   if (sectionId === 'extra_likkuteiTorah') {
     const d = new Date();
     const day = d.getDay();
@@ -3403,12 +3411,14 @@ function _scrollKey(sectionId) {
     monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
     return 'scroll_extra_likkuteiTorah_week_' + monday.toISOString().slice(0, 10);
   }
-  return 'scroll_' + sectionId + '_' + dateISO(new Date());
+  const d = new Date(); d.setDate(d.getDate() + (off || 0));
+  return 'scroll_' + sectionId + '_' + dateISO(d);
 }
 
 function _saveScrollPos(sectionId, pos) {
   try {
-    localStorage.setItem(_scrollKey(sectionId), String(Math.round(pos)));
+    // Saved under the section + day the reader is SHOWING (not whatever day is current now)
+    localStorage.setItem(_scrollKey(sectionId, window._readerActiveDay ?? dayOffset), String(Math.round(pos)));
     _pruneScrollKeys();
   } catch(e) {}
 }
@@ -3452,6 +3462,7 @@ function _restoreScrollAfterRender(sectionId, targetPos) {
   // Normalise: sectionId may be 'chumash' or 'extra_dafYomi' — active sid uses the raw
   // dataset value ('chumash' / 'dafYomi') so it matches chabad-mark-btn.dataset.sectionId.
   window._readerActiveSid = sectionId.startsWith('extra_') ? sectionId.slice(6) : sectionId;
+  window._readerActiveDay = dayOffset;
 
   if (!targetPos || targetPos <= 0) return;
   window._pendingScrollRestore[sectionId] = targetPos;
@@ -4420,7 +4431,10 @@ async function _loadTanyaNative(sectionId, silent) {
     if (!tp) return false;
 
     const chapterRef = tp.base + ' ' + tp.chapter;
-    const chapterLabel = tp.base.replace(/^Tanya,?\s*/i, '').replace(/Part\s+[IVX]+;\s*/i, '') + ' \u00b7 Chapter ' + tp.chapter;
+    const partName = tp.base.replace(/^Tanya,?\s*/i, '').replace(/Part\s+[IVX]+;\s*/i, '');
+    // Iggeret HaKodesh is made of epistles, Kuntres Acharon of essays
+    const unit = /Iggeret HaKodesh/i.test(partName) ? 'Epistle' : /Kuntres Acharon/i.test(partName) ? 'Essay' : 'Chapter';
+    const chapterLabel = partName + ' \u00b7 ' + unit + ' ' + tp.chapter;
     const enc = encodeURIComponent(chapterRef);
 
     const panelSection = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
@@ -4554,7 +4568,7 @@ async function _loadTanyaNative(sectionId, silent) {
         // The guide's text is plain text: escape it (footnote markers survive)
         const blocks = body.blocks.map(b => ({ he: escapeHtml(b.he), en: escapeHtml(b.en), isHagahah: b.isHagahah === true, heading: b.heading || '' }));
         _guideUpdate({ guidePending: false, guideError: '', blocks, notes: body.notes || [],
-          guide: { intro: body.intro || '', recap: body.recap || '', summary: body.summary || '' } });
+          guide: { keyIdea: body.keyIdea || '', terms: body.terms || [], intro: body.intro || '', recap: body.recap || '', summary: body.summary || '' } });
       });
     window._tanyaData.guidePending = true;
     if (!silent) _renderTanyaContent();
@@ -4616,11 +4630,14 @@ function _renderTanyaContent() {
   const g = d.guide;
   if (guideOn && !g && d.guidePending) t += '<div class="tz-guide"><p class="tz-ai" style="margin:0;">Preparing today\'s guide: the portion in small pieces, with an introduction and the flow. This takes about half a minute the first time.</p></div>';
   if (guideOn && !g && !d.guidePending && d.guideError) t += '<div class="tz-guide"><p class="tz-ai" style="margin:0;">The guide isn\'t available right now: ' + escapeHtml(d.guideError) + '. Here is the plain text.</p></div>';
-  if (guideOn && g && (g.intro || g.recap || g.summary)) {
+  if (guideOn && g && (g.keyIdea || g.intro || g.recap || g.summary)) {
+    const terms = (g.terms || []).filter(x => x.term && x.meaning);
     t += '<div class="tz-guide">'
+      + (g.keyIdea ? '<p class="tz-gl">In short</p><p class="tz-gt tz-key">' + escapeHtml(g.keyIdea) + '</p>' : '')
       + (g.intro ? '<p class="tz-gl">About this chapter</p><p class="tz-gt">' + escapeHtml(g.intro) + '</p>' : '')
       + (g.recap ? '<p class="tz-gl">So far in this chapter</p><p class="tz-gt">' + escapeHtml(g.recap) + '</p>' : '')
       + (g.summary ? '<p class="tz-gl">Today</p><p class="tz-gt">' + escapeHtml(g.summary) + '</p>' : '')
+      + (terms.length ? '<p class="tz-gl">Words to know</p><dl class="tz-terms">' + terms.map(x => '<dt>' + escapeHtml(x.term) + '</dt><dd>' + escapeHtml(x.meaning) + '</dd>').join('') + '</dl>' : '')
       + '<p class="tz-ai">The guide is AI-written to help you follow; the text is the Alter Rebbe\'s.</p></div>';
   }
 
@@ -4694,6 +4711,15 @@ function openChabadPanel(sectionId) {
   if (!s) return;
   // New learners pick their Rambam track the first time they open it
   if (sectionId === 'rambam' && user.rambamTrackAsked === false) { changeTrack({ firstTime: true }); return; }
+
+  // Switching straight from another section or day: keep its place, then start
+  // this one fresh (its own saved place, if any, is restored once it loads)
+  if (window._readerActiveSid) {
+    _flushReaderScroll();
+    window._readerActiveSid = null; window._readerActiveDay = null; window._pendingScrollRestore = {};
+  }
+  const _rd = document.getElementById('native-reader');
+  if (_rd) _rd.scrollTop = 0;
 
   markDoneUnlocked = false;
   document.getElementById('reader-next').style.display = 'none';
@@ -5163,22 +5189,9 @@ function _closeSettingsOnOutsideClick(e) {
   }
 }
 
-function closeChabadPanel() {
-  // Allow LS to intercept (e.g. X while reading a sicha → back to list)
-  if (window._lsHandleClose && window._lsHandleClose()) return;
-  // Clean up any LS chrome
-  document.getElementById('ls-nav-bar')?.remove();
-  document.getElementById('ls-fn-popup')?.remove();
-  document.getElementById('ls-set-modal')?.remove();
-  // Clean up translation mode UI
-  _lsHideTransPopup();
-  const wrap = document.getElementById('ls-body-wrap');
-  if (wrap) wrap.removeEventListener('click', _lsWrapClick);
-  // Reset progress bar to gold
-  const _lspb = document.getElementById('reader-progress-bar');
-  if (_lspb) _lspb.style.background = 'var(--gold)';
-
-  // Flush any pending debounced save immediately — but ONLY under the still-active sid
+// Save the reader's place for the section + day it is showing (on close, or
+// before switching to another section or day inside the reader)
+function _flushReaderScroll() {
   if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
   const reader = document.getElementById('native-reader');
   const activeSid = window._readerActiveSid;
@@ -5199,8 +5212,29 @@ function closeChabadPanel() {
     }
   }
 
+}
+
+function closeChabadPanel() {
+  // Allow LS to intercept (e.g. X while reading a sicha → back to list)
+  if (window._lsHandleClose && window._lsHandleClose()) return;
+  // Clean up any LS chrome
+  document.getElementById('ls-nav-bar')?.remove();
+  document.getElementById('ls-fn-popup')?.remove();
+  document.getElementById('ls-set-modal')?.remove();
+  // Clean up translation mode UI
+  _lsHideTransPopup();
+  const wrap = document.getElementById('ls-body-wrap');
+  if (wrap) wrap.removeEventListener('click', _lsWrapClick);
+  // Reset progress bar to gold
+  const _lspb = document.getElementById('reader-progress-bar');
+  if (_lspb) _lspb.style.background = 'var(--gold)';
+
+  _flushReaderScroll();
+  const reader = document.getElementById('native-reader');
+
   // Clear active section — nothing owns the reader until the next open sets it
   window._readerActiveSid = null;
+  window._readerActiveDay = null;
   window._pendingScrollRestore = {};
 
   document.getElementById('chabad-panel').style.display = 'none';
@@ -6076,6 +6110,14 @@ function _toggleExtraTrack(id) {
 async function openExtraReader(id) {
   const def = EXTRA_TRACK_DEFS[id];
   if (!def) return;
+
+  // Same as a section: keep the place of what was open, start this one fresh
+  if (window._readerActiveSid) {
+    _flushReaderScroll();
+    window._readerActiveSid = null; window._readerActiveDay = null; window._pendingScrollRestore = {};
+  }
+  const _rd = document.getElementById('native-reader');
+  if (_rd) _rd.scrollTop = 0;
 
   // Use the same panel as regular sections
   markDoneUnlocked = false;
