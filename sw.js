@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v8';
+const VERSION     = 'v9';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
@@ -33,6 +33,7 @@ const SHELL_URLS = [
   '/js/progress.js',
   '/js/learning-data.js',
   '/js/learning-stats.js',
+  '/js/day-note.js',
   '/js/account-merge.js',
 ];
 

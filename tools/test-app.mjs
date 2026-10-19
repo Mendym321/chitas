@@ -85,6 +85,24 @@ await check('Mark Done in the reader saves it and offers the next section of the
           document.querySelector('#reader-next .rn-go')?.textContent];
 }, [true, 'flex', 'Next: Tanya']);
 
+await check('ticking a section: its tick pops with a ring of its ink, after the list is drawn again', async () => {
+  user.done = {}; user.pastDone = {}; dayOffset = 0;
+  document.getElementById('chabad-panel').style.display = 'none';
+  showConfirm('chumash', false);                      // the tick on Today
+  await new Promise(r => requestAnimationFrame(() => setTimeout(r, 30)));
+  const tick = document.getElementById('tick-chumash');
+  return [tick.style.animation.includes('checkPop'), !!tick.querySelector('.tick-ring'),
+          document.getElementById('today-seg-0').classList.contains('on'), document.getElementById('toast').textContent];
+}, [true, true, true, 'Nice! Chumash done.']);
+
+await check('the line under the greeting says what kind of day it is', () => {
+  switchTab('learn'); dayOffset = 0; setGreeting();
+  const today = document.getElementById('day-note').textContent;
+  switchTab('stats'); const onLearning = document.getElementById('day-note').textContent;
+  switchTab('learn');
+  return [today.length > 0, today === dayNote(new Date(), getParshaForDate(new Date())).join(' · '), onLearning];
+}, [true, true, '']);
+
 await check('catching up: after yesterday\'s Chumash, next is today\'s Chumash', () => {
   user.done = {}; user.pastDone = {}; dayOffset = -1;
   showConfirm('chumash', true);

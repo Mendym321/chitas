@@ -160,7 +160,8 @@
   .panel.open { display: flex; }
 
   /* Toast */
-  #toast { position:fixed;top:14px;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:999px;font-size:var(--fs-2);font-weight:700;z-index:600;white-space:nowrap;box-shadow:0 8px 40px rgba(0,0,0,.7);display:none;pointer-events:none; }
+  #toast { position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);align-items:center;gap:8px;padding:10px 20px;border-radius:999px;font-size:var(--fs-2);font-weight:600;z-index:600;white-space:nowrap;background:var(--card);color:var(--t1);border:1px solid var(--border);box-shadow:0 6px 24px rgba(40,30,10,.16);display:none;pointer-events:none;animation:toastIn .35s cubic-bezier(.2,.7,.2,1); }
+  @keyframes toastIn { from { opacity:0; transform:translate(-50%,-10px); } to { opacity:1; transform:translate(-50%,0); } }
 
   /* Bottom nav */
   #bottom-nav { position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:10px 16px 20px;gap:6px;z-index:100; }
@@ -498,6 +499,29 @@
 .total-n b { font-weight:600; }
 .total-d { font-size:var(--fs-2); color:var(--t3); margin-top:2px; }
 .t-sec span { font-size:var(--fs-1); color:var(--t3); }
+/* Life: the day's character, the inks in the rows, motion when you tick */
+#day-note { font-size:var(--fs-2); font-weight:600; color:var(--gold); margin-top:6px; min-height:1em; }
+#day-note:empty { display:none; }
+#tab-learn .lrow-ic { width:44px; height:44px; border-radius:50%; position:relative; color:var(--c, var(--gold)); }
+#tab-learn .lrow-ic::before { content:''; position:absolute; inset:0; border-radius:50%; background:var(--c, var(--gold)); opacity:.13; transition:opacity .4s ease; }
+#tab-learn .lrow-ic svg { position:relative; }
+#tab-learn .lrow.done .lrow-ic::before { opacity:.24; }
+#tab-learn .lrow.done .lrow-t p:first-child { color:var(--t2); }
+.lrow-ic.lift svg { animation:glyphLift .6s cubic-bezier(.2,.7,.2,1); }
+@keyframes glyphLift { 0%{transform:none} 40%{transform:translateY(-3px) scale(1.12)} 100%{transform:none} }
+.check { position:relative; }
+.tick-ring { position:absolute; inset:-2px; border-radius:50%; border:2px solid var(--c, var(--gold)); pointer-events:none; animation:tickRing .7s ease-out forwards; }
+@keyframes tickRing { from{transform:scale(1);opacity:.8} to{transform:scale(2.1);opacity:0} }
+#streak-pill b { color:var(--gold); }
+#thought { display:block; width:100%; text-align:center; margin:30px 0 6px; padding:0 8px; border:none; background:none; color:inherit; cursor:pointer; font:inherit; }
+.thought-k { display:flex; align-items:center; gap:12px; font-size:var(--fs-1); font-weight:600; color:var(--gold); margin-bottom:12px; }
+.thought-k::before, .thought-k::after { content:''; flex:1; height:1px; background:var(--border); }
+.thought-t { font-family:var(--read-font); font-style:italic; font-size:18px; line-height:1.5; color:var(--t1); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.thought-more { font-size:var(--fs-2); font-weight:600; color:var(--gold); margin-top:10px; }
+.day-spark { position:relative; width:0; height:0; margin:0 auto; }
+.day-spark i { position:absolute; left:-4px; top:-4px; width:8px; height:8px; border-radius:50%; background:var(--c); opacity:0; animation:spark 1s 1.15s cubic-bezier(.15,.7,.3,1) forwards; }
+@keyframes spark { 0%{opacity:1;transform:translate(0,0) scale(1.2)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)} }
+@media (prefers-reduced-motion: reduce) { .day-spark, .tick-ring { display:none; } .lrow-ic.lift svg { animation:none; } }
 /* Today, on one page: the week, the day's line, the sections between thin rules */
 #week-strip { display:grid; grid-template-columns:repeat(7,1fr); padding:4px 0 14px; margin-bottom:14px; border-bottom:1px solid var(--border); }
 #progress-card { margin-bottom:6px; }
@@ -506,7 +530,8 @@
 #streak-pill { padding:0; background:none; border:none; font:var(--fs-2) var(--ui-font); color:var(--t2); white-space:nowrap; cursor:pointer; }
 #streak-pill b { color:var(--t1); font-weight:600; }
 .day-line { display:flex; gap:4px; margin:10px 0 8px; }
-.day-line i { flex:1; height:4px; border-radius:2px; background:var(--border); transition:background .4s ease; }
+.day-line i { flex:1; height:4px; border-radius:2px; background-color:var(--border); background-image:linear-gradient(var(--seg, var(--gold)), var(--seg, var(--gold))); background-repeat:no-repeat; background-size:0% 100%; transition:background-size .6s cubic-bezier(.2,.7,.2,1); }
+.day-line i.on { background-size:100% 100%; }
 #progress-sub { font-size:var(--fs-2); color:var(--t2); }
 #tab-learn .group { background:none; border-radius:0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:visible; }
 #tab-learn .lrow { background:none; padding-left:0; padding-right:0; }
@@ -1037,6 +1062,7 @@ window._fsGetDoc = getDoc;
       <div style="flex:1;min-width:0;">
         <p id="heb-date-label" class="t-caption">Loading…</p>
         <h1 id="greeting" class="t-title">Today</h1>
+        <p id="day-note"></p>
       </div>
     </div>
 
@@ -1091,6 +1117,9 @@ window._fsGetDoc = getDoc;
 
       <!-- Actual sections -->
       <div id="sections-list" class="group" style="display:none;"></div>
+
+      <!-- A few lines of today's Hayom Yom (tap to read it all) -->
+      <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
 
       <!-- Extra learning tracks -->
       <p id="extra-tracks-separator" class="t-sec">More learning <button onclick="_openExtraTracksMenu()">Edit</button></p>
@@ -1316,6 +1345,7 @@ window._fsGetDoc = getDoc;
 <script src="/js/account-merge.js"></script>
 <script src="/js/learning-data.js"></script>
 <script src="/js/learning-stats.js"></script>
+<script src="/js/day-note.js"></script>
 <script>
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║                    CHITAS DAILY — chitas.html                    ║
@@ -1498,11 +1528,10 @@ async function saveUserCritical() {
 function fire(msg, type='gold') {
   clearTimeout(toastTimer);
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.display = 'block';
-  t.style.background = type==='gold' ? '#C99A3A' : '#1A1A24';
-  t.style.color = type==='gold' ? '#000' : '#F0F0F5';
-  t.style.border = `1px solid ${type==='gold'?'#C99A3A':'#32323E'}`;
+  // Paper, not a black pill; something learned gets a small gold tick
+  t.innerHTML = (type === 'done' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' : '') + escapeHtml(msg);
+  t.style.display = 'flex';
+  t.style.animation = 'none'; void t.offsetWidth; t.style.animation = '';
   toastTimer = setTimeout(()=>{ t.style.display='none'; }, 3000);
 }
 
@@ -2415,6 +2444,41 @@ function setGreeting() {
   const firstName = (user.name || '').split(' ')[0];
   const hello = (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening') + (firstName ? ', ' + firstName : '');
   if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Your learning' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? hello : _dayName(dayOffset);
+  // Under it, on Today: what kind of day it is ("Erev Shabbos · Parshas Lech Lecha")
+  const noteEl = document.getElementById('day-note');
+  if (noteEl) {
+    const d = new Date(); d.setDate(d.getDate() + dayOffset);
+    noteEl.textContent = tab && tab !== 'tab-learn' ? '' : dayNote(d, getParshaForDate(d)).join(' · ');
+  }
+}
+
+// A few lines of today's Hayom Yom on Today. One read a day (kept on the phone).
+async function _renderThought(tries = 0) {
+  const el = document.getElementById('thought');
+  if (!el) return;
+  if (dayOffset !== 0) { el.style.display = 'none'; return; }
+  const today = new Date(), iso = dateISO(today);
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('chitas_thought') || 'null'); } catch (e) {}
+  if (!saved || saved.iso !== iso) {
+    if (!window._fsDb) { if (tries < 8) setTimeout(() => _renderThought(tries + 1), 1500); return; }
+    const parts = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(today);
+    const m = parts.find(p => p.type === 'month').value, n = +parts.find(p => p.type === 'day').value;
+    const HEBCAL = { Tishri: 'Tishrei', Heshvan: 'Cheshvan', Shevat: "Sh'vat", Iyar: 'Iyyar' };
+    const key = _hayomYomKeys(HEBCAL[m] || m, n)[0];
+    try {
+      const snap = key && await window._fsGetDoc(window._fsDoc(window._fsDb, 'hayomYom', key));
+      const text = snap?.exists() ? String(snap.data().english || '').replace(/\*/g, '').replace(/\s+/g, ' ').trim() : '';
+      if (!text) return;
+      saved = { iso, text: text.length > 320 ? text.slice(0, 320).replace(/\s+\S*$/, '') + '…' : text, date: hebMonthSpelling(n + ' ' + m) };
+      localStorage.setItem('chitas_thought', JSON.stringify(saved));
+    } catch (e) { return; }
+  }
+  if (dayOffset !== 0) return;
+  el.innerHTML = '<p class="thought-k">Hayom Yom · ' + escapeHtml(saved.date) + '</p>'
+    + '<p class="thought-t">' + escapeHtml(saved.text) + '</p>'
+    + '<p class="thought-more">Read it all</p>';
+  el.style.display = 'block';
 }
 
 // "How your streak works" — the rules in plain words (opened from the streak pill)
@@ -2522,6 +2586,7 @@ function updateDayNav() {
     document.getElementById('day-banner-text').textContent = 'Viewing ' + name + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
   if (schedule) updateProgressRing(); else renderWeekStrip();
+  setGreeting();
 }
 
 async function rebuildScheduleForOffset() {
@@ -2672,8 +2737,8 @@ function renderSectionsForOffset(iso) {
     const tickAction = done
       ? (isToday ? 'unmarkDone(\'' + s.id + '\')' : 'unmarkDonePast(\'' + s.id + '\',\'' + iso + '\')')
       : (isToday ? 'showConfirm(\'' + s.id + '\',false)' : 'showConfirmPast(\'' + s.id + '\',\'' + iso + '\')');
-    return '<div class="lrow" id="card-' + s.id + '" style="--c:' + (SECTION_COLORS[s.id] || s.color) + ';" onclick="openChabadPanel(\'' + s.id + '\')">'
-      + '<div class="lrow-ic" id="icon-' + s.id + '" style="color:' + s.color + ';">' + icon(s.icon, 24) + '</div>'
+    return '<div class="lrow' + (done ? ' done' : '') + '" id="card-' + s.id + '" style="--c:' + (SECTION_COLORS[s.id] || s.color) + ';" onclick="openChabadPanel(\'' + s.id + '\')">'
+      + '<div class="lrow-ic" id="icon-' + s.id + '">' + icon(s.icon, 24) + '</div>'
       + '<div class="lrow-t"><p>' + s.label + (SECTION_HE[s.id] ? '<span class="lrow-he" lang="he">' + SECTION_HE[s.id] + '</span>' : '') + '</p><p>' + s.subtitle + '</p></div>'
       + '<button class="check' + (done ? ' on' : '') + '" id="tick-' + s.id + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + s.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
       + '</div>';
@@ -2688,6 +2753,7 @@ function renderSectionsForOffset(iso) {
   _renderExtraTrackCards(iso, isToday);
   const addBtn = document.getElementById('add-learning-btn');
   if (addBtn) addBtn.style.display = hasTracks ? 'none' : 'block';
+  _renderThought();
 }
 
 const SECTION_COLORS = { chumash: 'var(--c-chumash)', tehillim: 'var(--c-tehillim)', tanya: 'var(--c-tanya)', rambam: 'var(--c-rambam)' };
@@ -2699,7 +2765,7 @@ function updateProgressRing() {
   const done = dayOffset === 0 ? (user.done || {}) : ((user.pastDone || {})[iso] || {});
   SECTION_IDS.forEach((id, i) => {
     const seg = document.getElementById('today-seg-' + i);
-    if (seg) seg.style.background = done[id] ? SECTION_COLORS[id] : '';
+    if (seg) { seg.style.setProperty('--seg', SECTION_COLORS[id]); seg.classList.toggle('on', !!done[id]); }
     const tseg = document.getElementById('tab-seg-' + i);    // the Today tab's little ring
     if (tseg) { tseg.setAttribute('stroke-opacity', done[id] ? '1' : '.3'); tseg.setAttribute('stroke', done[id] ? SECTION_COLORS[id] : 'currentColor'); }
   });
@@ -2711,8 +2777,13 @@ function updateProgressRing() {
   const list = left.length <= 1 ? left.join('') : left.slice(0, -1).join(', ') + ' and ' + left[left.length - 1];
   title.textContent = allDone ? (dayOffset === 0 ? 'Chitas done' : 'Chitas day') : n + ' of 4 done';
   sub.textContent = allDone
-    ? (dayOffset === 0 ? 'See you tomorrow' : 'All four learned')
-    : (dayOffset === 0 && new Date().getDay() === 5 ? list + ' left · before Shabbos' : list + ' left');
+    ? (dayOffset === 0 ? "That's all four. See you tomorrow!" : 'All four learned')
+    : dayOffset !== 0 ? list + ' left'
+    : (n === 0 ? 'Four to learn today, start wherever you like'
+      : n === 1 ? 'Nice start! ' + list + ' to go'
+      : n === 2 ? 'Halfway there. ' + list + ' to go'
+      : 'Almost there, just ' + list + ' left')
+      + (new Date().getDay() === 5 ? ', before Shabbos' : '');
   renderWeekStrip();
 }
 
@@ -2888,7 +2959,7 @@ function markDonePast(id, iso) {
   if (!schedule || user.pastDone?.[iso]?.[id]) return;
   _logTanya(id, iso);
   const r = _changeDay(iso, day => { day[id] = true; });
-  fire(r.completedNow ? 'Day caught up. ' + user.streak + ' days in a row, nice!' : 'Nice! ' + schedule[id].label + ' marked.', r.completedNow ? 'gold' : 'xp');
+  fire(r.completedNow ? 'Day caught up. ' + user.streak + ' days in a row, nice!' : 'Nice! ' + schedule[id].label + ' marked.', 'done');
   renderSectionsForOffset(_viewedISO());
   if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
 }
@@ -2910,7 +2981,7 @@ function markDone(id) {
   // Clear saved scroll for today so this section's next open starts from top
   try { localStorage.removeItem(_scrollKey(id)); } catch(e) {}
 
-  if (!r.completedNow) fire('Nice! ' + s.label + ' done.', 'xp');
+  if (!r.completedNow) fire('Nice! ' + s.label + ' done.', 'done');
 
   celebrateSection(id);
   // The day complete is its own moment (with the milestone's line, if one was reached)
@@ -3114,9 +3185,18 @@ function vibrate(pattern) {
 
 function celebrateSection(sectionId) {
   vibrate([10]); // one light tap
-  // Tick animation
-  const tick = document.getElementById('tick-' + sectionId);
-  if (tick) tick.style.animation = 'checkPop .4s ease';
+  // After the list has been drawn again (it is, right after marking)
+  requestAnimationFrame(() => {
+    const tick = document.getElementById('tick-' + sectionId);
+    if (tick) {
+      tick.style.animation = 'checkPop .4s ease';
+      const ring = document.createElement('span');
+      ring.className = 'tick-ring';
+      tick.appendChild(ring);
+      setTimeout(() => ring.remove(), 800);
+    }
+    document.getElementById('icon-' + sectionId)?.classList.add('lift');
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -3204,7 +3284,12 @@ function celebrateStreakMilestone(streak) {
 // The one daily celebration: the four sections' inks draw into one gold line
 function celebrateAllDone(milestone) {
   vibrate([12, 70, 12]);
-  const rule = '<div class="day-rule">' + SECTION_IDS.map(id => '<i style="--c:var(--c-' + id + ')"></i>').join('') + '</div>'
+  const sparks = Array.from({ length: 12 }, (_, i) => {
+    const a = (i / 12) * 2 * Math.PI - Math.PI / 2, r = 90 + (i % 3) * 22;
+    return '<i style="--c:var(--c-' + SECTION_IDS[i % 4] + ');--dx:' + Math.round(Math.cos(a) * r) + 'px;--dy:' + Math.round(Math.sin(a) * r * .6) + 'px;"></i>';
+  }).join('');
+  const rule = '<div class="day-spark">' + sparks + '</div>'
+    + '<div class="day-rule">' + SECTION_IDS.map(id => '<i style="--c:var(--c-' + id + ')"></i>').join('') + '</div>'
     + '<p class="day-he" lang="he">חת״ת</p>';
   const days = user.total || 1;
   const sub = milestone && MILESTONE_LINES[milestone] ? MILESTONE_LINES[milestone]
@@ -5562,7 +5647,7 @@ async function selectTrackInline(newTrack, firstTime) {
   // Rebuild schedule for the new track and re-render
   init();
   closeProfileSheet();
-  fire('Rambam track updated ✓', 'gold');
+  fire('Rambam track updated', 'done');
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -5652,8 +5737,7 @@ function switchTab(id) {
   const tab = document.getElementById('tab-' + id);
   if (tab) tab.classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
-  const g = document.getElementById('greeting');
-  if (g) g.textContent = id === 'stats' ? 'Your learning' : id === 'profile' ? 'Profile' : (dayOffset === 0 ? 'Today' : _dayName(dayOffset));
+  setGreeting();
   if (id === 'profile') renderProfile();
   window.scrollTo(0, 0);
   if (id === 'stats')   { renderStats(); }
@@ -5999,7 +6083,7 @@ async function _loadExtraSubtitle(id) {
 // Mark done / unmark for extra tracks
 function markExtraDone(id) {
   _changeDay(dateISO(new Date()), day => { day[id] = true; });
-  fire('Nice! ' + (EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done.', 'xp');
+  fire('Nice! ' + (EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done.', 'done');
   vibrate([10]);
   _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   // Animate card
@@ -7568,7 +7652,7 @@ function bootApp() {
       _showMainApp();
       showLoaderSafe();
       await init();
-      if (wasGuest) fire(remote ? 'Signed in · progress combined ✓' : 'Signed in · progress saved ✓', 'gold');
+      if (wasGuest) fire(remote ? 'Signed in · progress combined' : 'Signed in · progress saved', 'done');
       return;
     }
 
@@ -8606,7 +8690,7 @@ function _shbCompleteUnit(unit, unitIdx) {
     if (!user.shbCompleted) user.shbCompleted = 0;
     user.shbCompleted++;
     saveUser();
-    fire('Sha\'ar HaBitachon complete', 'gold');
+    fire('Sha\'ar HaBitachon complete', 'done');
     closeChabadPanel();
     return;
   }
