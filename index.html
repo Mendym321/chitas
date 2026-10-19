@@ -129,6 +129,7 @@
 
   /* Animations */
   @keyframes up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
   @keyframes pop { 0%{transform:scale(.7);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   @keyframes tickerExitUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-20px) scale(.93)} }
@@ -433,7 +434,11 @@
 .rb-en.rb-plain { font-weight: 400; color: var(--t1); }
 /* Week strip (renderWeekStrip) */
 /* Learning: the month with its dates, the streak, the totals as lines */
-#learning-cal { margin:4px 0 22px; }
+#learning-cal { margin:0 0 8px; }
+#learning-cal .cal-d { aspect-ratio:auto; height:38px; font-size:13px; }
+#learning-cal .cal-d svg { inset:auto; left:50%; top:50%; width:34px; height:34px; transform:translate(-50%,-50%); }
+#learning-cal .cal-head { margin-bottom:4px; }
+#learning-cal .cal-head button { width:32px; height:32px; font-size:17px; }
 .cal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; text-align:center; }
 .cal-head button { width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:none; color:var(--t1); font-size:20px; line-height:1; cursor:pointer; }
 .cal-head button:disabled { opacity:.3; cursor:default; }
@@ -491,6 +496,31 @@
 .stile-art.lift svg { animation:glyphLift .6s cubic-bezier(.2,.7,.2,1); }
 #tab-learn .group, #extra-tracks-list.group { background:var(--card); border-radius:var(--r-m); border:none; overflow:hidden; }
 #tab-learn .lrow { padding-left:14px; padding-right:14px; }
+#heb-chip { display:flex; align-items:center; gap:6px; padding:5px 12px 5px 6px !important; border:none; cursor:pointer; }
+#heb-chip .cal-ic { width:22px; height:22px; border-radius:50%; background:var(--ink); color:var(--on-ink); display:grid; place-items:center; }
+#back-today { background:var(--ink); color:var(--on-ink); border:none; cursor:pointer; }
+#day-readonly { margin:-4px 0 12px; padding:10px 14px; border-radius:16px; background:var(--card); font-size:13px; line-height:1.4; color:var(--t2); }
+#day-readonly b { color:var(--t1); }
+#day-picker { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
+.dp-sheet { width:100%; max-width:430px; background:var(--bg); border-radius:28px 28px 0 0; padding:10px 20px calc(22px + env(safe-area-inset-bottom)); animation:up .28s cubic-bezier(.2,.7,.2,1); }
+.dp-grab { width:40px; height:5px; border-radius:3px; background:var(--hi); margin:0 auto 12px; }
+.dp-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.dp-head p { font:800 24px var(--ui-font); letter-spacing:-.4px; color:var(--t1); }
+.dp-today { padding:8px 14px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:700 14px var(--ui-font); cursor:pointer; }
+.dp-cal { background:var(--card); border-radius:22px; padding:12px 10px 8px; }
+.dp-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px 0; }
+.dp-grid b { text-align:center; font-size:11px; font-weight:700; color:var(--t3); padding-bottom:4px; }
+.dp-d { position:relative; height:40px; border:none; background:none; padding:0; display:grid; place-items:center; color:var(--t1); font:600 14px var(--ui-font); cursor:pointer; border-radius:50%; }
+.dp-d svg { position:absolute; width:36px; height:36px; left:50%; top:50%; transform:translate(-50%,-50%); }
+.dp-d span { position:relative; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; }
+.dp-d.ahead { color:var(--t2); }
+.dp-d.today span { font-weight:800; text-decoration:underline; text-underline-offset:3px; }
+.dp-d.sel span { background:var(--ink); color:var(--on-ink); text-decoration:none; }
+.dp-d.off { color:var(--hi); cursor:default; }
+.dp-info { margin-top:12px; padding:12px 14px; border-radius:18px; background:var(--card2); }
+.dp-info p:first-child { font:800 15px var(--ui-font); color:var(--t1); }
+.dp-info p:last-child { font-size:13px; color:var(--t2); margin-top:2px; }
+.dp-go { margin-top:12px; width:100%; height:52px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:800 16px var(--ui-font); cursor:pointer; }
 /* Learning */
 .stat2 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin:6px 0 12px; }
 .stat2 > * { border-radius:var(--r-m); padding:14px 16px; text-align:left; border:none; font:inherit; }
@@ -580,6 +610,10 @@
 .th-chapter.he .th-text { font-family:'OTSiddur','Shlomo','Noto Serif Hebrew',serif; --rf-sz:21px; --rf-lh:1.62; text-align-last:right; }
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
 .th-pair { margin-bottom:12px; }
+.th-personal { margin-top:30px; padding-top:18px; border-top:1px solid var(--border); }
+.th-personal-head { display:flex; align-items:center; justify-content:space-between; }
+.th-personal-head p { font:800 var(--fs-3) var(--ui-font); color:var(--t1); }
+.th-personal-head button { display:flex; align-items:center; gap:5px; padding:7px 12px; border-radius:999px; border:none; background:var(--card2); color:var(--t1); font:700 13px var(--ui-font); cursor:pointer; }
 .th-pair .th-text { text-indent:0; margin-bottom:3px; }
 .th-en { direction:ltr; text-align:left; font-size:15px; line-height:1.5; color:var(--t2); }
 /* Reader: day bar + up next */
@@ -1074,7 +1108,7 @@ window._fsGetDoc = getDoc;
         <svg viewBox="0 0 24 24" style="transform:rotate(-90deg)"><circle id="tab-seg-0" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-0.9"/><circle id="tab-seg-1" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-14.2"/><circle id="tab-seg-2" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-27.6"/><circle id="tab-seg-3" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-40.9"/></svg><span class="tab-l">Today</span>
       </button>
       <button class="nav-tab" data-tab="stats" onclick="switchTab('stats')">
-        <span class="tab-glyph" id="tab-books"></span><span class="tab-l">Learning</span>
+        <span class="tab-glyph" id="tab-books"></span><span class="tab-l">Progress</span>
       </button>
       <button class="nav-tab" data-tab="profile" onclick="switchTab('profile')">
         <span class="tab-av"><span id="avatar-tab"></span><span id="avatar-dot" style="display:none;"></span></span><span class="tab-l">Profile</span>
@@ -1086,9 +1120,11 @@ window._fsGetDoc = getDoc;
       <!-- Chips: the streak, the Hebrew date, what kind of day it is -->
       <div id="day-chips">
         <button id="streak-pill" onclick="openStreakInfo()"><b id="streak-pill-num">0</b> days in a row<span id="week-summary"></span></button>
-        <span id="heb-chip"></span>
+        <button id="heb-chip" onclick="openDayPicker()" aria-label="Go to a day"><span class="cal-ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></span><span id="heb-chip-t"></span></button>
+        <button id="back-today" onclick="goToDay(0)" style="display:none;">Back to today</button>
         <span id="day-note"></span>
       </div>
+      <p id="day-readonly" style="display:none;"></p>
 
       <!-- The last 7 days: tap a day to read it or catch up -->
       <div id="week-strip"></div>
@@ -1441,7 +1477,10 @@ let user = (() => {
 })();
 let schedule = null;
 let dayOffset = 0; // 0 = today, -1 = yesterday, -2 = two days ago, etc.
-const MAX_DAYS_BACK = 7;
+const MAX_DAYS_BACK = 7;      // today and the last 7 days can be marked
+const READ_BACK = 400, READ_AHEAD = 60;   // any day in this range can be read
+const _canMarkDay = off => off <= 0 && off >= -MAX_DAYS_BACK;
+const _canReadDay = off => off <= READ_AHEAD && off >= -READ_BACK;
 let toastTimer = null;
 
 const RAMBAM_TRACKS = {
@@ -1457,6 +1496,7 @@ const RAMBAM_TRACKS = {
 const SVG_ICONS = {
   // The four sections' own glyphs (one stroke weight, drawn for this app):
   // a Sefer Torah, Dovid's kinor, a flame, and the 14 books of Mishneh Torah
+  chart: '<path d="M4 20h16" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="12" width="3.4" height="8" rx="1" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="10.3" y="7" width="3.4" height="13" rx="1" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="15.1" y="3.5" width="3.4" height="16.5" rx="1" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   calendar: '<rect x="4" y="5.5" width="16" height="14.5" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="14.5" r="1.1" fill="currentColor"/><circle cx="15" cy="14.5" r="1.1" fill="currentColor"/>',
   torah:  '<rect x="3.5" y="6" width="4" height="12" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.5" y="6" width="4" height="12" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 3v3M5.5 18v3M18.5 3v3M18.5 18v3M7.5 7.5h9M7.5 16.5h9M10 10.5h4M10 13.5h4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   kinor:  '<path d="M6.5 4.5h11M7.5 4.5C5.8 8.5 6 12.3 8.5 15M16.5 4.5c1.7 4 1.5 7.8-1 10.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="7" y="15" width="10" height="5" rx="2.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 4.5V15M12 4.5V15M14 4.5V15" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -1714,17 +1754,12 @@ async function _renderPersonalPsalms() {
   if (myGen !== _personalPsalmsGen) return; // stale
   if (!people.length) { el.innerHTML = ''; return; }
 
-  const BLUE = '#5B7DB0';
-  const HE = "'OTSiddur','Shlomo','Noto Serif Hebrew',serif";
   const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
 
-  let h = '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
-    +   '<p style="font-size:var(--fs-1);font-weight:700;color:' + BLUE + ';opacity:.8;">Personal Tehillim</p>'
-    +   '<button onclick="_openTehillimPeopleManager()" style="font-size:var(--fs-1);font-weight:700;color:' + BLUE + ';background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 0;display:flex;align-items:center;gap:4px;">'
-    +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-    +     'Add person'
-    +   '</button>'
+  // Same layout as today's Tehillim, with whose chapter it is under the number
+  let h = '<div class="th-personal">'
+    + '<div class="th-personal-head"><p>Personal Tehillim</p>'
+    +   '<button onclick="_openTehillimPeopleManager()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add person</button>'
     + '</div>';
 
   // Fetch all psalms using cache — no duplicate requests
@@ -1739,35 +1774,8 @@ async function _renderPersonalPsalms() {
 
   psalmResults.forEach(p => {
     if (!p) return;
-    const isHe = lang === 'he';
-
-    // Chapter heading — person name + psalm number (static size, not scaled)
-    const pHeadText = isHe
-      ? '\u05E4\u05E8\u05E7 ' + _toHebrewNumeral(p.chapter) + ' \u2013 ' + escapeHtml(p.label)
-      : 'Psalm ' + p.chapter + ' \u2013 ' + escapeHtml(p.label);
-    const pHeadAlign = isHe ? 'text-align:right;direction:rtl;' : '';
-    const pHeadFont = isHe ? 'font-family:' + HE + ';' : '';
-    h += '<div style="margin-top:20px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);' + pHeadAlign + '">'
-       + '<span class="rf-header" style="font-size:15px;font-weight:700;color:' + BLUE + ';' + pHeadFont + '">' + pHeadText + '</span>'
-       + '</div>';
-
-    // Flowing prose — same style as main Tehillim (rf-body so it scales with font controls)
-    const verses = isHe ? p.heSegs : p.enSegs;
-    const paraStyle = isHe
-      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:20px;--rf-lh:1.78;font-weight:400;color:var(--t1);'
-      : '--rf-sz:15px;--rf-lh:1.78;color:var(--t1);text-align:justify;';
-
-    if (verses.length) {
-      const verseHTML = verses.map((vText, i) => {
-        if (!vText) return '';
-        const vNum = i + 1;
-        const mark = '<sup style="font-size:var(--fs-1);font-weight:700;color:rgba(91,125,176,.65);margin-' + (isHe ? 'left' : 'right') + ':2px;">' + vNum + '</sup>';
-        return mark + vText;
-      }).join(' ');
-      h += '<p class="rf-body" style="' + paraStyle + '">' + verseHTML + '</p>';
-    }
-
-    h += '<div style="height:1px;background:var(--border);margin:16px 0;"></div>';
+    h += _thChapterHTML({ psalmNum: p.chapter, startVerse: 1, he: p.heSegs || [], en: p.enSegs || [] }, lang,
+      lang === 'en' ? 'For ' + escapeHtml(p.label) : escapeHtml(p.label));
   });
 
   h += '</div>';
@@ -2451,13 +2459,18 @@ function setGreeting() {
   const hello = (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening') + (firstName ? ', ' + firstName : '');
   const onToday = !tab || tab === 'tab-learn';
   const d = new Date(); d.setDate(d.getDate() + dayOffset);
-  if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Learning' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? 'Today' : _dayName(dayOffset);
+  if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Progress' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? 'Today' : _dayName(dayOffset);
   const line = document.getElementById('heb-date-label');
+  const away = Math.abs(dayOffset);
   if (line) line.textContent = !onToday ? d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
-    : dayOffset === 0 ? hello : d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    : dayOffset === 0 ? hello
+    : away <= 6 ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+    : dayOffset < 0 ? away + ' days ago' : 'In ' + away + ' days';
   document.getElementById('today-rings')?.classList.toggle('hide', !onToday);
   // Chips: the Hebrew date, and what kind of day it is ("Erev Shabbos · Parshas Lech Lecha")
-  const heb = document.getElementById('heb-chip');
+  const bt = document.getElementById('back-today');
+  if (bt) bt.style.display = dayOffset === 0 ? 'none' : '';
+  const heb = document.getElementById('heb-chip-t');
   if (heb) heb.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
   const noteEl = document.getElementById('day-note');
   if (noteEl) noteEl.textContent = dayNote(d, getParshaForDate(d)).join(' · ');
@@ -2537,7 +2550,7 @@ function updateHeader() {
   const at = document.getElementById('avatar-tab');
   if (at) at.textContent = ((user.name || '').trim()[0] || '·').toUpperCase();
   const tb = document.getElementById('tab-books');
-  if (tb && !tb.firstChild) tb.innerHTML = icon('calendar', 24);
+  if (tb && !tb.firstChild) tb.innerHTML = icon('chart', 24);
   const dot = document.getElementById('avatar-dot');
   if (dot) dot.style.display = isGuest() ? 'block' : 'none';
   setGreeting();
@@ -2564,8 +2577,7 @@ function dateISO(d) {
 
 function navDay(delta) {
   const newOffset = dayOffset + delta;
-  if (newOffset > 0) return;
-  if (newOffset < -MAX_DAYS_BACK) return;
+  if (!_canReadDay(newOffset)) return;
   dayOffset = newOffset;
   // Clear section data caches — past days need fresh fetches
   // (pre-fetched data is always for today only)
@@ -2591,7 +2603,7 @@ function navDay(delta) {
 function updateDayNav() {
   const banner = document.getElementById('day-banner');
   if (banner) {
-    banner.style.display = dayOffset === 0 ? 'none' : 'flex';
+    banner.style.display = 'none';   // the chips say it now: the day's name, and Back to today
     const d = new Date(); d.setDate(d.getDate() + dayOffset);
     const name = dayOffset === -1 ? 'Yesterday' : d.getDay() === 6 ? 'Shabbos' : d.toLocaleDateString('en-US', { weekday: 'long' });
     document.getElementById('day-banner-text').textContent = 'Viewing ' + name + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -2741,6 +2753,13 @@ function renderSectionsForOffset(iso) {
   const isToday = dayOffset === 0;
   if (!user.pastDone) user.pastDone = {};
   const dayDone = isToday ? user.done : (user.pastDone[iso] || {});
+  const markable = _canMarkDay(dayOffset);
+  const ro = document.getElementById('day-readonly');
+  if (ro) {
+    ro.style.display = markable ? 'none' : 'block';
+    ro.innerHTML = dayOffset > 0 ? '<b>Ahead of today.</b> You can read it now and mark it on the day.'
+      : '<b>Read only.</b> You can mark today and the last 7 days.';
+  }
 
   list.innerHTML = Object.values(schedule).map(s => {
     const done = !!dayDone[s.id];
@@ -2750,9 +2769,9 @@ function renderSectionsForOffset(iso) {
       : (isToday ? 'showConfirm(\'' + s.id + '\',false)' : 'showConfirmPast(\'' + s.id + '\',\'' + iso + '\')');
     return '<div class="stile' + (done ? ' done' : '') + '" id="card-' + s.id + '" style="--c:var(--c-' + s.id + ');--on:var(--on-' + s.id + ');" onclick="openChabadPanel(\'' + s.id + '\')">'
       + '<span class="stile-art" id="icon-' + s.id + '">' + icon(s.icon, 96) + '</span>'
-      + '<div class="stile-top"><button class="check' + (done ? ' on' : '') + '" id="tick-' + s.id + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + s.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
+      + '<div class="stile-top">' + (markable ? '<button class="check' + (done ? ' on' : '') + '" id="tick-' + s.id + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + s.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>' : (done ? '<span class="check on" aria-label="Learned"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>' : ''))
       + '</div>'
-      + '<div class="stile-t"><p>' + s.label + '</p><p>' + String(s.subtitle || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '') + '</p></div>'
+      + '<div class="stile-t"><p>' + s.label + '</p><p>' + (s.id === 'chumash' ? String(s.subtitle || '').replace(/^([^·]+?)( ·|$)/, (m, name, rest) => parshaSpelling(name.trim()) + rest) : String(s.subtitle || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '')) + '</p></div>'
       + '</div>';
   }).join('');
 
@@ -2805,9 +2824,12 @@ function renderWeekStrip() {
   const LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const R = 10, C = 2 * Math.PI * R;
   let html = '';
-  for (let off = -6; off <= 0; off++) {
+  // The last 7 days; when you're on a day outside them, that day's week (Sun–Sat)
+  let from = -6;
+  if (dayOffset < -6 || dayOffset > 0) { const v = new Date(today); v.setDate(today.getDate() + dayOffset); from = dayOffset - v.getDay(); }
+  for (let off = from; off <= from + 6; off++) {
     const d = new Date(today); d.setDate(today.getDate() + off);
-    const n = sectionsDone(dayDone(user, d, today));
+    const n = off > 0 ? 0 : sectionsDone(dayDone(user, d, today));
     const rest = isRestDay(d) && n === 0;
     const viewing = off === dayOffset;
     const shape = rest
@@ -2822,6 +2844,52 @@ function renderWeekStrip() {
   el.innerHTML = html;
 }
 
+// ── Go to a day: a month calendar that slides up from the date chip ──────────
+let _pickMonth = 0, _pickOff = null;
+function openDayPicker() {
+  _pickMonth = 0; _pickOff = dayOffset;
+  const today = new Date(), v = new Date(today); v.setDate(today.getDate() + dayOffset);
+  _pickMonth = (v.getFullYear() - today.getFullYear()) * 12 + v.getMonth() - today.getMonth();
+  document.getElementById('day-picker')?.remove();
+  const m = document.createElement('div');
+  m.id = 'day-picker';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = '<div class="dp-sheet" role="dialog" aria-label="Go to a day"><div class="dp-grab"></div>'
+    + '<div class="dp-head"><p>Go to a day</p><button class="dp-today" onclick="document.getElementById(\'day-picker\').remove();goToDay(0)">Today</button></div>'
+    + '<div id="dp-body"></div></div>';
+  document.body.appendChild(m);
+  _renderDayPicker();
+}
+function _renderDayPicker() {
+  const body = document.getElementById('dp-body');
+  if (!body) return;
+  const today = new Date(); today.setHours(12, 0, 0, 0);
+  const first = new Date(today.getFullYear(), today.getMonth() + _pickMonth, 1, 12);
+  const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  const heb = d => hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { month: 'long' }).format(d));
+  const h1 = heb(first), h2 = heb(new Date(first.getFullYear(), first.getMonth(), days, 12));
+  const offOf = d => Math.round((d - today) / 86400000);
+  let cells = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(l => '<b>' + l + '</b>').join('');
+  for (let i = 0; i < first.getDay(); i++) cells += '<span></span>';
+  for (let n = 1; n <= days; n++) {
+    const d = new Date(first.getFullYear(), first.getMonth(), n, 12), off = offOf(d);
+    const cls = (off === 0 ? ' today' : '') + (off === _pickOff ? ' sel' : '') + (_canReadDay(off) ? '' : ' off') + (off > 0 ? ' ahead' : '');
+    cells += '<button class="dp-d' + cls + '"' + (_canReadDay(off) ? ' onclick="_pickOff=' + off + ';_renderDayPicker()"' : ' disabled') + '>'
+      + '<svg viewBox="0 0 32 32" aria-hidden="true">' + (off <= 0 && !isRestDay(d) ? _quarterRing(dayDone(user, d, today), 16, 13, 2.6) : '') + '</svg><span>' + n + '</span></button>';
+  }
+  const sel = new Date(today); sel.setDate(today.getDate() + _pickOff);
+  const what = _pickOff === 0 ? 'Today.' : _pickOff > 0 ? 'Ahead of today. You can read it now and mark it on the day.'
+    : _canMarkDay(_pickOff) ? 'You can still mark this day.' : 'Read only. You can mark today and the last 7 days.';
+  body.innerHTML = '<div class="dp-cal"><div class="cal-head">'
+    + '<button onclick="_pickMonth--;_renderDayPicker()" aria-label="Previous month">‹</button>'
+    + '<div><p class="cal-m">' + first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + '</p><p class="t-caption">' + (h1 === h2 ? h1 : h1 + ' – ' + h2) + '</p></div>'
+    + '<button onclick="_pickMonth++;_renderDayPicker()" aria-label="Next month"' + (_pickMonth >= 2 ? ' disabled' : '') + '>›</button></div>'
+    + '<div class="dp-grid">' + cells + '</div></div>'
+    + '<div class="dp-info"><p>' + sel.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + ' · '
+    + hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(sel)) + '</p><p>' + what + '</p></div>'
+    + '<button class="dp-go" onclick="document.getElementById(\'day-picker\').remove();goToDay(' + _pickOff + ')">' + (_pickOff === dayOffset ? 'Stay on ' : 'Open ') + escapeHtml(_dayName(_pickOff)) + '</button>';
+}
+
 // A day as a small ring in four quarters, one per section, coloured when learned
 function _quarterRing(done, c, r, w) {
   const L = 2 * Math.PI * r, q = L / 4, gap = Math.min(2.2, q * .12);
@@ -2833,7 +2901,9 @@ function _quarterRing(done, c, r, w) {
 function _dayName(off) {
   if (off === 0) return 'Today';
   if (off === -1) return 'Yesterday';
+  if (off === 1) return 'Tomorrow';
   const d = new Date(); d.setDate(d.getDate() + off);
+  if (off < -6 || off > 6) return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   return d.getDay() === 6 ? 'Shabbos' : d.toLocaleDateString('en-US', { weekday: 'long' });
 }
 
@@ -2848,8 +2918,8 @@ function _updateReaderDayBar(sectionId) {
   label.textContent = dayOffset === 0 ? 'Today' : _dayName(dayOffset) + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   label.className = dayOffset === 0 ? '' : 'past';
   const prev = document.getElementById('rd-prev'), next = document.getElementById('rd-next');
-  prev.disabled = dayOffset <= -MAX_DAYS_BACK;
-  next.disabled = dayOffset >= 0;
+  prev.disabled = !_canReadDay(dayOffset - 1);
+  next.disabled = !_canReadDay(dayOffset + 1);
   document.getElementById('rd-prev-label').textContent = prev.disabled ? '' : _dayName(dayOffset - 1);
   document.getElementById('rd-next-label').textContent = next.disabled ? '' : _dayName(dayOffset + 1);
 }
@@ -2899,7 +2969,7 @@ function goToDay(offset) {
 }
 
 function showConfirm(sectionId, fromReader) {
-  if (!schedule) return;
+  if (!schedule || !_canMarkDay(dayOffset)) return;
   const isToday = dayOffset === 0;
   const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
   const iso = dateISO(d2);
@@ -3683,7 +3753,7 @@ function _restoreScrollAfterRender(sectionId, targetPos) {
 
 let markDoneUnlocked = false;
 function unlockMarkDone() {
-  if (markDoneUnlocked) return;
+  if (markDoneUnlocked || !_canMarkDay(dayOffset)) return;
   markDoneUnlocked = true;
   const hint = document.getElementById('scroll-hint');
   if (hint) hint.style.display = 'none';
@@ -4524,32 +4594,39 @@ function _renderTehillimContent() {
 
   let v = '';
   chapters.forEach((ch, chIdx) => {
-    const verses = isHe ? ch.he : ch.en;
-    v += '<div class="th-chapter' + (isHe ? ' he' : '') + '">'
-      + '<p class="th-ch-num">' + (isHe ? _toHebrewNumeral(ch.psalmNum) + '.' : 'Psalm ' + ch.psalmNum) + '</p>';
-    if (chIdx === 0 && dayNum) v += '<p class="th-day">' + (isHe ? 'יום ' + _toHebrewNumeral(dayNum) : 'Day ' + dayNum) + '</p>';
-    if (isBoth) {
-      // Each passuk in Hebrew, with its English right under it
-      v += ch.he.map((text, i) => {
-        if (!text) return '';
-        const n = (ch.startVerse || 1) + i;
-        return '<div class="th-pair"><p class="th-text rf-body"><span class="th-v">' + _toHebrewNumeral(n) + '</span>' + text + '</p>'
-          + (ch.en[i] ? '<p class="th-en">' + ch.en[i] + '</p>' : '') + '</div>';
-      }).join('');
-    } else if (verses.length) {
-      v += '<p class="th-text rf-body">' + verses.map((text, i) => {
-        if (!text) return '';
-        const n = (ch.startVerse || 1) + i;
-        return '<span class="th-v">' + (isHe ? _toHebrewNumeral(n) : n) + '</span>' + text;
-      }).join(' ') + '</p>';
-    }
-    v += '</div>';
+    v += _thChapterHTML(ch, lang, chIdx === 0 && dayNum ? (isHe ? 'יום ' + _toHebrewNumeral(dayNum) : 'Day ' + dayNum) : '');
   });
 
   el.innerHTML = t + top + v
     + '<div id="tehillim-personal"></div>'
     + '<p style="font-size:var(--fs-1);color:var(--t3);text-align:center;margin-top:12px;padding-bottom:8px;">— End of today\'s Tehillim —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
+// One chapter of Tehillim laid out like a printed Tehillim; under its number a
+// small line (the day of the month, or whose personal chapter it is)
+function _thChapterHTML(ch, lang, line) {
+  const isHe = lang !== 'en', isBoth = lang === 'both';
+  const verses = isHe ? ch.he : ch.en;
+  let v = '<div class="th-chapter' + (isHe ? ' he' : '') + '">'
+    + '<p class="th-ch-num">' + (isHe ? _toHebrewNumeral(ch.psalmNum) + '.' : 'Psalm ' + ch.psalmNum) + '</p>';
+  if (line) v += '<p class="th-day">' + line + '</p>';
+  if (isBoth) {
+    // Each passuk in Hebrew, with its English right under it
+    v += ch.he.map((text, i) => {
+      if (!text) return '';
+      const n = (ch.startVerse || 1) + i;
+      return '<div class="th-pair"><p class="th-text rf-body"><span class="th-v">' + _toHebrewNumeral(n) + '</span>' + text + '</p>'
+        + (ch.en[i] ? '<p class="th-en">' + ch.en[i] + '</p>' : '') + '</div>';
+    }).join('');
+  } else if (verses.length) {
+    v += '<p class="th-text rf-body">' + verses.map((text, i) => {
+      if (!text) return '';
+      const n = (ch.startVerse || 1) + i;
+      return '<span class="th-v">' + (isHe ? _toHebrewNumeral(n) : n) + '</span>' + text;
+    }).join(' ') + '</p>';
+  }
+  return v + '</div>';
 }
 
 function _setTehillimLang(lang) {
@@ -5008,6 +5085,13 @@ function openChabadPanel(sectionId) {
     if (markLabel) markLabel.textContent = 'Mark as learned';
 
     markBtn.onclick = () => showConfirm(sectionId, true);
+  }
+  // Days outside the last week (and days ahead) can be read, not marked
+  if (!_canMarkDay(dayOffset)) {
+    markBtn.dataset.state = 'done';
+    markBtn.style.cursor = 'default';
+    if (markLabel) markLabel.textContent = dayOffset > 0 ? 'Mark it on the day' : 'Read only';
+    markBtn.onclick = null;
   }
 
   // ── Quiz button — show for quizzable sections always ──
@@ -5487,7 +5571,7 @@ function _calTap(iso) {
   const what = off > 0 ? 'Still ahead.' : done.length === 4 ? 'All four learned. Nice!' : done.length ? list + ' learned.' : isRestDay(d) ? 'Shabbos / Yom Tov.' : 'Nothing marked.';
   const el = document.getElementById('cal-detail');
   if (el) el.innerHTML = '<p class="cal-dd">' + d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + heb + '</p><p class="t-caption">' + what + '</p>'
-    + (off <= 0 && off >= -MAX_DAYS_BACK ? '<button class="btn-quiet" style="margin-top:10px;width:100%;" onclick="switchTab(\'learn\');goToDay(' + off + ')">Open this day</button>' : '');
+    + (_canReadDay(off) ? '<button class="btn-quiet" style="margin-top:10px;width:100%;" onclick="switchTab(\'learn\');goToDay(' + off + ')">Open this day</button>' : '');
 }
 
 function renderStats() {
@@ -5554,13 +5638,14 @@ function renderStats() {
     +   '<button class="stat-dark" onclick="openStreakInfo()"><p class="stat-n">' + C.streak + '</p><p class="stat-l">days in a row · best ' + C.best + '</p></button>'
     +   '<div class="stat-soft"><p class="stat-n">' + C.pct30 + '%</p><p class="stat-l">full days, last 30</p></div>'
     + '</div>'
-    + '<div id="learning-cal" class="lcard">' + calHTML + '</div>'
-
     + '<p class="t-sec">All of it, added up <span>since ' + sinceLabel + '</span></p>'
     + '<div id="learned-grid">' + tiles + '</div>'
 
     + '<p class="t-sec">The last 30 days</p>'
     + '<div class="cbars lcard">' + bars + '</div>'
+
+    + '<p class="t-sec">Month by month</p>'
+    + '<div id="learning-cal" class="lcard">' + calHTML + '</div>'
 
     + highlights
     + '<div style="height:24px;"></div>';
@@ -5879,7 +5964,7 @@ async function _bustTanyaCache() {
   const THRESHOLD = 70, RATIO = 1.5;
   let x0 = 0, y0 = 0, dx = 0, active = false, horiz = null;
   const tiles = () => document.getElementById('sections-list');
-  const canGo = delta => { const n = dayOffset + delta; return n <= 0 && n >= -MAX_DAYS_BACK; };
+  const canGo = delta => _canReadDay(dayOffset + delta);
   document.addEventListener('touchstart', e => {
     const el = tiles();
     if (!el || !el.contains(e.target)) return;
@@ -5951,14 +6036,14 @@ async function _bustTanyaCache() {
     // Show hint on the side the user is swiping toward
     const leftHint  = hintEl('left');
     const rightHint = hintEl('right');
-    if (dx > 20 && dayOffset > -MAX_DAYS_BACK) {
+    if (dx > 20 && _canReadDay(dayOffset - 1)) {
       // Swiping right = going to previous day
       rightHint.classList.add('show');
       rightHint.textContent = dx >= THRESHOLD ? 'Previous day ✓' : '← Previous day';
     } else {
       rightHint.classList.remove('show');
     }
-    if (dx < -20 && dayOffset < 0) {
+    if (dx < -20 && _canReadDay(dayOffset + 1)) {
       // Swiping left = going toward today
       leftHint.classList.add('show');
       leftHint.textContent = Math.abs(dx) >= THRESHOLD ? 'Next day ✓' : 'Next day →';
@@ -6021,10 +6106,10 @@ async function _bustTanyaCache() {
     if (fromEdge) { fromEdge = false; if (dx > 80) closeChabadPanel(); return; }
 
     // Check threshold and direction
-    if (dx > THRESHOLD && dayOffset > -MAX_DAYS_BACK) {
+    if (dx > THRESHOLD && _canReadDay(dayOffset - 1)) {
       // Swiped right (finger moves right) — go to previous day
       swipeTransition(reader, 'right', () => navDay(-1));
-    } else if (dx < -THRESHOLD && dayOffset < 0) {
+    } else if (dx < -THRESHOLD && _canReadDay(dayOffset + 1)) {
       // Swiped left (finger moves left) — go to next day (toward today)
       swipeTransition(reader, 'left', () => navDay(1));
     }
@@ -6033,7 +6118,7 @@ async function _bustTanyaCache() {
   // The ‹ › buttons in the reader's day bar use the same transition
   window._readerGoDay = delta => {
     const next = dayOffset + delta;
-    if (next > 0 || next < -MAX_DAYS_BACK) return;
+    if (!_canReadDay(next)) return;
     swipeTransition(getReader(), delta < 0 ? 'right' : 'left', () => navDay(delta));
   };
 

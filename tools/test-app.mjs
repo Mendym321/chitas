@@ -102,7 +102,7 @@ await check('the line under the greeting says what kind of day it is', () => {
   switchTab('stats'); const title = document.getElementById('greeting').textContent;
   switchTab('learn');
   return [today.length > 0, today === dayNote(new Date(), getParshaForDate(new Date())).join(' · '), /\d+ \w+/.test(heb), title];
-}, [true, true, true, 'Learning']);
+}, [true, true, true, 'Progress']);
 
 await check('catching up: after yesterday\'s Chumash, next is today\'s Chumash', () => {
   user.done = {}; user.pastDone = {}; dayOffset = -1;
@@ -112,12 +112,12 @@ await check('catching up: after yesterday\'s Chumash, next is today\'s Chumash',
   return r;
 }, "Next: Today's Chumash");
 
-await check('reader day bar: yesterday can go back or forward; today can\'t go forward', () => {
+await check('reader day bar: yesterday can go back or forward; from today you can read ahead', () => {
   dayOffset = -1; _updateReaderDayBar('chumash');
   const y = [document.getElementById('rd-label').textContent.startsWith('Yesterday'), document.getElementById('rd-next').disabled, document.getElementById('rd-next-label').textContent];
   dayOffset = 0; _updateReaderDayBar('chumash');
   return [...y, document.getElementById('rd-next').disabled, document.getElementById('rd-label').textContent];
-}, [true, false, 'Today', true, 'Today']);
+}, [true, false, 'Today', false, 'Today']);
 
 await check('points: finishing all 4 sections = 50, unmarking one takes back 20', () => {
   user = { ...user, xp: 0, done: {}, pastDone: {}, streak: 0 };
