@@ -1,67 +1,55 @@
-# Chitas Daily — Progress & Home Screen Design
+# Chitas Daily — Design
 
-This explains **why** the points, streak, and home screen work the way they do. If you change one of them later, read this first.
+Read this before changing how anything looks or sounds. The full reasoning, the research and the mockups are in the design direction page (Oct 2026).
 
-> **Update (Oct 2026): points and the leaderboard were removed.** Without a leaderboard, points measured nothing that Chitas days, the streak and the learning stats don't show better, and a public leaderboard needs report/block tools for the App Store. What stays: the streak (Shabbos/Yom Tov never break it), Chitas days, the Today ring, the week strip of mini rings, learning stats, and quiz scores. The points rules below are kept as history. Internally `user.xp` is still computed so old data isn't lost, but it isn't shown anywhere.
->
-> **Reader navigation:** days are moved through with the day bar in the reader (‹ › arrows, last 7 days → today); a swipe in the middle of the screen does the same, and a swipe from the left edge closes the reader. After Mark Done, the reader offers the next step: the same subject on a later day when catching up, otherwise the next section of the day, otherwise today's unfinished sections.
+## The idea
+**Direction C, "colour tiles"** (chosen Oct 2026, after comparing four directions on a design canvas): warm cream, big rounded tiles filled with each section's colour, four rings for the day (like Apple Fitness), a dark pill tab bar, and a chunky grotesque for titles. The reading itself stays like a sefer: Crimson Pro English beside the Hebrew. Every screen serves one of three jobs:
+1. **Read it beautifully:** today's Chumash, Tehillim, Tanya and Rambam.
+2. **Stay accountable:** what's left today, gentle catch-up, years of learning adding up, Shabbos and Yom Tov built in.
+3. **Remember it:** a short Review that sends you back to the text.
 
-## What the best apps teach us
+## Rules every screen follows
+1. **Colour is the life.** Each section owns a colour (`--c-<id>`) and the text/icons on it (`--on-<id>`). Its tile, its rings, its reader header and its main button are that colour. Everything else is cream and ink.
+2. **Big, rounded, few.** Tiles 26px corners, cards 22px, pills for buttons and chips. Few things per screen (choice overload).
+3. **The day is four rings.** Today's header rings, the week strip and the calendar all draw a day as the same four parts, so you read progress the same way everywhere.
+4. **Any order.** No "up next" or suggested order: people learn the four in whatever order they like.
+5. **Quiet voice.** Plain facts ("Tanya and Rambam left", "86 days of Chitas"). No pep talk. A small "Nice! X done." when you tick, a real moment only when the day is finished or a milestone is reached. No emoji.
+6. **Celebrate real things.** The day finished: a full dark screen with the four rings closing. Milestones for real accomplishments. No points or levels.
+7. **Text first in the reader.** Controls stay out of the reading until asked for.
 
-| App | What it does well | What we take |
-|---|---|---|
-| **Duolingo** | One main number: the **streak**. It's always visible, protected on rest days, and repairable. Points (XP) are small, round, and easy to predict. | The streak is the hero. Simple round points. Rest days never break a streak. |
-| **Apple Fitness rings** | One glance answers "am I done today?" You **close your rings**. | Chitas is already 4 parts, so today is a **4-segment ring**. |
-| **Habit trackers** (Streaks, Loop) | A week strip of dots shows the pattern and lets you fix a missed day. | A 7-day strip under the ring. Tap a day to catch up. |
-| **Headspace / Calm** | Calm and respectful, no number overload. Stats are "minutes", "days", real things. | Show real learning (days, chapters), not abstract levels. |
-| **Sefaria / Daf Yomi apps** | Respect the text first. Gamification stays in the background. | Points never interrupt learning. One celebration per day, not five. |
-
-## Problems with the old system
-- **Too many numbers**, often repeating each other: XP appeared 3 times on the home screen, alongside Level, an XP bar, a streak, total days, and "perfect days" (which were the same thing as total days).
-- **Levels meant nothing.** Each level needed 1.5× more XP, so progress stalled quickly, and levels unlocked nothing.
-- **Points didn't add up.** The toast promised +150 when the app gave +50. Unmarking and re-marking could change your total. Bonus XP for milestones inflated totals.
-- **Streak** capped at 9 and broke every Shabbos for anyone who doesn't use a phone on Shabbos.
-- **Quiz XP** was paid for fake questions.
-
-## The new system
-
-### 1. Today = 4 segments
-Chumash, Tehillim, Tanya, Rambam. Each segment fills in its section's color. When all 4 are done, you have a **Chitas day** ✓.
-
-### 2. Streak 🔥 = Chitas days in a row
-- **Shabbos and Yom Tov never break a streak.** If you mark them done later, they count. If not, they're skipped, as if the day didn't exist.
-- **Today doesn't break it until it's over.** If yesterday was done, your streak still shows, and the app reminds you to keep it going.
-- **Catch up within 7 days.** Missed marking a day? Tap it in the week strip.
-- No limit on how far back a streak counts (the old one stopped at 9).
-
-### 3. Points ⭐ = simple and predictable
-| You do | Points |
+## Tokens (in `index.html`, `:root`)
+| | |
 |---|---|
-| Learn a Chitas section | **10** |
-| Finish all 4 (a Chitas day) | **+10 bonus** |
-| Extra learning (Daf Yomi, Hayom Yom…) | **5** |
-| Quiz: each correct answer *(when real quizzes return)* | **5** |
+| **Section colours** | `--c-chumash` amber · `--c-tehillim` blue · `--c-tanya` purple · `--c-rambam` green, with `--on-<id>` for text on them. |
+| **Ink** | `--ink` / `--on-ink`: the tab bar, the streak chip, the main button outside the reader. |
+| **Text** | `--t1` ink, `--t2` secondary, `--t3` captions. |
+| **Text sizes** | `--fs-1` 12 · `--fs-2` 14 · `--fs-3` 16 · `--fs-4` 19 · `--fs-5` 24 · `--fs-6` 32; page titles 34. |
+| **Corners** | `--r-s` 12 · `--r-m` 22 (cards, sheets) · `--r-l` 26 (tiles) · 999 (pills). |
+| **Fonts** | `--ui-font` / `--title-font` Bricolage Grotesque · `--read-font` Crimson Pro for English reading · Hebrew: OT Siddur (Tehillim), Vilna (Tanya), Frank Ruhl (everything else). |
 
-A full Chitas day = **50 points**, and the app shows this rule in plain words ("How points work"). Points come from **one function** that compares a day before and after a change, so unmarking always takes back exactly what marking gave. Old points are kept; nobody loses what they earned.
+## Landing and loading
+- **Loading:** on dark, the four rings chase each other (`#app-loader`).
+- **Landing (L2a):** on dark, the four rings close one by one and each section's name appears under "Chitas"; "Start today" and "I have an account". No tagline: the rings and names say it.
 
-### 4. Milestones instead of levels
-Real achievements, celebrated once: **streak** and **Chitas days** at 3, 7, 18 (חי), 30, 50, 100, 180, 365. No bonus points, so they mean something.
+## Section glyphs (`SVG_ICONS`)
+`torah` a Sefer Torah (Chumash) · `kinor` Dovid's kinor (Tehillim) · `flame` (Tanya) · `books` the 14 books of Mishneh Torah (Rambam) · `calendar` the Learning tab. One stroke weight (1.6). No stock icons for the sections.
 
-### 5. One celebration per day
-Confetti when the day completes, plus a moment when you reach a milestone. Level-up popups are gone.
+## Buttons
+Pills. `.btn-primary` ink: the one action that moves you forward. In the reader the main button (`#chabad-mark-btn`, Next) takes the section's colour through `--rc` / `--rc-on`, set by `_setReaderColour()`. `.btn-quiet` cream: everything else (Review, Home); a finished state uses it.
 
-### 6. Quizzes hidden until they're real
-The fake questions are switched off with one setting (`QUIZZES_ENABLED`). They come back when the real AI quiz is connected.
+## The day's character (`js/day-note.js`)
+`dayNote(date, parsha)` gives the parts of the line under the greeting, most important first, from the phone's Hebrew calendar (no network). Chabad spellings. Tested in `tools/test-day-note.mjs`.
 
-## Home screen, top to bottom
-1. Hebrew date, greeting, one helpful line ("Finish today to keep your 12-day streak")… then 🔥 streak and your avatar.
-2. **Today card:** the 4-segment ring, "2 of 4 done", ⭐ points this week.
-3. **7-day strip:** a filled dot = Chitas day, part-filled = some sections, 🕯 = Shabbos/Yom Tov. Tap to view or catch up a day.
-4. The 4 section cards: tap to learn, ✓ to mark done.
-5. Extra learning.
+## Toasts
+Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small gold tick, only when something was learned.
 
-## Still to do (next steps)
-- **Let people start learning before signing in** (Duolingo-style). This also helps the App Store, which requires Sign in with Apple.
-- **Real quizzes**, plus a "quizzed" star on each segment.
-- **Daily reminder notification** (needs the native app wrapper).
-- **Friends / chavrusa groups** instead of a global leaderboard.
+## Accountability
+- **Streak** = Chitas days in a row. Shabbos and Yom Tov never break it; mark them afterwards and they count.
+- **Catch up** any of the last 7 days; that keeps the streak.
+- **Totals** grow forever (pesukim, chapters, halachos), shown beside the streak.
+- **Learning page**: two stat tiles (streak, 30-day %), a month calendar where each date is the four-part ring (a small sefer under Shabbos / Yom Tov; tap a day to see it), and a colour tile per section with its total, what it means, and how far through the whole (the Torah, Tehillim, Mishneh Torah).
+- **Milestones** (planned): 7, 30, 100, 365 days; a whole parsha; Sefer Tehillim; each book of Rambam and the cycle; the Tanya cycle.
+- Points and the leaderboard were removed in Oct 2026 (`user.xp` is still stored so old data isn't lost, but never shown).
+
+## Reminders and touch (planned)
+At most one notification a day, only if the day isn't finished, never on Shabbos or Yom Tov. Location is asked only when someone turns on Shabbos quiet hours, as a city picked from a list. Three haptics in the whole app: a section learned, the day finished, a milestone.

@@ -156,6 +156,7 @@ function learningOverview(user, today, rambamTrack) {
     tanyaDays: base.sections.tanya.total, tanyaLatest: tanyaChapters.length ? Math.max(...tanyaChapters) : null,
     rambamChapters: base.rambamChapters, rambamHalachos: halachos,
     seferHamitzvosDays: rambamTrack === 'm' ? base.sections.rambam.total : 0,
+    daysBy: Object.fromEntries(SECTION_IDS.map(id => [id, base.sections[id].total])),
   };
 
   // Consistency
