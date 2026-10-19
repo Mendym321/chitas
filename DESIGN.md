@@ -32,7 +32,7 @@ Read this before changing how anything looks or sounds. The full reasoning, the 
 - **Landing (L2a):** on dark, the four rings close one by one and each section's name appears under "Chitas"; "Start today" and "I have an account". No tagline: the rings and names say it.
 
 ## Section glyphs (`SVG_ICONS`)
-`torah` a Sefer Torah (Chumash) · `kinor` Dovid's kinor (Tehillim) · `flame` (Tanya) · `books` the 14 books of Mishneh Torah (Rambam) · `calendar` the Learning tab. One stroke weight (1.6). No stock icons for the sections.
+`torah` a Sefer Torah (Chumash) · `kinor` Dovid's kinor (Tehillim) · `flame` (Tanya) · `books` the 14 books of Mishneh Torah (Rambam) · `chart` the Progress tab · `calendar` the date chip. One stroke weight (1.6). No stock icons for the sections.
 
 ## Buttons
 Pills. `.btn-primary` ink: the one action that moves you forward. In the reader the main button (`#chabad-mark-btn`, Next) takes the section's colour through `--rc` / `--rc-on`, set by `_setReaderColour()`. `.btn-quiet` cream: everything else (Review, Home); a finished state uses it.
@@ -46,8 +46,9 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
 ## Accountability
 - **Streak** = Chitas days in a row. Shabbos and Yom Tov never break it; mark them afterwards and they count.
 - **Catch up** any of the last 7 days; that keeps the streak.
+- **Any day can be read** (about a year back, two months ahead) from the calendar on Today's date chip, or by swiping the tiles. Only today and the last 7 days can be marked; other days say "Read only" or "Ahead of today".
 - **Totals** grow forever (pesukim, chapters, halachos), shown beside the streak.
-- **Learning page**: two stat tiles (streak, 30-day %), a month calendar where each date is the four-part ring (a small sefer under Shabbos / Yom Tov; tap a day to see it), and a colour tile per section with its total, what it means, and how far through the whole (the Torah, Tehillim, Mishneh Torah).
+- **Progress tab** (chart icon): two stat tiles (streak, 30-day %), a month calendar where each date is the four-part ring (a small sefer under Shabbos / Yom Tov; tap a day to see it), and a colour tile per section with its total, what it means, and how far through the whole (the Torah, Tehillim, Mishneh Torah).
 - **Milestones** (planned): 7, 30, 100, 365 days; a whole parsha; Sefer Tehillim; each book of Rambam and the cycle; the Tanya cycle.
 - Points and the leaderboard were removed in Oct 2026 (`user.xp` is still stored so old data isn't lost, but never shown).
 
