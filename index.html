@@ -83,6 +83,7 @@
       --c-chumash: #E0A030; --c-tehillim: #3F6FC0; --c-tanya: #8B54B0; --c-rambam: #5E8A3C;
     }
   }
+  body { overflow-x: hidden; overflow-x: clip; }
   html, body { background: var(--bg); color: var(--t1); font-family: var(--ui-font); font-size:var(--fs-3); line-height: 1.45; min-height: 100vh; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
   #app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: 120px; }
 
@@ -475,7 +476,7 @@
 #today-rings .rt { opacity:.2; }
 #today-rings .rf { stroke-linecap:round; stroke-dasharray:var(--len) var(--len); stroke-dashoffset:var(--len); transform:rotate(-90deg); transform-origin:46px 46px; transition:stroke-dashoffset .9s cubic-bezier(.3,.7,.2,1); }
 #today-rings .rf.on { stroke-dashoffset:0; }
-#day-chips { display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 14px; }
+#day-chips { display:flex; gap:8px; margin:2px -20px 14px; padding:0 20px; overflow-x:auto; scrollbar-width:none; }   /* one line, so it never pushes the page down */
 #day-chips > * { padding:7px 12px; border-radius:999px; font:700 13px var(--ui-font); line-height:1.2; }
 #day-chips > *:empty { display:none; }
 #streak-pill { background:var(--ink); color:var(--on-ink); border:none; cursor:pointer; }
@@ -499,7 +500,15 @@
 #heb-chip { display:flex; align-items:center; gap:6px; padding:5px 12px 5px 6px !important; border:none; cursor:pointer; }
 #heb-chip .cal-ic { width:22px; height:22px; border-radius:50%; background:var(--ink); color:var(--on-ink); display:grid; place-items:center; }
 #back-today { background:var(--ink); color:var(--on-ink); border:none; cursor:pointer; }
-#day-readonly { margin:-4px 0 12px; padding:10px 14px; border-radius:16px; background:var(--card); font-size:13px; line-height:1.4; color:var(--t2); }
+/* Only the tiles move when you swipe: they slide inside their own window,
+   the page never gets wider (no zoom or shift), and nothing above them moves */
+#tiles-wrap { overflow:hidden; margin:0 -20px; padding:14px 20px 4px; }
+#tab-learn #sections-list { margin-top:0; }
+.tiles4 { touch-action:pan-y; }
+.tiles4.dragging .stile { transform:none !important; transition:none !important; }
+#day-chips::-webkit-scrollbar { display:none; }
+#day-chips > * { flex-shrink:0; white-space:nowrap; }
+#day-readonly { margin:10px 0 4px; padding:10px 14px; border-radius:16px; background:var(--card); font-size:13px; line-height:1.4; color:var(--t2); }
 #day-readonly b { color:var(--t1); }
 #day-picker { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
 .dp-sheet { width:100%; max-width:430px; background:var(--bg); border-radius:28px 28px 0 0; padding:10px 20px calc(22px + env(safe-area-inset-bottom)); animation:up .28s cubic-bezier(.2,.7,.2,1); }
@@ -1124,7 +1133,6 @@ window._fsGetDoc = getDoc;
         <button id="back-today" onclick="goToDay(0)" style="display:none;">Back to today</button>
         <span id="day-note"></span>
       </div>
-      <p id="day-readonly" style="display:none;"></p>
 
       <!-- The last 7 days: tap a day to read it or catch up -->
       <div id="week-strip"></div>
@@ -1158,7 +1166,8 @@ window._fsGetDoc = getDoc;
       </div>
 
       <!-- Actual sections -->
-      <div id="sections-list" class="tiles4" style="display:none;"></div>
+      <div id="tiles-wrap"><div id="sections-list" class="tiles4" style="display:none;"></div></div>
+      <p id="day-readonly" style="display:none;"></p>
 
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
@@ -5975,7 +5984,10 @@ async function _bustTanyaCache() {
   document.addEventListener('touchmove', e => {
     if (!active) return;
     const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
-    if (horiz === null && (Math.abs(mx) > 10 || Math.abs(my) > 10)) horiz = Math.abs(mx) > Math.abs(my) * RATIO;
+    if (horiz === null && (Math.abs(mx) > 10 || Math.abs(my) > 10)) {
+      horiz = Math.abs(mx) > Math.abs(my) * RATIO;
+      if (horiz) tiles().classList.add('dragging');
+    }
     if (!horiz) return;
     dx = mx;
     // Where there's no day to go to, it only gives a little
@@ -5986,6 +5998,7 @@ async function _bustTanyaCache() {
     active = false;
     const el = tiles();
     if (!el || !horiz) return;
+    el.classList.remove('dragging');
     window._tilesSwipedAt = Date.now();
     const delta = dx > THRESHOLD ? -1 : dx < -THRESHOLD ? 1 : 0;
     if (!delta || !canGo(delta)) { el.style.transition = 'transform .25s ease'; el.style.transform = ''; return; }
