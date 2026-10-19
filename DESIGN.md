@@ -27,6 +27,10 @@ Read this before changing how anything looks or sounds. The full reasoning, the 
 | **Corners** | `--r-s` 12 · `--r-m` 22 (cards, sheets) · `--r-l` 26 (tiles) · 999 (pills). |
 | **Fonts** | `--ui-font` / `--title-font` Bricolage Grotesque · `--read-font` Crimson Pro for English reading · Hebrew: OT Siddur (Tehillim), Vilna (Tanya), Frank Ruhl (everything else). |
 
+## Landing and loading
+- **Loading:** on dark, the four rings chase each other (`#app-loader`).
+- **Landing (L2a):** on dark, the four rings close one by one and each section's name appears under "Chitas"; "Start today" and "I have an account". No tagline: the rings and names say it.
+
 ## Section glyphs (`SVG_ICONS`)
 `torah` a Sefer Torah (Chumash) · `kinor` Dovid's kinor (Tehillim) · `flame` (Tanya) · `books` the 14 books of Mishneh Torah (Rambam) · `calendar` the Learning tab. One stroke weight (1.6). No stock icons for the sections.
 
