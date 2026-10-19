@@ -469,6 +469,35 @@
 .rb-en .rb-add { font-weight: 400; color: var(--t2); }
 .rb-en.rb-plain { font-weight: 400; color: var(--t1); }
 /* Week strip (renderWeekStrip) */
+/* Learning: the month with its dates, the streak, the totals as lines */
+#learning-cal { margin:4px 0 22px; }
+.cal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; text-align:center; }
+.cal-head button { width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:none; color:var(--t1); font-size:20px; line-height:1; cursor:pointer; }
+.cal-head button:disabled { opacity:.3; cursor:default; }
+.cal-m { font-family:var(--title-font); font-size:var(--fs-4); color:var(--t1); }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px 0; }
+.cal-grid b { text-align:center; font-size:var(--fs-1); font-weight:500; color:var(--t3); padding-bottom:4px; }
+.cal-d { position:relative; aspect-ratio:1; border:none; background:none; padding:0; cursor:pointer; color:var(--t1); font:var(--fs-2) var(--ui-font); }
+.cal-d svg { position:absolute; inset:2px; width:calc(100% - 4px); height:calc(100% - 4px); }
+.cal-d span { position:relative; }
+.cal-d.full { color:#1F1A14; font-weight:600; }
+.cal-d.fut { color:var(--t3); opacity:.6; }
+.cal-d.rest { color:var(--t3); }
+.cal-d.rest span { top:-3px; }
+.cal-detail { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); min-height:44px; }
+.cal-dd { font-family:var(--title-font); font-size:var(--fs-3); color:var(--t1); }
+.streak-head { display:flex; justify-content:space-between; gap:12px; padding-top:16px; border-top:1px solid var(--border); }
+.streak-head button { background:none; border:none; padding:0; text-align:left; color:inherit; cursor:pointer; }
+.streak-n { font-family:var(--title-font); font-size:var(--fs-6); line-height:1.1; color:var(--t1); }
+.streak-n span { font-family:var(--ui-font); font-size:var(--fs-3); color:var(--t2); }
+.cbars { margin-top:14px; }
+.total-row { display:flex; gap:14px; align-items:flex-start; padding:12px 0; border-top:1px solid var(--border); }
+.total-row:last-child { border-bottom:1px solid var(--border); }
+.total-g { flex-shrink:0; padding-top:2px; }
+.total-n { font-family:var(--title-font); font-size:var(--fs-4); color:var(--t1); line-height:1.25; }
+.total-n b { font-weight:600; }
+.total-d { font-size:var(--fs-2); color:var(--t3); margin-top:2px; }
+.t-sec span { font-size:var(--fs-1); color:var(--t3); }
 /* Today, on one page: the week, the day's line, the sections between thin rules */
 #week-strip { display:grid; grid-template-columns:repeat(7,1fr); padding:4px 0 14px; margin-bottom:14px; border-bottom:1px solid var(--border); }
 #progress-card { margin-bottom:6px; }
@@ -1392,6 +1421,7 @@ const RAMBAM_TRACKS = {
 const SVG_ICONS = {
   // The four sections' own glyphs (one stroke weight, drawn for this app):
   // a Sefer Torah, Dovid's kinor, a flame, and the 14 books of Mishneh Torah
+  calendar: '<rect x="4" y="5.5" width="16" height="14.5" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="14.5" r="1.1" fill="currentColor"/><circle cx="15" cy="14.5" r="1.1" fill="currentColor"/>',
   torah:  '<rect x="3.5" y="6" width="4" height="12" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.5" y="6" width="4" height="12" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 3v3M5.5 18v3M18.5 3v3M18.5 18v3M7.5 7.5h9M7.5 16.5h9M10 10.5h4M10 13.5h4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   kinor:  '<path d="M6.5 4.5h11M7.5 4.5C5.8 8.5 6 12.3 8.5 15M16.5 4.5c1.7 4 1.5 7.8-1 10.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="7" y="15" width="10" height="5" rx="2.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 4.5V15M12 4.5V15M14 4.5V15" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   flame:  '<path d="M12 2.8c3.4 3.6 5.6 6.6 5.6 10.4a5.6 5.6 0 0 1-11.2 0c0-2.3 1.1-4.1 2.5-5.6.3 1.7 1.1 2.8 2.3 3.3-.1-2.9.2-5.4.8-8.1z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20.2a2.3 2.3 0 0 1-2.3-2.3c0-1.5 1-2.6 2.3-4 1.3 1.4 2.3 2.5 2.3 4a2.3 2.3 0 0 1-2.3 2.3z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -2432,7 +2462,7 @@ function updateHeader() {
   const at = document.getElementById('avatar-tab');
   if (at) at.textContent = ((user.name || '').trim()[0] || '·').toUpperCase();
   const tb = document.getElementById('tab-books');
-  if (tb && !tb.firstChild) tb.innerHTML = icon('books', 24);
+  if (tb && !tb.firstChild) tb.innerHTML = icon('calendar', 24);
   const dot = document.getElementById('avatar-dot');
   if (dot) dot.style.display = isGuest() ? 'block' : 'none';
   setGreeting();
@@ -5310,6 +5340,53 @@ function closeChabadPanel() {
 // ZONE 24 · STATS TAB  (streak hero, activity grid, section breakdown)
 // ════════════════════════════════════════════════════════════════════
 // ── STATS ─────────────────────────────────────────────────────────────────────
+// The Learning page's calendar: one month with its dates. A full Chitas day is
+// a gold circle, part of a day a partly drawn gold ring, Shabbos / Yom Tov a
+// small closed sefer, today outlined. Tap a day to see what you learned.
+let _calMonth = 0;   // 0 = this month, -1 = last month, ...
+function _learningMonthHTML() {
+  const today = new Date();
+  const first = new Date(today.getFullYear(), today.getMonth() + _calMonth, 1);
+  const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  const heb = d => hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { month: 'long' }).format(d));
+  const hebY = new Intl.DateTimeFormat('en-u-ca-hebrew', { year: 'numeric' }).format(first);
+  const h1 = heb(first), h2 = heb(new Date(first.getFullYear(), first.getMonth(), days));
+  const R = 13, C = 2 * Math.PI * R;
+  let cells = '';
+  for (let i = 0; i < first.getDay(); i++) cells += '<span></span>';
+  for (let n = 1; n <= days; n++) {
+    const d = new Date(first.getFullYear(), first.getMonth(), n);
+    const iso = dateISO(d), isT = iso === dateISO(today), future = d > today && !isT;
+    const k = future ? 0 : sectionsDone(dayDone(user, d, today));
+    const rest = !future && k === 0 && isRestDay(d);
+    const mark = k === 4 ? '<circle cx="16" cy="16" r="' + R + '" fill="var(--gold)"/>'
+      : rest ? '<rect x="13.2" y="23.5" width="5.6" height="5" rx=".8" fill="none" stroke="var(--t3)" stroke-width="1.1"/><path d="M14.7 23.5v5" stroke="var(--t3)" stroke-width="1.1"/>'
+      : (k ? '<circle cx="16" cy="16" r="' + R + '" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-dasharray="' + (C * k / 4).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 16 16)"/>' : '')
+        + (isT ? '<circle cx="16" cy="16" r="' + R + '" fill="none" stroke="var(--t1)" stroke-width="1.2"/>' : '');
+    cells += '<button class="cal-d' + (future ? ' fut' : '') + (rest ? ' rest' : '') + (k === 4 ? ' full' : '') + '" onclick="_calTap(\'' + iso + '\')" aria-label="' + d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '">'
+      + '<svg viewBox="0 0 32 32">' + mark + '</svg><span>' + n + '</span></button>';
+  }
+  return '<div class="cal-head"><button onclick="_calMove(-1)" aria-label="Previous month">‹</button>'
+    + '<div><p class="cal-m">' + first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + '</p><p class="t-caption">' + (h1 === h2 ? h1 : h1 + ' – ' + h2) + ' ' + hebY + '</p></div>'
+    + '<button onclick="_calMove(1)" aria-label="Next month"' + (_calMonth >= 0 ? ' disabled' : '') + '>›</button></div>'
+    + '<div class="cal-grid">' + ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(l => '<b>' + l + '</b>').join('') + cells + '</div>'
+    + '<div id="cal-detail" class="cal-detail"><p class="t-caption">Tap a day to see what you learned.</p></div>';
+}
+function _calMove(n) { _calMonth = Math.min(0, _calMonth + n); document.getElementById('learning-cal').innerHTML = _learningMonthHTML(); }
+function _calTap(iso) {
+  const today = new Date();
+  const d = new Date(iso + 'T12:00:00');
+  const done = SECTION_IDS.filter(id => dayDone(user, d, today)[id]);
+  const off = Math.round((d - new Date(dateISO(today) + 'T12:00:00')) / 86400000);
+  const names = done.map(id => schedule?.[id]?.label || id[0].toUpperCase() + id.slice(1));
+  const list = names.length <= 1 ? names.join('') : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+  const heb = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
+  const what = off > 0 ? 'Still ahead.' : done.length === 4 ? 'All four learned. Nice!' : done.length ? list + ' learned.' : isRestDay(d) ? 'Shabbos / Yom Tov.' : 'Nothing marked.';
+  const el = document.getElementById('cal-detail');
+  if (el) el.innerHTML = '<p class="cal-dd">' + d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + heb + '</p><p class="t-caption">' + what + '</p>'
+    + (off <= 0 && off >= -MAX_DAYS_BACK ? '<button class="btn-quiet" style="margin-top:10px;width:100%;" onclick="switchTab(\'learn\');goToDay(' + off + ')">Open this day</button>' : '');
+}
+
 function renderStats() {
   const ids = SECTION_IDS;
   const today = new Date();
@@ -5323,57 +5400,15 @@ function renderStats() {
   const since = firstISO ? new Date(firstISO + 'T12:00:00') : today;
   const sinceLabel = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).format(since));
 
-  // ── Calendar grid — 10 weeks (70 days), oldest first ──────────────────────
-  // Snap to start of current week (Sunday)
-  const dow = today.getDay();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - dow);
-
-  // 9 past weeks + this week (Sun → Shabbos), so today is always shown
-  const calDays = [];
-  for (let i = -63; i <= 6; i++) {
-    const d = new Date(weekStart);
-    d.setDate(weekStart.getDate() + i);
-    const iso = dateISO(d);
-    const isT = iso === dateISO(today);
-    const isFuture = d > today;
-    const day = isT ? user.done : (user.pastDone?.[iso] || {});
-    const done = isFuture ? [] : ids.filter(id => day[id]);
-    calDays.push({ iso, done, isT, isFuture, d });
-  }
-
-  // One colour, darker the more you learned (all 4 = solid gold). Shabbos /
-  // Yom Tov you didn't mark are calm grey with a dot, never "missed".
-  const SHADES = ['', 'color-mix(in srgb, var(--gold) 28%, transparent)', 'color-mix(in srgb, var(--gold) 50%, transparent)', 'color-mix(in srgb, var(--gold) 75%, transparent)', 'var(--gold)'];
-  const NAMES = { chumash: 'Chumash', tehillim: 'Tehillim', tanya: 'Tanya', rambam: 'Rambam' };
-  const calHTML = calDays.map(day => {
-    const base = 'width:100%;aspect-ratio:1;border-radius:4px;';
-    if (day.isFuture) return '<div style="' + base + 'background:var(--border);opacity:.2;"></div>';
-    const n = day.done.length;
-    const rest = n === 0 && isRestDay(day.d);
-    const bg = n ? SHADES[n] : 'var(--border)';
-    const border = day.isT ? 'box-shadow:0 0 0 1.5px var(--gold) inset;' : '';
-    const label = day.d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ': '
-      + (n ? day.done.map(id => NAMES[id]).join(', ') : rest ? 'Shabbos / Yom Tov' : 'nothing marked');
-    // Last 7 days open on the Learn tab; older days say what was learned
-    const offset = Math.round((new Date(day.iso + 'T12:00') - new Date(dateISO(today) + 'T12:00')) / 86400000);
-    const tap = offset >= -MAX_DAYS_BACK
-      ? "switchTab('learn');goToDay(" + offset + ")"
-      : "fire('" + label.replace(/'/g, "\\'") + "','xp')";
-    return '<div class="cal-day" onclick="' + tap + '" title="' + label + '" style="' + base + 'background:' + bg + ';' + (n ? '' : 'opacity:' + (rest ? '.35' : '.6') + ';') + border + 'cursor:pointer;display:flex;align-items:center;justify-content:center;">'
-      + (rest ? '<span style="width:4px;height:4px;border-radius:50%;background:var(--t3);"></span>' : '') + '</div>';
-  }).join('');
-
-  // Day-of-week labels
-  const dayLabels = ['S','M','T','W','T','F','S'].map(l =>
-    '<div style="text-align:center;font-size:var(--fs-1);color:var(--t3);">' + l + '</div>'
-  ).join('');
+  // ── The month, with dates: tap a day to see what you learned ─────────────
+  const calHTML = _learningMonthHTML();
 
   // ── All of it, added up ─────────────────────────────────────────────────
   const isMitzvos = user.rambamTrack === 'm';
+  const GLYPH = { chumash: 'torah', tehillim: 'kinor', tanya: 'flame', rambam: 'books' };
   const tile = (id, n, label, detail) =>
-    '<div class="tile"><span class="dot" style="background:' + SECTION_COLORS[id] + ';"></span>'
-    + '<p class="tile-n stats-num" data-target="' + n + '">' + fmt(n) + '</p><p class="tile-l">' + label + '</p><p class="tile-d">' + detail + '</p></div>';
+    '<div class="total-row"><span class="total-g" style="color:' + SECTION_COLORS[id] + ';">' + icon(GLYPH[id], 24) + '</span>'
+    + '<div><p class="total-n"><b class="stats-num" data-target="' + n + '">' + fmt(n) + '</b> ' + label + '</p><p class="total-d">' + detail + '</p></div></div>';
   const tiles =
       tile('chumash', T.pesukim, T.pesukim === 1 ? 'passuk of Chumash' : 'pesukim of Chumash', plural(T.parshiyos, 'full parsha', 'full parshiyos'))
     + tile('tehillim', T.tehillimChapters, T.tehillimChapters === 1 ? 'chapter of Tehillim' : 'chapters of Tehillim', T.tehillimBooks ? plural(T.tehillimBooks, 'time through', 'times through') : 'Said with the monthly cycle')
@@ -5398,35 +5433,19 @@ function renderStats() {
     : '';
 
   document.getElementById('stats-content').innerHTML =
-    '<p class="t-caption" style="margin:0 4px 4px;">Since you started · ' + sinceLabel + '</p>'
-    + '<p class="t-sec" style="margin-top:14px;">All of it, added up</p>'
-    + '<div id="learned-grid" class="tiles">' + tiles + '</div>'
+    '<div id="learning-cal">' + calHTML + '</div>'
 
-    + '<p class="t-sec">Consistency</p>'
-    + '<div class="card" style="padding:16px;">'
-    +   '<div style="display:flex;justify-content:space-between;gap:12px;">'
-    +     '<button onclick="openStreakInfo()" style="background:none;border:none;padding:0;text-align:left;color:inherit;">'
-    +       '<p style="font-size:var(--fs-6);font-weight:700;letter-spacing:-.4px;">' + C.streak + ' <span style="font-size:var(--fs-3);font-weight:400;color:var(--t2);">day streak</span></p>'
-    +       '<p class="t-caption">Best: ' + plural(C.best, 'day', 'days') + bestWhen + '</p>'
-    +     '</button>'
-    +     '<div style="text-align:right;"><p style="font-size:var(--fs-6);font-weight:700;letter-spacing:-.4px;">' + C.pct30 + '%</p><p class="t-caption">full days, last 30</p></div>'
-    +   '</div>'
-    +   '<div style="margin-top:14px;">' + bars + '</div>'
+    + '<div class="streak-head">'
+    +   '<button onclick="openStreakInfo()"><p class="streak-n">' + C.streak + '<span> days in a row</span></p>'
+    +     '<p class="t-caption">Best: ' + plural(C.best, 'day', 'days') + bestWhen + '</p></button>'
+    +   '<div style="text-align:right;"><p class="streak-n">' + C.pct30 + '%</p><p class="t-caption">full days, last 30</p></div>'
     + '</div>'
+    + '<div class="cbars">' + bars + '</div>'
+
+    + '<p class="t-sec">All of it, added up <span>since ' + sinceLabel + '</span></p>'
+    + '<div id="learned-grid">' + tiles + '</div>'
 
     + highlights
-
-    + '<p class="t-sec">Calendar <span style="font-size:var(--fs-1);">Tap a day</span></p>'
-    + '<div class="card" style="padding:14px;">'
-    +   '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">' + dayLabels + '</div>'
-    +   '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">' + calHTML + '</div>'
-    +   '<div style="display:flex;align-items:center;gap:5px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">'
-    +     '<p style="font-size:var(--fs-1);color:var(--t3);margin-right:3px;">Less</p>'
-    +     [0,1,2,3,4].map(i => '<div style="width:11px;height:11px;border-radius:3px;background:' + (i ? SHADES[i] : 'var(--border)') + ';' + (i ? '' : 'opacity:.6;') + '"></div>').join('')
-    +     '<p style="font-size:var(--fs-1);color:var(--t3);margin-left:3px;flex:1;">More</p>'
-    +     '<span style="width:4px;height:4px;border-radius:50%;background:var(--t3);"></span><p style="font-size:var(--fs-1);color:var(--t3);">Shabbos / Yom Tov</p>'
-    +   '</div>'
-    + '</div>'
     + '<div style="height:24px;"></div>';
 
   // Count the big numbers up once
