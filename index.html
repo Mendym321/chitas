@@ -2659,7 +2659,7 @@ function navDay(delta) {
     window._prefetched   = window._todayDataBackup.prefetched || {};
   }
   updateDayNav();
-  rebuildScheduleForOffset();
+  return rebuildScheduleForOffset();
 }
 
 
@@ -5946,6 +5946,56 @@ async function _bustTanyaCache() {
   }
 }
 
+
+// ── Today: swipe across the tiles for the day before / after ──────────────────
+// The tiles follow your finger; past the threshold they slide out and the
+// other day's slide in. Right = the day before, left = the day after.
+(function() {
+  const THRESHOLD = 70, RATIO = 1.5;
+  let x0 = 0, y0 = 0, dx = 0, active = false, horiz = null;
+  const tiles = () => document.getElementById('sections-list');
+  const canGo = delta => { const n = dayOffset + delta; return n <= 0 && n >= -MAX_DAYS_BACK; };
+  document.addEventListener('touchstart', e => {
+    const el = tiles();
+    if (!el || !el.contains(e.target)) return;
+    active = true; horiz = null; dx = 0;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+    el.style.transition = 'none';
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!active) return;
+    const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+    if (horiz === null && (Math.abs(mx) > 10 || Math.abs(my) > 10)) horiz = Math.abs(mx) > Math.abs(my) * RATIO;
+    if (!horiz) return;
+    dx = mx;
+    // Where there's no day to go to, it only gives a little
+    tiles().style.transform = 'translateX(' + (canGo(dx > 0 ? -1 : 1) ? dx : dx / 4) + 'px)';
+  }, { passive: true });
+  document.addEventListener('touchend', async () => {
+    if (!active) return;
+    active = false;
+    const el = tiles();
+    if (!el || !horiz) return;
+    window._tilesSwipedAt = Date.now();
+    const delta = dx > THRESHOLD ? -1 : dx < -THRESHOLD ? 1 : 0;
+    if (!delta || !canGo(delta)) { el.style.transition = 'transform .25s ease'; el.style.transform = ''; return; }
+    el.style.transition = 'transform .18s ease-in, opacity .18s';
+    el.style.transform = 'translateX(' + (delta < 0 ? 60 : -60) + '%)';
+    el.style.opacity = '0';
+    await new Promise(r => setTimeout(r, 180));
+    await navDay(delta);
+    el.style.transition = 'none';
+    el.style.transform = 'translateX(' + (delta < 0 ? -40 : 40) + '%)';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.transition = 'transform .28s cubic-bezier(.2,.7,.2,1), opacity .28s';
+      el.style.transform = ''; el.style.opacity = '';
+    }));
+  }, { passive: true });
+  // A swipe isn't a tap: don't open the tile you lifted your finger on
+  document.addEventListener('click', e => {
+    if (Date.now() - (window._tilesSwipedAt || 0) < 400 && tiles()?.contains(e.target)) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+})();
 
 // ── Reader horizontal swipe navigation ───────────────────────────────────────
 // Swipe left = previous day, swipe right = next day
