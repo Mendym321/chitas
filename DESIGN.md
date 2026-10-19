@@ -3,48 +3,47 @@
 Read this before changing how anything looks or sounds. The full reasoning, the research and the mockups are in the design direction page (Oct 2026).
 
 ## The idea
-The app should feel like **a well-made sefer, with a friend beside it who is glad you came**: reverent but warm, never a game and never a template. Every screen serves one of three jobs:
-1. **Read it beautifully:** today's Chumash, Tehillim, Tanya and Rambam, laid out like the sefer.
+**Direction C, "colour tiles"** (chosen Oct 2026, after comparing four directions on a design canvas): warm cream, big rounded tiles filled with each section's colour, four rings for the day (like Apple Fitness), a dark pill tab bar, and a chunky grotesque for titles. The reading itself stays like a sefer: Crimson Pro English beside the Hebrew. Every screen serves one of three jobs:
+1. **Read it beautifully:** today's Chumash, Tehillim, Tanya and Rambam.
 2. **Stay accountable:** what's left today, gentle catch-up, years of learning adding up, Shabbos and Yom Tov built in.
 3. **Remember it:** a short Review that sends you back to the text.
 
 ## Rules every screen follows
-1. **The sefer is the design system.** Thin rules instead of boxes, centred headings with Hebrew numerals, the large opening word, the guide as a note in the margin.
-2. **Ink on paper.** Warm paper, deep ink, high contrast. No gradients, no grey-on-grey, no tinted cards.
-3. **Colour means something.** Each section has an ink, used only for its rule, glyph and tick. Gold is the main button and a finished day.
-4. **One of everything.** One main button (gold), one quiet button (outline), one list row, one sheet, one label style. Six text sizes, two corner roundings.
-5. **Text first, tools on request.** Controls stay out of the reading until asked for.
-6. **A friend's voice.** Warm, brief, encouraging ("Nice!", "Keep it up!"), never scolding. Sentence case. No emoji; exclamation marks only when celebrating.
-7. **Alive, not loud.** Warmth comes from the day itself and from the inks: the line under the greeting says what kind of day it is (Erev Shabbos, Rosh Chodesh, Yud-Tes Kislev, the Omer, the parsha); each section's glyph sits in a soft circle of its ink; a line of today's Hayom Yom; a little motion when you tick (the tick pops, a ring of its ink spreads, the day's line fills). Motion is short and stops for "reduce motion".
-8. **Celebrate real things.** A small "Nice!" per section, one moment for the finished day, milestones for real accomplishments. No points or levels.
+1. **Colour is the life.** Each section owns a colour (`--c-<id>`) and the text/icons on it (`--on-<id>`). Its tile, its rings, its reader header and its main button are that colour. Everything else is cream and ink.
+2. **Big, rounded, few.** Tiles 26px corners, cards 22px, pills for buttons and chips. Few things per screen (choice overload).
+3. **The day is four rings.** Today's header rings, the week strip and the calendar all draw a day as the same four parts, so you read progress the same way everywhere.
+4. **Any order.** No "up next" or suggested order: people learn the four in whatever order they like.
+5. **Quiet voice.** Plain facts ("Tanya and Rambam left", "86 days of Chitas"). No pep talk. A small "Nice! X done." when you tick, a real moment only when the day is finished or a milestone is reached. No emoji.
+6. **Celebrate real things.** The day finished: a full dark screen with the four rings closing. Milestones for real accomplishments. No points or levels.
+7. **Text first in the reader.** Controls stay out of the reading until asked for.
 
 ## Tokens (in `index.html`, `:root`)
 | | |
 |---|---|
-| **Section inks** | `--c-chumash` ochre · `--c-tehillim` indigo · `--c-tanya` plum · `--c-rambam` olive. Code that builds colours (adds transparency to a hex) uses the mid tones `#C99A3A` `#5B7DB0` `#8E6AA3` `#6E9150`. |
-| **Gold** | `--gold`: the main button and the finished day. |
+| **Section colours** | `--c-chumash` amber · `--c-tehillim` blue · `--c-tanya` purple · `--c-rambam` green, with `--on-<id>` for text on them. |
+| **Ink** | `--ink` / `--on-ink`: the tab bar, the streak chip, the main button outside the reader. |
 | **Text** | `--t1` ink, `--t2` secondary, `--t3` captions. |
-| **Text sizes** | `--fs-1` 12 · `--fs-2` 14 · `--fs-3` 16 · `--fs-4` 19 · `--fs-5` 24 · `--fs-6` 32. Reading text (Hebrew, English) has its own sizes. |
-| **Corners** | `--r-s` 10 (controls) · `--r-m` 16 (cards, sheets) · 999 (pills). |
-| **Fonts** | `--title-font` Crimson Pro for titles and names · `--read-font` Crimson Pro for English reading text · `--ui-font` DM Sans for small interface text · Hebrew: OT Siddur (Tehillim), Vilna (Tanya), Frank Ruhl (everything else). |
+| **Text sizes** | `--fs-1` 12 · `--fs-2` 14 · `--fs-3` 16 · `--fs-4` 19 · `--fs-5` 24 · `--fs-6` 32; page titles 34. |
+| **Corners** | `--r-s` 12 · `--r-m` 22 (cards, sheets) · `--r-l` 26 (tiles) · 999 (pills). |
+| **Fonts** | `--ui-font` / `--title-font` Bricolage Grotesque · `--read-font` Crimson Pro for English reading · Hebrew: OT Siddur (Tehillim), Vilna (Tanya), Frank Ruhl (everything else). |
 
 ## Section glyphs (`SVG_ICONS`)
 `torah` a Sefer Torah (Chumash) · `kinor` Dovid's kinor (Tehillim) · `flame` (Tanya) · `books` the 14 books of Mishneh Torah (Rambam) · `calendar` the Learning tab. One stroke weight (1.6). No stock icons for the sections.
 
 ## Buttons
-`.btn-primary` gold, dark text: the one action that moves you forward (Mark as learned, Next). `.btn-quiet` outline: everything else (Review, Home). A finished state uses the quiet style. The reader's buttons follow these through `#chabad-mark-btn[data-state]`.
+Pills. `.btn-primary` ink: the one action that moves you forward. In the reader the main button (`#chabad-mark-btn`, Next) takes the section's colour through `--rc` / `--rc-on`, set by `_setReaderColour()`. `.btn-quiet` cream: everything else (Review, Home); a finished state uses it.
 
 ## The day's character (`js/day-note.js`)
 `dayNote(date, parsha)` gives the parts of the line under the greeting, most important first, from the phone's Hebrew calendar (no network). Chabad spellings. Tested in `tools/test-day-note.mjs`.
 
 ## Toasts
-Paper with ink text, never a black pill. `fire(msg, 'done')` adds a small gold tick, only when something was learned.
+Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small gold tick, only when something was learned.
 
 ## Accountability
 - **Streak** = Chitas days in a row. Shabbos and Yom Tov never break it; mark them afterwards and they count.
 - **Catch up** any of the last 7 days; that keeps the streak.
 - **Totals** grow forever (pesukim, chapters, halachos), shown beside the streak.
-- **Learning page**: a month calendar with dates (gold circle = full day, a partly drawn ring = part of a day, a small sefer under Shabbos / Yom Tov). Tap a day to see it.
+- **Learning page**: two stat tiles (streak, 30-day %), a month calendar where each date is the four-part ring (a small sefer under Shabbos / Yom Tov; tap a day to see it), and a colour tile per section with its total, what it means, and how far through the whole (the Torah, Tehillim, Mishneh Torah).
 - **Milestones** (planned): 7, 30, 100, 365 days; a whole parsha; Sefer Tehillim; each book of Rambam and the cycle; the Tanya cycle.
 - Points and the leaderboard were removed in Oct 2026 (`user.xp` is still stored so old data isn't lost, but never shown).
 

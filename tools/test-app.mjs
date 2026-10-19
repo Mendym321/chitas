@@ -98,10 +98,11 @@ await check('ticking a section: its tick pops with a ring of its ink, after the 
 await check('the line under the greeting says what kind of day it is', () => {
   switchTab('learn'); dayOffset = 0; setGreeting();
   const today = document.getElementById('day-note').textContent;
-  switchTab('stats'); const onLearning = document.getElementById('day-note').textContent;
+  const heb = document.getElementById('heb-chip').textContent;
+  switchTab('stats'); const title = document.getElementById('greeting').textContent;
   switchTab('learn');
-  return [today.length > 0, today === dayNote(new Date(), getParshaForDate(new Date())).join(' · '), onLearning];
-}, [true, true, '']);
+  return [today.length > 0, today === dayNote(new Date(), getParshaForDate(new Date())).join(' · '), /\d+ \w+/.test(heb), title];
+}, [true, true, true, 'Learning']);
 
 await check('catching up: after yesterday\'s Chumash, next is today\'s Chumash', () => {
   user.done = {}; user.pastDone = {}; dayOffset = -1;

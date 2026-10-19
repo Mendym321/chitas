@@ -13,7 +13,7 @@
 <title>Chitas Daily</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 @font-face {
   font-family: 'Taamey Frank CLM';
@@ -43,46 +43,51 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   /* ── Design tokens (see DESIGN.md) ──────────────────────────────────────
-     One palette for the whole app: warm paper and ink, four section inks
-     (ochre Chumash, indigo Tehillim, plum Tanya, olive Rambam) used as rules,
-     glyphs and ticks, and gold for the main button and a finished day.
+     Direction C ("colour tiles"): warm cream, big rounded tiles filled with
+     each section's colour, four rings for the day, a dark pill tab bar, a
+     chunky grotesque for titles and Crimson Pro for the English reading text.
      Dark is the default; light follows the phone's setting or the in-app choice.
+     Section fills: --c-<id> (the tile), --on-<id> (text and icons on it).
      Text sizes: --fs-1..6 = 12 · 14 · 16 · 19 · 24 · 32 (reading text has its own).
-     Corner radius: --r-s 10 (controls) · --r-m 16 (cards, sheets) · 999 (pills). */
+     Corner radius: --r-s 12 (controls) · --r-m 22 (cards, sheets) · --r-l 26 (tiles) · 999 (pills). */
   :root {
-    --ui-font: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --ui-font: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --he-font: "Frank Ruhl Libre", "Noto Serif Hebrew", serif;
     --read-font: "Crimson Pro", Georgia, "Times New Roman", serif;   /* English reading text */
-    --bg: #12110F; --surface: #191715; --card: #1E1C19; --card2: #2A2723;
-    --border: #2E2B27; --hi: #423E38;
-    --gold: #EBA937; --ok: #9DBA7F; --red: #E07A6B;
-    --c-chumash: #D2A048; --c-tehillim: #8FA9D6; --c-tanya: #B89AC6; --c-rambam: #9DBA7F;
+    --bg: #15120F; --surface: #1B1814; --card: #241F1A; --card2: #2E2822;
+    --border: #2F2A23; --hi: #4A443C;
+    --gold: #E8AE45; --ok: #7FAE58; --red: #E07A6B;
+    --c-chumash: #E0A030; --c-tehillim: #4E7ACB; --c-tanya: #9560BA; --c-rambam: #659444;
+    --on-chumash: #2E1E00; --on-tehillim: #F2F6FD; --on-tanya: #FAF4FD; --on-rambam: #F3F8EE;
     --purple: var(--c-tanya); --blue: var(--c-tehillim); --green: var(--c-rambam);
-    --t1: #F5F2EC; --t2: #ADA69C; --t3: #7D766C;
+    --t1: #F5EFE4; --t2: #B8AE9E; --t3: #877D6E;
+    --ink: #2E2822; --on-ink: #F5EFE4; --ink-soft: #9C9282;
     --fs-1: 12px; --fs-2: 14px; --fs-3: 16px; --fs-4: 19px; --fs-5: 24px; --fs-6: 32px;
-    --r-s: 10px; --r-m: 16px;
-    --title-font: "Crimson Pro", Georgia, "Times New Roman", serif;   /* titles, headings, names */
+    --r-s: 12px; --r-m: 22px; --r-l: 26px;
+    --title-font: "Bricolage Grotesque", -apple-system, sans-serif;   /* titles, headings, names */
   }
   /* Light mode override */
   html.light {
-    --bg: #F5F2EB; --surface: #FAF8F3; --card: #FFFEFB; --card2: #F0ECE3;
-    --border: #E6E0D4; --hi: #D4CDBF; --gold: #B07A12; --ok: #57773C; --red: #B4483A;
-    --c-chumash: #A8741C; --c-tehillim: #3D5F8F; --c-tanya: #78508A; --c-rambam: #57773C;
-    --t1: #1C1915; --t2: #5C564D; --t3: #8C857A;
+    --bg: #FBF7EF; --surface: #F6F0E4; --card: #FFFFFF; --card2: #F1E9D8;
+    --border: #ECE3D1; --hi: #DCD0B8; --gold: #A8700F; --ok: #5E8A3C; --red: #B4483A;
+    --t1: #1F1B16; --t2: #5E564A; --t3: #8A7F6E;
+    --ink: #1F1B16; --on-ink: #FBF7EF; --ink-soft: #BDB3A2;
+    --c-chumash: #E0A030; --c-tehillim: #3F6FC0; --c-tanya: #8B54B0; --c-rambam: #5E8A3C;
   }
   @media (prefers-color-scheme: light) {
     html:not(.dark) {
-      --bg: #F5F2EB; --surface: #FAF8F3; --card: #FFFEFB; --card2: #F0ECE3;
-      --border: #E6E0D4; --hi: #D4CDBF; --gold: #B07A12; --ok: #57773C; --red: #B4483A;
-    --c-chumash: #A8741C; --c-tehillim: #3D5F8F; --c-tanya: #78508A; --c-rambam: #57773C;
-      --t1: #1C1915; --t2: #5C564D; --t3: #8C857A;
+      --bg: #FBF7EF; --surface: #F6F0E4; --card: #FFFFFF; --card2: #F1E9D8;
+    --border: #ECE3D1; --hi: #DCD0B8; --gold: #A8700F; --ok: #5E8A3C; --red: #B4483A;
+    --t1: #1F1B16; --t2: #5E564A; --t3: #8A7F6E;
+    --ink: #1F1B16; --on-ink: #FBF7EF; --ink-soft: #BDB3A2;
+      --c-chumash: #E0A030; --c-tehillim: #3F6FC0; --c-tanya: #8B54B0; --c-rambam: #5E8A3C;
     }
   }
   html, body { background: var(--bg); color: var(--t1); font-family: var(--ui-font); font-size:var(--fs-3); line-height: 1.45; min-height: 100vh; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
-  #app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: 96px; }
+  #app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: 120px; }
 
   /* ── Shared building blocks ─────────────────────────────────────────────── */
-  .t-title { font-family: var(--title-font); font-size: var(--fs-6); font-weight: 500; letter-spacing: -.2px; line-height: 1.1; color: var(--t1); }
+  .t-title { font-family: var(--title-font); font-size: 34px; font-weight: 800; letter-spacing: -.8px; line-height: 1.1; color: var(--t1); }
   .t-caption { font-size:var(--fs-2); color: var(--t3); }
   .t-sec { font-size:var(--fs-2); color: var(--t3); margin: 22px 4px 8px; display: flex; justify-content: space-between; align-items: baseline; }
   .t-sec button { background: none; border: none; color: var(--gold); font-size:var(--fs-2); font-weight: 600; padding: 0; }
@@ -98,10 +103,12 @@
   .check { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--hi); background: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; color: transparent; transition: background .15s, border-color .15s; }
   .check.on { background: var(--c, var(--ok)); border-color: var(--c, var(--ok)); color: #fff; }
   .lrow-he { font-family: var(--he-font); font-size: 15px; font-weight: 500; color: var(--t3); margin-left: 7px; }
-  .tabbar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; display: flex; justify-content: space-around; padding: 8px 8px calc(10px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--border); z-index: 100; }
-  .tabbar button { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size:var(--fs-1); font-weight: 500; color: var(--t3); padding: 4px 0; }
-  .tabbar button.on { color: var(--t1); font-weight: 600; }
-  .tabbar svg { width: 24px; height: 24px; }
+  .tabbar { position: fixed; bottom: calc(14px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 390px; display: flex; justify-content: space-around; padding: 8px; background: var(--ink); border-radius: 22px; z-index: 100; box-shadow: 0 10px 30px rgba(30,20,5,.18); }
+  .tabbar button { background: none; border: none; display: flex; align-items: center; gap: 7px; font: 700 var(--fs-2) var(--ui-font); color: var(--ink-soft); padding: 10px 16px; border-radius: 16px; transition: background .2s, color .2s; }
+  .tabbar button .tab-l { display: none; }
+  .tabbar button.on { background: var(--on-ink); color: var(--ink); }
+  .tabbar button.on .tab-l { display: inline; }
+  .tabbar svg { width: 22px; height: 22px; }
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .tile { background: var(--card); border-radius:var(--r-m); padding: 14px; }
   .tile .dot { display: block; width: 8px; height: 8px; border-radius: 50%; margin-bottom: 8px; }
@@ -427,7 +434,7 @@
 .ps-modal-header {
   padding:18px 20px 15px;border-bottom:1px solid var(--border);flex-shrink:0;
 }
-.ps-modal-title { font-family:var(--title-font);font-size:var(--fs-5);font-weight:500;line-height:1.15;color:var(--t1);margin-bottom:2px; }
+.ps-modal-title { font-family:var(--title-font);font-size:var(--fs-5);font-weight:800;line-height:1.15;color:var(--t1);margin-bottom:2px; }
 .ps-modal-sub   { font-size:13px;color:var(--t3); }
 /* Modal close button */
 .ps-modal-close {
@@ -481,7 +488,7 @@
 .cal-d { position:relative; aspect-ratio:1; border:none; background:none; padding:0; cursor:pointer; color:var(--t1); font:var(--fs-2) var(--ui-font); }
 .cal-d svg { position:absolute; inset:2px; width:calc(100% - 4px); height:calc(100% - 4px); }
 .cal-d span { position:relative; }
-.cal-d.full { color:#1F1A14; font-weight:600; }
+.cal-d.today span { font-weight:800; text-decoration:underline; text-underline-offset:3px; }
 .cal-d.fut { color:var(--t3); opacity:.6; }
 .cal-d.rest { color:var(--t3); }
 .cal-d.rest span { top:-3px; }
@@ -499,11 +506,79 @@
 .total-n b { font-weight:600; }
 .total-d { font-size:var(--fs-2); color:var(--t3); margin-top:2px; }
 .t-sec span { font-size:var(--fs-1); color:var(--t3); }
+/* ── Direction C: header and rings, chips, tiles ── */
+.sr-only { position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+#app-head { padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+#today-rings { width:88px; height:88px; flex-shrink:0; }
+#today-rings.hide { display:none; }
+#today-rings circle { fill:none; stroke:var(--c); stroke-width:8; }
+#today-rings .rt { opacity:.2; }
+#today-rings .rf { stroke-linecap:round; stroke-dasharray:var(--len) var(--len); stroke-dashoffset:var(--len); transform:rotate(-90deg); transform-origin:46px 46px; transition:stroke-dashoffset .9s cubic-bezier(.3,.7,.2,1); }
+#today-rings .rf.on { stroke-dashoffset:0; }
+#day-chips { display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 14px; }
+#day-chips > * { padding:7px 12px; border-radius:999px; font:700 13px var(--ui-font); line-height:1.2; }
+#day-chips > *:empty { display:none; }
+#streak-pill { background:var(--ink); color:var(--on-ink); border:none; cursor:pointer; }
+#streak-pill b { font-weight:800; }
+#heb-chip, #day-note { background:var(--card2); color:var(--t1); }
+#week-summary { display:none; }
+.tiles4 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; margin-top:14px; }
+.stile { position:relative; height:172px; border-radius:var(--r-l); background:var(--c); color:var(--on); padding:14px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; cursor:pointer; -webkit-user-select:none; user-select:none; transition:transform .15s ease; }
+.stile:active { transform:scale(.97); }
+.stile-art { position:absolute; right:-18px; top:30px; opacity:.2; pointer-events:none; color:var(--on); }
+.stile-art svg { width:96px; height:96px; }
+.stile-top { display:flex; align-items:center; justify-content:space-between; gap:8px; position:relative; }
+.stile .check { width:34px; height:34px; border:2.5px solid var(--on); color:transparent; opacity:.85; }
+.stile .check.on { background:var(--on); border-color:var(--on); color:var(--c); opacity:1; }
+.stile-t { position:relative; pointer-events:none; }
+.stile-t p:first-child { font:800 22px/1.15 var(--ui-font); letter-spacing:-.3px; }
+.stile-t p:last-child { font:500 13px/1.3 var(--ui-font); opacity:.92; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.stile-art.lift svg { animation:glyphLift .6s cubic-bezier(.2,.7,.2,1); }
+#tab-learn .group, #extra-tracks-list.group { background:var(--card); border-radius:var(--r-m); border:none; overflow:hidden; }
+#tab-learn .lrow { padding-left:14px; padding-right:14px; }
+/* Learning */
+.stat2 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin:6px 0 12px; }
+.stat2 > * { border-radius:var(--r-m); padding:14px 16px; text-align:left; border:none; font:inherit; }
+.stat-dark { background:var(--ink); color:var(--on-ink); cursor:pointer; }
+.stat-soft { background:var(--card2); color:var(--t1); }
+.stat-n { font:800 34px/1 var(--ui-font); letter-spacing:-.6px; }
+.stat-l { font:500 13px var(--ui-font); margin-top:5px; opacity:.75; }
+.lcard { background:var(--card); border-radius:var(--r-l); padding:14px 12px 12px; }
+#learned-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+.ttile { position:relative; overflow:hidden; border-radius:var(--r-m); background:var(--c); color:var(--on); padding:14px 14px 14px; min-height:150px; }
+.ttile-art { position:absolute; right:-20px; top:-16px; opacity:.2; pointer-events:none; }
+.ttile-n { font:800 30px/1 var(--ui-font); letter-spacing:-.6px; position:relative; }
+.ttile-l { font:700 13px/1.25 var(--ui-font); margin:4px 0 8px; position:relative; }
+.ttile-d { font:500 12px/1.35 var(--ui-font); opacity:.88; position:relative; }
+.ttile-bar { height:6px; border-radius:3px; background:color-mix(in srgb, var(--on) 28%, transparent); margin:10px 0 4px; overflow:hidden; position:relative; }
+.ttile-bar i { display:block; height:100%; border-radius:3px; background:var(--on); }
+.cbars.lcard { padding:16px; }
+/* The reader, in its section's colour */
+#reader-head { background:var(--rc, var(--surface)); color:var(--rc-on, var(--t1)); border-radius:0 0 26px 26px; }
+#reader-head #chabad-panel-title { color:inherit !important; font-size:26px !important; letter-spacing:-.4px; }
+#reader-head #chabad-panel-sub { color:inherit !important; opacity:.85; font-size:13px !important; }
+#reader-head > button, #reader-head > a { background:color-mix(in srgb, var(--rc-on, #fff) 18%, transparent) !important; border:none !important; color:inherit !important; border-radius:50% !important; width:40px !important; height:40px !important; }
+#reader-progress-wrap { margin:8px 20px 0; border-radius:3px; overflow:hidden; }
+/* All four done: the whole screen */
+#moment-modal.m-full { padding:0 !important; background:#1F1B16 !important; backdrop-filter:none !important; }
+#moment-modal.m-full #moment-card { max-width:430px !important; height:100% !important; border-radius:0 !important; border:none !important; box-shadow:none !important; background:#1F1B16 !important; display:flex; flex-direction:column; align-items:center; padding:12vh 24px calc(28px + env(safe-area-inset-bottom)) !important; }
+#moment-modal.m-full #moment-btns { width:100%; }
+#moment-modal.m-full #moment-title { color:#FBF7EF !important; font-size:40px !important; font-weight:800 !important; letter-spacing:-1px; }
+#moment-modal.m-full #moment-sub { color:#BDB3A2 !important; }
+#moment-modal.m-full #moment-xp { color:#E0A030 !important; }
+#moment-modal.m-full #moment-btns { margin-top:auto; }
+#moment-modal.m-full .btn-quiet { background:#FBF7EF !important; color:#1F1B16 !important; }
+.done-rings { width:220px; height:220px; margin-bottom:10px; }
+.done-rings circle { fill:none; stroke:var(--c); stroke-width:8; stroke-linecap:round; stroke-dasharray:var(--len) var(--len); stroke-dashoffset:var(--len); transform:rotate(-90deg); transform-origin:46px 46px; animation:ringClose .8s calc(.25s + var(--i) * .22s) cubic-bezier(.3,.7,.2,1) forwards; }
+@keyframes ringClose { to { stroke-dashoffset:0; } }
+@media (prefers-reduced-motion: reduce) { .done-rings circle { animation:none; stroke-dashoffset:0; } #today-rings .rf { transition:none; } }
+/* Profile and settings: grouped rounded cards */
+.ps-label { text-transform:uppercase; font-weight:700; font-size:12px; letter-spacing:.4px; }
+.ps-card { border-radius:var(--r-m); }
+.ps-icon { border-radius:12px; }
 /* Life: the day's character, the inks in the rows, motion when you tick */
-#day-note { font-size:var(--fs-2); font-weight:600; color:var(--gold); margin-top:6px; min-height:1em; }
-#day-note:empty { display:none; }
-#tab-learn .lrow-ic { width:44px; height:44px; border-radius:50%; position:relative; color:var(--c, var(--gold)); }
-#tab-learn .lrow-ic::before { content:''; position:absolute; inset:0; border-radius:50%; background:var(--c, var(--gold)); opacity:.13; transition:opacity .4s ease; }
+#tab-learn .lrow-ic { width:40px; height:40px; border-radius:12px; position:relative; color:var(--c, var(--gold)); }
+#tab-learn .lrow-ic::before { content:''; position:absolute; inset:0; border-radius:12px; background:var(--c, var(--gold)); opacity:.13; transition:opacity .4s ease; }
 #tab-learn .lrow-ic svg { position:relative; }
 #tab-learn .lrow.done .lrow-ic::before { opacity:.24; }
 #tab-learn .lrow.done .lrow-t p:first-child { color:var(--t2); }
@@ -512,12 +587,10 @@
 .check { position:relative; }
 .tick-ring { position:absolute; inset:-2px; border-radius:50%; border:2px solid var(--c, var(--gold)); pointer-events:none; animation:tickRing .7s ease-out forwards; }
 @keyframes tickRing { from{transform:scale(1);opacity:.8} to{transform:scale(2.1);opacity:0} }
-#streak-pill b { color:var(--gold); }
-#thought { display:block; width:100%; text-align:center; margin:30px 0 6px; padding:0 8px; border:none; background:none; color:inherit; cursor:pointer; font:inherit; }
-.thought-k { display:flex; align-items:center; gap:12px; font-size:var(--fs-1); font-weight:600; color:var(--gold); margin-bottom:12px; }
-.thought-k::before, .thought-k::after { content:''; flex:1; height:1px; background:var(--border); }
-.thought-t { font-family:var(--read-font); font-style:italic; font-size:18px; line-height:1.5; color:var(--t1); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-.thought-more { font-size:var(--fs-2); font-weight:600; color:var(--gold); margin-top:10px; }
+#thought { display:block; width:100%; text-align:left; margin:12px 0 4px; padding:16px 18px; border:none; border-radius:var(--r-m); background:var(--card2); color:inherit; cursor:pointer; font:inherit; }
+.thought-k { font:800 15px var(--ui-font); color:var(--t1); margin-bottom:4px; }
+.thought-t { font-family:var(--read-font); font-size:17px; line-height:1.45; color:var(--t2); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.thought-more { display:none; }
 .day-spark { position:relative; width:0; height:0; margin:0 auto; }
 .day-spark i { position:absolute; left:-4px; top:-4px; width:8px; height:8px; border-radius:50%; background:var(--c); opacity:0; animation:spark 1s 1.15s cubic-bezier(.15,.7,.3,1) forwards; }
 @keyframes spark { 0%{opacity:1;transform:translate(0,0) scale(1.2)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)} }
@@ -527,8 +600,6 @@
 #progress-card { margin-bottom:6px; }
 .day-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
 #progress-title { font-family:var(--title-font); font-size:var(--fs-4); font-weight:500; color:var(--t1); }
-#streak-pill { padding:0; background:none; border:none; font:var(--fs-2) var(--ui-font); color:var(--t2); white-space:nowrap; cursor:pointer; }
-#streak-pill b { color:var(--t1); font-weight:600; }
 .day-line { display:flex; gap:4px; margin:10px 0 8px; }
 .day-line i { flex:1; height:4px; border-radius:2px; background-color:var(--border); background-image:linear-gradient(var(--seg, var(--gold)), var(--seg, var(--gold))); background-repeat:no-repeat; background-size:0% 100%; transition:background-size .6s cubic-bezier(.2,.7,.2,1); }
 .day-line i.on { background-size:100% 100%; }
@@ -536,9 +607,9 @@
 #tab-learn .group { background:none; border-radius:0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:visible; }
 #tab-learn .lrow { background:none; padding-left:0; padding-right:0; }
 #tab-learn #skeletons, #tab-learn #sections-list { margin-top:14px; }
-.tab-glyph { display:block; width:24px; height:24px; }
-.tab-av { position:relative; display:grid; place-items:center; width:24px; height:24px; border-radius:50%; border:1.6px solid currentColor; font:600 12px var(--ui-font); line-height:1; }
-#avatar-dot { position:absolute; top:-3px; right:-3px; width:8px; height:8px; border-radius:50%; background:var(--gold); border:2px solid var(--bg); }
+.tab-glyph { display:block; width:22px; height:22px; }
+.tab-av { position:relative; display:grid; place-items:center; width:22px; height:22px; border-radius:50%; border:1.6px solid currentColor; font:600 12px var(--ui-font); line-height:1; }
+#avatar-dot { position:absolute; top:-3px; right:-3px; width:8px; height:8px; border-radius:50%; background:var(--c-chumash); border:2px solid var(--ink); }
 .wk-day { display:flex; flex-direction:column; align-items:center; gap:6px; padding:2px 0 4px; background:none; border:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .wk-letter { font-size:var(--fs-1); font-weight:500; color:var(--t3); }
 .wk-day.on .wk-letter { color:var(--gold); font-weight:700; }
@@ -564,10 +635,11 @@
 #rd-label { font-size:var(--fs-1); font-weight:800; color:var(--t1); text-align:center; flex:1; }
 #rd-label.past { color:var(--gold); }
 /* ── Buttons: one main (gold) and one quiet (outline) for the whole app ── */
-.btn-primary, #chabad-mark-btn, #reader-next .rn-go { background: var(--gold) !important; color: #1F1A14 !important; border: none !important; font-weight: 700 !important; }
-.btn-quiet, #chabad-quiz-btn, #reader-next .rn-home, #chabad-mark-btn[data-state="done"] { background: transparent !important; border: 1.5px solid var(--hi) !important; color: var(--t1) !important; font-weight: 600 !important; }
+.btn-primary { background: var(--ink) !important; color: var(--on-ink) !important; border: none !important; font-weight: 700 !important; }
+#chabad-mark-btn, #reader-next .rn-go { background: var(--rc, var(--ink)) !important; color: var(--rc-on, var(--on-ink)) !important; border: none !important; font-weight: 800 !important; border-radius: 999px !important; }
+.btn-quiet, #chabad-quiz-btn, #reader-next .rn-home, #chabad-mark-btn[data-state="done"] { background: var(--card2) !important; border: none !important; color: var(--t1) !important; font-weight: 700 !important; border-radius: 999px !important; }
 #chabad-mark-btn[data-state="done"] { color: var(--t2) !important; }
-.btn-primary, .btn-quiet { padding: 13px; border-radius: var(--r-m); font-size: var(--fs-3); font-family: inherit; cursor: pointer; }
+.btn-primary, .btn-quiet { padding: 15px; border-radius: 999px; font-size: var(--fs-3); font-family: inherit; cursor: pointer; }
 #reader-next .rn-done { font-size:var(--fs-2); font-weight:600; color:var(--t2); margin:2px 2px 8px; }
 #reader-next .rn-row { display:flex; gap:8px; }
 #reader-next button { padding:13px; border-radius:var(--r-m); font-size:var(--fs-2); font-weight:800; font-family:inherit; cursor:pointer; }
@@ -639,7 +711,7 @@
 #ob-welcome .ob-he { font-family:var(--he-font); font-size:30px; line-height:1.45; direction:rtl; text-align:right; color:var(--t1); }
 #ob-welcome .ob-en { font-family:var(--read-font); font-size:var(--fs-4); line-height:1.45; color:var(--t2); margin-top:14px; font-style:italic; }
 #ob-welcome figcaption { font-size:var(--fs-1); color:var(--t3); margin-top:10px; }
-#ob-welcome .ob-name { font-family:var(--title-font); font-size:44px; font-weight:500; line-height:1; color:var(--t1); }
+#ob-welcome .ob-name { font-family:var(--title-font); font-size:46px; font-weight:800; letter-spacing:-1px; line-height:1; color:var(--t1); }
 #ob-welcome .ob-what { font-size:var(--fs-3); color:var(--t2); line-height:1.5; margin:10px 0 22px; }
 #ob-welcome .ob-link { display:block; width:100%; margin-top:10px; padding:12px; background:none; border:none; color:var(--t1); font:600 var(--fs-2) var(--ui-font); cursor:pointer; }
 #ob-welcome .ob-fine { font-size:var(--fs-1); color:var(--t3); text-align:center; }
@@ -1057,39 +1129,48 @@ window._fsGetDoc = getDoc;
   <!-- ── MAIN APP ── -->
   <div id="main-app" style="display:none;">
 
-    <!-- Header: date + title + profile -->
-    <div style="padding:20px 20px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
+    <!-- Header: greeting + title, and on Today the day's four rings -->
+    <div id="app-head">
       <div style="flex:1;min-width:0;">
         <p id="heb-date-label" class="t-caption">Loading…</p>
         <h1 id="greeting" class="t-title">Today</h1>
-        <p id="day-note"></p>
       </div>
+      <svg id="today-rings" viewBox="0 0 92 92" role="img" aria-label="Today's four sections">
+        <circle class="rt" cx="46" cy="46" r="40" style="--c:var(--c-chumash)"/><circle id="ring-0" class="rf" cx="46" cy="46" r="40" style="--c:var(--c-chumash);--len:251.3"/>
+        <circle class="rt" cx="46" cy="46" r="30" style="--c:var(--c-tehillim)"/><circle id="ring-1" class="rf" cx="46" cy="46" r="30" style="--c:var(--c-tehillim);--len:188.5"/>
+        <circle class="rt" cx="46" cy="46" r="20" style="--c:var(--c-tanya)"/><circle id="ring-2" class="rf" cx="46" cy="46" r="20" style="--c:var(--c-tanya);--len:125.7"/>
+        <circle class="rt" cx="46" cy="46" r="10" style="--c:var(--c-rambam)"/><circle id="ring-3" class="rf" cx="46" cy="46" r="10" style="--c:var(--c-rambam);--len:62.8"/>
+      </svg>
     </div>
 
     <!-- Bottom tab bar -->
     <nav class="tabbar" id="tabbar">
       <button class="nav-tab on" data-tab="learn" onclick="switchTab('learn')">
-        <svg viewBox="0 0 24 24" style="transform:rotate(-90deg)"><circle id="tab-seg-0" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-0.9"/><circle id="tab-seg-1" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-14.2"/><circle id="tab-seg-2" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-27.6"/><circle id="tab-seg-3" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-40.9"/></svg>Today
+        <svg viewBox="0 0 24 24" style="transform:rotate(-90deg)"><circle id="tab-seg-0" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-0.9"/><circle id="tab-seg-1" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-14.2"/><circle id="tab-seg-2" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-27.6"/><circle id="tab-seg-3" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-40.9"/></svg><span class="tab-l">Today</span>
       </button>
       <button class="nav-tab" data-tab="stats" onclick="switchTab('stats')">
-        <span class="tab-glyph" id="tab-books"></span>Learning
+        <span class="tab-glyph" id="tab-books"></span><span class="tab-l">Learning</span>
       </button>
       <button class="nav-tab" data-tab="profile" onclick="switchTab('profile')">
-        <span class="tab-av"><span id="avatar-tab"></span><span id="avatar-dot" style="display:none;"></span></span>Profile
+        <span class="tab-av"><span id="avatar-tab"></span><span id="avatar-dot" style="display:none;"></span></span><span class="tab-l">Profile</span>
       </button>
     </nav>
 
     <!-- ── LEARN TAB ── -->
     <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
+      <!-- Chips: the streak, the Hebrew date, what kind of day it is -->
+      <div id="day-chips">
+        <button id="streak-pill" onclick="openStreakInfo()"><b id="streak-pill-num">0</b> days in a row<span id="week-summary"></span></button>
+        <span id="heb-chip"></span>
+        <span id="day-note"></span>
+      </div>
+
       <!-- The last 7 days: tap a day to read it or catch up -->
       <div id="week-strip"></div>
 
-      <!-- Today's Chitas: what's done, and the four sections' inks as one line that fills -->
-      <div id="progress-card">
-        <div class="day-head">
-          <p id="progress-title">Loading…</p>
-          <button id="streak-pill" onclick="openStreakInfo()"><b id="streak-pill-num">0</b> days in a row<span id="week-summary"></span></button>
-        </div>
+      <!-- What's done, in words (for screen readers; the rings and tiles show it) -->
+      <div id="progress-card" class="sr-only" aria-live="polite">
+        <p id="progress-title">Loading…</p>
         <div class="day-line"><i id="today-seg-0"></i><i id="today-seg-1"></i><i id="today-seg-2"></i><i id="today-seg-3"></i></div>
         <p id="progress-sub"></p>
       </div>
@@ -1116,7 +1197,7 @@ window._fsGetDoc = getDoc;
       </div>
 
       <!-- Actual sections -->
-      <div id="sections-list" class="group" style="display:none;"></div>
+      <div id="sections-list" class="tiles4" style="display:none;"></div>
 
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
@@ -1142,7 +1223,7 @@ window._fsGetDoc = getDoc;
       <div class="card" style="display:flex;align-items:center;gap:14px;padding:16px;">
         <div id="profile-sheet-avatar"></div>
         <div style="flex:1;min-width:0;">
-          <p id="profile-sheet-name" style="font-family:var(--title-font);font-weight:500;font-size:var(--fs-5);color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
+          <p id="profile-sheet-name" style="font-family:var(--title-font);font-weight:800;font-size:var(--fs-5);color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
           <p id="profile-sheet-status" class="t-caption"></p>
         </div>
       </div>
@@ -1191,7 +1272,7 @@ window._fsGetDoc = getDoc;
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;">
-      <p id="quiz-title" style="font-family:var(--title-font);font-weight:500;font-size:var(--fs-5);line-height:1.1;color:var(--t1);"></p>
+      <p id="quiz-title" style="font-family:var(--title-font);font-weight:800;font-size:var(--fs-5);line-height:1.1;color:var(--t1);"></p>
       <p id="quiz-subtitle" style="font-size:var(--fs-1);color:var(--t3);margin-top:1px;"></p>
     </div>
     <div id="quiz-score-badge" style="display:none;background:rgba(142,106,163,.15);border:1px solid rgba(142,106,163,.4);border-radius:var(--r-s);padding:4px 10px;">
@@ -1205,13 +1286,13 @@ window._fsGetDoc = getDoc;
 <!-- Reader panel — native text for Chumash/Tanya/Rambam, iframe for Tehillim -->
 <div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;" onclick="_closeSettingsOnOutsideClick(event)">
 
-  <!-- Sticky header -->
-  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
+  <!-- Sticky header, in the colour of what you're reading (--rc) -->
+  <div id="reader-head" style="padding:14px 18px 16px;display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
     <button onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:var(--r-s);background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;min-width:0;">
-      <p id="chabad-panel-title" style="font-family:var(--title-font);font-weight:500;font-size:var(--fs-5);line-height:1.1;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
+      <p id="chabad-panel-title" style="font-family:var(--title-font);font-weight:800;font-size:var(--fs-5);line-height:1.1;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
       <p id="chabad-panel-sub" style="font-size:var(--fs-1);color:var(--t3);"></p>
     </div>
     <!-- Settings button — only shown for native reader sections -->
@@ -1250,7 +1331,7 @@ window._fsGetDoc = getDoc;
 
   <!-- Scroll progress bar (native reader only) -->
   <div id="reader-progress-wrap" style="display:none;height:3px;background:var(--border);flex-shrink:0;">
-    <div id="reader-progress-bar" style="height:100%;width:0%;background:var(--gold);transition:width .15s linear;"></div>
+    <div id="reader-progress-bar" style="height:100%;width:0%;background:var(--rc, var(--gold));transition:width .15s linear;"></div>
   </div>
 
   <!-- Native reader (Chumash / Tanya / Rambam) -->
@@ -2338,7 +2419,7 @@ async function init() {
     const civDate = `${new Date().getMonth()+1}/${new Date().getDate()}/${new Date().getFullYear()}`;
     const base = 'https://www.chabad.org/dailystudy';
 
-    document.getElementById('heb-date-label').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + ' · ' + hd.hd + ' ' + hd.hm;
+    setGreeting();
     document.getElementById('hebcal-link').style.display = 'flex';
 
     // Pull Sefaria refs from calendar
@@ -2443,13 +2524,18 @@ function setGreeting() {
   const hour = new Date().getHours();
   const firstName = (user.name || '').split(' ')[0];
   const hello = (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening') + (firstName ? ', ' + firstName : '');
-  if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Your learning' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? hello : _dayName(dayOffset);
-  // Under it, on Today: what kind of day it is ("Erev Shabbos · Parshas Lech Lecha")
+  const onToday = !tab || tab === 'tab-learn';
+  const d = new Date(); d.setDate(d.getDate() + dayOffset);
+  if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Learning' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? 'Today' : _dayName(dayOffset);
+  const line = document.getElementById('heb-date-label');
+  if (line) line.textContent = !onToday ? d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+    : dayOffset === 0 ? hello : d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  document.getElementById('today-rings')?.classList.toggle('hide', !onToday);
+  // Chips: the Hebrew date, and what kind of day it is ("Erev Shabbos · Parshas Lech Lecha")
+  const heb = document.getElementById('heb-chip');
+  if (heb) heb.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
   const noteEl = document.getElementById('day-note');
-  if (noteEl) {
-    const d = new Date(); d.setDate(d.getDate() + dayOffset);
-    noteEl.textContent = tab && tab !== 'tab-learn' ? '' : dayNote(d, getParshaForDate(d)).join(' · ');
-  }
+  if (noteEl) noteEl.textContent = dayNote(d, getParshaForDate(d)).join(' · ');
 }
 
 // A few lines of today's Hayom Yom on Today. One read a day (kept on the phone).
@@ -2723,7 +2809,7 @@ async function fetchHebDateFor(d) {
 function renderSectionsForOffset(iso) {
   document.getElementById('skeletons').style.display = 'none';
   const list = document.getElementById('sections-list');
-  list.style.display = 'block';
+  list.style.display = 'grid';
   if (!schedule) return;
 
   // Use today's done if offset=0, else pastDone
@@ -2737,10 +2823,11 @@ function renderSectionsForOffset(iso) {
     const tickAction = done
       ? (isToday ? 'unmarkDone(\'' + s.id + '\')' : 'unmarkDonePast(\'' + s.id + '\',\'' + iso + '\')')
       : (isToday ? 'showConfirm(\'' + s.id + '\',false)' : 'showConfirmPast(\'' + s.id + '\',\'' + iso + '\')');
-    return '<div class="lrow' + (done ? ' done' : '') + '" id="card-' + s.id + '" style="--c:' + (SECTION_COLORS[s.id] || s.color) + ';" onclick="openChabadPanel(\'' + s.id + '\')">'
-      + '<div class="lrow-ic" id="icon-' + s.id + '">' + icon(s.icon, 24) + '</div>'
-      + '<div class="lrow-t"><p>' + s.label + (SECTION_HE[s.id] ? '<span class="lrow-he" lang="he">' + SECTION_HE[s.id] + '</span>' : '') + '</p><p>' + s.subtitle + '</p></div>'
-      + '<button class="check' + (done ? ' on' : '') + '" id="tick-' + s.id + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + s.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
+    return '<div class="stile' + (done ? ' done' : '') + '" id="card-' + s.id + '" style="--c:var(--c-' + s.id + ');--on:var(--on-' + s.id + ');" onclick="openChabadPanel(\'' + s.id + '\')">'
+      + '<span class="stile-art" id="icon-' + s.id + '">' + icon(s.icon, 96) + '</span>'
+      + '<div class="stile-top"><button class="check' + (done ? ' on' : '') + '" id="tick-' + s.id + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + s.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
+      + '</div>'
+      + '<div class="stile-t"><p>' + s.label + '</p><p>' + String(s.subtitle || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '') + '</p></div>'
       + '</div>';
   }).join('');
 
@@ -2766,6 +2853,7 @@ function updateProgressRing() {
   SECTION_IDS.forEach((id, i) => {
     const seg = document.getElementById('today-seg-' + i);
     if (seg) { seg.style.setProperty('--seg', SECTION_COLORS[id]); seg.classList.toggle('on', !!done[id]); }
+    document.getElementById('ring-' + i)?.classList.toggle('on', !!done[id]);
     const tseg = document.getElementById('tab-seg-' + i);    // the Today tab's little ring
     if (tseg) { tseg.setAttribute('stroke-opacity', done[id] ? '1' : '.3'); tseg.setAttribute('stroke', done[id] ? SECTION_COLORS[id] : 'currentColor'); }
   });
@@ -2797,12 +2885,9 @@ function renderWeekStrip() {
     const n = sectionsDone(dayDone(user, d, today));
     const rest = isRestDay(d) && n === 0;
     const viewing = off === dayOffset;
-    const shape = n === 4
-      ? '<circle cx="13" cy="13" r="10" fill="var(--gold)"/><path d="M8.5 13.2l3 3 6-6.4" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
-      : rest
+    const shape = rest
         ? '<rect x="7.5" y="5.5" width="11" height="15" rx="1.5" fill="none" stroke="var(--t3)" stroke-width="1.6"/><path d="M10.5 5.5v15" stroke="var(--t3)" stroke-width="1.6"/>'
-        : '<circle cx="13" cy="13" r="10" fill="none" stroke="var(--border)" stroke-width="3"/>'
-          + (n ? '<circle cx="13" cy="13" r="10" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + (C * n / 4).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 13 13)"/>' : '');
+        : _quarterRing(dayDone(user, d, today), 13, 10, 3.4);
     const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + (rest ? ' (Shabbos / Yom Tov)' : ' · ' + n + ' of 4');
     html += '<button class="wk-day' + (viewing ? ' on' : '') + '" onclick="goToDay(' + off + ')" aria-label="' + label + '" title="' + label + '">'
       + '<span class="wk-letter">' + (off === 0 ? 'Today' : LETTERS[d.getDay()]) + '</span>'
@@ -2810,6 +2895,13 @@ function renderWeekStrip() {
       + '</button>';
   }
   el.innerHTML = html;
+}
+
+// A day as a small ring in four quarters, one per section, coloured when learned
+function _quarterRing(done, c, r, w) {
+  const L = 2 * Math.PI * r, q = L / 4, gap = Math.min(2.2, q * .12);
+  return SECTION_IDS.map((id, i) => '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="' + (done[id] ? 'var(--c-' + id + ')' : 'var(--border)')
+    + '" stroke-width="' + w + '" stroke-dasharray="' + (q - gap).toFixed(2) + ' ' + (L - q + gap).toFixed(2) + '" stroke-dashoffset="' + (-i * q).toFixed(2) + '" transform="rotate(-90 ' + c + ' ' + c + ')"/>').join('');
 }
 
 // "Today", "Yesterday", or the weekday ("Shabbos" for Saturday)
@@ -2863,7 +2955,7 @@ function _showReaderNext(sectionId) {
   const color = next ? (SECTION_COLORS[next.id] || 'var(--gold)') : '#6E9150';
   box.innerHTML = '<p class="rn-done">' + escapeHtml(schedule[sectionId].label) + ' done' + (next ? '' : ' · Chitas complete') + '</p>'
     + '<div class="rn-row">'
-    + (next ? '<button class="rn-go" style="background:' + color + ';" onclick="_goNext(' + next.off + ',\'' + next.id + '\')">Next: ' + escapeHtml(next.label) + '</button>' : '')
+    + (next ? '<button class="rn-go" style="--rc:' + (next ? 'var(--c-' + next.id + ')' : color) + ';--rc-on:' + (next ? 'var(--on-' + next.id + ')' : '#fff') + ';" onclick="_goNext(' + next.off + ',\'' + next.id + '\')">Next: ' + escapeHtml(next.label) + '</button>' : '')
     + '<button class="rn-home" ' + (next ? '' : 'style="flex:1;"') + ' onclick="closeChabadPanel()">' + (next ? 'Home' : 'Back to Home') + '</button>'
     + '</div>';
   box.style.display = 'block';
@@ -3218,6 +3310,7 @@ function showMoment(opts) {
     btnsEl.appendChild(btn);
   });
   const modal = document.getElementById('moment-modal');
+  modal.classList.toggle('m-full', !!opts.full);
   modal.style.display = 'flex';
   document.getElementById('moment-card').style.animation = 'none';
   requestAnimationFrame(() => {
@@ -3279,17 +3372,14 @@ function celebrateStreakMilestone(streak) {
 // The one daily celebration: the four sections' inks draw into one gold line
 function celebrateAllDone(milestone) {
   vibrate([12, 70, 12]);
-  const sparks = Array.from({ length: 12 }, (_, i) => {
-    const a = (i / 12) * 2 * Math.PI - Math.PI / 2, r = 90 + (i % 3) * 22;
-    return '<i style="--c:var(--c-' + SECTION_IDS[i % 4] + ');--dx:' + Math.round(Math.cos(a) * r) + 'px;--dy:' + Math.round(Math.sin(a) * r * .6) + 'px;"></i>';
-  }).join('');
-  const rule = '<div class="day-spark">' + sparks + '</div>'
-    + '<div class="day-rule">' + SECTION_IDS.map(id => '<i style="--c:var(--c-' + id + ')"></i>').join('') + '</div>'
+  const rule = '<svg class="done-rings" viewBox="0 0 92 92" aria-hidden="true">'
+    + [40, 30, 20, 10].map((r, i) => '<circle cx="46" cy="46" r="' + r + '" style="--c:var(--c-' + SECTION_IDS[i] + ');--len:' + (2 * Math.PI * r).toFixed(1) + ';--i:' + i + '"/>').join('')
+    + '</svg>'
     + '<p class="day-he" lang="he">חת״ת</p>';
   const days = user.total || 1;
   const sub = milestone && MILESTONE_LINES[milestone] ? MILESTONE_LINES[milestone]
-    : days === 1 ? "That's awesome. Your first Chitas day, keep it up!" : "That's awesome. " + days + ' days of Chitas, keep it up!';
-  setTimeout(() => showMoment({ icon: rule, title: 'All four done', sub,
+    : days === 1 ? 'Your first Chitas day' : days + ' days of Chitas';
+  setTimeout(() => showMoment({ full: true, icon: rule, title: 'All four done', sub,
     xp: (user.streak || 0) > 1 ? user.streak + ' days in a row' : '',
     btns: [{ label: 'See you tomorrow', primary: false }] }), 250);
 }
@@ -4897,6 +4987,7 @@ function openChabadPanel(sectionId) {
   if (_rd) _rd.scrollTop = 0;
 
   markDoneUnlocked = false;
+  _setReaderColour('var(--c-' + sectionId + ')', 'var(--on-' + sectionId + ')');
   document.getElementById('reader-next').style.display = 'none';
   document.getElementById('reader-actions').style.display = 'flex';
   _updateReaderDayBar(sectionId);
@@ -5381,6 +5472,14 @@ function _flushReaderScroll() {
 
 }
 
+// The reader (its header, progress bar and main button) in one section's colour
+function _setReaderColour(c, on) {
+  const panel = document.getElementById('chabad-panel');
+  if (!panel) return;
+  panel.style.setProperty('--rc', c);
+  panel.style.setProperty('--rc-on', on || '#fff');
+}
+
 function closeChabadPanel() {
   // Allow LS to intercept (e.g. X while reading a sicha → back to list)
   if (window._lsHandleClose && window._lsHandleClose()) return;
@@ -5439,11 +5538,10 @@ function _learningMonthHTML() {
     const iso = dateISO(d), isT = iso === dateISO(today), future = d > today && !isT;
     const k = future ? 0 : sectionsDone(dayDone(user, d, today));
     const rest = !future && k === 0 && isRestDay(d);
-    const mark = k === 4 ? '<circle cx="16" cy="16" r="' + R + '" fill="var(--gold)"/>'
+    const mark = future ? (isT ? '' : '')
       : rest ? '<rect x="13.2" y="23.5" width="5.6" height="5" rx=".8" fill="none" stroke="var(--t3)" stroke-width="1.1"/><path d="M14.7 23.5v5" stroke="var(--t3)" stroke-width="1.1"/>'
-      : (k ? '<circle cx="16" cy="16" r="' + R + '" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-dasharray="' + (C * k / 4).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 16 16)"/>' : '')
-        + (isT ? '<circle cx="16" cy="16" r="' + R + '" fill="none" stroke="var(--t1)" stroke-width="1.2"/>' : '');
-    cells += '<button class="cal-d' + (future ? ' fut' : '') + (rest ? ' rest' : '') + (k === 4 ? ' full' : '') + '" onclick="_calTap(\'' + iso + '\')" aria-label="' + d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '">'
+      : _quarterRing(dayDone(user, d, today), 16, R, 3);
+    cells += '<button class="cal-d' + (future ? ' fut' : '') + (rest ? ' rest' : '') + (isT ? ' today' : '') + '" onclick="_calTap(\'' + iso + '\')" aria-label="' + d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '">'
       + '<svg viewBox="0 0 32 32">' + mark + '</svg><span>' + n + '</span></button>';
   }
   return '<div class="cal-head"><button onclick="_calMove(-1)" aria-label="Previous month">‹</button>'
@@ -5486,16 +5584,30 @@ function renderStats() {
   // ── All of it, added up ─────────────────────────────────────────────────
   const isMitzvos = user.rambamTrack === 'm';
   const GLYPH = { chumash: 'torah', tehillim: 'kinor', tanya: 'flame', rambam: 'books' };
-  const tile = (id, n, label, detail) =>
-    '<div class="total-row"><span class="total-g" style="color:' + SECTION_COLORS[id] + ';">' + icon(GLYPH[id], 24) + '</span>'
-    + '<div><p class="total-n"><b class="stats-num" data-target="' + n + '">' + fmt(n) + '</b> ' + label + '</p><p class="total-d">' + detail + '</p></div></div>';
+  // Each section's tile: the big number, what it counts, two lines more, and
+  // where useful a bar for how far through the whole thing you are
+  const tile = (id, n, label, lines, pct, pctLabel) =>
+    '<div class="ttile" style="--c:var(--c-' + id + ');--on:var(--on-' + id + ');">'
+    + '<span class="ttile-art">' + icon(GLYPH[id], 96) + '</span>'
+    + '<p class="ttile-n"><b class="stats-num" data-target="' + n + '">' + fmt(n) + '</b></p><p class="ttile-l">' + label + '</p>'
+    + lines.filter(Boolean).map(l => '<p class="ttile-d">' + l + '</p>').join('')
+    + (pct != null ? '<div class="ttile-bar" role="img" aria-label="' + pctLabel + '"><i style="width:' + Math.max(2, Math.min(100, pct)) + '%"></i></div><p class="ttile-d">' + pctLabel + '</p>' : '')
+    + '</div>';
+  const D = T.daysBy || {};
+  const days = id => D[id] ? 'On ' + plural(D[id], 'day', 'days') : '';
+  const torahPct = Math.round(T.pesukim / 5845 * 100);
+  const tehCycle = T.tehillimChapters % 150;
   const tiles =
-      tile('chumash', T.pesukim, T.pesukim === 1 ? 'passuk of Chumash' : 'pesukim of Chumash', plural(T.parshiyos, 'full parsha', 'full parshiyos'))
-    + tile('tehillim', T.tehillimChapters, T.tehillimChapters === 1 ? 'chapter of Tehillim' : 'chapters of Tehillim', T.tehillimBooks ? plural(T.tehillimBooks, 'time through', 'times through') : 'Said with the monthly cycle')
-    + tile('tanya', T.tanyaDays, T.tanyaDays === 1 ? 'day of Tanya' : 'days of Tanya', T.tanyaLatest ? 'Up to chapter ' + T.tanyaLatest : 'The yearly cycle')
+      tile('chumash', T.pesukim, T.pesukim === 1 ? 'passuk of Chumash' : 'pesukim of Chumash',
+        [plural(T.parshiyos, 'full parsha', 'full parshiyos'), days('chumash')], torahPct, torahPct + '% of the Torah')
+    + tile('tehillim', T.tehillimChapters, T.tehillimChapters === 1 ? 'chapter of Tehillim' : 'chapters of Tehillim',
+        [T.tehillimBooks ? 'All of Tehillim ' + plural(T.tehillimBooks, 'time', 'times') : 'With the monthly cycle', days('tehillim')], Math.round(tehCycle / 150 * 100), tehCycle + ' of 150 this time through')
+    + tile('tanya', T.tanyaDays, T.tanyaDays === 1 ? 'day of Tanya' : 'days of Tanya',
+        [T.tanyaLatest ? 'Up to chapter ' + T.tanyaLatest : 'The yearly cycle', C.per.tanya.current > 1 ? C.per.tanya.current + ' days in a row' : ''])
     + (isMitzvos
-      ? tile('rambam', T.seferHamitzvosDays, T.seferHamitzvosDays === 1 ? 'day of Sefer HaMitzvos' : 'days of Sefer HaMitzvos', 'The daily mitzvos')
-      : tile('rambam', T.rambamHalachos, T.rambamHalachos === 1 ? 'halacha of Rambam' : 'halachos of Rambam', plural(T.rambamChapters, 'chapter', 'chapters') + ' · ' + Math.min(100, Math.round(T.rambamChapters / RAMBAM_TOTAL_CHAPTERS * 100)) + '% of it'));
+      ? tile('rambam', T.seferHamitzvosDays, T.seferHamitzvosDays === 1 ? 'day of Sefer HaMitzvos' : 'days of Sefer HaMitzvos', ['The daily mitzvos', C.per.rambam.current > 1 ? C.per.rambam.current + ' days in a row' : ''])
+      : tile('rambam', T.rambamHalachos, T.rambamHalachos === 1 ? 'halacha of Rambam' : 'halachos of Rambam',
+        [plural(T.rambamChapters, 'chapter', 'chapters'), days('rambam')], Math.round(T.rambamChapters / RAMBAM_TOTAL_CHAPTERS * 100), Math.min(100, Math.round(T.rambamChapters / RAMBAM_TOTAL_CHAPTERS * 100)) + '% of Mishneh Torah'));
 
   // ── Consistency ──────────────────────────────────────────────────────────
   const NAMES2 = { chumash: 'Chumash', tehillim: 'Tehillim', tanya: 'Tanya', rambam: isMitzvos ? 'Sefer HaMitzvos' : 'Rambam' };
@@ -5513,17 +5625,17 @@ function renderStats() {
     : '';
 
   document.getElementById('stats-content').innerHTML =
-    '<div id="learning-cal">' + calHTML + '</div>'
-
-    + '<div class="streak-head">'
-    +   '<button onclick="openStreakInfo()"><p class="streak-n">' + C.streak + '<span> days in a row</span></p>'
-    +     '<p class="t-caption">Best: ' + plural(C.best, 'day', 'days') + bestWhen + '</p></button>'
-    +   '<div style="text-align:right;"><p class="streak-n">' + C.pct30 + '%</p><p class="t-caption">full days, last 30</p></div>'
+    '<div class="stat2">'
+    +   '<button class="stat-dark" onclick="openStreakInfo()"><p class="stat-n">' + C.streak + '</p><p class="stat-l">days in a row · best ' + C.best + '</p></button>'
+    +   '<div class="stat-soft"><p class="stat-n">' + C.pct30 + '%</p><p class="stat-l">full days, last 30</p></div>'
     + '</div>'
-    + '<div class="cbars">' + bars + '</div>'
+    + '<div id="learning-cal" class="lcard">' + calHTML + '</div>'
 
     + '<p class="t-sec">All of it, added up <span>since ' + sinceLabel + '</span></p>'
     + '<div id="learned-grid">' + tiles + '</div>'
+
+    + '<p class="t-sec">The last 30 days</p>'
+    + '<div class="cbars lcard">' + bars + '</div>'
 
     + highlights
     + '<div style="height:24px;"></div>';
@@ -6273,6 +6385,7 @@ async function openExtraReader(id) {
 
   // Use the same panel as regular sections
   markDoneUnlocked = false;
+  _setReaderColour(def.color, '#fff');
   document.getElementById('chabad-panel-title').textContent = def.label;
   document.getElementById('chabad-panel-sub').textContent = 'Loading…';
   document.getElementById('chabad-panel-extlink').style.display = 'none';
