@@ -173,7 +173,7 @@ await check('reader: switching section or day keeps each place separately (no le
   openChabadPanel('chumash'); tall();
   const afterSwitch = reader.scrollTop;
   const chumashSaved = _getSavedScrollPos('chumash');
-  const tanyaSaved = _getSavedScrollPos('tanya');
+  const tanyaSaved = _getSavedScrollPos('tanya')?.y ?? _getSavedScrollPos('tanya');
   // Yesterday's Tanya has its own place, not today's
   dayOffset = -1; const yesterday = _getSavedScrollPos('tanya'); dayOffset = 0;
   closeChabadPanel();
@@ -199,6 +199,44 @@ await check('reader: a section loading in the background never takes over the on
   closeChabadPanel();
   return result;
 }, [300, 'chumash', true]);
+
+await check('reader: your place is the passage, kept when the guide arrives, the language or text size changes, and the top is remembered', async () => {
+  const reader = document.getElementById('native-reader');
+  const panel = document.getElementById('chabad-panel');
+  const c = document.getElementById('native-reader-content');
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const topText = () => { const top = reader.getBoundingClientRect().top; for (const el of c.querySelectorAll('p')) { const r = el.getBoundingClientRect(); if (r.bottom > top + 8 && r.height > 4) return el.textContent.trim().slice(0, 30).trim(); } };
+  dayOffset = 0; panel.style.display = 'flex'; reader.style.display = 'block'; c.style.display = 'block';
+  window._readerOpenFor = 'tanya'; closeReaderSettings?.();
+  // Plain text first: long segments
+  const segs = Array.from({ length: 12 }, (_, i) => ({ he: 'פסקה ' + i + ' ' + 'מילים רבות '.repeat(40), en: 'Paragraph ' + i + ' begins here. ' + 'Many words of the text. '.repeat(30), isHagahah: false }));
+  window._tanyaData = { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.41', chapterLabel: 'x', chapterNum: 41, isFirstSegment: false, blocks: segs, guide: null };
+  localStorage.setItem('chitas_lang_tanya', 'both');
+  _renderTanyaContent(); _restoreScrollAfterRender('tanya', 0);
+  // Read down to paragraph 7
+  const p7 = [...c.querySelectorAll('p')].find(p => p.textContent.startsWith('Paragraph 7'));
+  reader.scrollTop += p7.getBoundingClientRect().top - reader.getBoundingClientRect().top + 2;
+  const before = topText();
+  // The guide arrives: the intro card, headings, and each segment split into pieces
+  let place = _readerPlace();
+  window._tanyaData = { ...window._tanyaData, guide: { recap: 'So far, a long recap. '.repeat(10), summary: 'x' },
+    blocks: segs.flatMap((b, i) => [{ ...b, en: b.en.slice(0, 120), he: b.he.slice(0, 120), heading: 'Step ' + i }, { ...b, en: b.en.slice(120), he: b.he.slice(120) }]) };
+  _renderTanyaContent(); _restoreScrollAfterRender('tanya', place); await wait(120);
+  const afterGuide = topText();
+  // English only, then a bigger text size
+  _setTanyaLang('en'); await wait(120);
+  const afterLang = topText();
+  place = _readerPlace(); document.getElementById('reader-font-style')?.remove();
+  const st = document.createElement('style'); st.id = 'reader-font-style'; st.textContent = '#native-reader-content .rf-body { font-size: 30px !important; }'; document.head.appendChild(st);
+  _restoreScrollAfterRender('tanya', place); await wait(120);
+  const afterSize = topText(); st.remove();
+  // Back to the top, then away: next time it opens at the top
+  window._readerActiveSid = 'tanya'; reader.scrollTop = 0; _saveScrollPos('tanya', 0);
+  const topSaved = _getSavedScrollPos('tanya');
+  localStorage.setItem('chitas_lang_tanya', 'both');
+  closeChabadPanel();
+  return [before, afterGuide, afterLang, afterSize, topSaved];
+}, ['Paragraph 7 begins here. Many', 'Paragraph 7 begins here. Many', 'Paragraph 7 begins here. Many', 'Paragraph 7 begins here. Many', 0]);
 
 await check('Tanya: guide labeled and shown as text; headings, opening word, hagahah, footnotes', () => {
   const N = '\uE000' + '0' + '\uE001';

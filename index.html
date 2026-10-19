@@ -3366,6 +3366,9 @@ function onReaderScroll() {
   const nearBottom = sentinelRect.top <= readerRect.bottom + 120;
   if (nearBottom) unlockMarkDone();
 
+  // Your own scrolling (not ours placing the text) stops any re-placing
+  if (performance.now() > (window._readerProgScrollUntil || 0)) window._readerUserScrolled = true;
+
   // Save scroll position — debounced 300ms
   if (_scrollSaveTimer) clearTimeout(_scrollSaveTimer);
   const sidAtScroll = window._readerActiveSid, dayAtScroll = window._readerActiveDay;
@@ -3375,7 +3378,6 @@ function onReaderScroll() {
     const sid = window._readerActiveSid;
     if (!sid || sid !== sidAtScroll || window._readerActiveDay !== dayAtScroll) return;
     const curScrollTop = reader.scrollTop;
-    if (curScrollTop < 80) return; // don't save near-top positions
 
     // LS uses its own per-sicha key
     if (sid === 'likkuteiSichos' && window._lsInReader) {
@@ -3417,8 +3419,13 @@ function _scrollKey(sectionId, off = dayOffset) {
 
 function _saveScrollPos(sectionId, pos) {
   try {
-    // Saved under the section + day the reader is SHOWING (not whatever day is current now)
-    localStorage.setItem(_scrollKey(sectionId, window._readerActiveDay ?? dayOffset), String(Math.round(pos)));
+    // Saved under the section + day the reader is SHOWING (not whatever day is current now).
+    // While a restore is still on its way, the reader isn't at the saved place yet: don't save.
+    if (window._pendingScrollRestore?.[sectionId] !== undefined) return;
+    const key = _scrollKey(sectionId, window._readerActiveDay ?? dayOffset);
+    const place = _readerPlace() || { y: Math.round(pos) };
+    if (!place.y) { localStorage.removeItem(key); return; }   // at the top: start at the top next time
+    localStorage.setItem(key, JSON.stringify(place));
     _pruneScrollKeys();
   } catch(e) {}
 }
@@ -3426,8 +3433,51 @@ function _saveScrollPos(sectionId, pos) {
 function _getSavedScrollPos(sectionId) {
   try {
     const val = localStorage.getItem(_scrollKey(sectionId));
-    return val !== null ? parseInt(val) : 0;
+    if (val === null) return 0;
+    return val[0] === '{' ? JSON.parse(val) : parseInt(val);   // a place, or pixels (older saves)
   } catch(e) { return 0; }
+}
+
+// ── WHERE YOU ARE IN THE TEXT ─────────────────────────────────────────────────
+// A reading place is the passage at the top of the screen (its first words,
+// vowels ignored, and how far into it), not just pixels, so it survives
+// anything that changes the page's height: the Tanya guide arriving, switching
+// language, nekudos or text size, fonts finishing loading, Tehillim names.
+const _placeText = t => String(t || '').replace(/[\u0591-\u05C7]/g, '').replace(/\s+/g, ' ').trim();
+const _placeEls = () => document.getElementById('native-reader-content')?.querySelectorAll('p, h1, h2, h3, li') || [];
+function _readerPlace() {
+  const reader = document.getElementById('native-reader');
+  if (!reader || reader.style.display === 'none') return null;
+  const y = reader.scrollTop;
+  if (y < 40) return { y: 0 };
+  const top = reader.getBoundingClientRect().top;
+  for (const el of _placeEls()) {
+    const r = el.getBoundingClientRect();
+    if (r.height < 4 || r.bottom <= top + 8) continue;
+    const a = _placeText(el.textContent).slice(0, 48);
+    if (a.length < 6) continue;
+    return { y: Math.round(y), h: reader.scrollHeight, a, o: Math.max(0, Math.min(1, (top - r.top) / r.height)) };
+  }
+  return { y: Math.round(y), h: reader.scrollHeight };
+}
+// Where a place is now, in the reader's pixels
+function _placeY(place) {
+  if (!place) return 0;
+  if (typeof place === 'number') return place;
+  const reader = document.getElementById('native-reader');
+  if (!reader) return place.y || 0;
+  if (place.a) {
+    const top = reader.getBoundingClientRect().top;
+    for (const el of _placeEls()) {
+      const t = _placeText(el.textContent);
+      if (t.startsWith(place.a) || (t.length >= 12 && place.a.startsWith(t))) {
+        const r = el.getBoundingClientRect();
+        return Math.max(0, reader.scrollTop + (r.top - top) + (place.o || 0) * r.height);
+      }
+    }
+  }
+  // The passage isn't on the page any more (e.g. another language): same proportion
+  return place.h ? Math.round(place.y * reader.scrollHeight / place.h) : (place.y || 0);
 }
 
 function _pruneScrollKeys() {
@@ -3466,39 +3516,41 @@ function _restoreScrollAfterRender(sectionId, targetPos) {
   window._readerActiveSid = sectionId.startsWith('extra_') ? sectionId.slice(6) : sectionId;
   window._readerActiveDay = dayOffset;
 
-  if (!targetPos || targetPos <= 0) return;
+  if (!targetPos || (typeof targetPos === 'number' ? targetPos <= 0 : !targetPos.y)) return;
   window._pendingScrollRestore[sectionId] = targetPos;
+  window._readerUserScrolled = false;
 
   let attempts = 0;
   const MAX_ATTEMPTS = 40; // ~650ms at 60fps
+  const reader = document.getElementById('native-reader');
+  const go = () => { window._readerProgScrollUntil = performance.now() + 200; reader.scrollTop = _placeY(targetPos); };
+  // Fonts finishing loading or late content (Tehillim names, the Tanya guide) can
+  // move the text after we've placed it: place it again, unless you've scrolled
+  const owner = window._readerOpenFor;
+  const settle = () => {
+    const again = () => { if (!window._readerUserScrolled && window._readerOpenFor === owner && document.getElementById('chabad-panel')?.style.display !== 'none') go(); };
+    document.fonts?.ready?.then(again);
+    setTimeout(again, 900);
+  };
 
   const tryRestore = () => {
     // Superseded by a newer call for the same section
     if (window._pendingScrollRestore[sectionId] !== targetPos) return;
-
-    const reader = document.getElementById('native-reader');
     if (!reader) return;
     if (document.getElementById('chabad-panel')?.style.display === 'none') return;
 
     const maxScroll = reader.scrollHeight - reader.clientHeight;
+    const y = _placeY(targetPos);
 
-    // Content is tall enough — set position and stop
-    if (maxScroll >= targetPos - 20) {
-      reader.scrollTop = targetPos;
+    // Content is tall enough (or we've waited long enough): place it and stop
+    if (maxScroll >= y - 20 || attempts >= MAX_ATTEMPTS) {
+      go();
       delete window._pendingScrollRestore[sectionId];
+      settle();
       return;
     }
-
-    // Content not tall enough yet — retry next frame (up to limit)
-    if (attempts < MAX_ATTEMPTS) {
-      attempts++;
-      requestAnimationFrame(tryRestore);
-    }
-    // If we exhaust retries just scroll as far as we can
-    else {
-      reader.scrollTop = targetPos;
-      delete window._pendingScrollRestore[sectionId];
-    }
+    attempts++;
+    requestAnimationFrame(tryRestore);
   };
 
   requestAnimationFrame(tryRestore);
@@ -3871,7 +3923,7 @@ async function _loadChumashNative(sectionId, silent) {
 
 function _setChumashLang(lang) {
   localStorage.setItem('chitas_lang_chumash', lang);
-  const pos = document.getElementById('native-reader')?.scrollTop || 0;
+  const pos = _readerPlace();
   _renderChumashContent();
   _restoreScrollAfterRender('chumash', pos);
 }
@@ -4193,7 +4245,7 @@ document.addEventListener('scroll', _hideRambamNote, true);
 
 function _setRambamLang(lang) {
   localStorage.setItem('chitas_lang_rambam', lang);
-  const pos = document.getElementById('native-reader')?.scrollTop || 0;
+  const pos = _readerPlace();
   _renderRambamContent();
   _restoreScrollAfterRender('rambam', pos);
 }
@@ -4550,7 +4602,7 @@ async function _loadTanyaNative(sectionId, silent) {
     const _guideUpdate = changes => {
       window._tanyaData = { ...window._tanyaData, ...changes };
       if (_tanyaShown()) {
-        const pos = document.getElementById('native-reader')?.scrollTop || 0;
+        const pos = _readerPlace();
         _renderTanyaContent();
         _restoreScrollAfterRender('tanya', pos);
       }
@@ -4701,14 +4753,14 @@ function _showTanyaNote(e, n) {
 function _toggleTanyaOpt(name) {
   const key = 'chitas_tanya_' + name;
   localStorage.setItem(key, localStorage.getItem(key) === 'off' ? 'on' : 'off');
-  const pos = document.getElementById('native-reader')?.scrollTop || 0;
+  const pos = _readerPlace();
   _renderTanyaContent();
   _restoreScrollAfterRender('tanya', pos);
 }
 
 function _setTanyaLang(lang) {
   localStorage.setItem('chitas_lang_tanya', lang);
-  const pos = document.getElementById('native-reader')?.scrollTop || 0;
+  const pos = _readerPlace();
   _renderTanyaContent();
   _restoreScrollAfterRender('tanya', pos);
 }
@@ -4919,7 +4971,9 @@ function _readerFontStep(delta) {
   const next = Math.max(0, Math.min(_FONT_STEPS - 1, cur + delta));
   if (next === cur) return;
   localStorage.setItem(_readerFontKey(sid), String(next));
+  const place = _readerPlace();                       // keep the passage you're on in view
   _applyReaderFontSize(sid);
+  _restoreScrollAfterRender(['chumash', 'rambam', 'tehillim', 'tanya'].includes(sid) ? sid : 'extra_' + sid, place);
   // Subtle toast feedback
   const pct = Math.round(_FONT_SCALES[next] * 100);
   fire('Text size ' + pct + '%', 'xp');
@@ -5198,7 +5252,7 @@ function _flushReaderScroll() {
   if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
   const reader = document.getElementById('native-reader');
   const activeSid = window._readerActiveSid;
-  if (reader && activeSid && reader.scrollTop >= 80) {
+  if (reader && activeSid) {
     if (activeSid === 'likkuteiSichos' && window._lsInReader) {
       const it = window._lsSichos && window._lsSichos[window._lsCurIdx];
       if (it) { try { localStorage.setItem('ls_s_'+it.page+'_'+it.vol, String(Math.round(reader.scrollTop))); } catch {} }
@@ -6406,7 +6460,7 @@ function _rerenderDaf() {
 
 function _setDafLang(l) {
   localStorage.setItem('chitas_lang_extra_dafYomi', l);
-  const pos = document.getElementById('native-reader')?.scrollTop || 0;
+  const pos = _readerPlace();
   _rerenderDaf();
   _restoreScrollAfterRender('extra_dafYomi', pos);
 }
@@ -6417,7 +6471,7 @@ function _toggleDafComm(val) {
   if (commSet.has(val)) commSet.delete(val);
   else commSet.add(val);
   localStorage.setItem('chitas_daf_commentary', [...commSet].join(','));
-  const pos = document.getElementById('native-reader')?.scrollTop || 0;
+  const pos = _readerPlace();
   _rerenderDaf();
   _restoreScrollAfterRender('extra_dafYomi', pos);
 }
@@ -7288,7 +7342,7 @@ function _setChumashTranslation(id) {
   const readerOpen = panel?.style.display !== 'none' && markBtn?.dataset?.sectionId === 'chumash';
   if (readerOpen) {
     // Capture live scroll position NOW before the content is replaced
-    const livePos = document.getElementById('native-reader')?.scrollTop || 0;
+    const livePos = _readerPlace();
     // Show loading state immediately
     const contEl = document.getElementById('native-reader-content');
     const loadEl = document.getElementById('native-reader-loading');
@@ -7297,7 +7351,7 @@ function _setChumashTranslation(id) {
     // Clear cache and reload, then restore to the position we were at
     window._chumashData = null;
     _loadChumashNative('chumash').then(ok => {
-      if (ok && livePos > 0) _restoreScrollAfterRender('chumash', livePos);
+      if (ok && livePos?.y) _restoreScrollAfterRender('chumash', livePos);
     }).catch(() => {});
   } else {
     window._chumashData = null;
