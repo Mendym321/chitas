@@ -479,7 +479,8 @@
 #day-chips { display:flex; gap:8px; margin:2px -20px 14px; padding:0 20px; overflow-x:auto; scrollbar-width:none; }   /* one line, so it never pushes the page down */
 #day-chips > * { padding:7px 12px; border-radius:999px; font:700 13px var(--ui-font); line-height:1.2; }
 #day-chips > *:empty { display:none; }
-#streak-pill { background:var(--ink); color:var(--on-ink); border:none; cursor:pointer; }
+#streak-pill { background:var(--ink); color:var(--on-ink); border:none; cursor:pointer; display:flex; align-items:center; gap:6px; }
+#streak-pill .sp-ic { width:15px; height:15px; fill:none; stroke:var(--c-chumash); stroke-width:3; }
 #streak-pill b { font-weight:800; }
 #heb-chip, #day-note { background:var(--card2); color:var(--t1); }
 #week-summary { display:none; }
@@ -529,6 +530,12 @@
 .dp-info { margin-top:12px; padding:12px 14px; border-radius:18px; background:var(--card2); }
 .dp-info p:first-child { font:800 15px var(--ui-font); color:var(--t1); }
 .dp-info p:last-child { font-size:13px; color:var(--t2); margin-top:2px; }
+.sk-big { border-radius:var(--r-m); background:var(--ink); color:var(--on-ink); padding:18px 18px 16px; }
+.sk-big p:first-child { font:800 52px/1 var(--ui-font); letter-spacing:-1.5px; }
+.sk-big p:last-child { font:600 15px var(--ui-font); opacity:.8; margin-top:4px; }
+.sk-rule { margin-top:14px; font-size:14px; line-height:1.45; color:var(--t2); }
+.sk-next { margin-top:8px; font-size:14px; color:var(--t2); }
+.sk-next b { color:var(--t1); }
 .dp-go { margin-top:12px; width:100%; height:52px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:800 16px var(--ui-font); cursor:pointer; }
 /* Learning */
 .stat2 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin:6px 0 12px; }
@@ -1128,9 +1135,9 @@ window._fsGetDoc = getDoc;
     <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
       <!-- Chips: the streak, the Hebrew date, what kind of day it is -->
       <div id="day-chips">
-        <button id="streak-pill" onclick="openStreakInfo()"><b id="streak-pill-num">0</b> days in a row<span id="week-summary"></span></button>
-        <button id="heb-chip" onclick="openDayPicker()" aria-label="Go to a day"><span class="cal-ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></span><span id="heb-chip-t"></span></button>
+        <button id="streak-pill" onclick="openStreakInfo()" aria-label="Days in a row"><svg class="sp-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/></svg><b id="streak-pill-num">0</b> days<span id="week-summary"></span></button>
         <button id="back-today" onclick="goToDay(0)" style="display:none;">Back to today</button>
+        <button id="heb-chip" onclick="openDayPicker()" aria-label="Go to a day"><span class="cal-ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></span><span id="heb-chip-t"></span></button>
         <span id="day-note"></span>
       </div>
 
@@ -2477,12 +2484,15 @@ function setGreeting() {
     : dayOffset < 0 ? away + ' days ago' : 'In ' + away + ' days';
   document.getElementById('today-rings')?.classList.toggle('hide', !onToday);
   // Chips: the Hebrew date, and what kind of day it is ("Erev Shabbos · Parshas Lech Lecha")
+  // Away from today, "Back to today" takes the streak's place (one line of chips)
   const bt = document.getElementById('back-today');
   if (bt) bt.style.display = dayOffset === 0 ? 'none' : '';
+  const sp = document.getElementById('streak-pill');
+  if (sp) sp.style.display = dayOffset === 0 ? '' : 'none';
   const heb = document.getElementById('heb-chip-t');
   if (heb) heb.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
   const noteEl = document.getElementById('day-note');
-  if (noteEl) noteEl.textContent = dayNote(d, getParshaForDate(d)).join(' · ');
+  if (noteEl) noteEl.textContent = dayNote(d, getParshaForDate(d)).map(t => t.replace(/^Parshas /, '')).join(' · ');
 }
 
 // A few lines of today's Hayom Yom on Today. One read a day (kept on the phone).
@@ -2520,28 +2530,19 @@ function openStreakInfo() {
   const today = new Date();
   const st = computeStreak(user, today);
   const next = nextMilestone(st.current);
-  const stat = (n, label) => '<div style="flex:1;text-align:center;"><p style="font-size:var(--fs-5);font-weight:900;color:var(--t1);">' + n + '</p><p style="font-size:var(--fs-1);color:var(--t3);font-weight:600;">' + label + '</p></div>';
-  const modal = document.createElement('div');
+    const modal = document.createElement('div');
   modal.id = 'streak-info-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(31,27,22,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;';
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
-  modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:88vh;overflow-y:auto;">'
-    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
-    +   '<div><p class="ps-modal-title">' + st.current + '-day streak</p><p class="ps-modal-sub">Chitas days in a row</p></div>'
-    +   '<button onclick="this.closest(\'#streak-info-modal\').remove()" class="ps-modal-close">×</button>'
+  modal.innerHTML = '<div class="dp-sheet" role="dialog" aria-label="Days in a row"><div class="dp-grab"></div>'
+    + '<div class="sk-big"><p>' + st.current + '</p><p>' + (st.current === 1 ? 'day' : 'days') + ' in a row</p></div>'
+    + '<div class="stat2" style="margin:10px 0 0;">'
+    +   '<div class="stat-soft"><p class="stat-n">' + Math.max(user.longestStreak || 0, st.current) + '</p><p class="stat-l">best</p></div>'
+    +   '<div class="stat-soft"><p class="stat-n">' + chitasDaysThisWeek(user, today) + '</p><p class="stat-l">this week</p></div>'
     + '</div>'
-    + '<div style="padding:16px 20px 28px;">'
-    +   '<div style="display:flex;gap:8px;padding:14px 0;margin-bottom:14px;border-radius:var(--r-m);background:var(--card);border:1px solid var(--border);">'
-    +     stat(Math.max(user.longestStreak || 0, st.current), 'best streak') + stat(user.total || 0, 'Chitas days') + stat(chitasDaysThisWeek(user, today), 'this week')
-    +   '</div>'
-    +   '<p class="ps-label">How your streak works</p>'
-    +   '<div style="font-size:var(--fs-2);color:var(--t2);line-height:1.65;">'
-    +     '<p>A <b style="color:var(--t1);">Chitas day</b> means all four: Chumash, Tehillim, Tanya and Rambam.</p>'
-    +     '<p style="margin-top:8px;">Your streak counts Chitas days in a row. <b style="color:var(--t1);">Shabbos and Yom Tov never break it</b>; mark them afterwards and they count too.</p>'
-    +     '<p style="margin-top:8px;">Missed marking a day? Tap it in the week strip, up to 7 days back.</p>'
-    +     (next ? '<p style="margin-top:8px;">Next milestone: <b style="color:var(--t1);">' + next + ' days</b>, ' + (next - st.current) + ' to go.</p>' : '')
-    +   '</div>'
-    + '</div></div>';
+    + '<p class="sk-rule">A day counts when all four are learned. Shabbos and Yom Tov never break it.</p>'
+    + (next ? '<p class="sk-next">Next milestone: <b>' + next + ' days</b></p>' : '')
+    + '</div>';
   document.body.appendChild(modal);
 }
 

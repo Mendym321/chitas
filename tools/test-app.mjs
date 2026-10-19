@@ -101,7 +101,7 @@ await check('the line under the greeting says what kind of day it is', () => {
   const heb = document.getElementById('heb-chip').textContent;
   switchTab('stats'); const title = document.getElementById('greeting').textContent;
   switchTab('learn');
-  return [today.length > 0, today === dayNote(new Date(), getParshaForDate(new Date())).join(' · '), /\d+ \w+/.test(heb), title];
+  return [today.length > 0, today === dayNote(new Date(), getParshaForDate(new Date())).map(t => t.replace(/^Parshas /, '')).join(' · '), /\d+ \w+/.test(heb), title];
 }, [true, true, true, 'Progress']);
 
 await check('catching up: after yesterday\'s Chumash, next is today\'s Chumash', () => {
