@@ -2777,13 +2777,8 @@ function updateProgressRing() {
   const list = left.length <= 1 ? left.join('') : left.slice(0, -1).join(', ') + ' and ' + left[left.length - 1];
   title.textContent = allDone ? (dayOffset === 0 ? 'Chitas done' : 'Chitas day') : n + ' of 4 done';
   sub.textContent = allDone
-    ? (dayOffset === 0 ? "That's all four. See you tomorrow!" : 'All four learned')
-    : dayOffset !== 0 ? list + ' left'
-    : (n === 0 ? 'Four to learn today, start wherever you like'
-      : n === 1 ? 'Nice start! ' + list + ' to go'
-      : n === 2 ? 'Halfway there. ' + list + ' to go'
-      : 'Almost there, just ' + list + ' left')
-      + (new Date().getDay() === 5 ? ', before Shabbos' : '');
+    ? (dayOffset === 0 ? 'See you tomorrow' : 'All four learned')
+    : (dayOffset === 0 && new Date().getDay() === 5 ? list + ' left · before Shabbos' : list + ' left');
   renderWeekStrip();
 }
 
