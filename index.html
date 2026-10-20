@@ -509,6 +509,11 @@
 .tiles4.dragging .stile { transform:none !important; transition:none !important; }
 #day-chips::-webkit-scrollbar { display:none; }
 #day-chips > * { flex-shrink:0; white-space:nowrap; }
+#welcome-back { position:relative; margin:12px 0 4px; padding:16px 18px; border-radius:var(--r-m); background:var(--card); }
+.wb-t { font:800 18px var(--ui-font); color:var(--t1); }
+.wb-s { font-size:14px; color:var(--t2); margin-top:2px; }
+.wb-go { margin-top:12px; padding:9px 16px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:700 14px var(--ui-font); cursor:pointer; }
+.wb-x { position:absolute; top:8px; right:10px; width:32px; height:32px; border:none; background:none; color:var(--t3); font-size:20px; cursor:pointer; }
 #day-readonly { margin:10px 0 4px; padding:10px 14px; border-radius:16px; background:var(--card); font-size:13px; line-height:1.4; color:var(--t2); }
 #day-readonly b { color:var(--t1); }
 #day-picker { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
@@ -1180,6 +1185,7 @@ window._fsGetDoc = getDoc;
       <!-- Actual sections -->
       <div id="tiles-wrap"><div id="sections-list" class="tiles4" style="display:none;"></div></div>
       <p id="day-readonly" style="display:none;"></p>
+      <div id="welcome-back" style="display:none;"></div>
 
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
@@ -2787,6 +2793,24 @@ function renderSectionsForOffset(iso) {
   const addBtn = document.getElementById('add-learning-btn');
   if (addBtn) addBtn.style.display = hasTracks ? 'none' : 'block';
   _renderThought();
+  _renderWelcomeBack();
+}
+
+// After a break: a quiet card under the tiles, once a day, gone as soon as
+// you mark something (welcomeBack in js/progress.js decides)
+function _renderWelcomeBack() {
+  const el = document.getElementById('welcome-back');
+  if (!el) return;
+  const iso = dateISO(new Date());
+  let hidden = false;
+  try { hidden = localStorage.getItem('chitas_wb_hide') === iso; } catch (e) {}
+  const wb = dayOffset === 0 && !hidden ? welcomeBack(user, new Date()) : null;
+  if (!wb) { el.style.display = 'none'; return; }
+  el.innerHTML = '<button class="wb-x" aria-label="Close" onclick="try{localStorage.setItem(\'chitas_wb_hide\',\'' + iso + '\')}catch(e){};_renderWelcomeBack()">×</button>'
+    + '<p class="wb-t">Welcome back</p>'
+    + '<p class="wb-s">Today\'s four are here. Start with any of them.</p>'
+    + (wb.missedOff ? '<button class="wb-go" onclick="goToDay(' + wb.missedOff + ')">Catch up ' + escapeHtml(_dayName(wb.missedOff).toLowerCase() === 'yesterday' ? 'yesterday' : _dayName(wb.missedOff)) + '</button>' : '');
+  el.style.display = 'block';
 }
 
 const SECTION_COLORS = { chumash: 'var(--c-chumash)', tehillim: 'var(--c-tehillim)', tanya: 'var(--c-tanya)', rambam: 'var(--c-rambam)' };

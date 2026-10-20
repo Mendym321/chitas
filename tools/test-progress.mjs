@@ -10,7 +10,7 @@ const ctx = {};
 vm.createContext(ctx);
 for (const f of ['../js/holidays-data.js', '../js/progress.js'])
   vm.runInContext(readFileSync(new URL(f, import.meta.url), 'utf8'), ctx);
-const P = vm.runInContext('({ POINTS, pointsForDay, computeStreak, countChitasDays, weekPoints, isRestDay, milestoneReached, nextMilestone })', ctx);
+const P = vm.runInContext('({ POINTS, pointsForDay, computeStreak, countChitasDays, weekPoints, isRestDay, milestoneReached, nextMilestone, welcomeBack })', ctx);
 
 let failed = 0;
 function check(name, actual, expected) {
@@ -67,6 +67,16 @@ check('crossing 17 → 18 is a milestone (חי)', P.milestoneReached(17, 18), 18
 check('6 → 6 is not', P.milestoneReached(6, 6), null);
 check('next milestone after 20 is 30', P.nextMilestone(20), 30);
 check('Yom Kippur 2026 is a rest day', P.isRestDay(day('2026-09-21')), true);
+
+console.log('Welcome back:');
+check('a new user: nothing to come back to', P.welcomeBack({ done: {}, pastDone: {} }, TODAY), null);
+check('learned yesterday: no break', P.welcomeBack({ done: {}, pastDone: { '2026-10-13': ALL } }, TODAY), null);
+check('missed yesterday after learning before → welcome back, catch up yesterday',
+  P.welcomeBack({ done: {}, pastDone: { '2026-10-12': ALL } }, TODAY), { missedOff: -1 });
+check('already started today: no card', P.welcomeBack({ done: { chumash: true }, pastDone: { '2026-10-12': ALL } }, TODAY), null);
+check('away for weeks: welcome back; yesterday can still be caught up',
+  P.welcomeBack({ done: {}, pastDone: { '2026-09-01': ALL } }, TODAY), { missedOff: -1 });
+check('yesterday half-done still counts as missed', P.welcomeBack({ done: {}, pastDone: { '2026-10-12': ALL, '2026-10-13': { chumash: true } } }, TODAY), { missedOff: -1 });
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll progress tests passed');
 process.exit(failed ? 1 : 0);
