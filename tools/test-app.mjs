@@ -183,7 +183,7 @@ await check('Rambam translator\'s notes become tappable numbers that open in pla
   const en = _cleanHtml('<b>One must</b> [rest]<sup class="footnote-marker">1</sup><i class="footnote">See <i>Shabbos</i> 2a.</i> on the seventh day.<sup class="footnote-marker">2</sup><i class="footnote">&lt;b&gt;<img src=x onerror="window.__hacked=true"></i>', notes);
   window._rambamData = { chapters: [{ ref: 'Mishneh Torah, Sabbath 1', title: 'Shabbos 1', chapter: 1, en: [en], he: ['שבת'], notes }] };
   localStorage.setItem('chitas_lang_rambam', 'en');
-  (window._readerOpenFor = 'rambam', _renderRambamContent());
+  (_rv.sid = 'rambam', _renderRambamContent());
   const btns = document.querySelectorAll('#native-reader-content .rambam-fn');
   btns[0].click();
   const popup = document.getElementById('rambam-note-popup');
@@ -193,82 +193,7 @@ await check('Rambam translator\'s notes become tappable numbers that open in pla
   return [btns.length, notes, first, closed, !!window.__hacked, document.getElementById('native-reader-content').textContent.includes('on the seventh day')];
 }, [2, ['See Shabbos 2a.', '<b>'], ['block', 'See Shabbos 2a.'], 'none', false, true]);
 
-await check('reader: switching section or day keeps each place separately (no leaking)', async () => {
-  Object.keys(localStorage).filter(k => k.startsWith('scroll_')).forEach(k => localStorage.removeItem(k));
-  const reader = document.getElementById('native-reader');
-  const panel = document.getElementById('chabad-panel');
-  const tall = () => { const c = document.getElementById('native-reader-content'); c.style.display = 'block'; c.innerHTML = '<div style="height:5000px"></div>'; reader.style.display = 'block'; };
-  // Reading today's Tanya, scrolled far down
-  dayOffset = 0; panel.style.display = 'flex'; tall();
-  window._readerOpenFor = 'tanya'; _restoreScrollAfterRender('tanya', 0); reader.scrollTop = 1500;
-  // "Next: Chumash" straight from the reader
-  openChabadPanel('chumash'); tall();
-  const afterSwitch = reader.scrollTop;
-  const chumashSaved = _getSavedScrollPos('chumash');
-  const tanyaSaved = _getSavedScrollPos('tanya')?.y ?? _getSavedScrollPos('tanya');
-  // Yesterday's Tanya has its own place, not today's
-  dayOffset = -1; const yesterday = _getSavedScrollPos('tanya'); dayOffset = 0;
-  closeChabadPanel();
-  return [afterSwitch, chumashSaved, tanyaSaved, yesterday];
-}, [0, 0, 1500, 0]);
-
-await check('reader: a section loading in the background never takes over the one you are reading', async () => {
-  const reader = document.getElementById('native-reader');
-  const panel = document.getElementById('chabad-panel');
-  const c = document.getElementById('native-reader-content');
-  // Reading Chumash, a little way down
-  dayOffset = 0; panel.style.display = 'flex'; reader.style.display = 'block'; c.style.display = 'block';
-  window._readerOpenFor = 'chumash';
-  c.innerHTML = '<div id="chumash-text" style="height:5000px"></div>';
-  _restoreScrollAfterRender('chumash', 0); reader.scrollTop = 300;
-  // Tanya (with a saved place far down) finishes preloading in the background
-  _saveScrollPos('tanya', 2500);
-  _restoreScrollAfterRender('tanya', 2500);
-  window._tanyaData = { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.1', chapterLabel: 'x', chapterNum: 1, blocks: [{ he: 'א', en: 'a' }] };
-  _renderTanyaContent();
-  await new Promise(r => setTimeout(r, 300));
-  const result = [reader.scrollTop, window._readerActiveSid, !!document.getElementById('chumash-text')];
-  closeChabadPanel();
-  return result;
-}, [300, 'chumash', true]);
-
-await check('reader: your place is the passage, kept when the guide arrives, the language or text size changes, and the top is remembered', async () => {
-  const reader = document.getElementById('native-reader');
-  const panel = document.getElementById('chabad-panel');
-  const c = document.getElementById('native-reader-content');
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-  const topText = () => { const top = reader.getBoundingClientRect().top; for (const el of c.querySelectorAll('p')) { const r = el.getBoundingClientRect(); if (r.bottom > top + 8 && r.height > 4) return el.textContent.trim().slice(0, 30).trim(); } };
-  dayOffset = 0; panel.style.display = 'flex'; reader.style.display = 'block'; c.style.display = 'block';
-  window._readerOpenFor = 'tanya'; closeReaderSettings?.();
-  // Plain text first: long segments
-  const segs = Array.from({ length: 12 }, (_, i) => ({ he: 'פסקה ' + i + ' ' + 'מילים רבות '.repeat(40), en: 'Paragraph ' + i + ' begins here. ' + 'Many words of the text. '.repeat(30), isHagahah: false }));
-  window._tanyaData = { chapterSlug: 'Tanya,_Part_I;_Likkutei_Amarim.41', chapterLabel: 'x', chapterNum: 41, isFirstSegment: false, blocks: segs, guide: null };
-  localStorage.setItem('chitas_lang_tanya', 'both');
-  _renderTanyaContent(); _restoreScrollAfterRender('tanya', 0);
-  // Read down to paragraph 7
-  const p7 = [...c.querySelectorAll('p')].find(p => p.textContent.startsWith('Paragraph 7'));
-  reader.scrollTop += p7.getBoundingClientRect().top - reader.getBoundingClientRect().top + 2;
-  const before = topText();
-  // The guide arrives: the intro card, headings, and each segment split into pieces
-  let place = _readerPlace();
-  window._tanyaData = { ...window._tanyaData, guide: { recap: 'So far, a long recap. '.repeat(10), summary: 'x' },
-    blocks: segs.flatMap((b, i) => [{ ...b, en: b.en.slice(0, 120), he: b.he.slice(0, 120), heading: 'Step ' + i }, { ...b, en: b.en.slice(120), he: b.he.slice(120) }]) };
-  _renderTanyaContent(); _restoreScrollAfterRender('tanya', place); await wait(120);
-  const afterGuide = topText();
-  // English only, then a bigger text size
-  _setTanyaLang('en'); await wait(120);
-  const afterLang = topText();
-  place = _readerPlace(); document.getElementById('reader-font-style')?.remove();
-  const st = document.createElement('style'); st.id = 'reader-font-style'; st.textContent = '#native-reader-content .rf-body { font-size: 30px !important; }'; document.head.appendChild(st);
-  _restoreScrollAfterRender('tanya', place); await wait(120);
-  const afterSize = topText(); st.remove();
-  // Back to the top, then away: next time it opens at the top
-  window._readerActiveSid = 'tanya'; reader.scrollTop = 0; _saveScrollPos('tanya', 0);
-  const topSaved = _getSavedScrollPos('tanya');
-  localStorage.setItem('chitas_lang_tanya', 'both');
-  closeChabadPanel();
-  return [before, afterGuide, afterLang, afterSize, topSaved];
-}, ['Paragraph 7 begins here. Many', 'Paragraph 7 begins here. Many', 'Paragraph 7 begins here. Many', 'Paragraph 7 begins here. Many', 0]);
+// Keeping your place in the reader: see test-reader-place.mjs (npm run test:place)
 
 await check('Tanya: guide labeled and shown as text; headings, opening word, hagahah, footnotes', () => {
   const N = '\uE000' + '0' + '\uE001';
@@ -280,7 +205,7 @@ await check('Tanya: guide labeled and shown as text; headings, opening word, hag
   window.__hacked = false;
   localStorage.setItem('chitas_lang_tanya', 'both');
   localStorage.removeItem('chitas_tanya_guide'); localStorage.removeItem('chitas_tanya_nikud');
-  (window._readerOpenFor = 'tanya', _renderTanyaContent());
+  (_rv.sid = 'tanya', _renderTanyaContent());
   const c = document.getElementById('native-reader-content');
   const on = [c.textContent.includes('AI-written'), c.textContent.includes('<img'), !!window.__hacked, c.querySelector('.tz-ch')?.textContent,
     c.querySelector('.tz-h')?.textContent, c.querySelector('.tz-open')?.textContent, !!c.querySelector('.tz-hag .tz-he'), c.querySelectorAll('.tanya-fn').length];
@@ -304,7 +229,7 @@ await check('Rambam (real Sefaria text): [bracketed] translator\'s words lighter
   const en = _cleanHtml(sabbath, notes);
   window._rambamData = { chapters: [{ title: 'Shabbos 1', chapter: 1, en: [en], he: ['ש'], notes }] };
   localStorage.setItem('chitas_lang_rambam', 'en');
-  (window._readerOpenFor = 'rambam', _renderRambamContent());
+  (_rv.sid = 'rambam', _renderRambamContent());
   const root = document.querySelector('#native-reader-content .rb-en');
   const add = root.querySelector('.rb-add'), bold = root.querySelector('b');
   return [add.textContent, +getComputedStyle(add).fontWeight < 600, +getComputedStyle(bold).fontWeight >= 700,
@@ -315,7 +240,7 @@ await check('Rambam (real Sefaria text): [bracketed] translator\'s words lighter
 await check('Rambam (real Sefaria text, Ishus 1:2): added words lighter, footnotes tappable, transliterations italic', ({ ishus }) => {
   const notes = [];
   window._rambamData = { chapters: [{ title: 'Ishus 1', chapter: 1, en: [_cleanHtml(ishus, notes)], he: ['א'], notes }] };
-  (window._readerOpenFor = 'rambam', _renderRambamContent());
+  (_rv.sid = 'rambam', _renderRambamContent());
   const root = document.querySelector('#native-reader-content .rb-en');
   const adds = [...root.querySelectorAll('.rb-add')].map(e => e.textContent);
   return [adds.slice(0, 3), notes.length, document.querySelectorAll('#native-reader-content .rambam-fn').length,
@@ -324,7 +249,7 @@ await check('Rambam (real Sefaria text, Ishus 1:2): added words lighter, footnot
 
 await check('Rambam (real Sefaria text): a book with no brackets is shown in regular weight, not all bold', ({ robbery }) => {
   window._rambamData = { chapters: [{ title: 'Robbery 13', chapter: 13, en: [_cleanHtml(robbery, [])], he: ['א'], notes: [] }] };
-  (window._readerOpenFor = 'rambam', _renderRambamContent());
+  (_rv.sid = 'rambam', _renderRambamContent());
   const root = document.querySelector('#native-reader-content .rb-en');
   return [root.classList.contains('rb-plain'), +getComputedStyle(root).fontWeight < 600];
 }, [true, true], { robbery: RAMBAM.robbery_13_1 });
@@ -332,7 +257,7 @@ await check('Rambam (real Sefaria text): a book with no brackets is shown in reg
 await check('Tehillim "Both": each passuk in Hebrew with its English under it', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
   localStorage.setItem('chitas_lang_tehillim', 'both');
-  (window._readerOpenFor = 'tehillim', _renderTehillimContent());
+  (_rv.sid = 'tehillim', _renderTehillimContent());
   const pairs = [...document.querySelectorAll('#native-reader-content .th-pair')];
   return pairs.map(p => [p.querySelector('.th-v').textContent, p.querySelector('.th-en').textContent]);
 }, [['א', 'For the leader'], ['ב', 'And he said']]);
@@ -340,7 +265,7 @@ await check('Tehillim "Both": each passuk in Hebrew with its English under it', 
 await check('Tehillim looks like a printed Tehillim: chapter "יח.", day "יום ג", Hebrew verse letters', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר', 'יְהוָה'], en: [] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
   localStorage.setItem('chitas_lang_tehillim', 'he');
-  (window._readerOpenFor = 'tehillim', _renderTehillimContent());
+  (_rv.sid = 'tehillim', _renderTehillimContent());
   const c = document.getElementById('native-reader-content');
   return [c.querySelector('.th-ch-num').textContent, c.querySelector('.th-day').textContent,
           [...c.querySelectorAll('.th-v')].map(e => e.textContent), getComputedStyle(c.querySelector('.th-text')).textAlign];

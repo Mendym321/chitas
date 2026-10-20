@@ -216,6 +216,8 @@
 
 /* main-app is invisible until loader dismisses */
 #main-app { opacity: 0; transition: opacity .35s ease; }
+/* While the reader is open, the page behind it doesn't scroll (and keeps its place) */
+html.reader-open, html.reader-open body { overflow: hidden; }
 #main-app.ready { opacity: 1; }
 
 /* ── Reader swipe navigation ── */
@@ -1374,7 +1376,7 @@ window._fsGetDoc = getDoc;
   </div>
 
   <!-- Native reader (Chumash / Tanya / Rambam) -->
-  <div id="native-reader" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;" onscroll="onReaderScroll()">
+  <div id="native-reader" style="display:none;flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;" onscroll="onReaderScroll()">
     <div style="padding:20px 18px 40px;width:100%;">
       <div id="native-reader-loading" style="text-align:center;padding:60px 0;">
         <div class="spinner" style="margin:0 auto 16px;color:var(--gold);"></div>
@@ -2498,17 +2500,8 @@ async function init() {
 
     renderSectionsForOffset(dateISO(new Date()));
 
-    // Pre-fetch all four readers in background — silent, no UI changes
-    _prefetchAllReaders().then(() => {
-      // Backup today's data so navDay(0) can restore without re-fetching
-      window._todayDataBackup = {
-        chumash:   window._chumashData  || null,
-        tehillim:  window._tehillimData || null,
-        tanya:     window._tanyaData    || null,
-        rambam:    window._rambamData   || null,
-        prefetched: { ...window._prefetched },
-      };
-    }).catch(() => {});
+    // Load today's four ahead of time, quietly, so opening one is instant
+    _prefetchAllReaders().catch(() => {});
 
     hideLoader();
     // Check if we're in Omer period → auto-show Sotah
@@ -2631,24 +2624,11 @@ function navDay(delta) {
   const newOffset = dayOffset + delta;
   if (!_canReadDay(newOffset)) return;
   dayOffset = newOffset;
-  // Clear section data caches — past days need fresh fetches
-  // (pre-fetched data is always for today only)
-  if (dayOffset !== 0) {
-    window._chumashData  = null;
-    window._tehillimData = null;
-    window._tanyaData    = null;
-    window._rambamData   = null;
-    window._prefetched   = {};
-  } else if (window._todayDataBackup) {
-    // Restore today's data when navigating back
-    window._chumashData  = window._todayDataBackup.chumash  || null;
-    window._tehillimData = window._todayDataBackup.tehillim || null;
-    window._tanyaData    = window._todayDataBackup.tanya    || null;
-    window._rambamData   = window._todayDataBackup.rambam   || null;
-    window._prefetched   = window._todayDataBackup.prefetched || {};
-  }
   updateDayNav();
-  return rebuildScheduleForOffset();
+  // The day's schedule is worked out (partly from Hebcal) in the background;
+  // anything that needs it for this day waits for _dayReady
+  window._dayReady = rebuildScheduleForOffset();
+  return window._dayReady;
 }
 
 
@@ -3136,20 +3116,22 @@ function markDonePast(id, iso) {
 
 // Tanya's portion isn't in any offline calendar, so remember the chapter when it's marked
 function _logTanya(id, iso) {
-  if (id !== 'tanya' || !window._tanyaData?.chapterNum) return;
+  const t = id === 'tanya' && _textFor('tanya', iso);
+  if (!t?.chapterNum) return;
   if (!user.tanyaLog) user.tanyaLog = {};
-  user.tanyaLog[iso] = window._tanyaData.chapterNum;
+  user.tanyaLog[iso] = t.chapterNum;
 }
 
 function markDone(id) {
   if (user.done[id] || !schedule) return;
   _logTanya(id, dateISO(new Date()));
   const s = schedule[id];
-  _addLifetimeCounts(id);
+  _addLifetimeCounts(id, dateISO(new Date()));
   const r = _changeDay(dateISO(new Date()), day => { day[id] = true; });
 
-  // Clear saved scroll for today so this section's next open starts from top
-  try { localStorage.removeItem(_scrollKey(id)); } catch(e) {}
+  // Learned: its next open starts at the top (closing the reader now doesn't save the place again)
+  try { localStorage.removeItem(_scrollKey(id, dateISO(new Date()))); } catch(e) {}
+  if (_rv.sid === id) _rv.touched = false;
 
   if (!r.completedNow) fire('Nice! ' + s.label + ' done.', 'done');
 
@@ -3168,31 +3150,33 @@ function markDone(id) {
   }
 }
 
-// Real learning totals for the Progress tab (verses, psalms, halachos…)
-function _addLifetimeCounts(id) {
+// Real learning totals for the Progress tab (verses, psalms, halachos…), from
+// that day's text (if it was loaded)
+function _addLifetimeCounts(id, iso) {
   if (!user.lifetime) user.lifetime = {verses:0, psalms:0, tanyaBlocks:0, halachos:0};
-  if (id === 'chumash' && window._chumashData?.torahChunks) {
-    const v = window._chumashData.torahChunks.reduce((sum, ch) => sum + Math.max(ch.en.length, ch.he.length), 0);
+  const t = _textFor(id, iso);
+  if (id === 'chumash' && t?.torahChunks) {
+    const v = t.torahChunks.reduce((sum, ch) => sum + Math.max(ch.en.length, ch.he.length), 0);
     user.lifetime.verses = (user.lifetime.verses || 0) + v;
   }
-  if (id === 'tehillim' && window._tehillimData?.chapters) {
-    const p = window._tehillimData.chapters.reduce((sum, ch) => sum + Math.max(ch.he.length, ch.en.length), 0);
+  if (id === 'tehillim' && t?.chapters) {
+    const p = t.chapters.reduce((sum, ch) => sum + Math.max(ch.he.length, ch.en.length), 0);
     user.lifetime.psalms = (user.lifetime.psalms || 0) + p;
-    user.lifetime.psalmChaps = (user.lifetime.psalmChaps || 0) + window._tehillimData.chapters.length;
+    user.lifetime.psalmChaps = (user.lifetime.psalmChaps || 0) + t.chapters.length;
   }
-  if (id === 'tanya' && window._tanyaData?.chapterNum) {
+  if (id === 'tanya' && t?.chapterNum) {
     // A chapter spans multiple days — count it once, when first seen
     if (!user.lifetime.tanyaChapsSeen) user.lifetime.tanyaChapsSeen = {};
-    const ch = window._tanyaData.chapterNum;
+    const ch = t.chapterNum;
     if (!user.lifetime.tanyaChapsSeen[ch]) {
       user.lifetime.tanyaChapsSeen[ch] = true;
       user.lifetime.tanyaChaps = (user.lifetime.tanyaChaps || 0) + 1;
     }
   }
-  if (id === 'rambam' && window._rambamData?.chapters) {
-    const h = window._rambamData.chapters.reduce((sum, ch) => sum + Math.max(ch.en.length, ch.he.length), 0);
+  if (id === 'rambam' && t?.chapters) {
+    const h = t.chapters.reduce((sum, ch) => sum + Math.max(ch.en.length, ch.he.length), 0);
     user.lifetime.halachos = (user.lifetime.halachos || 0) + h;
-    user.lifetime.rambamChaps = (user.lifetime.rambamChaps || 0) + window._rambamData.chapters.length;
+    user.lifetime.rambamChaps = (user.lifetime.rambamChaps || 0) + t.chapters.length;
   }
 }
 
@@ -3264,13 +3248,16 @@ function openQuiz(sectionId) {
 async function _quizPassage(sectionId) {
   if (sectionId === 'chumash') return { refs: getChumashAliyaRef(new Date()).split('|') };
   if (sectionId === 'rambam') {
-    if (!window._rambamData?.chapters?.length) await _loadRambamNative('rambam', true);
-    const refs = (window._rambamData?.chapters || []).map(c => c.ref).filter(Boolean).slice(0, 3);
+    const today = dateISO(new Date());
+    if (!_textFor('rambam', today) && dayOffset === 0) await _loadRambamNative('rambam', true);
+    const refs = (_textFor('rambam', today)?.chapters || []).map(c => c.ref).filter(Boolean).slice(0, 3);
     return refs.length ? { refs } : null;
   }
   if (sectionId === 'tanya') {
-    if (!window._tanyaData?.quizRef) await _loadTanyaNative('tanya', true);
-    return window._tanyaData?.quizRef ? { tanya: window._tanyaData.quizRef } : null;
+    const today = dateISO(new Date());
+    if (!_textFor('tanya', today) && dayOffset === 0) await _loadTanyaNative('tanya', true);
+    const t = _textFor('tanya', today);
+    return t?.quizRef ? { tanya: t.quizRef } : null;
   }
   return null;
 }
@@ -3678,127 +3665,157 @@ const NATIVE_READER_SECTIONS = ['chumash', 'tanya', 'rambam'];
 // Extract readable content from Chabad.org HTML (kept as fallback, not used)
 // extractChabadContent() removed — was never called (superseded by native readers)
 
-// Scroll handler — updates progress bar and unlocks Mark Done
+// ── WHAT THE READER SHOWS, AND WHERE YOU ARE IN IT ───────────────────────────
+// The reader shows one piece of learning at a time: a section on a day
+// (_rv.sid, _rv.iso; an extra track is 'extra_' + its id). Three rules keep
+// your place (see DESIGN.md, "Your place in the reader"):
+//  1. One owner. Only the piece on screen may draw into the reader or move it:
+//     a load checks _readerShows(sid, iso) before it draws.
+//  2. Saved only when it's yours. A place is saved for the piece on screen,
+//     once its text is in and put back, and only after you've touched it. So
+//     our own moves, or the page going blank while it reloads, never overwrite it.
+//  3. Put back, and held. The text goes back to your passage and is held there
+//     while the page settles (fonts, the Tanya guide, Tehillim names), until
+//     you touch it.
+const _rv = { sid: null, iso: null, drawn: false, place: null, placing: false, touched: false, holdUntil: 0, gen: 0 };
+
+function _readerShows(sid, iso) { return _rv.sid === sid && _rv.iso === iso; }
+
+// Start showing a piece for the day you're on: keep the place of what was
+// showing, then start at the top until this one's text is in and put back
+function _readerBegin(sid) {
+  _flushReaderScroll();
+  Object.assign(_rv, { sid, iso: _viewedISO(), drawn: false, place: null, placing: true, touched: false, holdUntil: 0, gen: _rv.gen + 1 });
+  window._readerActiveSid = null;          // Likkutei Sichos and Shaar HaBitachon set their own
+  const reader = document.getElementById('native-reader');
+  if (reader) reader.scrollTop = 0;
+  document.documentElement.classList.add('reader-open');   // the page behind stays where it is
+}
+function _readerEnd() {
+  _flushReaderScroll();
+  Object.assign(_rv, { sid: null, iso: null, drawn: false, place: null, placing: false, touched: false, holdUntil: 0, gen: _rv.gen + 1 });
+  window._readerActiveSid = null;
+  document.documentElement.classList.remove('reader-open');
+}
+
+// You touching the text (a finger, the wheel, the scrollbar, the keys) makes
+// the place yours: we stop moving it, and from now on it's saved
+(() => {
+  const reader = document.getElementById('native-reader');
+  const mine = () => { if (_rv.sid) { _rv.touched = true; _rv.placing = false; } };
+  ['touchstart', 'wheel', 'pointerdown'].forEach(t => reader?.addEventListener(t, mine, { passive: true }));
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('chabad-panel')?.style.display !== 'none' && /^(Arrow(Up|Down)|Page(Up|Down)|Home|End| )$/.test(e.key)) mine();
+  });
+})();
+
+// Scroll handler: the progress bar, unlocking Mark Done, and saving your place
 let _scrollSaveTimer = null;
-
-// The section currently "owned" by #native-reader. Set by open functions
-// AFTER content is loaded, cleared by closeChabadPanel. Prevents cross-section
-// bleed where a fast section-switch saves outgoing scrollTop under incoming sid.
-window._readerActiveSid = null;
-
 function onReaderScroll() {
   const reader = document.getElementById('native-reader');
   const sentinel = document.getElementById('reader-bottom-sentinel');
   if (!reader || !sentinel) return;
 
-  const readerRect = reader.getBoundingClientRect();
-  const sentinelRect = sentinel.getBoundingClientRect();
   const scrollTop = reader.scrollTop;
   const scrollHeight = reader.scrollHeight - reader.clientHeight;
-
-  // Progress bar
   const pct = scrollHeight > 0 ? Math.min(100, Math.round((scrollTop / scrollHeight) * 100)) : 100;
   document.getElementById('reader-progress-bar').style.width = pct + '%';
 
-  // Unlock when sentinel is visible (within 120px of viewport bottom)
-  const nearBottom = sentinelRect.top <= readerRect.bottom + 120;
-  if (nearBottom) unlockMarkDone();
+  // Unlock when the end of the text is in view (within 120px of the bottom)
+  if (sentinel.getBoundingClientRect().top <= reader.getBoundingClientRect().bottom + 120) unlockMarkDone();
 
-  // Your own scrolling (not ours placing the text) stops any re-placing
-  if (performance.now() > (window._readerProgScrollUntil || 0)) window._readerUserScrolled = true;
-
-  // Save scroll position — debounced 300ms
+  // Saved a moment after you stop
   if (_scrollSaveTimer) clearTimeout(_scrollSaveTimer);
-  const sidAtScroll = window._readerActiveSid, dayAtScroll = window._readerActiveDay;
-  _scrollSaveTimer = setTimeout(() => {
-    // Only save for the section + day that was scrolled — a switch in the
-    // meantime must not save one section's place under another
-    const sid = window._readerActiveSid;
-    if (!sid || sid !== sidAtScroll || window._readerActiveDay !== dayAtScroll) return;
-    const curScrollTop = reader.scrollTop;
-
-    // LS uses its own per-sicha key
-    if (sid === 'likkuteiSichos' && window._lsInReader) {
-      const it = window._lsSichos && window._lsSichos[window._lsCurIdx];
-      if (it) { try { localStorage.setItem('ls_s_'+it.page+'_'+it.vol, String(Math.round(curScrollTop))); } catch {} }
-      return;
-    }
-    // SHB uses its own per-unit key (handled in _shbSaveProgress)
-    if (sid === 'shaarHaBitachon') { _shbSaveProgress(_shbGetProgress().unitId, curScrollTop, false); return; }
-
-    // Core daily sections save as-is; extra tracks get 'extra_' prefix
-    if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
-      _saveScrollPos(sid, curScrollTop);
-    } else if (typeof EXTRA_TRACK_DEFS !== 'undefined' && EXTRA_TRACK_DEFS[sid]) {
-      _saveScrollPos('extra_' + sid, curScrollTop);
-    }
-  }, 300);
+  _scrollSaveTimer = setTimeout(() => { _scrollSaveTimer = null; _saveSpecialPlace() || _savePlace(); }, 300);
 }
 
-// ── SCROLL POSITION PERSISTENCE — robust, re-render safe ─────────────────────
-// Central registry: any render that replaces innerHTML registers here so
-// the restore fires AFTER the new content has full height.
-window._pendingScrollRestore = {}; // { sectionId: targetPixels }
-
-// Keys are date-scoped so today's position doesn't collide with yesterday's
-// (yesterday's Chumash has different content than today's, restoring a deep
-// scroll position into a shorter piece of content is nonsensical).
-function _scrollKey(sectionId, off = dayOffset) {
-  if (sectionId === 'extra_likkuteiTorah') {
-    const d = new Date();
-    const day = d.getDay();
-    const monday = new Date(d);
-    monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
-    return 'scroll_extra_likkuteiTorah_week_' + monday.toISOString().slice(0, 10);
+// Likkutei Sichos and Shaar HaBitachon keep their own places (per sicha / unit)
+function _saveSpecialPlace(toCloud) {
+  const reader = document.getElementById('native-reader');
+  const sid = window._readerActiveSid;
+  if (!reader || !sid) return false;
+  if (sid === 'likkuteiSichos') {
+    const it = window._lsInReader && window._lsSichos && window._lsSichos[window._lsCurIdx];
+    if (it) { try { localStorage.setItem('ls_s_' + it.page + '_' + it.vol, String(Math.round(reader.scrollTop))); } catch {} }
+    return true;
   }
-  const d = new Date(); d.setDate(d.getDate() + (off || 0));
-  return 'scroll_' + sectionId + '_' + dateISO(d);
+  if (sid === 'shaarHaBitachon') {
+    if (toCloud) _shbSaveScroll(); else _shbSaveProgress(_shbGetProgress().unitId, reader.scrollTop, false);
+    return true;
+  }
+  return false;
 }
 
-function _saveScrollPos(sectionId, pos) {
-  try {
-    // Saved under the section + day the reader is SHOWING (not whatever day is current now).
-    // While a restore is still on its way, the reader isn't at the saved place yet: don't save.
-    if (window._pendingScrollRestore?.[sectionId] !== undefined) return;
-    const key = _scrollKey(sectionId, window._readerActiveDay ?? dayOffset);
-    const place = _readerPlace() || { y: Math.round(pos) };
-    if (!place.y) { localStorage.removeItem(key); return; }   // at the top: start at the top next time
-    localStorage.setItem(key, JSON.stringify(place));
-    _pruneScrollKeys();
-  } catch(e) {}
+// Keys are per section and day: yesterday's Chumash is different text
+function _scrollKey(sid, iso = _viewedISO()) {
+  if (sid === 'extra_likkuteiTorah') {
+    const d = new Date(iso + 'T12:00:00');
+    d.setDate(d.getDate() - (d.getDay() + 6) % 7);           // that week's Monday
+    return 'scroll_extra_likkuteiTorah_week_' + dateISO(d);
+  }
+  return 'scroll_' + sid + '_' + iso;
 }
 
-function _getSavedScrollPos(sectionId) {
+function _savedPlace(sid, iso = _rv.iso || _viewedISO()) {
   try {
-    const val = localStorage.getItem(_scrollKey(sectionId));
-    if (val === null) return 0;
-    return val[0] === '{' ? JSON.parse(val) : parseInt(val);   // a place, or pixels (older saves)
-  } catch(e) { return 0; }
+    const val = localStorage.getItem(_scrollKey(sid, iso));
+    if (val === null) return null;
+    return val[0] === '{' ? JSON.parse(val) : { y: parseInt(val) || 0 };   // a place, or pixels (older saves)
+  } catch (e) { return null; }
 }
+
+// Save a place for the piece on screen (at the top: forget it, so it opens at the top)
+function _storePlace(place) {
+  if (!_rv.sid || !place) return;
+  const key = _scrollKey(_rv.sid, _rv.iso);
+  try {
+    if (!place.y) localStorage.removeItem(key);
+    else { localStorage.setItem(key, JSON.stringify(place)); _pruneScrollKeys(); }
+  } catch (e) {}
+}
+// Save where you are now, if it's yours to save (rule 2)
+function _savePlace() {
+  if (!_rv.sid || _rv.placing || !_rv.touched) return;
+  _storePlace(_readerPlace());
+}
+
+// Save now: before closing, switching section or day, or the app going away
+function _flushReaderScroll() {
+  if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
+  _saveSpecialPlace(true) || _savePlace();
+}
+// Phones close apps without warning: save whenever the app goes out of view
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') _flushReaderScroll(); });
+window.addEventListener('pagehide', _flushReaderScroll);
 
 // ── WHERE YOU ARE IN THE TEXT ─────────────────────────────────────────────────
 // A reading place is the passage at the top of the screen (its first words,
-// vowels ignored, and how far into it), not just pixels, so it survives
-// anything that changes the page's height: the Tanya guide arriving, switching
-// language, nekudos or text size, fonts finishing loading, Tehillim names.
-const _placeText = t => String(t || '').replace(/[\u0591-\u05C7]/g, '').replace(/\s+/g, ' ').trim();
-const _placeEls = () => document.getElementById('native-reader-content')?.querySelectorAll('p, h1, h2, h3, li') || [];
+// vowels ignored, which one it is, and how far into it), not just pixels, so
+// it survives anything that changes the page's height: the Tanya guide
+// arriving, switching language, nekudos or text size, fonts finishing loading,
+// Tehillim names. Nothing while the text isn't showing (it's loading).
+const _placeText = t => String(t || '').replace(/[֑-ׇ]/g, '').replace(/\s+/g, ' ').trim();
+const _placeEls = () => [...(document.getElementById('native-reader-content')?.querySelectorAll('p, h1, h2, h3, li') || [])];
 function _readerPlace() {
   const reader = document.getElementById('native-reader');
-  if (!reader || reader.style.display === 'none') return null;
+  const content = document.getElementById('native-reader-content');
+  if (!reader || reader.style.display === 'none' || !content || content.style.display === 'none') return null;
   const y = reader.scrollTop;
   if (y < 40) return { y: 0 };
   const top = reader.getBoundingClientRect().top;
-  for (const el of _placeEls()) {
-    const r = el.getBoundingClientRect();
+  const els = _placeEls();
+  for (let i = 0; i < els.length; i++) {
+    const r = els[i].getBoundingClientRect();
     if (r.height < 4 || r.bottom <= top + 8) continue;
-    const a = _placeText(el.textContent).slice(0, 48);
+    const a = _placeText(els[i].textContent).slice(0, 48);
     if (a.length < 6) continue;
-    return { y: Math.round(y), h: reader.scrollHeight, a, o: Math.max(0, Math.min(1, (top - r.top) / r.height)) };
+    return { y: Math.round(y), h: reader.scrollHeight, a, i, o: Math.max(0, Math.min(1, (top - r.top) / r.height)) };
   }
   return { y: Math.round(y), h: reader.scrollHeight };
 }
-// Where a place is now, in the reader's pixels
+// Where a place is now, in the reader's pixels. The same words can be on the
+// page twice (your own Tehillim chapter can also be one of today's): the
+// passage nearest where it was is the one.
 function _placeY(place) {
   if (!place) return 0;
   if (typeof place === 'number') return place;
@@ -3806,13 +3823,16 @@ function _placeY(place) {
   if (!reader) return place.y || 0;
   if (place.a) {
     const top = reader.getBoundingClientRect().top;
-    for (const el of _placeEls()) {
+    let best = null, bestGap = Infinity;
+    _placeEls().forEach((el, i) => {
       const t = _placeText(el.textContent);
-      if (t.startsWith(place.a) || (t.length >= 12 && place.a.startsWith(t))) {
-        const r = el.getBoundingClientRect();
-        return Math.max(0, reader.scrollTop + (r.top - top) + (place.o || 0) * r.height);
-      }
-    }
+      if (!(t.startsWith(place.a) || (t.length >= 12 && place.a.startsWith(t)))) return;
+      const r = el.getBoundingClientRect();
+      if (r.height < 4) return;                                 // hidden (e.g. the other language)
+      const gap = Math.abs(i - (place.i ?? i));
+      if (gap < bestGap) { best = r; bestGap = gap; }
+    });
+    if (best) return Math.max(0, reader.scrollTop + (best.top - top) + (place.o || 0) * best.height);
   }
   // The passage isn't on the page any more (e.g. another language): same proportion
   return place.h ? Math.round(place.y * reader.scrollHeight / place.h) : (place.y || 0);
@@ -3831,67 +3851,88 @@ function _pruneScrollKeys() {
   } catch(e) {}
 }
 
-/**
- * Restore scroll after ANY innerHTML replacement.
- *
- * Problems with simple setTimeout:
- *  - Content may not have its full height yet when the timer fires
- *  - A subsequent re-render (e.g. enhance API) wipes the position
- *
- * Solution:
- *  1. Register the target in window._pendingScrollRestore[sectionId]
- *  2. Poll with rAF until scrollHeight is big enough to reach the target,
- *     up to ~1.5s. Retry loop means it self-heals after re-renders too.
- *  3. Any re-render calls this again, which just updates the target and
- *     the loop re-runs — so enhance upgrades never leave us at position 0.
- */
-function _restoreScrollAfterRender(sectionId, targetPos) {
-  // Only the section on screen may claim the reader and move its scroll
-  if (window._readerOpenFor !== (sectionId.startsWith('extra_') ? sectionId.slice(6) : sectionId)) return;
-  // Mark this section as the active owner — future scroll saves attribute correctly.
-  // Normalise: sectionId may be 'chumash' or 'extra_dafYomi' — active sid uses the raw
-  // dataset value ('chumash' / 'dafYomi') so it matches chabad-mark-btn.dataset.sectionId.
-  window._readerActiveSid = sectionId.startsWith('extra_') ? sectionId.slice(6) : sectionId;
-  window._readerActiveDay = dayOffset;
-
-  if (!targetPos || (typeof targetPos === 'number' ? targetPos <= 0 : !targetPos.y)) return;
-  window._pendingScrollRestore[sectionId] = targetPos;
-  window._readerUserScrolled = false;
-
-  let attempts = 0;
-  const MAX_ATTEMPTS = 40; // ~650ms at 60fps
+// Put the piece on screen at a place (with none given: its saved place), as
+// soon as its text is tall enough to get there; then hold it there (rule 3).
+// Call it right after drawing the text. A place you hand over (kept across a
+// language or text size change) is also saved, if it's yours.
+function _putReaderAt(sid, place) {
+  if (_rv.sid !== sid) return;                                  // rule 1
   const reader = document.getElementById('native-reader');
-  const go = () => { window._readerProgScrollUntil = performance.now() + 200; reader.scrollTop = _placeY(targetPos); };
-  // Fonts finishing loading or late content (Tehillim names, the Tanya guide) can
-  // move the text after we've placed it: place it again, unless you've scrolled
-  const owner = window._readerOpenFor;
-  const settle = () => {
-    const again = () => { if (!window._readerUserScrolled && window._readerOpenFor === owner && document.getElementById('chabad-panel')?.style.display !== 'none') go(); };
-    document.fonts?.ready?.then(again);
-    setTimeout(again, 900);
+  if (!reader) return;
+  if (_rv.placing && _rv.place) place = _rv.place;              // still on its way to your place: keep going there
+  else if (place == null) place = _savedPlace(sid);
+  else if (_rv.touched) _storePlace(place);
+  const gen = ++_rv.gen;
+  Object.assign(_rv, { place, placing: true, touched: false, holdUntil: 0 });
+  if (!place || !(typeof place === 'number' ? place : place.y)) {
+    reader.scrollTop = 0; _rv.place = null; _rv.placing = false;
+    return;
+  }
+  let frames = 0;
+  const go = () => {
+    if (_rv.gen !== gen || _rv.touched) return;                 // moved on, or you took over
+    const y = _placeY(place);
+    if (reader.scrollHeight - reader.clientHeight < y - 20 && frames++ < 40) { requestAnimationFrame(go); return; }
+    reader.scrollTop = y;
+    _rv.placing = false;
+    _rv.holdUntil = performance.now() + 6000;
   };
+  go();
+}
 
-  const tryRestore = () => {
-    // Superseded by a newer call for the same section
-    if (window._pendingScrollRestore[sectionId] !== targetPos) return;
-    if (!reader) return;
-    if (document.getElementById('chabad-panel')?.style.display === 'none') return;
+// Holding the place: when the text or the reader changes size soon after it
+// was put back (fonts, the guide, names), put it back again, until you touch it
+if (window.ResizeObserver) {
+  const hold = new ResizeObserver(() => {
+    if (!_rv.sid || !_rv.place || _rv.placing || _rv.touched || performance.now() > _rv.holdUntil) return;
+    const reader = document.getElementById('native-reader');
+    const y = _placeY(_rv.place);
+    if (reader && Math.abs(reader.scrollTop - y) > 2) reader.scrollTop = y;
+  });
+  ['native-reader', 'native-reader-content'].forEach(id => { const el = document.getElementById(id); if (el) hold.observe(el); });
+}
 
-    const maxScroll = reader.scrollHeight - reader.clientHeight;
-    const y = _placeY(targetPos);
+// ── TEXTS BY SECTION AND DAY ─────────────────────────────────────────────────
+// Each loaded text is kept under its section and day ('tanya|2026-10-20'), so
+// a text can never be shown, counted or reviewed as another day's, and going
+// back to a day you've opened is instant. The last couple of dozen are kept.
+const _dayTexts = new Map();
+function _textFor(sid, iso) { return _dayTexts.get(sid + '|' + iso) || null; }
+function _keepText(sid, iso, data) {
+  const k = sid + '|' + iso;
+  _dayTexts.delete(k); _dayTexts.set(k, data);
+  while (_dayTexts.size > 24) _dayTexts.delete(_dayTexts.keys().next().value);
+  return data;
+}
+function _dropTexts(sid) { [..._dayTexts.keys()].filter(k => k.startsWith(sid + '|')).forEach(k => _dayTexts.delete(k)); }
 
-    // Content is tall enough (or we've waited long enough): place it and stop
-    if (maxScroll >= y - 20 || attempts >= MAX_ATTEMPTS) {
-      go();
-      delete window._pendingScrollRestore[sectionId];
-      settle();
-      return;
-    }
-    attempts++;
-    requestAnimationFrame(tryRestore);
-  };
-
-  requestAnimationFrame(tryRestore);
+const _TEXT_SLOT = { chumash: '_chumashData', tehillim: '_tehillimData', tanya: '_tanyaData', rambam: '_rambamData' };
+const _TEXT_DRAW = { chumash: () => _renderChumashContent(), tehillim: () => { _renderTehillimContent(); _renderPersonalPsalms(); }, tanya: () => _renderTanyaContent(), rambam: () => _renderRambamContent() };
+// A load starting: which day it's for (the day you're on now), with the
+// loading spinner if it's for the reader on screen
+function _textLoading(sid, silent) {
+  const iso = _viewedISO();
+  if (!silent && _readerShows(sid, iso)) { _readerLoading(true); _rv.drawn = false; }
+  return iso;
+}
+function _readerLoading(on) {
+  document.getElementById('native-reader-loading').style.display = on ? 'block' : 'none';
+  document.getElementById('native-reader-content').style.display = on ? 'none' : 'block';
+}
+// A load's text has arrived: keep it under its day, and if that's what the
+// reader is showing, draw it and put you back at your place (rule 1: a load
+// for a section or day you've left draws nothing)
+function _textArrived(sid, iso, data, silent) {
+  _keepText(sid, iso, data);
+  if (!silent && _readerShows(sid, iso) && !_rv.drawn) _drawText(sid, data);   // (once: a second copy doesn't redraw it)
+}
+function _drawText(sid, data, place) {
+  window[_TEXT_SLOT[sid]] = data;          // what the section's drawing (and its notes) read
+  _rv.drawn = true;
+  _readerLoading(false);
+  _TEXT_DRAW[sid]();
+  document.getElementById('native-reader-content').dataset.sectionId = sid;
+  _putReaderAt(sid, place);
 }
 
 let markDoneUnlocked = false;
@@ -4068,7 +4109,7 @@ async function _fetchChumashText(ref, keyword){
 
 
 function _renderChumashContent() {
-  if (window._readerOpenFor !== 'chumash') return;   // another section is on screen
+  if (_rv.sid !== 'chumash') return;   // another section is on screen
   const { torahChunks, rashiMap } = window._chumashData || {};
   if (!torahChunks || !torahChunks.length) return;
   const lang = localStorage.getItem('chitas_lang_chumash') || 'both';
@@ -4185,19 +4226,17 @@ function _renderChumashContent() {
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 async function _loadChumashNative(sectionId, silent) {
-  const loadEl = document.getElementById('native-reader-loading');
-  const contEl = document.getElementById('native-reader-content');
-  if (!silent) {
-    if (loadEl) loadEl.style.display = 'block';
-    if (contEl) contEl.style.display = 'none';
-  }
-
+  const iso = _textLoading('chumash', silent);
   try {
-    // schedule.chumash.sefariaRef is always correct for the currently-viewed day:
-    // - init() sets it from Hebcal for today
-    // - rebuildScheduleForOffset() updates it when navigating to past days
-    // No re-fetching needed — trust the schedule.
-    const aliyahRef = schedule?.chumash?.sefariaRef || '';
+    // The day's aliyah, from the date itself (js/chumash.js, tested). Only if
+    // that has no answer, the schedule's (from Hebcal): once it's been worked
+    // out for this day, and only if you're still on it
+    let aliyahRef = getChumashAliyaRef(new Date(iso + 'T12:00:00'));
+    if (!aliyahRef) {
+      await window._dayReady;
+      if (_viewedISO() !== iso) return false;
+      aliyahRef = schedule?.chumash?.sefariaRef || '';
+    }
     if (!aliyahRef) {
       console.warn('Chumash: no sefariaRef in schedule');
       return false;
@@ -4238,19 +4277,8 @@ async function _loadChumashNative(sectionId, silent) {
       }
     });
 
-    // Update panel subtitle to show the actual ref
-    const subEl = document.getElementById('chabad-panel-sub');
-    if (!silent && subEl) subEl.textContent = aliyahRef;
-
-    window._chumashData = { torahChunks: torah.chunks, rashiMap, ref: aliyahRef, versionTitle: torah.versionTitle };
-    if (!silent) {
-      _renderChumashContent();
-      if (loadEl) loadEl.style.display = 'none';
-      if (contEl) contEl.style.display = 'block';
-    }
-
-    // Restore scroll — robust rAF loop handles slow paints and re-renders
-    if (!silent) _restoreScrollAfterRender('chumash', _getSavedScrollPos('chumash'));
+    if (!silent && _readerShows('chumash', iso)) document.getElementById('chabad-panel-sub').textContent = aliyahRef;
+    _textArrived('chumash', iso, { torahChunks: torah.chunks, rashiMap, ref: aliyahRef, versionTitle: torah.versionTitle }, silent);
     return true;
 
   } catch(e) {
@@ -4263,7 +4291,7 @@ function _setChumashLang(lang) {
   localStorage.setItem('chitas_lang_chumash', lang);
   const pos = _readerPlace();
   _renderChumashContent();
-  _restoreScrollAfterRender('chumash', pos);
+  _putReaderAt('chumash', pos);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -4274,23 +4302,10 @@ function _setChumashLang(lang) {
 // ════════════════════════════════════════════════════════════════════
 
 async function _loadRambamNative(sectionId, silent) {
-  const loadEl = document.getElementById('native-reader-loading');
-  const contEl = document.getElementById('native-reader-content');
-  if (!silent) {
-    if (loadEl) loadEl.style.display = 'block';
-    if (contEl) contEl.style.display = 'none';
-  }
-
+  if (user.rambamTrack === 'm') return _loadSeferHamitzvos(sectionId, silent);
+  const iso = _textLoading('rambam', silent);
   try {
-    if (user.rambamTrack === 'm') {
-      return await _loadSeferHamitzvos(sectionId);
-    }
-
-    const viewedDay = new Date();
-    viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
-    const dateStr = viewedDay.getFullYear() + '-'
-      + String(viewedDay.getMonth()+1).padStart(2,'0') + '-'
-      + String(viewedDay.getDate()).padStart(2,'0');
+    const dateStr = iso;
     const track = user.rambamTrack === '1' ? '1' : '3';
     const cat   = track === '1' ? 'dailyRambam1' : 'dailyRambam3';
 
@@ -4338,18 +4353,8 @@ async function _loadRambamNative(sectionId, silent) {
     const valid = chapters.filter(ch => ch && (ch.en.length || ch.he.length));
     if (!valid.length) return false;
 
-    const subEl = document.getElementById('chabad-panel-sub');
-    if (!silent && subEl) subEl.textContent = valid.map(ch => ch.title).join(' · ');
-
-    window._rambamData = { chapters: valid };
-    if (!silent) {
-      _renderRambamContent();
-      if (loadEl) loadEl.style.display = 'none';
-      if (contEl) contEl.style.display = 'block';
-    }
-
-    if (!silent) _restoreScrollAfterRender('rambam', _getSavedScrollPos('rambam'));
-
+    if (!silent && _readerShows('rambam', iso)) document.getElementById('chabad-panel-sub').textContent = valid.map(ch => ch.title).join(' · ');
+    _textArrived('rambam', iso, { chapters: valid }, silent);
     return true;
 
   } catch(e) {
@@ -4462,7 +4467,7 @@ async function _fetchRambamChapter(ref) {
 }
 
 function _renderRambamContent() {
-  if (window._readerOpenFor !== 'rambam') return;   // another section is on screen
+  if (_rv.sid !== 'rambam') return;   // another section is on screen
   const { chapters } = window._rambamData || {};
   if (!chapters || !chapters.length) return;
   const lang = localStorage.getItem('chitas_lang_rambam') || 'both';
@@ -4585,7 +4590,7 @@ function _setRambamLang(lang) {
   localStorage.setItem('chitas_lang_rambam', lang);
   const pos = _readerPlace();
   _renderRambamContent();
-  _restoreScrollAfterRender('rambam', pos);
+  _putReaderAt('rambam', pos);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -4597,17 +4602,10 @@ function _setRambamLang(lang) {
 // ════════════════════════════════════════════════════════════════════
 
 async function _loadTehillimNative(sectionId, silent) {
-  const loadEl = document.getElementById('native-reader-loading');
-  const contEl = document.getElementById('native-reader-content');
-  if (!silent) {
-    if (loadEl) loadEl.style.display = 'block';
-    if (contEl) contEl.style.display = 'none';
-  }
-
+  const iso = _textLoading('tehillim', silent);
   try {
     // Monthly cycle lives in js/tehillim.js (shared with the home screen, tested)
-    const viewedDay = new Date();
-    viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
+    const viewedDay = new Date(iso + 'T12:00:00');
     const { day: dayNum, ref, label: tehLabel } = getTehillimForDate(viewedDay);
     // Days 25–26 are part of Psalm 119 — verse numbers start where the range starts
     const startVerse = parseInt((ref.match(/:(\d+)-/) || [])[1] || '1', 10);
@@ -4670,27 +4668,13 @@ async function _loadTehillimNative(sectionId, silent) {
 
     const psalmLabel = tehLabel;
 
-    const subEl = document.getElementById('chabad-panel-sub');
-    if (subEl) subEl.textContent = psalmLabel;
-
-    window._tehillimData = { chapters, psalmLabel, dayNum };
-    if (!silent) _renderTehillimContent();
+    if (!silent && _readerShows('tehillim', iso)) document.getElementById('chabad-panel-sub').textContent = psalmLabel;
+    _textArrived('tehillim', iso, { chapters, psalmLabel, dayNum }, silent);
 
     // Pre-warm personal psalm cache in background — so personal sections load instantly
     _buildPersonalPsalms().then(people => {
       Promise.all(people.filter(p => p.chapter).map(p => _fetchPsalm(p.chapter))).catch(() => {});
     }).catch(() => {});
-
-    if (!silent) {
-      if (loadEl) loadEl.style.display = 'none';
-      if (contEl) contEl.style.display = 'block';
-    }
-
-    // Restore scroll after personal psalms finish rendering too
-    const _tehSaved = _getSavedScrollPos('tehillim');
-    _renderPersonalPsalms().then(() => {
-      _restoreScrollAfterRender('tehillim', _tehSaved);
-    });
     return true;
 
   } catch(e) {
@@ -4716,7 +4700,7 @@ function _toHebrewNumeral(n) {
 // of the month ("יום ג") where the day starts, small Hebrew-letter verse
 // markers inline, justified text with a first-line indent, OT Siddur font.
 function _renderTehillimContent() {
-  if (window._readerOpenFor !== 'tehillim') return;   // another section is on screen
+  if (_rv.sid !== 'tehillim') return;   // another section is on screen
   const { chapters, psalmLabel, dayNum } = window._tehillimData || {};
   if (!chapters || !chapters.length) return;
   const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
@@ -4792,13 +4776,7 @@ function _setTehillimLang(lang) {
 // Splits a long Sefaria segment into smaller readable chunks.
 
 async function _loadTanyaNative(sectionId, silent) {
-  const loadEl = document.getElementById('native-reader-loading');
-  const contEl = document.getElementById('native-reader-content');
-  if (!silent) {
-    if (loadEl) loadEl.style.display = 'block';
-    if (contEl) contEl.style.display = 'none';
-  }
-
+  const iso = _textLoading('tanya', silent);
   try {
     function parseTanyaRef(ref) {
       if (!ref) return null;
@@ -4807,21 +4785,18 @@ async function _loadTanyaNative(sectionId, silent) {
       return { base: m[1].replace(/:$/, '').trim(), chapter: parseInt(m[2]), seg: parseInt(m[3]) };
     }
 
-    const today = new Date(); today.setDate(today.getDate() + (dayOffset || 0));
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    const dateStr = today.getFullYear() + '-'
-      + String(today.getMonth()+1).padStart(2,'0') + '-'
-      + String(today.getDate()).padStart(2,'0');
+    const dateStr = iso;
+    const isToday = iso === dateISO(new Date());
 
     // Fetch today + tomorrow from /api/tanya-boundary (server-side, no CORS)
     // Falls back to Sefaria calendar for today if Chabad.org parse fails
     // Fetch today + tomorrow refs from boundary proxy (server-side, date params work)
     // Use cached boundary from Firestore daily cache if available
-    const boundary = (dayOffset === 0 && window._cachedTanyaBoundary)
+    const boundary = (isToday && window._cachedTanyaBoundary)
       ? window._cachedTanyaBoundary
       : await fetch('/api/tanya-boundary?date=' + dateStr)
           .then(r => r.json()).catch(() => null);
-    const todayRef = boundary?.today || schedule?.tanya?.sefariaRef || null;
+    const todayRef = boundary?.today || (isToday ? schedule?.tanya?.sefariaRef : null) || null;
     const tomorrowRef = boundary?.tomorrow || null;
     const isApproximate = boundary?.isApproximate ?? true;
     console.log('Tanya: today=' + todayRef + ' tomorrow=' + tomorrowRef + ' approximate=' + isApproximate);
@@ -4837,9 +4812,7 @@ async function _loadTanyaNative(sectionId, silent) {
     const chapterLabel = partName + ' \u00b7 ' + unit + ' ' + tp.chapter;
     const enc = encodeURIComponent(chapterRef);
 
-    const panelSection = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-    const subEl = panelSection === 'tanya' ? document.getElementById('chabad-panel-sub') : null;
-    if (subEl) subEl.textContent = chapterLabel;
+    if (!silent && _readerShows('tanya', iso)) document.getElementById('chabad-panel-sub').textContent = chapterLabel;
 
     const isFirstSegment = tp.seg === 1;
     const blocks = [];
@@ -4929,35 +4902,25 @@ async function _loadTanyaNative(sectionId, silent) {
       blocks.push({ he, en, isHagahah });
     }
     const quizRef = { chapterSlug, startVerse: startV, endVerse: endV !== allHe.length ? endV : null };
-    window._tanyaData = { blocks, notes, guide: null, chapterSlug, chapterLabel, chapterNum: tp.chapter, isFirstSegment, isApproximate, quizRef };
-    if (!silent) {
-      _renderTanyaContent();
-      if (loadEl) loadEl.style.display = 'none';
-      if (contEl) contEl.style.display = 'block';
-    }
+    // Shown at once; the guide (below) replaces the blocks when it comes
+    _textArrived('tanya', iso, { blocks, notes, guide: null, guidePending: true, chapterSlug, chapterLabel, chapterNum: tp.chapter, isFirstSegment, isApproximate, quizRef }, silent);
 
     // The guide is asked for by DATE: the server works out the portion itself.
     // 202 = being prepared (the first person to open a day's Tanya starts it,
-    // about half a minute): ask again every few seconds. Anything else that
-    // isn't the guide: say why, in place of the guide.
-    const _enhDayOffset = dayOffset;
+    // about half a minute): ask again every few seconds, while you're on that
+    // day. Anything else that isn't the guide: say why, in place of the guide.
     const _enhUrl = '/api/tanya-enhance?date=' + dateStr;
-    const _tanyaShown = () => document.getElementById('chabad-panel')?.style.display !== 'none'
-      && document.getElementById('chabad-mark-btn')?.dataset?.sectionId === 'tanya' && dayOffset === _enhDayOffset;
     const _guideUpdate = changes => {
-      window._tanyaData = { ...window._tanyaData, ...changes };
-      if (_tanyaShown()) {
-        const pos = _readerPlace();
-        _renderTanyaContent();
-        _restoreScrollAfterRender('tanya', pos);
-      }
+      const data = _keepText('tanya', iso, { ..._textFor('tanya', iso), ...changes });
+      if (_readerShows('tanya', iso)) _drawText('tanya', data, _readerPlace());   // keeping your passage
     };
     const _askGuide = tries => fetch(_enhUrl)
       .then(async r => ({ status: r.status, body: await r.json().catch(() => ({})) }))
       .catch(() => ({ status: 0, body: { error: 'no connection' } }))
       .then(({ status, body }) => {
-        if (dayOffset !== _enhDayOffset) return; // user navigated away
         if (status === 202) {
+          // Left that day: stop asking, and forget the half-ready text so it's asked again next time
+          if (_viewedISO() !== iso) { _dayTexts.delete('tanya|' + iso); return; }
           if (tries > 0) { setTimeout(() => _askGuide(tries - 1), 8000); return; }
           return _guideUpdate({ guidePending: false, guideError: 'still being prepared; open Tanya again in a minute' });
         }
@@ -4970,12 +4933,7 @@ async function _loadTanyaNative(sectionId, silent) {
         _guideUpdate({ guidePending: false, guideError: '', blocks, notes: body.notes || [],
           guide: { intro: body.intro || '', recap: body.recap || '', summary: body.summary || '' } });
       });
-    window._tanyaData.guidePending = true;
-    if (!silent) _renderTanyaContent();
     _askGuide(40);
-
-    // Restore scroll — rAF loop handles both slow paints and the enhance re-render
-    if (!silent) _restoreScrollAfterRender('tanya', _getSavedScrollPos('tanya'));
     return true;
 
   } catch(e) {
@@ -4999,7 +4957,7 @@ const TANYA_PARTS = [
 ];
 
 function _renderTanyaContent() {
-  if (window._readerOpenFor !== 'tanya') return;   // another section is on screen
+  if (_rv.sid !== 'tanya') return;   // another section is on screen
   const d = window._tanyaData || {};
   const { blocks, chapterLabel } = d;
   if (!blocks || !blocks.length) return;
@@ -5100,14 +5058,14 @@ function _toggleTanyaOpt(name) {
   localStorage.setItem(key, localStorage.getItem(key) === 'off' ? 'on' : 'off');
   const pos = _readerPlace();
   _renderTanyaContent();
-  _restoreScrollAfterRender('tanya', pos);
+  _putReaderAt('tanya', pos);
 }
 
 function _setTanyaLang(lang) {
   localStorage.setItem('chitas_lang_tanya', lang);
   const pos = _readerPlace();
   _renderTanyaContent();
-  _restoreScrollAfterRender('tanya', pos);
+  _putReaderAt('tanya', pos);
 }
 
 
@@ -5117,19 +5075,10 @@ function openChabadPanel(sectionId) {
   // New learners pick their Rambam track the first time they open it
   if (sectionId === 'rambam' && user.rambamTrackAsked === false) { changeTrack({ firstTime: true }); return; }
 
-  // What the reader is showing, set FIRST: only this section may draw into the
-  // reader or move its scroll (a background preload or a slow load of a
-  // section you already left must not)
-  window._readerOpenFor = sectionId;
-
-  // Switching straight from another section or day: keep its place, then start
-  // this one fresh (its own saved place, if any, is restored once it loads)
-  if (window._readerActiveSid) {
-    _flushReaderScroll();
-    window._readerActiveSid = null; window._readerActiveDay = null; window._pendingScrollRestore = {};
-  }
-  const _rd = document.getElementById('native-reader');
-  if (_rd) _rd.scrollTop = 0;
+  // What the reader shows, set FIRST: this section on this day is the only
+  // thing that may draw into the reader or move it now (what was showing keeps
+  // its place)
+  _readerBegin(sectionId);
 
   markDoneUnlocked = false;
   _setReaderColour('var(--c-' + sectionId + ')', 'var(--on-' + sectionId + ')');
@@ -5153,14 +5102,6 @@ function openChabadPanel(sectionId) {
 
   if (sectionId === 'chumash' || sectionId === 'rambam' || sectionId === 'tehillim' || sectionId === 'tanya') {
     iframeEl.style.display = 'none'; iframeEl.src = '';
-    // Only wipe stale content when switching between different sections.
-    // Reopening the same section: renderFn() overwrites innerHTML anyway,
-    // and wiping first collapses scrollHeight which breaks scroll restore.
-    const prevSectionId = document.getElementById('native-reader-content')?.dataset?.sectionId;
-    if (prevSectionId && prevSectionId !== sectionId) {
-      const staleContent = document.getElementById('native-reader-content');
-      if (staleContent) staleContent.innerHTML = '';
-    }
     nativeEl.style.display = 'flex';
     if (progWrap) progWrap.style.display = 'block';
     document.getElementById('chabad-panel-extlink').style.display = 'none';
@@ -5169,33 +5110,20 @@ function openChabadPanel(sectionId) {
     if (fontCtrl) fontCtrl.style.display = 'flex';
     _applyReaderFontSize(sectionId);
 
-    const dataKey = { chumash:'_chumashData', tehillim:'_tehillimData', tanya:'_tanyaData', rambam:'_rambamData' }[sectionId];
-    const renderFn = { chumash:_renderChumashContent, tehillim:_renderTehillimContent, tanya:_renderTanyaContent, rambam:_renderRambamContent }[sectionId];
-    const loaderFn = { chumash:_loadChumashNative, tehillim:_loadTehillimNative, tanya:_loadTanyaNative, rambam:_loadRambamNative }[sectionId];
-
-    if (window[dataKey] && window._prefetched?.[sectionId] !== false) {
-      // Data already pre-fetched — render immediately
-      const loadEl = document.getElementById('native-reader-loading');
-      const contEl = document.getElementById('native-reader-content');
-      if (loadEl) loadEl.style.display = 'none';
-      if (contEl) contEl.style.display = 'block';
-      renderFn();
-      if (contEl) contEl.dataset.sectionId = sectionId;
-      _restoreScrollAfterRender(sectionId, _getSavedScrollPos(sectionId));
-      if (sectionId === 'tehillim') _renderPersonalPsalms();
-    } else {
-      // Not pre-fetched yet — load normally
+    // This day's text: already here (loaded before, or ahead of time) or loaded now
+    const iso = _rv.iso;
+    const ready = _textFor(sectionId, iso);
+    if (ready && !(sectionId === 'rambam' && user.rambamTrack === 'm')) _drawText(sectionId, ready);
+    else {
+      const loaderFn = { chumash:_loadChumashNative, tehillim:_loadTehillimNative, tanya:_loadTanyaNative, rambam:_loadRambamNative }[sectionId];
+      _readerLoading(true);
       loaderFn(sectionId).then(ok => {
-        if (!ok) {
+        // Couldn't load it (and it's still what you opened): open the page on Chabad.org instead
+        if (!ok && _readerShows(sectionId, iso)) {
           nativeEl.style.display = 'none';
           iframeEl.style.display = 'flex'; iframeEl.src = s.chabadUrl;
           if (progWrap) progWrap.style.display = 'none';
           document.getElementById('chabad-panel-extlink').style.display = 'flex';
-        } else {
-          // Stamp sectionId so next open knows what content is loaded
-          const contEl2 = document.getElementById('native-reader-content');
-          if (contEl2) contEl2.dataset.sectionId = sectionId;
-          if (sectionId === 'tehillim') _renderPersonalPsalms();
         }
       });
     }
@@ -5326,7 +5254,7 @@ function _readerFontStep(delta) {
   localStorage.setItem(_readerFontKey(sid), String(next));
   const place = _readerPlace();                       // keep the passage you're on in view
   _applyReaderFontSize(sid);
-  _restoreScrollAfterRender(['chumash', 'rambam', 'tehillim', 'tanya'].includes(sid) ? sid : 'extra_' + sid, place);
+  _putReaderAt(['chumash', 'rambam', 'tehillim', 'tanya'].includes(sid) ? sid : 'extra_' + sid, place);
   // Subtle toast feedback
   const pct = Math.round(_FONT_SCALES[next] * 100);
   fire('Text size ' + pct + '%', 'xp');
@@ -5599,31 +5527,6 @@ function _closeSettingsOnOutsideClick(e) {
   }
 }
 
-// Save the reader's place for the section + day it is showing (on close, or
-// before switching to another section or day inside the reader)
-function _flushReaderScroll() {
-  if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
-  const reader = document.getElementById('native-reader');
-  const activeSid = window._readerActiveSid;
-  if (reader && activeSid) {
-    if (activeSid === 'likkuteiSichos' && window._lsInReader) {
-      const it = window._lsSichos && window._lsSichos[window._lsCurIdx];
-      if (it) { try { localStorage.setItem('ls_s_'+it.page+'_'+it.vol, String(Math.round(reader.scrollTop))); } catch {} }
-    } else if (activeSid === 'shaarHaBitachon') {
-      _shbSaveScroll(); // saves the place to the cloud too
-    } else {
-      // Core daily sections save as-is; extra tracks get 'extra_' prefix
-      if (activeSid === 'chumash' || activeSid === 'rambam' || activeSid === 'tehillim' || activeSid === 'tanya') {
-        _saveScrollPos(activeSid, reader.scrollTop);
-      } else if (typeof EXTRA_TRACK_DEFS !== 'undefined' && EXTRA_TRACK_DEFS[activeSid]) {
-        _saveScrollPos('extra_' + activeSid, reader.scrollTop);
-      }
-      // shaarHaBitachon saves through its own path (_shbSaveProgress)
-    }
-  }
-
-}
-
 // The reader (its header, progress bar and main button) in one section's colour
 function _setReaderColour(c, on) {
   const panel = document.getElementById('chabad-panel');
@@ -5647,14 +5550,9 @@ function closeChabadPanel() {
   const _lspb = document.getElementById('reader-progress-bar');
   if (_lspb) _lspb.style.background = 'var(--gold)';
 
-  _flushReaderScroll();
+  // Keep your place; nothing owns the reader until the next open
+  _readerEnd();
   const reader = document.getElementById('native-reader');
-
-  // Clear active section — nothing owns the reader until the next open sets it
-  window._readerActiveSid = null;
-  window._readerActiveDay = null;
-  window._readerOpenFor = null;
-  window._pendingScrollRestore = {};
 
   document.getElementById('chabad-panel').style.display = 'none';
   document.getElementById('chabad-iframe').src = '';
@@ -5662,8 +5560,6 @@ function closeChabadPanel() {
   if (fontCtrl) fontCtrl.style.display = 'none';
   closeReaderSettings();
   markDoneUnlocked = false;
-  // Reset scrollTop on the (now hidden) reader so a section switch starts fresh
-  // and cannot leak a stale scroll value into the new section's save handler.
   if (reader) reader.scrollTop = 0;
 }
 
@@ -5890,6 +5786,7 @@ async function selectTrackInline(newTrack, firstTime) {
     user.rambamTrackAsked = true;
     const changed = newTrack !== user.rambamTrack;
     user.rambamTrack = newTrack;
+    _dropTexts('rambam');
     saveUser();
     if (changed) await init();      // load the chosen track's chapters
     openChabadPanel('rambam');
@@ -5902,6 +5799,7 @@ async function selectTrackInline(newTrack, firstTime) {
   }
   // Change track WITHOUT wiping any data
   user.rambamTrack = newTrack;
+  _dropTexts('rambam');
   saveUser();
   document.getElementById('inline-track-picker')?.remove();
   // Rebuild schedule for the new track and re-render
@@ -6081,35 +5979,16 @@ function switchTab(id) {
 
 
 
-// ── Background pre-fetch — loads all readers silently during app init ──────────
-// After schedule is built, we pre-fetch all four sections so clicking them
-// is instant. Each native loader already stores data in window._xxxData,
-// so openChabadPanel just calls _renderXxxContent() without re-fetching.
+// ── Loading ahead — today's four, quietly, during start-up ───────────────────
+// Each loader keeps its text under its section and day (_keepText), so opening
+// one is then instant. A load only fills that store: it draws nothing.
 async function _prefetchAllReaders() {
-  window._prefetched = {};
-
-  async function silentLoad(fn, id) {
-    window._prefetchingId = id;
-    try {
-      window._prefetched[id] = await fn(id, true); // true = silent — no DOM writes
-    } catch(e) {
-      window._prefetched[id] = false;
-    } finally {
-      window._prefetchingId = null;
-    }
-  }
-
-  // Prefetch Chumash immediately (most likely to be tapped first)
-  await silentLoad(_loadChumashNative, 'chumash');
-
-  // Prefetch the rest after a short delay so UI stays responsive
+  const quietly = fn => fn(null, true).catch(() => false);
+  await quietly(_loadChumashNative);              // most likely to be opened first
+  // The rest a moment later, so starting up stays smooth
   setTimeout(() => {
-    if (dayOffset !== 0) return; // user navigated to a past day — skip
-    Promise.all([
-      silentLoad(_loadTehillimNative, 'tehillim'),
-      silentLoad(_loadTanyaNative, 'tanya'),
-      silentLoad(_loadRambamNative, 'rambam'),
-    ]).catch(() => {});
+    if (dayOffset !== 0) return;                  // you've gone to another day
+    [_loadTehillimNative, _loadTanyaNative, _loadRambamNative].forEach(quietly);
   }, 1500);
 }
 
@@ -6165,11 +6044,8 @@ async function _bustTanyaCache() {
   if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
   fire(results.join(' | '), 'gold');
   // Reload Tanya data if panel is open
-  if (window._tanyaData) {
-    window._tanyaData = null;
-    window._prefetched = {};
-    _prefetchAllReaders().catch(() => {});
-  }
+  _dropTexts('tanya');
+  _prefetchAllReaders().catch(() => {});
 }
 
 
@@ -6659,14 +6535,8 @@ async function openExtraReader(id) {
   const def = EXTRA_TRACK_DEFS[id];
   if (!def) return;
 
-  window._readerOpenFor = id;
-  // Same as a section: keep the place of what was open, start this one fresh
-  if (window._readerActiveSid) {
-    _flushReaderScroll();
-    window._readerActiveSid = null; window._readerActiveDay = null; window._pendingScrollRestore = {};
-  }
-  const _rd = document.getElementById('native-reader');
-  if (_rd) _rd.scrollTop = 0;
+  // Same as a section: this is now what the reader shows (what was open keeps its place)
+  _readerBegin('extra_' + id);
 
   // Use the same panel as regular sections
   markDoneUnlocked = false;
@@ -6958,7 +6828,7 @@ function _setDafLang(l) {
   localStorage.setItem('chitas_lang_extra_dafYomi', l);
   const pos = _readerPlace();
   _rerenderDaf();
-  _restoreScrollAfterRender('extra_dafYomi', pos);
+  _putReaderAt('extra_dafYomi', pos);
 }
 
 function _toggleDafComm(val) {
@@ -6969,7 +6839,7 @@ function _toggleDafComm(val) {
   localStorage.setItem('chitas_daf_commentary', [...commSet].join(','));
   const pos = _readerPlace();
   _rerenderDaf();
-  _restoreScrollAfterRender('extra_dafYomi', pos);
+  _putReaderAt('extra_dafYomi', pos);
 }
 
 
@@ -7012,6 +6882,7 @@ async function _loadHayomYomNative(silent) {
   const subEl    = document.getElementById('chabad-panel-sub');
   const extEl    = document.getElementById('chabad-panel-extlink');
   const iframeEl = document.getElementById('chabad-iframe');
+  const iso = _viewedISO();
 
   if (!silent) {
     if (iframeEl) { iframeEl.style.display = 'none'; iframeEl.src = ''; }
@@ -7096,9 +6967,10 @@ async function _loadHayomYomNative(silent) {
 
   html += '</div>';
 
+  if (silent || !_readerShows('extra_hayomYom', iso)) return;   // you've moved on
   if (loadEl) loadEl.style.display = 'none';
   if (contEl) { contEl.innerHTML = html; contEl.style.display = 'block'; }
-  _restoreScrollAfterRender('extra_hayomYom', _getSavedScrollPos('extra_hayomYom'));
+  _putReaderAt('extra_hayomYom');
 }
 
 // ── Lang toggle ─────────────────────────────────────────────────────────────
@@ -7120,6 +6992,7 @@ window._hayomYomSetLang = function(lang) {
   window._hayomYomLang = lang;
   try { localStorage.setItem('hayomYomLang', lang); } catch(e) {}
   _hayomYomInjectLangToggle();
+  _flushReaderScroll();               // it reloads: you come back to the same passage
   _loadHayomYomNative(false);
 };
 
@@ -7216,18 +7089,11 @@ async function _loadMishnahYomi() {
 // Sefaria: "Sefer HaMitzvot" — positive + negative mitzvot
 // Calendar item title: "Daily Mitzvah" or "Sefer HaMitzvos"
 // ════════════════════════════════════════════════════════════════════
-async function _loadSeferHamitzvos(sectionId) {
-  const loadEl = document.getElementById('native-reader-loading');
-  const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
-  if (contEl) contEl.style.display = 'none';
-
+// Draws straight into the reader, so it only loads for the reader on screen
+async function _loadSeferHamitzvos(sectionId, silent) {
+  if (silent) return false;
+  const iso = _textLoading('rambam', silent);
   try {
-    const viewedDay = new Date();
-    viewedDay.setDate(viewedDay.getDate() + (dayOffset || 0));
-    const iso = viewedDay.getFullYear() + '-'
-      + String(viewedDay.getMonth()+1).padStart(2,'0') + '-'
-      + String(viewedDay.getDate()).padStart(2,'0');
 
     // Hebcal has Sefer HaMitzvos under category 'seferHaMitzvot'
     // Title format: "Day 46: P155" or "Day 46: N23" or "Day 46: P3, N180"
@@ -7247,7 +7113,6 @@ async function _loadSeferHamitzvos(sectionId) {
     }
 
     const title = mItem.title || '';
-    document.getElementById('chabad-panel-sub').textContent = title;
 
     // Parse all P/N numbers from the title
     const allPos = [...title.matchAll(/P(\d+)/g)].map(m =>
@@ -7287,7 +7152,10 @@ async function _loadSeferHamitzvos(sectionId) {
       i.category === 'dailyLearning' && (i.title || '').includes('Rambam') && !(i.title || '').includes('1 Chapter')
     );
 
+    if (!_readerShows('rambam', iso)) return true;    // you've moved on
+    document.getElementById('chabad-panel-sub').textContent = title;
     _renderSeferHamitzvos(title, results, rambam3?.title || '');
+    _putReaderAt('rambam');
     return true;
 
   } catch(e) {
@@ -7308,7 +7176,17 @@ async function _loadSeferHamitzvos(sectionId) {
 }
 
 
+// Sefer HaMitzvos in another language, keeping your passage
+function _smSetLang(l) {
+  const place = _readerPlace();
+  localStorage.setItem('chitas_lang_rambam', l);
+  const a = window._smArgs || [];
+  _renderSeferHamitzvos(a[0] || '', window._smResults || [], a[1] || '');
+  _putReaderAt('rambam', place);
+}
+
 function _renderSeferHamitzvos(displayVal, results, rambamContext) {
+  window._smArgs = [displayVal, rambamContext];
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
   if (loadEl) loadEl.style.display = 'none';
@@ -7324,7 +7202,7 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
   let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
   [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
     const a = lang === l;
-    t += '<button onclick="localStorage.setItem(\'chitas_lang_rambam\',\'' + l + '\');_renderSeferHamitzvos(' + JSON.stringify(displayVal) + ',window._smResults||[],' + JSON.stringify(rambamContext) + ')"'
+    t += '<button onclick="_smSetLang(\'' + l + '\')"'
       + ' style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
       + (a ? 'background:' + GREEN + ';color:#000;border-color:' + GREEN + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
       + '">' + lb + '</button>';
@@ -7626,7 +7504,7 @@ function _flatHtml(x) {
 
 // ── Scroll position for extra tracks (persisted by section + date) ─────────────
 function _restoreExtraScroll(id) {
-  _restoreScrollAfterRender('extra_' + id, _getSavedScrollPos('extra_' + id));
+  _putReaderAt('extra_' + id);
   unlockMarkDone(); // extra tracks unlock immediately
 }
 
@@ -7832,26 +7710,10 @@ function _setChumashTranslation(id) {
   if (psEl) psEl.textContent = _getChumashTransLabel();
   // Close the picker
   document.getElementById('chumash-trans-modal')?.remove();
-  // If the Chumash reader is currently open, reload it in place
-  const markBtn = document.getElementById('chabad-mark-btn');
-  const panel = document.getElementById('chabad-panel');
-  const readerOpen = panel?.style.display !== 'none' && markBtn?.dataset?.sectionId === 'chumash';
-  if (readerOpen) {
-    // Capture live scroll position NOW before the content is replaced
-    const livePos = _readerPlace();
-    // Show loading state immediately
-    const contEl = document.getElementById('native-reader-content');
-    const loadEl = document.getElementById('native-reader-loading');
-    if (contEl) contEl.style.display = 'none';
-    if (loadEl) loadEl.style.display = 'block';
-    // Clear cache and reload, then restore to the position we were at
-    window._chumashData = null;
-    _loadChumashNative('chumash').then(ok => {
-      if (ok && livePos?.y) _restoreScrollAfterRender('chumash', livePos);
-    }).catch(() => {});
-  } else {
-    window._chumashData = null;
-  }
+  // Every day's Chumash is now in another translation. If it's open, keep your
+  // place and load it again (you come back to the same passage)
+  _dropTexts('chumash');
+  if (_rv.sid === 'chumash') { _flushReaderScroll(); _loadChumashNative('chumash'); }
   const label = CHUMASH_TRANSLATIONS.find(t => t.id === id)?.label || id;
   fire(label + ' translation', 'gold');
 }
@@ -9943,24 +9805,6 @@ async function _lsShowFnPopup(num, el) {
 // ── Subtitle on feed card ─────────────────────────────────────────────────────
 // (Called from _loadExtraSubtitle — already wired above)
 
-
-// Save scroll position on page unload — catches reloads and tab closes
-window.addEventListener('beforeunload', () => {
-  const reader = document.getElementById('native-reader');
-  if (!reader || reader.scrollTop <= 0) return;
-  const panel = document.getElementById('chabad-panel');
-  if (!panel || panel.style.display === 'none') return;
-  const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
-  if (!sid) return;
-  if (sid === 'chumash' || sid === 'rambam' || sid === 'tehillim' || sid === 'tanya') {
-    _saveScrollPos(sid, reader.scrollTop);
-  } else if (typeof EXTRA_TRACK_DEFS !== 'undefined' && EXTRA_TRACK_DEFS[sid]) {
-    _saveScrollPos('extra_' + sid, reader.scrollTop);
-  } else if (sid === 'likkuteiSichos' && window._lsInReader) {
-    const it = window._lsSichos && window._lsSichos[window._lsCurIdx];
-    if (it) { try { localStorage.setItem('ls_s_'+it.page+'_'+it.vol, String(Math.round(reader.scrollTop))); } catch {} }
-  }
-});
 
 bootApp();
 </script>
