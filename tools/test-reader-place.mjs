@@ -205,6 +205,19 @@ await test('each day keeps its own place, and shows its own text', async () => {
   expect(same(y, y2), 'yesterday\'s place', { y, y2 });
 });
 
+await test('the bar on top: empty on a new day, filled to your place when you come back', async () => {
+  const bar = () => page.evaluate(() => parseFloat(document.getElementById('reader-progress-bar').style.width));
+  await open('chumash'); await scrollBy(4000); const deep = await bar();
+  expect(deep > 10, 'shows how far you are', deep);
+  await goDay(-1);
+  expect(await bar() === 0, 'empty on yesterday, before you scroll', await bar());
+  await goDay(1);
+  const back = await bar();
+  expect(Math.abs(back - deep) < 5, 'back where it was', { deep, back });
+  await open('rambam');
+  expect(await bar() === 0, 'empty for a section you haven\'t started', await bar());
+});
+
 await test('a day picked on Today, then opened at once, shows that day\'s text (slow calendar)', async () => {
   delays = [[/hebcal\.com/, 700]];
   const yest = await chumashRef(-1);

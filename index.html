@@ -3689,6 +3689,7 @@ function _readerBegin(sid) {
   window._readerActiveSid = null;          // Likkutei Sichos and Shaar HaBitachon set their own
   const reader = document.getElementById('native-reader');
   if (reader) reader.scrollTop = 0;
+  _readerProgress(true);
   document.documentElement.classList.add('reader-open');   // the page behind stays where it is
 }
 function _readerEnd() {
@@ -3709,17 +3710,28 @@ function _readerEnd() {
   });
 })();
 
+// The bar on top: how far through the text you are. Drawn whenever the reader
+// changes (opening, loading, putting you back), not only when it scrolls: a
+// new day starts at the top without scrolling. Empty while the text loads;
+// jump: no sliding (a fresh start, not reading progress).
+function _readerProgress(jump) {
+  const reader = document.getElementById('native-reader');
+  const bar = document.getElementById('reader-progress-bar');
+  if (!reader || !bar) return;
+  const shown = document.getElementById('native-reader-content')?.style.display !== 'none' && _rv.drawn;
+  const max = reader.scrollHeight - reader.clientHeight;
+  const pct = !shown ? 0 : max > 0 ? Math.min(100, Math.round(reader.scrollTop / max * 100)) : 100;
+  if (jump) { bar.style.transition = 'none'; bar.style.width = pct + '%'; bar.offsetWidth; bar.style.transition = 'width .15s linear'; }
+  else bar.style.width = pct + '%';
+}
+
 // Scroll handler: the progress bar, unlocking Mark Done, and saving your place
 let _scrollSaveTimer = null;
 function onReaderScroll() {
+  _readerProgress();
   const reader = document.getElementById('native-reader');
   const sentinel = document.getElementById('reader-bottom-sentinel');
   if (!reader || !sentinel) return;
-
-  const scrollTop = reader.scrollTop;
-  const scrollHeight = reader.scrollHeight - reader.clientHeight;
-  const pct = scrollHeight > 0 ? Math.min(100, Math.round((scrollTop / scrollHeight) * 100)) : 100;
-  document.getElementById('reader-progress-bar').style.width = pct + '%';
 
   // Unlock when the end of the text is in view (within 120px of the bottom)
   if (sentinel.getBoundingClientRect().top <= reader.getBoundingClientRect().bottom + 120) unlockMarkDone();
@@ -3863,9 +3875,10 @@ function _putReaderAt(sid, place) {
   else if (place == null) place = _savedPlace(sid);
   else if (_rv.touched) _storePlace(place);
   const gen = ++_rv.gen;
-  Object.assign(_rv, { place, placing: true, touched: false, holdUntil: 0 });
+  Object.assign(_rv, { drawn: true, place, placing: true, touched: false, holdUntil: 0 });   // (called right after drawing)
   if (!place || !(typeof place === 'number' ? place : place.y)) {
     reader.scrollTop = 0; _rv.place = null; _rv.placing = false;
+    _readerProgress(true);
     return;
   }
   let frames = 0;
@@ -3876,6 +3889,7 @@ function _putReaderAt(sid, place) {
     reader.scrollTop = y;
     _rv.placing = false;
     _rv.holdUntil = performance.now() + 6000;
+    _readerProgress(true);
   };
   go();
 }
@@ -3918,6 +3932,7 @@ function _textLoading(sid, silent) {
 function _readerLoading(on) {
   document.getElementById('native-reader-loading').style.display = on ? 'block' : 'none';
   document.getElementById('native-reader-content').style.display = on ? 'none' : 'block';
+  if (on) _readerProgress(true);
 }
 // A load's text has arrived: keep it under its day, and if that's what the
 // reader is showing, draw it and put you back at your place (rule 1: a load
