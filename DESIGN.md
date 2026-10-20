@@ -49,7 +49,12 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
 - **Any day can be read** (about a year back, two months ahead) from the calendar on Today's date chip, or by swiping the tiles. Only today and the last 7 days can be marked; other days say "Read only" or "Ahead of today".
 - **Totals** grow forever (pesukim, chapters, halachos), shown beside the streak.
 - **Progress tab** (chart icon): two stat tiles (streak, 30-day %), a month calendar where each date is the four-part ring (a small sefer under Shabbos / Yom Tov; tap a day to see it), and a colour tile per section with its total, what it means, and how far through the whole (the Torah, Tehillim, Mishneh Torah).
-- **Milestones** (planned): 7, 30, 100, 365 days; a whole parsha; Sefer Tehillim; each book of Rambam and the cycle; the Tanya cycle.
+- **Motivation model.** Reward finishing (the four rings, the day complete), showing up (the streak; Shabbos and Yom Tov never break it, quietly), learning adding up (Progress totals), and real milestones. No points, levels, leaderboards, pep talk or suggested order.
+- **Milestones**, each celebrated once (`user.milestones` keeps the keys):
+  - Streak: 3, 7, 18, 30, 50, 100, 180, 365, 500, 1000 days (`js/progress.js`).
+  - Learning (`learningMilestone` in `js/learning-stats.js`): a whole parsha (all 7 aliyos in its week), all of Sefer Tehillim in a month, 100 / 250 / 500 chapters of Rambam and all of Mishneh Torah, 50 / 100 / 200 / 365 days of Tanya.
+- The streak chip opens Progress (no separate pop-up).
+- **Next:** a quiet "welcome back" after a missed day; reminders.
 - Points and the leaderboard were removed in Oct 2026 (`user.xp` is still stored so old data isn't lost, but never shown).
 
 ## Reminders and touch (planned)

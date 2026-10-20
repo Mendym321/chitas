@@ -32,6 +32,7 @@ check('days from both are kept (incl. the account\'s unarchived Oct 12)', Object
 check('today = what was done on the phone today', m.done, { chumash: true, tehillim: true });
 check('points add up when the days are different', m.xp, 570);
 check('account settings win (track, name)', [m.rambamTrack, m.name, m.uid], ['1', 'Mendy', 'u1']);
+check('milestones already celebrated are combined', merge({ ...guest, milestones: ['parsha-2026-10-10'] }, { ...remote, milestones: ['rambam-100', 'parsha-2026-10-10'] }, TODAY).milestones.sort(), ['parsha-2026-10-10', 'rambam-100']);
 check('Tehillim names combined without duplicates', m.tehillimPeople.map(p => p.label), ['Savta', 'Zaidy']);
 
 const sameDay = merge(
