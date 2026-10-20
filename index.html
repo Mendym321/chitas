@@ -889,6 +889,49 @@
   direction: rtl; text-align: right; flex: 1;
 }
 /* ═══════════════════════════════════════════════════════════════════════════ */
+/* ── On a computer (1000px and wider): the same app, laid out for the screen ──
+   A sidebar instead of the bottom pill; Today's four tiles in one row; the
+   reader's text in a page-wide column; Progress in two columns; pop-ups as
+   centred boxes. Below 1000px nothing here applies. */
+.side-logo { display:none; }
+@media (min-width: 1000px) {
+  #app { max-width:none; padding-bottom:40px; }
+  #main-app { margin-left:260px; max-width:1060px; padding:12px 48px 0; }
+  .tabbar { left:20px; top:20px; bottom:20px; transform:none; width:220px; max-width:none; flex-direction:column; justify-content:flex-start; gap:6px; padding:18px 12px; }
+  .tabbar button { width:100%; justify-content:flex-start; padding:12px 14px; }
+  .tabbar button .tab-l { display:inline; }
+  .side-logo { display:flex; align-items:center; gap:10px; padding:4px 10px 18px; color:var(--on-ink); font:800 22px var(--ui-font); letter-spacing:-.5px; }
+  .side-logo svg { width:34px; height:34px; }
+  .side-logo circle { fill:none; stroke-width:9; }
+  #app-head { padding-left:0; padding-right:0; }
+  #tab-learn { padding-left:0 !important; padding-right:0 !important; }
+  #tiles-wrap { margin:0; padding:14px 0 4px; }
+  .tiles4 { grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; }
+  .stile { height:210px; }
+  #thought, #welcome-back, #day-readonly { max-width:720px; }
+  #week-strip { max-width:720px; }
+  #tab-stats, #tab-profile { padding-left:0 !important; padding-right:0 !important; }
+  #stats-content { display:grid; grid-template-columns:1fr 1fr; column-gap:24px; grid-auto-flow:row dense; }
+  #stats-content > * { grid-column:1 / -1; }
+  #stats-content > .sec-30, #stats-content > .cbars { grid-column:1; }
+  #stats-content > .cbars, #stats-content > #learning-cal { align-self:start; }
+  #stats-content > .sec-month, #stats-content > #learning-cal { grid-column:2; }
+  #learned-grid { grid-template-columns:repeat(4, minmax(0,1fr)); }
+  .stat2 { max-width:720px; }
+  #tab-profile > * { max-width:640px; }
+  /* The reader: a column about as wide as a printed page */
+  #reader-head, #reader-daybar { padding-left:max(24px, calc((100% - 900px) / 2)) !important; padding-right:max(24px, calc((100% - 900px) / 2)) !important; }
+  #native-reader > div { max-width:900px; margin:0 auto; }
+  #reader-progress-wrap { max-width:900px; margin:8px auto 0 !important; width:calc(100% - 48px); }
+  #reader-bottom-bar > * { max-width:900px; margin-left:auto; margin-right:auto; }
+  #quiz-head { padding-left:max(24px, calc((100% - 640px) / 2)) !important; padding-right:max(24px, calc((100% - 640px) / 2)) !important; }
+  #quiz-body { max-width:640px !important; }
+  /* Pop-ups: centred boxes, not sheets from the bottom */
+  #day-picker, #del-sheet, #credits-sheet, body > div[style*="align-items:flex-end"] { align-items:center !important; }
+  .dp-sheet, .ps-modal-sheet { max-width:480px !important; border-radius:28px !important; }
+  .dp-grab { display:none; }
+  #moment-modal.m-full #moment-card { max-width:none !important; }
+}
 </style>
 <!-- Firebase SDK -->
 <script type="module">
@@ -1132,6 +1175,7 @@ window._fsGetDoc = getDoc;
 
     <!-- Bottom tab bar -->
     <nav class="tabbar" id="tabbar">
+      <div class="side-logo" aria-hidden="true"><svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="40" stroke="#E0A030"/><circle cx="46" cy="46" r="29" stroke="#4E7ACB"/><circle cx="46" cy="46" r="18" stroke="#9560BA"/><circle cx="46" cy="46" r="7" stroke="#659444"/></svg><span>Chitas</span></div>
       <button class="nav-tab on" data-tab="learn" onclick="switchTab('learn')">
         <svg viewBox="0 0 24 24" style="transform:rotate(-90deg)"><circle id="tab-seg-0" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-0.9"/><circle id="tab-seg-1" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-14.2"/><circle id="tab-seg-2" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-27.6"/><circle id="tab-seg-3" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-40.9"/></svg><span class="tab-l">Today</span>
       </button>
@@ -5740,10 +5784,10 @@ function renderStats() {
     + '<p class="t-sec">All of it, added up <span>since ' + sinceLabel + '</span></p>'
     + '<div id="learned-grid">' + tiles + '</div>'
 
-    + '<p class="t-sec">The last 30 days</p>'
+    + '<p class="t-sec sec-30">The last 30 days</p>'
     + '<div class="cbars lcard">' + bars + '</div>'
 
-    + '<p class="t-sec">Month by month</p>'
+    + '<p class="t-sec sec-month">Month by month</p>'
     + '<div id="learning-cal" class="lcard">' + calHTML + '</div>'
 
     + highlights
