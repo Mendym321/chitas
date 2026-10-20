@@ -10,7 +10,8 @@ vm.createContext(ctx);
 for (const f of ['holidays-data', 'progress', 'tehillim', 'chumash-data', 'chumash', 'learning-data', 'learning-stats'])
   vm.runInContext(readFileSync(new URL(`../js/${f}.js`, import.meta.url), 'utf8'), ctx);
 const learningStats = vm.runInContext('learningStats', ctx);
-const { learningOverview, chumashVerseCount, rambamHalachosOn, learningMilestone } = vm.runInContext('({ learningOverview, chumashVerseCount, rambamHalachosOn, learningMilestone })', ctx);
+const getParshaForDate = vm.runInContext('getParshaForDate', ctx);
+const { learningOverview, chumashVerseCount, rambamHalachosOn, learningMilestone, RAMBAM_BOOK_SPANS } = vm.runInContext('({ learningOverview, chumashVerseCount, rambamHalachosOn, learningMilestone, RAMBAM_BOOK_SPANS })', ctx);
 
 let failed = 0;
 function check(name, actual, expected) {
@@ -21,11 +22,11 @@ function check(name, actual, expected) {
 const day = s => new Date(s + 'T12:00:00');
 const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 function range(from, to) { const out = []; for (let d = day(from); d <= day(to); d.setDate(d.getDate() + 1)) out.push(iso(d)); return out; }
-function userWith(map) { // map: { 'YYYY-MM-DD': ['chumash', ...] } — today's marks go in "done", like the app
+function userWith(map, todayISO = '2026-10-14') { // map: { 'YYYY-MM-DD': ['chumash', ...] } — today's marks go in "done", like the app
   const pastDone = {}; let done = {};
   for (const [d, ids] of Object.entries(map)) {
     const marks = Object.fromEntries(ids.map(id => [id, true]));
-    if (d === '2026-10-14') done = marks; else pastDone[d] = marks;
+    if (d === todayISO) done = marks; else pastDone[d] = marks;
   }
   return { done, pastDone };
 }
@@ -94,19 +95,48 @@ const h = learningOverview(userWith(Object.fromEntries(twoWeeks.map(d => [d, ['c
 check('a run of a week or more is highlighted', h.some(t => /every day for 15 days/.test(t)), true);
 check('the latest full parsha is highlighted', h.some(t => /^Learned all of Parshas /.test(t)), true);
 
-console.log('Learning milestones:');
+console.log('Learning milestones (they follow the cycles):');
 {
-  const S = map => learningStats(userWith(map), TODAY, '3');
+  const S = (map, today = TODAY, track = '3') => learningStats(userWith(map), today, track);
+  const M = (id, before, after, d, today = TODAY, track = '3', map = {}) => learningMilestone(id, S(before, today, track), S(after, today, track), day(d), userWith(map), today, track);
   const six = Object.fromEntries(bereishisWeek.slice(0, 5).map(d => [d, ['chumash']]));      // Sun–Thu
   const all = { ...six, '2026-10-09': ['chumash'] };                                          // + Friday
-  const m = learningMilestone('chumash', S(six), S(all), day('2026-10-09'));
+  const m = M('chumash', six, all, '2026-10-09');
   check('the last aliyah of the week finishes the parsha', [m && m.title, m && m.key], ['Parshas Bereishit', 'parsha-2026-10-10']);
-  check('an ordinary day is no milestone', learningMilestone('chumash', S({}), S({ '2026-10-04': ['chumash'] }), day('2026-10-04')), null);
+  check('an ordinary day is no milestone', M('chumash', {}, { '2026-10-04': ['chumash'] }, '2026-10-04'), null);
   const t29 = Object.fromEntries(tishrei.slice(0, 29).map(d => [d, ['tehillim']]));
   const t30 = Object.fromEntries(tishrei.map(d => [d, ['tehillim']]));
-  check('the whole month of Tehillim → Sefer Tehillim', learningMilestone('tehillim', S(t29), S(t30), day('2026-10-11'))?.title, 'All of Sefer Tehillim');
-  check('Rambam: passing 100 chapters', learningMilestone('rambam', { rambamPerDay: 3, rambamChapters: 99 }, { rambamPerDay: 3, rambamChapters: 102 }, TODAY)?.key, 'rambam-100');
-  check('Tanya: 50 days', learningMilestone('tanya', { sections: { tanya: { total: 49 } } }, { sections: { tanya: { total: 50 } } }, TODAY)?.title, '50 days of Tanya');
+  check('the whole month of Tehillim → Sefer Tehillim', M('tehillim', t29, t30, '2026-10-11')?.title, 'All of Sefer Tehillim');
+
+  // Chumash: the week of Vayechi finishes Sefer Bereishis (5787: Shabbos 26 Dec 2026)
+  {
+    let sat = day('2026-12-01'); while (getParshaForDate(sat) !== 'Vayechi' || sat.getDay() !== 6) sat.setDate(sat.getDate() + 1);
+    const T = sat, fri = new Date(T); fri.setDate(T.getDate() - 1);
+    const ch = range('2026-10-04', iso(T)).filter(d => d !== iso(T));      // Bereishis (4 Oct) through Friday of Vayechi
+    const u = m => userWith(m, iso(fri));
+    const cmap = days => Object.fromEntries(days.map(d => [d, ['chumash']]));
+    const b = learningMilestone('chumash', learningStats(u(cmap(ch.slice(0, -1))), fri, '3'), learningStats(u(cmap(ch)), fri, '3'), fri, u(cmap(ch)), fri, '3');
+    check('the last parsha of Bereishis finishes the book', [b?.title, b?.sub], ['Sefer Bereishis', 'Every parsha of it.']);
+  }
+  // Rambam, 3 chapters: Sefer Nezikin ran 28 Oct – 17 Nov 2025
+  const NOV17 = day('2025-11-17');
+  const nezikin = range('2025-10-28', '2025-11-17');
+  const rmap = days => Object.fromEntries(days.map(d => [d, ['rambam']]));
+  const R = days => { const before = rmap(days.filter(d => d !== '2025-11-17')), after = rmap(days), u = m => userWith(m, '2025-11-17');
+    return learningMilestone('rambam', learningStats(u(before), NOV17, '3'), learningStats(u(after), NOV17, '3'), NOV17, u(after), NOV17, '3'); };
+  check('the last day of a Rambam book, every day learned', [R(nezikin)?.title, R(nezikin)?.sub], ['Sefer Nezikin', 'You learned every day of it.']);
+  const most = nezikin.filter((d, i) => i % 5 !== 1);
+  check('most of it: says how many days', /^You learned \d+ of its 21 days\.$/.test(R(most)?.sub || ''), true);
+  check('under half of it: no milestone', R(nezikin.filter((d, i) => i % 3 === 0 || d === '2025-11-17')), null);
+  const mid = learningMilestone('rambam', S({}, NOV17), S({ '2025-11-10': ['rambam'] }, NOV17), day('2025-11-10'), userWith({ '2025-11-10': ['rambam'] }), NOV17, '3');
+  check('a day in the middle of a book: no milestone', mid, null);
+  // Sefer Shoftim, the last book: the Siyum (the next cycle starts 3 Feb 2026)
+  const FEB2 = day('2026-02-02');
+  const shoftimSpan = RAMBAM_BOOK_SPANS.three.find(([s, e, b]) => b === 14 && e === Math.round((Date.UTC(2026, 1, 2) - Date.UTC(2025, 0, 1)) / 86400000));
+  const sh = range(new Date(Date.UTC(2025, 0, 1 + shoftimSpan[0])).toISOString().slice(0, 10), '2026-02-02');
+  const u2 = m => userWith(m, '2026-02-02');
+  const sm = learningMilestone('rambam', learningStats(u2(rmap(sh.slice(0, -1))), FEB2, '3'), learningStats(u2(rmap(sh)), FEB2, '3'), FEB2, u2(rmap(sh)), FEB2, '3');
+  check('the end of Sefer Shoftim is the Siyum', sm?.title, 'Siyum HaRambam');
 }
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll learning-stats tests passed');

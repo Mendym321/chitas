@@ -41,17 +41,18 @@ function learningStats(user, today, rambamTrack) {
     sections[id] = { total, last30 };
   }
 
-  // Parshiyos completed: a Sunday–Shabbos week with all 7 aliyos learned
-  // (an unmarked Shabbos/Yom Tov is fine, but at least one day must be marked)
-  const parshiyos = [];
+  // Parshiyos completed: a Sunday–Shabbos week with all its aliyos learned.
+  // Shabbos can't be marked in the app, so the week is complete on Friday
+  // (an unmarked Yom Tov is fine too, but at least one day must be marked)
+  const parshiyos = [], parshaWeeks = [];
   for (const d of days) {
-    if (d.getDay() !== 6) continue;
+    if (d.getDay() !== 5) continue;
     let all = true, any = false;
-    for (let back = 0; back < 7 && all; back++) {
+    for (let back = 0; back < 6 && all; back++) {
       const x = new Date(d); x.setDate(d.getDate() - back);
       all = covered(x, 'chumash'); any = any || did(x, 'chumash');
     }
-    if (all && any) parshiyos.push(getParshaForDate(d));
+    if (all && any) { parshiyos.push(getParshaForDate(d)); parshaWeeks.push({ name: getParshaForDate(d), iso: progressISO(d) }); }
   }
 
   // Times through Tehillim: a Hebrew month where every day's Tehillim was said
@@ -86,7 +87,7 @@ function learningStats(user, today, rambamTrack) {
   const weakest = ranked[0], strongest = ranked[ranked.length - 1];
   const needsAttention = sections[strongest].last30 - sections[weakest].last30 >= 3 ? weakest : null;
 
-  return { sections, parshiyos, tehillimBooks, tehillimChapters, rambamChapters, rambamPerDay: perDay, needsAttention };
+  return { sections, parshiyos, parshaWeeks, tehillimBooks, tehillimChapters, rambamChapters, rambamPerDay: perDay, needsAttention };
 }
 
 // ── "Your learning": totals, consistency, highlights ──────────────────────────
@@ -217,32 +218,66 @@ function _highlights(user, today, days, base, per, overall, rambamTrack) {
   return out.slice(0, 4);
 }
 
-// ── Learning milestones: the learning itself, not just the chain of days ─────
-// Compare learningStats() before and after marking a section on date d.
-// Returns { key, id, title, sub } or null. The key is stable, so a milestone
-// is celebrated once even if you unmark and mark again.
-const RAMBAM_CHAPTER_MILESTONES = [100, 250, 500, 1000];
-const TANYA_DAY_MILESTONES = [50, 100, 200, 365];
-function learningMilestone(id, before, after, d) {
-  const crossed = (list, a, b) => list.find(m => a < m && b >= m) || null;
+// ── Learning milestones: they follow the cycles ─────────────────────────────
+// Chumash: each parsha, each book (at its last parsha), the whole Torah.
+// Tehillim: all of it, each month. Rambam: each of the 14 books and the Siyum,
+// on your track. (Tanya's parts come from the day's portion: see index.html.)
+// A milestone comes when you reach the end of something and learned most of
+// it, and says honestly how much ("28 of its 30 days").
+// Compares learningStats() before and after marking section `id` on date d.
+// Returns { key, id, title, sub } or null; the key is stable, so each one is
+// celebrated once.
+const CHUMASH_BOOKS = [
+  ['Sefer Bereishis', ['Bereishit', 'Noach', 'Lech Lecha', 'Vayera', 'Chayei Sara', 'Toldot', 'Vayetzei', 'Vayishlach', 'Vayeshev', 'Miketz', 'Vayigash', 'Vayechi']],
+  ['Sefer Shemos', ['Shemot', 'Vaera', 'Bo', 'Beshalach', 'Yitro', 'Mishpatim', 'Terumah', 'Tetzaveh', 'Ki Tisa', 'Vayakhel', 'Pekudei']],
+  ['Sefer Vayikra', ['Vayikra', 'Tzav', 'Shemini', 'Tazria', 'Metzora', 'Acharei Mot', 'Kedoshim', 'Emor', 'Behar', 'Bechukotai']],
+  ['Sefer Bamidbar', ['Bamidbar', 'Nasso', "Beha'alotcha", 'Shelach', 'Korach', 'Chukat', 'Balak', 'Pinchas', 'Matot', 'Masei']],
+  ['Sefer Devarim', ['Devarim', 'Vaetchanan', 'Eikev', "Re'eh", 'Shoftim', 'Ki Teitzei', 'Ki Tavo', 'Nitzavim', 'Vayeilech', 'Haazinu', 'Vezot Haberakhah']],
+];
+const _plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+const _isoDay = iso => Math.round((Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) - Date.UTC(2025, 0, 1)) / 86400000);
+
+function learningMilestone(id, before, after, d, user, today, track) {
+  const did = x => !!dayDone(user, x, today)[id] || isRestDay(x);
   if (id === 'chumash' && after.parshiyos.length > before.parshiyos.length) {
     const shabbos = new Date(d); shabbos.setDate(d.getDate() + (6 - d.getDay()));
-    const name = getParshaForDate(d);
-    return { key: 'parsha-' + progressISO(shabbos), id,
-      title: 'Parshas ' + (typeof parshaSpelling === 'function' ? parshaSpelling(name) : name),
-      sub: 'Every aliyah of the parsha, all week.' };
+    const name = getParshaForDate(d), spell = typeof parshaSpelling === 'function' ? parshaSpelling : x => x;
+    const last = name.split('-').pop();
+    const bi = CHUMASH_BOOKS.findIndex(([, list]) => list[list.length - 1] === last);
+    if (bi >= 0) {
+      // The book's last parsha: how many of the book's parshiyos (and the year's) you learned
+      const within = days => new Set(after.parshaWeeks
+        .filter(w => (shabbos - new Date(w.iso + 'T12:00:00')) / 86400000 < days)
+        .flatMap(w => w.name.split('-')));
+      const inBook = [...within(bi === 4 ? 120 : 160)].filter(n => CHUMASH_BOOKS[bi][1].includes(n)).length;
+      const total = CHUMASH_BOOKS[bi][1].length;
+      if (inBook * 2 >= total) {
+        if (bi === 4) {
+          const year = [...within(370)].length;
+          return { key: 'torah-' + progressISO(shabbos), id, title: 'The whole Torah',
+            sub: 'Sefer Devarim done. You learned ' + year + ' of the year\'s 54 parshiyos.' };
+        }
+        return { key: 'chumash-book-' + progressISO(shabbos), id, title: CHUMASH_BOOKS[bi][0],
+          sub: inBook === total ? 'Every parsha of it.' : 'You learned ' + inBook + ' of its ' + total + ' parshiyos.' };
+      }
+    }
+    return { key: 'parsha-' + progressISO(shabbos), id, title: 'Parshas ' + spell(name), sub: 'Every aliyah of the parsha, all week.' };
   }
   if (id === 'tehillim' && after.tehillimBooks > before.tehillimBooks)
     return { key: 'tehillim-' + _hebrewMonthKey(d), id, title: 'All of Sefer Tehillim',
       sub: 'Every chapter this month' + (after.tehillimBooks > 1 ? ', ' + after.tehillimBooks + ' times through.' : '.') };
-  if (id === 'rambam' && after.rambamPerDay) {
-    const m = crossed(RAMBAM_CHAPTER_MILESTONES, before.rambamChapters, after.rambamChapters);
-    if (m) return { key: 'rambam-' + m, id, title: m === 1000 ? 'All of Mishneh Torah' : m + ' chapters of Rambam',
-      sub: m === 1000 ? 'Every one of its 1,000 chapters.' : Math.round(m / 10) + '% of Mishneh Torah.' };
-  }
-  if (id === 'tanya') {
-    const m = crossed(TANYA_DAY_MILESTONES, before.sections.tanya.total, after.sections.tanya.total);
-    if (m) return { key: 'tanya-' + m, id, title: m + ' days of Tanya', sub: m === 365 ? 'A whole year of it.' : 'Day after day.' };
+  if (id === 'rambam' && (track === '3' || track === '1') && typeof RAMBAM_BOOK_SPANS !== 'undefined') {
+    const t = track === '3' ? 'three' : 'one', i = _isoDay(progressISO(d));
+    const span = RAMBAM_BOOK_SPANS[t].find(([s, e]) => s <= i && i <= e);
+    if (!span || span[1] !== i || span[2] === 0) return null;   // not the last day of a book
+    const [s, e, b] = span, total = e - s + 1;
+    let learned = 0;
+    for (let k = s; k <= e; k++) { const x = new Date(d); x.setDate(d.getDate() - (e - k)); if (did(x)) learned++; }
+    if (learned * 2 < total) return null;
+    const how = learned === total ? 'every day of it' : learned + ' of its ' + total + ' days';
+    return b === RAMBAM_BOOK_NAMES.length - 1
+      ? { key: 'rambam-' + t + '-' + s, id, title: 'Siyum HaRambam', sub: 'All of Mishneh Torah. Sefer Shoftim: ' + how + '.' }
+      : { key: 'rambam-' + t + '-' + s, id, title: RAMBAM_BOOK_NAMES[b], sub: 'You learned ' + how + '.' };
   }
   return null;
 }
