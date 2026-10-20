@@ -687,16 +687,18 @@
   border-radius:var(--r-m); box-shadow: 0 8px 32px rgba(0,0,0,.35); padding: 12px 15px;
   max-height: 45vh; overflow-y: auto; animation: lsFnPop .14s cubic-bezier(.22,1,.36,1) both;
 }
-#rambam-note-popup .rn-label { font-size:var(--fs-1); font-weight: 700; color: #6E9150; margin-bottom: 5px; }
+#rambam-note-popup .rn-label { font-size:var(--fs-1); font-weight: 700; color: var(--t3); margin-bottom: 5px; }
 #rambam-note-popup .rn-text { font-size:var(--fs-2); line-height: 1.55; color: var(--t1); }
 .rambam-fn {
-  display: inline-block; vertical-align: super; font-family: inherit; font-size:var(--fs-1); font-weight: 700; line-height: 14px;
-  min-width: 16px; height: 16px; padding: 0 4px; margin: 0 1px 0 2px; border-radius:var(--r-s);
-  border: 1px solid rgba(110,145,80,.45); background: rgba(110,145,80,.12); color: #6E9150; cursor: pointer;
+  /* A footnote: a small raised number, like in a printed sefer. The tap
+     area is bigger than it looks (padding pulled back with margins) */
+  display: inline; vertical-align: super; font-family: var(--ui-font); font-size: .62em; font-weight: 600; line-height: 1;
+  padding: 6px 4px; margin: -6px -2px -6px 0; border: none; background: none; border-radius: 0;
+  color: color-mix(in srgb, var(--c-rambam) 75%, var(--t3)); cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
-.rambam-fn.active { background: #6E9150; color: #000; }
-.tanya-fn { border-color: color-mix(in srgb, var(--purple) 45%, transparent); background: color-mix(in srgb, var(--purple) 12%, transparent); color: var(--purple); }
-.tanya-fn.active { background: var(--purple); color: #fff; }
+.rambam-fn.active { color: var(--c-rambam); text-decoration: underline; text-underline-offset: 2px; }
+.tanya-fn { color: color-mix(in srgb, var(--c-tanya) 75%, var(--t3)); }
+.tanya-fn.active { color: var(--c-tanya); }
 /* The day complete: four inks draw together into one gold line */
 .day-rule { display:flex; gap:12px; width:180px; animation: dayGap .7s .15s cubic-bezier(.2,.7,.2,1) forwards; }
 .day-rule i { flex:1; height:3px; border-radius:2px; background:var(--c); animation: dayGold .5s .75s ease forwards; }
