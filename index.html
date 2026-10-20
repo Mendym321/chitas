@@ -562,7 +562,10 @@
 .ttile-bar i { display:block; height:100%; border-radius:3px; background:var(--on); }
 .cbars.lcard { padding:16px; }
 /* The reader, in its section's colour */
-#reader-head { background:var(--rc, var(--surface)); color:var(--rc-on, var(--t1)); border-radius:0 0 26px 26px; }
+#reader-head, #quiz-head { background:var(--rc, var(--surface)); color:var(--rc-on, var(--t1)); border-radius:0 0 26px 26px; }
+#quiz-head #quiz-title { color:inherit !important; font-size:26px !important; letter-spacing:-.4px; }
+#quiz-head #quiz-subtitle { color:inherit !important; opacity:.85; font-size:13px !important; }
+#quiz-head > button { background:color-mix(in srgb, var(--rc-on, #fff) 18%, transparent) !important; border:none !important; color:inherit !important; border-radius:50% !important; width:40px !important; height:40px !important; }
 #reader-head #chabad-panel-title { color:inherit !important; font-size:26px !important; letter-spacing:-.4px; }
 #reader-head #chabad-panel-sub { color:inherit !important; opacity:.85; font-size:13px !important; }
 #reader-head > button, #reader-head > a { background:color-mix(in srgb, var(--rc-on, #fff) 18%, transparent) !important; border:none !important; color:inherit !important; border-radius:50% !important; width:40px !important; height:40px !important; }
@@ -1193,10 +1196,9 @@ window._fsGetDoc = getDoc;
       <p id="extra-tracks-separator" class="t-sec">More learning <button onclick="_openExtraTracksMenu()">Edit</button></p>
       <div id="extra-tracks-list" class="group" style="display:none;"></div>
       <div id="add-learning-btn" class="group" style="display:none;">
-        <div class="lrow" onclick="_openExtraTracksMenu()"><div class="lrow-ic" style="color:var(--gold);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div><div class="lrow-t"><p>Add learning</p><p>Hayom Yom, Daf Yomi, Likkutei Sichos and more</p></div></div>
+        <div class="lrow" onclick="_openExtraTracksMenu()"><div class="lrow-ic" style="color:var(--gold);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div><div class="lrow-t"><p>Add Hayom Yom</p><p>The Rebbe's teaching for each day</p></div></div>
       </div>
 
-      <!-- Weekly quiz card -->
 
     </div>
 
@@ -1261,7 +1263,7 @@ window._fsGetDoc = getDoc;
 
 <!-- Quiz panel -->
 <div id="quiz-panel" style="position:fixed;inset:0;z-index:998;background:var(--bg);display:none;flex-direction:column;overflow-y:auto;">
-  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:1;">
+  <div id="quiz-head" style="padding:14px 18px 16px;display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:1;">
     <button onclick="closeQuiz()" style="width:38px;height:38px;border-radius:var(--r-s);background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
@@ -1276,7 +1278,6 @@ window._fsGetDoc = getDoc;
   <div id="quiz-body" style="flex:1;padding:24px 20px;max-width:430px;margin:0 auto;width:100%;"></div>
 </div>
 
-<!-- Weekly Quiz panel -->
 <!-- Reader panel — native text for Chumash/Tanya/Rambam, iframe for Tehillim -->
 <div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;" onclick="_closeSettingsOnOutsideClick(event)">
 
@@ -3178,6 +3179,10 @@ function _quizLevelDone(sectionId, level) {
   return !!(d && typeof d === 'object' && d[level] != null);
 }
 
+// Review takes the colour of its section, like the reader
+const _qc = () => 'var(--c-' + quizState.sectionId + ')';
+const _qon = () => 'var(--on-' + quizState.sectionId + ')';
+
 function openQuiz(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
@@ -3186,17 +3191,20 @@ function openQuiz(sectionId) {
   document.getElementById('quiz-title').textContent = s.label + ' review';
   document.getElementById('quiz-subtitle').textContent = s.subtitle;
   document.getElementById('quiz-score-badge').style.display = 'none';
-  document.getElementById('quiz-panel').style.display = 'flex';
+  const qp = document.getElementById('quiz-panel');
+  qp.style.setProperty('--rc', 'var(--c-' + sectionId + ')');
+  qp.style.setProperty('--rc-on', 'var(--on-' + sectionId + ')');
+  qp.style.display = 'flex';
 
   const card = (level) => {
     const L = QUIZ_LEVELS[level], done = _quizLevelDone(sectionId, level);
     const score = done ? user.quizDone[sectionId][level] : null;
-    return '<button onclick="_startQuiz(\'' + level + '\')" class="quiz-level" style="width:100%;text-align:left;padding:16px;border-radius:var(--r-m);background:var(--card);border:1.5px solid var(--border);cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:14px;">'
-      + '<div style="width:44px;height:44px;border-radius:var(--r-s);background:' + s.color + '18;border:1px solid ' + s.color + '40;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + s.color + ';">' + icon(level === 'quick' ? 'bolt' : 'search', 20) + '</div>'
+    return '<button onclick="_startQuiz(\'' + level + '\')" class="quiz-level" style="width:100%;text-align:left;padding:16px;border-radius:var(--r-m);background:var(--card);border:none;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:14px;">'
+      + '<div style="width:44px;height:44px;border-radius:14px;background:' + _qc() + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + _qon() + ';">' + icon(level === 'quick' ? 'bolt' : 'search', 20) + '</div>'
       + '<div style="flex:1;min-width:0;">'
       +   '<p style="font-size:var(--fs-3);font-weight:800;color:var(--t1);">' + L.label + ' <span style="font-size:var(--fs-1);font-weight:600;color:var(--t3);">· ' + L.count + ' questions</span></p>'
       +   '<p style="font-size:var(--fs-1);color:var(--t3);margin-top:2px;line-height:1.4;">' + L.desc + '</p>'
-      +   '<p style="font-size:var(--fs-1);font-weight:700;margin-top:6px;color:' + (done ? '#6E9150' : 'var(--gold)') + ';">'
+      +   '<p style="font-size:var(--fs-1);font-weight:700;margin-top:6px;color:' + (done ? 'var(--t1)' : 'var(--t3)') + ';">'
       +     (done ? 'Done today · ' + score + '/' + L.count : 'Not taken yet today') + '</p>'
       + '</div></button>';
   };
@@ -3238,7 +3246,7 @@ async function _startQuiz(level) {
   quizState = { ...quizState, level, questions: [], current: 0, score: 0, answered: false, missed: [] };
   document.getElementById('quiz-body').innerHTML =
     '<div style="text-align:center;padding-top:60px;">'
-    + '<div class="spinner" style="margin:0 auto;color:' + s.color + ';"></div>'
+    + '<div class="spinner" style="margin:0 auto;color:' + _qc() + ';"></div>'
     + '<p style="color:var(--t3);font-size:var(--fs-2);margin-top:16px;">Writing your ' + QUIZ_LEVELS[level].label.toLowerCase() + '… <br><span style="font-size:var(--fs-1);">The first quiz on a portion takes up to a minute.</span></p>'
     + '</div>';
 
@@ -3491,7 +3499,7 @@ function renderQuestion() {
     <div style="animation:fadeUp .3s ease both;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:24px;">
         ${Array.from({length:total},(_,i) => `
-          <div style="flex:1;height:4px;border-radius:2px;background:${i<current?s.color:i===current?s.color+'60':'var(--border)'};" ></div>
+          <div style="flex:1;height:4px;border-radius:2px;background:${i<current?_qc():i===current?'color-mix(in srgb, '+_qc()+' 45%, transparent)':'var(--border)'};" ></div>
         `).join('')}
       </div>
       <p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:12px;">${QUIZ_LEVELS[quizState.level].label} · Question ${current+1} of ${total}</p>
@@ -3526,13 +3534,12 @@ function selectAnswer(idx) {
     if (!btn) return;
     btn.style.cursor = 'default';
     if (i === correct) {
-      btn.style.background = 'rgba(110,145,80,.15)';
-      btn.style.borderColor = '#6E9150';
-      btn.style.color = '#6E9150';
+      btn.style.background = _qc();
+      btn.style.borderColor = _qc();
+      btn.style.color = _qon();
     } else if (i === idx) {
-      btn.style.background = 'rgba(192,86,74,.15)';
-      btn.style.borderColor = '#C0564A';
-      btn.style.color = '#C0564A';
+      btn.style.textDecoration = 'line-through';
+      btn.style.color = 'var(--t2)';
     } else {
       btn.style.opacity = '0.4';
     }
@@ -3544,12 +3551,12 @@ function selectAnswer(idx) {
   fb.id = 'quiz-feedback';
   fb.style.cssText = 'margin-top:14px;animation:fadeUp .2s ease both;';
   fb.innerHTML =
-    '<div style="background:var(--card);border:1.5px solid ' + (isRight ? 'rgba(110,145,80,.35)' : 'rgba(192,86,74,.3)') + ';border-radius:var(--r-m);padding:14px 15px;margin-bottom:14px;">'
-    + '<p style="font-size:var(--fs-2);font-weight:800;color:' + (isRight ? '#6E9150' : '#C0564A') + ';margin-bottom:6px;">' + (isRight ? 'Correct' : 'Not quite') + '</p>'
+    '<div style="background:var(--card);border-radius:var(--r-m);padding:14px 15px;margin-bottom:14px;">'
+    + '<p style="font-size:var(--fs-2);font-weight:800;color:var(--t1);margin-bottom:6px;">' + (isRight ? 'Right' : 'Not quite') + '</p>'
     + '<p style="font-size:var(--fs-2);color:var(--t1);line-height:1.55;">' + escapeHtml(q.explanation || '') + '</p>'
-    + (q.quote ? '<p style="font-size:var(--fs-1);color:var(--t2);line-height:1.5;margin-top:9px;padding-left:10px;border-left:3px solid ' + s.color + ';font-style:italic;">“' + escapeHtml(q.quote) + '”</p>' : '')
+    + (q.quote ? '<p style="font-size:var(--fs-1);color:var(--t2);line-height:1.5;margin-top:9px;padding-left:10px;border-left:3px solid ' + _qc() + ';font-style:italic;">“' + escapeHtml(q.quote) + '”</p>' : '')
     + '</div>'
-    + '<button onclick="nextQuestion()" style="width:100%;padding:14px;border-radius:var(--r-m);background:' + s.color + ';border:none;color:#000;font-size:var(--fs-3);font-weight:800;cursor:pointer;font-family:inherit;">' + (isLast ? 'See results' : 'Next') + '</button>';
+    + '<button onclick="nextQuestion()" style="width:100%;padding:15px;border-radius:999px;background:' + _qc() + ';border:none;color:' + _qon() + ';font-size:var(--fs-3);font-weight:800;cursor:pointer;font-family:inherit;">' + (isLast ? 'See results' : 'Next') + '</button>';
   document.getElementById('quiz-body').querySelector('div').appendChild(fb);
   fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -3589,7 +3596,7 @@ function showQuizResults() {
       + missed.map(m =>
         '<div class="quiz-missed" style="text-align:left;background:var(--card);border:1px solid var(--border);border-radius:var(--r-m);padding:13px 14px;margin-bottom:8px;">'
         + '<p style="font-size:var(--fs-2);font-weight:700;color:var(--t1);line-height:1.45;margin-bottom:6px;">' + escapeHtml(m.q) + '</p>'
-        + '<p style="font-size:var(--fs-1);color:#6E9150;font-weight:700;margin-bottom:4px;">✓ ' + escapeHtml(m.options[m.answer]) + '</p>'
+        + '<p style="font-size:var(--fs-1);color:var(--t1);font-weight:700;margin-bottom:4px;">' + escapeHtml(m.options[m.answer]) + '</p>'
         + '<p style="font-size:var(--fs-1);color:var(--t2);line-height:1.5;">' + escapeHtml(m.explanation || '') + '</p>'
         + '</div>').join('')
     : '';
@@ -3601,12 +3608,12 @@ function showQuizResults() {
       <p style="font-size:var(--fs-2);color:var(--t2);margin-bottom:4px;">${msg}</p>
       <div style="height:22px;"></div>
       <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin-bottom:22px;">
-        <div style="height:100%;width:${pct}%;background:${s.color};border-radius:4px;"></div>
+        <div style="height:100%;width:${pct}%;background:${_qc()};border-radius:4px;"></div>
       </div>
       ${review}
       <div style="display:flex;gap:10px;margin-top:14px;">
-        <button onclick="_startQuiz('${other}')" style="flex:1;padding:13px;border-radius:var(--r-m);background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;">Try ${QUIZ_LEVELS[other].label}</button>
-        <button id="done-btn" style="flex:1;padding:13px;border-radius:var(--r-m);background:${s.color};border:none;color:#000;font-size:var(--fs-2);font-weight:800;cursor:pointer;font-family:inherit;">Done</button>
+        <button onclick="_startQuiz('${other}')" style="flex:1;padding:14px;border-radius:999px;background:var(--card2);border:none;color:var(--t1);font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;">Try ${QUIZ_LEVELS[other].label}</button>
+        <button id="done-btn" style="flex:1;padding:14px;border-radius:999px;background:${_qc()};border:none;color:${_qon()};font-size:var(--fs-2);font-weight:800;cursor:pointer;font-family:inherit;">Done</button>
       </div>
     </div>`;
   document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSectionsForOffset(dateISO(new Date())); };
@@ -5799,7 +5806,7 @@ function changeTrack(opts = {}) {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
 
-  const CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E9150" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-rambam)" stroke-width="2.6" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
   const rows = Object.entries(TRACKS).map(([id, t], i) => {
     const active = user.rambamTrack === id;
@@ -5808,7 +5815,7 @@ function changeTrack(opts = {}) {
       + 'style="width:100%;padding:14px 16px;background:transparent;border:none;' + border
       + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
       + '<div style="text-align:left;">'
-      +   '<p style="font-size:var(--fs-2);font-weight:700;color:' + (active ? '#6E9150' : 'var(--t1)') + ';margin-bottom:2px;">' + t.label + '</p>'
+      +   '<p style="font-size:var(--fs-2);font-weight:700;color:var(--t1);margin-bottom:2px;">' + t.label + '</p>'
       +   '<p style="font-size:var(--fs-1);color:var(--t3);">' + t.sub + '</p>'
       + '</div>'
       + (active ? CHECK : '')
@@ -6208,14 +6215,14 @@ async function _bustTanyaCache() {
     if (dx > 20 && _canReadDay(dayOffset - 1)) {
       // Swiping right = going to previous day
       rightHint.classList.add('show');
-      rightHint.textContent = dx >= THRESHOLD ? 'Previous day ✓' : '← Previous day';
+      rightHint.textContent = dx >= THRESHOLD ? '← Previous day' : '← Previous day';
     } else {
       rightHint.classList.remove('show');
     }
     if (dx < -20 && _canReadDay(dayOffset + 1)) {
       // Swiping left = going toward today
       leftHint.classList.add('show');
-      leftHint.textContent = Math.abs(dx) >= THRESHOLD ? 'Next day ✓' : 'Next day →';
+      leftHint.textContent = Math.abs(dx) >= THRESHOLD ? 'Next day →' : 'Next day →';
     } else {
       leftHint.classList.remove('show');
     }
@@ -6453,6 +6460,10 @@ function unmarkExtraDonePast(id, iso) {
 }
 
 // ── Extra daily learning tracks ───────────────────────────────────────────────
+// The extra learning the app offers now. The rest (Daf Yomi, Mishnah Yomi,
+// Likkutei Torah, Likkutei Sichos, Sha'ar HaBitachon) is parked: hidden from
+// "More learning" but kept working for anyone who already added it.
+const OFFERED_TRACKS = ['hayomYom'];
 const EXTRA_TRACK_DEFS = {
   dafYomi: {
     id: 'dafYomi',
@@ -6528,18 +6539,19 @@ function _openExtraTracksMenu() {
     if (def.id === 'sotah' && sotahActive) return '';
     const on = enabled.includes(def.id);
     return '<div id="et-tile-' + def.id + '" onclick="_toggleExtraTrack(\'' + def.id + '\')" '
-      + 'style="position:relative;background:' + (on ? def.color + '18' : 'var(--card)') + ';border:1.5px solid ' + (on ? def.color : 'var(--border)') + ';border-radius:var(--r-m);padding:16px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;">'
-      + (on ? '<div style="position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:' + def.color + ';display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg></div>' : '')
-      + '<div style="width:44px;height:44px;border-radius:var(--r-m);background:' + def.color + '18;border:1px solid ' + def.color + '30;display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:' + def.color + ';">'
+      + 'style="position:relative;background:var(--card);border:2px solid ' + (on ? 'var(--ink)' : 'transparent') + ';border-radius:var(--r-m);padding:16px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;">'
+      + (on ? '<div style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg></div>' : '')
+      + '<div style="width:44px;height:44px;border-radius:14px;background:' + def.color + ';display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:#fff;">'
       +   '<svg width="22" height="22" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
       + '</div>'
-      + '<p style="font-size:var(--fs-2);font-weight:800;color:' + (on ? def.color : 'var(--t1)') + ';margin-bottom:3px;">' + def.label + '</p>'
+      + '<p style="font-size:var(--fs-2);font-weight:800;color:var(--t1);margin-bottom:3px;">' + def.label + '</p>'
       + '<p style="font-size:var(--fs-1);color:var(--t3);line-height:1.4;">' + def.desc + '</p>'
-      + '<p style="font-size:var(--fs-1);color:' + def.color + ';font-weight:600;margin-top:6px;opacity:.8;">' + def.duration + '</p>'
+      + '<p style="font-size:var(--fs-1);color:var(--t3);font-weight:600;margin-top:6px;">' + def.duration + '</p>'
       + '</div>';
   }
 
-  const tiles = Object.values(EXTRA_TRACK_DEFS).map(trackTile).filter(Boolean);
+  // Version 1 offers Hayom Yom; the others stay for whoever already added them
+  const tiles = Object.values(EXTRA_TRACK_DEFS).filter(d => OFFERED_TRACKS.includes(d.id) || enabled.includes(d.id)).map(trackTile).filter(Boolean);
 
   modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:85vh;">'
     + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
