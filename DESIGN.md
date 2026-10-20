@@ -27,6 +27,18 @@ Read this before changing how anything looks or sounds. The full reasoning, the 
 | **Corners** | `--r-s` 12 · `--r-m` 22 (cards, sheets) · `--r-l` 26 (tiles) · 999 (pills). |
 | **Fonts** | `--ui-font` / `--title-font` Bricolage Grotesque · `--read-font` Crimson Pro for English reading · Hebrew: OT Siddur (Tehillim), Vilna (Tanya), Frank Ruhl (everything else). |
 
+## Review
+The header and the main button take the section's colour (like the reader). The right answer is filled in that colour; a wrong pick is struck through. No red or green.
+
+## Footnotes
+Rambam and Tanya footnotes are small raised numbers in a soft section colour, no box; the open one is underlined.
+
+## Extra learning
+Version 1 offers Hayom Yom (`OFFERED_TRACKS`). Daf Yomi, Mishnah Yomi, Likkutei Torah, Likkutei Sichos and Sha'ar HaBitachon are parked: hidden from the menu, still working for anyone who already added them.
+
+## App icon
+The four rings closing on dark ink (`icons/icon.svg`, rendered to PNGs).
+
 ## Landing and loading
 - **Loading:** on dark, the four rings chase each other (`#app-loader`).
 - **Landing (L2a):** on dark, the four rings close one by one and each section's name appears under "Chitas"; "Start today" and "I have an account". No tagline: the rings and names say it.
@@ -58,7 +70,8 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
   - Tanya: each part (Likkutei Amarim … Kuntres Acharon) when the next day's portion starts a new one, and all of Tanya at the end of Kuntres Acharon (`_tanyaPartMilestone`, from the day's portion).
   - Finished = you reached the end and learned most of it; it says honestly how much ("28 of its 30 days", "on 230 days"). Under half: no milestone.
 - The streak chip opens Progress (no separate pop-up).
-- **Next:** a quiet "welcome back" after a missed day; reminders.
+- **Welcome back** (`welcomeBack` in `js/progress.js`): after a break, a quiet card under the tiles, once a day, with "Catch up yesterday" when it's still in the 7-day window.
+- **Next:** reminders (native app).
 - Points and the leaderboard were removed in Oct 2026 (`user.xp` is still stored so old data isn't lost, but never shown).
 
 ## Reminders and touch (planned)

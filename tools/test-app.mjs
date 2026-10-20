@@ -457,6 +457,15 @@ await check2('signing in keeps what was done signed out and adds the account\'s 
 }, ['acc1', 'Mendy', '1', true, 210, true, true, 'none']);
 
 // ── Firebase blocked (ad blocker / offline): the app must still start ─────
+await check2('Delete everything (no account): the phone is cleared and the welcome screen shows', async () => {
+  localStorage.setItem('chitas_test_key', '1');
+  openDeleteAccount();
+  const asked = document.querySelector('#del-sheet .del-t')?.textContent;
+  await deleteAccount();
+  const vis = id => getComputedStyle(document.getElementById(id)).display !== 'none';
+  return [asked, localStorage.getItem('chitas_test_key'), localStorage.getItem('chitas_v78'), vis('onboarding'), vis('main-app')];
+}, ['Delete everything on this phone?', null, null, true, false]);
+
 console.log('Firebase blocked:');
 const page3 = await browser.newPage();
 await page3.route(u => !u.href.startsWith(url), r => r.abort());

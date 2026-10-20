@@ -97,3 +97,18 @@ function chitasDaysThisWeek(user, today) {
   }
   return n;
 }
+
+// "Welcome back": after a break, when nothing is marked today yet.
+// Returns null, or { missedOff } — the latest missed day (-1 = yesterday)
+// that can still be caught up (within 7 days), or null if none can.
+function welcomeBack(user, today) {
+  const learnedBefore = Object.values(user.pastDone || {}).some(d => d && SECTION_IDS.some(id => d[id]));
+  if (!learnedBefore) return null;                                   // new: nothing to come back to
+  if (SECTION_IDS.some(id => (user.done || {})[id])) return null;    // already started today
+  if (computeStreak(user, today).current > 0) return null;           // no break
+  for (let back = 1; back <= 7; back++) {
+    const d = _addDays(today, -back);
+    if (!isRestDay(d) && !isChitasDay(dayDone(user, d, today))) return { missedOff: -back };
+  }
+  return { missedOff: null };
+}

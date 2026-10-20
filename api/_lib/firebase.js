@@ -62,6 +62,13 @@ export async function verifyUserToken(req) {
   catch { return null; }
 }
 
+// Delete someone's sign-in (their Google/Apple link to this app)
+export async function deleteAuthUser(uid) {
+  app();
+  try { await getAuth().deleteUser(uid); }
+  catch (e) { if (e?.code !== 'auth/user-not-found') throw e; }   // already gone is fine
+}
+
 // Just the uid (or null)
 export async function verifyUser(req) {
   return (await verifyUserToken(req))?.uid || null;

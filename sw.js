@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v9';
+const VERSION     = 'v10';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
@@ -25,6 +25,8 @@ const SHELL_URLS = [
   '/fonts/ShlomoBold.ttf',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/icons/icon-32.png',
+  '/icons/icon-180.png',
   '/manifest.json',
   '/js/chumash-data.js',
   '/js/chumash.js',

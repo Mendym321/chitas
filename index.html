@@ -10,9 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="Chitas"/>
 <link rel="manifest" href="/manifest.json"/>
 <link rel="apple-touch-icon" href="/icons/icon-180.png"/>
-<title>Chitas Daily</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A1A24'/><rect width='32' height='32' rx='8' fill='%23F0A500' opacity='0.15'/><path d='M6 22.5A2.5 2.5 0 018.5 20H24' stroke='%23F0A500' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M8.5 4H24v20H8.5A2.5 2.5 0 016 21.5v-15A2.5 2.5 0 018.5 4z' stroke='%23F0A500' stroke-width='2' fill='none'/><line x1='10' y1='10' x2='20' y2='10' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='13.5' x2='20' y2='13.5' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/><line x1='10' y1='17' x2='16' y2='17' stroke='%23F0A500' stroke-width='1.5' opacity='0.5' stroke-linecap='round'/></svg>">
+<title>Chitas</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 @font-face {
@@ -509,6 +508,11 @@
 .tiles4.dragging .stile { transform:none !important; transition:none !important; }
 #day-chips::-webkit-scrollbar { display:none; }
 #day-chips > * { flex-shrink:0; white-space:nowrap; }
+#welcome-back { position:relative; margin:12px 0 4px; padding:16px 18px; border-radius:var(--r-m); background:var(--card); }
+.wb-t { font:800 18px var(--ui-font); color:var(--t1); }
+.wb-s { font-size:14px; color:var(--t2); margin-top:2px; }
+.wb-go { margin-top:12px; padding:9px 16px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:700 14px var(--ui-font); cursor:pointer; }
+.wb-x { position:absolute; top:8px; right:10px; width:32px; height:32px; border:none; background:none; color:var(--t3); font-size:20px; cursor:pointer; }
 #day-readonly { margin:10px 0 4px; padding:10px 14px; border-radius:16px; background:var(--card); font-size:13px; line-height:1.4; color:var(--t2); }
 #day-readonly b { color:var(--t1); }
 #day-picker { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
@@ -531,6 +535,14 @@
 .dp-info p:first-child { font:800 15px var(--ui-font); color:var(--t1); }
 .dp-info p:last-child { font-size:13px; color:var(--t2); margin-top:2px; }
 .lm-ic { width:84px; height:84px; border-radius:50%; background:var(--c); color:var(--on); display:grid; place-items:center; }
+.del-t { font:800 24px/1.15 var(--ui-font); letter-spacing:-.4px; color:var(--t1); margin-bottom:8px; }
+.del-s { font-size:15px; line-height:1.5; color:var(--t2); }
+.del-go { margin-top:18px; width:100%; height:52px; border-radius:999px; border:none; background:var(--red); color:#fff; font:800 16px var(--ui-font); cursor:pointer; }
+.del-no { margin-top:8px; width:100%; height:52px; border-radius:999px; border:none; background:var(--card2); color:var(--t1); font:700 16px var(--ui-font); cursor:pointer; }
+.cr-h { margin:18px 0 6px; font:700 12px var(--ui-font); letter-spacing:.4px; text-transform:uppercase; color:var(--t3); }
+.cr-row { padding:10px 0; border-top:1px solid var(--border); }
+.cr-row p:first-child { font:700 15px var(--ui-font); color:var(--t1); }
+.cr-row p:last-child { font-size:14px; line-height:1.45; color:var(--t2); margin-top:2px; }
 .dp-go { margin-top:12px; width:100%; height:52px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:800 16px var(--ui-font); cursor:pointer; }
 /* Learning */
 .stat2 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin:6px 0 12px; }
@@ -550,7 +562,10 @@
 .ttile-bar i { display:block; height:100%; border-radius:3px; background:var(--on); }
 .cbars.lcard { padding:16px; }
 /* The reader, in its section's colour */
-#reader-head { background:var(--rc, var(--surface)); color:var(--rc-on, var(--t1)); border-radius:0 0 26px 26px; }
+#reader-head, #quiz-head { background:var(--rc, var(--surface)); color:var(--rc-on, var(--t1)); border-radius:0 0 26px 26px; }
+#quiz-head #quiz-title { color:inherit !important; font-size:26px !important; letter-spacing:-.4px; }
+#quiz-head #quiz-subtitle { color:inherit !important; opacity:.85; font-size:13px !important; }
+#quiz-head > button { background:color-mix(in srgb, var(--rc-on, #fff) 18%, transparent) !important; border:none !important; color:inherit !important; border-radius:50% !important; width:40px !important; height:40px !important; }
 #reader-head #chabad-panel-title { color:inherit !important; font-size:26px !important; letter-spacing:-.4px; }
 #reader-head #chabad-panel-sub { color:inherit !important; opacity:.85; font-size:13px !important; }
 #reader-head > button, #reader-head > a { background:color-mix(in srgb, var(--rc-on, #fff) 18%, transparent) !important; border:none !important; color:inherit !important; border-radius:50% !important; width:40px !important; height:40px !important; }
@@ -1172,6 +1187,7 @@ window._fsGetDoc = getDoc;
       <!-- Actual sections -->
       <div id="tiles-wrap"><div id="sections-list" class="tiles4" style="display:none;"></div></div>
       <p id="day-readonly" style="display:none;"></p>
+      <div id="welcome-back" style="display:none;"></div>
 
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
@@ -1180,10 +1196,9 @@ window._fsGetDoc = getDoc;
       <p id="extra-tracks-separator" class="t-sec">More learning <button onclick="_openExtraTracksMenu()">Edit</button></p>
       <div id="extra-tracks-list" class="group" style="display:none;"></div>
       <div id="add-learning-btn" class="group" style="display:none;">
-        <div class="lrow" onclick="_openExtraTracksMenu()"><div class="lrow-ic" style="color:var(--gold);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div><div class="lrow-t"><p>Add learning</p><p>Hayom Yom, Daf Yomi, Likkutei Sichos and more</p></div></div>
+        <div class="lrow" onclick="_openExtraTracksMenu()"><div class="lrow-ic" style="color:var(--gold);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div><div class="lrow-t"><p>Add Hayom Yom</p><p>The Rebbe's teaching for each day</p></div></div>
       </div>
 
-      <!-- Weekly quiz card -->
 
     </div>
 
@@ -1222,11 +1237,18 @@ window._fsGetDoc = getDoc;
         <button onclick="toggleTheme()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span><span class="ps-row-label">Appearance</span><span id="theme-label" class="ps-row-val">Dark</span></button>
       </div>
 
+      <p class="ps-label">About</p>
+      <div class="ps-card">
+        <a href="/privacy.html" target="_blank" rel="noopener" class="ps-row" style="text-decoration:none;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg></span><span class="ps-row-label">Privacy</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
+        <button onclick="openCredits()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><span class="ps-row-label">Texts and credits</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>
+
       <p class="ps-label">Account</p>
       <div class="ps-card">
         <button onclick="shareApp()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg></span><span class="ps-row-label">Share Chitas Daily</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         <button id="ps-signout-row" onclick="signOut()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></span><span class="ps-row-label">Sign out</span></button>
         <button onclick="resetProgress()" class="ps-row"><span class="ps-icon" style="color:var(--red);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg></span><span class="ps-row-label" style="color:var(--red);">Reset progress</span></button>
+        <button onclick="openDeleteAccount()" class="ps-row"><span class="ps-icon" style="color:var(--red);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.3-3.6 4.2-5.5 8-5.5 1.6 0 3 .3 4.2 1M16 17l5 5M21 17l-5 5"/></svg></span><span class="ps-row-label" style="color:var(--red);">Delete account</span></button>
       </div>
       <p class="t-caption" style="text-align:center;margin:24px 0 8px;">Chitas Daily</p>
     </div>
@@ -1241,7 +1263,7 @@ window._fsGetDoc = getDoc;
 
 <!-- Quiz panel -->
 <div id="quiz-panel" style="position:fixed;inset:0;z-index:998;background:var(--bg);display:none;flex-direction:column;overflow-y:auto;">
-  <div style="padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:1;">
+  <div id="quiz-head" style="padding:14px 18px 16px;display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:1;">
     <button onclick="closeQuiz()" style="width:38px;height:38px;border-radius:var(--r-s);background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
@@ -1256,7 +1278,6 @@ window._fsGetDoc = getDoc;
   <div id="quiz-body" style="flex:1;padding:24px 20px;max-width:430px;margin:0 auto;width:100%;"></div>
 </div>
 
-<!-- Weekly Quiz panel -->
 <!-- Reader panel — native text for Chumash/Tanya/Rambam, iframe for Tehillim -->
 <div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;" onclick="_closeSettingsOnOutsideClick(event)">
 
@@ -2772,6 +2793,24 @@ function renderSectionsForOffset(iso) {
   const addBtn = document.getElementById('add-learning-btn');
   if (addBtn) addBtn.style.display = hasTracks ? 'none' : 'block';
   _renderThought();
+  _renderWelcomeBack();
+}
+
+// After a break: a quiet card under the tiles, once a day, gone as soon as
+// you mark something (welcomeBack in js/progress.js decides)
+function _renderWelcomeBack() {
+  const el = document.getElementById('welcome-back');
+  if (!el) return;
+  const iso = dateISO(new Date());
+  let hidden = false;
+  try { hidden = localStorage.getItem('chitas_wb_hide') === iso; } catch (e) {}
+  const wb = dayOffset === 0 && !hidden ? welcomeBack(user, new Date()) : null;
+  if (!wb) { el.style.display = 'none'; return; }
+  el.innerHTML = '<button class="wb-x" aria-label="Close" onclick="try{localStorage.setItem(\'chitas_wb_hide\',\'' + iso + '\')}catch(e){};_renderWelcomeBack()">×</button>'
+    + '<p class="wb-t">Welcome back</p>'
+    + '<p class="wb-s">Today\'s four are here. Start with any of them.</p>'
+    + (wb.missedOff ? '<button class="wb-go" onclick="goToDay(' + wb.missedOff + ')">Catch up ' + escapeHtml(_dayName(wb.missedOff).toLowerCase() === 'yesterday' ? 'yesterday' : _dayName(wb.missedOff)) + '</button>' : '');
+  el.style.display = 'block';
 }
 
 const SECTION_COLORS = { chumash: 'var(--c-chumash)', tehillim: 'var(--c-tehillim)', tanya: 'var(--c-tanya)', rambam: 'var(--c-rambam)' };
@@ -3140,6 +3179,10 @@ function _quizLevelDone(sectionId, level) {
   return !!(d && typeof d === 'object' && d[level] != null);
 }
 
+// Review takes the colour of its section, like the reader
+const _qc = () => 'var(--c-' + quizState.sectionId + ')';
+const _qon = () => 'var(--on-' + quizState.sectionId + ')';
+
 function openQuiz(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
@@ -3148,17 +3191,20 @@ function openQuiz(sectionId) {
   document.getElementById('quiz-title').textContent = s.label + ' review';
   document.getElementById('quiz-subtitle').textContent = s.subtitle;
   document.getElementById('quiz-score-badge').style.display = 'none';
-  document.getElementById('quiz-panel').style.display = 'flex';
+  const qp = document.getElementById('quiz-panel');
+  qp.style.setProperty('--rc', 'var(--c-' + sectionId + ')');
+  qp.style.setProperty('--rc-on', 'var(--on-' + sectionId + ')');
+  qp.style.display = 'flex';
 
   const card = (level) => {
     const L = QUIZ_LEVELS[level], done = _quizLevelDone(sectionId, level);
     const score = done ? user.quizDone[sectionId][level] : null;
-    return '<button onclick="_startQuiz(\'' + level + '\')" class="quiz-level" style="width:100%;text-align:left;padding:16px;border-radius:var(--r-m);background:var(--card);border:1.5px solid var(--border);cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:14px;">'
-      + '<div style="width:44px;height:44px;border-radius:var(--r-s);background:' + s.color + '18;border:1px solid ' + s.color + '40;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + s.color + ';">' + icon(level === 'quick' ? 'bolt' : 'search', 20) + '</div>'
+    return '<button onclick="_startQuiz(\'' + level + '\')" class="quiz-level" style="width:100%;text-align:left;padding:16px;border-radius:var(--r-m);background:var(--card);border:none;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:14px;">'
+      + '<div style="width:44px;height:44px;border-radius:14px;background:' + _qc() + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + _qon() + ';">' + icon(level === 'quick' ? 'bolt' : 'search', 20) + '</div>'
       + '<div style="flex:1;min-width:0;">'
       +   '<p style="font-size:var(--fs-3);font-weight:800;color:var(--t1);">' + L.label + ' <span style="font-size:var(--fs-1);font-weight:600;color:var(--t3);">· ' + L.count + ' questions</span></p>'
       +   '<p style="font-size:var(--fs-1);color:var(--t3);margin-top:2px;line-height:1.4;">' + L.desc + '</p>'
-      +   '<p style="font-size:var(--fs-1);font-weight:700;margin-top:6px;color:' + (done ? '#6E9150' : 'var(--gold)') + ';">'
+      +   '<p style="font-size:var(--fs-1);font-weight:700;margin-top:6px;color:' + (done ? 'var(--t1)' : 'var(--t3)') + ';">'
       +     (done ? 'Done today · ' + score + '/' + L.count : 'Not taken yet today') + '</p>'
       + '</div></button>';
   };
@@ -3200,7 +3246,7 @@ async function _startQuiz(level) {
   quizState = { ...quizState, level, questions: [], current: 0, score: 0, answered: false, missed: [] };
   document.getElementById('quiz-body').innerHTML =
     '<div style="text-align:center;padding-top:60px;">'
-    + '<div class="spinner" style="margin:0 auto;color:' + s.color + ';"></div>'
+    + '<div class="spinner" style="margin:0 auto;color:' + _qc() + ';"></div>'
     + '<p style="color:var(--t3);font-size:var(--fs-2);margin-top:16px;">Writing your ' + QUIZ_LEVELS[level].label.toLowerCase() + '… <br><span style="font-size:var(--fs-1);">The first quiz on a portion takes up to a minute.</span></p>'
     + '</div>';
 
@@ -3453,7 +3499,7 @@ function renderQuestion() {
     <div style="animation:fadeUp .3s ease both;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:24px;">
         ${Array.from({length:total},(_,i) => `
-          <div style="flex:1;height:4px;border-radius:2px;background:${i<current?s.color:i===current?s.color+'60':'var(--border)'};" ></div>
+          <div style="flex:1;height:4px;border-radius:2px;background:${i<current?_qc():i===current?'color-mix(in srgb, '+_qc()+' 45%, transparent)':'var(--border)'};" ></div>
         `).join('')}
       </div>
       <p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:12px;">${QUIZ_LEVELS[quizState.level].label} · Question ${current+1} of ${total}</p>
@@ -3488,13 +3534,12 @@ function selectAnswer(idx) {
     if (!btn) return;
     btn.style.cursor = 'default';
     if (i === correct) {
-      btn.style.background = 'rgba(110,145,80,.15)';
-      btn.style.borderColor = '#6E9150';
-      btn.style.color = '#6E9150';
+      btn.style.background = _qc();
+      btn.style.borderColor = _qc();
+      btn.style.color = _qon();
     } else if (i === idx) {
-      btn.style.background = 'rgba(192,86,74,.15)';
-      btn.style.borderColor = '#C0564A';
-      btn.style.color = '#C0564A';
+      btn.style.textDecoration = 'line-through';
+      btn.style.color = 'var(--t2)';
     } else {
       btn.style.opacity = '0.4';
     }
@@ -3506,12 +3551,12 @@ function selectAnswer(idx) {
   fb.id = 'quiz-feedback';
   fb.style.cssText = 'margin-top:14px;animation:fadeUp .2s ease both;';
   fb.innerHTML =
-    '<div style="background:var(--card);border:1.5px solid ' + (isRight ? 'rgba(110,145,80,.35)' : 'rgba(192,86,74,.3)') + ';border-radius:var(--r-m);padding:14px 15px;margin-bottom:14px;">'
-    + '<p style="font-size:var(--fs-2);font-weight:800;color:' + (isRight ? '#6E9150' : '#C0564A') + ';margin-bottom:6px;">' + (isRight ? 'Correct' : 'Not quite') + '</p>'
+    '<div style="background:var(--card);border-radius:var(--r-m);padding:14px 15px;margin-bottom:14px;">'
+    + '<p style="font-size:var(--fs-2);font-weight:800;color:var(--t1);margin-bottom:6px;">' + (isRight ? 'Right' : 'Not quite') + '</p>'
     + '<p style="font-size:var(--fs-2);color:var(--t1);line-height:1.55;">' + escapeHtml(q.explanation || '') + '</p>'
-    + (q.quote ? '<p style="font-size:var(--fs-1);color:var(--t2);line-height:1.5;margin-top:9px;padding-left:10px;border-left:3px solid ' + s.color + ';font-style:italic;">“' + escapeHtml(q.quote) + '”</p>' : '')
+    + (q.quote ? '<p style="font-size:var(--fs-1);color:var(--t2);line-height:1.5;margin-top:9px;padding-left:10px;border-left:3px solid ' + _qc() + ';font-style:italic;">“' + escapeHtml(q.quote) + '”</p>' : '')
     + '</div>'
-    + '<button onclick="nextQuestion()" style="width:100%;padding:14px;border-radius:var(--r-m);background:' + s.color + ';border:none;color:#000;font-size:var(--fs-3);font-weight:800;cursor:pointer;font-family:inherit;">' + (isLast ? 'See results' : 'Next') + '</button>';
+    + '<button onclick="nextQuestion()" style="width:100%;padding:15px;border-radius:999px;background:' + _qc() + ';border:none;color:' + _qon() + ';font-size:var(--fs-3);font-weight:800;cursor:pointer;font-family:inherit;">' + (isLast ? 'See results' : 'Next') + '</button>';
   document.getElementById('quiz-body').querySelector('div').appendChild(fb);
   fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -3551,7 +3596,7 @@ function showQuizResults() {
       + missed.map(m =>
         '<div class="quiz-missed" style="text-align:left;background:var(--card);border:1px solid var(--border);border-radius:var(--r-m);padding:13px 14px;margin-bottom:8px;">'
         + '<p style="font-size:var(--fs-2);font-weight:700;color:var(--t1);line-height:1.45;margin-bottom:6px;">' + escapeHtml(m.q) + '</p>'
-        + '<p style="font-size:var(--fs-1);color:#6E9150;font-weight:700;margin-bottom:4px;">✓ ' + escapeHtml(m.options[m.answer]) + '</p>'
+        + '<p style="font-size:var(--fs-1);color:var(--t1);font-weight:700;margin-bottom:4px;">' + escapeHtml(m.options[m.answer]) + '</p>'
         + '<p style="font-size:var(--fs-1);color:var(--t2);line-height:1.5;">' + escapeHtml(m.explanation || '') + '</p>'
         + '</div>').join('')
     : '';
@@ -3563,12 +3608,12 @@ function showQuizResults() {
       <p style="font-size:var(--fs-2);color:var(--t2);margin-bottom:4px;">${msg}</p>
       <div style="height:22px;"></div>
       <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin-bottom:22px;">
-        <div style="height:100%;width:${pct}%;background:${s.color};border-radius:4px;"></div>
+        <div style="height:100%;width:${pct}%;background:${_qc()};border-radius:4px;"></div>
       </div>
       ${review}
       <div style="display:flex;gap:10px;margin-top:14px;">
-        <button onclick="_startQuiz('${other}')" style="flex:1;padding:13px;border-radius:var(--r-m);background:var(--card);border:1.5px solid var(--border);color:var(--t1);font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;">Try ${QUIZ_LEVELS[other].label}</button>
-        <button id="done-btn" style="flex:1;padding:13px;border-radius:var(--r-m);background:${s.color};border:none;color:#000;font-size:var(--fs-2);font-weight:800;cursor:pointer;font-family:inherit;">Done</button>
+        <button onclick="_startQuiz('${other}')" style="flex:1;padding:14px;border-radius:999px;background:var(--card2);border:none;color:var(--t1);font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;">Try ${QUIZ_LEVELS[other].label}</button>
+        <button id="done-btn" style="flex:1;padding:14px;border-radius:999px;background:${_qc()};border:none;color:${_qon()};font-size:var(--fs-2);font-weight:800;cursor:pointer;font-family:inherit;">Done</button>
       </div>
     </div>`;
   document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSectionsForOffset(dateISO(new Date())); };
@@ -5761,7 +5806,7 @@ function changeTrack(opts = {}) {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
 
-  const CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E9150" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-rambam)" stroke-width="2.6" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
   const rows = Object.entries(TRACKS).map(([id, t], i) => {
     const active = user.rambamTrack === id;
@@ -5770,7 +5815,7 @@ function changeTrack(opts = {}) {
       + 'style="width:100%;padding:14px 16px;background:transparent;border:none;' + border
       + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
       + '<div style="text-align:left;">'
-      +   '<p style="font-size:var(--fs-2);font-weight:700;color:' + (active ? '#6E9150' : 'var(--t1)') + ';margin-bottom:2px;">' + t.label + '</p>'
+      +   '<p style="font-size:var(--fs-2);font-weight:700;color:var(--t1);margin-bottom:2px;">' + t.label + '</p>'
       +   '<p style="font-size:var(--fs-1);color:var(--t3);">' + t.sub + '</p>'
       + '</div>'
       + (active ? CHECK : '')
@@ -5860,6 +5905,79 @@ async function signOut() {
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('onboarding').style.display = 'flex';
   fire('Signed out', 'xp');
+}
+
+// ── DELETE ACCOUNT ────────────────────────────────────────────────────────────
+// Asks once, clearly. Signed in: the server deletes the account, its data and
+// the sign-in (api/delete-account.js). Either way, everything on this phone goes.
+function openDeleteAccount() {
+  document.getElementById('del-sheet')?.remove();
+  const signedIn = !isGuest() && !!window._fb?.getCurrentUser?.();
+  const m = document.createElement('div');
+  m.id = 'del-sheet';
+  m.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(31,27,22,.45);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = '<div class="dp-sheet" role="dialog" aria-label="Delete account"><div class="dp-grab"></div>'
+    + '<p class="del-t">' + (signedIn ? 'Delete your account?' : 'Delete everything on this phone?') + '</p>'
+    + '<p class="del-s">' + (signedIn
+        ? 'Your progress, history, milestones and settings will be deleted from your account and this phone, and you\'ll be signed out. This can\'t be undone.'
+        : 'Your progress, history and settings on this phone will be deleted. This can\'t be undone.') + '</p>'
+    + '<button class="del-go" onclick="deleteAccount()">' + (signedIn ? 'Delete my account' : 'Delete everything') + '</button>'
+    + '<button class="del-no" onclick="document.getElementById(\'del-sheet\').remove()">Cancel</button>'
+    + '</div>';
+  document.body.appendChild(m);
+}
+async function deleteAccount() {
+  const btn = document.querySelector('#del-sheet .del-go');
+  if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
+  if (!isGuest() && window._fb?.getCurrentUser?.()) {
+    try {
+      const token = await window._fb.getIdToken();
+      const r = await fetch('/api/delete-account', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Delete my account'; }
+      fire('Could not delete the account. Check your connection and try again.');
+      return;
+    }
+    await window._fb.signOut().catch(() => {});
+  }
+  // Everything this app kept on the phone
+  try { Object.keys(localStorage).filter(k => /^chitas|^hayomYom|^tanya|^rambam|^ls/i.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  document.getElementById('del-sheet')?.remove();
+  document.getElementById('profile-sheet')?.classList?.remove('open');
+  user = blankUser();
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('onboarding').style.display = 'flex';
+  fire('Deleted');
+}
+
+// ── TEXTS AND CREDITS ─────────────────────────────────────────────────────────
+function openCredits() {
+  document.getElementById('credits-sheet')?.remove();
+  const m = document.createElement('div');
+  m.id = 'credits-sheet';
+  m.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(31,27,22,.45);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  const row = (t, s) => '<div class="cr-row"><p>' + t + '</p><p>' + s + '</p></div>';
+  m.innerHTML = '<div class="dp-sheet" role="dialog" aria-label="Texts and credits" style="max-height:86vh;overflow-y:auto;"><div class="dp-grab"></div>'
+    + '<p class="del-t">Texts and credits</p>'
+    + '<p class="cr-h">Texts, from Sefaria (sefaria.org)</p>'
+    + row('Chumash', 'Hebrew text, with The Koren Jerusalem Bible translation')
+    + row('Rashi', 'The Metsudah Chumash / Rashi translation, Metsudah Publications')
+    + row('Tehillim', 'Hebrew text, with The Koren Jerusalem Bible translation')
+    + row('Tanya', 'Hebrew text and English translation as published on Sefaria')
+    + row('Rambam', 'Mishneh Torah, translated by Rabbi Eliyahu Touger, Moznaim Publishing')
+    + '<p class="cr-h">Calendar</p>'
+    + row('Hebcal', 'The Jewish calendar, the parsha, and the daily Tehillim and Rambam schedules (hebcal.com)')
+    + '<p class="cr-h">Written with AI</p>'
+    + row('Review and the Tanya guide', 'Written by Claude (Anthropic) from the day\'s text. Every Review answer is checked against a quote from the text; the guide never changes the text itself.')
+    + '<p class="cr-h">Fonts</p>'
+    + row('Hebrew', 'OT Siddur, OT Vilna, Frank Ruhl Libre, Taamey Frank CLM, Shlomo')
+    + row('English', 'Bricolage Grotesque, Crimson Pro')
+    + '<button class="del-no" style="margin-top:16px;" onclick="document.getElementById(\'credits-sheet\').remove()">Close</button>'
+    + '</div>';
+  document.body.appendChild(m);
 }
 
 // ── SHARE ─────────────────────────────────────────────────────────────────────
@@ -6097,14 +6215,14 @@ async function _bustTanyaCache() {
     if (dx > 20 && _canReadDay(dayOffset - 1)) {
       // Swiping right = going to previous day
       rightHint.classList.add('show');
-      rightHint.textContent = dx >= THRESHOLD ? 'Previous day ✓' : '← Previous day';
+      rightHint.textContent = dx >= THRESHOLD ? '← Previous day' : '← Previous day';
     } else {
       rightHint.classList.remove('show');
     }
     if (dx < -20 && _canReadDay(dayOffset + 1)) {
       // Swiping left = going toward today
       leftHint.classList.add('show');
-      leftHint.textContent = Math.abs(dx) >= THRESHOLD ? 'Next day ✓' : 'Next day →';
+      leftHint.textContent = Math.abs(dx) >= THRESHOLD ? 'Next day →' : 'Next day →';
     } else {
       leftHint.classList.remove('show');
     }
@@ -6342,6 +6460,10 @@ function unmarkExtraDonePast(id, iso) {
 }
 
 // ── Extra daily learning tracks ───────────────────────────────────────────────
+// The extra learning the app offers now. The rest (Daf Yomi, Mishnah Yomi,
+// Likkutei Torah, Likkutei Sichos, Sha'ar HaBitachon) is parked: hidden from
+// "More learning" but kept working for anyone who already added it.
+const OFFERED_TRACKS = ['hayomYom'];
 const EXTRA_TRACK_DEFS = {
   dafYomi: {
     id: 'dafYomi',
@@ -6417,18 +6539,19 @@ function _openExtraTracksMenu() {
     if (def.id === 'sotah' && sotahActive) return '';
     const on = enabled.includes(def.id);
     return '<div id="et-tile-' + def.id + '" onclick="_toggleExtraTrack(\'' + def.id + '\')" '
-      + 'style="position:relative;background:' + (on ? def.color + '18' : 'var(--card)') + ';border:1.5px solid ' + (on ? def.color : 'var(--border)') + ';border-radius:var(--r-m);padding:16px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;">'
-      + (on ? '<div style="position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:' + def.color + ';display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg></div>' : '')
-      + '<div style="width:44px;height:44px;border-radius:var(--r-m);background:' + def.color + '18;border:1px solid ' + def.color + '30;display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:' + def.color + ';">'
+      + 'style="position:relative;background:var(--card);border:2px solid ' + (on ? 'var(--ink)' : 'transparent') + ';border-radius:var(--r-m);padding:16px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;">'
+      + (on ? '<div style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg></div>' : '')
+      + '<div style="width:44px;height:44px;border-radius:14px;background:' + def.color + ';display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:#fff;">'
       +   '<svg width="22" height="22" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
       + '</div>'
-      + '<p style="font-size:var(--fs-2);font-weight:800;color:' + (on ? def.color : 'var(--t1)') + ';margin-bottom:3px;">' + def.label + '</p>'
+      + '<p style="font-size:var(--fs-2);font-weight:800;color:var(--t1);margin-bottom:3px;">' + def.label + '</p>'
       + '<p style="font-size:var(--fs-1);color:var(--t3);line-height:1.4;">' + def.desc + '</p>'
-      + '<p style="font-size:var(--fs-1);color:' + def.color + ';font-weight:600;margin-top:6px;opacity:.8;">' + def.duration + '</p>'
+      + '<p style="font-size:var(--fs-1);color:var(--t3);font-weight:600;margin-top:6px;">' + def.duration + '</p>'
       + '</div>';
   }
 
-  const tiles = Object.values(EXTRA_TRACK_DEFS).map(trackTile).filter(Boolean);
+  // Version 1 offers Hayom Yom; the others stay for whoever already added them
+  const tiles = Object.values(EXTRA_TRACK_DEFS).filter(d => OFFERED_TRACKS.includes(d.id) || enabled.includes(d.id)).map(trackTile).filter(Boolean);
 
   modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:85vh;">'
     + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
