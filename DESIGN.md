@@ -50,9 +50,13 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
 - **Totals** grow forever (pesukim, chapters, halachos), shown beside the streak.
 - **Progress tab** (chart icon): two stat tiles (streak, 30-day %), a month calendar where each date is the four-part ring (a small sefer under Shabbos / Yom Tov; tap a day to see it), and a colour tile per section with its total, what it means, and how far through the whole (the Torah, Tehillim, Mishneh Torah).
 - **Motivation model.** Reward finishing (the four rings, the day complete), showing up (the streak; Shabbos and Yom Tov never break it, quietly), learning adding up (Progress totals), and real milestones. No points, levels, leaderboards, pep talk or suggested order.
-- **Milestones**, each celebrated once (`user.milestones` keeps the keys):
+- **Milestones**, each celebrated once (`user.milestones` keeps the keys), and they **follow the cycles**, so they come back every year:
   - Streak: 3, 7, 18, 30, 50, 100, 180, 365, 500, 1000 days (`js/progress.js`).
-  - Learning (`learningMilestone` in `js/learning-stats.js`): a whole parsha (all 7 aliyos in its week), all of Sefer Tehillim in a month, 100 / 250 / 500 chapters of Rambam and all of Mishneh Torah, 50 / 100 / 200 / 365 days of Tanya.
+  - Chumash: each parsha (Sunday to Friday learned); each book at its last parsha; the whole Torah at V'zos Habrachah.
+  - Tehillim: all of Sefer Tehillim in a month.
+  - Rambam (3-chapter and 1-chapter tracks): each of the 14 books on its last day, and the Siyum at the end of Sefer Shoftim. The book dates come from Hebcal (`RAMBAM_BOOK_SPANS` in `js/learning-data.js`, made by `tools/generate-learning-data.mjs`).
+  - Tanya: each part (Likkutei Amarim … Kuntres Acharon) when the next day's portion starts a new one, and all of Tanya at the end of Kuntres Acharon (`_tanyaPartMilestone`, from the day's portion).
+  - Finished = you reached the end and learned most of it; it says honestly how much ("28 of its 30 days", "on 230 days"). Under half: no milestone.
 - The streak chip opens Progress (no separate pop-up).
 - **Next:** a quiet "welcome back" after a missed day; reminders.
 - Points and the leaderboard were removed in Oct 2026 (`user.xp` is still stored so old data isn't lost, but never shown).

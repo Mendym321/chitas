@@ -56,5 +56,6 @@ function mergeGuestIntoAccount(guest, remote, today) {
     extraTracks: [...new Set([...(remote.extraTracks || []), ...(guest.extraTracks || [])])],
     tanyaLog: { ...(remote.tanyaLog || {}), ...(guest.tanyaLog || {}) },
     milestones: [...new Set([...(remote.milestones || []), ...(guest.milestones || [])])],
+    tanyaParts: { ...(remote.tanyaParts || {}), ...(guest.tanyaParts || {}) },
   };
 }
