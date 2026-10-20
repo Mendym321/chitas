@@ -1,26 +1,41 @@
 {
-  "name": "Chitas Daily",
+  "name": "Chitas",
   "short_name": "Chitas",
-  "description": "Daily Chumash, Tehillim, Tanya & Rambam",
+  "description": "Chumash, Tehillim, Tanya and Rambam, every day",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0D0D14",
-  "theme_color": "#F0A500",
+  "background_color": "#1F1B16",
+  "theme_color": "#1F1B16",
   "orientation": "portrait",
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "categories": ["education", "lifestyle"],
+  "categories": [
+    "education",
+    "lifestyle"
+  ],
   "lang": "en-US"
 }
