@@ -1,5 +1,5 @@
 /**
- * End-to-end tests of api/quiz.js and api/tanya-enhance.js with pretend
+ * End-to-end tests of api/quiz.js, api/tanya-enhance.js and api/delete-account.js with pretend
  * Sefaria, Claude and Firebase (no internet or API keys needed). Checks
  * sign-in, the quote check, verbatim Tanya text, saving results so they're
  * shared, admin-only regenerate, and the daily limits.
@@ -10,6 +10,7 @@ import { createServer } from 'node:http';
 
 // ── Pretend Firebase: an in-memory Firestore and "token-<uid>" sign-in ──────
 const store = new Map();
+const deletedAuth = [];
 const docRef = (col, id) => ({
   async get() { const k = col + '/' + id; return { exists: store.has(k), data: () => store.get(k) }; },
   async set(v) { store.set(col + '/' + id, v); },
@@ -24,6 +25,7 @@ mock.module('../api/_lib/firebase.js', { namedExports: {
   verifyUser: async req => (req.headers.authorization || '').match(/^Bearer token-(\w+)$/)?.[1] || null,
   verifyUserToken: async req => { const u = (req.headers.authorization || '').match(/^Bearer token-(\w+)$/)?.[1]; return u ? { uid: u, email: u + '@example.com' } : null; },
   isAdmin: who => who?.uid === 'admin',
+  deleteAuthUser: async uid => { deletedAuth.push(uid); },
 }});
 
 // ── Pretend Vercel background work: collect it so tests can wait for it ──────
@@ -193,5 +195,16 @@ const b1 = await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackgrou
 check('prepare again by an admin → prepared again', [b1.status, claudeCalls - callsB], [202, 1]);
 
 claude.close();
+console.log('Delete account API:');
+{
+  const { default: del } = await import('../api/delete-account.js');
+  const run = async (token, method = 'POST') => { const res = fakeRes(); await del({ method, headers: token ? { authorization: 'Bearer ' + token } : {} }, res); return res; };
+  store.set('users/u9', { name: 'Someone' }); store.set('quiz_usage/u9', { n: 2 }); store.set('tanya_usage/u9', { n: 1 }); store.set('users/u8', { name: 'Someone else' });
+  check('not signed in → 401, nothing deleted', [(await run(null)).code, store.has('users/u9')], [401, true]);
+  check('GET → 405', (await run('token-u9', 'GET')).code, 405);
+  const r = await run('token-u9');
+  check('deletes their data and their sign-in, only theirs', [r.code, store.has('users/u9'), store.has('quiz_usage/u9'), store.has('tanya_usage/u9'), deletedAuth, store.has('users/u8')], [200, false, false, false, ['u9'], true]);
+}
+
 console.log(failed ? `\n${failed} FAILED` : '\nAll API tests passed');
 process.exit(failed ? 1 : 0);
