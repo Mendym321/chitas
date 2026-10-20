@@ -42,6 +42,16 @@ The four rings closing on dark ink (`icons/icon.svg`, rendered to PNGs).
 ## On a computer (1000px and wider)
 The same app, laid out for the screen (one `@media (min-width: 1000px)` block at the end of the styles): a sidebar instead of the bottom pill, Today's tiles in one row, the reader's text in a page-wide column (about 900px, so lines stay readable), Progress in two columns, pop-ups as centred boxes. Below 1000px nothing changes.
 
+## Your place in the reader
+
+The reader shows one piece of learning at a time: one section on one day. Each piece has one saved place: the passage at the top of the screen, which copy of it, and how far into it. Pixels alone break when the page changes height. Three rules (in `index.html`, "What the reader shows"):
+
+1. **One owner.** Only the piece on screen may draw into the reader or move it. A text that arrives for a section or day you've left is kept for later, never drawn.
+2. **Saved only when it's yours.** A place is saved only for the piece on screen, only once its text is in and put back, and only after you've touched it. It's saved when you stop scrolling, and at once when you close, switch, or the app goes out of view.
+3. **Put back, and held.** The text goes back to your passage, and stays there for a few seconds while fonts, the Tanya guide or Tehillim names settle in. The moment you touch it, nothing moves it.
+
+Texts are kept by section and day (`_textFor`), so yesterday's text can never be shown, counted or reviewed as today's. The page behind the reader doesn't scroll while it's open. Tests: `tools/test-reader-place.mjs` (`npm run test:place`) uses the reader the way a person does, with slow answers on purpose.
+
 ## Landing and loading
 - **Loading:** on dark, the four rings chase each other (`#app-loader`).
 - **Landing (L2a):** on dark, the four rings close one by one and each section's name appears under "Chitas"; "Start today" and "I have an account". No tagline: the rings and names say it.
