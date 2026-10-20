@@ -104,6 +104,19 @@ await check('the line under the greeting says what kind of day it is', () => {
   return [today.length > 0, today === dayNote(new Date(), getParshaForDate(new Date())).map(t => t.replace(/^Parshas /, '')).join(' · '), /\d+ \w+/.test(heb), title];
 }, [true, true, true, 'Progress']);
 
+await check('finishing a week of Chumash celebrates the parsha, once', () => {
+  const iso = d => dateISO(d);
+  const today = new Date(); today.setHours(12, 0, 0, 0);
+  const fri = new Date(today); fri.setDate(today.getDate() - today.getDay() - 2);   // last week's Friday
+  user.done = {}; user.pastDone = {}; user.milestones = []; dayOffset = 0;
+  for (let back = 5; back >= 1; back--) { const d = new Date(fri); d.setDate(fri.getDate() - back); user.pastDone[iso(d)] = { chumash: true }; }
+  const seen = []; const real = window.celebrateLearning; window.celebrateLearning = m => seen.push(m.title);
+  markDonePast('chumash', iso(fri));
+  unmarkDonePast('chumash', iso(fri)); markDonePast('chumash', iso(fri));
+  window.celebrateLearning = real;
+  return [seen.length, /^Parshas /.test(seen[0] || '')];
+}, [1, true]);
+
 await check('catching up: after yesterday\'s Chumash, next is today\'s Chumash', () => {
   user.done = {}; user.pastDone = {}; dayOffset = -1;
   showConfirm('chumash', true);

@@ -10,7 +10,7 @@ vm.createContext(ctx);
 for (const f of ['holidays-data', 'progress', 'tehillim', 'chumash-data', 'chumash', 'learning-data', 'learning-stats'])
   vm.runInContext(readFileSync(new URL(`../js/${f}.js`, import.meta.url), 'utf8'), ctx);
 const learningStats = vm.runInContext('learningStats', ctx);
-const { learningOverview, chumashVerseCount, rambamHalachosOn } = vm.runInContext('({ learningOverview, chumashVerseCount, rambamHalachosOn })', ctx);
+const { learningOverview, chumashVerseCount, rambamHalachosOn, learningMilestone } = vm.runInContext('({ learningOverview, chumashVerseCount, rambamHalachosOn, learningMilestone })', ctx);
 
 let failed = 0;
 function check(name, actual, expected) {
@@ -93,6 +93,21 @@ console.log('Highlights:');
 const h = learningOverview(userWith(Object.fromEntries(twoWeeks.map(d => [d, ['chumash', 'tehillim', 'tanya', 'rambam']]))), TODAY, '3').highlights.map(x => x.title);
 check('a run of a week or more is highlighted', h.some(t => /every day for 15 days/.test(t)), true);
 check('the latest full parsha is highlighted', h.some(t => /^Learned all of Parshas /.test(t)), true);
+
+console.log('Learning milestones:');
+{
+  const S = map => learningStats(userWith(map), TODAY, '3');
+  const six = Object.fromEntries(bereishisWeek.slice(0, 5).map(d => [d, ['chumash']]));      // Sun–Thu
+  const all = { ...six, '2026-10-09': ['chumash'] };                                          // + Friday
+  const m = learningMilestone('chumash', S(six), S(all), day('2026-10-09'));
+  check('the last aliyah of the week finishes the parsha', [m && m.title, m && m.key], ['Parshas Bereishit', 'parsha-2026-10-10']);
+  check('an ordinary day is no milestone', learningMilestone('chumash', S({}), S({ '2026-10-04': ['chumash'] }), day('2026-10-04')), null);
+  const t29 = Object.fromEntries(tishrei.slice(0, 29).map(d => [d, ['tehillim']]));
+  const t30 = Object.fromEntries(tishrei.map(d => [d, ['tehillim']]));
+  check('the whole month of Tehillim → Sefer Tehillim', learningMilestone('tehillim', S(t29), S(t30), day('2026-10-11'))?.title, 'All of Sefer Tehillim');
+  check('Rambam: passing 100 chapters', learningMilestone('rambam', { rambamPerDay: 3, rambamChapters: 99 }, { rambamPerDay: 3, rambamChapters: 102 }, TODAY)?.key, 'rambam-100');
+  check('Tanya: 50 days', learningMilestone('tanya', { sections: { tanya: { total: 49 } } }, { sections: { tanya: { total: 50 } } }, TODAY)?.title, '50 days of Tanya');
+}
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll learning-stats tests passed');
 process.exit(failed ? 1 : 0);

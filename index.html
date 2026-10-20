@@ -530,17 +530,12 @@
 .dp-info { margin-top:12px; padding:12px 14px; border-radius:18px; background:var(--card2); }
 .dp-info p:first-child { font:800 15px var(--ui-font); color:var(--t1); }
 .dp-info p:last-child { font-size:13px; color:var(--t2); margin-top:2px; }
-.sk-big { border-radius:var(--r-m); background:var(--ink); color:var(--on-ink); padding:18px 18px 16px; }
-.sk-big p:first-child { font:800 52px/1 var(--ui-font); letter-spacing:-1.5px; }
-.sk-big p:last-child { font:600 15px var(--ui-font); opacity:.8; margin-top:4px; }
-.sk-rule { margin-top:14px; font-size:14px; line-height:1.45; color:var(--t2); }
-.sk-next { margin-top:8px; font-size:14px; color:var(--t2); }
-.sk-next b { color:var(--t1); }
+.lm-ic { width:84px; height:84px; border-radius:50%; background:var(--c); color:var(--on); display:grid; place-items:center; }
 .dp-go { margin-top:12px; width:100%; height:52px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:800 16px var(--ui-font); cursor:pointer; }
 /* Learning */
 .stat2 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin:6px 0 12px; }
 .stat2 > * { border-radius:var(--r-m); padding:14px 16px; text-align:left; border:none; font:inherit; }
-.stat-dark { background:var(--ink); color:var(--on-ink); cursor:pointer; }
+.stat-dark { background:var(--ink); color:var(--on-ink); }
 .stat-soft { background:var(--card2); color:var(--t1); }
 .stat-n { font:800 34px/1 var(--ui-font); letter-spacing:-.6px; }
 .stat-l { font:500 13px var(--ui-font); margin-top:5px; opacity:.75; }
@@ -1135,7 +1130,7 @@ window._fsGetDoc = getDoc;
     <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
       <!-- Chips: the streak, the Hebrew date, what kind of day it is -->
       <div id="day-chips">
-        <button id="streak-pill" onclick="openStreakInfo()" aria-label="Days in a row"><svg class="sp-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/></svg><b id="streak-pill-num">0</b> days<span id="week-summary"></span></button>
+        <button id="streak-pill" onclick="switchTab('stats')" aria-label="Days in a row: see your progress"><svg class="sp-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/></svg><b id="streak-pill-num">0</b> days<span id="week-summary"></span></button>
         <button id="back-today" onclick="goToDay(0)" style="display:none;">Back to today</button>
         <button id="heb-chip" onclick="openDayPicker()" aria-label="Go to a day"><span class="cal-ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></span><span id="heb-chip-t"></span></button>
         <span id="day-note"></span>
@@ -1382,7 +1377,7 @@ window._fsGetDoc = getDoc;
     <!-- Icon -->
     <div id="moment-icon" style="margin:0 auto 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;"></div>
     <!-- Content -->
-    <p id="moment-title" style="font-family:var(--title-font);font-size:var(--fs-6);font-weight:500;color:var(--t1);line-height:1.1;margin-bottom:10px;position:relative;"></p>
+    <p id="moment-title" style="font-family:var(--title-font);font-size:var(--fs-6);font-weight:800;letter-spacing:-.6px;color:var(--t1);line-height:1.1;margin-bottom:10px;position:relative;"></p>
     <p id="moment-sub" style="font-size:var(--fs-3);color:var(--t2);line-height:1.55;margin-bottom:8px;position:relative;"></p>
     <p id="moment-xp" style="font-size:var(--fs-2);font-weight:600;color:var(--gold);margin-bottom:24px;position:relative;"></p>
     <div id="moment-btns" style="display:flex;flex-direction:column;gap:10px;position:relative;"></div>
@@ -1568,6 +1563,7 @@ function _userPayload() {
     shbProgress: user.shbProgress || null,
     shbCompleted: user.shbCompleted || 0,
     tanyaLog: user.tanyaLog || {},
+    milestones: user.milestones || [],   // learning milestones already celebrated
   };
 }
 
@@ -2524,28 +2520,6 @@ async function _renderThought(tries = 0) {
   el.style.display = 'block';
 }
 
-// "How your streak works" — the rules in plain words (opened from the streak pill)
-function openStreakInfo() {
-  document.getElementById('streak-info-modal')?.remove();
-  const today = new Date();
-  const st = computeStreak(user, today);
-  const next = nextMilestone(st.current);
-    const modal = document.createElement('div');
-  modal.id = 'streak-info-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(31,27,22,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;';
-  modal.onclick = e => { if (e.target === modal) modal.remove(); };
-  modal.innerHTML = '<div class="dp-sheet" role="dialog" aria-label="Days in a row"><div class="dp-grab"></div>'
-    + '<div class="sk-big"><p>' + st.current + '</p><p>' + (st.current === 1 ? 'day' : 'days') + ' in a row</p></div>'
-    + '<div class="stat2" style="margin:10px 0 0;">'
-    +   '<div class="stat-soft"><p class="stat-n">' + Math.max(user.longestStreak || 0, st.current) + '</p><p class="stat-l">best</p></div>'
-    +   '<div class="stat-soft"><p class="stat-n">' + chitasDaysThisWeek(user, today) + '</p><p class="stat-l">this week</p></div>'
-    + '</div>'
-    + '<p class="sk-rule">A day counts when all four are learned. Shabbos and Yom Tov never break it.</p>'
-    + (next ? '<p class="sk-next">Next milestone: <b>' + next + ' days</b></p>' : '')
-    + '</div>';
-  document.body.appendChild(modal);
-}
-
 // Single call to refresh all stat displays after any user state change
 function _refreshUI() {
   updateStats();
@@ -3009,8 +2983,23 @@ function _changeDay(iso, change) {
   const before = { ...day };
   const streakBefore = computeStreak(user, now).current;
   const totalBefore = countChitasDays(user, now);
+  const statsBefore = learningStats(user, now, user.rambamTrack);
 
   change(day);
+
+  // A learning milestone (a whole parsha, Sefer Tehillim, Rambam, Tanya),
+  // for a section that was just marked; each one only once, ever
+  let learnMilestone = null;
+  const added = SECTION_IDS.filter(id => day[id] && !before[id]);
+  if (added.length) {
+    const statsAfter = learningStats(user, now, user.rambamTrack);
+    const d = new Date(iso + 'T12:00:00');
+    if (!user.milestones) user.milestones = [];
+    for (const id of added) {
+      const m = learningMilestone(id, statsBefore, statsAfter, d);
+      if (m && !user.milestones.includes(m.key)) { user.milestones.push(m.key); learnMilestone = m; break; }
+    }
+  }
 
   const delta = pointsForDay(day) - pointsForDay(before);
   user.xp = Math.max(0, (user.xp || 0) + delta);
@@ -3023,6 +3012,7 @@ function _changeDay(iso, change) {
     completedNow: !isChitasDay(before) && isChitasDay(day),
     streakMilestone: milestoneReached(streakBefore, user.streak),
     daysMilestone: milestoneReached(totalBefore, user.total),
+    learnMilestone,
   };
 }
 
@@ -3053,7 +3043,8 @@ function markDonePast(id, iso) {
   const r = _changeDay(iso, day => { day[id] = true; });
   fire(r.completedNow ? 'Day caught up. ' + user.streak + ' days in a row, nice!' : 'Nice! ' + schedule[id].label + ' marked.', 'done');
   renderSectionsForOffset(_viewedISO());
-  if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
+  if (r.learnMilestone) celebrateLearning(r.learnMilestone);
+  else if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
 }
 
 // Tanya's portion isn't in any offline calendar, so remember the chapter when it's marked
@@ -3077,7 +3068,8 @@ function markDone(id) {
 
   celebrateSection(id);
   // The day complete is its own moment (with the milestone's line, if one was reached)
-  if (r.completedNow) celebrateAllDone(r.streakMilestone);
+  if (r.completedNow) celebrateAllDone(r.streakMilestone, r.learnMilestone);
+  else if (r.learnMilestone) celebrateLearning(r.learnMilestone);
   else if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
 
   // Signed out: after the first section, offer to save their progress (once)
@@ -3375,14 +3367,23 @@ function celebrateStreakMilestone(streak) {
 
 // ── 2. THE DAY COMPLETE ──────────────────────────────────────────────────────
 // The one daily celebration: the four sections' inks draw into one gold line
-function celebrateAllDone(milestone) {
+// A learning milestone: the section's glyph in its colour, what you finished
+function celebrateLearning(m) {
+  vibrate([40]);
+  const GLYPH = { chumash: 'torah', tehillim: 'kinor', tanya: 'flame', rambam: 'books' };
+  const art = '<span class="lm-ic" style="--c:var(--c-' + m.id + ');--on:var(--on-' + m.id + ');">' + icon(GLYPH[m.id], 44) + '</span>';
+  setTimeout(() => showMoment({ icon: art, title: m.title, sub: m.sub, xp: '', btns: [{ label: 'Keep going', primary: true }] }), 400);
+}
+
+function celebrateAllDone(milestone, learn) {
   vibrate([12, 70, 12]);
   const rule = '<svg class="done-rings" viewBox="0 0 92 92" aria-hidden="true">'
     + [40, 30, 20, 10].map((r, i) => '<circle cx="46" cy="46" r="' + r + '" style="--c:var(--c-' + SECTION_IDS[i] + ');--len:' + (2 * Math.PI * r).toFixed(1) + ';--i:' + i + '"/>').join('')
     + '</svg>'
     + '<p class="day-he" lang="he">חת״ת</p>';
   const days = user.total || 1;
-  const sub = milestone && MILESTONE_LINES[milestone] ? MILESTONE_LINES[milestone]
+  const sub = learn ? learn.title + '. ' + learn.sub
+    : milestone && MILESTONE_LINES[milestone] ? MILESTONE_LINES[milestone]
     : days === 1 ? 'Your first Chitas day' : days + ' days of Chitas';
   setTimeout(() => showMoment({ full: true, icon: rule, title: 'All four done', sub,
     xp: (user.streak || 0) > 1 ? user.streak + ' days in a row' : '',
@@ -5645,7 +5646,7 @@ function renderStats() {
 
   document.getElementById('stats-content').innerHTML =
     '<div class="stat2">'
-    +   '<button class="stat-dark" onclick="openStreakInfo()"><p class="stat-n">' + C.streak + '</p><p class="stat-l">days in a row · best ' + C.best + '</p></button>'
+    +   '<div class="stat-dark"><p class="stat-n">' + C.streak + '</p><p class="stat-l">days in a row · best ' + C.best + '</p></div>'
     +   '<div class="stat-soft"><p class="stat-n">' + C.pct30 + '%</p><p class="stat-l">full days, last 30</p></div>'
     + '</div>'
     + '<p class="t-sec">All of it, added up <span>since ' + sinceLabel + '</span></p>'

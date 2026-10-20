@@ -216,3 +216,33 @@ function _highlights(user, today, days, base, per, overall, rambamTrack) {
   }
   return out.slice(0, 4);
 }
+
+// ── Learning milestones: the learning itself, not just the chain of days ─────
+// Compare learningStats() before and after marking a section on date d.
+// Returns { key, id, title, sub } or null. The key is stable, so a milestone
+// is celebrated once even if you unmark and mark again.
+const RAMBAM_CHAPTER_MILESTONES = [100, 250, 500, 1000];
+const TANYA_DAY_MILESTONES = [50, 100, 200, 365];
+function learningMilestone(id, before, after, d) {
+  const crossed = (list, a, b) => list.find(m => a < m && b >= m) || null;
+  if (id === 'chumash' && after.parshiyos.length > before.parshiyos.length) {
+    const shabbos = new Date(d); shabbos.setDate(d.getDate() + (6 - d.getDay()));
+    const name = getParshaForDate(d);
+    return { key: 'parsha-' + progressISO(shabbos), id,
+      title: 'Parshas ' + (typeof parshaSpelling === 'function' ? parshaSpelling(name) : name),
+      sub: 'Every aliyah of the parsha, all week.' };
+  }
+  if (id === 'tehillim' && after.tehillimBooks > before.tehillimBooks)
+    return { key: 'tehillim-' + _hebrewMonthKey(d), id, title: 'All of Sefer Tehillim',
+      sub: 'Every chapter this month' + (after.tehillimBooks > 1 ? ', ' + after.tehillimBooks + ' times through.' : '.') };
+  if (id === 'rambam' && after.rambamPerDay) {
+    const m = crossed(RAMBAM_CHAPTER_MILESTONES, before.rambamChapters, after.rambamChapters);
+    if (m) return { key: 'rambam-' + m, id, title: m === 1000 ? 'All of Mishneh Torah' : m + ' chapters of Rambam',
+      sub: m === 1000 ? 'Every one of its 1,000 chapters.' : Math.round(m / 10) + '% of Mishneh Torah.' };
+  }
+  if (id === 'tanya') {
+    const m = crossed(TANYA_DAY_MILESTONES, before.sections.tanya.total, after.sections.tanya.total);
+    if (m) return { key: 'tanya-' + m, id, title: m + ' days of Tanya', sub: m === 365 ? 'A whole year of it.' : 'Day after day.' };
+  }
+  return null;
+}
