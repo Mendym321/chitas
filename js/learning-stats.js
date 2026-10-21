@@ -281,3 +281,62 @@ function learningMilestone(id, before, after, d, user, today, track) {
   }
   return null;
 }
+
+// ── REVIEW: what stays with you ──────────────────────────────────────────────
+// From each day's Review results: user.pastQuizDone[iso] and today's
+// user.quizDone, each { section: { quick | deep: result } }. A result is
+// { r: right, n: questions }, or (saved before that) just the number right,
+// out of the level's usual count.
+const REVIEW_COUNTS = { quick: 4, deep: 6 };
+function reviewResult(v, level) {
+  if (v == null) return null;
+  if (typeof v === 'number') return { r: v, n: REVIEW_COUNTS[level] || v };
+  return typeof v.r === 'number' && v.n > 0 ? { r: v.r, n: v.n } : null;
+}
+function _reviewEntries(user, today) {
+  const byDay = { ...(user.pastQuizDone || {}), [progressISO(today)]: user.quizDone || {} };
+  const out = [];
+  for (const [iso, secs] of Object.entries(byDay))
+    for (const [sid, levels] of Object.entries(secs || {}))
+      if (levels && typeof levels === 'object')
+        for (const [level, v] of Object.entries(levels)) {
+          const res = reviewResult(v, level);
+          if (res) out.push({ iso, sid, level, ...res });
+        }
+  return out;
+}
+// null before your first review. Otherwise:
+//  weeks: the last 6 weeks (Sunday to Shabbos), oldest first: { shabbos, pct } (pct null if none)
+//  now / then: % right in the latest week with reviews, and the earliest of those 6 that has any
+//  bySection: { id: { pct, n } } for the last 30 days (n = reviews)
+//  right, deepDives, perfect: all-time answers right, deep dives, reviews with every answer right
+function reviewStats(user, today) {
+  const all = _reviewEntries(user, today);
+  if (!all.length) return null;
+  const pct = list => { const n = list.reduce((s, e) => s + e.n, 0); return n ? Math.round(list.reduce((s, e) => s + e.r, 0) / n * 100) : null; };
+  const t = new Date(today); t.setHours(12, 0, 0, 0);
+  const weeks = [];
+  for (let w = 5; w >= 0; w--) {
+    const sun = new Date(t); sun.setDate(t.getDate() - t.getDay() - 7 * w);
+    const sat = new Date(sun); sat.setDate(sun.getDate() + 6);
+    const from = progressISO(sun), to = progressISO(sat);
+    weeks.push({ shabbos: to, pct: pct(all.filter(e => e.iso >= from && e.iso <= to)) });
+  }
+  const had = weeks.filter(w => w.pct != null);
+  const from30 = new Date(t); from30.setDate(t.getDate() - 29);
+  const recent = all.filter(e => e.iso >= progressISO(from30));
+  const bySection = {};
+  for (const id of ['chumash', 'tanya', 'rambam']) {
+    const mine = recent.filter(e => e.sid === id);
+    if (mine.length) bySection[id] = { pct: pct(mine), n: mine.length };
+  }
+  return {
+    weeks,
+    now: had.length ? had[had.length - 1].pct : pct(recent),
+    then: had.length > 1 ? had[0].pct : null,
+    bySection,
+    right: all.reduce((s, e) => s + e.r, 0),
+    deepDives: all.filter(e => e.level === 'deep').length,
+    perfect: all.filter(e => e.r === e.n).length,
+  };
+}

@@ -30,6 +30,13 @@ Read this before changing how anything looks or sounds. The full reasoning, the 
 ## Review
 The header and the main button take the section's colour (like the reader). The right answer is filled in that colour; a wrong pick is struck through. No red or green.
 
+Review is the step after learning, shown where you are, never pushed:
+- **Right after you learn** (marking a section in the reader, today): "While it's fresh: 4 questions on what you just learned", with Deep dive and Home beside it.
+- **On Today:** a learned section's tile says "Review · 4", then "Reviewed 3/4". A card under the tiles lists what's ready.
+- **Results:** the score as a ring, then "What you learned today": each answer with the line it's from. A missed one has "Read it again", which opens the text at that line.
+- **Progress, "What stays with you":** % right week by week (each week named by its parsha), by section for the last 30 days, and all-time totals (`reviewStats` in `js/learning-stats.js`). It shows nothing until your first review.
+- Results are saved as `{ r, n }` (right, out of how many), per section, level and day, in `quizDone` and `pastQuizDone`.
+
 ## Footnotes
 Rambam and Tanya footnotes are small raised numbers in a soft section colour, no box; the open one is underlined.
 

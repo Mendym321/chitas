@@ -374,6 +374,19 @@ await test('Today keeps its place while you read', async () => {
   expect(y === 400, 'Today where you left it', y);
 });
 
+await test('"Read it again" after a review: today\'s text, at the line the answer comes from', async () => {
+  await open('chumash'); const name = await readerShows(); await close();
+  const r = await page.evaluate(async name => {
+    quizState = { sectionId: 'chumash', level: 'quick', questions: [], answers: [{ q: 'x', options: ['a'], answer: 0, right: false, quote: name + ' v9. and the words of this passage' }] };
+    _readAgain(0);
+    await new Promise(res => setTimeout(res, 1200));
+    const el = document.querySelector('#native-reader-content .found');
+    const reader = document.getElementById('native-reader'), rt = reader.getBoundingClientRect(), et = el?.getBoundingClientRect();
+    return [!!el, el ? /v9\./.test(el.textContent) : null, el ? et.top >= rt.top && et.top < rt.bottom : null];
+  }, name);
+  expect(r[0] && r[1] && r[2], 'found and in view', r);
+});
+
 await test('the page behind the reader doesn\'t scroll with it', async () => {
   const v = await page.evaluate(() => getComputedStyle(document.getElementById('native-reader')).overscrollBehaviorY);
   expect(v === 'contain' || v === 'none', 'reader keeps its scrolling to itself', v);
