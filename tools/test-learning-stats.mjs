@@ -139,5 +139,28 @@ console.log('Learning milestones (they follow the cycles):');
   check('the end of Sefer Shoftim is the Siyum', sm?.title, 'Siyum HaRambam');
 }
 
+// ── Review: what stays with you ─────────────────────────────────────────────
+{
+  const reviewStats = vm.runInContext('reviewStats', ctx);
+  const T = day('2026-10-21');   // a Wednesday
+  check('no reviews yet: nothing to show', reviewStats({}, T), null);
+  const u = {
+    quizDone: { chumash: { quick: { r: 4, n: 4 } } },                                   // today
+    pastQuizDone: {
+      '2026-10-19': { tanya: { quick: { r: 2, n: 4 }, deep: { r: 5, n: 6 } } },          // this week
+      '2026-10-12': { rambam: { quick: 3 } },                                            // last week, saved before { r, n }: out of 4
+      '2026-09-14': { chumash: { quick: { r: 1, n: 4 } } },                              // 5 weeks back
+      '2026-08-01': { chumash: { deep: { r: 6, n: 6 } } },                               // long ago: all-time only
+    },
+  };
+  const r = reviewStats(u, T);
+  check('six weeks, Sunday to Shabbos, ending this week', r.weeks.map(w => w.shabbos), ['2026-09-19', '2026-09-26', '2026-10-03', '2026-10-10', '2026-10-17', '2026-10-24']);
+  check('% right each week (none: null)', r.weeks.map(w => w.pct), [25, null, null, null, 75, 79]);
+  check('now: the latest week; then: the earliest with reviews', [r.now, r.then], [79, 25]);
+  check('by section, last 30 days (old numbers count out of 4)', r.bySection, { chumash: { pct: 100, n: 1 }, tanya: { pct: 70, n: 2 }, rambam: { pct: 75, n: 1 } });
+  check('all time: answers right, deep dives, all right', [r.right, r.deepDives, r.perfect], [21, 2, 2]);
+  check('a broken result is ignored', reviewStats({ quizDone: { tanya: { quick: { r: 2 } } } }, T), null);
+}
+
 console.log(failed ? `\n${failed} FAILED` : '\nAll learning-stats tests passed');
 process.exit(failed ? 1 : 0);

@@ -516,6 +516,63 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .wb-s { font-size:14px; color:var(--t2); margin-top:2px; }
 .wb-go { margin-top:12px; padding:9px 16px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:700 14px var(--ui-font); cursor:pointer; }
 .wb-x { position:absolute; top:8px; right:10px; width:32px; height:32px; border:none; background:none; color:var(--t3); font-size:20px; cursor:pointer; }
+/* Review: ready on Today, and right after reading */
+.stile-rv { position:absolute; top:14px; right:14px; z-index:1; padding:5px 10px; border-radius:999px; border:none; background:color-mix(in srgb, var(--ink) 88%, transparent); color:var(--on-ink); font:800 11px/1.2 var(--ui-font); cursor:pointer; }
+.stile-rv.done { cursor:default; }
+#review-ready { margin:12px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
+#review-ready .rr-k, .rv-k { font:800 12px/1.2 var(--ui-font); letter-spacing:.6px; color:var(--t3); text-transform:uppercase; }
+.rr-row { display:flex; align-items:center; gap:12px; padding:10px 0; }
+.rr-row + .rr-row { border-top:1px solid var(--border); }
+.rr-sq { width:40px; height:40px; border-radius:14px; background:var(--c); color:var(--on); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rr-t { flex:1; min-width:0; }
+.rr-t p:first-child { font:800 15px/1.25 var(--ui-font); color:var(--t1); }
+.rr-t p:last-child { font-size:12px; color:var(--t3); margin-top:1px; }
+.rr-go { height:36px; padding:0 15px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:800 13px var(--ui-font); cursor:pointer; }
+#reader-next .rv-fresh { margin:4px 0 10px; padding:16px; border-radius:22px; background:var(--rc); color:var(--rc-on); text-align:left; }
+#reader-next .rv-fresh .rv-k { color:inherit; opacity:.85; }
+#reader-next .rv-fresh h3 { font:800 21px/1.15 var(--ui-font); margin:4px 0 0; }
+#reader-next .rv-fresh p.rv-s { font-size:13px; font-weight:600; opacity:.85; margin-top:5px; }
+#reader-next .rv-fresh button { width:100%; margin-top:14px; height:48px; padding:0; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font-size:16px; }
+/* Review results */
+.rv-top { display:flex; align-items:center; gap:18px; padding:14px 4px 8px; }
+.rv-ring { position:relative; width:112px; height:112px; flex-shrink:0; }
+.rv-ring svg { width:112px; height:112px; transform:rotate(-90deg); }
+.rv-ring circle { fill:none; stroke:var(--rc); stroke-width:12; }
+.rv-ring circle:first-child { opacity:.18; }
+.rv-ring circle + circle { stroke-linecap:round; stroke-dasharray:0 999; animation:rvFill .9s .15s cubic-bezier(.3,.7,.2,1) forwards; }
+@keyframes rvFill { to { stroke-dasharray:var(--len) 999; } }
+.rv-ring b { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font:800 30px/1 var(--ui-font); color:var(--t1); }
+.rv-top h3 { font:800 22px/1.1 var(--ui-font); color:var(--t1); }
+.rv-top p { font-size:13px; line-height:1.4; color:var(--t3); margin-top:4px; }
+.rv-list { margin:6px 0 0; padding:2px 14px; border-radius:22px; background:var(--card); text-align:left; }
+.rv-item { display:flex; gap:10px; padding:12px 0; }
+.rv-item + .rv-item { border-top:1px solid var(--border); }
+.rv-dot { width:22px; height:22px; border-radius:50%; flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; border:2px solid color-mix(in srgb, var(--t3) 55%, transparent); color:transparent; box-sizing:border-box; }
+.rv-dot.ok { background:var(--rc); border-color:var(--rc); color:var(--rc-on); }
+.rv-a { font:800 14px/1.3 var(--ui-font); color:var(--t1); }
+.rv-q { font-size:12px; color:var(--t3); line-height:1.35; margin-top:3px; }
+.rv-quote { margin-top:6px; padding-left:9px; border-left:3px solid var(--rc); font:italic 15px/1.35 var(--read-font); color:var(--t2); }
+.rv-again { margin-top:7px; padding:0; border:none; background:none; font:800 13px var(--ui-font); color:var(--t1); text-decoration:underline; cursor:pointer; }
+.found { background:color-mix(in srgb, var(--rc) 24%, transparent); border-radius:8px; transition:background 1.2s ease; }
+/* Progress: what stays with you */
+.rv-card { margin:4px 0 12px; padding:18px; border-radius:var(--r-l); background:var(--ink); color:var(--on-ink); }
+.rv-card .rv-k { color:color-mix(in srgb, var(--on-ink) 70%, transparent); }
+.rv-big { display:flex; align-items:baseline; gap:10px; margin-top:6px; }
+.rv-big b { font:800 46px/1 var(--ui-font); letter-spacing:-1px; }
+.rv-big span { font-size:13px; line-height:1.35; color:color-mix(in srgb, var(--on-ink) 72%, transparent); }
+.rv-weeks { display:flex; gap:6px; margin-top:14px; }
+.rv-weeks div { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px; }
+.rv-weeks i { display:block; width:100%; border-radius:7px; background:color-mix(in srgb, var(--on-ink) 20%, transparent); }
+.rv-weeks div:last-child i { background:var(--c-chumash); }
+.rv-weeks div { justify-content:flex-end; }
+.rv-weeks em { font:700 10px/1.15 var(--ui-font); font-style:normal; color:color-mix(in srgb, var(--on-ink) 55%, transparent); text-align:center; height:23px; overflow:hidden; }
+.rv-secs { padding:14px 16px 16px; }
+.rv-sec { display:flex; align-items:center; gap:10px; margin-top:10px; }
+.rv-sec .n { width:92px; } .rv-sec .n p:first-child { font:700 13px var(--ui-font); color:var(--t1); } .rv-sec .n p:last-child { font-size:11px; color:var(--t3); }
+.rv-sec .bar { flex:1; margin-top:0; } .rv-sec b { width:40px; text-align:right; font:800 13px var(--ui-font); color:var(--t1); }
+.rv-3 { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin:10px 0 4px; }
+.rv-3 div { border-radius:18px; background:var(--card2); padding:12px; } .rv-3 b { display:block; font:800 22px/1.1 var(--ui-font); color:var(--t1); } .rv-3 span { font:600 11px var(--ui-font); color:var(--t3); }
+
 #day-readonly { margin:10px 0 4px; padding:10px 14px; border-radius:16px; background:var(--card); font-size:13px; line-height:1.4; color:var(--t2); }
 #day-readonly b { color:var(--t1); }
 #day-picker { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
@@ -1234,6 +1291,7 @@ window._fsGetDoc = getDoc;
       <!-- Actual sections -->
       <div id="tiles-wrap"><div id="sections-list" class="tiles4" style="display:none;"></div></div>
       <p id="day-readonly" style="display:none;"></p>
+      <div id="review-ready" style="display:none;"></div>
       <div id="welcome-back" style="display:none;"></div>
 
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
@@ -2802,6 +2860,7 @@ function renderSectionsForOffset(iso) {
       : (isToday ? 'showConfirm(\'' + s.id + '\',false)' : 'showConfirmPast(\'' + s.id + '\',\'' + iso + '\')');
     return '<div class="stile' + (done ? ' done' : '') + '" id="card-' + s.id + '" style="--c:var(--c-' + s.id + ');--on:var(--on-' + s.id + ');" onclick="openChabadPanel(\'' + s.id + '\')">'
       + '<span class="stile-art" id="icon-' + s.id + '">' + icon(s.icon, 96) + '</span>'
+      + _tileReview(s.id, isToday && done)
       + '<div class="stile-top">' + (markable ? '<button class="check' + (done ? ' on' : '') + '" id="tick-' + s.id + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + s.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>' : (done ? '<span class="check on" aria-label="Learned"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>' : ''))
       + '</div>'
       + '<div class="stile-t"><p>' + s.label + '</p><p>' + (s.id === 'chumash' ? String(s.subtitle || '').replace(/^([^·]+?)( ·|$)/, (m, name, rest) => parshaSpelling(name.trim()) + rest) : String(s.subtitle || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '')) + '</p></div>'
@@ -2809,6 +2868,7 @@ function renderSectionsForOffset(iso) {
   }).join('');
 
   updateProgressRing();
+  _renderReviewReady(isToday ? dayDone : {});
 
   // "More learning": your extra tracks, or an "Add learning" row if none
   const hasTracks = (user.extraTracks || []).length > 0 || !!window._sotahDaf;
@@ -2819,6 +2879,32 @@ function renderSectionsForOffset(iso) {
   if (addBtn) addBtn.style.display = hasTracks ? 'none' : 'block';
   _renderThought();
   _renderWelcomeBack();
+}
+
+// Review on Today: a learned section's tile says it's ready to review (or how
+// it went), and a card under the tiles lists what's ready. Today only.
+function _reviewOf(id) {
+  const d = (user.quizDone || {})[id];
+  return d && typeof d === 'object' ? (reviewResult(d.quick, 'quick') || reviewResult(d.deep, 'deep')) : null;
+}
+function _tileReview(id, learnedToday) {
+  if (!learnedToday || !_quizzable(id)) return '';
+  const r = _reviewOf(id);
+  return r ? '<span class="stile-rv done">Reviewed ' + r.r + '/' + r.n + '</span>'
+    : '<button class="stile-rv" onclick="event.stopPropagation();_reviewNow(\'' + id + '\',\'quick\')">Review · ' + QUIZ_LEVELS.quick.count + '</button>';
+}
+function _renderReviewReady(done) {
+  const el = document.getElementById('review-ready');
+  if (!el) return;
+  const ready = SECTION_IDS.filter(id => done[id] && _quizzable(id) && !_reviewOf(id) && schedule[id]);
+  el.style.display = ready.length ? 'block' : 'none';
+  if (!ready.length) return;
+  const GLYPH = { chumash: 'torah', tanya: 'flame', rambam: 'books' };
+  const what = { chumash: 'aliyah', tanya: 'Tanya', rambam: 'chapters' };
+  el.innerHTML = '<p class="rr-k">Review</p>' + ready.map(id =>
+    '<div class="rr-row"><span class="rr-sq" style="--c:var(--c-' + id + ');--on:var(--on-' + id + ');">' + icon(GLYPH[id], 20) + '</span>'
+    + '<div class="rr-t"><p>' + schedule[id].label + ' is ready to review</p><p>' + QUIZ_LEVELS.quick.count + ' questions on today\'s ' + what[id] + ' · about 2 min</p></div>'
+    + '<button class="rr-go" onclick="_reviewNow(\'' + id + '\',\'quick\')">Start</button></div>').join('');
 }
 
 // After a break: a quiet card under the tiles, once a day, gone as soon as
@@ -2996,6 +3082,19 @@ function _nextStep(sectionId) {
 }
 
 function _showReaderNext(sectionId) {
+  // A section with a review, learned today and not reviewed yet: the review is the next step
+  if (_quizzable(sectionId) && dayOffset === 0 && !_quizLevelDone(sectionId, 'quick')) {
+    const box = document.getElementById('reader-next');
+    box.innerHTML = '<p class="rn-done">' + escapeHtml(schedule[sectionId].label) + ' learned</p>'
+      + '<div class="rv-fresh"><p class="rv-k">While it\'s fresh</p>'
+      + '<h3>' + QUIZ_LEVELS.quick.count + ' questions on what you just learned</h3><p class="rv-s">About 2 minutes</p>'
+      + '<button onclick="_reviewNow(\'' + sectionId + '\',\'quick\')">Start the review</button></div>'
+      + '<div class="rn-row"><button class="rn-home" style="flex:1;" onclick="_reviewNow(\'' + sectionId + '\',\'deep\')">Deep dive · ' + QUIZ_LEVELS.deep.count + '</button>'
+      + '<button class="rn-home" style="flex:1;" onclick="closeChabadPanel()">Home</button></div>';
+    box.style.display = 'block';
+    document.getElementById('reader-actions').style.display = 'none';
+    return;
+  }
   const next = _nextStep(sectionId);
   const box = document.getElementById('reader-next');
   const color = next ? (SECTION_COLORS[next.id] || 'var(--gold)') : '#6E9150';
@@ -3216,7 +3315,7 @@ function openQuiz(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
   if (isGuest()) { openSignIn('quiz'); return; }
-  quizState = { sectionId, level: null, questions: [], current: 0, score: 0, answered: false, missed: [] };
+  quizState = { sectionId, level: null, questions: [], current: 0, score: 0, answered: false, missed: [], answers: [] };
   document.getElementById('quiz-title').textContent = s.label + ' review';
   document.getElementById('quiz-subtitle').textContent = s.subtitle;
   document.getElementById('quiz-score-badge').style.display = 'none';
@@ -3227,14 +3326,14 @@ function openQuiz(sectionId) {
 
   const card = (level) => {
     const L = QUIZ_LEVELS[level], done = _quizLevelDone(sectionId, level);
-    const score = done ? user.quizDone[sectionId][level] : null;
+    const res = done ? reviewResult(user.quizDone[sectionId][level], level) : null;
     return '<button onclick="_startQuiz(\'' + level + '\')" class="quiz-level" style="width:100%;text-align:left;padding:16px;border-radius:var(--r-m);background:var(--card);border:none;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;gap:14px;">'
       + '<div style="width:44px;height:44px;border-radius:14px;background:' + _qc() + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + _qon() + ';">' + icon(level === 'quick' ? 'bolt' : 'search', 20) + '</div>'
       + '<div style="flex:1;min-width:0;">'
       +   '<p style="font-size:var(--fs-3);font-weight:800;color:var(--t1);">' + L.label + ' <span style="font-size:var(--fs-1);font-weight:600;color:var(--t3);">· ' + L.count + ' questions</span></p>'
       +   '<p style="font-size:var(--fs-1);color:var(--t3);margin-top:2px;line-height:1.4;">' + L.desc + '</p>'
       +   '<p style="font-size:var(--fs-1);font-weight:700;margin-top:6px;color:' + (done ? 'var(--t1)' : 'var(--t3)') + ';">'
-      +     (done ? 'Done today · ' + score + '/' + L.count : 'Not taken yet today') + '</p>'
+      +     (done ? 'Done today · ' + res.r + '/' + res.n : 'Not taken yet today') + '</p>'
       + '</div></button>';
   };
   document.getElementById('quiz-body').innerHTML =
@@ -3275,7 +3374,7 @@ function _quizMessage(iconName, title, text, retry) {
 
 async function _startQuiz(level) {
   const sid = quizState.sectionId, s = schedule[sid];
-  quizState = { ...quizState, level, questions: [], current: 0, score: 0, answered: false, missed: [] };
+  quizState = { ...quizState, level, questions: [], current: 0, score: 0, answered: false, missed: [], answers: [] };
   document.getElementById('quiz-body').innerHTML =
     '<div style="text-align:center;padding-top:60px;">'
     + '<div class="spinner" style="margin:0 auto;color:' + _qc() + ';"></div>'
@@ -3560,6 +3659,7 @@ function selectAnswer(idx) {
 
   if (isRight) { quizState.score++; }
   else { quizState.missed.push({ ...q, picked: idx }); }
+  quizState.answers.push({ ...q, picked: idx, right: isRight });
 
   q.options.forEach((_, i) => {
     const btn = document.getElementById(`opt-${i}`);
@@ -3600,55 +3700,90 @@ function nextQuestion() {
   else renderQuestion();
 }
 
+// Results: the score as a ring, then what you learned, each answer with the
+// line it's from; a missed one can take you straight back to that line
 function showQuizResults() {
-  const { score, questions, sectionId, level, missed } = quizState;
+  const { score, questions, sectionId, level, answers } = quizState;
   const s = schedule[sectionId];
   const total = questions.length;
-  const pct = Math.round((score / total) * 100);
+  const missed = total - score;
 
   // Saved once per section, per level, per day (retries are for learning)
   if (!user.quizDone) user.quizDone = {};
   if (!_quizLevelDone(sectionId, level)) {
     const prev = user.quizDone[sectionId];
-    user.quizDone[sectionId] = { ...(prev && typeof prev === 'object' ? prev : {}), [level]: score };
+    user.quizDone[sectionId] = { ...(prev && typeof prev === 'object' ? prev : {}), [level]: { r: score, n: total } };
     user.quizTotal   = (user.quizTotal   || 0) + total;
     user.quizCorrect = (user.quizCorrect || 0) + score;
     saveUser();
     updateHeader();
     updateStats();
   }
+  document.getElementById('quiz-subtitle').textContent = (s.subtitle || '') + ' · ' + QUIZ_LEVELS[level].label;
 
-  document.getElementById('quiz-score-text').textContent = `${score}/${total}`;
-  document.getElementById('quiz-score-badge').style.display = 'block';
-
-  const msg = score === total ? 'Every one right!' : pct >= 60 ? 'Nicely done' : 'Worth another look at the text';
-
-  const review = missed.length
-    ? '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin:4px 0 8px;text-align:left;">Review what you missed</p>'
-      + missed.map(m =>
-        '<div class="quiz-missed" style="text-align:left;background:var(--card);border:1px solid var(--border);border-radius:var(--r-m);padding:13px 14px;margin-bottom:8px;">'
-        + '<p style="font-size:var(--fs-2);font-weight:700;color:var(--t1);line-height:1.45;margin-bottom:6px;">' + escapeHtml(m.q) + '</p>'
-        + '<p style="font-size:var(--fs-1);color:var(--t1);font-weight:700;margin-bottom:4px;">' + escapeHtml(m.options[m.answer]) + '</p>'
-        + '<p style="font-size:var(--fs-1);color:var(--t2);line-height:1.5;">' + escapeHtml(m.explanation || '') + '</p>'
-        + '</div>').join('')
-    : '';
+  const portion = { chumash: "today's aliyah", tanya: "today's Tanya", rambam: "today's Rambam" }[sectionId] || 'today';
+  const title = score / total >= 0.6 ? 'Nice!' : 'Worth another look';
+  const line = !missed ? 'All of ' + portion + ' stayed with you.'
+    : score / total >= 0.6 ? 'You held on to most of ' + portion + '. ' + (missed === 1 ? 'One' : missed) + ' worth a second look.'
+    : 'Read the ones below again; they come straight from the text.';
+  const len = (2 * Math.PI * 50).toFixed(1);
+  const check = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const items = answers.map((a, i) =>
+    '<div class="rv-item"><span class="rv-dot' + (a.right ? ' ok' : '') + '" aria-label="' + (a.right ? 'Right' : 'Missed') + '">' + check + '</span>'
+    + '<div style="flex:1;min-width:0;"><p class="rv-a">' + escapeHtml(a.options[a.answer]) + '</p>'
+    + '<p class="rv-q">' + escapeHtml(a.q) + '</p>'
+    + (a.quote ? '<p class="rv-quote">“' + escapeHtml(a.quote) + '”</p>' : '')
+    + (!a.right && a.quote ? '<button class="rv-again" onclick="_readAgain(' + i + ')">Read it again</button>' : '')
+    + '</div></div>').join('');
 
   const other = level === 'quick' ? 'deep' : 'quick';
-  document.getElementById('quiz-body').innerHTML = `
-    <div style="text-align:center;padding-top:28px;animation:fadeUp .35s ease both;">
-      <p style="font-size:var(--fs-5);font-weight:900;color:var(--t1);margin-bottom:4px;">${score} / ${total}</p>
-      <p style="font-size:var(--fs-2);color:var(--t2);margin-bottom:4px;">${msg}</p>
-      <div style="height:22px;"></div>
-      <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin-bottom:22px;">
-        <div style="height:100%;width:${pct}%;background:${_qc()};border-radius:4px;"></div>
-      </div>
-      ${review}
-      <div style="display:flex;gap:10px;margin-top:14px;">
-        <button onclick="_startQuiz('${other}')" style="flex:1;padding:14px;border-radius:999px;background:var(--card2);border:none;color:var(--t1);font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;">Try ${QUIZ_LEVELS[other].label}</button>
-        <button id="done-btn" style="flex:1;padding:14px;border-radius:999px;background:${_qc()};border:none;color:${_qon()};font-size:var(--fs-2);font-weight:800;cursor:pointer;font-family:inherit;">Done</button>
-      </div>
-    </div>`;
-  document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSectionsForOffset(dateISO(new Date())); };
+  document.getElementById('quiz-body').innerHTML =
+    '<div style="animation:fadeUp .35s ease both;">'
+    + '<div class="rv-top"><div class="rv-ring" role="img" aria-label="' + score + ' of ' + total + ' right">'
+    +   '<svg viewBox="0 0 112 112"><circle cx="56" cy="56" r="50"/><circle cx="56" cy="56" r="50" style="--len:' + (len * score / total).toFixed(1) + '"/></svg><b>' + score + '/' + total + '</b></div>'
+    +   '<div><h3>' + title + '</h3><p>' + line + '</p></div></div>'
+    + '<p class="rv-k" style="margin:12px 4px 0;">What you learned today</p>'
+    + '<div class="rv-list">' + items + '</div>'
+    + '<div style="display:flex;gap:8px;margin-top:16px;">'
+    +   '<button onclick="_startQuiz(\'' + other + '\')" style="flex:1;height:50px;border-radius:999px;background:var(--card2);border:none;color:var(--t1);font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;">' + QUIZ_LEVELS[other].label + ' · ' + QUIZ_LEVELS[other].count + '</button>'
+    +   '<button id="done-btn" style="flex:1;height:50px;border-radius:999px;background:' + _qc() + ';border:none;color:' + _qon() + ';font-size:var(--fs-2);font-weight:800;cursor:pointer;font-family:inherit;">Done</button>'
+    + '</div><div style="height:20px;"></div></div>';
+  document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSectionsForOffset(_viewedISO()); };
+  document.getElementById('quiz-panel').scrollTop = 0;
+}
+
+// "Read it again": back to today's text, at the line the answer comes from
+function _readAgain(i) {
+  const a = quizState.answers[i], sid = quizState.sectionId;
+  if (!a) return;
+  closeQuiz();
+  const go = () => { openChabadPanel(sid); _findInReader(sid, a.quote); };
+  if (dayOffset !== 0) { navDay(-dayOffset).then(go); } else go();
+}
+function _findInReader(sid, quote) {
+  const iso = _rv.iso, words = _placeText(quote).toLowerCase();
+  let tries = 0;
+  const look = () => {
+    if (!_readerShows(sid, iso)) return;                         // you've moved on
+    if (!_rv.drawn || _rv.placing) { if (tries++ < 80) setTimeout(look, 100); return; }
+    const els = _placeEls();
+    // The whole quote, or its start (it can run across two verses)
+    const el = [words.slice(0, 60), words.slice(0, 30)].map(w => els.find(e => _placeText(e.textContent).toLowerCase().includes(w))).find(Boolean);
+    if (!el) return;
+    const reader = document.getElementById('native-reader');
+    _rv.touched = true; _rv.place = null;                        // from here on it's your place
+    reader.scrollTo({ top: Math.max(0, reader.scrollTop + el.getBoundingClientRect().top - reader.getBoundingClientRect().top - 80), behavior: 'smooth' });
+    el.classList.add('found');
+    setTimeout(() => el.classList.remove('found'), 2600);
+  };
+  look();
+}
+
+// Start a review straight away (from Today or the reader); guests are asked to sign in
+function _reviewNow(sid, level) {
+  if (document.getElementById('chabad-panel').style.display !== 'none') closeChabadPanel();
+  openQuiz(sid);
+  if (document.getElementById('quiz-panel').style.display === 'flex' && quizState.sectionId === sid) _startQuiz(level);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -5629,6 +5764,30 @@ function _calTap(iso) {
     + (_canReadDay(off) ? '<button class="btn-quiet" style="margin-top:10px;width:100%;" onclick="switchTab(\'learn\');goToDay(' + off + ')">Open this day</button>' : '');
 }
 
+// Progress: what stays with you, from your Review results (reviewStats in
+// js/learning-stats.js). Nothing before your first review.
+function _reviewCardHTML(today) {
+  const R = reviewStats(user, today);
+  if (!R) return '';
+  // Each week by its parsha (a Yom Tov week, which has none of its own: its date)
+  const names = R.weeks.map(w => { const d = new Date(w.shabbos + 'T12:00:00'), p = getParshaForDate(d); return p ? parshaSpelling(p) : ''; });
+  const weekName = (w, i) => names[i] && names[i] !== names[i - 1] && names[i] !== names[i + 1] ? names[i]
+    : new Date(w.shabbos + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  // Heights from 40% up, so the change shows
+  const h = pct => 6 + Math.round(Math.max(0, pct - 40) / 60 * 58);
+  const bars = R.weeks.map((w, i) => '<div><i style="height:' + (w.pct == null ? 4 : h(w.pct)) + 'px;' + (w.pct == null ? 'opacity:.4;' : '') + '" title="' + (w.pct == null ? 'No reviews' : w.pct + '%') + '"></i><em>' + escapeHtml(weekName(w, i)) + '</em></div>').join('');
+  const sub = R.then != null && R.then !== R.now ? 'right this week · ' + (R.now > R.then ? 'up' : 'down') + ' from ' + R.then + '%' : 'of your answers right';
+  const NAMES = { chumash: 'Chumash', tanya: 'Tanya', rambam: 'Rambam' };
+  const secs = Object.entries(R.bySection).map(([id, v]) =>
+    '<div class="rv-sec"><div class="n"><p>' + NAMES[id] + '</p><p>' + v.n + (v.n === 1 ? ' review' : ' reviews') + '</p></div>'
+    + '<div class="bar"><i style="width:' + v.pct + '%;background:' + SECTION_COLORS[id] + ';"></i></div><b>' + v.pct + '%</b></div>').join('');
+  return '<div class="rv-card"><p class="rv-k">What stays with you</p>'
+    + '<div class="rv-big"><b>' + R.now + '%</b><span>' + sub + '</span></div>'
+    + '<div class="rv-weeks" role="img" aria-label="Answers right, week by week">' + bars + '</div></div>'
+    + (secs ? '<div class="lcard rv-secs"><p class="rv-k">By section, last 30 days</p>' + secs + '</div>' : '')
+    + '<div class="rv-3"><div><b>' + R.right.toLocaleString('en-US') + '</b><span>answers right</span></div><div><b>' + R.deepDives + '</b><span>deep dives</span></div><div><b>' + R.perfect + '</b><span>all right</span></div></div>';
+}
+
 function renderStats() {
   const ids = SECTION_IDS;
   const today = new Date();
@@ -5693,6 +5852,7 @@ function renderStats() {
     +   '<div class="stat-dark"><p class="stat-n">' + C.streak + '</p><p class="stat-l">days in a row · best ' + C.best + '</p></div>'
     +   '<div class="stat-soft"><p class="stat-n">' + C.pct30 + '%</p><p class="stat-l">full days, last 30</p></div>'
     + '</div>'
+    + _reviewCardHTML(today)
     + '<p class="t-sec">All of it, added up <span>since ' + sinceLabel + '</span></p>'
     + '<div id="learned-grid">' + tiles + '</div>'
 

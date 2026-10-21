@@ -297,11 +297,32 @@ await check('quiz: pick a level, answer 4, see explanations and a review of miss
   nextQuestion(); selectAnswer(1);                    // right
   nextQuestion(); selectAnswer(3);                    // right
   nextQuestion();
-  const missed = [...document.querySelectorAll('.quiz-missed')].map(e => e.textContent.includes('Q2'));
+  // Results: the score, every answer with its line, "Read it again" only on the missed one
+  const ring = document.querySelector('.rv-ring b')?.textContent;
+  const learned = [...document.querySelectorAll('.rv-item')].map(e => [e.querySelector('.rv-dot').classList.contains('ok'), e.querySelector('.rv-quote')?.textContent, !!e.querySelector('.rv-again')]);
   const first = [user.quizTotal, user.quizCorrect];
   await _startQuiz('quick'); [2, 0, 1, 3].forEach((a, i) => { selectAnswer(a); nextQuestion(); }); // a retry is for learning; not counted again
-  return [levels, explained, missed, first, [user.quizTotal, user.quizCorrect], user.quizDone.chumash, !!window.__hacked];
-}, [2, true, [true], [4, 3], [4, 3], { quick: 3 }, false]);
+  return [levels, explained, ring, learned, first, [user.quizTotal, user.quizCorrect], user.quizDone.chumash, !!window.__hacked];
+}, [2, true, '3/4', [[true, '“the line about c”', false], [false, '“q2”', true], [true, '“q3”', false], [true, '“q4”', false]], [4, 3], [4, 3], { quick: { r: 3, n: 4 } }, false]);
+
+await check('Review on Today: a learned tile is ready to review, then says how it went', () => {
+  closeQuiz(); dayOffset = 0;
+  user.done = { chumash: true, tanya: true }; user.quizDone = { chumash: { quick: { r: 3, n: 4 } } };
+  renderSectionsForOffset(dateISO(new Date()));
+  const chip = id => document.querySelector('#card-' + id + ' .stile-rv')?.textContent || null;
+  const ready = document.getElementById('review-ready');
+  return [chip('chumash'), chip('tanya'), chip('tehillim'), chip('rambam'), ready.style.display, [...ready.querySelectorAll('.rr-t p:first-child')].map(p => p.textContent)];
+}, ['Reviewed 3/4', 'Review · 4', null, null, 'block', ['Tanya is ready to review']]);
+
+await check('Review right after you learn: marking it in the reader offers the review', () => {
+  user.done = {}; user.quizDone = {}; dayOffset = 0;
+  document.getElementById('chabad-panel').style.display = 'flex';
+  showConfirm('rambam', true);
+  const box = document.getElementById('reader-next');
+  const r = [box.querySelector('.rv-fresh h3')?.textContent, [...box.querySelectorAll('.rn-row button')].map(b => b.textContent)];
+  closeChabadPanel();
+  return r;
+}, ['4 questions on what you just learned', ['Deep dive · 6', 'Home']]);
 
 await check('quiz request sends today\'s exact Chumash ref and the sign-in token',
   () => getChumashAliyaRef(new Date()).split('|'), quizRequest && quizRequest.body.refs);
