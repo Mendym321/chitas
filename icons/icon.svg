@@ -1,13 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <rect width="1024" height="1024" fill="#1F1B16"/>
-  <g fill="none" stroke-width="48" stroke-linecap="round" transform="translate(512 512)">
-    <circle r="300" stroke="#E0A030" stroke-opacity=".18"/>
-    <circle r="300" stroke="#E0A030"/>
-    <circle r="222" stroke="#4E7ACB" stroke-opacity=".18"/>
-    <circle r="222" stroke="#4E7ACB" stroke-dasharray="1199.6 1394.9" transform="rotate(-90)"/>
-    <circle r="144" stroke="#9560BA" stroke-opacity=".18"/>
-    <circle r="144" stroke="#9560BA" stroke-dasharray="669.5 904.8" transform="rotate(-90)"/>
-    <circle r="66" stroke="#659444" stroke-opacity=".18"/>
-    <circle r="66" stroke="#659444" stroke-dasharray="257.1 414.7" transform="rotate(-90)"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="#FBF7EF"/><g fill="none" stroke-width="70" stroke-linecap="round" transform="translate(512 512)"><circle r="400" stroke="#E0A030"/><circle r="308" stroke="#3F6FC0"/><circle r="216" stroke="#8B54B0"/><circle r="124" stroke="#5E8A3C"/></g></svg>

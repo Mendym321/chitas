@@ -37,7 +37,9 @@ Rambam and Tanya footnotes are small raised numbers in a soft section colour, no
 Version 1 offers Hayom Yom (`OFFERED_TRACKS`). Daf Yomi, Mishnah Yomi, Likkutei Torah, Likkutei Sichos and Sha'ar HaBitachon are parked: hidden from the menu, still working for anyone who already added them.
 
 ## App icon
-The four rings closing on dark ink (`icons/icon.svg`, rendered to PNGs).
+The four rings, full and large, on cream (`icons/icon.svg`, rendered to PNGs). A plain square with no rounded corners and no see-through parts: the phone rounds the corners itself, and the App Store turns down icons that are already rounded or transparent.
+- `icon-maskable.svg`: the rings a little smaller, inside the middle 80%, because Android may crop the icon to a circle.
+- `favicon.svg` / `icon-32.png`: the browser tab. Thicker rings fill the square so the four colours still read at 16–32px; rounded corners, see-through outside them.
 
 ## On a computer (1000px and wider)
 The same app, laid out for the screen (one `@media (min-width: 1000px)` block at the end of the styles): a sidebar instead of the bottom pill, Today's tiles in one row, the reader's text in a page-wide column (about 900px, so lines stay readable), Progress in two columns, pop-ups as centred boxes. Below 1000px nothing changes.
