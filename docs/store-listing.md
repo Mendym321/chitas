@@ -19,9 +19,9 @@ Upload the screenshots in number order: Today, Tanya, all four done, Progress, R
 ## 1. Name and short texts
 
 **App name** (Apple 30, Google 30)
-> Chitas: Daily Chumash & Tanya
+> Chitas: Daily Learning
 
-Plain "Chitas" may already be taken. If it is free on both stores, use it; otherwise use the line above. Pick one name and use it in both stores, because people search for it.
+Use the same name in both stores, because people search for it. On the phone, under the icon, the app is just "Chitas".
 
 **Subtitle** (Apple only, 30)
 > Chumash Tehillim Tanya Rambam
@@ -165,7 +165,7 @@ These must match the privacy page. If the app changes what it saves, update both
 
 ## 7. Before we submit (things only you can answer)
 
-1. **Final name**: "Chitas" if it's free on both stores, otherwise "Chitas: Daily Chumash & Tanya". The app itself still says "Chitas Daily" in three places (Share, the Profile footer, the share text); we'll change those to match the name you choose.
+1. ~~**Final name**~~ Decided: "Chitas: Daily Learning" in the stores, "Chitas" on the phone.
 2. **Developer name** shown on the store: your own name, or a business name. A business name on Apple needs a D-U-N-S number.
 3. **Hayom Yom English**: confirm where the English comes from and that we're allowed to use it.
 4. **Fonts**: confirm the OT Siddur and Vilna fonts can be shipped inside an app (web licences sometimes don't cover apps).

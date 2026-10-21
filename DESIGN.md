@@ -1,4 +1,4 @@
-# Chitas Daily — Design
+# Chitas — Design
 
 Read this before changing how anything looks or sounds. The full reasoning, the research and the mockups are in the design direction page (Oct 2026).
 

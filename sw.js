@@ -1,5 +1,5 @@
 /**
- * Chitas Daily — Service Worker
+ * Chitas — Service Worker
  *
  * Strategy:
  * - App shell (HTML, fonts, icons): Cache first, update in background
