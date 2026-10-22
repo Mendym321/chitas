@@ -1341,7 +1341,7 @@ window._fsGetDoc = getDoc;
         <button onclick="_openTehillimPeopleManager()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span><span class="ps-row-label">Tehillim names</span><span id="ps-tehillim-sub" class="ps-row-val"></span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
       </div>
 
-      <p class="ps-label">More learning</p>
+      <p class="ps-label" id="ps-extra-label">More learning</p>
       <div id="ps-extra-tracks-list" class="ps-card"></div>
 
       <p class="ps-label">Reading</p>
@@ -2878,12 +2878,8 @@ function renderSectionsForOffset(iso) {
   _renderReviewReady(isToday ? dayDone : {});
 
   // "More learning": your extra tracks, or an "Add learning" row if none
-  const hasTracks = (user.extraTracks || []).length > 0 || !!window._sotahDaf;
-  const sep = document.getElementById('extra-tracks-separator');
-  if (sep) sep.style.display = 'flex';
   _renderExtraTrackCards(iso, isToday);
-  const addBtn = document.getElementById('add-learning-btn');
-  if (addBtn) addBtn.style.display = hasTracks ? 'none' : 'block';
+  _syncMoreLearning();
   _renderThought();
   _renderWelcomeBack();
 }
@@ -6443,7 +6439,7 @@ async function _bustTanyaCache() {
 function _renderExtraTrackCards(iso, isToday) {
   const list = document.getElementById('extra-tracks-list');
   if (!list) return;
-  const tracks = user.extraTracks || [];
+  const tracks = _shownTracks();
 
   // Auto-inject Sotah during Omer (not opt-in)
   // We check window._sotahDaf which is set by _checkSotahOmer()
@@ -6567,7 +6563,22 @@ function unmarkExtraDonePast(id, iso) {
 // The extra learning the app offers now. The rest (Daf Yomi, Mishnah Yomi,
 // Likkutei Torah, Likkutei Sichos, Sha'ar HaBitachon) is parked: hidden from
 // "More learning" but kept working for anyone who already added it.
-const OFFERED_TRACKS = ['hayomYom'];
+// Extra learning anyone can add. Hayom Yom isn't one: it lives on Today, in
+// the card on top. Nothing is offered until real daily tracks are ready, so
+// "More learning" stays hidden (except for tracks someone added before).
+const OFFERED_TRACKS = [];
+const _shownTracks = () => (user.extraTracks || []).filter(id => id !== 'hayomYom' && EXTRA_TRACK_DEFS[id]);
+function _syncMoreLearning() {
+  const has = _shownTracks().length > 0 || !!window._sotahDaf;
+  const show = has || OFFERED_TRACKS.length > 0;
+  const sep = document.getElementById('extra-tracks-separator');
+  if (sep) sep.style.display = show ? 'flex' : 'none';
+  const addBtn = document.getElementById('add-learning-btn');
+  if (addBtn) addBtn.style.display = show && !has ? 'block' : 'none';
+  const psl = document.getElementById('ps-extra-label'), psc = document.getElementById('ps-extra-tracks-list');
+  if (psl) psl.style.display = show ? '' : 'none';
+  if (psc) psc.style.display = show ? '' : 'none';
+}
 const EXTRA_TRACK_DEFS = {
   dafYomi: {
     id: 'dafYomi',
@@ -6709,9 +6720,8 @@ function _toggleExtraTrack(id) {
 
   // Re-render feed cards + separator
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const sep = document.getElementById('extra-tracks-separator');
-  if (sep) sep.style.display = user.extraTracks.length ? 'flex' : 'none';
   _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+  _syncMoreLearning();
 }
 
 // ── Extra track reader ─────────────────────────────────────────────────────────
@@ -7828,9 +7838,8 @@ function _removeExtraTrack(id) {
   user.extraTracks = user.extraTracks.filter(t => t !== id);
   saveUser();
   const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const sep = document.getElementById('extra-tracks-separator');
-  if (sep) sep.style.display = user.extraTracks.length ? 'flex' : 'none';
   _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+  _syncMoreLearning();
   fire(EXTRA_TRACK_DEFS[id]?.label + ' removed', 'gray');
 }
 
@@ -7922,7 +7931,8 @@ function _updateProfileExtras() {
 function _renderPsExtraTracks() {
   const el = document.getElementById('ps-extra-tracks-list');
   if (!el) return;
-  const tracks = user.extraTracks || [];
+  const tracks = _shownTracks();
+  _syncMoreLearning();
   const TRASH = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>';
   const PLUS  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
@@ -8004,9 +8014,7 @@ async function _checkSotahOmer() {
   const info = await getSotahDafForDate(d).catch(() => null);
   window._sotahDaf = info; // null = not in Omer
   if (info) {
-    // Update the separator visibility
-    const sep = document.getElementById('extra-tracks-separator');
-    if (sep) sep.style.display = 'flex';
+    _syncMoreLearning();
   }
 }
 
