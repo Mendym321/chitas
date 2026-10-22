@@ -2625,19 +2625,18 @@ async function _renderThought(tries = 0) {
   if (dayOffset !== 0) { el.style.display = 'none'; return; }
   const today = new Date(), iso = dateISO(today);
   let saved = null;
-  try { saved = JSON.parse(localStorage.getItem('chitas_thought') || 'null'); } catch (e) {}
+  try { saved = JSON.parse(localStorage.getItem('chitas_thought2') || 'null'); } catch (e) {}
   if (!saved || saved.iso !== iso) {
-    if (!window._fsDb) { if (tries < 8) setTimeout(() => _renderThought(tries + 1), 1500); return; }
     const parts = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(today);
     const m = parts.find(p => p.type === 'month').value, n = +parts.find(p => p.type === 'day').value;
     const HEBCAL = { Tishri: 'Tishrei', Heshvan: 'Cheshvan', Shevat: "Sh'vat", Iyar: 'Iyyar' };
     const key = _hayomYomKeys(HEBCAL[m] || m, n)[0];
     try {
-      const snap = key && await window._fsGetDoc(window._fsDoc(window._fsDb, 'hayomYom', key));
-      const text = snap?.exists() ? String(snap.data().english || '').replace(/\*/g, '').replace(/\s+/g, ' ').trim() : '';
+      const entry = key && (await _hayomYomData())[key];
+      const text = String(entry?.en || '').replace(/\s+/g, ' ').trim();
       if (!text) return;
       saved = { iso, text: text.length > 320 ? text.slice(0, 320).replace(/\s+\S*$/, '') + '…' : text, date: hebMonthSpelling(n + ' ' + m) };
-      localStorage.setItem('chitas_thought', JSON.stringify(saved));
+      localStorage.setItem('chitas_thought2', JSON.stringify(saved));
     } catch (e) { return; }
   }
   if (dayOffset !== 0) return;
@@ -6089,6 +6088,8 @@ function openCredits() {
     + row('Tehillim', 'Hebrew text, with The Koren Jerusalem Bible translation')
     + row('Tanya', 'Hebrew text and English translation as published on Sefaria')
     + row('Rambam', 'Mishneh Torah, translated by Rabbi Eliyahu Touger, Moznaim Publishing')
+    + '<p class="cr-h">Hayom Yom</p>'
+    + row('Hayom Yom', 'The Hebrew and Yiddish original, with an English translation made for Chitas from the original')
     + '<p class="cr-h">Calendar</p>'
     + row('Hebcal', 'The Jewish calendar, the parsha, and the daily Tehillim and Rambam schedules (hebcal.com)')
     + '<p class="cr-h">Written with AI</p>'
@@ -7061,15 +7062,20 @@ function _hayomYomKeys(hm, hd) {
   return [prefix + '_' + day];
 }
 
+// ── Hayom Yom: the Hebrew original and our own English (translated for Chitas
+// from the original, checked against the published translation for meaning),
+// in data/hayom-yom.json: { "Cheshvan_11": { he, en }, … }. Loaded once.
+let _hyData = null;
+function _hayomYomData() {
+  return _hyData || (_hyData = fetch('/data/hayom-yom.json').then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))).catch(e => { _hyData = null; throw e; }));
+}
+
 // ── Native Hayom Yom reader ───────────────────────────────────────────────────
 // Uses window._fsDb / _fsDoc / _fsGetDoc exposed from the module script
 async function _loadHayomYomNative(silent) {
   const def    = EXTRA_TRACK_DEFS.hayomYom;
   const COLOR  = def ? def.color : '#B85C38';
   const HE_FONT = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
-  const fsDb   = window._fsDb;
-  const fsDoc  = window._fsDoc;
-  const fsGet  = window._fsGetDoc;
 
   const loadEl   = document.getElementById('native-reader-loading');
   const contEl   = document.getElementById('native-reader-content');
@@ -7109,18 +7115,17 @@ async function _loadHayomYomNative(silent) {
   const keys = _hayomYomKeys(hm, hd);
   if (!keys.length) { if (!silent) _hayomYomError('Unknown month: ' + hm); return; }
 
-  // ── Fetch from Firestore ───────────────────────────────────────────────
+  // ── The day's entry (data/hayom-yom.json) ─────────────────────────────
   let docs = [];
   try {
-    for (const key of keys) {
-      const snap = await fsGet(fsDoc(fsDb, 'hayomYom', key));
-      if (snap.exists()) docs.push({ key, ...snap.data() });
-    }
+    const all = await _hayomYomData();
+    for (const key of keys) if (all[key]) docs.push({ key, hebrew: all[key].he, english: all[key].en });
   } catch(e) {
-    console.error('Hayom Yom Firestore error:', e);
+    console.error('Hayom Yom:', e);
     if (!silent) _hayomYomError('Could not load Hayom Yom.');
     return;
   }
+  if (!_readerShows('extra_hayomYom', iso) && !silent) return;   // you've moved on
 
   if (!docs.length) { if (!silent) _hayomYomError('No entry for ' + hm + ' ' + hd); return; }
   if (silent) return;
@@ -7145,14 +7150,14 @@ async function _loadHayomYomNative(silent) {
       html += '<p class="rf-body" style="direction:rtl;text-align:justify;text-align-last:right;'
         + 'font-family:' + HE_FONT + ';--rf-sz:21px;--rf-lh:2.0;color:var(--t1);'
         + (lang === 'both' ? 'margin-bottom:16px;' : '') + '">'
-        + data.hebrew.replace(/\n/g, '<br>') + '</p>';
+        + escapeHtml(data.hebrew).replace(/\n/g, '<br>') + '</p>';
     }
     if (lang === 'both' && data.hebrew && data.hebrew.trim() && data.english && data.english.trim()) {
       html += '<div style="height:1px;background:var(--border);margin:4px 0 18px;"></div>';
     }
     if ((lang === 'en' || lang === 'both') && data.english && data.english.trim()) {
       html += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);text-align:justify;">'
-        + data.english.replace(/\n/g, '<br>') + '</p>';
+        + escapeHtml(data.english).replace(/\n/g, '<br>') + '</p>';
     }
     if (isNonLeapAdar && idx === 0 && docs.length === 2) {
       html += '<div style="height:1px;background:var(--border);margin:24px 0;"></div>';

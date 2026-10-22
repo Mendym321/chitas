@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v12';
+const VERSION     = 'v13';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
@@ -39,6 +39,7 @@ const SHELL_URLS = [
   '/js/learning-stats.js',
   '/js/day-note.js',
   '/js/account-merge.js',
+  '/data/hayom-yom.json',
 ];
 
 // ── Install: cache the app shell ──────────────────────────────────────────────
@@ -122,6 +123,7 @@ function isShellRequest(url) {
     url.pathname.startsWith('/fonts/') ||
     url.pathname.startsWith('/icons/') ||
     url.pathname.startsWith('/js/') ||
+    url.pathname.startsWith('/data/') ||
     url.pathname === '/manifest.json'
   );
 }
