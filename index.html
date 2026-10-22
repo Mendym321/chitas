@@ -7127,7 +7127,7 @@ async function _loadHayomYomNative(silent) {
   }
   if (!_readerShows('extra_hayomYom', iso) && !silent) return;   // you've moved on
 
-  if (!docs.length) { if (!silent) _hayomYomError('No entry for ' + hm + ' ' + hd); return; }
+  if (!docs.length) { if (!silent) _hayomYomError('Hayom Yom for ' + hd + ' ' + hm + ' isn\'t in the app yet.'); return; }
   if (silent) return;
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -7135,6 +7135,7 @@ async function _loadHayomYomNative(silent) {
   const isChaiElul    = keys[0] === 'Chai_18_Elul';
   const isNonLeapAdar = hm === 'Adar';
   const dateLabel = isChaiElul ? 'Chai Elul · ' + hd + ' ' + hm : hd + ' ' + hm;
+  if (subEl) subEl.textContent = hebMonthSpelling(hd + ' ' + hm);
 
   let html = '<div style="max-width:680px;margin:0 auto;padding-bottom:40px;">'
     + '<div style="margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);">'
