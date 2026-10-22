@@ -49,7 +49,7 @@ The four rings, full and large, on cream (`icons/icon.svg`, rendered to PNGs). A
 - `favicon.svg` / `icon-32.png`: the browser tab. Thicker rings fill the square so the four colours still read at 16–32px; rounded corners, see-through outside them.
 
 ## On a computer (1000px and wider)
-The same app, laid out for the screen (one `@media (min-width: 1000px)` block at the end of the styles): a sidebar instead of the bottom pill, Today's tiles in one row, the reader's text in a page-wide column (about 900px, so lines stay readable), Progress in two columns, pop-ups as centred boxes. Below 1000px nothing changes.
+The same app, laid out for the screen (one `@media (min-width: 1000px)` block at the end of the styles): a sidebar instead of the bottom pill, Today's tiles in one row, the reader's text in a page-wide column (about 900px, so lines stay readable), Progress in two columns, pop-ups as centred boxes. Below 1000px nothing changes. Everything on a page spans the same width as the tiles; Profile flows into two columns; the reader's text lines up with its header and buttons.
 
 ## Your place in the reader
 

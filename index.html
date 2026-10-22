@@ -968,8 +968,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #tiles-wrap { margin:0; padding:14px 0 4px; }
   .tiles4 { grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; }
   .stile { height:210px; }
-  #thought, #welcome-back, #day-readonly { max-width:720px; }
-  #week-strip { max-width:720px; }
+  /* One width for everything on a page: no box stops short of the tiles */
   #tab-stats, #tab-profile { padding-left:0 !important; padding-right:0 !important; }
   #stats-content { display:grid; grid-template-columns:1fr 1fr; column-gap:24px; grid-auto-flow:row dense; }
   #stats-content > * { grid-column:1 / -1; }
@@ -977,17 +976,25 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #stats-content > .cbars, #stats-content > #learning-cal { align-self:start; }
   #stats-content > .sec-month, #stats-content > #learning-cal { grid-column:2; }
   #learned-grid { grid-template-columns:repeat(4, minmax(0,1fr)); }
-  .stat2 { max-width:720px; }
-  #tab-profile > * { max-width:640px; }
+  #stats-content > .rv-card { grid-column:1; margin-bottom:12px; }
+  #stats-content > .rv-secs { grid-column:2; margin:4px 0 12px; align-self:stretch; }
+  /* Profile: its sections in two columns, the whole width */
+  #tab-profile { columns:2; column-gap:24px; }
+  #tab-profile > .card, #tab-profile > #ps-guest-row { column-span:all; }
+  #tab-profile > .ps-card { break-inside:avoid; }
+  #tab-profile > .ps-label { break-after:avoid; }
+  #tab-profile > .ps-label:first-of-type { margin-top:6px; }
   /* The reader: a column about as wide as a printed page */
   #reader-head, #reader-daybar { padding-left:max(24px, calc((100% - 900px) / 2)) !important; padding-right:max(24px, calc((100% - 900px) / 2)) !important; }
-  #native-reader > div { max-width:900px; margin:0 auto; }
+  #native-reader > div { max-width:936px; margin:0 auto; }   /* 900 of text inside its 18px sides: lines up with the header and buttons */
   #reader-progress-wrap { max-width:900px; margin:8px auto 0 !important; width:calc(100% - 48px); }
   #reader-bottom-bar > * { max-width:900px; margin-left:auto; margin-right:auto; }
   #quiz-head { padding-left:max(24px, calc((100% - 640px) / 2)) !important; padding-right:max(24px, calc((100% - 640px) / 2)) !important; }
   #quiz-body { max-width:640px !important; }
   /* Pop-ups: centred boxes, not sheets from the bottom */
-  #day-picker, #del-sheet, #credits-sheet, body > div[style*="align-items:flex-end"] { align-items:center !important; }
+  /* (the browser writes a style set from code as "align-items: flex-end", with a space) */
+  #day-picker, #del-sheet, #credits-sheet, #signin-sheet, body > div[style*="align-items:flex-end"], body > div[style*="align-items: flex-end"] { align-items:center !important; }
+  #signin-sheet > div, body > div[style*="align-items: flex-end"] > div { border-radius:28px !important; border-bottom:1px solid var(--border) !important; }
   .dp-sheet, .ps-modal-sheet { max-width:480px !important; border-radius:28px !important; }
   .dp-grab { display:none; }
   #moment-modal.m-full #moment-card { max-width:none !important; }
@@ -6494,8 +6501,8 @@ async function _loadExtraSubtitle(id) {
       const item = items.find(i => i.title?.en === 'Daf Yomi');
       el.textContent = item?.displayValue?.en || item?.ref || 'Daf Yomi';
     } else if (id === 'hayomYom') {
-      const item = items.find(i => (i.title?.en || '').includes('Hayom Yom'));
-      el.textContent = item?.displayValue?.en || 'Hayom Yom';
+      // Hayom Yom goes by the Hebrew date: that's its subtitle
+      el.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
     } else if (id === 'likkuteiTorah') {
       const parshaItem = items.find(i => i.title?.en === 'Parashat Hashavua');
       const parshaName = parshaItem?.displayValue?.en || '';
