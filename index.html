@@ -968,8 +968,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #tiles-wrap { margin:0; padding:14px 0 4px; }
   .tiles4 { grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; }
   .stile { height:210px; }
-  #thought, #welcome-back, #day-readonly { max-width:720px; }
-  #week-strip { max-width:720px; }
+  /* One width for everything on a page: no box stops short of the tiles */
   #tab-stats, #tab-profile { padding-left:0 !important; padding-right:0 !important; }
   #stats-content { display:grid; grid-template-columns:1fr 1fr; column-gap:24px; grid-auto-flow:row dense; }
   #stats-content > * { grid-column:1 / -1; }
@@ -977,17 +976,25 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #stats-content > .cbars, #stats-content > #learning-cal { align-self:start; }
   #stats-content > .sec-month, #stats-content > #learning-cal { grid-column:2; }
   #learned-grid { grid-template-columns:repeat(4, minmax(0,1fr)); }
-  .stat2 { max-width:720px; }
-  #tab-profile > * { max-width:640px; }
+  #stats-content > .rv-card { grid-column:1; margin-bottom:12px; }
+  #stats-content > .rv-secs { grid-column:2; margin:4px 0 12px; align-self:stretch; }
+  /* Profile: its sections in two columns, the whole width */
+  #tab-profile { columns:2; column-gap:24px; }
+  #tab-profile > .card, #tab-profile > #ps-guest-row { column-span:all; }
+  #tab-profile > .ps-card { break-inside:avoid; }
+  #tab-profile > .ps-label { break-after:avoid; }
+  #tab-profile > .ps-label:first-of-type { margin-top:6px; }
   /* The reader: a column about as wide as a printed page */
   #reader-head, #reader-daybar { padding-left:max(24px, calc((100% - 900px) / 2)) !important; padding-right:max(24px, calc((100% - 900px) / 2)) !important; }
-  #native-reader > div { max-width:900px; margin:0 auto; }
+  #native-reader > div { max-width:936px; margin:0 auto; }   /* 900 of text inside its 18px sides: lines up with the header and buttons */
   #reader-progress-wrap { max-width:900px; margin:8px auto 0 !important; width:calc(100% - 48px); }
   #reader-bottom-bar > * { max-width:900px; margin-left:auto; margin-right:auto; }
   #quiz-head { padding-left:max(24px, calc((100% - 640px) / 2)) !important; padding-right:max(24px, calc((100% - 640px) / 2)) !important; }
   #quiz-body { max-width:640px !important; }
   /* Pop-ups: centred boxes, not sheets from the bottom */
-  #day-picker, #del-sheet, #credits-sheet, body > div[style*="align-items:flex-end"] { align-items:center !important; }
+  /* (the browser writes a style set from code as "align-items: flex-end", with a space) */
+  #day-picker, #del-sheet, #credits-sheet, #signin-sheet, body > div[style*="align-items:flex-end"], body > div[style*="align-items: flex-end"] { align-items:center !important; }
+  #signin-sheet > div, body > div[style*="align-items: flex-end"] > div { border-radius:28px !important; border-bottom:1px solid var(--border) !important; }
   .dp-sheet, .ps-modal-sheet { max-width:480px !important; border-radius:28px !important; }
   .dp-grab { display:none; }
   #moment-modal.m-full #moment-card { max-width:none !important; }
@@ -1350,12 +1357,12 @@ window._fsGetDoc = getDoc;
 
       <p class="ps-label">Account</p>
       <div class="ps-card">
-        <button onclick="shareApp()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg></span><span class="ps-row-label">Share Chitas Daily</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        <button onclick="shareApp()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg></span><span class="ps-row-label">Share Chitas</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         <button id="ps-signout-row" onclick="signOut()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></span><span class="ps-row-label">Sign out</span></button>
         <button onclick="resetProgress()" class="ps-row"><span class="ps-icon" style="color:var(--red);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg></span><span class="ps-row-label" style="color:var(--red);">Reset progress</span></button>
         <button onclick="openDeleteAccount()" class="ps-row"><span class="ps-icon" style="color:var(--red);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.3-3.6 4.2-5.5 8-5.5 1.6 0 3 .3 4.2 1M16 17l5 5M21 17l-5 5"/></svg></span><span class="ps-row-label" style="color:var(--red);">Delete account</span></button>
       </div>
-      <p class="t-caption" style="text-align:center;margin:24px 0 8px;">Chitas Daily</p>
+      <p class="t-caption" style="text-align:center;margin:24px 0 8px;">Chitas</p>
     </div>
 
 
@@ -6100,9 +6107,9 @@ function openCredits() {
 
 // ── SHARE ─────────────────────────────────────────────────────────────────────
 function shareApp() {
-  const text = `I'm learning Chitas daily — Chumash, Tehillim, Tanya & Rambam every day. ${user.streak}-day streak. Join me on Chitas Daily.`;
+  const text = `I'm learning Chitas every day: Chumash, Tehillim, Tanya and Rambam, in one app.${user.streak > 1 ? ' ' + user.streak + ' days in a row.' : ''} Join me.`;
   if (navigator.share) {
-    navigator.share({ title: 'Chitas Daily', text, url: window.location.href })
+    navigator.share({ title: 'Chitas', text, url: window.location.href })
       .catch(() => {});
   } else {
     navigator.clipboard.writeText(text + '\n' + window.location.href)
@@ -6494,8 +6501,8 @@ async function _loadExtraSubtitle(id) {
       const item = items.find(i => i.title?.en === 'Daf Yomi');
       el.textContent = item?.displayValue?.en || item?.ref || 'Daf Yomi';
     } else if (id === 'hayomYom') {
-      const item = items.find(i => (i.title?.en || '').includes('Hayom Yom'));
-      el.textContent = item?.displayValue?.en || 'Hayom Yom';
+      // Hayom Yom goes by the Hebrew date: that's its subtitle
+      el.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
     } else if (id === 'likkuteiTorah') {
       const parshaItem = items.find(i => i.title?.en === 'Parashat Hashavua');
       const parshaName = parshaItem?.displayValue?.en || '';
