@@ -208,7 +208,7 @@ await test('each day keeps its own place, and shows its own text', async () => {
 await test('the bar on top: empty on a new day, filled to your place when you come back', async () => {
   const bar = () => page.evaluate(() => parseFloat(document.getElementById('reader-progress-bar').style.width));
   await open('chumash'); await scrollBy(4000); const deep = await bar();
-  expect(deep > 10, 'shows how far you are', deep);
+  expect(deep > 0 && deep < 100, 'shows how far you are', deep);   // (how far depends on how long the day's portion is)
   await goDay(-1);
   expect(await bar() === 0, 'empty on yesterday, before you scroll', await bar());
   await goDay(1);
