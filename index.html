@@ -319,21 +319,6 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 }
 
 /* ── Extra track card swipe-to-delete ── */
-.extra-card-wrap {
-  position:relative;
-  overflow:hidden;
-  border-radius:var(--r-m);
-  margin-bottom:10px;
-}
-.extra-card-delete-bg {
-  position:absolute;
-  right:0;top:0;bottom:0;
-  width:80px;
-  background:#C0564A;
-  display:flex;align-items:center;justify-content:center;
-  border-radius:0 16px 16px 0;
-  pointer-events:none;
-}
 .extra-card-inner {
   position:relative;
   transition:transform .2s ease;
@@ -495,6 +480,32 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .g-chips { display:inline-flex; gap:4px; vertical-align:middle; }
 .g-chips span { font-family:'Vilna',serif; font-size:11px; font-weight:700; line-height:16px; padding:0 6px; border-radius:999px; background:var(--card2); color:var(--t2); }
 .g-chips-row { text-align:right; margin-top:4px; }
+/* Your seforim: the line on Today and the shelf (real covers: dark cloth, gold lettering) */
+.shelf-line { display:flex; align-items:center; gap:14px; width:100%; margin:12px 0 0; padding:12px 16px; border:1px solid var(--border); border-radius:var(--r-m); background:none; color:var(--t3); font-family:inherit; text-align:left; cursor:pointer; }
+.sl-spines { display:flex; align-items:flex-end; gap:2px; height:34px; flex-shrink:0; }
+.sl-spine { position:relative; width:9px; border-radius:1px; }
+.sl-spine.on::after { content:''; position:absolute; top:-1px; right:2px; width:3px; height:10px; background:#8E2B22; }
+.sl-spine.empty { height:32px; border:1.5px dashed var(--border); background:none; box-sizing:border-box; }
+.sl-t { flex:1; min-width:0; display:flex; flex-direction:column; }
+.sl-t span:first-child { font-size:var(--fs-3); font-weight:700; color:var(--t1); }
+.sl-t span + span { font-size:13px; color:var(--t3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sh-head { display:flex; justify-content:space-between; align-items:baseline; margin:4px 0 18px; }
+.sh-head p { font-family:var(--title-font); font-size:var(--fs-5); font-weight:800; color:var(--t1); }
+.sh-head button { background:none; border:none; padding:6px 0; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t2); cursor:pointer; }
+.sh-shelf { display:flex; align-items:flex-end; justify-content:center; gap:8px; min-height:184px; }
+.sh-book { position:relative; width:54px; border:none; border-radius:4px 4px 2px 2px; padding:0; display:flex; flex-direction:column; align-items:center; cursor:pointer; box-shadow:inset -5px 0 0 rgba(0,0,0,.18), 0 0 0 1px rgba(255,255,255,.05); }
+.sh-book.on::after { content:''; position:absolute; top:-1px; right:8px; width:6px; height:24px; background:#8E2B22; }
+.sh-rule { margin-top:12px; width:70%; height:1px; background:#B8954E; }
+.sh-rule.sh-foot { position:absolute; bottom:14px; margin:0; }
+.sh-name { margin-top:22px; padding:0 4px; font-family:'Frank Ruhl Libre',serif; font-weight:700; font-size:15px; line-height:1.2; color:#CDAA62; text-align:center; direction:rtl; }   /* across the spine, word under word, like a printed sefer */
+.sh-ledge { height:6px; border-radius:2px; background:var(--border); }
+.sh-rows { margin-top:12px; }
+.sh-row { display:flex; align-items:center; gap:12px; padding:12px 0; cursor:pointer; }
+.sh-row + .sh-row { border-top:1px solid var(--border); }
+.sh-row-t { flex:1; min-width:0; }
+.sh-row-t p:first-child { font-size:var(--fs-3); font-weight:700; color:var(--t1); }
+.sh-row-t p + p { font-size:13px; color:var(--t3); margin-top:1px; }
+.sh-empty { font-size:var(--fs-2); line-height:1.5; color:var(--t2); margin:6px 0 10px; }
 .reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
 .seg-n { font-family:var(--ui-font); font-size:11px; font-weight:700; color:var(--t3); }
 /* Likkutei Torah: the week's maamarim, and a maamar (in Heilig, the look from May: dibbur hamaschil as a drop word) */
@@ -550,7 +561,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .stile-t p:first-child { font:800 22px/1.15 var(--ui-font); letter-spacing:-.3px; }
 .stile-t p:last-child { font:500 13px/1.3 var(--ui-font); opacity:.92; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .stile-art.lift svg { animation:glyphLift .6s cubic-bezier(.2,.7,.2,1); }
-#tab-learn .group, #extra-tracks-list.group { background:var(--card); border-radius:var(--r-m); border:none; overflow:hidden; }
+#tab-learn .group { background:var(--card); border-radius:var(--r-m); border:none; overflow:hidden; }
 #tab-learn .lrow { padding-left:14px; padding-right:14px; }
 #heb-chip { display:flex; align-items:center; gap:6px; padding:5px 12px 5px 6px !important; border:none; cursor:pointer; }
 #heb-chip .cal-ic { width:22px; height:22px; border-radius:50%; background:var(--ink); color:var(--on-ink); display:grid; place-items:center; }
@@ -1356,12 +1367,8 @@ window._fsGetDoc = getDoc;
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
 
-      <!-- Extra learning tracks -->
-      <p id="extra-tracks-separator" class="t-sec">More learning <span class="beta-chip">Beta</span><button onclick="_openExtraTracksMenu()">Edit</button></p>
-      <div id="extra-tracks-list" class="group" style="display:none;"></div>
-      <div id="add-learning-btn" class="group" style="display:none;">
-        <div class="lrow" onclick="_openExtraTracksMenu()"><div class="lrow-ic" style="color:var(--gold);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div><div class="lrow-t"><p>Add learning</p><p>Daf Yomi, Nach Yomi, Halacha Yomis, Likkutei Torah</p></div></div>
-      </div>
+      <!-- Your seforim (More learning, beta): one quiet line; tap it for the shelf -->
+      <button type="button" id="shelf-line" class="shelf-line" onclick="_openShelf()" style="display:none;"></button>
 
 
     </div>
@@ -6494,42 +6501,67 @@ async function _bustTanyaCache() {
 
 
 // ── Extra track card rendering ────────────────────────────────────────────────
-function _renderExtraTrackCards(iso, isToday) {
-  const list = document.getElementById('extra-tracks-list');
-  if (!list) return;
+// Your seforim: on Today one quiet line (small spines, how many are learned
+// today); tapping it opens the shelf. Chitas stays the main thing on Today.
+const SPINES = {   // the cover of each sefer: [colour, name on the spine]
+  dafYomi: ['#3A1712', 'דף יומי'], nachYomi: ['#1E2A3D', 'נ״ך יומי'], kitzur: ['#23342A', 'קיצור שו״ע'],
+  likkuteiTorah: ['#1F1B19', 'לקוטי תורה'], sotah: ['#2E2A44', 'סוטה'], mishnahYomi: ['#2A3530', 'משניות'],
+  likkuteiSichos: ['#33203A', 'לקוטי שיחות'], shaarHaBitachon: ['#1D3340', 'שער הבטחון'],
+};
+function _shelfTracks() {
   const tracks = _shownTracks();
+  return window._sotahDaf ? ['sotah', ...tracks.filter(t => t !== 'sotah')] : tracks;   // Sotah during the Omer, without adding it
+}
+function _renderExtraTrackCards(iso, isToday) {
+  const line = document.getElementById('shelf-line');
+  if (line) {
+    const ids = _shelfTracks();
+    const done = ids.filter(id => _trackDoneOn(id, iso)).length;
+    const spines = ids.length
+      ? ids.map((id, i) => '<span class="sl-spine' + (_trackDoneOn(id, iso) ? ' on' : '') + '" style="background:' + (SPINES[id] || ['#2B2622'])[0] + ';height:' + (30 + (i % 3) * 2) + 'px"></span>').join('')
+      : '<span class="sl-spine empty"></span><span class="sl-spine empty" style="height:30px"></span>';
+    line.innerHTML = '<span class="sl-spines" aria-hidden="true">' + spines + '</span>'
+      + '<span class="sl-t"><span>Your seforim</span><span>' + (ids.length ? done + ' of ' + ids.length + ' today' : 'Daf Yomi, Nach, Halacha, Likkutei Torah') + '</span></span>'
+      + '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+  }
+  if (document.getElementById('shelf-sheet')) _drawShelf();
+}
 
-  // Auto-inject Sotah during Omer (not opt-in)
-  // We check window._sotahDaf which is set by _checkSotahOmer()
-  const sotahDaf = window._sotahDaf;
-  const allTracks = sotahDaf ? ['sotah', ...tracks.filter(t => t !== 'sotah')] : tracks;
-
-  if (!allTracks.length) { list.style.display = 'none'; return; }
-  list.style.display = 'block';
-
-  list.innerHTML = allTracks.map((id, i) => {
-    const def = EXTRA_TRACK_DEFS[id];
-    if (!def) return '';
-    const done = !!_trackDoneOn(id, iso);
-    const tickAction = '_toggleTrack(\'' + id + '\')';
-
-    return '<div class="extra-card-wrap" id="extra-wrap-' + id + '">'
-      + '<div class="extra-card-delete-bg" id="extra-del-bg-' + id + '" style="opacity:0;">'
-      +   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'
-      + '</div>'
-      + '<div class="lrow" id="extra-card-' + id + '" style="--c:' + def.color + ';" onclick="openExtraReader(\'' + id + '\')">'
-      +   '<div class="lrow-ic" style="color:' + def.color + ';"><svg width="19" height="19" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg></div>'
-      +   '<div class="lrow-t"><p>' + def.label + '</p><p id="extra-sub-' + id + '">Loading…</p></div>'
-      +   '<button class="check' + (done ? ' on' : '') + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + def.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
-      + '</div>'
-      + '</div>'; // card-wrap
+// The shelf: your seforim in their covers, and under them each one's piece for
+// the day you're on, with its tick. Tap a book or a line to open it.
+function _openShelf() {
+  document.getElementById('shelf-sheet')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'shelf-sheet';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:flex-end;justify-content:center;';
+  modal.onclick = e => { if (e.target === modal) _closeShelf(); };
+  modal.innerHTML = '<div class="ps-modal-sheet shelf-sheet" role="dialog" aria-label="Your seforim" style="max-height:88vh;"><div id="shelf-body" style="overflow-y:auto;padding:10px 20px 24px;"></div></div>';
+  document.body.appendChild(modal);
+  _drawShelf();
+}
+function _closeShelf() { document.getElementById('shelf-sheet')?.remove(); }
+function _shelfOpenTrack(id) { _closeShelf(); openExtraReader(id); }
+function _drawShelf() {
+  const body = document.getElementById('shelf-body');
+  if (!body) return;
+  const iso = _viewedISO(), ids = _shelfTracks();
+  const books = ids.map((id, i) => {
+    const [cover, name] = SPINES[id] || ['#2B2622', EXTRA_TRACK_DEFS[id].label];
+    const on = !!_trackDoneOn(id, iso);
+    return '<button type="button" class="sh-book' + (on ? ' on' : '') + '" style="background:' + cover + ';height:' + [176, 160, 168, 180, 164][i % 5] + 'px" onclick="_shelfOpenTrack(\'' + id + '\')" aria-label="' + EXTRA_TRACK_DEFS[id].label + (on ? ', learned' : '') + '">'
+      + '<span class="sh-rule"></span><span class="sh-name" lang="he" id="spine-he-' + id + '">' + name.split(' ').join('<br>') + '</span><span class="sh-rule sh-foot"></span></button>';
   }).join('');
-
-  // Attach swipe-to-delete listeners after render
-  setTimeout(() => _attachExtraSwipeDelete(), 30);
-
-  // Load subtitles async — use allTracks so auto-injected Sotah is included
-  allTracks.forEach(id => _loadExtraSubtitle(id));
+  const rows = ids.map(id => {
+    const def = EXTRA_TRACK_DEFS[id], on = !!_trackDoneOn(id, iso);
+    return '<div class="sh-row" onclick="_shelfOpenTrack(\'' + id + '\')"><div class="sh-row-t"><p>' + def.label + '</p><p id="extra-sub-' + id + '">…</p></div>'
+      + '<button class="check' + (on ? ' on' : '') + '" aria-label="' + (on ? 'Unmark ' : 'Mark done: ') + def.label + '" onclick="event.stopPropagation();_toggleTrack(\'' + id + '\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></button></div>';
+  }).join('');
+  body.innerHTML = '<div class="dp-grab"></div>'
+    + '<div class="sh-head"><p>Your seforim <span class="beta-chip">Beta</span></p><button type="button" onclick="_closeShelf();_openExtraTracksMenu()">Add a sefer</button></div>'
+    + (ids.length
+      ? '<div class="sh-shelf">' + books + '</div><div class="sh-ledge"></div><div class="sh-rows">' + rows + '</div>'
+      : '<p class="sh-empty">Your shelf is empty. Add Daf Yomi, Nach Yomi, Halacha Yomis or the week\'s Likkutei Torah, and each day\'s piece is waiting here.</p>');
+  ids.forEach(id => _loadExtraSubtitle(id));
 }
 
 // Load subtitle for an extra track card
@@ -6549,7 +6581,10 @@ async function _loadExtraSubtitle(id) {
       const lsKeys = parshaEn ? _lsParshaKeys(parshaEn) : [];
       el.textContent = lsKeys.length ? 'Sichos · ' + lsKeys.map(_lsParshaHeb).join(' · ') : "This week's parsha";
     } else if (OFFERED_TRACKS.includes(id)) {
-      el.textContent = _trackLine(id, await _trackPiece(id, dateISO(d)));
+      const piece = await _trackPiece(id, dateISO(d));
+      el.textContent = _trackLine(id, piece);
+      const spine = document.getElementById('spine-he-' + id);   // Torah Ohr on Bereishis and Shemos
+      if (spine && id === 'likkuteiTorah' && piece.books === 'Torah Ohr') spine.innerHTML = 'תורה<br>אור';
     } else if (id === 'hayomYom') {
       // Hayom Yom goes by the Hebrew date: that's its subtitle
       el.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
@@ -6620,10 +6655,9 @@ const _shownTracks = () => (user.extraTracks || []).filter(id => id !== 'hayomYo
 function _syncMoreLearning() {
   const has = _shownTracks().length > 0 || !!window._sotahDaf;
   const show = has || OFFERED_TRACKS.length > 0;
-  const sep = document.getElementById('extra-tracks-separator');
-  if (sep) sep.style.display = show ? 'flex' : 'none';
-  const addBtn = document.getElementById('add-learning-btn');
-  if (addBtn) addBtn.style.display = show && !has ? 'block' : 'none';
+  const line = document.getElementById('shelf-line');
+  if (line) line.style.display = show ? 'flex' : 'none';
+  if (line && show && !line.innerHTML) _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   const psl = document.getElementById('ps-extra-label'), psc = document.getElementById('ps-extra-tracks-list');
   if (psl) psl.style.display = show ? '' : 'none';
   if (psc) psc.style.display = show ? '' : 'none';
@@ -7962,62 +7996,11 @@ function _restoreExtraScroll(id) {
   unlockMarkDone(); // extra tracks unlock immediately
 }
 
-// ── Extra track card swipe-to-delete ──────────────────────────────────────────
-function _attachExtraSwipeDelete() {
-  (user.extraTracks || []).forEach(id => {
-    const wrap = document.getElementById('extra-wrap-' + id);
-    const card = document.getElementById('extra-card-' + id);
-    const bg   = document.getElementById('extra-del-bg-' + id);
-    if (!wrap || !card || !bg) return;
-
-    let startX = 0, curX = 0, dragging = false;
-    const THRESHOLD = 70; // px to trigger delete
-
-    function onStart(e) {
-      startX = e.touches ? e.touches[0].clientX : e.clientX;
-      curX = startX;
-      dragging = true;
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      curX = e.touches ? e.touches[0].clientX : e.clientX;
-      const dx = curX - startX;
-      if (dx >= 0) { card.style.transform = ''; bg.style.opacity = '0'; return; }
-      const pull = Math.min(Math.abs(dx), 90);
-      card.style.transform = 'translateX(-' + pull + 'px)';
-      bg.style.opacity = String(Math.min(pull / THRESHOLD, 1));
-      if (e.cancelable) e.preventDefault();
-    }
-    function onEnd() {
-      if (!dragging) return;
-      dragging = false;
-      const dx = startX - curX;
-      if (dx >= THRESHOLD) {
-        // Animate out and remove
-        card.style.transition = 'transform .25s ease, opacity .2s ease';
-        card.style.transform = 'translateX(-110%)';
-        card.style.opacity = '0';
-        setTimeout(() => _removeExtraTrack(id), 220);
-      } else {
-        card.style.transition = 'transform .2s ease';
-        card.style.transform = '';
-        bg.style.opacity = '0';
-        setTimeout(() => { card.style.transition = ''; }, 220);
-      }
-    }
-
-    wrap.addEventListener('touchstart', onStart, { passive: true });
-    wrap.addEventListener('touchmove',  onMove,  { passive: false });
-    wrap.addEventListener('touchend',   onEnd,   { passive: true });
-  });
-}
-
 function _removeExtraTrack(id) {
   if (!user.extraTracks) return;
   user.extraTracks = user.extraTracks.filter(t => t !== id);
   saveUser();
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   _syncMoreLearning();
   fire(EXTRA_TRACK_DEFS[id]?.label + ' removed', 'gray');
 }

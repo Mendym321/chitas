@@ -72,11 +72,15 @@ console.log('More learning (beta):');
 
 await page.evaluate(() => { user.extraTracks = []; user.done = {}; user.pastDone = {}; dayOffset = 0; _syncMoreLearning(); });
 
-await check('"More learning" shows, with a Beta chip and an Add learning row', () => [
-  document.getElementById('extra-tracks-separator').style.display,
-  document.querySelector('#extra-tracks-separator .beta-chip')?.textContent,
-  document.getElementById('add-learning-btn').style.display,
-], ['flex', 'Beta', 'block']);
+// A tick on the shelf, for a track (opens the shelf to look)
+await page.evaluate(() => { window.__ticked = id => { if (!document.getElementById('shelf-sheet')) _openShelf();
+  const row = [...document.querySelectorAll('#shelf-body .sh-row')].find(r => r.querySelector('.sh-row-t p').textContent === EXTRA_TRACK_DEFS[id].label);
+  return !!row && row.querySelector('.check').classList.contains('on'); }; });
+
+await check('Today has one quiet line for your seforim, and nothing else; with none yet, it says what you can add', () => {
+  const line = document.getElementById('shelf-line');
+  return [line.style.display, line.textContent.trim(), !document.getElementById('extra-tracks-list')];
+}, ['flex', 'Your seforimDaf Yomi, Nach, Halacha, Likkutei Torah', true]);
 
 await check('the Add learning sheet offers the four tracks, with today\'s piece', async () => {
   _openExtraTracksMenu();
@@ -91,14 +95,18 @@ await check('the Add learning sheet offers the four tracks, with today\'s piece'
 
 await check('Add adds a track, and the button says Added', () => {
   ['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'].forEach(id => document.getElementById('ml-add-' + id).click());
-  return [user.extraTracks, document.getElementById('ml-add-dafYomi').textContent, document.getElementById('add-learning-btn').style.display];
-}, [['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'], 'Added', 'none']);
+  return [user.extraTracks, document.getElementById('ml-add-dafYomi').textContent, document.querySelector('#shelf-line .sl-t span + span').textContent];
+}, [['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'], 'Added', '0 of 4 today']);
 
-await check('Today has a row for each, with its piece (no network needed)', async () => {
+await check('the line opens your shelf: a sefer for each, and its piece (no network needed)', async () => {
   _closeExtraMenu();
+  document.getElementById('shelf-line').click();
   await new Promise(r => setTimeout(r, 300));
-  return ['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'].map(id => document.getElementById('extra-sub-' + id).textContent);
-}, ['Bechoros 35', 'Yirmiyahu 41', 'Siman 10:20–26', 'Parshas Lech Lecha · Torah Ohr']);
+  const r = [[...document.querySelectorAll('#shelf-body .sh-name')].map(e => e.textContent),
+    ['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'].map(id => document.getElementById('extra-sub-' + id).textContent)];
+  _closeShelf();
+  return r;
+}, [['דףיומי', 'נ״ךיומי', 'קיצורשו״ע', 'תורהאור'], ['Bechoros 35', 'Yirmiyahu 41', 'Siman 10:20–26', 'Parshas Lech Lecha · Torah Ohr']]);
 if (asked.some(a => a.startsWith('calendars'))) { failed++; console.log('  ✗ a row asked Sefaria\'s calendar:', asked); }
 else console.log('  ✓ no row asked Sefaria\'s calendar');
 
@@ -194,10 +202,10 @@ await check('ticking Halacha Yomis marks it, says so, and leaves the day\'s four
   _toggleTrack('kitzur');
   await new Promise(r => setTimeout(r, 50));
   return [user.done.kitzur, document.getElementById('toast').textContent, sectionsDone(user.done),
-          document.querySelector('#extra-card-kitzur .check').classList.contains('on')];
-}, [true, 'Nice! Halacha Yomis done.', 0, true]);
+          __ticked('kitzur'), document.querySelector('#shelf-line .sl-t span + span').textContent];
+}, [true, 'Nice! Halacha Yomis done.', 0, true, '1 of 4 today']);
 
-await check('ticking it again unmarks it', () => { _toggleTrack('kitzur'); return [!!user.done.kitzur, document.querySelector('#extra-card-kitzur .check').classList.contains('on')]; }, [false, false]);
+await check('ticking it again unmarks it', () => { _toggleTrack('kitzur'); const r = [!!user.done.kitzur, __ticked('kitzur')]; _closeShelf(); return r; }, [false, false]);
 
 asked.length = 0;
 await check('Likkutei Torah opens the week\'s maamarim: Torah Ohr on Lech Lecha', async () => {
@@ -226,7 +234,7 @@ await check('Likkutei Torah marked on Wednesday counts for the week, here on Fri
   dayOffset = -2; _toggleTrack('likkuteiTorah');                 // Wednesday
   dayOffset = 0; _renderExtraTrackCards(_viewedISO(), true);     // back to Friday
   return [user.pastDone['2026-10-21']?.likkuteiTorah, !!user.done.likkuteiTorah,
-          document.querySelector('#extra-card-likkuteiTorah .check').classList.contains('on')];
+          __ticked('likkuteiTorah')];
 }, [true, false, true]);
 
 await check('and the reader says it\'s learned this week', async () => {
@@ -237,7 +245,7 @@ await check('and the reader says it\'s learned this week', async () => {
 await check('unticking it on Friday removes Wednesday\'s mark', () => {
   closeChabadPanel();
   _toggleTrack('likkuteiTorah');
-  return [!!user.pastDone['2026-10-21']?.likkuteiTorah, document.querySelector('#extra-card-likkuteiTorah .check').classList.contains('on')];
+  const r = [!!user.pastDone['2026-10-21']?.likkuteiTorah, __ticked('likkuteiTorah')]; _closeShelf(); return r;
 }, [false, false]);
 
 await check('next week is a new week: Vayera', async () => {

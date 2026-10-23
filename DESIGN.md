@@ -40,8 +40,8 @@ Review is the step after learning, shown where you are, never pushed:
 ## Footnotes
 Rambam and Tanya footnotes are small raised numbers in a soft section colour, no box; the open one is underlined.
 
-## More learning (beta)
-Below Today's four tiles and the Hayom Yom card, under "More learning" with a Beta chip. Offered (`OFFERED_TRACKS`): **Daf Yomi**, **Nach Yomi**, **Halacha Yomis** (Kitzur Shulchan Aruch Yomi) and the week's **Likkutei Torah** (Torah Ohr on Bereishis and Shemos). They never count toward the day's four rings or the streak.
+## More learning (beta): your seforim
+Chitas stays the main thing on Today. Below the four tiles and the Hayom Yom card there is one quiet line, "Your seforim" (tiny spines, "2 of 4 today"; with none yet, what you can add). Tapping it opens the shelf: your seforim in real-looking covers (dark cloth, gold Hebrew title word under word, a red ribbon when learned; weekly ones keep it all week), and under them each one's piece for the day with its tick. A book or a line opens it; "Add a sefer" opens the Add learning sheet. No "next": any order, like Chitas. Offered (`OFFERED_TRACKS`): **Daf Yomi**, **Nach Yomi**, **Halacha Yomis** (Kitzur Shulchan Aruch Yomi) and the week's **Likkutei Torah** (Torah Ohr on Bereishis and Shemos). They never count toward the day's four rings or the streak.
 - **Which piece, when:** `data/cycles.json` (each day's daf, chapter of Nach and Kitzur se'ifim, as Sefaria refs) and `data/likkutei-torah.json` (each parsha's maamarim, with opening words and minutes), made by `tools/generate-cycles.mjs` from Hebcal's schedules and Sefaria's export. No network to know today's piece; the text itself comes from Sefaria. The schedule runs to Sept 2030: run the generator again before then.
 - **Add learning sheet:** one card of rows (coloured icon, name, what it is with today's piece, an Add / Added pill), like the design canvas's Y-Add.
 - **Marking:** the same rules as Chitas (today and the last 7 days). Likkutei Torah is weekly: marked any day of the week (Sunday to Shabbos), it shows learned all week, and your place in a maamar is kept for the week.
