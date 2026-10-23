@@ -7826,7 +7826,9 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
 
   const HE = id === 'likkuteiTorah'
     ? "'DachHeilig','Frank Ruhl Libre',serif"
-    : "'Vilna','Shlomo','Noto Serif Hebrew',serif";   // like Chumash and Rambam
+    : id === 'nachYomi'
+      ? "'OTSiddur','Shlomo','Noto Serif Hebrew',serif"   // Tanach with taamim: OT Siddur, like Tehillim (Vilna can't place a taam on a letter that also has a vowel)
+      : "'Vilna','Shlomo','Noto Serif Hebrew',serif";   // like Rambam
   const langKey = 'chitas_lang_extra_' + id;
   const lang = localStorage.getItem(langKey) || (enSegs.length ? 'both' : 'he');
 
@@ -7864,7 +7866,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
       : 'padding:14px 0;border-bottom:1px solid var(--border);';
     const heStyle = isLT
       ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.62;color:var(--t1);'
-      : 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:' + (id === 'nachYomi' ? 21 : 19) + 'px;--rf-lh:1.92;color:var(--t1);';   // Nach as big as Chumash, the rest like Rambam
+      : 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:' + (id === 'nachYomi' ? 21 : 19) + 'px;--rf-lh:' + (id === 'nachYomi' ? 1.62 : 1.92) + ';color:var(--t1);';   // Nach like Tehillim (21px), the rest like Rambam
     const enStyle = isLT
       ? '--rf-sz:15px;--rf-lh:1.78;color:var(--t1);'
       : '--rf-sz:15px;--rf-lh:1.82;color:var(--t1);';
