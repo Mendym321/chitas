@@ -515,7 +515,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .lt-orn i { width:5px; height:5px; border-radius:50%; background:currentColor; }
 .lt-body { direction:rtl; text-align:justify; text-align-last:right; font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; --rf-sz:19px; --rf-lh:1.6; color:var(--t1); margin-bottom:.15em; }
 .lt-body.lt-last { text-align-last:center; }
-.lt-sefer .lt-body > b:first-child, .lt-sefer .lt-body > .lt-pg:first-child + b { font-weight:normal; font-size:1.4em; line-height:1; }   /* the title's face (a bold one would be another font), just larger */
+.lt-sefer { font-synthesis:none; }   /* never a made-up bold: everything in the one regular Heilig face */
+.lt-sefer .lt-open { font-weight:400; font-size:1.4em; line-height:1; }   /* the opening words: the title's face, larger */
+.lt-sefer .lt-em { font-weight:400; font-size:1.15em; }
 .lt-sefer .lt-body small { font-size:.78em; color:var(--t2); }
 .lt-pg { display:inline-block; font-family:var(--ui-font); font-size:10px; font-weight:700; color:var(--t3); border:1px solid var(--border); border-radius:999px; padding:0 6px; margin:0 3px; line-height:16px; vertical-align:middle; text-indent:0; }
 .ml-foot { margin:12px 4px 0; font-size:var(--fs-1); color:var(--t3); line-height:1.45; }
@@ -7451,7 +7453,11 @@ function _ltHtml(raw) {
     .replace(/\u0000(\/?)(b|small)\u0000/g, '<$1$2>');
   t = t.replace(/<b>\s*<\/b>|<small>\s*<\/small>/g, '').trim();
   // A maamar that opens with its verse in brackets, "(אנכי מגן לך).", has it set as the opening words
-  return t.replace(/^((?:<span class="lt-pg">[^<]*<\/span>\s*)?)(\([^()<]{2,60}\))/, '$1<b>$2</b>');
+  t = t.replace(/^((?:<span class="lt-pg">[^<]*<\/span>\s*)?)(\([^()<]{2,60}\))/, '$1<b>$2</b>');
+  // Not <b>: a bold Heilig is another font file (thin, on phones). The opening words and other
+  // emphasis are the regular face, larger, styled by class
+  return t.replace(/^((?:<span class="lt-pg">[^<]*<\/span>\s*)?)<b>([\s\S]*?)<\/b>/, '$1<span class="lt-open">$2</span>')
+    .replace(/<b>/g, '<span class="lt-em">').replace(/<\/b>/g, '</span>');
 }
 
 async function _ltOpen(i) {

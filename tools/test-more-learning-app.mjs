@@ -189,7 +189,7 @@ if (asked.length) { failed++; console.log('  ✗ the list should need no network
 await check('tapping a maamar opens it like the printed sefer (title, bold opening, Heilig), with a way back', async () => {
   await _ltOpen(1);
   const c = document.getElementById('native-reader-content');
-  return [c.querySelector('.lt-title')?.textContent.startsWith('פרשת') && c.querySelector('.lt-body b')?.textContent === 'פתיחה של' ? 'אנכי מגן לך' : c.innerHTML.slice(0, 300), !!c.querySelector('.lt-back'), getComputedStyle(c.querySelector('.lt-body')).fontFamily.startsWith('DachHeilig')];
+  return [c.querySelector('.lt-title')?.textContent.startsWith('פרשת') && c.querySelector('.lt-body .lt-open')?.textContent === 'פתיחה של' && !c.querySelector('.lt-body b') && getComputedStyle(c.querySelector('.lt-open')).fontWeight === '400' ? 'אנכי מגן לך' : c.innerHTML.slice(0, 300), !!c.querySelector('.lt-back'), getComputedStyle(c.querySelector('.lt-body')).fontFamily.startsWith('DachHeilig')];
 }, ['אנכי מגן לך', true, true]);
 if (!asked.some(a => a.startsWith('Torah Ohr, Lech Lecha 2'))) { failed++; console.log('  ✗ the maamar asked for', asked); }
 
