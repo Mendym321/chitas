@@ -480,31 +480,32 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .g-chips { display:inline-flex; gap:4px; vertical-align:middle; }
 .g-chips span { font-family:'Vilna',serif; font-size:11px; font-weight:700; line-height:16px; padding:0 6px; border-radius:999px; background:var(--card2); color:var(--t2); }
 .g-chips-row { text-align:right; margin-top:4px; }
-/* Your seforim: the line on Today and the shelf (real covers: dark cloth, gold lettering) */
-.shelf-line { display:flex; align-items:center; gap:14px; width:100%; margin:12px 0 0; padding:12px 16px; border:1px solid var(--border); border-radius:var(--r-m); background:none; color:var(--t3); font-family:inherit; text-align:left; cursor:pointer; }
-.sl-spines { display:flex; align-items:flex-end; gap:2px; height:34px; flex-shrink:0; }
-.sl-spine { position:relative; width:9px; border-radius:1px; }
-.sl-spine.on::after { content:''; position:absolute; top:-1px; right:2px; width:3px; height:10px; background:#8E2B22; }
-.sl-spine.empty { height:32px; border:1.5px dashed var(--border); background:none; box-sizing:border-box; }
-.sl-t { flex:1; min-width:0; display:flex; flex-direction:column; }
-.sl-t span:first-child { font-size:var(--fs-3); font-weight:700; color:var(--t1); }
-.sl-t span + span { font-size:13px; color:var(--t3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.sh-head { display:flex; justify-content:space-between; align-items:baseline; margin:4px 0 18px; }
+/* More learning: your seforim (dark cloth, gold bands, a ribbon when learned) on Today and on the shelf */
+.ml-head { display:flex; justify-content:space-between; align-items:center; width:100%; margin:22px 0 8px; padding:0 4px; background:none; border:none; font-family:inherit; cursor:pointer; color:var(--t3); }
+.ml-head > span:first-child { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
+.ml-head > span:first-child .beta-chip { text-transform:none; letter-spacing:.3px; margin-left:6px; }
+.ml-head > span + span { display:flex; align-items:center; gap:4px; font-size:13px; }
+.ml-books { display:flex; justify-content:space-around; align-items:flex-end; gap:6px; padding:16px 10px 12px; border-radius:var(--r-m); background:var(--card); overflow-x:auto; }
+.ml-book { display:flex; flex-direction:column; align-items:center; gap:7px; background:none; border:none; padding:0; font-family:inherit; cursor:pointer; flex-shrink:0; }
+.ml-name { font-size:11px; font-weight:700; color:var(--t2); max-width:74px; text-align:center; line-height:1.25; }
+.sefer { position:relative; display:block; border-radius:3px 3px 1px 1px; box-shadow:inset -4px 0 0 rgba(0,0,0,.18), 0 0 0 1px rgba(255,255,255,.05); }
+.sefer.sf-small { width:56px; height:82px; }
+.sefer.sf-big { width:66px; }
+.sefer.on::after { content:''; position:absolute; top:-1px; right:9px; width:6px; height:24%; background:#8E2B22; }
+.sf-band { position:absolute; left:15%; right:15%; top:9%; height:4px; border-top:1px solid #B8954E; border-bottom:1px solid #B8954E; }
+.sf-band.sf-low { top:auto; bottom:8%; height:0; border-bottom:none; }
+.sefer.sf-empty { border:1.5px dashed var(--border); background:none; box-shadow:none; display:flex; align-items:center; justify-content:center; color:var(--t3); box-sizing:border-box; }
+.sh-head { display:flex; justify-content:space-between; align-items:baseline; margin:4px 0 22px; }
 .sh-head p { font-family:var(--title-font); font-size:var(--fs-5); font-weight:800; color:var(--t1); }
 .sh-head button { background:none; border:none; padding:6px 0; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t2); cursor:pointer; }
-.sh-shelf { display:flex; align-items:flex-end; justify-content:center; gap:8px; min-height:184px; }
-.sh-book { position:relative; width:54px; border:none; border-radius:4px 4px 2px 2px; padding:0; display:flex; flex-direction:column; align-items:center; cursor:pointer; box-shadow:inset -5px 0 0 rgba(0,0,0,.18), 0 0 0 1px rgba(255,255,255,.05); }
-.sh-book.on::after { content:''; position:absolute; top:-1px; right:8px; width:6px; height:24px; background:#8E2B22; }
-.sh-rule { margin-top:12px; width:70%; height:1px; background:#B8954E; }
-.sh-rule.sh-foot { position:absolute; bottom:14px; margin:0; }
-.sh-name { margin-top:22px; padding:0 4px; font-family:'Frank Ruhl Libre',serif; font-weight:700; font-size:15px; line-height:1.2; color:#CDAA62; text-align:center; direction:rtl; }   /* across the spine, word under word, like a printed sefer */
+.sh-shelf, .sh-caps { display:flex; justify-content:space-around; gap:8px; }
+.sh-shelf { align-items:flex-end; min-height:180px; }
+.sh-slot { background:none; border:none; padding:0; cursor:pointer; }
 .sh-ledge { height:6px; border-radius:2px; background:var(--border); }
-.sh-rows { margin-top:12px; }
-.sh-row { display:flex; align-items:center; gap:12px; padding:12px 0; cursor:pointer; }
-.sh-row + .sh-row { border-top:1px solid var(--border); }
-.sh-row-t { flex:1; min-width:0; }
-.sh-row-t p:first-child { font-size:var(--fs-3); font-weight:700; color:var(--t1); }
-.sh-row-t p + p { font-size:13px; color:var(--t3); margin-top:1px; }
+.sh-caps { margin-top:10px; align-items:flex-start; }
+.sh-cap { width:74px; display:flex; flex-direction:column; align-items:center; gap:2px; background:none; border:none; padding:0; font-family:inherit; cursor:pointer; text-align:center; }
+.sh-cap span:first-child { font-size:13px; font-weight:700; color:var(--t1); line-height:1.25; }
+.sh-cap span + span { font-size:12px; color:var(--t3); line-height:1.3; }
 .sh-empty { font-size:var(--fs-2); line-height:1.5; color:var(--t2); margin:6px 0 10px; }
 .reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
 .seg-n { font-family:var(--ui-font); font-size:11px; font-weight:700; color:var(--t3); }
@@ -1367,8 +1368,8 @@ window._fsGetDoc = getDoc;
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
 
-      <!-- Your seforim (More learning, beta): one quiet line; tap it for the shelf -->
-      <button type="button" id="shelf-line" class="shelf-line" onclick="_openShelf()" style="display:none;"></button>
+      <!-- More learning (beta): your seforim side by side; tap one to learn it, the count for the shelf -->
+      <div id="more-learning" style="display:none;"></div>
 
 
     </div>
@@ -6501,41 +6502,50 @@ async function _bustTanyaCache() {
 
 
 // ── Extra track card rendering ────────────────────────────────────────────────
-// Your seforim: on Today one quiet line (small spines, how many are learned
-// today); tapping it opens the shelf. Chitas stays the main thing on Today.
-const SPINES = {   // the cover of each sefer: [colour, name on the spine]
-  dafYomi: ['#3A1712', 'דף יומי'], nachYomi: ['#1E2A3D', 'נ״ך יומי'], kitzur: ['#23342A', 'קיצור שו״ע'],
-  likkuteiTorah: ['#1F1B19', 'לקוטי תורה'], sotah: ['#2E2A44', 'סוטה'], mishnahYomi: ['#2A3530', 'משניות'],
-  likkuteiSichos: ['#33203A', 'לקוטי שיחות'], shaarHaBitachon: ['#1D3340', 'שער הבטחון'],
+// More learning: on Today, below Chitas, your seforim side by side, each with
+// its name; tap one to learn it. The count ("2 of 4 today") opens the shelf:
+// the books bigger, each with its name and the day's piece. Learned shows as
+// the sefer's ribbon; you mark it learned in the reader, like Chitas.
+const COVERS = {   // each sefer's cloth, and its short name
+  dafYomi: ['#3A1712', 'Daf Yomi'], nachYomi: ['#1E2A3D', 'Nach Yomi'], kitzur: ['#23342A', 'Halacha'],
+  likkuteiTorah: ['#1F1B19', 'Likkutei Torah'], sotah: ['#2E2A44', 'Sotah'], mishnahYomi: ['#2A3530', 'Mishnah'],
+  likkuteiSichos: ['#33203A', 'Likkutei Sichos'], shaarHaBitachon: ['#1D3340', "Sha'ar HaBitachon"],
 };
 function _shelfTracks() {
   const tracks = _shownTracks();
   return window._sotahDaf ? ['sotah', ...tracks.filter(t => t !== 'sotah')] : tracks;   // Sotah during the Omer, without adding it
 }
+// A sefer: dark cloth, gold bands, a ribbon when it's learned (no title on the spine: the name is underneath)
+function _sefer(id, iso, cls) {
+  const on = !!_trackDoneOn(id, iso);
+  const [klass, height] = cls.split('|');
+  return '<span class="sefer ' + klass + (on ? ' on' : '') + '" style="background:' + (COVERS[id] || ['#2B2622'])[0] + (height ? ';height:' + height + 'px' : '') + '">'
+    + '<span class="sf-band"></span><span class="sf-band sf-low"></span></span>';
+}
 function _renderExtraTrackCards(iso, isToday) {
-  const line = document.getElementById('shelf-line');
-  if (line) {
+  const box = document.getElementById('more-learning');
+  if (box) {
     const ids = _shelfTracks();
     const done = ids.filter(id => _trackDoneOn(id, iso)).length;
-    const spines = ids.length
-      ? ids.map((id, i) => '<span class="sl-spine' + (_trackDoneOn(id, iso) ? ' on' : '') + '" style="background:' + (SPINES[id] || ['#2B2622'])[0] + ';height:' + (30 + (i % 3) * 2) + 'px"></span>').join('')
-      : '<span class="sl-spine empty"></span><span class="sl-spine empty" style="height:30px"></span>';
-    line.innerHTML = '<span class="sl-spines" aria-hidden="true">' + spines + '</span>'
-      + '<span class="sl-t"><span>Your seforim</span><span>' + (ids.length ? done + ' of ' + ids.length + ' today' : 'Daf Yomi, Nach, Halacha, Likkutei Torah') + '</span></span>'
-      + '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+    box.innerHTML = '<button type="button" class="ml-head" onclick="_openShelf()"><span>More learning <span class="beta-chip">Beta</span></span>'
+      + '<span>' + (ids.length ? done + ' of ' + ids.length + ' today' : '') + '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span></button>'
+      + '<div class="ml-books">'
+      + ids.map(id => '<button type="button" class="ml-book" onclick="openExtraReader(\'' + id + '\')" aria-label="' + EXTRA_TRACK_DEFS[id].label + (_trackDoneOn(id, iso) ? ', learned' : '') + '">'
+          + _sefer(id, iso, 'sf-small') + '<span class="ml-name" id="ml-name-' + id + '">' + (COVERS[id] || [, EXTRA_TRACK_DEFS[id].label])[1] + '</span></button>').join('')
+      + '<button type="button" class="ml-book" onclick="_openExtraTracksMenu()" aria-label="Add a sefer"><span class="sefer sf-small sf-empty"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="ml-name">' + (ids.length ? 'Add' : 'Add a sefer') + '</span></button>'
+      + '</div>';
+    if (ids.includes('likkuteiTorah')) _loadExtraSubtitle('likkuteiTorah');   // its name: Torah Ohr on Bereishis and Shemos
   }
   if (document.getElementById('shelf-sheet')) _drawShelf();
 }
 
-// The shelf: your seforim in their covers, and under them each one's piece for
-// the day you're on, with its tick. Tap a book or a line to open it.
 function _openShelf() {
   document.getElementById('shelf-sheet')?.remove();
   const modal = document.createElement('div');
   modal.id = 'shelf-sheet';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:flex-end;justify-content:center;';
   modal.onclick = e => { if (e.target === modal) _closeShelf(); };
-  modal.innerHTML = '<div class="ps-modal-sheet shelf-sheet" role="dialog" aria-label="Your seforim" style="max-height:88vh;"><div id="shelf-body" style="overflow-y:auto;padding:10px 20px 24px;"></div></div>';
+  modal.innerHTML = '<div class="ps-modal-sheet shelf-sheet" role="dialog" aria-label="More learning" style="max-height:88vh;"><div id="shelf-body" style="overflow-y:auto;padding:10px 20px 28px;"></div></div>';
   document.body.appendChild(modal);
   _drawShelf();
 }
@@ -6545,29 +6555,21 @@ function _drawShelf() {
   const body = document.getElementById('shelf-body');
   if (!body) return;
   const iso = _viewedISO(), ids = _shelfTracks();
-  const books = ids.map((id, i) => {
-    const [cover, name] = SPINES[id] || ['#2B2622', EXTRA_TRACK_DEFS[id].label];
-    const on = !!_trackDoneOn(id, iso);
-    return '<button type="button" class="sh-book' + (on ? ' on' : '') + '" style="background:' + cover + ';height:' + [176, 160, 168, 180, 164][i % 5] + 'px" onclick="_shelfOpenTrack(\'' + id + '\')" aria-label="' + EXTRA_TRACK_DEFS[id].label + (on ? ', learned' : '') + '">'
-      + '<span class="sh-rule"></span><span class="sh-name" lang="he" id="spine-he-' + id + '">' + name.split(' ').join('<br>') + '</span><span class="sh-rule sh-foot"></span></button>';
-  }).join('');
-  const rows = ids.map(id => {
-    const def = EXTRA_TRACK_DEFS[id], on = !!_trackDoneOn(id, iso);
-    return '<div class="sh-row" onclick="_shelfOpenTrack(\'' + id + '\')"><div class="sh-row-t"><p>' + def.label + '</p><p id="extra-sub-' + id + '">…</p></div>'
-      + '<button class="check' + (on ? ' on' : '') + '" aria-label="' + (on ? 'Unmark ' : 'Mark done: ') + def.label + '" onclick="event.stopPropagation();_toggleTrack(\'' + id + '\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></button></div>';
-  }).join('');
+  const heights = [176, 160, 168, 180, 164];
   body.innerHTML = '<div class="dp-grab"></div>'
-    + '<div class="sh-head"><p>Your seforim <span class="beta-chip">Beta</span></p><button type="button" onclick="_closeShelf();_openExtraTracksMenu()">Add a sefer</button></div>'
+    + '<div class="sh-head"><p>More learning <span class="beta-chip">Beta</span></p><button type="button" onclick="_closeShelf();_openExtraTracksMenu()">Add a sefer</button></div>'
     + (ids.length
-      ? '<div class="sh-shelf">' + books + '</div><div class="sh-ledge"></div><div class="sh-rows">' + rows + '</div>'
-      : '<p class="sh-empty">Your shelf is empty. Add Daf Yomi, Nach Yomi, Halacha Yomis or the week\'s Likkutei Torah, and each day\'s piece is waiting here.</p>');
+      ? '<div class="sh-shelf">' + ids.map((id, i) => '<button type="button" class="sh-slot" onclick="_shelfOpenTrack(\'' + id + '\')" aria-label="' + EXTRA_TRACK_DEFS[id].label + (_trackDoneOn(id, iso) ? ', learned' : '') + '">'
+          + _sefer(id, iso, 'sf-big|' + heights[i % heights.length]) + '</button>').join('') + '</div>'
+        + '<div class="sh-ledge"></div>'
+        + '<div class="sh-caps">' + ids.map(id => '<button type="button" class="sh-cap" onclick="_shelfOpenTrack(\'' + id + '\')"><span id="sh-name-' + id + '">' + (COVERS[id] || [, EXTRA_TRACK_DEFS[id].label])[1] + '</span><span id="extra-sub-' + id + '">…</span></button>').join('') + '</div>'
+      : '<p class="sh-empty">Nothing on your shelf yet. Add Daf Yomi, Nach Yomi, Halacha Yomis or the week\'s Likkutei Torah, and each day\'s piece is waiting here.</p>');
   ids.forEach(id => _loadExtraSubtitle(id));
 }
 
 // Load subtitle for an extra track card
 async function _loadExtraSubtitle(id) {
-  const el = document.getElementById('extra-sub-' + id);
-  if (!el) return;
+  const el = document.getElementById('extra-sub-' + id) || document.createElement('p');   // (the Today row has no line for it)
   try {
     const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
     // Only Mishnah Yomi still asks Sefaria's calendar; the rest know their piece offline
@@ -6582,9 +6584,10 @@ async function _loadExtraSubtitle(id) {
       el.textContent = lsKeys.length ? 'Sichos · ' + lsKeys.map(_lsParshaHeb).join(' · ') : "This week's parsha";
     } else if (OFFERED_TRACKS.includes(id)) {
       const piece = await _trackPiece(id, dateISO(d));
-      el.textContent = _trackLine(id, piece);
-      const spine = document.getElementById('spine-he-' + id);   // Torah Ohr on Bereishis and Shemos
-      if (spine && id === 'likkuteiTorah' && piece.books === 'Torah Ohr') spine.innerHTML = 'תורה<br>אור';
+      // under the sefer's name on the shelf, just the piece: "Lech Lecha", not "Parshas Lech Lecha · Torah Ohr"
+      el.textContent = _trackLine(id, piece).replace(/^(Parshas|Siman) /, '').replace(/ · (Torah Ohr|Likkutei Torah)$/, '');
+      if (id === 'likkuteiTorah' && piece.books === 'Torah Ohr')   // Torah Ohr on Bereishis and Shemos
+        ['ml-name-', 'sh-name-'].forEach(k => { const n = document.getElementById(k + id); if (n) n.textContent = 'Torah Ohr'; });
     } else if (id === 'hayomYom') {
       // Hayom Yom goes by the Hebrew date: that's its subtitle
       el.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
@@ -6655,9 +6658,9 @@ const _shownTracks = () => (user.extraTracks || []).filter(id => id !== 'hayomYo
 function _syncMoreLearning() {
   const has = _shownTracks().length > 0 || !!window._sotahDaf;
   const show = has || OFFERED_TRACKS.length > 0;
-  const line = document.getElementById('shelf-line');
-  if (line) line.style.display = show ? 'flex' : 'none';
-  if (line && show && !line.innerHTML) _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
+  const box = document.getElementById('more-learning');
+  if (box) box.style.display = show ? 'block' : 'none';
+  if (box && show && !box.innerHTML) _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   const psl = document.getElementById('ps-extra-label'), psc = document.getElementById('ps-extra-tracks-list');
   if (psl) psl.style.display = show ? '' : 'none';
   if (psc) psc.style.display = show ? '' : 'none';

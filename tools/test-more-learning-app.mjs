@@ -72,15 +72,14 @@ console.log('More learning (beta):');
 
 await page.evaluate(() => { user.extraTracks = []; user.done = {}; user.pastDone = {}; dayOffset = 0; _syncMoreLearning(); });
 
-// A tick on the shelf, for a track (opens the shelf to look)
-await page.evaluate(() => { window.__ticked = id => { if (!document.getElementById('shelf-sheet')) _openShelf();
-  const row = [...document.querySelectorAll('#shelf-body .sh-row')].find(r => r.querySelector('.sh-row-t p').textContent === EXTRA_TRACK_DEFS[id].label);
-  return !!row && row.querySelector('.check').classList.contains('on'); }; });
+// Is a track's cover on Today marked learned (its ribbon)?
+await page.evaluate(() => { window.__ticked = id => !!document.getElementById('ml-name-' + id)?.parentElement.querySelector('.sefer.on');
+  window.__count = () => document.querySelector('#more-learning .ml-head span + span').textContent; });
 
-await check('Today has one quiet line for your seforim, and nothing else; with none yet, it says what you can add', () => {
-  const line = document.getElementById('shelf-line');
-  return [line.style.display, line.textContent.trim(), !document.getElementById('extra-tracks-list')];
-}, ['flex', 'Your seforimDaf Yomi, Nach, Halacha, Likkutei Torah', true]);
+await check('Today has a More learning label and, with nothing added yet, just a place to add a sefer', () => {
+  const box = document.getElementById('more-learning');
+  return [box.style.display, box.querySelector('.ml-head').textContent.trim(), [...box.querySelectorAll('.ml-name')].map(e => e.textContent), !document.getElementById('extra-tracks-list')];
+}, ['block', 'More learning Beta', ['Add a sefer'], true]);
 
 await check('the Add learning sheet offers the four tracks, with today\'s piece', async () => {
   _openExtraTracksMenu();
@@ -95,18 +94,33 @@ await check('the Add learning sheet offers the four tracks, with today\'s piece'
 
 await check('Add adds a track, and the button says Added', () => {
   ['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'].forEach(id => document.getElementById('ml-add-' + id).click());
-  return [user.extraTracks, document.getElementById('ml-add-dafYomi').textContent, document.querySelector('#shelf-line .sl-t span + span').textContent];
+  return [user.extraTracks, document.getElementById('ml-add-dafYomi').textContent, __count()];
 }, [['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'], 'Added', '0 of 4 today']);
 
-await check('the line opens your shelf: a sefer for each, and its piece (no network needed)', async () => {
-  _closeExtraMenu();
-  document.getElementById('shelf-line').click();
+await check('Today shows the four covers side by side, each with its name under it, and no Hebrew on them', async () => {
+  await new Promise(r => setTimeout(r, 200));
+  const box = document.getElementById('more-learning');
+  return [[...box.querySelectorAll('.ml-name')].map(e => e.textContent), box.querySelectorAll('.ml-book .sefer:not(.sf-empty)').length, /[\u0590-\u05FF]/.test(box.textContent)];
+}, [['Daf Yomi', 'Nach Yomi', 'Halacha', 'Torah Ohr', 'Add'], 4, false]);
+
+await check('tapping a cover opens its reader', async () => {
+  document.getElementById('ml-name-nachYomi').parentElement.click();
   await new Promise(r => setTimeout(r, 300));
-  const r = [[...document.querySelectorAll('#shelf-body .sh-name')].map(e => e.textContent),
-    ['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'].map(id => document.getElementById('extra-sub-' + id).textContent)];
+  const r = document.getElementById('chabad-panel-title').textContent;
+  closeChabadPanel();
+  return r;
+}, 'Nach Yomi');
+
+await check('the label opens your shelf: a sefer for each, its name and piece, and no ticks (no network needed)', async () => {
+  _closeExtraMenu();
+  document.querySelector('#more-learning .ml-head').click();
+  await new Promise(r => setTimeout(r, 300));
+  const r = [[...document.querySelectorAll('#shelf-body [id^=sh-name-]')].map(e => e.textContent),
+    ['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'].map(id => document.getElementById('extra-sub-' + id).textContent),
+    document.querySelectorAll('#shelf-body .sh-slot').length, document.querySelectorAll('#shelf-body .check').length];
   _closeShelf();
   return r;
-}, [['דףיומי', 'נ״ךיומי', 'קיצורשו״ע', 'תורהאור'], ['Bechoros 35', 'Yirmiyahu 41', 'Siman 10:20–26', 'Parshas Lech Lecha · Torah Ohr']]);
+}, [['Daf Yomi', 'Nach Yomi', 'Halacha', 'Torah Ohr'], ['Bechoros 35', 'Yirmiyahu 41', '10:20–26', 'Lech Lecha'], 4, 0]);
 if (asked.some(a => a.startsWith('calendars'))) { failed++; console.log('  ✗ a row asked Sefaria\'s calendar:', asked); }
 else console.log('  ✓ no row asked Sefaria\'s calendar');
 
@@ -202,10 +216,10 @@ await check('ticking Halacha Yomis marks it, says so, and leaves the day\'s four
   _toggleTrack('kitzur');
   await new Promise(r => setTimeout(r, 50));
   return [user.done.kitzur, document.getElementById('toast').textContent, sectionsDone(user.done),
-          __ticked('kitzur'), document.querySelector('#shelf-line .sl-t span + span').textContent];
+          __ticked('kitzur'), __count()];
 }, [true, 'Nice! Halacha Yomis done.', 0, true, '1 of 4 today']);
 
-await check('ticking it again unmarks it', () => { _toggleTrack('kitzur'); const r = [!!user.done.kitzur, __ticked('kitzur')]; _closeShelf(); return r; }, [false, false]);
+await check('ticking it again unmarks it', () => { _toggleTrack('kitzur'); return [!!user.done.kitzur, __ticked('kitzur')]; }, [false, false]);
 
 asked.length = 0;
 await check('Likkutei Torah opens the week\'s maamarim: Torah Ohr on Lech Lecha', async () => {
@@ -245,7 +259,7 @@ await check('and the reader says it\'s learned this week', async () => {
 await check('unticking it on Friday removes Wednesday\'s mark', () => {
   closeChabadPanel();
   _toggleTrack('likkuteiTorah');
-  const r = [!!user.pastDone['2026-10-21']?.likkuteiTorah, __ticked('likkuteiTorah')]; _closeShelf(); return r;
+  return [!!user.pastDone['2026-10-21']?.likkuteiTorah, __ticked('likkuteiTorah')];
 }, [false, false]);
 
 await check('next week is a new week: Vayera', async () => {
