@@ -142,6 +142,18 @@ await check('Rashi with English: two columns; without English: all the way acros
   return [withEn, withoutEn, full];
 }, [1, 0, true]);
 
+await check('the Gemara\'s English looks like every other reader\'s (same font and size as Nach)', async () => {
+  const enStyle = () => { const p = [...document.querySelectorAll('#native-reader-content p')].find(e => /^(A|Text) \d/.test(e.textContent.replace(/^\d+\s*/, '')));
+    const c = p && getComputedStyle(p); return c && [c.fontFamily.split(',')[0], c.fontSize, c.lineHeight]; };
+  localStorage.setItem('chitas_lang_extra_dafYomi', 'both'); _rerenderDaf();
+  const daf = enStyle();
+  closeChabadPanel(); localStorage.setItem('chitas_lang_extra_nachYomi', 'both');
+  await openExtraReader('nachYomi');
+  const nach = enStyle();
+  closeChabadPanel(); await openExtraReader('dafYomi');
+  return [daf, daf && daf[0] === nach[0] && daf[1] === nach[1] && daf[2] === nach[2]];
+}, [['"Crimson Pro"', '15px', '27.3px'], true]);
+
 await check('the daf heads like a page of Shas, with each amud marked', () =>
   [_dafData.head.startsWith('דף לה') || _dafData.head.includes('דף לה'), [...document.querySelectorAll('.g-amud')].map(e => e.textContent)], [true, ['דף לה ע״א', 'דף לה ע״ב']]);
 

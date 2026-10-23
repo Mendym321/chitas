@@ -7080,8 +7080,8 @@ function _rerenderDaf() {
     let v = '<div class="g-seg' + (lang === 'he' ? ' g-run' : '') + (hadran ? ' g-hadran' : '') + '"' + (tappable ? ' onclick="_dafTap(' + idx + ')" role="button"' : '') + '>';
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">'
-        + '<p style="font-size:var(--fs-3);line-height:1.82;color:var(--t1);">' + en + '</p>'
-        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:1.92;color:var(--t1);">' + he + '</p>'
+        + '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>'
+        + '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.85;color:var(--t1);">' + he + '</p>'
         + '</div>';
     } else if (lang === 'en' && en) {
       v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
@@ -7095,11 +7095,11 @@ function _rerenderDaf() {
       const rEnText = String(rEn || '').replace(/<[^>]*>/g, '').trim();   // no English Rashi: the Hebrew goes all the way across
       if (lang === 'both' && rEnText) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">'
-          + '<p style="font-size:var(--fs-2);line-height:1.65;color:var(--t2);">' + rEn + '</p>'
-          + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.88;color:var(--t1);">' + rHe + '</p>'
+          + '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t2);">' + rEn + '</p>'
+          + '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.92;color:var(--t1);">' + rHe + '</p>'
           + '</div>';
       } else if (lang === 'en' && rEnText) {
-        v += '<p style="font-size:var(--fs-2);line-height:1.65;color:var(--t2);">' + rEn + '</p>';
+        v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t2);">' + rEn + '</p>';
       } else {
         v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.92;color:var(--t1);width:100%;display:block;">' + rHe + '</p>';
       }
@@ -7108,7 +7108,7 @@ function _rerenderDaf() {
     if (showT) {
       v += '<div style="margin-top:6px;padding:9px 12px;background:#8E6AA318;border-left:4px solid #8E6AA3AA;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:var(--fs-1);font-weight:700;color:#8E6AA3;margin-bottom:5px;">\u05EA\u05D5\u05E1\u05E4\u05D5\u05EA</p>'
-        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.88;color:var(--t1);">' + tosHe + '</p>'
+        + '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.92;color:var(--t1);">' + tosHe + '</p>'
         + '</div>';
     }
     v += '</div>';
