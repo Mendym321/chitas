@@ -319,21 +319,6 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 }
 
 /* ── Extra track card swipe-to-delete ── */
-.extra-card-wrap {
-  position:relative;
-  overflow:hidden;
-  border-radius:var(--r-m);
-  margin-bottom:10px;
-}
-.extra-card-delete-bg {
-  position:absolute;
-  right:0;top:0;bottom:0;
-  width:80px;
-  background:#C0564A;
-  display:flex;align-items:center;justify-content:center;
-  border-radius:0 16px 16px 0;
-  pointer-events:none;
-}
 .extra-card-inner {
   position:relative;
   transition:transform .2s ease;
@@ -469,6 +454,85 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .total-n b { font-weight:600; }
 .total-d { font-size:var(--fs-2); color:var(--t3); margin-top:2px; }
 .t-sec span { font-size:var(--fs-1); color:var(--t3); }
+/* "More learning" (beta): the chip, and the Add learning sheet */
+.beta-chip, .t-sec .beta-chip { display:inline-block; vertical-align:middle; margin:0 auto 0 8px; padding:2px 8px; border-radius:999px; background:var(--card2); color:var(--t2); font-family:var(--ui-font); font-size:11px; font-weight:800; letter-spacing:.3px; }
+.ps-modal-title .beta-chip { margin-left:6px; position:relative; top:-2px; }
+.ml-list { background:var(--card); border-radius:var(--r-m); padding:0 14px; }
+.ml-row { display:flex; align-items:center; gap:12px; padding:12px 0; }
+.ml-row + .ml-row { border-top:1px solid var(--border); }
+.ml-ic { width:40px; height:40px; border-radius:14px; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ml-t { flex:1; min-width:0; }
+.ml-t p:first-child { font-size:var(--fs-3); font-weight:800; color:var(--t1); }
+.ml-t p + p { font-size:var(--fs-1); color:var(--t3); margin-top:1px; line-height:1.35; }
+.ml-add { height:34px; padding:0 14px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font-family:inherit; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0; }
+.ml-add.on { background:var(--card2); color:var(--t1); }
+.g-head { text-align:center; margin:4px 0 18px; }
+.g-head p:first-child { font-family:'Vilna','Frank Ruhl Libre',serif; font-weight:700; font-size:26px; line-height:1.25; color:var(--t1); }
+.g-head p + p { font-size:var(--fs-1); color:var(--t3); margin-top:2px; }
+.g-head .g-note { max-width:34em; margin:6px auto 0; line-height:1.45; }
+.g-amud { display:flex; align-items:center; gap:10px; margin:18px 0 10px; font-family:'Vilna',serif; font-weight:700; font-size:15px; color:var(--t2); }
+.g-amud span { flex:1; height:1px; background:var(--border); }
+.g-seg { padding:14px 0; border-bottom:1px solid var(--border); }
+.g-seg.g-run { padding:3px 0; border-bottom:none; }
+.g-seg[role="button"] { cursor:pointer; }
+.g-mark { font-weight:700; font-size:1.3em; }
+.g-hadran p { text-align:center !important; font-weight:700; color:var(--t2); margin:10px 0; }
+.g-chips { display:inline-flex; gap:4px; vertical-align:middle; }
+.g-chips span { font-family:'Vilna',serif; font-size:11px; font-weight:700; line-height:16px; padding:0 6px; border-radius:999px; background:var(--card2); color:var(--t2); }
+.g-chips-row { text-align:right; margin-top:4px; }
+/* More learning: your seforim (dark cloth, gold bands, a ribbon when learned) on Today and on the shelf */
+.ml-head { display:flex; justify-content:space-between; align-items:center; width:100%; margin:22px 0 8px; padding:0 4px; background:none; border:none; font-family:inherit; cursor:pointer; color:var(--t3); }
+.ml-head > span:first-child { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
+.ml-head > span:first-child .beta-chip { text-transform:none; letter-spacing:.3px; margin-left:6px; }
+.ml-head > span + span { display:flex; align-items:center; gap:4px; font-size:13px; }
+.ml-books { display:flex; justify-content:space-around; align-items:flex-end; gap:6px; padding:16px 10px 12px; border-radius:var(--r-m); background:var(--card); overflow-x:auto; }
+.ml-book { display:flex; flex-direction:column; align-items:center; gap:7px; background:none; border:none; padding:0; font-family:inherit; cursor:pointer; flex-shrink:0; }
+.ml-name { font-size:11px; font-weight:700; color:var(--t2); max-width:74px; text-align:center; line-height:1.25; }
+.sefer { position:relative; display:block; border-radius:3px 3px 1px 1px; box-shadow:inset -4px 0 0 rgba(0,0,0,.18), 0 0 0 1px rgba(255,255,255,.05); }
+.sefer.sf-small { width:56px; height:82px; }
+.sefer.sf-big { width:66px; }
+.sefer.on::after { content:''; position:absolute; top:-1px; right:9px; width:6px; height:24%; background:#8E2B22; }
+.sf-band { position:absolute; left:15%; right:15%; top:9%; height:4px; border-top:1px solid #B8954E; border-bottom:1px solid #B8954E; }
+.sf-band.sf-low { top:auto; bottom:8%; height:0; border-bottom:none; }
+.sefer.sf-empty { border:1.5px dashed var(--border); background:none; box-shadow:none; display:flex; align-items:center; justify-content:center; color:var(--t3); box-sizing:border-box; }
+.sh-head { display:flex; justify-content:space-between; align-items:baseline; margin:4px 0 22px; }
+.sh-head p { font-family:var(--title-font); font-size:var(--fs-5); font-weight:800; color:var(--t1); }
+.sh-head button { background:none; border:none; padding:6px 0; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t2); cursor:pointer; }
+.sh-shelf, .sh-caps { display:flex; justify-content:space-around; gap:8px; }
+.sh-shelf { align-items:flex-end; min-height:180px; }
+.sh-slot { background:none; border:none; padding:0; cursor:pointer; }
+.sh-ledge { height:6px; border-radius:2px; background:var(--border); }
+.sh-caps { margin-top:10px; align-items:flex-start; }
+.sh-cap { width:74px; display:flex; flex-direction:column; align-items:center; gap:2px; background:none; border:none; padding:0; font-family:inherit; cursor:pointer; text-align:center; }
+.sh-cap span:first-child { font-size:13px; font-weight:700; color:var(--t1); line-height:1.25; }
+.sh-cap span + span { font-size:12px; color:var(--t3); line-height:1.3; }
+.sh-empty { font-size:var(--fs-2); line-height:1.5; color:var(--t2); margin:6px 0 10px; }
+.reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
+.seg-n { font-family:var(--ui-font); font-size:11px; font-weight:700; color:var(--t3); }
+/* Likkutei Torah: the week's maamarim, and a maamar (in Heilig, the look from May: dibbur hamaschil as a drop word) */
+.lt-intro { font-size:var(--fs-2); color:var(--t2); line-height:1.5; margin:4px 2px 14px; }
+.lt-list { background:var(--card); border-radius:var(--r-m); overflow:hidden; }
+.lt-m { display:block; width:100%; text-align:right; direction:rtl; background:none; border:none; padding:14px 16px; cursor:pointer; color:var(--t1); font-family:inherit; }
+.lt-m + .lt-m { border-top:1px solid var(--border); }
+.lt-m-t { display:block; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-size:20px; line-height:1.4; }
+.lt-m-d { display:block; direction:ltr; text-align:left; font-size:var(--fs-1); color:var(--t3); margin-top:3px; }
+.lt-back { background:var(--card2); border:none; border-radius:999px; padding:8px 14px; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t1); cursor:pointer; margin-bottom:16px; }
+.lt-h { direction:rtl; text-align:center; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-weight:normal; font-size:var(--fs-4); color:var(--t2); margin-bottom:14px; }
+.lt-sefer { font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; color:var(--t1); }
+.lt-run { display:flex; justify-content:center; gap:10px; font-size:14px; color:var(--t3); letter-spacing:.5px; margin-bottom:10px; }
+.lt-title { text-align:center; font-size:30px; line-height:1.2; margin-bottom:6px; }
+.lt-subject { text-align:center; font-size:14px; line-height:1.5; color:var(--t2); margin:0 10px 4px; }
+.lt-orn { display:flex; align-items:center; justify-content:center; gap:8px; margin:12px auto 16px; width:42%; color:var(--t3); }
+.lt-orn span { flex:1; height:1px; background:currentColor; opacity:.7; }
+.lt-orn i { width:5px; height:5px; border-radius:50%; background:currentColor; }
+.lt-body { direction:rtl; text-align:justify; text-align-last:right; font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; --rf-sz:19px; --rf-lh:1.6; color:var(--t1); margin-bottom:.15em; }
+.lt-body.lt-last { text-align-last:center; }
+.lt-sefer { font-synthesis:none; }   /* never a made-up bold: everything in the one regular Heilig face */
+.lt-sefer .lt-open { font-weight:400; font-size:1.4em; line-height:1; }   /* the opening words: the title's face, larger */
+.lt-sefer .lt-em { font-weight:400; font-size:1.15em; }
+.lt-sefer .lt-body small { font-size:.78em; color:var(--t2); }
+.lt-pg { display:inline-block; font-family:var(--ui-font); font-size:10px; font-weight:700; color:var(--t3); border:1px solid var(--border); border-radius:999px; padding:0 6px; margin:0 3px; line-height:16px; vertical-align:middle; text-indent:0; }
+.ml-foot { margin:12px 4px 0; font-size:var(--fs-1); color:var(--t3); line-height:1.45; }
 /* ── Direction C: header and rings, chips, tiles ── */
 .sr-only { position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 #app-head { padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -498,7 +562,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .stile-t p:first-child { font:800 22px/1.15 var(--ui-font); letter-spacing:-.3px; }
 .stile-t p:last-child { font:500 13px/1.3 var(--ui-font); opacity:.92; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .stile-art.lift svg { animation:glyphLift .6s cubic-bezier(.2,.7,.2,1); }
-#tab-learn .group, #extra-tracks-list.group { background:var(--card); border-radius:var(--r-m); border:none; overflow:hidden; }
+#tab-learn .group { background:var(--card); border-radius:var(--r-m); border:none; overflow:hidden; }
 #tab-learn .lrow { padding-left:14px; padding-right:14px; }
 #heb-chip { display:flex; align-items:center; gap:6px; padding:5px 12px 5px 6px !important; border:none; cursor:pointer; }
 #heb-chip .cal-ic { width:22px; height:22px; border-radius:50%; background:var(--ink); color:var(--on-ink); display:grid; place-items:center; }
@@ -832,7 +896,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* ══ END LIKKUTEI SICHOS TRANSLATION MODE ══════════════════════════════════ */
 @font-face {
   font-family: 'DachHeilig';
-  src: url('https://dach.dev/fonts/Heilig.OTF') format('opentype');
+  src: url('/fonts/Heilig.otf') format('opentype'), url('https://dach.dev/fonts/Heilig.OTF') format('opentype');   /* our copy, works offline */
   font-weight: normal; font-display: swap;
 }
 @font-face {
@@ -1304,12 +1368,8 @@ window._fsGetDoc = getDoc;
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
 
-      <!-- Extra learning tracks -->
-      <p id="extra-tracks-separator" class="t-sec">More learning <button onclick="_openExtraTracksMenu()">Edit</button></p>
-      <div id="extra-tracks-list" class="group" style="display:none;"></div>
-      <div id="add-learning-btn" class="group" style="display:none;">
-        <div class="lrow" onclick="_openExtraTracksMenu()"><div class="lrow-ic" style="color:var(--gold);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div><div class="lrow-t"><p>Add Hayom Yom</p><p>The Rebbe's teaching for each day</p></div></div>
-      </div>
+      <!-- More learning (beta): your seforim side by side; tap one to learn it, the count for the shelf -->
+      <div id="more-learning" style="display:none;"></div>
 
 
     </div>
@@ -1534,6 +1594,7 @@ window._fsGetDoc = getDoc;
 <script src="/js/learning-data.js"></script>
 <script src="/js/learning-stats.js"></script>
 <script src="/js/day-note.js"></script>
+<script src="/js/more-learning.js"></script>
 <script>
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║                    CHITAS DAILY — chitas.html                    ║
@@ -6088,15 +6149,19 @@ function openCredits() {
     + row('Tehillim', 'Hebrew text, with The Koren Jerusalem Bible translation')
     + row('Tanya', 'Hebrew text and English translation as published on Sefaria')
     + row('Rambam', 'Mishneh Torah, translated by Rabbi Eliyahu Touger, Moznaim Publishing')
+    + row('Daf Yomi', 'Talmud Bavli, with the William Davidson Edition translation')
+    + row('Nach Yomi', 'Hebrew text, with The Koren Jerusalem Bible translation')
+    + row('Halacha Yomis', 'Kitzur Shulchan Aruch, Hebrew text and English translation as published on Sefaria')
+    + row('Likkutei Torah and Torah Ohr', 'Hebrew text, Kehot Publication Society')
     + '<p class="cr-h">Hayom Yom</p>'
     + row('Hayom Yom', 'The Hebrew and Yiddish original, with an English translation made for Chitas from the original')
     + '<p class="cr-h">Calendar</p>'
-    + row('Hebcal', 'The Jewish calendar, the parsha, and the daily Tehillim and Rambam schedules (hebcal.com)')
+    + row('Hebcal', 'The Jewish calendar, the parsha, and the schedules of Tehillim, Rambam, Daf Yomi, Nach Yomi and Kitzur Shulchan Aruch Yomi (hebcal.com)')
     + '<p class="cr-h">Written with AI</p>'
     + row('Review and the Tanya guide', 'Written by Claude (Anthropic) from the day\'s text. Every Review answer is checked against a quote from the text; the guide never changes the text itself.')
     + '<p class="cr-h">Fonts</p>'
     + row('OT Siddur and OT Vilna', 'By Levi Chyrek, Otzar Fonts (fonts.otzar.io). Used with permission.')
-    + row('Hebrew, also', 'Frank Ruhl Libre, Taamey Frank CLM, Shlomo')
+    + row('Hebrew, also', 'Frank Ruhl Libre, Taamey Frank CLM, Shlomo, Heilig (Likkutei Torah)')
     + row('English', 'Bricolage Grotesque, Crimson Pro')
     + '<button class="del-no" style="margin-top:16px;" onclick="document.getElementById(\'credits-sheet\').remove()">Close</button>'
     + '</div>';
@@ -6437,56 +6502,78 @@ async function _bustTanyaCache() {
 
 
 // ── Extra track card rendering ────────────────────────────────────────────────
-function _renderExtraTrackCards(iso, isToday) {
-  const list = document.getElementById('extra-tracks-list');
-  if (!list) return;
+// More learning: on Today, below Chitas, your seforim side by side, each with
+// its name; tap one to learn it. The count ("2 of 4 today") opens the shelf:
+// the books bigger, each with its name and the day's piece. Learned shows as
+// the sefer's ribbon; you mark it learned in the reader, like Chitas.
+const COVERS = {   // each sefer's cloth, and its short name
+  dafYomi: ['#3A1712', 'Daf Yomi'], nachYomi: ['#1E2A3D', 'Nach Yomi'], kitzur: ['#23342A', 'Halacha'],
+  likkuteiTorah: ['#1F1B19', 'Likkutei Torah'], sotah: ['#2E2A44', 'Sotah'], mishnahYomi: ['#2A3530', 'Mishnah'],
+  likkuteiSichos: ['#33203A', 'Likkutei Sichos'], shaarHaBitachon: ['#1D3340', "Sha'ar HaBitachon"],
+};
+function _shelfTracks() {
   const tracks = _shownTracks();
+  return window._sotahDaf ? ['sotah', ...tracks.filter(t => t !== 'sotah')] : tracks;   // Sotah during the Omer, without adding it
+}
+// A sefer: dark cloth, gold bands, a ribbon when it's learned (no title on the spine: the name is underneath)
+function _sefer(id, iso, cls) {
+  const on = !!_trackDoneOn(id, iso);
+  const [klass, height] = cls.split('|');
+  return '<span class="sefer ' + klass + (on ? ' on' : '') + '" style="background:' + (COVERS[id] || ['#2B2622'])[0] + (height ? ';height:' + height + 'px' : '') + '">'
+    + '<span class="sf-band"></span><span class="sf-band sf-low"></span></span>';
+}
+function _renderExtraTrackCards(iso, isToday) {
+  const box = document.getElementById('more-learning');
+  if (box) {
+    const ids = _shelfTracks();
+    const done = ids.filter(id => _trackDoneOn(id, iso)).length;
+    box.innerHTML = '<button type="button" class="ml-head" onclick="_openShelf()"><span>More learning <span class="beta-chip">Beta</span></span>'
+      + '<span>' + (ids.length ? done + ' of ' + ids.length + ' today' : '') + '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span></button>'
+      + '<div class="ml-books">'
+      + ids.map(id => '<button type="button" class="ml-book" onclick="openExtraReader(\'' + id + '\')" aria-label="' + EXTRA_TRACK_DEFS[id].label + (_trackDoneOn(id, iso) ? ', learned' : '') + '">'
+          + _sefer(id, iso, 'sf-small') + '<span class="ml-name" id="ml-name-' + id + '">' + (COVERS[id] || [, EXTRA_TRACK_DEFS[id].label])[1] + '</span></button>').join('')
+      + '<button type="button" class="ml-book" onclick="_openExtraTracksMenu()" aria-label="Add a sefer"><span class="sefer sf-small sf-empty"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="ml-name">' + (ids.length ? 'Add' : 'Add a sefer') + '</span></button>'
+      + '</div>';
+    if (ids.includes('likkuteiTorah')) _loadExtraSubtitle('likkuteiTorah');   // its name: Torah Ohr on Bereishis and Shemos
+  }
+  if (document.getElementById('shelf-sheet')) _drawShelf();
+}
 
-  // Auto-inject Sotah during Omer (not opt-in)
-  // We check window._sotahDaf which is set by _checkSotahOmer()
-  const sotahDaf = window._sotahDaf;
-  const allTracks = sotahDaf ? ['sotah', ...tracks.filter(t => t !== 'sotah')] : tracks;
-
-  if (!allTracks.length) { list.style.display = 'none'; return; }
-  list.style.display = 'block';
-
-  const dayDone = isToday ? user.done : (user.pastDone?.[iso] || {});
-
-  list.innerHTML = allTracks.map((id, i) => {
-    const def = EXTRA_TRACK_DEFS[id];
-    if (!def) return '';
-    const done = !!dayDone[id];
-    const tickAction = done
-      ? (isToday ? 'unmarkExtraDone(\'' + id + '\')' : 'unmarkExtraDonePast(\'' + id + '\',\'' + iso + '\')')
-      : (isToday ? 'markExtraDone(\'' + id + '\')' : 'markExtraDonePast(\'' + id + '\',\'' + iso + '\')');
-
-    return '<div class="extra-card-wrap" id="extra-wrap-' + id + '">'
-      + '<div class="extra-card-delete-bg" id="extra-del-bg-' + id + '" style="opacity:0;">'
-      +   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'
-      + '</div>'
-      + '<div class="lrow" id="extra-card-' + id + '" style="--c:' + def.color + ';" onclick="openExtraReader(\'' + id + '\')">'
-      +   '<div class="lrow-ic" style="color:' + def.color + ';"><svg width="19" height="19" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg></div>'
-      +   '<div class="lrow-t"><p>' + def.label + '</p><p id="extra-sub-' + id + '">Loading…</p></div>'
-      +   '<button class="check' + (done ? ' on' : '') + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + def.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>'
-      + '</div>'
-      + '</div>'; // card-wrap
-  }).join('');
-
-  // Attach swipe-to-delete listeners after render
-  setTimeout(() => _attachExtraSwipeDelete(), 30);
-
-  // Load subtitles async — use allTracks so auto-injected Sotah is included
-  allTracks.forEach(id => _loadExtraSubtitle(id));
+function _openShelf() {
+  document.getElementById('shelf-sheet')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'shelf-sheet';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:flex-end;justify-content:center;';
+  modal.onclick = e => { if (e.target === modal) _closeShelf(); };
+  modal.innerHTML = '<div class="ps-modal-sheet shelf-sheet" role="dialog" aria-label="More learning" style="max-height:88vh;"><div id="shelf-body" style="overflow-y:auto;padding:10px 20px 28px;"></div></div>';
+  document.body.appendChild(modal);
+  _drawShelf();
+}
+function _closeShelf() { document.getElementById('shelf-sheet')?.remove(); }
+function _shelfOpenTrack(id) { _closeShelf(); openExtraReader(id); }
+function _drawShelf() {
+  const body = document.getElementById('shelf-body');
+  if (!body) return;
+  const iso = _viewedISO(), ids = _shelfTracks();
+  const heights = [176, 160, 168, 180, 164];
+  body.innerHTML = '<div class="dp-grab"></div>'
+    + '<div class="sh-head"><p>More learning <span class="beta-chip">Beta</span></p><button type="button" onclick="_closeShelf();_openExtraTracksMenu()">Add a sefer</button></div>'
+    + (ids.length
+      ? '<div class="sh-shelf">' + ids.map((id, i) => '<button type="button" class="sh-slot" onclick="_shelfOpenTrack(\'' + id + '\')" aria-label="' + EXTRA_TRACK_DEFS[id].label + (_trackDoneOn(id, iso) ? ', learned' : '') + '">'
+          + _sefer(id, iso, 'sf-big|' + heights[i % heights.length]) + '</button>').join('') + '</div>'
+        + '<div class="sh-ledge"></div>'
+        + '<div class="sh-caps">' + ids.map(id => '<button type="button" class="sh-cap" onclick="_shelfOpenTrack(\'' + id + '\')"><span id="sh-name-' + id + '">' + (COVERS[id] || [, EXTRA_TRACK_DEFS[id].label])[1] + '</span><span id="extra-sub-' + id + '">…</span></button>').join('') + '</div>'
+      : '<p class="sh-empty">Nothing on your shelf yet. Add Daf Yomi, Nach Yomi, Halacha Yomis or the week\'s Likkutei Torah, and each day\'s piece is waiting here.</p>');
+  ids.forEach(id => _loadExtraSubtitle(id));
 }
 
 // Load subtitle for an extra track card
 async function _loadExtraSubtitle(id) {
-  const el = document.getElementById('extra-sub-' + id);
-  if (!el) return;
+  const el = document.getElementById('extra-sub-' + id) || document.createElement('p');   // (the Today row has no line for it)
   try {
     const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-    const cal = await fetchSefariaCalendar(d);
-    const items = cal?.calendar_items || [];
+    // Only Mishnah Yomi still asks Sefaria's calendar; the rest know their piece offline
+    const items = id === 'mishnahYomi' ? ((await fetchSefariaCalendar(d))?.calendar_items || []) : [];
 
     if (id === 'likkuteiSichos') {
       // Show this week's parsha name
@@ -6495,16 +6582,15 @@ async function _loadExtraSubtitle(id) {
       // "Vayakhel-Pekudei" → ['vayakhel','pekudei'] → "ויקהל · פקודי"
       const lsKeys = parshaEn ? _lsParshaKeys(parshaEn) : [];
       el.textContent = lsKeys.length ? 'Sichos · ' + lsKeys.map(_lsParshaHeb).join(' · ') : "This week's parsha";
-    } else if (id === 'dafYomi') {
-      const item = items.find(i => i.title?.en === 'Daf Yomi');
-      el.textContent = item?.displayValue?.en || item?.ref || 'Daf Yomi';
+    } else if (OFFERED_TRACKS.includes(id)) {
+      const piece = await _trackPiece(id, dateISO(d));
+      // under the sefer's name on the shelf, just the piece: "Lech Lecha", not "Parshas Lech Lecha · Torah Ohr"
+      el.textContent = _trackLine(id, piece).replace(/^(Parshas|Siman) /, '').replace(/ · (Torah Ohr|Likkutei Torah)$/, '');
+      if (id === 'likkuteiTorah' && piece.books === 'Torah Ohr')   // Torah Ohr on Bereishis and Shemos
+        ['ml-name-', 'sh-name-'].forEach(k => { const n = document.getElementById(k + id); if (n) n.textContent = 'Torah Ohr'; });
     } else if (id === 'hayomYom') {
       // Hayom Yom goes by the Hebrew date: that's its subtitle
       el.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
-    } else if (id === 'likkuteiTorah') {
-      const parshaItem = items.find(i => i.title?.en === 'Parashat Hashavua');
-      const parshaName = parshaItem?.displayValue?.en || '';
-      el.textContent = parshaName ? 'Parshas ' + parshaName : 'Likkutei Torah';
     } else if (id === 'mishnahYomi') {
       const item = items.find(i => i.title?.en === 'Mishnah Yomit');
       el.textContent = item?.displayValue?.en || item?.ref || 'Mishnah Yomi';
@@ -6551,43 +6637,113 @@ function unmarkExtraDone(id) {
 function markExtraDonePast(id, iso) {
   _changeDay(iso, day => { day[id] = true; });
   fire((EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' marked', 'xp');
-  _renderExtraTrackCards(iso, false);
+  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
 }
 
 function unmarkExtraDonePast(id, iso) {
   if (!user.pastDone?.[iso]?.[id]) return;
   _changeDay(iso, day => { day[id] = false; });
-  _renderExtraTrackCards(iso, false);
+  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
 }
 
 // ── Extra daily learning tracks ───────────────────────────────────────────────
-// The extra learning the app offers now. The rest (Daf Yomi, Mishnah Yomi,
-// Likkutei Torah, Likkutei Sichos, Sha'ar HaBitachon) is parked: hidden from
-// "More learning" but kept working for anyone who already added it.
-// Extra learning anyone can add. Hayom Yom isn't one: it lives on Today, in
-// the card on top. Nothing is offered until real daily tracks are ready, so
-// "More learning" stays hidden (except for tracks someone added before).
-const OFFERED_TRACKS = [];
+// "More learning" (beta): daily cycles learned together, and the week's
+// Likkutei Torah. Which piece is learned when comes from the schedules in
+// data/ (js/more-learning.js reads them); the texts come from Sefaria.
+// Hayom Yom isn't one: it lives on Today, in the card on top. The other
+// tracks (Mishnah Yomi, Likkutei Sichos, Sha'ar HaBitachon) are parked:
+// hidden from the menu, still working for anyone who already added them.
+const OFFERED_TRACKS = ['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah'];
 const _shownTracks = () => (user.extraTracks || []).filter(id => id !== 'hayomYom' && EXTRA_TRACK_DEFS[id]);
 function _syncMoreLearning() {
   const has = _shownTracks().length > 0 || !!window._sotahDaf;
   const show = has || OFFERED_TRACKS.length > 0;
-  const sep = document.getElementById('extra-tracks-separator');
-  if (sep) sep.style.display = show ? 'flex' : 'none';
-  const addBtn = document.getElementById('add-learning-btn');
-  if (addBtn) addBtn.style.display = show && !has ? 'block' : 'none';
+  const box = document.getElementById('more-learning');
+  if (box) box.style.display = show ? 'block' : 'none';
+  if (box && show && !box.innerHTML) _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   const psl = document.getElementById('ps-extra-label'), psc = document.getElementById('ps-extra-tracks-list');
   if (psl) psl.style.display = show ? '' : 'none';
   if (psc) psc.style.display = show ? '' : 'none';
 }
+
+// The schedules, loaded once: data/cycles.json (each day's Daf Yomi, Nach
+// Yomi, Kitzur) and data/likkutei-torah.json (each parsha's maamarim)
+let _mlData = null;
+function _moreLearningData() {
+  return _mlData || (_mlData = Promise.all(['/data/cycles.json', '/data/likkutei-torah.json'].map(u =>
+    fetch(u).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))))
+    .then(([cycles, weeks]) => ({ cycles, weeks }))
+    .catch(e => { _mlData = null; throw e; }));
+}
+// A track's piece for a day. Daily: { label, ref, note }, null when the
+// schedule has nothing that day, undefined outside its dates. Weekly
+// (Likkutei Torah): { parsha, list, books } for the week the day is in.
+async function _trackPiece(id, iso) {
+  const { cycles, weeks } = await _moreLearningData();
+  if (id === 'likkuteiTorah') {
+    const parsha = getParshaForDate(new Date(iso + 'T12:00:00'));
+    const list = parsha ? maamarimFor(weeks, parsha) : [];
+    return { parsha, list, books: maamarimBooks(list) };
+  }
+  const day = cycleDay(cycles, iso);
+  return day ? day[{ dafYomi: 'daf', nachYomi: 'nach', kitzur: 'kitzur' }[id]] : undefined;
+}
+// The line under a track's name: today's piece
+function _trackLine(id, piece) {
+  if (id === 'likkuteiTorah') {
+    if (!piece.parsha) return 'No parsha this week';
+    return 'Parshas ' + parshaSpelling(piece.parsha) + (piece.books ? ' · ' + piece.books : '');
+  }
+  if (piece === undefined) return EXTRA_TRACK_DEFS[id].desc;
+  return piece ? piece.label : 'No reading today';
+}
+
+// Learned is per day, except a weekly track: learned any day of its week
+// (Sunday to Shabbos) counts for the whole week. The day it was marked, or null.
+const WEEKLY_TRACKS = ['likkuteiTorah'];
+function _trackDoneOn(id, iso) {
+  const now = new Date();
+  const doneOn = i => !!dayDone(user, new Date(i + 'T12:00:00'), now)[id];
+  if (!WEEKLY_TRACKS.includes(id)) return doneOn(iso) ? iso : null;
+  const d = new Date(weekShabbos(iso) + 'T12:00:00Z');
+  for (let k = 0; k < 7; k++, d.setUTCDate(d.getUTCDate() - 1)) {
+    const i = d.toISOString().slice(0, 10);
+    if (doneOn(i)) return i;
+  }
+  return null;
+}
+// Tick or untick a track for the day you're on (only today and the last 7 days)
+function _toggleTrack(id) {
+  const iso = _viewedISO(), on = _trackDoneOn(id, iso);
+  if (on) { if (on === dateISO(new Date())) unmarkExtraDone(id); else unmarkExtraDonePast(id, on); return; }
+  if (!_canMarkDay(dayOffset)) { fire('Read only. You can mark today and the last 7 days.'); return; }
+  if (dayOffset === 0) markExtraDone(id); else markExtraDonePast(id, iso);
+}
+
 const EXTRA_TRACK_DEFS = {
   dafYomi: {
     id: 'dafYomi',
     label: 'Daf Yomi',
-    desc: 'Daily page of Talmud Bavli',
+    desc: 'A page of Gemara a day',
     duration: '~45 min',
-    color: '#E8A020',
+    color: '#B4533E',
     iconPath: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  },
+  nachYomi: {
+    id: 'nachYomi',
+    label: 'Nach Yomi',
+    desc: 'A chapter of Nach a day',
+    duration: '~10 min',
+    color: '#9A5B86',
+    iconPath: '<path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M7 4a2 2 0 0 0-2 2v12a2 2 0 0 0 4 0V6a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 9h4M12 13h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  },
+  kitzur: {
+    id: 'kitzur',
+    label: 'Halacha Yomis',
+    desc: 'Kitzur Shulchan Aruch, a few se\'ifim a day',
+    duration: '~10 min',
+    color: '#2F7F86',
+    iconPath: '<path d="M10 6h10M10 12h10M10 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 6l1.3 1.3L7.6 5M4 12l1.3 1.3 2.3-2.3M4 18l1.3 1.3 2.3-2.3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   },
   hayomYom: {
     id: 'hayomYom',
@@ -6600,9 +6756,9 @@ const EXTRA_TRACK_DEFS = {
   likkuteiTorah: {
     id: 'likkuteiTorah',
     label: 'Likkutei Torah',
-    desc: "Weekly Chassidic discourse on the parsha",
-    duration: '~20 min',
-    color: '#5B6FE8',
+    desc: 'The parsha\'s maamarim, once a week',
+    duration: 'weekly',
+    color: '#4F5FA8',
     iconPath: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
   },
   sotah: {
@@ -6639,90 +6795,59 @@ const EXTRA_TRACK_DEFS = {
     iconPath: '<path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
   },
 };
-function _openExtraTracksMenu() {
-  const existing = document.getElementById('extra-tracks-modal');
-  if (existing) existing.remove();
 
+// The Add learning sheet: the tracks on offer (and any parked one you have),
+// each with today's piece and an Add / Added button
+function _openExtraTracksMenu() {
+  document.getElementById('extra-tracks-modal')?.remove();
   const modal = document.createElement('div');
   modal.id = 'extra-tracks-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
 
   const enabled = user.extraTracks || [];
-  const sotahActive = !!window._sotahDaf; // hide Sotah if already auto-showing
-
-  function trackTile(def) {
-    if (def.id === 'sotah' && sotahActive) return '';
-    const on = enabled.includes(def.id);
-    return '<div id="et-tile-' + def.id + '" onclick="_toggleExtraTrack(\'' + def.id + '\')" '
-      + 'style="position:relative;background:var(--card);border:2px solid ' + (on ? 'var(--ink)' : 'transparent') + ';border-radius:var(--r-m);padding:16px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;">'
-      + (on ? '<div style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg></div>' : '')
-      + '<div style="width:44px;height:44px;border-radius:14px;background:' + def.color + ';display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:#fff;">'
-      +   '<svg width="22" height="22" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
-      + '</div>'
-      + '<p style="font-size:var(--fs-2);font-weight:800;color:var(--t1);margin-bottom:3px;">' + def.label + '</p>'
-      + '<p style="font-size:var(--fs-1);color:var(--t3);line-height:1.4;">' + def.desc + '</p>'
-      + '<p style="font-size:var(--fs-1);color:var(--t3);font-weight:600;margin-top:6px;">' + def.duration + '</p>'
+  const ids = [...OFFERED_TRACKS, ..._shownTracks().filter(id => !OFFERED_TRACKS.includes(id))];
+  const rows = ids.map(id => {
+    const def = EXTRA_TRACK_DEFS[id];
+    return '<div class="ml-row">'
+      + '<span class="ml-ic" style="background:' + def.color + ';"><svg width="20" height="20" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg></span>'
+      + '<div class="ml-t"><p>' + def.label + '</p><p id="ml-line-' + id + '">' + escapeHtml(def.desc) + '</p></div>'
+      + '<button type="button" id="ml-add-' + id + '" class="ml-add' + (enabled.includes(id) ? ' on' : '') + '" onclick="_toggleExtraTrack(\'' + id + '\')">' + (enabled.includes(id) ? 'Added' : 'Add') + '</button>'
       + '</div>';
-  }
-
-  // Version 1 offers Hayom Yom; the others stay for whoever already added them
-  const tiles = Object.values(EXTRA_TRACK_DEFS).filter(d => OFFERED_TRACKS.includes(d.id) || enabled.includes(d.id)).map(trackTile).filter(Boolean);
+  }).join('');
 
   modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:85vh;">'
     + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
-    +   '<div><p class="ps-modal-title">More learning</p><p class="ps-modal-sub">Tap to add</p></div>'
-    +   '<button onclick="_closeExtraMenu()" class="ps-modal-close">×</button>'
+    +   '<div><p class="ps-modal-title">Add learning <span class="beta-chip">Beta</span></p><p class="ps-modal-sub">Daily cycles, learned together</p></div>'
+    +   '<button onclick="_closeExtraMenu()" class="ps-modal-close" aria-label="Close">×</button>'
     + '</div>'
-    + '<div style="overflow-y:auto;flex:1;padding:12px 20px 24px;">'
-    +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-    +     tiles.join('')
-    +   '</div>'
+    + '<div style="overflow-y:auto;flex:1;padding:14px 20px 24px;">'
+    +   '<div class="ml-list">' + rows + '</div>'
+    +   '<p class="ml-foot">Daf Yomi, Nach Yomi and Kitzur Shulchan Aruch follow the standard daily schedules. Texts from Sefaria.</p>'
     + '</div>'
     + '</div>';
-
   document.body.appendChild(modal);
+
+  // Today's piece under each name
+  const iso = _viewedISO();
+  ids.filter(id => OFFERED_TRACKS.includes(id)).forEach(id => _trackPiece(id, iso).then(piece => {
+    const el = document.getElementById('ml-line-' + id);
+    if (el) el.textContent = EXTRA_TRACK_DEFS[id].desc + ' · ' + _trackLine(id, piece);
+  }).catch(() => {}));
 }
 
 function _closeExtraMenu() { document.getElementById('extra-tracks-modal')?.remove(); }
 
 function _toggleExtraTrack(id) {
   if (!user.extraTracks) user.extraTracks = [];
-  const idx = user.extraTracks.indexOf(id);
-  const def = EXTRA_TRACK_DEFS[id];
-  if (idx === -1) {
-    user.extraTracks.push(id);
-  } else {
-    user.extraTracks.splice(idx, 1);
-  }
+  const on = !user.extraTracks.includes(id);
+  user.extraTracks = on ? [...user.extraTracks, id] : user.extraTracks.filter(t => t !== id);
   saveUser();
-
-  // Update tile visual immediately in modal
-  const on = user.extraTracks.includes(id);
-  const tile = document.getElementById('et-tile-' + id);
-  if (tile && def) {
-    tile.style.background = on ? def.color + '18' : 'var(--card)';
-    tile.style.borderColor = on ? def.color : 'var(--border)';
-    // Update label color
-    const label = tile.querySelector('p');
-    if (label) label.style.color = on ? def.color : 'var(--t1)';
-    // Show/hide checkmark
-    let check = tile.querySelector('.et-check');
-    if (on && !check) {
-      check = document.createElement('div');
-      check.className = 'et-check';
-      check.style.cssText = 'position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:' + def.color + ';display:flex;align-items:center;justify-content:center;';
-      check.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>';
-      tile.appendChild(check);
-    } else if (!on && check) {
-      check.remove();
-    }
-  }
-
-  // Re-render feed cards + separator
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+  const btn = document.getElementById('ml-add-' + id);
+  if (btn) { btn.classList.toggle('on', on); btn.textContent = on ? 'Added' : 'Add'; }
+  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   _syncMoreLearning();
+  if (typeof _renderPsExtraTracks === 'function') _renderPsExtraTracks();
 }
 
 // ── Extra track reader ─────────────────────────────────────────────────────────
@@ -6760,19 +6885,24 @@ async function openExtraReader(id) {
   const markXp = document.getElementById('chabad-mark-xp');
   markBtn.dataset.sectionId = id;
 
-  const isDone = !!user.done[id];
-  if (isDone) {
+  // For the day you're on (a weekly track: its week)
+  const weekly = WEEKLY_TRACKS.includes(id);
+  if (markXp) markXp.textContent = '';
+  if (_trackDoneOn(id, _viewedISO())) {
     markBtn.dataset.state = 'done';
     markBtn.style.cursor = 'default';
-    if (markLabel) markLabel.textContent = 'Learned';
-    if (markXp) markXp.textContent = '';
+    if (markLabel) markLabel.textContent = weekly ? 'Learned this week' : 'Learned';
+    markBtn.onclick = null;
+  } else if (!_canMarkDay(dayOffset)) {
+    markBtn.dataset.state = 'done';
+    markBtn.style.cursor = 'default';
+    if (markLabel) markLabel.textContent = 'Read only';
     markBtn.onclick = null;
   } else {
     markBtn.dataset.state = 'todo';
     markBtn.style.cursor = 'pointer';
-    if (markLabel) markLabel.textContent = 'Mark as learned';
-    if (markXp) markXp.textContent = '';
-    markBtn.onclick = () => { markExtraDone(id); closeChabadPanel(); };
+    if (markLabel) markLabel.textContent = weekly ? 'Mark this week as learned' : 'Mark as learned';
+    markBtn.onclick = () => { _toggleTrack(id); closeChabadPanel(); };
   }
 
   // Hide quiz button
@@ -6787,6 +6917,7 @@ async function openExtraReader(id) {
 
   try {
     if (id === 'dafYomi')            await _loadDafYomi();
+    else if (id === 'nachYomi' || id === 'kitzur') await _loadDailyText(id);
     else if (id === 'sotah')         await _loadSotah();
     else if (id === 'hayomYom')      await _loadHayomYomNative(false);
     else if (id === 'likkuteiTorah') await _loadLikkuteiTorah();
@@ -6802,60 +6933,87 @@ async function openExtraReader(id) {
 
 // ── Individual track loaders ───────────────────────────────────────────────────
 
+// A Rashi or Tosafos comment opens with its dibbur hamaschil: "טימא טהרותיו - לשלם…"
+// → the words before " - " in bold, as on the daf (unless it already has bold)
+function _dhBold(t) {
+  if (!t || /<b>/.test(t)) return t;
+  const i = t.indexOf(' - ');
+  return i > 0 && i < 120 ? '<b>' + t.slice(0, i) + '</b> ' + t.slice(i + 3) : t;
+}
+
 async function _loadDafYomi() {
   const def = EXTRA_TRACK_DEFS.dafYomi;
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetchSefariaCalendar(d);
-  const item = (cal.calendar_items || []).find(i => i.title?.en === 'Daf Yomi');
-  if (!item?.ref) throw new Error('No Daf Yomi ref');
+  const iso = _viewedISO();
+  const piece = await _trackPiece('dafYomi', iso);
+  if (!_readerShows('extra_dafYomi', iso)) return;
+  if (!piece) { _readerNote(piece === undefined ? 'Daf Yomi for this day isn\'t in the app yet.' : 'No daf today.'); return; }
+  const refs = piece.ref.split('|');                     // Me'ilah 22 is also Kinnim's first perek
+  const mishnahOnly = refs.every(r => r.startsWith('Mishnah '));
+  document.getElementById('chabad-panel-sub').textContent = piece.label + (mishnahOnly ? ' · Mishnah' : '');
 
-  document.getElementById('chabad-panel-sub').textContent = item.displayValue?.en || item.ref;
+  // Each part's text, and for Gemara its links (Rashi and Tosafos, placed by anchorRef)
+  const parts = await Promise.all(refs.map(ref => {
+    const enc = encodeURIComponent(ref);
+    return Promise.all([
+      fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
+      fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
+      ref.startsWith('Mishnah ') ? [] : fetch('https://www.sefaria.org/api/links/' + enc + '?with_text=1').then(r=>r.json()).catch(()=>[]),
+    ]).then(([enRes, heRes, links]) => ({ ref, enRes, heRes, links }));
+  }));
+  if (!_readerShows('extra_dafYomi', iso)) return;            // you moved on while it loaded
 
-  const enc = encodeURIComponent(item.ref);
-
-  // Fetch Gemara text + links (for exact Rashi/Tosafot alignment via anchorRef)
-  const [enRes, heRes, links] = await Promise.all([
-    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
-    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
-    fetch('https://www.sefaria.org/api/links/' + enc + '?with_text=1').then(r=>r.json()).catch(()=>[]),
-  ]);
-
-  const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-  const allEn = _flatHtml(engVersion?.text || []);
-  const allHe = _flatHtml(heRes?.he || []);
-
-  // Build per-segment maps from links using anchorRef
-  function buildMap(links, name) {
-    const map = {};
+  // A daf's text comes per amud (35a, then 35b), and a link's anchorRef ("Bekhorot 35b:3")
+  // counts lines within its amud: so a line's place is where its amud starts plus its number
+  const amudKey = r => { const m = String(r).match(/(\d+)([ab])(?::|$|-)/); return m ? m[1] * 2 + (m[2] === 'b') : null; };
+  const allHe = [], allEn = [], rashiHe = [], rashiEn = [], tosafotHe = [], amudAt = {};
+  let heTitle = '';
+  for (const { ref, enRes, heRes, links } of parts) {
+    const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+    const en = _flatHtml(engVersion?.text || []), he = _flatHtml(heRes?.he || []);
+    if (!he.length && !en.length) throw new Error('No text for ' + ref);
+    if (refs.length > 1) {                                   // a heading where the next masechta begins
+      const name = ref.startsWith('Mishnah ') ? 'Mishnah ' + ref.split(' ')[1] : ref.split(' ')[0];
+      allHe.push('<b>' + escapeHtml(heRes?.heRef || name) + '</b>'); allEn.push('<b>' + escapeHtml(name) + '</b>');
+      rashiHe.push(''); rashiEn.push(''); tosafotHe.push('');
+    }
+    const base = allHe.length, len = Math.max(he.length, en.length);
+    // Where each amud starts, from Sefaria's nesting (one list per amud) when the ref spans two
+    const nested = Array.isArray(heRes?.he?.[0]);
+    const firstAmud = amudKey(ref.split('-')[0]);
+    const starts = {};
+    if (nested && firstAmud != null) heRes.he.reduce((at, amud, k) => { starts[firstAmud + k] = at; return at + _flatHtml(amud).length; }, 0);
+    else if (firstAmud != null) starts[firstAmud] = 0;
+    if (!ref.startsWith('Mishnah ')) {                       // "דף לה ע״א" where each amud starts
+      heTitle = heTitle || heRes?.heTitle || '';
+      for (const [k, at] of Object.entries(starts)) amudAt[base + at] = hebNumeral(Math.floor(k / 2)) + ' ' + (k % 2 ? 'ע״ב' : 'ע״א');
+    }
+    for (let i = 0; i < len; i++) { allHe.push(he[i] || ''); allEn.push(en[i] || ''); rashiHe.push(''); rashiEn.push(''); tosafotHe.push(''); }
     (Array.isArray(links) ? links : []).forEach(lnk => {
       const title = lnk.collectiveTitle?.en || lnk.commentator || '';
-      if (!title.includes(name)) return;
-      if (!lnk.he) return;
+      const which = title.includes('Rashi') ? 'rashi' : title.includes('Tosafot') ? 'tos' : null;
+      if (!which || !lnk.he) return;
       const m = (lnk.anchorRef || '').match(/:(\d+)/);
       if (!m) return;
-      const seg = parseInt(m[1]) - 1;
-      if (!map[seg]) map[seg] = { he: [], en: [] };
-      map[seg].he.push(_cleanHtml(lnk.he));
-      if (lnk.text) map[seg].en.push(_cleanHtml(typeof lnk.text === 'string' ? lnk.text : (lnk.text[0] || '')));
+      const k = amudKey(lnk.anchorRef);
+      const at = base + (nested && k != null && starts[k] != null ? starts[k] : 0) + parseInt(m[1]) - 1;
+      if (at >= base + len) return;
+      const add = (arr, t) => { arr[at] = arr[at] ? arr[at] + ' ' + t : t; };
+      if (which === 'rashi') {
+        add(rashiHe, _dhBold(_cleanHtml(lnk.he)));
+        const en = lnk.text ? _cleanHtml(typeof lnk.text === 'string' ? lnk.text : (lnk.text[0] || '')) : '';
+        if (en.replace(/<[^>]*>/g, '').trim()) add(rashiEn, en);
+      } else add(tosafotHe, _dhBold(_cleanHtml(lnk.he)));
     });
-    return map;
   }
 
-  function mapToArr(len, map, lang) {
-    return Array.from({length: len}, (_, i) => (map[i]?.[lang] || []).join(' '));
-  }
-
-  const rashiMap  = buildMap(links, 'Rashi');
-  const tosMap    = buildMap(links, 'Tosafot');
-  const len = Math.max(allHe.length, allEn.length);
-
+  window._dafOpen = new Set();
   window._dafData = {
-    title: item.displayValue?.en || item.ref,
+    title: piece.label,
+    kind: mishnahOnly ? 'Mishnah' : refs.length > 1 ? 'Talmud Bavli and Mishnah' : piece.ref.startsWith('Jerusalem') ? 'Talmud Yerushalmi' : 'Talmud Bavli',
+    note: piece.note,
     color: def.color,
-    allHe, allEn,
-    rashiHe:   mapToArr(len, rashiMap, 'he'),
-    rashiEn:   mapToArr(len, rashiMap, 'en'),
-    tosafotHe: mapToArr(len, tosMap, 'he'),
+    allHe, allEn, rashiHe, rashiEn, tosafotHe, amudAt,
+    head: (heTitle ? 'מסכת ' + heTitle + ' · ' : '') + 'דף ' + hebNumeral(+piece.label.split(' ').pop()),
   };
   _rerenderDaf();
   _restoreExtraScroll('dafYomi');
@@ -6924,10 +7082,13 @@ function _rerenderDaf() {
     t += '</div>';
   }
 
-  // Heading
-  t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'
-    + '<p style="font-size:var(--fs-1);font-weight:700;color:' + color + '80;margin-bottom:3px;">Talmud Bavli</p>'
+  // Heading: like the head of a page of Shas ("מסכת בכורות · דף לה"), when we have it
+  if (dat.head) t += '<div class="g-head" lang="he" dir="rtl"><p>' + escapeHtml(dat.head) + '</p><p dir="ltr">' + escapeHtml(title) + ' · ' + (dat.kind || 'Talmud Bavli') + '</p>'
+    + (dat.note ? '<p dir="ltr" class="g-note">' + dat.note + '</p>' : '') + '</div>';
+  else t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'
+    + '<p style="font-size:var(--fs-1);font-weight:700;color:' + color + '80;margin-bottom:3px;">' + (dat.kind || 'Talmud Bavli') + '</p>'
     + '<p style="font-size:var(--fs-4);font-weight:800;color:' + color + ';line-height:1.3;">' + title + '</p>'
+    + (dat.note ? '<p style="font-size:var(--fs-1);color:var(--t3);margin-top:3px;">' + dat.note + '</p>' : '')
     + '</div>';
 
   function amudSep(side) {
@@ -6940,38 +7101,51 @@ function _rerenderDaf() {
       + '</div>';
   }
 
-  function renderSegment(he, en, rHe, rEn, tosHe) {
+  // מתני׳ and גמ׳ stand out as on the daf; "הדרן עלך…" closes a perek, centred
+  const gem = h => h.replace(/^(\s*(?:<b>)?)(מתני[׳']|גמ[׳'])/, '$1<span class="g-mark">$2</span>');
+  const open = window._dafOpen || new Set();
+  function renderSegment(he, en, rHe, rEn, tosHe, idx) {
     if (!he && !en) return '';
-    let v = '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
+    const hadran = /^(<b>)?\s*הדרן עלך/.test(he);
+    he = gem(he);
+    // Its Rashi and Tosafos: all of them (the buttons on top), or this line's, tapped open
+    const mine = idx != null && open.has(idx);
+    const showR = (showRashi || mine) && rHe, showT = (showTosafot || mine) && tosHe;
+    const tappable = idx != null && ((rHe && !showRashi) || (tosHe && !showTosafot));
+    const chips = tappable && !mine ? '<span class="g-chips">' + (rHe ? '<span>רש״י</span>' : '') + (tosHe ? '<span>תוס׳</span>' : '') + '</span>' : '';
+    if (lang === 'he' && chips) he += ' ' + chips;
+    let v = '<div class="g-seg' + (lang === 'he' ? ' g-run' : '') + (hadran ? ' g-hadran' : '') + '"' + (tappable ? ' onclick="_dafTap(' + idx + ')" role="button"' : '') + '>';
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">'
-        + '<p style="font-size:var(--fs-3);line-height:1.82;color:var(--t1);">' + en + '</p>'
-        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:21px;line-height:1.92;color:var(--t1);">' + he + '</p>'
+        + '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>'
+        + '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.85;color:var(--t1);">' + he + '</p>'
         + '</div>';
     } else if (lang === 'en' && en) {
       v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
     } else if (he) {
-      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.85;color:var(--t1);">' + he + '</p>';
+      v += '<p class="rf-body" style="direction:rtl;text-align:' + (lang === 'he' ? 'justify' : 'right') + ';font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.85;color:var(--t1);">' + he + '</p>';
     }
-    if (showRashi && rHe) {
+    if (chips && lang !== 'he') v += '<p class="g-chips-row">' + chips + '</p>';
+    if (showR) {
       v += '<div style="margin-top:8px;padding:9px 12px;background:#6E915018;border-left:4px solid #6E9150AA;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:var(--fs-1);font-weight:700;color:#6E9150;margin-bottom:5px;">\u05E8\u05E9\"\u05D9</p>';
-      if (lang === 'both' && rEn) {
+      const rEnText = String(rEn || '').replace(/<[^>]*>/g, '').trim();   // no English Rashi: the Hebrew goes all the way across
+      if (lang === 'both' && rEnText) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">'
-          + '<p style="font-size:var(--fs-2);line-height:1.65;color:var(--t2);">' + rEn + '</p>'
-          + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.88;color:var(--t1);">' + rHe + '</p>'
+          + '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t2);">' + rEn + '</p>'
+          + '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.92;color:var(--t1);">' + rHe + '</p>'
           + '</div>';
-      } else if (lang === 'en' && rEn) {
-        v += '<p style="font-size:var(--fs-2);line-height:1.65;color:var(--t2);">' + rEn + '</p>';
+      } else if (lang === 'en' && rEnText) {
+        v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t2);">' + rEn + '</p>';
       } else {
         v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.92;color:var(--t1);width:100%;display:block;">' + rHe + '</p>';
       }
       v += '</div>';
     }
-    if (showTosafot && tosHe) {
+    if (showT) {
       v += '<div style="margin-top:6px;padding:9px 12px;background:#8E6AA318;border-left:4px solid #8E6AA3AA;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:var(--fs-1);font-weight:700;color:#8E6AA3;margin-bottom:5px;">\u05EA\u05D5\u05E1\u05E4\u05D5\u05EA</p>'
-        + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.88;color:var(--t1);">' + tosHe + '</p>'
+        + '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.92;color:var(--t1);">' + tosHe + '</p>'
         + '</div>';
     }
     v += '</div>';
@@ -7007,10 +7181,11 @@ function _rerenderDaf() {
     const tosafotHe = dat.tosafotHe || [];
     const maxLen = Math.max(allHe.length, allEn.length);
     for (let i = 0; i < maxLen; i++) {
+      if (dat.amudAt?.[i]) v += '<div class="g-amud" lang="he" dir="rtl"><span></span>דף ' + dat.amudAt[i] + '<span></span></div>';
       v += renderSegment(
         allHe[i] || '', allEn[i] || '',
         rashiHe[i] || '', rashiEn[i] || '',
-        tosafotHe[i] || ''
+        tosafotHe[i] || '', i
       );
     }
   }
@@ -7018,6 +7193,16 @@ function _rerenderDaf() {
   contEl.innerHTML = t + v + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
+
+// Tap a line of Gemara to see its Rashi and Tosafos under it; tap again to close
+function _dafTap(i) {
+  if (getSelection && String(getSelection()).length) return;      // selecting text, not tapping
+  const open = window._dafOpen || (window._dafOpen = new Set());
+  if (open.has(i)) open.delete(i); else open.add(i);
+  const pos = _readerPlace();
+  _rerenderDaf();
+  _putReaderAt(_rv.sid, pos);
+}
 
 function _setDafLang(l) {
   localStorage.setItem('chitas_lang_extra_dafYomi', l);
@@ -7207,54 +7392,160 @@ function _hayomYomError(msg) {
   }
 }
 
+// A short message in the reader instead of a text (nothing to show today)
+function _readerNote(msg) {
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'none';
+  if (contEl) { contEl.innerHTML = '<p class="reader-note">' + escapeHtml(msg) + '</p>'; contEl.style.display = 'block'; }
+  unlockMarkDone();
+}
+
+// Sefaria's text of a range is one list, or a list per chapter when it runs
+// over two: → [{ he, en, ch, v }], numbered from where the ref starts
+// ("Jeremiah 41" → 41:1…, "Kitzur Shulchan Arukh 25:1-26:2" → 25:1… 26:1…)
+function _numberedSegments(he, en, ref) {
+  const m = ref.match(/(\d+)(?::(\d+))?(?:-[\d:]+)?$/);
+  let ch = m ? +m[1] : 1, v = m && m[2] ? +m[2] : 1;
+  const nested = Array.isArray(he?.[0]) || Array.isArray(en?.[0]);
+  const H = nested ? (he || []) : [he || []], E = nested ? (en || []) : [en || []];
+  const out = [];
+  for (let c = 0; c < Math.max(H.length, E.length); c++, ch++, v = 1) {
+    const hs = H[c] || [], es = E[c] || [];
+    for (let i = 0; i < Math.max(hs.length, es.length); i++)
+      out.push({ he: _cleanHtml(hs[i] || ''), en: _cleanHtml(es[i] || ''), ch, v: v + i });
+  }
+  return out;
+}
+
+// Nach Yomi and Halacha Yomis: the day's chapter or se'ifim, Hebrew and English
+async function _loadDailyText(id) {
+  const def = EXTRA_TRACK_DEFS[id], sid = 'extra_' + id, iso = _viewedISO();
+  const piece = await _trackPiece(id, iso);
+  if (!_readerShows(sid, iso)) return;
+  const sub = document.getElementById('chabad-panel-sub');
+  if (piece === undefined) { sub.textContent = def.label; _readerNote(def.label + ' for this day isn\'t in the app yet.'); return; }
+  if (piece === null) { sub.textContent = def.label; _readerNote('No ' + def.label + ' today: the schedule has nothing for this date.'); return; }
+  sub.textContent = piece.label;
+  if (!piece.ref) { _readerNote('Today\'s Kitzur Yomi is ' + piece.label + '. Its text isn\'t on Sefaria, so it isn\'t in the app.'); return; }
+
+  // Nach in the Koren translation, like Tehillim and Chumash
+  const ven = id === 'nachYomi' ? '&ven=' + encodeURIComponent('The Koren Jerusalem Bible') : '';
+  const res = await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(piece.ref) + '?context=0&commentary=0' + ven)
+    .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)));
+  if (!_readerShows(sid, iso)) return;                           // you moved on while it loaded
+  const segs = _numberedSegments(res.he, res.text, piece.ref);
+  if (!segs.some(s => s.he || s.en)) throw new Error('No text for ' + piece.ref);
+  const many = new Set(segs.map(s => s.ch)).size > 1;
+  const num = s => '<span class="seg-n">' + (many ? s.ch + ':' : '') + s.v + '</span> ';
+  _renderBilingualReader(id, piece.label, segs.map(s => s.he && num(s) + s.he), segs.map(s => s.en && num(s) + s.en), def.color,
+    id === 'nachYomi' ? 'Nach Yomi' : 'Kitzur Shulchan Aruch');
+  _restoreExtraScroll(id);
+}
+
+// ── Likkutei Torah: the week's maamarim ──────────────────────────────────────
+// The list for the week's parsha (Torah Ohr on Bereishis and Shemos, Likkutei
+// Torah on the rest); tap one to read it. Your place in a maamar lasts the week.
 async function _loadLikkuteiTorah() {
-  const def = EXTRA_TRACK_DEFS.likkuteiTorah;
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const cal = await fetchSefariaCalendar(d);
-  // Try multiple title variants — Sefaria sometimes returns 'Parasha' vs 'Parashat Hashavua'
-  const parshaItem = (cal.calendar_items || []).find(i =>
-    i.title?.en === 'Parashat Hashavua' ||
-    i.title?.en === 'Parasha' ||
-    (i.title?.en || '').toLowerCase().includes('parasha') ||
-    (i.title?.en || '').toLowerCase().includes('parashat')
-  );
-  if (!parshaItem) {
-    console.log('LT: no parsha in calendar. Items:', (cal.calendar_items || []).map(i => i.title?.en));
-    throw new Error('No parsha found');
-  }
+  const iso = _viewedISO();
+  const piece = await _trackPiece('likkuteiTorah', iso);
+  if (!_readerShows('extra_likkuteiTorah', iso)) return;
+  const sub = document.getElementById('chabad-panel-sub');
+  sub.textContent = piece.parsha ? 'Parshas ' + parshaSpelling(piece.parsha) : 'This week';
+  if (!piece.parsha) { _readerNote('There\'s no parsha this week, so there are no maamarim for it.'); return; }
+  if (!piece.list.length) { _readerNote('Likkutei Torah has no maamarim on Parshas ' + parshaSpelling(piece.parsha) + '.'); return; }
+  window._ltWeek = piece;
+  _ltShowList();
+}
 
-  const parshaName = parshaItem.displayValue?.en || parshaItem.ref;
-  console.log('LT: parshaName =', parshaName);
-  // Map parsha name to Likkutei Torah ref
-  const ltRef = _parshaToLikkuteiTorah(parshaName);
-  console.log('LT: ltRef =', ltRef);
-  if (!ltRef) {
-    // Try fetching directly from Sefaria with the parsha name as-is
-    console.log('LT: no ref for parsha', parshaName, '— trying Sefaria search');
-    document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaName;
-    const loadEl = document.getElementById('native-reader-loading');
-    const contEl = document.getElementById('native-reader-content');
-    if (loadEl) loadEl.style.display = 'none';
-    if (contEl) {
-      contEl.innerHTML = '<div style="padding:24px 20px;text-align:center;">'
-        + '<p style="color:var(--t2);font-size:var(--fs-3);margin-bottom:8px;">Parshas ' + parshaName + '</p>'
-        + '<p style="color:var(--t3);font-size:var(--fs-2);margin-bottom:20px;">Likkutei Torah / Torah Or for this parsha is not yet in our library.</p>'
-        + '<a href="https://www.chabad.org/kabbalah/article_cdo/aid/1046914/jewish/Likkutei-Torah.htm" onclick="event.stopPropagation()" target="_blank" '
-        + 'style="display:inline-block;padding:10px 20px;border-radius:var(--r-s);background:' + def.color + '18;border:1px solid ' + def.color + '35;color:' + def.color + ';font-weight:700;font-size:var(--fs-2);text-decoration:none;">Open on Chabad.org</a>'
-        + '</div>';
-      contEl.style.display = 'block';
-    }
-    return;
-  }
-
-  document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaName;
-
-  const enc = encodeURIComponent(ltRef);
-  const heRes = await fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r => r.json()).catch(() => null);
-  const allHe = _flatHtml(heRes?.he || []);
-
-  _renderBilingualReader('likkuteiTorah', 'Parshas ' + parshaName, allHe, [], def.color, 'Likkutei Torah');
+function _ltShowList() {
+  const piece = window._ltWeek;
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'none';
+  if (!contEl || !piece) return;
+  document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaSpelling(piece.parsha);
+  contEl.innerHTML = '<p class="lt-intro">The maamarim of ' + piece.books + ' on Parshas ' + parshaSpelling(piece.parsha)
+    + '. Learn one or more this week.</p>'
+    + '<div class="lt-list">' + piece.list.map((m, i) =>
+      '<button type="button" class="lt-m" onclick="_ltOpen(' + i + ')">'
+      + '<span class="lt-m-t">' + escapeHtml(m.title) + '</span>'
+      + '<span class="lt-m-d">' + m.book + ' · about ' + m.mins + ' min</span>'
+      + '</button>').join('') + '</div>'
+    + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+  contEl.style.display = 'block';
   _restoreExtraScroll('likkuteiTorah');
+}
+
+// A maamar's Hebrew from Sefaria, keeping what the printed page has: the bold
+// opening words (<b>), smaller references (<small>), and the printed page
+// numbers ("Vilna Pages" markers → a small "יא, א"). Everything else goes.
+function _ltHtml(raw) {
+  if (typeof raw !== 'string') return '';
+  let t = raw.replace(/<i\b[^>]*data-value="([^"]*)"[^>]*><\/i>/g, (_, v) => '\u0000pg' + v + '\u0000')
+    .replace(/<(\/?)(b|small)\b[^>]*>/g, '\u0000$1$2\u0000')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;|\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+  t = escapeHtml(t).replace(/\u0000pg([^\u0000]*)\u0000/g, (_, v) => '<span class="lt-pg">' + v.replace(',', ', ') + '</span>')
+    .replace(/\u0000(\/?)(b|small)\u0000/g, '<$1$2>');
+  t = t.replace(/<b>\s*<\/b>|<small>\s*<\/small>/g, '').trim();
+  // A maamar that opens with its verse in brackets, "(אנכי מגן לך).", has it set as the opening words
+  t = t.replace(/^((?:<span class="lt-pg">[^<]*<\/span>\s*)?)(\([^()<]{2,60}\))/, '$1<b>$2</b>');
+  // Not <b>: a bold Heilig is another font file (thin, on phones). The opening words and other
+  // emphasis are the regular face, larger, styled by class
+  return t.replace(/^((?:<span class="lt-pg">[^<]*<\/span>\s*)?)<b>([\s\S]*?)<\/b>/, '$1<span class="lt-open">$2</span>')
+    .replace(/<b>/g, '<span class="lt-em">').replace(/<\/b>/g, '</span>');
+}
+
+async function _ltOpen(i) {
+  const piece = window._ltWeek, m = piece?.list[i];
+  if (!m) return;
+  const sid = 'extra_likkuteiTorah:' + m.ref;
+  _readerBegin(sid);
+  _rv.iso = weekShabbos(_viewedISO());                            // the place is kept for the week
+  const iso = _rv.iso;
+  const loadEl = document.getElementById('native-reader-loading');
+  const contEl = document.getElementById('native-reader-content');
+  if (loadEl) loadEl.style.display = 'block';
+  if (contEl) contEl.style.display = 'none';
+  document.getElementById('chabad-panel-sub').textContent = m.book + ' · ' + parshaSpelling(piece.parsha);
+  const back = '<button type="button" class="lt-back" onclick="_ltBack()">‹ The week\'s maamarim</button>';
+  try {
+    const res = await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(m.ref) + '?context=0&commentary=0&lang=he')
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)));
+    if (!_readerShows(sid, iso)) return;
+    const paras = (Array.isArray(res.he) ? res.he.flat(Infinity) : [res.he]).map(_ltHtml).filter(Boolean);
+    if (!paras.length) throw new Error('No text for ' + m.ref);
+    if (loadEl) loadEl.style.display = 'none';
+    // Set like the printed sefer: running head, the parsha, the maamar's subject line, bold openings,
+    // the printed page numbers, and the last line centred
+    const heRef = String(res.heRef || '').replace(/\s+\S+$/, '');           // "תורה אור, לך לך ב" → "תורה אור, לך לך"
+    const [heBook, heParsha] = heRef.includes(',') ? heRef.split(/,\s*/) : [m.book, parshaSpelling(piece.parsha)];
+    const subject = /^<small>\(.*\)<\/small>$/.test(paras[0]) ? paras.shift() : '';
+    const orn = '<div class="lt-orn" aria-hidden="true"><span></span><i></i><span></span></div>';
+    contEl.innerHTML = back
+      + '<div class="lt-sefer" lang="he" dir="rtl">'
+      +   '<p class="lt-run">' + escapeHtml(heBook) + '<span>·</span>' + escapeHtml(heParsha) + '</p>'
+      +   '<p class="lt-title">פרשת ' + escapeHtml(heParsha) + '</p>'
+      +   (subject ? '<p class="lt-subject">' + subject.replace(/<\/?small>/g, '') + '</p>' : '')
+      +   orn
+      +   paras.map((p, k) => '<p class="rf-body lt-body' + (k === paras.length - 1 ? ' lt-last' : '') + '" lang="he" dir="rtl">' + p + '</p>').join('')
+      +   orn
+      + '</div>'
+      + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+    contEl.style.display = 'block';
+    _putReaderAt(sid);
+  } catch (e) {
+    if (!_readerShows(sid, iso)) return;
+    if (loadEl) loadEl.style.display = 'none';
+    contEl.innerHTML = back + '<p class="reader-note">Couldn\'t load this maamar. Check your connection and try again.</p>';
+    contEl.style.display = 'block';
+  }
+}
+
+function _ltBack() {
+  _readerBegin('extra_likkuteiTorah');
+  _ltShowList();
 }
 
 async function _loadMishnahYomi() {
@@ -7572,7 +7863,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
 
   const HE = id === 'likkuteiTorah'
     ? "'DachHeilig','Frank Ruhl Libre',serif"
-    : "'Shlomo','Taamey Frank CLM','Noto Serif Hebrew',serif";
+    : "'Vilna','Shlomo','Noto Serif Hebrew',serif";   // like Chumash and Rambam
   const langKey = 'chitas_lang_extra_' + id;
   const lang = localStorage.getItem(langKey) || (enSegs.length ? 'both' : 'he');
 
@@ -7610,7 +7901,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
       : 'padding:14px 0;border-bottom:1px solid var(--border);';
     const heStyle = isLT
       ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.62;color:var(--t1);'
-      : 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.85;color:var(--t1);';
+      : 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:' + (id === 'nachYomi' ? 21 : 19) + 'px;--rf-lh:1.92;color:var(--t1);';   // Nach like Chumash (21px), the rest like Rambam (19px)
     const enStyle = isLT
       ? '--rf-sz:15px;--rf-lh:1.78;color:var(--t1);'
       : '--rf-sz:15px;--rf-lh:1.82;color:var(--t1);';
@@ -7708,143 +7999,11 @@ function _restoreExtraScroll(id) {
   unlockMarkDone(); // extra tracks unlock immediately
 }
 
-// ── Parsha → Likkutei Torah ref map ───────────────────────────────────────────
-function _parshaToLikkuteiTorah(parshaName) {
-  // Likkutei Torah covers Vayikra, Bamidbar, Devarim + Shir HaShirim, Rosh Hashana etc.
-  // Torah Or covers Bereishit, Shemot
-  const LT = {
-    'Vayikra':      'Likkutei Torah, Vayikra.1',
-    'Tzav':         'Likkutei Torah, Tzav.1',
-    'Shemini':      'Likkutei Torah, Shemini.1',
-    'Tazria':       'Likkutei Torah, Tazria.1',
-    'Metzora':      'Likkutei Torah, Metzora.1',
-    'Acharei':      'Likkutei Torah, Acharei.1',
-    'Kedoshim':     'Likkutei Torah, Kedoshim.1',
-    'Emor':         'Likkutei Torah, Emor.1',
-    'Behar':        'Likkutei Torah, Behar.1',
-    'Bechukotai':   'Likkutei Torah, Bechukotai.1',
-    'Bamidbar':     'Likkutei Torah, Bamidbar.1',
-    'Nasso':        'Likkutei Torah, Nasso.1',
-    "Beha'alotcha": 'Likkutei Torah, Beha\'alotcha.1',
-    'Shelach':      'Likkutei Torah, Shelach.1',
-    'Korach':       'Likkutei Torah, Korach.1',
-    'Chukat':       'Likkutei Torah, Chukat.1',
-    'Balak':        'Likkutei Torah, Balak.1',
-    'Pinchas':      'Likkutei Torah, Pinchas.1',
-    'Matot':        'Likkutei Torah, Matot.1',
-    'Masei':        'Likkutei Torah, Masei.1',
-    'Devarim':      'Likkutei Torah, Devarim.1',
-    "Va'etchanan":  "Likkutei Torah, Va'etchanan.1",
-    'Eikev':        'Likkutei Torah, Eikev.1',
-    "Re'eh":        "Likkutei Torah, Re'eh.1",
-    'Shoftim':      'Likkutei Torah, Shoftim.1',
-    'Ki Teitzei':   'Likkutei Torah, Ki Teitzei.1',
-    'Ki Tavo':      'Likkutei Torah, Ki Tavo.1',
-    'Nitzavim':     'Likkutei Torah, Nitzavim.1',
-    'Vayeilech':    'Likkutei Torah, Nitzavim.1',
-  };
-  // Torah Or for Bereishit/Shemot parshiyot
-  const TO = {
-    'Bereishit':    'Torah Ohr, Bereishit.1',
-    'Noach':        'Torah Ohr, Noach.1',
-    'Lech Lecha':   'Torah Ohr, Lech Lecha.1',
-    'Vayera':       'Torah Ohr, Vayera.1',
-    'Chayei Sara':  'Torah Ohr, Chayei Sarah.1',
-    'Toldot':       'Torah Ohr, Toldot.1',
-    'Vayetzei':     'Torah Ohr, Vayetzei.1',
-    'Vayishlach':   'Torah Ohr, Vayishlach.1',
-    'Vayeshev':     'Torah Ohr, Vayeshev.1',
-    'Miketz':       'Torah Ohr, Miketz.1',
-    'Vayigash':     'Torah Ohr, Vayigash.1',
-    'Vayechi':      'Torah Ohr, Vayechi.1',
-    'Shemot':       'Torah Ohr, Shemot.1',
-    'Vaera':        "Torah Ohr, Va'era.1",
-    'Bo':           'Torah Ohr, Bo.1',
-    'Beshalach':    'Torah Ohr, Beshalach.1',
-    'Yitro':        'Torah Ohr, Yitro.1',
-    'Mishpatim':    'Torah Ohr, Mishpatim.1',
-    'Terumah':      'Torah Ohr, Terumah.1',
-    'Tetzaveh':     'Torah Ohr, Tetzaveh.1',
-    'Ki Tisa':      'Torah Ohr, Ki Tisa.1',
-    'Vayakhel':     'Torah Ohr, Vayakhel.1',
-    'Pekudei':      'Torah Ohr, Pekudei.1',
-  };
-  // Try exact match, then partial
-  // Normalize: remove diacritics, extra spaces, common prefixes
-  const norm = s => s.trim()
-    .replace(/^Parshat?\s+/i, '')
-    .replace(/^Parasha\s+/i, '')
-    .normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const n = norm(parshaName);
-  // Exact match first
-  if (LT[n]) return LT[n];
-  if (TO[n]) return TO[n];
-  // Partial match
-  const all = {...LT,...TO};
-  const found = Object.entries(all).find(([k]) => {
-    const nk = norm(k);
-    return n === nk || n.includes(nk) || nk.includes(n);
-  });
-  return found?.[1] || null;
-}
-
-
-// ── Extra track card swipe-to-delete ──────────────────────────────────────────
-function _attachExtraSwipeDelete() {
-  (user.extraTracks || []).forEach(id => {
-    const wrap = document.getElementById('extra-wrap-' + id);
-    const card = document.getElementById('extra-card-' + id);
-    const bg   = document.getElementById('extra-del-bg-' + id);
-    if (!wrap || !card || !bg) return;
-
-    let startX = 0, curX = 0, dragging = false;
-    const THRESHOLD = 70; // px to trigger delete
-
-    function onStart(e) {
-      startX = e.touches ? e.touches[0].clientX : e.clientX;
-      curX = startX;
-      dragging = true;
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      curX = e.touches ? e.touches[0].clientX : e.clientX;
-      const dx = curX - startX;
-      if (dx >= 0) { card.style.transform = ''; bg.style.opacity = '0'; return; }
-      const pull = Math.min(Math.abs(dx), 90);
-      card.style.transform = 'translateX(-' + pull + 'px)';
-      bg.style.opacity = String(Math.min(pull / THRESHOLD, 1));
-      if (e.cancelable) e.preventDefault();
-    }
-    function onEnd() {
-      if (!dragging) return;
-      dragging = false;
-      const dx = startX - curX;
-      if (dx >= THRESHOLD) {
-        // Animate out and remove
-        card.style.transition = 'transform .25s ease, opacity .2s ease';
-        card.style.transform = 'translateX(-110%)';
-        card.style.opacity = '0';
-        setTimeout(() => _removeExtraTrack(id), 220);
-      } else {
-        card.style.transition = 'transform .2s ease';
-        card.style.transform = '';
-        bg.style.opacity = '0';
-        setTimeout(() => { card.style.transition = ''; }, 220);
-      }
-    }
-
-    wrap.addEventListener('touchstart', onStart, { passive: true });
-    wrap.addEventListener('touchmove',  onMove,  { passive: false });
-    wrap.addEventListener('touchend',   onEnd,   { passive: true });
-  });
-}
-
 function _removeExtraTrack(id) {
   if (!user.extraTracks) return;
   user.extraTracks = user.extraTracks.filter(t => t !== id);
   saveUser();
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  _renderExtraTrackCards(dateISO(d), dayOffset === 0);
+  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   _syncMoreLearning();
   fire(EXTRA_TRACK_DEFS[id]?.label + ' removed', 'gray');
 }
