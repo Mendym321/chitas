@@ -40,8 +40,14 @@ Review is the step after learning, shown where you are, never pushed:
 ## Footnotes
 Rambam and Tanya footnotes are small raised numbers in a soft section colour, no box; the open one is underlined.
 
-## Extra learning
-Version 1 offers Hayom Yom (`OFFERED_TRACKS`). Daf Yomi, Mishnah Yomi, Likkutei Torah, Likkutei Sichos and Sha'ar HaBitachon are parked: hidden from the menu, still working for anyone who already added them.
+## More learning (beta)
+Below Today's four tiles and the Hayom Yom card, under "More learning" with a Beta chip. Offered (`OFFERED_TRACKS`): **Daf Yomi**, **Nach Yomi**, **Halacha Yomis** (Kitzur Shulchan Aruch Yomi) and the week's **Likkutei Torah** (Torah Ohr on Bereishis and Shemos). They never count toward the day's four rings or the streak.
+- **Which piece, when:** `data/cycles.json` (each day's daf, chapter of Nach and Kitzur se'ifim, as Sefaria refs) and `data/likkutei-torah.json` (each parsha's maamarim, with opening words and minutes), made by `tools/generate-cycles.mjs` from Hebcal's schedules and Sefaria's export. No network to know today's piece; the text itself comes from Sefaria. The schedule runs to Sept 2030: run the generator again before then.
+- **Add learning sheet:** one card of rows (coloured icon, name, what it is with today's piece, an Add / Added pill), like the design canvas's Y-Add.
+- **Marking:** the same rules as Chitas (today and the last 7 days). Likkutei Torah is weekly: marked any day of the week (Sunday to Shabbos), it shows learned all week, and your place in a maamar is kept for the week.
+- **Readers:** Nach and Kitzur in Hebrew and English with verse / se'if numbers (Nach in Koren, like Tehillim). Daf Yomi keeps its Rashi and Tosafos toggles. Likkutei Torah opens on the week's list of maamarim; a maamar is Hebrew only, in Vilna (like Tanya).
+- **Odd days, said plainly:** Kinnim and Middos have no Gemara, so Daf Yomi shows their Mishnah; 30 Cheshvan and 30 Adar I have no Kitzur reading; 15 Elul's "Klalim" isn't on Sefaria; Shoftim has no section in Likkutei Torah. Hebcal's Adar II Kitzur table has four typos, fixed in the generator.
+- Parked, still working for anyone who added them before: Mishnah Yomi, Likkutei Sichos, Sha'ar HaBitachon.
 
 ## App icon
 The four rings, full and large, on cream (`icons/icon.svg`, rendered to PNGs). A plain square with no rounded corners and no see-through parts: the phone rounds the corners itself, and the App Store turns down icons that are already rounded or transparent.
