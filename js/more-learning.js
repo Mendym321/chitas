@@ -76,3 +76,13 @@ function maamarimFor(weeks, parsha) {
 function maamarimBooks(list) {
   return [...new Set(list.map(m => m.book))].join(' and ');
 }
+
+// 35 → "לה", 15 → "טו", 16 → "טז", 300 → "ש" (a daf number, without geresh marks)
+function hebNumeral(n) {
+  let out = '';
+  for (const [v, l] of [[400, 'ת'], [300, 'ש'], [200, 'ר'], [100, 'ק']]) while (n >= v) { out += l; n -= v; }
+  if (n === 15) return out + 'טו';
+  if (n === 16) return out + 'טז';
+  out += ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'][Math.floor(n / 10)];
+  return out + ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'][n % 10];
+}

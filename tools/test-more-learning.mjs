@@ -9,7 +9,7 @@ import vm from 'node:vm';
 const ctx = {};
 vm.createContext(ctx);
 vm.runInContext(readFileSync(new URL('../js/more-learning.js', import.meta.url), 'utf8'), ctx);
-const M = vm.runInContext('({ cycleDay, weekShabbos, maamarimFor, maamarimBooks, dafLabel, nachLabel, kitzurLabel })', ctx);
+const M = vm.runInContext('({ cycleDay, weekShabbos, maamarimFor, maamarimBooks, dafLabel, nachLabel, kitzurLabel, hebNumeral })', ctx);
 const cycles = JSON.parse(readFileSync(new URL('../data/cycles.json', import.meta.url)));
 const weeks = JSON.parse(readFileSync(new URL('../data/likkutei-torah.json', import.meta.url)));
 
@@ -44,6 +44,8 @@ check('15 Elul is Klalim, with no text', day('2027-09-17').kitzur, { label: 'Kla
 check('every day of the schedule is there', cycles.days.length, Math.round((Date.parse(cycles.end) - Date.parse(cycles.start)) / 864e5) + 1);
 check('outside the schedule: nothing', [M.cycleDay(cycles, '2026-08-31'), M.cycleDay(cycles, '2030-10-01')], [null, null]);
 check('Nach Yomi goes one chapter a day', [day('2026-10-24').nach.label, day('2026-10-25').nach.label], ['Yirmiyahu 42', 'Yirmiyahu 43']);
+
+check('daf numbers in Hebrew letters', [2, 15, 16, 35, 64, 100, 119, 142, 176].map(M.hebNumeral), ['ב', 'טו', 'טז', 'לה', 'סד', 'ק', 'קיט', 'קמב', 'קעו']);
 
 console.log('Weekly Likkutei Torah');
 check('the week ends on Shabbos', [M.weekShabbos('2026-10-18'), M.weekShabbos('2026-10-23'), M.weekShabbos('2026-10-24')], ['2026-10-24', '2026-10-24', '2026-10-24']);

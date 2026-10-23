@@ -142,6 +142,20 @@ await check('Rashi with English: two columns; without English: all the way acros
   return [withEn, withoutEn, full];
 }, [1, 0, true]);
 
+await check('the daf heads like a page of Shas, with each amud marked', () =>
+  [_dafData.head.startsWith('דף לה') || _dafData.head.includes('דף לה'), [...document.querySelectorAll('.g-amud')].map(e => e.textContent)], [true, ['דף לה ע״א', 'דף לה ע״ב']]);
+
+await check('tapping a line opens its Rashi under it (and only its), tapping again closes it', () => {
+  localStorage.setItem('chitas_lang_extra_dafYomi', 'he'); localStorage.removeItem('chitas_daf_commentary');
+  _rerenderDaf();
+  const chips = document.querySelectorAll('.g-chips').length;
+  _dafTap(4);
+  const opened = [...document.querySelectorAll('#native-reader-content .g-seg')].filter(d => d.textContent.includes('רש"י על ב')).length;
+  _dafTap(4);
+  const closed = document.getElementById('native-reader-content').textContent.includes('רש"י על ב');
+  return [chips, opened, closed];
+}, [1, 1, false]);
+
 asked.length = 0;
 await check('Me\'ilah 22 (in March): the Gemara, then Kinnim\'s first perek under its own heading', async () => {
   closeChabadPanel();

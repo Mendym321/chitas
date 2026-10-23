@@ -481,6 +481,20 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .ml-t p + p { font-size:var(--fs-1); color:var(--t3); margin-top:1px; line-height:1.35; }
 .ml-add { height:34px; padding:0 14px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font-family:inherit; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0; }
 .ml-add.on { background:var(--card2); color:var(--t1); }
+.g-head { text-align:center; margin:4px 0 18px; }
+.g-head p:first-child { font-family:'Vilna','Frank Ruhl Libre',serif; font-weight:700; font-size:26px; line-height:1.25; color:var(--t1); }
+.g-head p + p { font-size:var(--fs-1); color:var(--t3); margin-top:2px; }
+.g-head .g-note { max-width:34em; margin:6px auto 0; line-height:1.45; }
+.g-amud { display:flex; align-items:center; gap:10px; margin:18px 0 10px; font-family:'Vilna',serif; font-weight:700; font-size:15px; color:var(--t2); }
+.g-amud span { flex:1; height:1px; background:var(--border); }
+.g-seg { padding:14px 0; border-bottom:1px solid var(--border); }
+.g-seg.g-run { padding:3px 0; border-bottom:none; }
+.g-seg[role="button"] { cursor:pointer; }
+.g-mark { font-weight:700; font-size:1.3em; }
+.g-hadran p { text-align:center !important; font-weight:700; color:var(--t2); margin:10px 0; }
+.g-chips { display:inline-flex; gap:4px; vertical-align:middle; }
+.g-chips span { font-family:'Vilna',serif; font-size:11px; font-weight:700; line-height:16px; padding:0 6px; border-radius:999px; background:var(--card2); color:var(--t2); }
+.g-chips-row { text-align:right; margin-top:4px; }
 .reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
 .seg-n { font-family:var(--ui-font); font-size:11px; font-weight:700; color:var(--t3); }
 /* Likkutei Torah: the week's maamarim, and a maamar (in Heilig, the look from May: dibbur hamaschil as a drop word) */
@@ -501,7 +515,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .lt-orn i { width:5px; height:5px; border-radius:50%; background:currentColor; }
 .lt-body { direction:rtl; text-align:justify; text-align-last:right; font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; --rf-sz:19px; --rf-lh:1.6; color:var(--t1); margin-bottom:.15em; }
 .lt-body.lt-last { text-align-last:center; }
-.lt-sefer .lt-body > b:first-child, .lt-sefer .lt-body > .lt-pg:first-child + b { font-weight:bold; font-size:1.3em; line-height:1; }
+.lt-sefer .lt-body > b:first-child, .lt-sefer .lt-body > .lt-pg:first-child + b { font-weight:normal; font-size:1.4em; line-height:1; }   /* the title's face (a bold one would be another font), just larger */
 .lt-sefer .lt-body small { font-size:.78em; color:var(--t2); }
 .lt-pg { display:inline-block; font-family:var(--ui-font); font-size:10px; font-weight:700; color:var(--t3); border:1px solid var(--border); border-radius:999px; padding:0 6px; margin:0 3px; line-height:16px; vertical-align:middle; text-indent:0; }
 .ml-foot { margin:12px 4px 0; font-size:var(--fs-1); color:var(--t3); line-height:1.45; }
@@ -6880,6 +6894,14 @@ async function openExtraReader(id) {
 
 // ── Individual track loaders ───────────────────────────────────────────────────
 
+// A Rashi or Tosafos comment opens with its dibbur hamaschil: "טימא טהרותיו - לשלם…"
+// → the words before " - " in bold, as on the daf (unless it already has bold)
+function _dhBold(t) {
+  if (!t || /<b>/.test(t)) return t;
+  const i = t.indexOf(' - ');
+  return i > 0 && i < 120 ? '<b>' + t.slice(0, i) + '</b> ' + t.slice(i + 3) : t;
+}
+
 async function _loadDafYomi() {
   const def = EXTRA_TRACK_DEFS.dafYomi;
   const iso = _viewedISO();
@@ -6904,7 +6926,8 @@ async function _loadDafYomi() {
   // A daf's text comes per amud (35a, then 35b), and a link's anchorRef ("Bekhorot 35b:3")
   // counts lines within its amud: so a line's place is where its amud starts plus its number
   const amudKey = r => { const m = String(r).match(/(\d+)([ab])(?::|$|-)/); return m ? m[1] * 2 + (m[2] === 'b') : null; };
-  const allHe = [], allEn = [], rashiHe = [], rashiEn = [], tosafotHe = [];
+  const allHe = [], allEn = [], rashiHe = [], rashiEn = [], tosafotHe = [], amudAt = {};
+  let heTitle = '';
   for (const { ref, enRes, heRes, links } of parts) {
     const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
     const en = _flatHtml(engVersion?.text || []), he = _flatHtml(heRes?.he || []);
@@ -6920,6 +6943,11 @@ async function _loadDafYomi() {
     const firstAmud = amudKey(ref.split('-')[0]);
     const starts = {};
     if (nested && firstAmud != null) heRes.he.reduce((at, amud, k) => { starts[firstAmud + k] = at; return at + _flatHtml(amud).length; }, 0);
+    else if (firstAmud != null) starts[firstAmud] = 0;
+    if (!ref.startsWith('Mishnah ')) {                       // "דף לה ע״א" where each amud starts
+      heTitle = heTitle || heRes?.heTitle || '';
+      for (const [k, at] of Object.entries(starts)) amudAt[base + at] = hebNumeral(Math.floor(k / 2)) + ' ' + (k % 2 ? 'ע״ב' : 'ע״א');
+    }
     for (let i = 0; i < len; i++) { allHe.push(he[i] || ''); allEn.push(en[i] || ''); rashiHe.push(''); rashiEn.push(''); tosafotHe.push(''); }
     (Array.isArray(links) ? links : []).forEach(lnk => {
       const title = lnk.collectiveTitle?.en || lnk.commentator || '';
@@ -6932,19 +6960,21 @@ async function _loadDafYomi() {
       if (at >= base + len) return;
       const add = (arr, t) => { arr[at] = arr[at] ? arr[at] + ' ' + t : t; };
       if (which === 'rashi') {
-        add(rashiHe, _cleanHtml(lnk.he));
+        add(rashiHe, _dhBold(_cleanHtml(lnk.he)));
         const en = lnk.text ? _cleanHtml(typeof lnk.text === 'string' ? lnk.text : (lnk.text[0] || '')) : '';
         if (en.replace(/<[^>]*>/g, '').trim()) add(rashiEn, en);
-      } else add(tosafotHe, _cleanHtml(lnk.he));
+      } else add(tosafotHe, _dhBold(_cleanHtml(lnk.he)));
     });
   }
 
+  window._dafOpen = new Set();
   window._dafData = {
     title: piece.label,
     kind: mishnahOnly ? 'Mishnah' : refs.length > 1 ? 'Talmud Bavli and Mishnah' : piece.ref.startsWith('Jerusalem') ? 'Talmud Yerushalmi' : 'Talmud Bavli',
     note: piece.note,
     color: def.color,
-    allHe, allEn, rashiHe, rashiEn, tosafotHe,
+    allHe, allEn, rashiHe, rashiEn, tosafotHe, amudAt,
+    head: (heTitle ? 'מסכת ' + heTitle + ' · ' : '') + 'דף ' + hebNumeral(+piece.label.split(' ').pop()),
   };
   _rerenderDaf();
   _restoreExtraScroll('dafYomi');
@@ -7013,8 +7043,10 @@ function _rerenderDaf() {
     t += '</div>';
   }
 
-  // Heading
-  t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'
+  // Heading: like the head of a page of Shas ("מסכת בכורות · דף לה"), when we have it
+  if (dat.head) t += '<div class="g-head" lang="he" dir="rtl"><p>' + escapeHtml(dat.head) + '</p><p dir="ltr">' + escapeHtml(title) + ' · ' + (dat.kind || 'Talmud Bavli') + '</p>'
+    + (dat.note ? '<p dir="ltr" class="g-note">' + dat.note + '</p>' : '') + '</div>';
+  else t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'
     + '<p style="font-size:var(--fs-1);font-weight:700;color:' + color + '80;margin-bottom:3px;">' + (dat.kind || 'Talmud Bavli') + '</p>'
     + '<p style="font-size:var(--fs-4);font-weight:800;color:' + color + ';line-height:1.3;">' + title + '</p>'
     + (dat.note ? '<p style="font-size:var(--fs-1);color:var(--t3);margin-top:3px;">' + dat.note + '</p>' : '')
@@ -7030,9 +7062,20 @@ function _rerenderDaf() {
       + '</div>';
   }
 
-  function renderSegment(he, en, rHe, rEn, tosHe) {
+  // מתני׳ and גמ׳ stand out as on the daf; "הדרן עלך…" closes a perek, centred
+  const gem = h => h.replace(/^(\s*(?:<b>)?)(מתני[׳']|גמ[׳'])/, '$1<span class="g-mark">$2</span>');
+  const open = window._dafOpen || new Set();
+  function renderSegment(he, en, rHe, rEn, tosHe, idx) {
     if (!he && !en) return '';
-    let v = '<div style="padding:14px 0;border-bottom:1px solid var(--border);">';
+    const hadran = /^(<b>)?\s*הדרן עלך/.test(he);
+    he = gem(he);
+    // Its Rashi and Tosafos: all of them (the buttons on top), or this line's, tapped open
+    const mine = idx != null && open.has(idx);
+    const showR = (showRashi || mine) && rHe, showT = (showTosafot || mine) && tosHe;
+    const tappable = idx != null && ((rHe && !showRashi) || (tosHe && !showTosafot));
+    const chips = tappable && !mine ? '<span class="g-chips">' + (rHe ? '<span>רש״י</span>' : '') + (tosHe ? '<span>תוס׳</span>' : '') + '</span>' : '';
+    if (lang === 'he' && chips) he += ' ' + chips;
+    let v = '<div class="g-seg' + (lang === 'he' ? ' g-run' : '') + (hadran ? ' g-hadran' : '') + '"' + (tappable ? ' onclick="_dafTap(' + idx + ')" role="button"' : '') + '>';
     if (lang === 'both' && he && en) {
       v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">'
         + '<p style="font-size:var(--fs-3);line-height:1.82;color:var(--t1);">' + en + '</p>'
@@ -7041,9 +7084,10 @@ function _rerenderDaf() {
     } else if (lang === 'en' && en) {
       v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
     } else if (he) {
-      v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.85;color:var(--t1);">' + he + '</p>';
+      v += '<p class="rf-body" style="direction:rtl;text-align:' + (lang === 'he' ? 'justify' : 'right') + ';font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.85;color:var(--t1);">' + he + '</p>';
     }
-    if (showRashi && rHe) {
+    if (chips && lang !== 'he') v += '<p class="g-chips-row">' + chips + '</p>';
+    if (showR) {
       v += '<div style="margin-top:8px;padding:9px 12px;background:#6E915018;border-left:4px solid #6E9150AA;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:var(--fs-1);font-weight:700;color:#6E9150;margin-bottom:5px;">\u05E8\u05E9\"\u05D9</p>';
       const rEnText = String(rEn || '').replace(/<[^>]*>/g, '').trim();   // no English Rashi: the Hebrew goes all the way across
@@ -7059,7 +7103,7 @@ function _rerenderDaf() {
       }
       v += '</div>';
     }
-    if (showTosafot && tosHe) {
+    if (showT) {
       v += '<div style="margin-top:6px;padding:9px 12px;background:#8E6AA318;border-left:4px solid #8E6AA3AA;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:var(--fs-1);font-weight:700;color:#8E6AA3;margin-bottom:5px;">\u05EA\u05D5\u05E1\u05E4\u05D5\u05EA</p>'
         + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.88;color:var(--t1);">' + tosHe + '</p>'
@@ -7098,10 +7142,11 @@ function _rerenderDaf() {
     const tosafotHe = dat.tosafotHe || [];
     const maxLen = Math.max(allHe.length, allEn.length);
     for (let i = 0; i < maxLen; i++) {
+      if (dat.amudAt?.[i]) v += '<div class="g-amud" lang="he" dir="rtl"><span></span>דף ' + dat.amudAt[i] + '<span></span></div>';
       v += renderSegment(
         allHe[i] || '', allEn[i] || '',
         rashiHe[i] || '', rashiEn[i] || '',
-        tosafotHe[i] || ''
+        tosafotHe[i] || '', i
       );
     }
   }
@@ -7109,6 +7154,16 @@ function _rerenderDaf() {
   contEl.innerHTML = t + v + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
+
+// Tap a line of Gemara to see its Rashi and Tosafos under it; tap again to close
+function _dafTap(i) {
+  if (getSelection && String(getSelection()).length) return;      // selecting text, not tapping
+  const open = window._dafOpen || (window._dafOpen = new Set());
+  if (open.has(i)) open.delete(i); else open.add(i);
+  const pos = _readerPlace();
+  _rerenderDaf();
+  _putReaderAt(_rv.sid, pos);
+}
 
 function _setDafLang(l) {
   localStorage.setItem('chitas_lang_extra_dafYomi', l);
