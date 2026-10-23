@@ -483,16 +483,16 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .ml-add.on { background:var(--card2); color:var(--t1); }
 .reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
 .seg-n { font-family:var(--ui-font); font-size:11px; font-weight:700; color:var(--t3); }
-/* Likkutei Torah: the week's maamarim, and a maamar (Vilna, like Tanya) */
+/* Likkutei Torah: the week's maamarim, and a maamar (in Heilig, the look from May: dibbur hamaschil as a drop word) */
 .lt-intro { font-size:var(--fs-2); color:var(--t2); line-height:1.5; margin:4px 2px 14px; }
 .lt-list { background:var(--card); border-radius:var(--r-m); overflow:hidden; }
 .lt-m { display:block; width:100%; text-align:right; direction:rtl; background:none; border:none; padding:14px 16px; cursor:pointer; color:var(--t1); font-family:inherit; }
 .lt-m + .lt-m { border-top:1px solid var(--border); }
-.lt-m-t { display:block; font-family:'Vilna','Frank Ruhl Libre',serif; font-size:20px; line-height:1.4; }
+.lt-m-t { display:block; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-size:20px; line-height:1.4; }
 .lt-m-d { display:block; direction:ltr; text-align:left; font-size:var(--fs-1); color:var(--t3); margin-top:3px; }
 .lt-back { background:var(--card2); border:none; border-radius:999px; padding:8px 14px; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t1); cursor:pointer; margin-bottom:16px; }
-.lt-h { direction:rtl; text-align:center; font-family:'Vilna',serif; font-weight:700; font-size:var(--fs-4); color:var(--t2); margin-bottom:14px; }
-.lt-body { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; --rf-sz:20px; --rf-lh:1.72; color:var(--t1); margin-bottom:.9em; }
+.lt-h { direction:rtl; text-align:center; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-weight:normal; font-size:var(--fs-4); color:var(--t2); margin-bottom:14px; }
+.lt-body { direction:rtl; text-align:justify; text-align-last:right; font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; --rf-sz:19px; --rf-lh:1.62; color:var(--t1); margin-bottom:.9em; }
 .ml-foot { margin:12px 4px 0; font-size:var(--fs-1); color:var(--t3); line-height:1.45; }
 /* ── Direction C: header and rings, chips, tiles ── */
 .sr-only { position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
@@ -6922,7 +6922,8 @@ async function _loadDafYomi() {
       const add = (arr, t) => { arr[at] = arr[at] ? arr[at] + ' ' + t : t; };
       if (which === 'rashi') {
         add(rashiHe, _cleanHtml(lnk.he));
-        if (lnk.text) add(rashiEn, _cleanHtml(typeof lnk.text === 'string' ? lnk.text : (lnk.text[0] || '')));
+        const en = lnk.text ? _cleanHtml(typeof lnk.text === 'string' ? lnk.text : (lnk.text[0] || '')) : '';
+        if (en.replace(/<[^>]*>/g, '').trim()) add(rashiEn, en);
       } else add(tosafotHe, _cleanHtml(lnk.he));
     });
   }
@@ -7034,12 +7035,13 @@ function _rerenderDaf() {
     if (showRashi && rHe) {
       v += '<div style="margin-top:8px;padding:9px 12px;background:#6E915018;border-left:4px solid #6E9150AA;border-radius:0 6px 6px 0;">'
         + '<p style="font-size:var(--fs-1);font-weight:700;color:#6E9150;margin-bottom:5px;">\u05E8\u05E9\"\u05D9</p>';
-      if (lang === 'both' && rEn) {
+      const rEnText = String(rEn || '').replace(/<[^>]*>/g, '').trim();   // no English Rashi: the Hebrew goes all the way across
+      if (lang === 'both' && rEnText) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">'
           + '<p style="font-size:var(--fs-2);line-height:1.65;color:var(--t2);">' + rEn + '</p>'
           + '<p style="direction:rtl;text-align:right;font-family:' + HE + ';font-size:17px;line-height:1.88;color:var(--t1);">' + rHe + '</p>'
           + '</div>';
-      } else if (lang === 'en' && rEn) {
+      } else if (lang === 'en' && rEnText) {
         v += '<p style="font-size:var(--fs-2);line-height:1.65;color:var(--t2);">' + rEn + '</p>';
       } else {
         v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.92;color:var(--t1);width:100%;display:block;">' + rHe + '</p>';
@@ -7392,7 +7394,7 @@ async function _ltOpen(i) {
     if (loadEl) loadEl.style.display = 'none';
     contEl.innerHTML = back
       + '<p class="lt-h">' + escapeHtml(m.title) + '</p>'
-      + paras.map((p, k) => '<p class="rf-body lt-body" lang="he" dir="rtl">' + (k ? p : _ltFormatHe(p)) + '</p>').join('')
+      + paras.map(p => '<p class="rf-body lt-body" lang="he" dir="rtl">' + _ltFormatHe(p) + '</p>').join('')
       + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
     contEl.style.display = 'block';
     _putReaderAt(sid);
@@ -7818,7 +7820,7 @@ function _ltFormatHe(he) {
   // The large first word floats to the right.
   // restDibbur at medium size wraps beside it on the left.
   // Body text follows below, clearing the float.
-  const FONT = "'Vilna','Frank Ruhl Libre',serif";
+  const FONT = "'DachHeilig','Frank Ruhl Libre',serif";
 
   const dropWord = '<span style="'
     + 'float:right;'

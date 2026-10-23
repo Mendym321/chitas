@@ -130,6 +130,18 @@ if (!asked.some(a => a.startsWith('Bekhorot 35a-35b'))) { failed++; console.log(
 await check('Rashi on amud beis sits beside amud beis (not amud aleph)', () =>
   [_dafData.allHe.length, _dafData.rashiHe.indexOf('רש"י על ב'), _dafData.allHe[4]], [6, 4, 'ב 2']);
 
+await check('Rashi with English: two columns; without English: all the way across', () => {
+  localStorage.setItem('chitas_lang_extra_dafYomi', 'both'); localStorage.setItem('chitas_daf_commentary', 'rashi');
+  _rerenderDaf();
+  const grid = () => [...document.querySelectorAll('#native-reader-content div')].filter(d => d.textContent.startsWith('רש"י') && d.querySelector('div[style*="grid"]')).length;
+  const withEn = grid();
+  _dafData.rashiEn = _dafData.rashiEn.map(() => ''); _rerenderDaf();
+  const withoutEn = grid();
+  const full = [...document.querySelectorAll('#native-reader-content p')].some(p => p.textContent === 'רש"י על ב' && p.style.width === '100%');
+  localStorage.removeItem('chitas_daf_commentary');
+  return [withEn, withoutEn, full];
+}, [1, 0, true]);
+
 asked.length = 0;
 await check('Me\'ilah 22 (in March): the Gemara, then Kinnim\'s first perek under its own heading', async () => {
   closeChabadPanel();
@@ -160,10 +172,10 @@ await check('Likkutei Torah opens the week\'s maamarim: Torah Ohr on Lech Lecha'
 }, ['Parshas Lech Lecha', 6, 'אנכי מגן לך', true]);
 if (asked.length) { failed++; console.log('  ✗ the list should need no network:', asked); }
 
-await check('tapping a maamar opens it, in Vilna, with a way back', async () => {
+await check('tapping a maamar opens it, in Heilig (the May look), with a way back', async () => {
   await _ltOpen(1);
   const c = document.getElementById('native-reader-content');
-  return [c.querySelector('.lt-h')?.textContent, !!c.querySelector('.lt-back'), getComputedStyle(c.querySelector('.lt-body')).fontFamily.startsWith('Vilna')];
+  return [c.querySelector('.lt-h')?.textContent, !!c.querySelector('.lt-back'), getComputedStyle(c.querySelector('.lt-body')).fontFamily.startsWith('DachHeilig')];
 }, ['אנכי מגן לך', true, true]);
 if (!asked.some(a => a.startsWith('Torah Ohr, Lech Lecha 2'))) { failed++; console.log('  ✗ the maamar asked for', asked); }
 
