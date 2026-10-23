@@ -492,7 +492,18 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .lt-m-d { display:block; direction:ltr; text-align:left; font-size:var(--fs-1); color:var(--t3); margin-top:3px; }
 .lt-back { background:var(--card2); border:none; border-radius:999px; padding:8px 14px; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t1); cursor:pointer; margin-bottom:16px; }
 .lt-h { direction:rtl; text-align:center; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-weight:normal; font-size:var(--fs-4); color:var(--t2); margin-bottom:14px; }
-.lt-body { direction:rtl; text-align:justify; text-align-last:right; font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; --rf-sz:19px; --rf-lh:1.62; color:var(--t1); margin-bottom:.9em; }
+.lt-sefer { font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; color:var(--t1); }
+.lt-run { display:flex; justify-content:center; gap:10px; font-size:14px; color:var(--t3); letter-spacing:.5px; margin-bottom:10px; }
+.lt-title { text-align:center; font-size:30px; line-height:1.2; margin-bottom:6px; }
+.lt-subject { text-align:center; font-size:14px; line-height:1.5; color:var(--t2); margin:0 10px 4px; }
+.lt-orn { display:flex; align-items:center; justify-content:center; gap:8px; margin:12px auto 16px; width:42%; color:var(--t3); }
+.lt-orn span { flex:1; height:1px; background:currentColor; opacity:.7; }
+.lt-orn i { width:5px; height:5px; border-radius:50%; background:currentColor; }
+.lt-body { direction:rtl; text-align:justify; text-align-last:right; font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; --rf-sz:19px; --rf-lh:1.6; color:var(--t1); margin-bottom:.15em; }
+.lt-body.lt-last { text-align-last:center; }
+.lt-sefer .lt-body > b:first-child, .lt-sefer .lt-body > .lt-pg:first-child + b { font-weight:bold; font-size:1.3em; line-height:1; }
+.lt-sefer .lt-body small { font-size:.78em; color:var(--t2); }
+.lt-pg { display:inline-block; font-family:var(--ui-font); font-size:10px; font-weight:700; color:var(--t3); border:1px solid var(--border); border-radius:999px; padding:0 6px; margin:0 3px; line-height:16px; vertical-align:middle; text-indent:0; }
 .ml-foot { margin:12px 4px 0; font-size:var(--fs-1); color:var(--t3); line-height:1.45; }
 /* ── Direction C: header and rings, chips, tiles ── */
 .sr-only { position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
@@ -7372,6 +7383,22 @@ function _ltShowList() {
   _restoreExtraScroll('likkuteiTorah');
 }
 
+// A maamar's Hebrew from Sefaria, keeping what the printed page has: the bold
+// opening words (<b>), smaller references (<small>), and the printed page
+// numbers ("Vilna Pages" markers → a small "יא, א"). Everything else goes.
+function _ltHtml(raw) {
+  if (typeof raw !== 'string') return '';
+  let t = raw.replace(/<i\b[^>]*data-value="([^"]*)"[^>]*><\/i>/g, (_, v) => '\u0000pg' + v + '\u0000')
+    .replace(/<(\/?)(b|small)\b[^>]*>/g, '\u0000$1$2\u0000')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;|\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+  t = escapeHtml(t).replace(/\u0000pg([^\u0000]*)\u0000/g, (_, v) => '<span class="lt-pg">' + v.replace(',', ', ') + '</span>')
+    .replace(/\u0000(\/?)(b|small)\u0000/g, '<$1$2>');
+  t = t.replace(/<b>\s*<\/b>|<small>\s*<\/small>/g, '').trim();
+  // A maamar that opens with its verse in brackets, "(אנכי מגן לך).", has it set as the opening words
+  return t.replace(/^((?:<span class="lt-pg">[^<]*<\/span>\s*)?)(\([^()<]{2,60}\))/, '$1<b>$2</b>');
+}
+
 async function _ltOpen(i) {
   const piece = window._ltWeek, m = piece?.list[i];
   if (!m) return;
@@ -7389,12 +7416,24 @@ async function _ltOpen(i) {
     const res = await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(m.ref) + '?context=0&commentary=0&lang=he')
       .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)));
     if (!_readerShows(sid, iso)) return;
-    const paras = _flatHtml(res.he || []);
+    const paras = (Array.isArray(res.he) ? res.he.flat(Infinity) : [res.he]).map(_ltHtml).filter(Boolean);
     if (!paras.length) throw new Error('No text for ' + m.ref);
     if (loadEl) loadEl.style.display = 'none';
+    // Set like the printed sefer: running head, the parsha, the maamar's subject line, bold openings,
+    // the printed page numbers, and the last line centred
+    const heRef = String(res.heRef || '').replace(/\s+\S+$/, '');           // "תורה אור, לך לך ב" → "תורה אור, לך לך"
+    const [heBook, heParsha] = heRef.includes(',') ? heRef.split(/,\s*/) : [m.book, parshaSpelling(piece.parsha)];
+    const subject = /^<small>\(.*\)<\/small>$/.test(paras[0]) ? paras.shift() : '';
+    const orn = '<div class="lt-orn" aria-hidden="true"><span></span><i></i><span></span></div>';
     contEl.innerHTML = back
-      + '<p class="lt-h">' + escapeHtml(m.title) + '</p>'
-      + paras.map(p => '<p class="rf-body lt-body" lang="he" dir="rtl">' + _ltFormatHe(p) + '</p>').join('')
+      + '<div class="lt-sefer" lang="he" dir="rtl">'
+      +   '<p class="lt-run">' + escapeHtml(heBook) + '<span>·</span>' + escapeHtml(heParsha) + '</p>'
+      +   '<p class="lt-title">פרשת ' + escapeHtml(heParsha) + '</p>'
+      +   (subject ? '<p class="lt-subject">' + subject.replace(/<\/?small>/g, '') + '</p>' : '')
+      +   orn
+      +   paras.map((p, k) => '<p class="rf-body lt-body' + (k === paras.length - 1 ? ' lt-last' : '') + '" lang="he" dir="rtl">' + p + '</p>').join('')
+      +   orn
+      + '</div>'
       + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
     contEl.style.display = 'block';
     _putReaderAt(sid);

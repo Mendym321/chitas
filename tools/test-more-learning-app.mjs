@@ -172,10 +172,10 @@ await check('Likkutei Torah opens the week\'s maamarim: Torah Ohr on Lech Lecha'
 }, ['Parshas Lech Lecha', 6, 'אנכי מגן לך', true]);
 if (asked.length) { failed++; console.log('  ✗ the list should need no network:', asked); }
 
-await check('tapping a maamar opens it, in Heilig (the May look), with a way back', async () => {
+await check('tapping a maamar opens it like the printed sefer (title, bold opening, Heilig), with a way back', async () => {
   await _ltOpen(1);
   const c = document.getElementById('native-reader-content');
-  return [c.querySelector('.lt-h')?.textContent, !!c.querySelector('.lt-back'), getComputedStyle(c.querySelector('.lt-body')).fontFamily.startsWith('DachHeilig')];
+  return [c.querySelector('.lt-title')?.textContent.startsWith('פרשת') && c.querySelector('.lt-body b')?.textContent === 'פתיחה של' ? 'אנכי מגן לך' : c.innerHTML.slice(0, 300), !!c.querySelector('.lt-back'), getComputedStyle(c.querySelector('.lt-body')).fontFamily.startsWith('DachHeilig')];
 }, ['אנכי מגן לך', true, true]);
 if (!asked.some(a => a.startsWith('Torah Ohr, Lech Lecha 2'))) { failed++; console.log('  ✗ the maamar asked for', asked); }
 
