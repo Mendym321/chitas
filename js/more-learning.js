@@ -51,9 +51,10 @@ function cycleDay(cycles, iso) {
   const n = Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(cycles.start + 'T12:00:00Z')) / 864e5);
   const row = cycles.days[n];
   if (!row) return null;
-  const [dafName, dafRef, nachRef, kitzur] = row;
+  const [dafName, dafRef, nachRef, kitzur, note] = row;
   return {
-    daf: { label: dafLabel(dafName), ref: dafRef, note: dafRef.startsWith('Mishnah ') ? 'Learned from the Mishnah: this masechta has no Gemara' : null },
+    // ref may be several, joined by "|" (Me'ilah 22 is also Kinnim's first perek)
+    daf: { label: dafLabel(dafName), ref: dafRef, note: note || null },
     nach: { label: nachLabel(nachRef), ref: nachRef },
     kitzur: kitzur == null ? null
       : { label: kitzurLabel(kitzur), ref: kitzur === 'Klalim' ? null : 'Kitzur Shulchan Arukh ' + kitzur },

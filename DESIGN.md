@@ -46,7 +46,7 @@ Below Today's four tiles and the Hayom Yom card, under "More learning" with a Be
 - **Add learning sheet:** one card of rows (coloured icon, name, what it is with today's piece, an Add / Added pill), like the design canvas's Y-Add.
 - **Marking:** the same rules as Chitas (today and the last 7 days). Likkutei Torah is weekly: marked any day of the week (Sunday to Shabbos), it shows learned all week, and your place in a maamar is kept for the week.
 - **Readers:** Nach and Kitzur in Hebrew and English with verse / se'if numbers (Nach in Koren, like Tehillim). Daf Yomi keeps its Rashi and Tosafos toggles. Likkutei Torah opens on the week's list of maamarim; a maamar is Hebrew only, in Vilna (like Tanya).
-- **Odd days, said plainly:** Kinnim and Middos have no Gemara, so Daf Yomi shows their Mishnah; 30 Cheshvan and 30 Adar I have no Kitzur reading; 15 Elul's "Klalim" isn't on Sefaria; Shoftim has no section in Likkutei Torah. Hebcal's Adar II Kitzur table has four typos, fixed in the generator.
+- **Odd days, said plainly:** Kinnim and Middos have no Gemara: their Vilna pages are the Mishnah, so Daf Yomi shows the mishnayos on each page (read off the Vilna Shas, Me'ilah 22 to Middos 37; Me'ilah 22 also has Kinnim's first perek), with a note where a daf starts or ends inside a mishnah; 30 Cheshvan and 30 Adar I have no Kitzur reading; 15 Elul's "Klalim" isn't on Sefaria; Shoftim has no section in Likkutei Torah. Hebcal's Adar II Kitzur table has four typos, fixed in the generator.
 - Parked, still working for anyone who added them before: Mishnah Yomi, Likkutei Sichos, Sha'ar HaBitachon.
 
 ## App icon

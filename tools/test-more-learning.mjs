@@ -29,8 +29,13 @@ check('12 Cheshvan 5787: Bechoros 35, Yirmiyahu 41, Kitzur 10:20 to the end of t
 });
 check('a Kitzur reading across two simanim', day('2026-11-21').kitzur, { label: 'Simanim 25:1–26:2', ref: 'Kitzur Shulchan Arukh 25:1-26:2' });
 check('Berachos ends on 64a: no amud beis', cycles.days.some(r => r[1] === 'Berakhot 64a') && !cycles.days.some(r => r[1] === 'Berakhot 64a-64b'), true);
-check('Kinnim is learned from the Mishnah', day('2027-03-13').daf, { label: 'Kinnim 23', ref: 'Mishnah Kinnim 1', note: 'Learned from the Mishnah: this masechta has no Gemara' });
-check('Middos 37: the last two chapters', day('2027-03-27').daf.ref, 'Mishnah Middot 4-5');
+check('Me\'ilah 22 is also the first perek of Kinnim (Vilna page)', day('2027-03-12').daf.ref, 'Meilah 22a|Mishnah Kinnim 1:1-4');
+check('Kinnim is learned from the Mishnah, page by page', ['2027-03-13', '2027-03-14', '2027-03-15'].map(i => day(i).daf.ref),
+  ['Mishnah Kinnim 2:1-3:1', 'Mishnah Kinnim 3:1-6', 'Mishnah Kinnim 3:6']);
+check('where a daf starts inside a mishnah, the note says where', day('2027-03-15').daf.note.includes('בן עזאי אומר'), true);
+check('Middos, page by page', ['2027-03-24', '2027-03-25', '2027-03-26', '2027-03-27'].map(i => day(i).daf.ref),
+  ['Mishnah Middot 1:1-2:2', 'Mishnah Middot 2:3-3:1', 'Mishnah Middot 3:2-4:2', 'Mishnah Middot 4:3-5:4']);
+check('an ordinary daf has no note', day('2027-03-16').daf, { label: 'Tamid 26', ref: 'Tamid 26a-26b', note: null });
 check('Shekalim is the Yerushalmi', day('2028-08-25').daf.ref, 'Jerusalem Talmud Shekalim.1.1.10-4.1');
 check('Nach Yomi includes Tehillim', day('2027-03-16').nach.label, 'Tehillim 18');
 check('Adar II of a leap year: Kitzur on brachos (Hebcal typo fixed)', day('2027-03-18').kitzur.ref, 'Kitzur Shulchan Arukh 17:8-18:2');

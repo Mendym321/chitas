@@ -18,22 +18,30 @@ const START = new Date(2026, 8, 1), END = new Date(2030, 8, 30);
 const seifim = JSON.parse(readFileSync(new URL('./data/kitzur-lengths.json', import.meta.url))).seifim;
 const index = JSON.parse(readFileSync(new URL('./data/chassidus-index.json', import.meta.url))).books;
 
-// Kinnim and Middos have no Gemara: Daf Yomi learns their Mishnah on those days
+// Kinnim and Middos have no Gemara: their pages in the Vilna Shas are the
+// Mishnah (with commentaries), and Daf Yomi learns those pages. Which mishnayos
+// are on each daf, read off the Vilna pages (Me'ilah 22 to Middos 37). Sefaria
+// gives whole mishnayos, so where a daf starts or ends inside one, the note says where.
+// Several refs are joined by "|".
+const NO_GEMARA = 'This masechta has no Gemara: the daf is its Mishnah.';
 const MISHNAH_DAYS = {
-  Kinnim: { 23: 'Mishnah Kinnim 1', 24: 'Mishnah Kinnim 2', 25: 'Mishnah Kinnim 3' },
-  Midot: { 34: 'Mishnah Middot 1', 35: 'Mishnah Middot 2', 36: 'Mishnah Middot 3', 37: 'Mishnah Middot 4-5' },
+  'Meilah 22': { ref: 'Meilah 22a|Mishnah Kinnim 1:1-4', note: 'Me\'ilah ends on 22a, and Kinnim begins: all of its first perek is on this daf.' },
+  'Kinnim 23': { ref: 'Mishnah Kinnim 2:1-3:1', note: NO_GEMARA + ' The daf ends partway through 3:1, before "שתים לזו ושתים לזו".' },
+  'Kinnim 24': { ref: 'Mishnah Kinnim 3:1-6', note: NO_GEMARA + ' The daf starts partway through 3:1, at "שתים לזו ושתים לזו", and ends partway through 3:6, before "בן עזאי אומר".' },
+  'Kinnim 25': { ref: 'Mishnah Kinnim 3:6', note: NO_GEMARA + ' The daf starts partway through 3:6, at "בן עזאי אומר", and finishes Kinnim.' },
+  'Midot 34': { ref: 'Mishnah Middot 1:1-2:2', note: NO_GEMARA },
+  'Midot 35': { ref: 'Mishnah Middot 2:3-3:1', note: NO_GEMARA },
+  'Midot 36': { ref: 'Mishnah Middot 3:2-4:2', note: NO_GEMARA },
+  'Midot 37': { ref: 'Mishnah Middot 4:3-5:4', note: NO_GEMARA },
 };
 
-// [the daf as Hebcal names it ("Bechorot 35"), the Sefaria ref of both sides ("Bekhorot 35a-35b")].
+// [the daf as Hebcal names it ("Bechorot 35"), the Sefaria ref of both sides ("Bekhorot 35a-35b"), a note?].
 // Hebcal's link gives Sefaria's name for the masechta (and Shekalim's Yerushalmi halachos).
 function daf(d) {
   const y = new DafYomi(d), name = y.getName(), blatt = y.getBlatt();
   const label = name + ' ' + blatt;
-  if (MISHNAH_DAYS[name]) {
-    const ref = MISHNAH_DAYS[name][blatt];
-    if (!ref) throw new Error('No Mishnah for ' + label);
-    return [label, ref];
-  }
+  if (MISHNAH_DAYS[label]) return [label, MISHNAH_DAYS[label].ref, MISHNAH_DAYS[label].note];
+  if (name === 'Kinnim' || name === 'Midot') throw new Error('No mishnayos for ' + label);
   const url = new DafYomiEvent(new HDate(d)).url();
   if (!url.includes('sefaria.org/')) throw new Error('No Sefaria link for ' + label);
   const ref = decodeURIComponent(url.split('sefaria.org/')[1].split('?')[0]).replace(/_/g, ' ');
@@ -72,7 +80,8 @@ const nach = new NachYomiIndex();
 const days = [];
 for (let d = new Date(START); d <= END; d.setDate(d.getDate() + 1)) {
   const hd = new HDate(d), n = nach.lookup(d);
-  days.push([...daf(d), n.k + ' ' + n.v, kitzur(hd)]);
+  const [label, ref, note] = daf(d);
+  days.push([label, ref, n.k + ' ' + n.v, kitzur(hd), ...(note ? [note] : [])]);   // a note only on the odd days
 }
 const pad = n => String(n).padStart(2, '0');
 const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());

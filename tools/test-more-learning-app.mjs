@@ -40,8 +40,17 @@ await page.route(u => !u.href.startsWith(url), r => r.abort());
 await page.route(/sefaria\.org\/api\//, route => {
   const u = new URL(route.request().url());
   asked.push(decodeURIComponent(u.pathname.replace(/^\/api\/(v3\/)?texts\//, '').replace(/^\/api\//, '')) + u.search);
+  if (u.pathname.startsWith('/api/links/')) {                    // one Rashi, on the 2nd line of amud beis
+    const ref = decodeURIComponent(u.pathname.split('/links/')[1]);
+    const m = ref.match(/^(.+) (\d+)a-\d+b$/);
+    return route.fulfill({ json: m ? [{ collectiveTitle: { en: 'Rashi' }, anchorRef: m[1] + ' ' + m[2] + 'b:2', he: 'רש"י על ב', text: 'Rashi on b' }] : [] });
+  }
   if (!u.pathname.includes('/texts/')) return route.fulfill({ json: [] });
   const ref = decodeURIComponent(u.pathname.split('/texts/')[1]);
+  if (/\d+a-\d+b$/.test(ref)) {                                   // a daf: one list per amud
+    if (u.pathname.startsWith('/api/v3/')) return route.fulfill({ json: { versions: [{ language: 'en', text: [['A 1', 'A 2', 'A 3'], ['B 1', 'B 2', 'B 3']] }] } });
+    return route.fulfill({ json: { he: [['א 1', 'א 2', 'א 3'], ['ב 1', 'ב 2', 'ב 3']], text: [['A 1', 'A 2', 'A 3'], ['B 1', 'B 2', 'B 3']] } });
+  }
   const he = n => Array.from({ length: n }, (_, i) => (i === 0 ? '<b>פתיחה של</b> ' : '') + 'טקסט ' + (i + 1));
   const en = n => Array.from({ length: n }, (_, i) => 'Text ' + (i + 1));
   const two = /\d+:\d+-\d+:\d+$/.test(ref);
@@ -117,6 +126,21 @@ await check('Daf Yomi opens both sides of Bechoros 35', async () => {
   return [document.getElementById('chabad-panel-sub').textContent, document.getElementById('native-reader-content').textContent.includes('Talmud Bavli')];
 }, ['Bechoros 35', true]);
 if (!asked.some(a => a.startsWith('Bekhorot 35a-35b'))) { failed++; console.log('  ✗ Daf asked for', asked); }
+
+await check('Rashi on amud beis sits beside amud beis (not amud aleph)', () =>
+  [_dafData.allHe.length, _dafData.rashiHe.indexOf('רש"י על ב'), _dafData.allHe[4]], [6, 4, 'ב 2']);
+
+asked.length = 0;
+await check('Me\'ilah 22 (in March): the Gemara, then Kinnim\'s first perek under its own heading', async () => {
+  closeChabadPanel();
+  dayOffset = Math.round((Date.parse('2027-03-12T12:00:00') - Date.parse('2026-10-23T12:00:00')) / 864e5);
+  await openExtraReader('dafYomi');
+  const c = document.getElementById('native-reader-content').textContent;
+  const r = [document.getElementById('chabad-panel-sub').textContent, c.includes('Talmud Bavli and Mishnah'), c.includes('Mishnah Kinnim'), c.includes('all of its first perek')];
+  closeChabadPanel(); dayOffset = 0;
+  return r;
+}, ["Me'ilah 22", true, true, true]);
+if (!asked.some(a => a.startsWith('Meilah 22a?')) || !asked.some(a => a.startsWith('Mishnah Kinnim 1:1-4'))) { failed++; console.log('  ✗ Me\'ilah 22 asked for', asked); }
 
 await check('ticking Halacha Yomis marks it, says so, and leaves the day\'s four rings alone', async () => {
   closeChabadPanel();

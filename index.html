@@ -6875,59 +6875,64 @@ async function _loadDafYomi() {
   const piece = await _trackPiece('dafYomi', iso);
   if (!_readerShows('extra_dafYomi', iso)) return;
   if (!piece) { _readerNote(piece === undefined ? 'Daf Yomi for this day isn\'t in the app yet.' : 'No daf today.'); return; }
-  const item = { ref: piece.ref, displayValue: { en: piece.label } };
+  const refs = piece.ref.split('|');                     // Me'ilah 22 is also Kinnim's first perek
+  const mishnahOnly = refs.every(r => r.startsWith('Mishnah '));
+  document.getElementById('chabad-panel-sub').textContent = piece.label + (mishnahOnly ? ' · Mishnah' : '');
 
-  document.getElementById('chabad-panel-sub').textContent = piece.label + (piece.note ? ' · Mishnah' : '');
-
-  const enc = encodeURIComponent(item.ref);
-
-  // Fetch Gemara text + links (for exact Rashi/Tosafot alignment via anchorRef)
-  const [enRes, heRes, links] = await Promise.all([
-    fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
-    fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
-    fetch('https://www.sefaria.org/api/links/' + enc + '?with_text=1').then(r=>r.json()).catch(()=>[]),
-  ]);
-
+  // Each part's text, and for Gemara its links (Rashi and Tosafos, placed by anchorRef)
+  const parts = await Promise.all(refs.map(ref => {
+    const enc = encodeURIComponent(ref);
+    return Promise.all([
+      fetch('https://www.sefaria.org/api/v3/texts/' + enc + '?version=english&fill_in_missing_segments=1').then(r=>r.json()).catch(()=>null),
+      fetch('https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0').then(r=>r.json()).catch(()=>null),
+      ref.startsWith('Mishnah ') ? [] : fetch('https://www.sefaria.org/api/links/' + enc + '?with_text=1').then(r=>r.json()).catch(()=>[]),
+    ]).then(([enRes, heRes, links]) => ({ ref, enRes, heRes, links }));
+  }));
   if (!_readerShows('extra_dafYomi', iso)) return;            // you moved on while it loaded
-  const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
-  const allEn = _flatHtml(engVersion?.text || []);
-  const allHe = _flatHtml(heRes?.he || []);
-  if (!allHe.length && !allEn.length) throw new Error('No text for ' + item.ref);
 
-  // Build per-segment maps from links using anchorRef
-  function buildMap(links, name) {
-    const map = {};
+  // A daf's text comes per amud (35a, then 35b), and a link's anchorRef ("Bekhorot 35b:3")
+  // counts lines within its amud: so a line's place is where its amud starts plus its number
+  const amudKey = r => { const m = String(r).match(/(\d+)([ab])(?::|$|-)/); return m ? m[1] * 2 + (m[2] === 'b') : null; };
+  const allHe = [], allEn = [], rashiHe = [], rashiEn = [], tosafotHe = [];
+  for (const { ref, enRes, heRes, links } of parts) {
+    const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
+    const en = _flatHtml(engVersion?.text || []), he = _flatHtml(heRes?.he || []);
+    if (!he.length && !en.length) throw new Error('No text for ' + ref);
+    if (refs.length > 1) {                                   // a heading where the next masechta begins
+      const name = ref.startsWith('Mishnah ') ? 'Mishnah ' + ref.split(' ')[1] : ref.split(' ')[0];
+      allHe.push('<b>' + escapeHtml(heRes?.heRef || name) + '</b>'); allEn.push('<b>' + escapeHtml(name) + '</b>');
+      rashiHe.push(''); rashiEn.push(''); tosafotHe.push('');
+    }
+    const base = allHe.length, len = Math.max(he.length, en.length);
+    // Where each amud starts, from Sefaria's nesting (one list per amud) when the ref spans two
+    const nested = Array.isArray(heRes?.he?.[0]);
+    const firstAmud = amudKey(ref.split('-')[0]);
+    const starts = {};
+    if (nested && firstAmud != null) heRes.he.reduce((at, amud, k) => { starts[firstAmud + k] = at; return at + _flatHtml(amud).length; }, 0);
+    for (let i = 0; i < len; i++) { allHe.push(he[i] || ''); allEn.push(en[i] || ''); rashiHe.push(''); rashiEn.push(''); tosafotHe.push(''); }
     (Array.isArray(links) ? links : []).forEach(lnk => {
       const title = lnk.collectiveTitle?.en || lnk.commentator || '';
-      if (!title.includes(name)) return;
-      if (!lnk.he) return;
+      const which = title.includes('Rashi') ? 'rashi' : title.includes('Tosafot') ? 'tos' : null;
+      if (!which || !lnk.he) return;
       const m = (lnk.anchorRef || '').match(/:(\d+)/);
       if (!m) return;
-      const seg = parseInt(m[1]) - 1;
-      if (!map[seg]) map[seg] = { he: [], en: [] };
-      map[seg].he.push(_cleanHtml(lnk.he));
-      if (lnk.text) map[seg].en.push(_cleanHtml(typeof lnk.text === 'string' ? lnk.text : (lnk.text[0] || '')));
+      const k = amudKey(lnk.anchorRef);
+      const at = base + (nested && k != null && starts[k] != null ? starts[k] : 0) + parseInt(m[1]) - 1;
+      if (at >= base + len) return;
+      const add = (arr, t) => { arr[at] = arr[at] ? arr[at] + ' ' + t : t; };
+      if (which === 'rashi') {
+        add(rashiHe, _cleanHtml(lnk.he));
+        if (lnk.text) add(rashiEn, _cleanHtml(typeof lnk.text === 'string' ? lnk.text : (lnk.text[0] || '')));
+      } else add(tosafotHe, _cleanHtml(lnk.he));
     });
-    return map;
   }
-
-  function mapToArr(len, map, lang) {
-    return Array.from({length: len}, (_, i) => (map[i]?.[lang] || []).join(' '));
-  }
-
-  const rashiMap  = buildMap(links, 'Rashi');
-  const tosMap    = buildMap(links, 'Tosafot');
-  const len = Math.max(allHe.length, allEn.length);
 
   window._dafData = {
-    title: item.displayValue?.en || item.ref,
-    kind: piece.note ? 'Mishnah' : piece.ref.startsWith('Jerusalem') ? 'Talmud Yerushalmi' : 'Talmud Bavli',
+    title: piece.label,
+    kind: mishnahOnly ? 'Mishnah' : refs.length > 1 ? 'Talmud Bavli and Mishnah' : piece.ref.startsWith('Jerusalem') ? 'Talmud Yerushalmi' : 'Talmud Bavli',
     note: piece.note,
     color: def.color,
-    allHe, allEn,
-    rashiHe:   mapToArr(len, rashiMap, 'he'),
-    rashiEn:   mapToArr(len, rashiMap, 'en'),
-    tosafotHe: mapToArr(len, tosMap, 'he'),
+    allHe, allEn, rashiHe, rashiEn, tosafotHe,
   };
   _rerenderDaf();
   _restoreExtraScroll('dafYomi');
