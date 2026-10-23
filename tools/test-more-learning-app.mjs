@@ -154,6 +154,15 @@ await check('the Gemara\'s English looks like every other reader\'s (same font a
   return [daf, daf && daf[0] === nach[0] && daf[1] === nach[1] && daf[2] === nach[2]];
 }, [['"Crimson Pro"', '15px', '27.3px'], true]);
 
+await check('Nach and Halacha Hebrew in Vilna, like Chumash and Rambam (Nach at Chumash\'s size)', async () => {
+  const heStyle = () => { const p = [...document.querySelectorAll('#native-reader-content p')].find(e => e.textContent.includes('טקסט'));
+    const c = getComputedStyle(p); return [c.fontFamily.split(',')[0], c.fontSize]; };
+  closeChabadPanel(); await openExtraReader('nachYomi'); const nach = heStyle();
+  closeChabadPanel(); await openExtraReader('kitzur'); const kitzur = heStyle();
+  closeChabadPanel(); await openExtraReader('dafYomi');
+  return [nach, kitzur];
+}, [['Vilna', '21px'], ['Vilna', '19px']]);
+
 await check('the daf heads like a page of Shas, with each amud marked', () =>
   [_dafData.head.startsWith('דף לה') || _dafData.head.includes('דף לה'), [...document.querySelectorAll('.g-amud')].map(e => e.textContent)], [true, ['דף לה ע״א', 'דף לה ע״ב']]);
 
