@@ -237,20 +237,31 @@ if (!asked.some(a => a.startsWith('Torah Ohr, Lech Lecha 2'))) { failed++; conso
 
 await check('back goes to the list', () => { _ltBack(); return document.querySelectorAll('.lt-m').length; }, 6);
 
-await check('the list shows how far you got: the one you were in last on top to continue, a ring for each, learned when read to the end', async () => {
+await check('the list shows how far you got in every maamar, says which one you were in last, and learned when read to the end', async () => {
   const view = document.getElementById('native-reader').clientHeight, key = n => 'scroll_extra_likkuteiTorah:Torah Ohr, Lech Lecha ' + n + '_2026-10-24';
   localStorage.setItem(key(1), JSON.stringify({ y: view, h: view * 5, t: 2 }));        // 40%, the last one you were in
   localStorage.setItem(key(4), JSON.stringify({ y: view, h: view * 4, t: 1 }));        // 50%, earlier
   localStorage.setItem(key(2), JSON.stringify({ y: view * 2, h: view * 3, t: 3 }));    // to the end
   _ltShowList();
-  const r = [document.querySelector('.lt-cont-t')?.textContent, document.querySelector('.lt-cont-f span').textContent,
-    document.querySelector('.lt-head').textContent, [...document.querySelectorAll('.lt-m .lt-m-d')].map(e => e.textContent)];
+  const r = [document.querySelector('.lt-head').textContent, [...document.querySelectorAll('.lt-m .lt-m-d')].map(e => e.textContent)];
   [1, 2, 4].forEach(n => localStorage.removeItem(key(n)));
   _ltShowList();
-  r.push(!document.querySelector('.lt-cont'), document.querySelectorAll('.lt-m').length);
+  r.push(document.querySelectorAll('.lt-m-d b').length);
   return r;
-}, ['ענין לך לך וילך למסעיו ממטה למעלה …', '40% read · about 9 min left', "This week's maamarim1 of 6 learned",
-    ['Learned', 'about 10 min', '50% read', 'about 5 min', 'about 5 min'], true, 6]);
+}, ["This week's maamarim1 of 6 learned",
+    ['Last read · 40% read · about 9 min left', 'Learned', 'about 10 min', '50% read · about 8 min left', 'about 5 min', 'about 5 min'], 0]);
+
+await check('the header names the sefer: Torah Ohr on Bereishis and Shemos', () => document.getElementById('chabad-panel-title').textContent, 'Torah Ohr');
+
+await check('X in a maamar goes back to the week\'s maamarim; X there closes the reader', async () => {
+  await _ltOpen(2);
+  closeChabadPanel();
+  const r = [document.querySelectorAll('.lt-m').length, document.getElementById('chabad-panel').style.display !== 'none'];
+  closeChabadPanel();
+  r.push(document.getElementById('chabad-panel').style.display !== 'none');
+  await openExtraReader('likkuteiTorah');
+  return r;
+}, [6, true, false]);
 
 await check('your place in a maamar is kept for the whole week (by its Shabbos)', async () => {
   await _ltOpen(1);

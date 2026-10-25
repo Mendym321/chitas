@@ -525,13 +525,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .lt-m-d { display:block; direction:ltr; text-align:right; font-size:var(--fs-1); color:var(--t3); margin-top:2px; }
 .lt-head { display:flex; justify-content:space-between; align-items:baseline; margin:20px 4px 8px; font-size:13px; color:var(--t3); }
 .lt-head span:first-child { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
-.lt-cont { display:block; width:100%; margin-top:4px; padding:16px 18px; border:none; border-radius:var(--r-m); background:color-mix(in srgb, #4F5FA8 13%, var(--card)); font-family:inherit; text-align:left; color:var(--t1); cursor:pointer; }
-.lt-cont-l { display:block; font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:color-mix(in srgb, #4F5FA8 75%, var(--t1)); }
-.lt-cont-t { display:block; margin-top:8px; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-size:23px; line-height:1.3; text-align:right; }
-.lt-cont-bar { display:block; height:6px; margin-top:12px; border-radius:3px; background:color-mix(in srgb, #4F5FA8 22%, var(--card)); overflow:hidden; }
-.lt-cont-bar span { display:block; height:100%; border-radius:3px; background:#4F5FA8; margin-left:auto; }
-.lt-cont-f { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:10px; font-size:13px; color:var(--t2); }
-.lt-cont-go { padding:8px 16px; border-radius:999px; background:#4F5FA8; color:#fff; font-size:14px; font-weight:800; flex-shrink:0; }
+#native-reader-content .lt-m-d b { font-weight:700; color:color-mix(in srgb, #4F5FA8 75%, var(--t1)); }
 .lt-back { background:var(--card2); border:none; border-radius:999px; padding:8px 14px; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t1); cursor:pointer; margin-bottom:16px; }
 .lt-h { direction:rtl; text-align:center; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-weight:normal; font-size:var(--fs-4); color:var(--t2); margin-bottom:14px; }
 .lt-sefer { font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; color:var(--t1); }
@@ -5768,6 +5762,8 @@ function _setReaderColour(c, on) {
 function closeChabadPanel() {
   // Allow LS to intercept (e.g. X while reading a sicha → back to list)
   if (window._lsHandleClose && window._lsHandleClose()) return;
+  // X in a Torah Ohr / Likkutei Torah maamar → back to the week's maamarim; X there closes
+  if (String(_rv.sid).startsWith('extra_likkuteiTorah:')) { _ltBack(); return; }
   // Clean up any LS chrome
   document.getElementById('ls-nav-bar')?.remove();
   document.getElementById('ls-fn-popup')?.remove();
@@ -7471,6 +7467,7 @@ async function _loadLikkuteiTorah() {
   if (!piece.parsha) { _readerNote('There\'s no parsha this week, so there are no maamarim for it.'); return; }
   if (!piece.list.length) { _readerNote('Likkutei Torah has no maamarim on Parshas ' + parshaSpelling(piece.parsha) + '.'); return; }
   window._ltWeek = piece;
+  document.getElementById('chabad-panel-title').textContent = piece.books === 'Torah Ohr' ? 'Torah Ohr' : 'Likkutei Torah';
   _ltShowList();
 }
 
@@ -7498,23 +7495,19 @@ function _ltShowList() {
   document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaSpelling(piece.parsha);
   const iso = _viewedISO();
   const read = piece.list.map(m => _ltRead(m, iso));
-  // Pick up where you left off: the one you were in last, if you didn't finish it
-  let cur = -1;
-  read.forEach((r, i) => { if (r.f > 0 && r.f < 1 && (cur < 0 || r.t > read[cur].t)) cur = i; });
+  // The one you were in last (and didn't finish) says so; tapping any maamar opens it where you left off
+  let last = -1;
+  read.forEach((r, i) => { if (r.f > 0 && r.f < 1 && (last < 0 || r.t > read[last].t)) last = i; });
   const learned = read.filter(r => r.f >= 1).length;
-  const c = piece.list[cur];
-  contEl.innerHTML = (c
-      ? '<button type="button" class="lt-cont" onclick="_ltOpen(' + cur + ')"><span class="lt-cont-l">Pick up where you left off</span>'
-        + '<span class="lt-cont-t" lang="he" dir="rtl">' + escapeHtml(c.title) + '</span>'
-        + '<span class="lt-cont-bar"><span style="width:' + Math.round(read[cur].f * 100) + '%"></span></span>'
-        + '<span class="lt-cont-f"><span>' + Math.round(read[cur].f * 100) + '% read · about ' + Math.max(1, Math.round(c.mins * (1 - read[cur].f))) + ' min left</span><span class="lt-cont-go">Continue</span></span></button>'
-      : '<p class="lt-intro">The maamarim of ' + piece.books + ' on Parshas ' + parshaSpelling(piece.parsha) + '. Learn one or more this week.</p>')
+  contEl.innerHTML = '<p class="lt-intro">The maamarim of ' + piece.books + ' on Parshas ' + parshaSpelling(piece.parsha) + '. Learn one or more this week; each one keeps your place.</p>'
     + '<div class="lt-head"><span>This week\'s maamarim</span><span>' + learned + ' of ' + piece.list.length + ' learned</span></div>'
-    + '<div class="lt-list">' + piece.list.map((m, i) => i === cur ? '' :
-      '<button type="button" class="lt-m" onclick="_ltOpen(' + i + ')">' + _ltRing(read[i].f)
-      + '<span class="lt-m-x"><span class="lt-m-t">' + escapeHtml(m.title) + '</span>'
-      + '<span class="lt-m-d">' + (read[i].f >= 1 ? 'Learned' : read[i].f ? Math.round(read[i].f * 100) + '% read' : 'about ' + m.mins + ' min') + '</span></span>'
-      + '</button>').join('') + '</div>'
+    + '<div class="lt-list">' + piece.list.map((m, i) => {
+      const f = read[i].f;
+      const d = f >= 1 ? 'Learned' : f ? Math.round(f * 100) + '% read · about ' + Math.max(1, Math.round(m.mins * (1 - f))) + ' min left' : 'about ' + m.mins + ' min';
+      return '<button type="button" class="lt-m" onclick="_ltOpen(' + i + ')">' + _ltRing(f)
+        + '<span class="lt-m-x"><span class="lt-m-t">' + escapeHtml(m.title) + '</span>'
+        + '<span class="lt-m-d">' + (i === last ? '<b>Last read</b> · ' : '') + d + '</span></span></button>';
+    }).join('') + '</div>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
   contEl.style.display = 'block';
   _restoreExtraScroll('likkuteiTorah');
