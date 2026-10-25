@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex, nofollow"/>
+<title>Chitas numbers</title>
+<link rel="icon" type="image/svg+xml" href="/icons/favicon.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet"/>
+<style>
+  /* The app's tokens (index.html :root), light and dark */
+  :root {
+    --bg: #FBF7EF; --card: #FFFFFF; --card2: #F1E9D8; --border: #ECE3D1; --hi: #DCD0B8;
+    --t1: #1F1B16; --t2: #5E564A; --t3: #8A7F6E; --ink: #1F1B16; --on-ink: #FBF7EF; --red: #B4483A;
+    --c-chumash: #E0A030; --c-tehillim: #3F6FC0; --c-tanya: #8B54B0; --c-rambam: #5E8A3C;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15120F; --card: #241F1A; --card2: #2E2822; --border: #2F2A23; --hi: #4A443C;
+      --t1: #F5EFE4; --t2: #B8AE9E; --t3: #877D6E; --ink: #F5EFE4; --on-ink: #15120F; }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--t1); font-family: 'Bricolage Grotesque', system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { font-size: 34px; font-weight: 800; letter-spacing: -.8px; }
+  .sub { margin-top: 4px; font-size: 14px; color: var(--t3); line-height: 1.5; }
+  .bar-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  button { font-family: inherit; cursor: pointer; }
+  .btn { border: none; border-radius: 999px; padding: 11px 18px; background: var(--ink); color: var(--on-ink); font-size: 14px; font-weight: 800; }
+  .btn.quiet { background: var(--card2); color: var(--t1); }
+  h2 { margin: 30px 4px 10px; font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--t3); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .tile { background: var(--card); border-radius: 22px; padding: 16px; }
+  .tile b { display: block; font-size: 30px; font-weight: 800; letter-spacing: -.6px; }
+  .tile span { display: block; margin-top: 2px; font-size: 13px; color: var(--t3); }
+  .card { background: var(--card); border-radius: 22px; padding: 16px; }
+  .cols { display: flex; align-items: flex-end; gap: 3px; height: 120px; }
+  .cols div { flex: 1; position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+  .cols i { display: block; border-radius: 3px 3px 0 0; min-height: 0; }
+  .legend { display: flex; gap: 14px; margin-top: 10px; font-size: 12px; color: var(--t3); flex-wrap: wrap; }
+  .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--k); }
+  .axis { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--t3); }
+  .rows p { display: grid; grid-template-columns: 130px 1fr 44px; align-items: center; gap: 10px; padding: 7px 0; font-size: 14px; }
+  .rows p + p { border-top: 1px solid var(--border); }
+  .rows .track { height: 8px; border-radius: 4px; background: var(--card2); overflow: hidden; }
+  .rows .track i { display: block; height: 100%; border-radius: 4px; background: var(--k, var(--ink)); }
+  .rows b { text-align: right; font-weight: 800; }
+  .note { margin-top: 24px; font-size: 13px; color: var(--t3); line-height: 1.55; }
+  .center { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
+  .err { color: var(--red); font-size: 14px; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+</style>
+</head>
+<body>
+<main id="app"><div class="center"><p class="sub">Loading…</p></div></main>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+// The same Firebase project as the app (index.html)
+const auth = getAuth(initializeApp({
+  apiKey: "AIzaSyApK4ahGQYr-9n6_U6_BB1yLXR-8ICpYr4",
+  authDomain: "chitas-daily.firebaseapp.com",
+  projectId: "chitas-daily",
+  storageBucket: "chitas-daily.firebasestorage.app",
+  messagingSenderId: "706230735824",
+  appId: "1:706230735824:web:779c49f5d6078dc9215fd5"
+}));
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const n = x => (x ?? 0).toLocaleString();
+const localISO = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const short = iso => new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+window.signIn = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(e => show('<p class="err">' + esc(e.message) + '</p>'));
+window.out = () => signOut(auth);
+window.load = fresh => load(fresh);
+
+function show(html) { app.innerHTML = html; }
+function signInScreen(msg = '') {
+  show('<div class="center"><h1>Chitas numbers</h1><p class="sub">For the app\'s admins. Everyone is counted; no one is named.</p>'
+    + '<button class="btn" onclick="signIn()">Sign in with Google</button>' + (msg ? '<p class="err">' + msg + '</p>' : '') + '</div>');
+}
+
+onAuthStateChanged(auth, u => u ? load() : signInScreen());
+
+async function load(fresh) {
+  const u = auth.currentUser;
+  if (!u) return signInScreen();
+  try {
+    const r = await fetch('/api/admin-stats?today=' + localISO() + (fresh ? '&fresh=1' : ''), { headers: { authorization: 'Bearer ' + await u.getIdToken() } });
+    const body = await r.json().catch(() => ({}));
+    if (r.status === 403) return show('<div class="center"><h1>Not an admin</h1><p class="sub">' + esc(u.email || '') + ' isn\'t on the admin list (ADMIN_UIDS on Vercel).</p><button class="btn quiet" onclick="out()">Sign out</button></div>');
+    if (!r.ok) throw new Error(body.error || 'HTTP ' + r.status);
+    render(body);
+  } catch (e) { show('<div class="center"><p class="err">Couldn\'t load: ' + esc(e.message) + '</p><button class="btn" onclick="load(true)">Try again</button></div>'); }
+}
+
+// Columns for 30 days (or 12 weeks): one or two series, the second drawn inside the first
+function columns(rows, a, b, label) {
+  const max = Math.max(1, ...rows.map(r => r[a]));
+  return '<div class="cols" role="img" aria-label="' + esc(label) + '">' + rows.map(r =>
+    '<div title="' + esc((r.date ? short(r.date) : 'Week of ' + short(r.week)) + ': ' + r[a] + (b ? ', ' + r[b] + ' full Chitas' : '')) + '">'
+    + '<i style="height:' + (r[a] / max * 100) + '%;background:var(--hi);position:relative;">'
+    + (b && r[b] ? '<i style="position:absolute;left:0;right:0;bottom:0;height:' + (r[b] / Math.max(1, r[a]) * 100) + '%;background:var(--c-rambam);"></i>' : '')
+    + '</i></div>').join('') + '</div>'
+    + '<div class="axis"><span>' + short(rows[0].date || rows[0].week) + '</span><span>' + short(rows.at(-1).date || rows.at(-1).week) + '</span></div>';
+}
+function rowsOf(obj, colours = {}, total) {
+  const entries = Object.entries(obj);
+  const max = total || Math.max(1, ...entries.map(([, v]) => v));
+  if (!entries.length) return '<p class="sub">None yet</p>';
+  return '<div class="rows">' + entries.map(([k, v]) => '<p><span>' + esc(k) + '</span><span class="track"><i style="width:' + (v / max * 100) + '%;--k:' + (colours[k] || 'var(--ink)') + '"></i></span><b>' + n(v) + '</b></p>').join('') + '</div>';
+}
+
+function render(s) {
+  const SEC = { chumash: 'Chumash', tehillim: 'Tehillim', tanya: 'Tanya', rambam: 'Rambam' };
+  const ML = { dafYomi: 'Daf Yomi', nachYomi: 'Nach Yomi', kitzur: 'Halacha Yomis', likkuteiTorah: 'Likkutei Torah', mishnahYomi: 'Mishnah Yomi', likkuteiSichos: 'Likkutei Sichos', shaarHaBitachon: "Sha'ar HaBitachon" };
+  const sections = Object.fromEntries(Object.entries(s.sections30).map(([k, v]) => [SEC[k] || k, v]));
+  const secColours = Object.fromEntries(Object.keys(SEC).map(k => [SEC[k], 'var(--c-' + k + ')']));
+  const ml = Object.fromEntries(Object.entries(s.moreLearning).sort((a, b) => b[1] - a[1]).map(([k, v]) => [ML[k] || k, v]));
+  show(
+    '<div class="bar-top"><div><h1>Chitas numbers</h1><p class="sub">Everyone counted, no one named. As of ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '.</p></div>'
+    + '<div style="display:flex;gap:8px;"><button class="btn quiet" onclick="load(true)">Refresh</button><button class="btn quiet" onclick="out()">Sign out</button></div></div>'
+
+    + '<h2>People</h2><div class="tiles">'
+    + '<div class="tile"><b>' + n(s.accounts.total) + '</b><span>accounts</span></div>'
+    + '<div class="tile"><b>' + n(s.active.today) + '</b><span>learned today</span></div>'
+    + '<div class="tile"><b>' + n(s.active.last7) + '</b><span>learned in the last 7 days</span></div>'
+    + '<div class="tile"><b>' + n(s.active.last30) + '</b><span>learned in the last 30 days</span></div></div>'
+
+    + '<h2>The last 30 days</h2><div class="card">' + columns(s.daily, 'learned', 'chitas', 'People who learned each day, and how many finished all four')
+    + '<div class="legend"><span style="--k:var(--hi)">learned something</span><span style="--k:var(--c-rambam)">finished all four</span></div></div>'
+
+    + '<div class="two"><div><h2>Sections learned, 30 days</h2><div class="card">' + rowsOf(sections, secColours) + '</div></div>'
+    + '<div><h2>Streaks now</h2><div class="card">' + rowsOf(s.streaks, {}, Math.max(1, s.accounts.total)) + '</div></div></div>'
+
+    + '<h2>Review</h2><div class="tiles">'
+    + '<div class="tile"><b>' + n(s.reviews.last30) + '</b><span>reviews taken, 30 days</span></div>'
+    + '<div class="tile"><b>' + n(s.reviews.quick) + ' · ' + n(s.reviews.deep) + '</b><span>quick · deep dive</span></div>'
+    + '<div class="tile"><b>' + (s.reviews.rightPct == null ? '–' : s.reviews.rightPct + '%') + '</b><span>answers right</span></div></div>'
+
+    + '<h2>Questions and guides made (AI)</h2><div class="tiles">'
+    + '<div class="tile"><b>' + n(s.ai.quizzesSaved) + '</b><span>reviews made and saved (each is shared by everyone on that day)</span></div>'
+    + '<div class="tile"><b>' + n(s.ai.quizRequestsToday) + '</b><span>review requests today, by ' + n(s.ai.quizPeopleToday) + ' people</span></div>'
+    + '<div class="tile"><b>' + n(s.ai.tanyaGuides) + '</b><span>Tanya guides prepared' + (s.ai.tanyaFailed ? ' (' + n(s.ai.tanyaFailed) + ' failed)' : '') + '</span></div></div>'
+    + '<div class="card" style="margin-top:10px;">' + columns(s.ai.quizzesByDay, 'n', null, 'Reviews made each day') + '<div class="legend"><span style="--k:var(--hi)">reviews made each day</span></div></div>'
+
+    + '<div class="two"><div><h2>More learning (beta)</h2><div class="card">' + rowsOf(ml, { 'Daf Yomi': '#B4533E', 'Nach Yomi': '#9A5B86', 'Halacha Yomis': '#2F7F86', 'Likkutei Torah': '#4F5FA8' }, Math.max(1, s.accounts.total)) + '</div></div>'
+    + '<div><h2>Rambam track</h2><div class="card">' + rowsOf(s.rambamTracks, {}, Math.max(1, s.accounts.total)) + '</div></div></div>'
+
+    + '<h2>New sign-ins, by week</h2><div class="card">' + columns(s.accounts.signedUpByWeek, 'n', null, 'New sign-ins each week') + '</div>'
+
+    + '<p class="note">Counts only people with an account: someone using the app without signing in keeps their progress on their own phone, so it isn\'t here. '
+    + 'Nothing on this page names anyone, and the server never even reads names, cities or Tehillim names to make it.</p>'
+  );
+}
+</script>
+</body>
+</html>

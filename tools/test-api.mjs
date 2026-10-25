@@ -17,9 +17,22 @@ const docRef = (col, id) => ({
   async create(v) { const k = col + '/' + id; if (store.has(k)) throw new Error('ALREADY_EXISTS'); store.set(k, v); },
   async delete() { store.delete(col + '/' + id); },
 });
+// A collection, as much of it as the routes use: doc, select, where ==, count, get
+const query = (col, filters = []) => {
+  const docs = () => [...store].filter(([k, v]) => k.startsWith(col + '/') && filters.every(([f, val]) => v?.[f] === val))
+    .map(([k, v]) => ({ id: k.slice(col.length + 1), data: () => v, get: f => v?.[f] }));
+  return {
+    doc: id => docRef(col, id),
+    select: () => query(col, filters),
+    where: (f, op, val) => query(col, [...filters, [f, val]]),
+    count: () => ({ get: async () => ({ data: () => ({ count: docs().length }) }) }),
+    get: async () => { const d = docs(); return { docs: d, size: d.length }; },
+  };
+};
 mock.module('../api/_lib/firebase.js', { namedExports: {
+  signupDates: async () => ['2026-10-20T10:00:00Z'],
   getDb: () => ({
-    collection: col => ({ doc: id => docRef(col, id) }),
+    collection: col => query(col),
     runTransaction: fn => fn({ get: r => r.get(), set: (r, v) => r.set(v) }),
   }),
   verifyUser: async req => (req.headers.authorization || '').match(/^Bearer token-(\w+)$/)?.[1] || null,
@@ -204,6 +217,18 @@ console.log('Delete account API:');
   check('GET → 405', (await run('token-u9', 'GET')).code, 405);
   const r = await run('token-u9');
   check('deletes their data and their sign-in, only theirs', [r.code, store.has('users/u9'), store.has('quiz_usage/u9'), store.has('tanya_usage/u9'), deletedAuth, store.has('users/u8')], [200, false, false, false, ['u9'], true]);
+}
+
+console.log('Admin stats API:');
+{
+  const { default: stats } = await import('../api/admin-stats.js');
+  const run = async token => { const res = fakeRes(); await stats({ method: 'GET', query: { today: '2026-10-23', fresh: '1' }, headers: token ? { authorization: 'Bearer ' + token } : {} }, res); return res; };
+  store.set('users/u7', { name: 'Private Name', city: 'Somewhere', tehillimPeople: [{ label: 'Bubby' }], lastDate: '2026-10-23', done: { chumash: true }, pastDone: {}, streak: 1 });
+  check('not signed in → 401', (await run(null)).code, 401);
+  check('signed in, not an admin → 403, no numbers', [(await run('token-u7')).code, (await run('token-u7')).body?.accounts], [403, undefined]);
+  const r = await run('token-admin');
+  check('the admin gets counts', [r.code, r.body.active.today >= 1, r.body.accounts.signIns], [200, true, 1]);
+  check('…and nothing personal', ['Private Name', 'Somewhere', 'Bubby', 'u7'].filter(w => JSON.stringify(r.body).includes(w)), []);
 }
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll API tests passed');

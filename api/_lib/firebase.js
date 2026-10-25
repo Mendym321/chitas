@@ -69,6 +69,20 @@ export async function deleteAuthUser(uid) {
   catch (e) { if (e?.code !== 'auth/user-not-found') throw e; }   // already gone is fine
 }
 
+// When each sign-in was created (ISO strings), for the admin page's
+// sign-ups by week. Only the dates leave this function, never who.
+export async function signupDates() {
+  app();
+  const out = [];
+  let page;
+  do {
+    const r = await getAuth().listUsers(1000, page);
+    for (const u of r.users) if (u.metadata?.creationTime) out.push(new Date(u.metadata.creationTime).toISOString());
+    page = r.pageToken;
+  } while (page);
+  return out;
+}
+
 // Just the uid (or null)
 export async function verifyUser(req) {
   return (await verifyUserToken(req))?.uid || null;
