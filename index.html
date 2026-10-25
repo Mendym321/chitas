@@ -457,15 +457,6 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* "More learning" (beta): the chip, and the Add learning sheet */
 .beta-chip, .t-sec .beta-chip { display:inline-block; vertical-align:middle; margin:0 auto 0 8px; padding:2px 8px; border-radius:999px; background:var(--card2); color:var(--t2); font-family:var(--ui-font); font-size:11px; font-weight:800; letter-spacing:.3px; }
 .ps-modal-title .beta-chip { margin-left:6px; position:relative; top:-2px; }
-.ml-list { background:var(--card); border-radius:var(--r-m); padding:0 14px; }
-.ml-row { display:flex; align-items:center; gap:12px; padding:12px 0; }
-.ml-row + .ml-row { border-top:1px solid var(--border); }
-.ml-ic { width:40px; height:40px; border-radius:14px; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.ml-t { flex:1; min-width:0; }
-.ml-t p:first-child { font-size:var(--fs-3); font-weight:800; color:var(--t1); }
-.ml-t p + p { font-size:var(--fs-1); color:var(--t3); margin-top:1px; line-height:1.35; }
-.ml-add { height:34px; padding:0 14px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font-family:inherit; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0; }
-.ml-add.on { background:var(--card2); color:var(--t1); }
 .g-head { text-align:center; margin:4px 0 18px; }
 .g-head p:first-child { font-family:'Vilna','Frank Ruhl Libre',serif; font-weight:700; font-size:26px; line-height:1.25; color:var(--t1); }
 .g-head p + p { font-size:var(--fs-1); color:var(--t3); margin-top:2px; }
@@ -481,41 +472,45 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .g-chips span { font-family:'Vilna',serif; font-size:11px; font-weight:700; line-height:16px; padding:0 6px; border-radius:999px; background:var(--card2); color:var(--t2); }
 .g-chips-row { text-align:right; margin-top:4px; }
 /* More learning: your seforim (dark cloth, gold bands, a ribbon when learned) on Today and on the shelf */
-.ml-head { display:flex; justify-content:space-between; align-items:center; width:100%; margin:22px 0 8px; padding:0 4px; background:none; border:none; font-family:inherit; cursor:pointer; color:var(--t3); }
-.ml-head > span:first-child { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
-.ml-head > span:first-child .beta-chip { text-transform:none; letter-spacing:.3px; margin-left:6px; }
-.ml-head > span + span { display:flex; align-items:center; gap:4px; font-size:13px; }
-.ml-books { display:flex; justify-content:space-around; align-items:flex-end; gap:6px; padding:16px 10px 12px; border-radius:var(--r-m); background:var(--card); overflow-x:auto; }
-.ml-book { display:flex; flex-direction:column; align-items:center; gap:7px; background:none; border:none; padding:0; font-family:inherit; cursor:pointer; flex-shrink:0; }
-.ml-name { font-size:11px; font-weight:700; color:var(--t2); max-width:74px; text-align:center; line-height:1.25; }
-.sefer { position:relative; display:block; border-radius:3px 3px 1px 1px; box-shadow:inset -4px 0 0 rgba(0,0,0,.18), 0 0 0 1px rgba(255,255,255,.05); }
-.sefer.sf-small { width:56px; height:82px; }
-.sefer.sf-big { width:66px; }
-.sefer.on::after { content:''; position:absolute; top:-1px; right:9px; width:6px; height:24%; background:#8E2B22; }
-.sf-band { position:absolute; left:15%; right:15%; top:9%; height:4px; border-top:1px solid #B8954E; border-bottom:1px solid #B8954E; }
-.sf-band.sf-low { top:auto; bottom:8%; height:0; border-bottom:none; }
-.sefer.sf-empty { border:1.5px dashed var(--border); background:none; box-shadow:none; display:flex; align-items:center; justify-content:center; color:var(--t3); box-sizing:border-box; }
-.sh-head { display:flex; justify-content:space-between; align-items:baseline; margin:4px 0 22px; }
-.sh-head p { font-family:var(--title-font); font-size:var(--fs-5); font-weight:800; color:var(--t1); }
-.sh-head button { background:none; border:none; padding:6px 0; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t2); cursor:pointer; }
-.sh-shelf, .sh-caps { display:flex; justify-content:space-around; gap:8px; }
-.sh-shelf { align-items:flex-end; min-height:180px; }
-.sh-slot { background:none; border:none; padding:0; cursor:pointer; }
-.sh-ledge { height:6px; border-radius:2px; background:var(--border); }
-.sh-caps { margin-top:10px; align-items:flex-start; }
-.sh-cap { width:74px; display:flex; flex-direction:column; align-items:center; gap:2px; background:none; border:none; padding:0; font-family:inherit; cursor:pointer; text-align:center; }
-.sh-cap span:first-child { font-size:13px; font-weight:700; color:var(--t1); line-height:1.25; }
-.sh-cap span + span { font-size:12px; color:var(--t3); line-height:1.3; }
-.sh-empty { font-size:var(--fs-2); line-height:1.5; color:var(--t2); margin:6px 0 10px; }
+.ml-label { display:flex; justify-content:space-between; align-items:baseline; margin:22px 4px 8px; }
+.ml-label > span { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
+.ml-label .beta-chip { text-transform:none; letter-spacing:.3px; margin-left:6px; }
+.ml-label button { background:none; border:none; padding:4px 0; font-family:inherit; font-size:13px; font-weight:700; color:var(--t2); cursor:pointer; }
+.ml-card { background:var(--card); border-radius:var(--r-m); overflow:hidden; }
+.ml-r { display:flex; align-items:center; gap:14px; width:100%; padding:13px 16px; background:none; border:none; font-family:inherit; text-align:left; color:var(--t1); cursor:pointer; }
+.ml-r + .ml-r { border-top:1px solid var(--border); }
+.ml-bar { width:4px; align-self:stretch; border-radius:2px; flex-shrink:0; }
+.ml-x { flex:1; min-width:0; }
+.ml-n { display:block; font-size:var(--fs-3); font-weight:800; }
+.ml-p { display:block; margin-top:1px; font-size:13px; line-height:1.35; color:var(--t3); }
+.ml-n .beta-chip { margin-left:6px; }
+.ml-r > svg { flex-shrink:0; }
+.ml-empty { margin-top:14px; }
+.ml-empty > svg { color:var(--t3); }
+.ml-sw { position:relative; width:46px; height:28px; border-radius:14px; border:none; padding:0; background:var(--hi); flex-shrink:0; cursor:pointer; transition:background .15s; }
+.ml-sw::after { content:''; position:absolute; left:3px; top:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.2); transition:transform .15s; }
+.ml-sw[aria-checked="true"]::after { transform:translateX(18px); }
+.th-seg { display:flex; gap:2px; margin-left:auto; padding:3px; border-radius:999px; background:var(--card2); }
+.th-seg button { flex:1; padding:6px 10px; border:none; border-radius:999px; background:none; font-family:inherit; font-size:12px; font-weight:700; color:var(--t3); cursor:pointer; white-space:nowrap; }
+.th-seg button[aria-pressed="true"] { background:var(--t1); color:var(--bg); }
+#reader-settings-popover .th-seg { margin-left:0; }
+.ps-row .th-seg { flex-basis:100%; margin:10px 0 2px; }
+.th-seg button { padding:8px 10px; }
+.ml-foot { font-size:var(--fs-1); color:var(--t3); line-height:1.5; margin:12px 4px 0; }
 .reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
 .seg-n { font-family:var(--ui-font); font-size:11px; font-weight:700; color:var(--t3); }
 /* Likkutei Torah: the week's maamarim, and a maamar (in Heilig, the look from May: dibbur hamaschil as a drop word) */
 .lt-intro { font-size:var(--fs-2); color:var(--t2); line-height:1.5; margin:4px 2px 14px; }
 .lt-list { background:var(--card); border-radius:var(--r-m); overflow:hidden; }
-.lt-m { display:block; width:100%; text-align:right; direction:rtl; background:none; border:none; padding:14px 16px; cursor:pointer; color:var(--t1); font-family:inherit; }
+.lt-m { display:flex; align-items:center; gap:14px; width:100%; background:none; border:none; padding:13px 16px; cursor:pointer; color:var(--t1); font-family:inherit; text-align:left; }
 .lt-m + .lt-m { border-top:1px solid var(--border); }
+.lt-ring { flex-shrink:0; }
+.lt-m-x { flex:1; min-width:0; text-align:right; direction:rtl; }
 .lt-m-t { display:block; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-size:20px; line-height:1.4; }
-.lt-m-d { display:block; direction:ltr; text-align:left; font-size:var(--fs-1); color:var(--t3); margin-top:3px; }
+.lt-m-d { display:block; direction:ltr; text-align:right; font-size:var(--fs-1); color:var(--t3); margin-top:2px; }
+.lt-head { display:flex; justify-content:space-between; align-items:baseline; margin:20px 4px 8px; font-size:13px; color:var(--t3); }
+.lt-head span:first-child { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
+#native-reader-content .lt-m-d b { font-weight:700; color:color-mix(in srgb, #4F5FA8 75%, var(--t1)); }
 .lt-back { background:var(--card2); border:none; border-radius:999px; padding:8px 14px; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t1); cursor:pointer; margin-bottom:16px; }
 .lt-h { direction:rtl; text-align:center; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-weight:normal; font-size:var(--fs-4); color:var(--t2); margin-bottom:14px; }
 .lt-sefer { font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; color:var(--t1); }
@@ -1368,7 +1363,7 @@ window._fsGetDoc = getDoc;
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
 
-      <!-- More learning (beta): your seforim side by side; tap one to learn it, the count for the shelf -->
+      <!-- More learning (beta): a card with a row for each (colour line, name, today's piece, its circle) -->
       <div id="more-learning" style="display:none;"></div>
 
 
@@ -1406,7 +1401,7 @@ window._fsGetDoc = getDoc;
 
       <p class="ps-label">Reading</p>
       <div class="ps-card">
-        <button onclick="toggleTheme()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span><span class="ps-row-label">Appearance</span><span id="theme-label" class="ps-row-val">Dark</span></button>
+        <div class="ps-row" style="cursor:default;flex-wrap:wrap;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span><span class="ps-row-label">Appearance</span><div class="th-seg" role="group" aria-label="Appearance"><button type="button" data-th="auto" onclick="setThemePref('auto')">Automatic</button><button type="button" data-th="light" onclick="setThemePref('light')">Light</button><button type="button" data-th="dark" onclick="setThemePref('dark')">Dark</button></div></div>
       </div>
 
       <p class="ps-label">About</p>
@@ -1491,6 +1486,11 @@ window._fsGetDoc = getDoc;
         <div id="rs-font-dots" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;"></div>
         <button onclick="_readerFontStep(1)" id="rs-font-inc" style="width:36px;height:36px;border-radius:var(--r-s);background:var(--surface);border:1px solid var(--border);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--ui-font);font-size:var(--fs-4);font-weight:800;flex-shrink:0;">A</button>
       </div>
+    </div>
+    <!-- Light or dark, without leaving the text -->
+    <div>
+      <p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Appearance</p>
+      <div class="th-seg" role="group" aria-label="Appearance"><button type="button" data-th="auto" onclick="setThemePref('auto')">Automatic</button><button type="button" data-th="light" onclick="setThemePref('light')">Light</button><button type="button" data-th="dark" onclick="setThemePref('dark')">Dark</button></div>
     </div>
     <!-- Section-specific options injected here by JS -->
     <div id="rs-section-opts"></div>
@@ -3981,7 +3981,7 @@ function _storePlace(place) {
   const key = _scrollKey(_rv.sid, _rv.iso);
   try {
     if (!place.y) localStorage.removeItem(key);
-    else { localStorage.setItem(key, JSON.stringify(place)); _pruneScrollKeys(); }
+    else { localStorage.setItem(key, JSON.stringify({ ...place, t: Date.now() })); _pruneScrollKeys(); }
   } catch (e) {}
 }
 // Save where you are now, if it's yours to save (rule 2)
@@ -4057,7 +4057,7 @@ function _pruneScrollKeys() {
       if (k && k.startsWith('scroll_')) keys.push(k);
     }
     if (keys.length <= 20) return;
-    keys.sort();
+    keys.sort((a, b) => a.slice(-10).localeCompare(b.slice(-10)));   // oldest day first (every key ends in its date)
     keys.slice(0, keys.length - 20).forEach(k => localStorage.removeItem(k));
   } catch(e) {}
 }
@@ -5752,6 +5752,8 @@ function _setReaderColour(c, on) {
 function closeChabadPanel() {
   // Allow LS to intercept (e.g. X while reading a sicha → back to list)
   if (window._lsHandleClose && window._lsHandleClose()) return;
+  // X in a Torah Ohr / Likkutei Torah maamar → back to the week's maamarim; X there closes
+  if (String(_rv.sid).startsWith('extra_likkuteiTorah:')) { _ltBack(); return; }
   // Clean up any LS chrome
   document.getElementById('ls-nav-bar')?.remove();
   document.getElementById('ls-fn-popup')?.remove();
@@ -5960,8 +5962,7 @@ function renderProfile() {
   const transEl = document.getElementById('ps-chumash-trans');
   if (transEl) transEl.textContent = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Metsudah';
   _updateProfileExtras();
-  const isLight = document.documentElement.classList.contains('light');
-  const tl = document.getElementById('theme-label'); if (tl) tl.textContent = isLight ? 'Light' : 'Dark';
+  _showThemePref();
 }
 // After a change made from the Profile, refresh it
 function closeProfileSheet() {
@@ -6051,28 +6052,34 @@ async function selectTrackInline(newTrack, firstTime) {
 // ZONE 26 · THEME  (dark/light, system preference, localStorage)
 // ════════════════════════════════════════════════════════════════════
 // ── THEME ─────────────────────────────────────────────────────────────────────
+// Automatic (the default) follows the phone, also when it changes by itself
+// in the evening; Light or Dark is your choice, kept on this phone.
+// (function declarations, not consts: initTheme runs before this part of the file)
+function _themePref() { try { const v = localStorage.getItem('chitas_theme'); return v === 'light' || v === 'dark' ? v : 'auto'; } catch { return 'auto'; } }
+function _systemDark() { return window.matchMedia('(prefers-color-scheme: dark)'); }
 function initTheme() {
-  // Read saved preference, fallback to system
-  const saved = localStorage.getItem('chitas_theme');
-  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = saved ? saved === 'dark' : systemDark;
-  setTheme(isDark ? 'dark' : 'light', false);
+  _applyTheme();
+  _systemDark().addEventListener?.('change', () => { if (_themePref() === 'auto') _applyTheme(); });
+}
+function _applyTheme() {
+  const pref = _themePref();
+  setTheme(pref === 'auto' ? (_systemDark().matches ? 'dark' : 'light') : pref, false);
+}
+function setThemePref(pref) {
+  try { if (pref === 'auto') localStorage.removeItem('chitas_theme'); else localStorage.setItem('chitas_theme', pref); } catch {}
+  _applyTheme();
+}
+// Mark the current choice on every Automatic / Light / Dark control
+function _showThemePref() {
+  const pref = _themePref();
+  document.querySelectorAll('.th-seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.th === pref));
 }
 function setTheme(mode, save=true) {
   const html = document.documentElement;
   if (mode === 'light') { html.classList.add('light'); html.classList.remove('dark'); }
   else                  { html.classList.remove('light'); html.classList.add('dark'); }
-  const moon  = document.getElementById('theme-icon-moon');
-  const sun   = document.getElementById('theme-icon-sun');
-  const label = document.getElementById('theme-label');
-  if (moon)  moon.style.display  = mode === 'light' ? 'none'  : 'block';
-  if (sun)   sun.style.display   = mode === 'light' ? 'block' : 'none';
-  if (label) label.textContent   = mode === 'light' ? 'Light' : 'Dark';
-  if (save) localStorage.setItem('chitas_theme', mode);
-}
-function toggleTheme() {
-  const isLight = document.documentElement.classList.contains('light');
-  setTheme(isLight ? 'dark' : 'light');
+  if (save) { try { localStorage.setItem('chitas_theme', mode); } catch {} }
+  _showThemePref();
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -6502,68 +6509,37 @@ async function _bustTanyaCache() {
 
 
 // ── Extra track card rendering ────────────────────────────────────────────────
-// More learning: on Today, below Chitas, your seforim side by side, each with
-// its name; tap one to learn it. The count ("2 of 4 today") opens the shelf:
-// the books bigger, each with its name and the day's piece. Learned shows as
-// the sefer's ribbon; you mark it learned in the reader, like Chitas.
-const COVERS = {   // each sefer's cloth, and its short name
-  dafYomi: ['#3A1712', 'Daf Yomi'], nachYomi: ['#1E2A3D', 'Nach Yomi'], kitzur: ['#23342A', 'Halacha'],
-  likkuteiTorah: ['#1F1B19', 'Likkutei Torah'], sotah: ['#2E2A44', 'Sotah'], mishnahYomi: ['#2A3530', 'Mishnah'],
-  likkuteiSichos: ['#33203A', 'Likkutei Sichos'], shaarHaBitachon: ['#1D3340', "Sha'ar HaBitachon"],
-};
+// More learning: on Today, below Chitas, one card with a row for each: a line
+// in its reader's colour, its name, today's piece, and its circle (learned:
+// filled). Tap a row to learn it; you mark it learned in the reader, like
+// Chitas. Edit turns them on and off. Nothing added yet: one row that says
+// what you can add.
 function _shelfTracks() {
   const tracks = _shownTracks();
   return window._sotahDaf ? ['sotah', ...tracks.filter(t => t !== 'sotah')] : tracks;   // Sotah during the Omer, without adding it
 }
-// A sefer: dark cloth, gold bands, a ribbon when it's learned (no title on the spine: the name is underneath)
-function _sefer(id, iso, cls) {
-  const on = !!_trackDoneOn(id, iso);
-  const [klass, height] = cls.split('|');
-  return '<span class="sefer ' + klass + (on ? ' on' : '') + '" style="background:' + (COVERS[id] || ['#2B2622'])[0] + (height ? ';height:' + height + 'px' : '') + '">'
-    + '<span class="sf-band"></span><span class="sf-band sf-low"></span></span>';
-}
+const _mlCircle = (on, colour) => on
+  ? '<svg width="26" height="26" viewBox="0 0 26 26" role="img" aria-label="Learned"><circle cx="13" cy="13" r="12" fill="' + colour + '"/><path d="M8 13.4l3.2 3.2 6.6-7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  : '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11.5" fill="none" stroke="var(--hi)" stroke-width="2"/></svg>';
+const _ML_CHEV = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
 function _renderExtraTrackCards(iso, isToday) {
   const box = document.getElementById('more-learning');
-  if (box) {
-    const ids = _shelfTracks();
-    const done = ids.filter(id => _trackDoneOn(id, iso)).length;
-    box.innerHTML = '<button type="button" class="ml-head" onclick="_openShelf()"><span>More learning <span class="beta-chip">Beta</span></span>'
-      + '<span>' + (ids.length ? done + ' of ' + ids.length + ' today' : '') + '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span></button>'
-      + '<div class="ml-books">'
-      + ids.map(id => '<button type="button" class="ml-book" onclick="openExtraReader(\'' + id + '\')" aria-label="' + EXTRA_TRACK_DEFS[id].label + (_trackDoneOn(id, iso) ? ', learned' : '') + '">'
-          + _sefer(id, iso, 'sf-small') + '<span class="ml-name" id="ml-name-' + id + '">' + (COVERS[id] || [, EXTRA_TRACK_DEFS[id].label])[1] + '</span></button>').join('')
-      + '<button type="button" class="ml-book" onclick="_openExtraTracksMenu()" aria-label="Add a sefer"><span class="sefer sf-small sf-empty"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="ml-name">' + (ids.length ? 'Add' : 'Add a sefer') + '</span></button>'
-      + '</div>';
-    if (ids.includes('likkuteiTorah')) _loadExtraSubtitle('likkuteiTorah');   // its name: Torah Ohr on Bereishis and Shemos
+  if (!box) return;
+  const ids = _shelfTracks();
+  if (!ids.length) {
+    box.innerHTML = '<button type="button" class="ml-card ml-r ml-empty" onclick="_openExtraTracksMenu()">'
+      + '<span class="ml-x"><span class="ml-n">More learning<span class="beta-chip">Beta</span></span>'
+      + '<span class="ml-p">Add Daf Yomi, Nach, Halacha or Likkutei Torah</span></span>' + _ML_CHEV + '</button>';
+    return;
   }
-  if (document.getElementById('shelf-sheet')) _drawShelf();
-}
-
-function _openShelf() {
-  document.getElementById('shelf-sheet')?.remove();
-  const modal = document.createElement('div');
-  modal.id = 'shelf-sheet';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:flex-end;justify-content:center;';
-  modal.onclick = e => { if (e.target === modal) _closeShelf(); };
-  modal.innerHTML = '<div class="ps-modal-sheet shelf-sheet" role="dialog" aria-label="More learning" style="max-height:88vh;"><div id="shelf-body" style="overflow-y:auto;padding:10px 20px 28px;"></div></div>';
-  document.body.appendChild(modal);
-  _drawShelf();
-}
-function _closeShelf() { document.getElementById('shelf-sheet')?.remove(); }
-function _shelfOpenTrack(id) { _closeShelf(); openExtraReader(id); }
-function _drawShelf() {
-  const body = document.getElementById('shelf-body');
-  if (!body) return;
-  const iso = _viewedISO(), ids = _shelfTracks();
-  const heights = [176, 160, 168, 180, 164];
-  body.innerHTML = '<div class="dp-grab"></div>'
-    + '<div class="sh-head"><p>More learning <span class="beta-chip">Beta</span></p><button type="button" onclick="_closeShelf();_openExtraTracksMenu()">Add a sefer</button></div>'
-    + (ids.length
-      ? '<div class="sh-shelf">' + ids.map((id, i) => '<button type="button" class="sh-slot" onclick="_shelfOpenTrack(\'' + id + '\')" aria-label="' + EXTRA_TRACK_DEFS[id].label + (_trackDoneOn(id, iso) ? ', learned' : '') + '">'
-          + _sefer(id, iso, 'sf-big|' + heights[i % heights.length]) + '</button>').join('') + '</div>'
-        + '<div class="sh-ledge"></div>'
-        + '<div class="sh-caps">' + ids.map(id => '<button type="button" class="sh-cap" onclick="_shelfOpenTrack(\'' + id + '\')"><span id="sh-name-' + id + '">' + (COVERS[id] || [, EXTRA_TRACK_DEFS[id].label])[1] + '</span><span id="extra-sub-' + id + '">…</span></button>').join('') + '</div>'
-      : '<p class="sh-empty">Nothing on your shelf yet. Add Daf Yomi, Nach Yomi, Halacha Yomis or the week\'s Likkutei Torah, and each day\'s piece is waiting here.</p>');
+  box.innerHTML = '<div class="ml-label"><span>More learning<span class="beta-chip">Beta</span></span><button type="button" onclick="_openExtraTracksMenu()">Edit</button></div>'
+    + '<div class="ml-card">' + ids.map(id => {
+      const def = EXTRA_TRACK_DEFS[id], on = !!_trackDoneOn(id, iso);
+      return '<button type="button" class="ml-r" data-id="' + id + '" onclick="openExtraReader(\'' + id + '\')">'
+        + '<span class="ml-bar" style="background:' + def.color + '"></span>'
+        + '<span class="ml-x"><span class="ml-n" id="ml-name-' + id + '">' + def.label + '</span><span class="ml-p" id="extra-sub-' + id + '">&nbsp;</span></span>'
+        + _mlCircle(on, def.color) + '</button>';
+    }).join('') + '</div>';
   ids.forEach(id => _loadExtraSubtitle(id));
 }
 
@@ -6584,10 +6560,10 @@ async function _loadExtraSubtitle(id) {
       el.textContent = lsKeys.length ? 'Sichos · ' + lsKeys.map(_lsParshaHeb).join(' · ') : "This week's parsha";
     } else if (OFFERED_TRACKS.includes(id)) {
       const piece = await _trackPiece(id, dateISO(d));
-      // under the sefer's name on the shelf, just the piece: "Lech Lecha", not "Parshas Lech Lecha · Torah Ohr"
-      el.textContent = _trackLine(id, piece).replace(/^(Parshas|Siman) /, '').replace(/ · (Torah Ohr|Likkutei Torah)$/, '');
+      // under the sefer's name, just the piece: "Lech Lecha", not "Parshas Lech Lecha · Torah Ohr"
+      el.textContent = _trackLine(id, piece).replace(/^Parshas /, '').replace(/ · (Torah Ohr|Likkutei Torah)$/, '');
       if (id === 'likkuteiTorah' && piece.books === 'Torah Ohr')   // Torah Ohr on Bereishis and Shemos
-        ['ml-name-', 'sh-name-'].forEach(k => { const n = document.getElementById(k + id); if (n) n.textContent = 'Torah Ohr'; });
+        { const n = document.getElementById('ml-name-' + id); if (n) n.textContent = 'Torah Ohr'; }
     } else if (id === 'hayomYom') {
       // Hayom Yom goes by the Hebrew date: that's its subtitle
       el.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
@@ -6796,43 +6772,43 @@ const EXTRA_TRACK_DEFS = {
   },
 };
 
-// The Add learning sheet: the tracks on offer (and any parked one you have),
-// each with today's piece and an Add / Added button
+// The More learning sheet: the tracks on offer (and any parked one you have),
+// each with what it is, today's piece, and a switch
 function _openExtraTracksMenu() {
   document.getElementById('extra-tracks-modal')?.remove();
   const modal = document.createElement('div');
   modal.id = 'extra-tracks-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
 
   const enabled = user.extraTracks || [];
   const ids = [...OFFERED_TRACKS, ..._shownTracks().filter(id => !OFFERED_TRACKS.includes(id))];
   const rows = ids.map(id => {
-    const def = EXTRA_TRACK_DEFS[id];
-    return '<div class="ml-row">'
-      + '<span class="ml-ic" style="background:' + def.color + ';"><svg width="20" height="20" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg></span>'
-      + '<div class="ml-t"><p>' + def.label + '</p><p id="ml-line-' + id + '">' + escapeHtml(def.desc) + '</p></div>'
-      + '<button type="button" id="ml-add-' + id + '" class="ml-add' + (enabled.includes(id) ? ' on' : '') + '" onclick="_toggleExtraTrack(\'' + id + '\')">' + (enabled.includes(id) ? 'Added' : 'Add') + '</button>'
+    const def = EXTRA_TRACK_DEFS[id], on = enabled.includes(id);
+    return '<div class="ml-r" style="cursor:default">'
+      + '<span class="ml-bar" style="background:' + def.color + '"></span>'
+      + '<span class="ml-x"><span class="ml-n">' + def.label + '</span><span class="ml-p" id="ml-line-' + id + '">' + escapeHtml(def.desc) + '</span></span>'
+      + '<button type="button" role="switch" aria-checked="' + on + '" aria-label="' + def.label + '" id="ml-add-' + id + '" class="ml-sw"' + (on ? ' style="background:' + def.color + '"' : '') + ' onclick="_toggleExtraTrack(\'' + id + '\')"></button>'
       + '</div>';
   }).join('');
 
   modal.innerHTML = '<div class="ps-modal-sheet" style="max-height:85vh;">'
     + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
-    +   '<div><p class="ps-modal-title">Add learning <span class="beta-chip">Beta</span></p><p class="ps-modal-sub">Daily cycles, learned together</p></div>'
-    +   '<button onclick="_closeExtraMenu()" class="ps-modal-close" aria-label="Close">×</button>'
+    +   '<div><p class="ps-modal-title">More learning <span class="beta-chip">Beta</span></p><p class="ps-modal-sub">Turn on what you learn. It shows below Chitas on Today.</p></div>'
+    +   '<button onclick="_closeExtraMenu()" class="ps-modal-close" aria-label="Done">×</button>'
     + '</div>'
     + '<div style="overflow-y:auto;flex:1;padding:14px 20px 24px;">'
-    +   '<div class="ml-list">' + rows + '</div>'
+    +   '<div class="ml-card">' + rows + '</div>'
     +   '<p class="ml-foot">Daf Yomi, Nach Yomi and Kitzur Shulchan Aruch follow the standard daily schedules. Texts from Sefaria.</p>'
     + '</div>'
     + '</div>';
   document.body.appendChild(modal);
 
-  // Today's piece under each name
+  // Today's piece after what it is
   const iso = _viewedISO();
   ids.filter(id => OFFERED_TRACKS.includes(id)).forEach(id => _trackPiece(id, iso).then(piece => {
     const el = document.getElementById('ml-line-' + id);
-    if (el) el.textContent = EXTRA_TRACK_DEFS[id].desc + ' · ' + _trackLine(id, piece);
+    if (el) el.textContent = EXTRA_TRACK_DEFS[id].desc + '. Today: ' + _trackLine(id, piece);
   }).catch(() => {}));
 }
 
@@ -6843,8 +6819,8 @@ function _toggleExtraTrack(id) {
   const on = !user.extraTracks.includes(id);
   user.extraTracks = on ? [...user.extraTracks, id] : user.extraTracks.filter(t => t !== id);
   saveUser();
-  const btn = document.getElementById('ml-add-' + id);
-  if (btn) { btn.classList.toggle('on', on); btn.textContent = on ? 'Added' : 'Add'; }
+  const sw = document.getElementById('ml-add-' + id);
+  if (sw) { sw.setAttribute('aria-checked', on); sw.style.background = on ? EXTRA_TRACK_DEFS[id].color : ''; }
   _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
   _syncMoreLearning();
   if (typeof _renderPsExtraTracks === 'function') _renderPsExtraTracks();
@@ -7455,7 +7431,23 @@ async function _loadLikkuteiTorah() {
   if (!piece.parsha) { _readerNote('There\'s no parsha this week, so there are no maamarim for it.'); return; }
   if (!piece.list.length) { _readerNote('Likkutei Torah has no maamarim on Parshas ' + parshaSpelling(piece.parsha) + '.'); return; }
   window._ltWeek = piece;
+  document.getElementById('chabad-panel-title').textContent = piece.books === 'Torah Ohr' ? 'Torah Ohr' : 'Likkutei Torah';
   _ltShowList();
+}
+
+// How far you got in a maamar this week: 0 (not started) to 1 (read to the end), and when
+function _ltRead(m, iso) {
+  const p = _savedPlace('extra_likkuteiTorah:' + m.ref, weekShabbos(iso));
+  if (!p || !p.y || !p.h) return { f: 0, t: 0 };
+  const view = document.getElementById('native-reader')?.clientHeight || 700;
+  const f = Math.min(1, (p.y + view) / p.h);
+  return { f: f > 0.97 ? 1 : f, t: p.t || 0 };
+}
+function _ltRing(f) {
+  if (f >= 1) return '<svg class="lt-ring" width="26" height="26" viewBox="0 0 26 26" role="img" aria-label="Learned"><circle cx="13" cy="13" r="12" fill="#4F5FA8"/><path d="M8 13.4l3.2 3.2 6.6-7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const c = 2 * Math.PI * 10.5;
+  return '<svg class="lt-ring" width="26" height="26" viewBox="0 0 26 26" ' + (f ? 'role="img" aria-label="' + Math.round(f * 100) + '% read"' : 'aria-hidden="true"') + '><circle cx="13" cy="13" r="10.5" fill="none" stroke="var(--hi)" stroke-width="' + (f ? 3 : 1.6) + '"/>'
+    + (f ? '<circle cx="13" cy="13" r="10.5" fill="none" stroke="#4F5FA8" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + (c * f).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 13 13)"/>' : '') + '</svg>';
 }
 
 function _ltShowList() {
@@ -7465,13 +7457,21 @@ function _ltShowList() {
   if (loadEl) loadEl.style.display = 'none';
   if (!contEl || !piece) return;
   document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaSpelling(piece.parsha);
-  contEl.innerHTML = '<p class="lt-intro">The maamarim of ' + piece.books + ' on Parshas ' + parshaSpelling(piece.parsha)
-    + '. Learn one or more this week.</p>'
-    + '<div class="lt-list">' + piece.list.map((m, i) =>
-      '<button type="button" class="lt-m" onclick="_ltOpen(' + i + ')">'
-      + '<span class="lt-m-t">' + escapeHtml(m.title) + '</span>'
-      + '<span class="lt-m-d">' + m.book + ' · about ' + m.mins + ' min</span>'
-      + '</button>').join('') + '</div>'
+  const iso = _viewedISO();
+  const read = piece.list.map(m => _ltRead(m, iso));
+  // The one you were in last (and didn't finish) says so; tapping any maamar opens it where you left off
+  let last = -1;
+  read.forEach((r, i) => { if (r.f > 0 && r.f < 1 && (last < 0 || r.t > read[last].t)) last = i; });
+  const learned = read.filter(r => r.f >= 1).length;
+  contEl.innerHTML = '<p class="lt-intro">The maamarim of ' + piece.books + ' on Parshas ' + parshaSpelling(piece.parsha) + '. Learn one or more this week; each one keeps your place.</p>'
+    + '<div class="lt-head"><span>This week\'s maamarim</span><span>' + learned + ' of ' + piece.list.length + ' learned</span></div>'
+    + '<div class="lt-list">' + piece.list.map((m, i) => {
+      const f = read[i].f;
+      const d = f >= 1 ? 'Learned' : f ? Math.round(f * 100) + '% read · about ' + Math.max(1, Math.round(m.mins * (1 - f))) + ' min left' : 'about ' + m.mins + ' min';
+      return '<button type="button" class="lt-m" onclick="_ltOpen(' + i + ')">' + _ltRing(f)
+        + '<span class="lt-m-x"><span class="lt-m-t">' + escapeHtml(m.title) + '</span>'
+        + '<span class="lt-m-d">' + (i === last ? '<b>Last read</b> · ' : '') + d + '</span></span></button>';
+    }).join('') + '</div>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
   contEl.style.display = 'block';
   _restoreExtraScroll('likkuteiTorah');
@@ -8105,9 +8105,7 @@ function _renderPsExtraTracks() {
     const def = EXTRA_TRACK_DEFS[id];
     if (!def) return '';
     return '<div class="ps-row">'
-      + '<div class="ps-icon" style="background:' + def.color + '18;color:' + def.color + ';">'
-      +   '<svg width="14" height="14" viewBox="0 0 24 24" style="display:block;">' + def.iconPath + '</svg>'
-      + '</div>'
+      + '<span class="ml-bar" style="background:' + def.color + ';min-height:34px"></span>'
       + '<div style="flex:1;min-width:0;">'
       +   '<p class="ps-row-label">' + def.label + '</p>'
       +   '<p class="ps-row-sub">' + def.desc + '</p>'
