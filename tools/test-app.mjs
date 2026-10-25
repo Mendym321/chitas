@@ -329,6 +329,29 @@ await check('quiz request sends today\'s exact Chumash ref and the sign-in token
 console.log(quizRequest.auth === 'Bearer tok123' && quizRequest.body.section === 'chumash' && quizRequest.body.level === 'quick'
   ? '  ✓ …with section, level and token' : (failed++, '  ✗ quiz request was ' + JSON.stringify(quizRequest)));
 
+// ── Light and dark: Automatic follows the phone ───────────────────────────
+console.log('Appearance:');
+const isDark = () => page.evaluate(() => document.documentElement.classList.contains('dark'));
+const pressed = () => page.evaluate(() => [...document.querySelectorAll('.th-seg')].map(g => g.querySelector('[aria-pressed=true]')?.dataset.th));
+await page.evaluate(() => setThemePref('auto'));
+await page.emulateMedia({ colorScheme: 'dark' }); await page.waitForTimeout(100);
+let th = [await isDark(), await pressed()];
+await page.emulateMedia({ colorScheme: 'light' }); await page.waitForTimeout(100);
+th.push(await isDark());
+if (JSON.stringify(th) !== JSON.stringify([true, ['auto', 'auto'], false])) { failed++; console.log('  ✗ Automatic: got', th); }
+else console.log('  ✓ Automatic follows the phone, also when it changes while the app is open');
+await check('Light stays light when the phone goes dark, and is kept; both controls (Profile, reader) show it', async () => {
+  setThemePref('light');
+  return [localStorage.getItem('chitas_theme'), document.documentElement.classList.contains('light')];
+}, ['light', true]);
+await page.emulateMedia({ colorScheme: 'dark' }); await page.waitForTimeout(100);
+th = [await isDark(), await pressed()];
+await page.evaluate(() => setThemePref('auto'));
+th.push(await isDark(), await page.evaluate(() => localStorage.getItem('chitas_theme')));
+if (JSON.stringify(th) !== JSON.stringify([false, ['light', 'light'], true, null])) { failed++; console.log('  ✗ Light / back to Automatic: got', th); }
+else console.log('  ✓ …and Automatic again forgets the choice and follows the phone');
+await page.emulateMedia({ colorScheme: 'light' });
+
 // ── A brand-new visitor, in a fresh page ───────────────────────────────────
 console.log('New visitor (signed out):');
 const page2 = await browser.newPage();
