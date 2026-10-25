@@ -103,7 +103,7 @@
   .lrow-t p:last-child { font-size:var(--fs-2); color: var(--t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .check { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--hi); background: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; color: transparent; transition: background .15s, border-color .15s; }
   .check.on { background: var(--c, var(--ok)); border-color: var(--c, var(--ok)); color: #fff; }
-  .lrow-he { font-family: var(--he-font); font-size: 15px; font-weight: 500; color: var(--t3); margin-left: 7px; }
+  
   .tabbar { position: fixed; bottom: calc(14px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 390px; display: flex; justify-content: space-around; padding: 8px; background: var(--ink); border-radius: 22px; z-index: 100; box-shadow: 0 10px 30px rgba(30,20,5,.18); }
   .tabbar button { background: none; border: none; display: flex; align-items: center; gap: 7px; font: 700 var(--fs-2) var(--ui-font); color: var(--ink-soft); padding: 10px 16px; border-radius: 16px; transition: background .2s, color .2s; }
   .tabbar button .tab-l { display: none; }
@@ -113,9 +113,9 @@
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .tile { background: var(--card); border-radius:var(--r-m); padding: 14px; }
   .tile .dot { display: block; width: 8px; height: 8px; border-radius: 50%; margin-bottom: 8px; }
-  .tile-n { font-size:var(--fs-5); font-weight: 700; letter-spacing: -.5px; color: var(--t1); font-variant-numeric: tabular-nums; }
-  .tile-l { font-size:var(--fs-2); color: var(--t2); margin-top: 1px; }
-  .tile-d { font-size:var(--fs-1); color: var(--t3); margin-top: 6px; }
+  
+  
+  
   .cbar + .cbar { margin-top: 11px; }
   .cbar p { display: flex; justify-content: space-between; font-size:var(--fs-2); color: var(--t1); }
   .cbar p span:last-child { color: var(--t3); }
@@ -133,30 +133,15 @@
   @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
   @keyframes pop { 0%{transform:scale(.7);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  @keyframes tickerExitUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-20px) scale(.93)} }
   @keyframes tickerEnterDown { 0%{opacity:0;transform:translateY(18px) scale(.95)} 100%{opacity:1;transform:translateY(0) scale(1)} }
-  @keyframes logoReveal { 0%{transform:scale(.4) rotate(-20deg);opacity:0} 70%{transform:scale(1.08) rotate(2deg)} 100%{transform:scale(1) rotate(0deg);opacity:1} }
-  @keyframes titleReveal { 0%{transform:translateY(24px);opacity:0} 100%{transform:translateY(0);opacity:1} }
-  @keyframes glowPulse { 0%,100%{box-shadow:0 0 30px rgba(201,154,58,.2),0 4px 20px rgba(201,154,58,.3)} 50%{box-shadow:0 0 50px rgba(201,154,58,.35),0 4px 28px rgba(201,154,58,.45)} }
-  @keyframes cardSlide { 0%{transform:translateX(-28px);opacity:0} 100%{transform:translateX(0);opacity:1} }
-  @keyframes quizPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.015)} }
-  @keyframes dotBlink { 0%,100%{opacity:.3} 50%{opacity:1} }
   .ob-bg-glow { display:none !important; position:fixed;inset:0;pointer-events:none;z-index:0;
     background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,154,58,.12) 0%, transparent 70%); }
-  @keyframes flamePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
   @keyframes checkPop { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.3)} 100%{transform:scale(1);opacity:1} }
-  @keyframes streakBurst { 0%{transform:scale(1)} 30%{transform:scale(1.18)} 60%{transform:scale(.95)} 100%{transform:scale(1)} }
-  @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
   @keyframes momentSlide { 0%{transform:scale(.85) translateY(20px);opacity:0} 60%{transform:scale(1.03)} 100%{transform:scale(1) translateY(0);opacity:1} }
-  @keyframes iconBounce { 0%{transform:scale(0) rotate(-15deg);opacity:0} 60%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1) rotate(0);opacity:1} }
-  @keyframes glowRing { 0%,100%{box-shadow:0 0 0 0 rgba(201,154,58,0)} 50%{box-shadow:0 0 0 8px rgba(201,154,58,.12)} }
-  @keyframes celebSlide { 0%{transform:translateY(100%);opacity:0} 20%{transform:translateY(0);opacity:1} 80%{transform:translateY(0);opacity:1} 100%{transform:translateY(100%);opacity:0} }
-  @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-  #confetti-container { position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden; }
   @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
 
-  .anim-up { animation: up .32s ease both; }
-  .anim-fadeup { animation: fadeUp .4s ease both; }
+  
+  
   .spinner { width:30px;height:30px;border:3px solid var(--border);border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite; }
 
   /* Rambam reader — make bold text actually visible */
@@ -173,20 +158,19 @@
   @keyframes toastIn { from { opacity:0; transform:translate(-50%,-10px); } to { opacity:1; transform:translate(-50%,0); } }
 
   /* Bottom nav */
-  #bottom-nav { position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:10px 16px 20px;gap:6px;z-index:100; }
-  .nav-btn { flex:1;padding:7px 4px;border-radius:var(--r-s);border:none;background:transparent;color:var(--t3);font-size:var(--fs-1);font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s; }
-  .nav-btn.active { background:rgba(201,154,58,.12); color:var(--gold); }
+  
+  
 
   /* Cards */
-  .section-card { background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-m);padding:15px 16px;margin-bottom:10px;transition:border-color .3s; }
-  .section-card.done { border-color: rgba(110,145,80,.5); }
+  
+  
 
   /* Skeleton */
-  .skel { background:var(--border);border-radius:var(--r-s);animation:up .35s ease both; }
+  
 
   /* Onboarding input */
-  .ob-input { width:100%;padding:13px 16px;border-radius:var(--r-s);border:1.5px solid var(--border);background:var(--card);color:var(--t1);font-size:var(--fs-3);caret-color:var(--gold);margin-bottom:12px; }
-  .ob-input:focus { border-color:var(--gold); }
+  
+  
 
 
 /* ── App loader overlay ── */
@@ -244,87 +228,26 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .swipe-hint.show  { opacity:1; }
 
 /* Reader slides during swipe */
-#native-reader.swiping-left  { transform:translateX(-40px); transition:transform .25s ease; }
-#native-reader.swiping-right { transform:translateX(40px);  transition:transform .25s ease; }
+
+
 #native-reader.swipe-exit-left  { transform:translateX(-120%); transition:transform .28s cubic-bezier(.4,0,.2,1); opacity:0; }
 #native-reader.swipe-exit-right { transform:translateX(120%);  transition:transform .28s cubic-bezier(.4,0,.2,1); opacity:0; }
-#native-reader.swipe-enter { transform:none; transition:transform .28s cubic-bezier(.22,1,.36,1); opacity:1; }
+
 
 /* ── Drum / wheel date picker ── */
-.drum-picker {
-  display:flex;
-  position:relative;
-  height:132px;
-  border-radius:var(--r-s);
-  overflow:hidden;
-  background:var(--card);
-  border:1px solid var(--border);
-  margin-bottom:12px;
-}
-.drum-picker::before,.drum-picker::after {
-  content:'';
-  position:absolute;
-  left:0;right:0;
-  z-index:4;
-  pointer-events:none;
-}
-.drum-picker::before {
-  top:0;height:44px;
-  background:linear-gradient(to bottom,var(--card) 15%,transparent 100%);
-}
-.drum-picker::after {
-  bottom:0;height:44px;
-  background:linear-gradient(to top,var(--card) 15%,transparent 100%);
-}
-.drum-sel {
-  position:absolute;
-  left:0;right:0;top:50%;
-  transform:translateY(-50%);
-  height:32px;
-  pointer-events:none;
-  z-index:3;
-  border-top:1px solid rgba(91,125,176,.3);
-  border-bottom:1px solid rgba(91,125,176,.3);
-  background:rgba(91,125,176,.05);
-}
-.drum-col {
-  flex:1;
-  overflow-y:scroll;
-  scroll-snap-type:y mandatory;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-  padding:50px 0;
-}
-.drum-col::-webkit-scrollbar{display:none;}
-.drum-col+.drum-col{border-left:1px solid var(--border);}
-.drum-item {
-  height:32px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  scroll-snap-align:center;
-  font-size:var(--fs-2);
-  font-weight:400;
-  color:var(--t3);
-  user-select:none;
-  -webkit-user-select:none;
-}
-.drum-col-label {
-  font-size:var(--fs-1);
-  font-weight:700;
-  
 
-  color:var(--t3);
-  text-align:center;
-}
+
+
+
+
+
+
+
+
+
 
 /* ── Extra track card swipe-to-delete ── */
-.extra-card-inner {
-  position:relative;
-  transition:transform .2s ease;
-  border-radius:var(--r-m);
-  will-change:transform;
-}
+
 
 /* ── Profile sheet design system ── */
 /* All profile rows, modals, and customization sheets share these tokens */
@@ -358,15 +281,12 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* Remove (trash) button */
 .ps-remove-btn {
   width:28px;height:28px;border-radius:var(--r-s);border:none;
-  background:rgba(192,86,74,.08);
+  background:color-mix(in srgb, var(--red) 8%, transparent);
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex-shrink:0;color:#C0564A;
+  cursor:pointer;flex-shrink:0;color:var(--red);
 }
 /* Drag handle */
-.ps-drag-handle {
-  color:var(--t3);cursor:grab;touch-action:none;
-  padding:4px 2px;display:flex;align-items:center;flex-shrink:0;
-}
+
 /* Modal sheet container */
 .ps-modal-sheet {
   background:var(--bg);border-radius:20px 20px 0 0;
@@ -442,17 +362,17 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .cal-d.rest span { top:-3px; }
 .cal-detail { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); min-height:44px; }
 .cal-dd { font-family:var(--title-font); font-size:var(--fs-3); color:var(--t1); }
-.streak-head { display:flex; justify-content:space-between; gap:12px; padding-top:16px; border-top:1px solid var(--border); }
-.streak-head button { background:none; border:none; padding:0; text-align:left; color:inherit; cursor:pointer; }
-.streak-n { font-family:var(--title-font); font-size:var(--fs-6); line-height:1.1; color:var(--t1); }
-.streak-n span { font-family:var(--ui-font); font-size:var(--fs-3); color:var(--t2); }
+
+
+
+
 .cbars { margin-top:14px; }
-.total-row { display:flex; gap:14px; align-items:flex-start; padding:12px 0; border-top:1px solid var(--border); }
-.total-row:last-child { border-bottom:1px solid var(--border); }
-.total-g { flex-shrink:0; padding-top:2px; }
-.total-n { font-family:var(--title-font); font-size:var(--fs-4); color:var(--t1); line-height:1.25; }
-.total-n b { font-weight:600; }
-.total-d { font-size:var(--fs-2); color:var(--t3); margin-top:2px; }
+
+
+
+
+
+
 .t-sec span { font-size:var(--fs-1); color:var(--t3); }
 /* "More learning" (beta): the chip, and the Add learning sheet */
 .beta-chip, .t-sec .beta-chip { display:inline-block; vertical-align:middle; margin:0 auto 0 8px; padding:2px 8px; border-radius:999px; background:var(--card2); color:var(--t2); font-family:var(--ui-font); font-size:11px; font-weight:800; letter-spacing:.3px; }
@@ -512,7 +432,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .lt-head span:first-child { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
 #native-reader-content .lt-m-d b { font-weight:700; color:color-mix(in srgb, #4F5FA8 75%, var(--t1)); }
 .lt-back { background:var(--card2); border:none; border-radius:999px; padding:8px 14px; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t1); cursor:pointer; margin-bottom:16px; }
-.lt-h { direction:rtl; text-align:center; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-weight:normal; font-size:var(--fs-4); color:var(--t2); margin-bottom:14px; }
+
 .lt-sefer { font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; color:var(--t1); }
 .lt-run { display:flex; justify-content:center; gap:10px; font-size:14px; color:var(--t3); letter-spacing:.5px; margin-bottom:10px; }
 .lt-title { text-align:center; font-size:30px; line-height:1.2; margin-bottom:6px; }
@@ -721,14 +641,13 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .thought-k { font:800 15px var(--ui-font); color:var(--t1); margin-bottom:4px; }
 .thought-t { font-family:var(--read-font); font-size:17px; line-height:1.45; color:var(--t2); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .thought-more { display:none; }
-.day-spark { position:relative; width:0; height:0; margin:0 auto; }
-.day-spark i { position:absolute; left:-4px; top:-4px; width:8px; height:8px; border-radius:50%; background:var(--c); opacity:0; animation:spark 1s 1.15s cubic-bezier(.15,.7,.3,1) forwards; }
-@keyframes spark { 0%{opacity:1;transform:translate(0,0) scale(1.2)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)} }
-@media (prefers-reduced-motion: reduce) { .day-spark, .tick-ring { display:none; } .lrow-ic.lift svg { animation:none; } }
+
+
+@media (prefers-reduced-motion: reduce) {  .tick-ring { display:none; } .lrow-ic.lift svg { animation:none; } }
 /* Today, on one page: the week, the day's line, the sections between thin rules */
 #week-strip { display:grid; grid-template-columns:repeat(7,1fr); padding:4px 0 14px; margin-bottom:14px; border-bottom:1px solid var(--border); }
 #progress-card { margin-bottom:6px; }
-.day-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+
 #progress-title { font-family:var(--title-font); font-size:var(--fs-4); font-weight:500; color:var(--t1); }
 .day-line { display:flex; gap:4px; margin:10px 0 8px; }
 .day-line i { flex:1; height:4px; border-radius:2px; background-color:var(--border); background-image:linear-gradient(var(--seg, var(--gold)), var(--seg, var(--gold))); background-repeat:no-repeat; background-size:0% 100%; transition:background-size .6s cubic-bezier(.2,.7,.2,1); }
@@ -789,7 +708,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .tz-seg button.on { background:var(--card); color:var(--t1); box-shadow:0 1px 3px rgba(0,0,0,.14); }
 .tz-opts { display:flex; gap:8px; margin-bottom:22px; }
 .tz-opt { border:1px solid var(--border); background:none; border-radius:20px; padding:5px 12px; font:600 12px var(--ui-font); color:var(--t3); cursor:pointer; }
-.tz-opt.on { border-color:color-mix(in srgb, var(--purple) 50%, transparent); color:var(--purple); background:color-mix(in srgb, var(--purple) 10%, transparent); }
+.tz-opt.on { border-color:color-mix(in srgb, var(--rc, var(--purple)) 50%, transparent); color:var(--rc, var(--purple)); background:color-mix(in srgb, var(--rc, var(--purple)) 10%, transparent); }
 .tz-head { text-align:center; margin:4px 0 22px; }
 .tz-part { font-family:var(--he-font); font-size:15px; color:var(--t3); direction:rtl; }
 .tz-ch { display:flex; align-items:center; justify-content:center; gap:14px; font-family:'Vilna','Frank Ruhl Libre',serif; font-weight:700; font-size:32px; line-height:1.25; color:var(--t1); direction:rtl; }
@@ -834,12 +753,10 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .tanya-fn { color: color-mix(in srgb, var(--c-tanya) 75%, var(--t3)); }
 .tanya-fn.active { color: var(--c-tanya); }
 /* The day complete: four inks draw together into one gold line */
-.day-rule { display:flex; gap:12px; width:180px; animation: dayGap .7s .15s cubic-bezier(.2,.7,.2,1) forwards; }
-.day-rule i { flex:1; height:3px; border-radius:2px; background:var(--c); animation: dayGold .5s .75s ease forwards; }
+
+
 .day-he { font-family:var(--he-font); font-size:30px; color:var(--gold); margin-top:14px; line-height:1; }
-@keyframes dayGap { to { gap:0; } }
-@keyframes dayGold { to { background:var(--gold); } }
-@media (prefers-reduced-motion: reduce) { .day-rule { animation:none; gap:0; } .day-rule i { animation:none; background:var(--gold); } }
+@media (prefers-reduced-motion: reduce) {   }
 /* Landing: on dark, the four rings close one by one and each name appears */
 #onboarding.ob-dark { background:#1F1B16; }
 #ob-welcome { position:relative; z-index:1; min-height:calc(100vh - 48px); display:flex; flex-direction:column; align-items:center; text-align:center; padding:9vh 0 4px; color:#FBF7EF; }
@@ -942,10 +859,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   line-height: 1.65;
 }
 #ls-body-wrap p { margin-bottom: .85em; orphans: 3; widows: 3; }
-#ls-body-wrap .ls-sh {
-  display: block; font-weight: 700; break-after: avoid;
-  column-span: all; margin-bottom: .3em; margin-top: .6em;
-}
+
 /* Two columns on tablets (540–899px) */
 @media (min-width: 540px) {
   #ls-body-wrap {
@@ -1197,7 +1111,7 @@ window._fsGetDoc = getDoc;
 <div id="rescue" style="display:none;position:fixed;inset:0;z-index:100000;background:#0E0E10;color:#F4F4F5;font:15px/1.5 -apple-system,system-ui,sans-serif;padding:48px 24px;overflow:auto;">
   <p style="font-size:var(--fs-5);font-weight:700;margin-bottom:8px;">The app didn't start</p>
   <p style="color:#A1A1AA;margin-bottom:20px;">Something on this device is stopping it. Your learning is safe. Try "Repair" first.</p>
-  <button onclick="__rescueRepair()" style="width:100%;padding:14px;border-radius:var(--r-m);border:none;background:#C99A3A;color:#111;font-size:var(--fs-3);font-weight:600;margin-bottom:10px;">Repair and reload</button>
+  <button onclick="__rescueRepair()" style="width:100%;padding:14px;border-radius:var(--r-m);border:none;background:var(--ink);color:var(--on-ink);font-size:var(--fs-3);font-weight:600;margin-bottom:10px;">Repair and reload</button>
   <button onclick="location.reload()" style="width:100%;padding:14px;border-radius:var(--r-m);border:1px solid #2A2A2E;background:none;color:#F4F4F5;font-size:var(--fs-3);margin-bottom:24px;">Just reload</button>
   <p style="color:#71717A;font-size:var(--fs-2);margin-bottom:6px;">If it keeps happening, send this to the developer:</p>
   <pre id="rescue-details" style="white-space:pre-wrap;font-size:var(--fs-1);color:#A1A1AA;background:#1C1C1F;border-radius:var(--r-s);padding:12px;"></pre>
@@ -1277,7 +1191,7 @@ window._fsGetDoc = getDoc;
       <p id="signin-sub" style="font-size:var(--fs-2);color:var(--t3);line-height:1.5;margin-bottom:20px;"></p>
       <button id="signin-apple-btn" onclick="signInWith('apple')" style="display:none;width:100%;padding:14px;border-radius:var(--r-m);background:#000;border:1px solid #333;color:#fff;font-size:var(--fs-3);font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;align-items:center;justify-content:center;gap:10px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.87-.76-1.47.02-2.83.86-3.59 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.24 2.73 2.2 1.1-.04 1.51-.7 2.84-.7 1.32 0 1.7.7 2.86.68 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.41 1.2-2.47-.03-.01-2.3-.88-2.29-3.52zM14.2 6.13c.6-.74 1.01-1.75.9-2.77-.87.04-1.93.58-2.55 1.31-.56.65-1.05 1.69-.92 2.69.97.07 1.96-.49 2.57-1.23z"/></svg> Continue with Apple</button>
       <button id="ob-google-btn" onclick="signInWith('google')" style="width:100%;padding:14px;border-radius:var(--r-m);background:#fff;border:1px solid #ddd;color:#1f1f1f;font-size:var(--fs-3);font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;"><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continue with Google</button>
-      <p id="ob-signin-error" style="display:none;font-size:var(--fs-1);color:#C0564A;text-align:center;margin-top:10px;"></p>
+      <p id="ob-signin-error" style="display:none;font-size:var(--fs-1);color:var(--red);text-align:center;margin-top:10px;"></p>
       <button onclick="closeSignIn()" style="width:100%;padding:12px;margin-top:8px;border-radius:var(--r-m);background:transparent;border:none;color:var(--t3);font-size:var(--fs-2);font-weight:600;cursor:pointer;font-family:inherit;">Not now</button>
     </div>
   </div>
@@ -1334,7 +1248,7 @@ window._fsGetDoc = getDoc;
       </div>
 
       <!-- API error -->
-      <div id="api-error" style="display:none;background:rgba(192,86,74,.08);border:1px solid rgba(192,86,74,.25);border-radius:var(--r-m);padding:12px 16px;margin-bottom:16px;gap:10px;align-items:flex-start;color:var(--red);">
+      <div id="api-error" style="display:none;background:color-mix(in srgb, var(--red) 8%, transparent);border:1px solid color-mix(in srgb, var(--red) 25%, transparent);border-radius:var(--r-m);padding:12px 16px;margin-bottom:16px;gap:10px;align-items:flex-start;color:var(--red);">
         <svg width="18" height="18" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
         <div><p style="font-size:var(--fs-2);font-weight:700;margin-bottom:2px;">Could not reach Hebcal</p><p style="font-size:var(--fs-1);color:var(--t3);">Check your connection. Buttons still open Chabad.org.</p></div>
       </div>
@@ -1438,9 +1352,6 @@ window._fsGetDoc = getDoc;
       <p id="quiz-title" style="font-family:var(--title-font);font-weight:800;font-size:var(--fs-5);line-height:1.1;color:var(--t1);"></p>
       <p id="quiz-subtitle" style="font-size:var(--fs-1);color:var(--t3);margin-top:1px;"></p>
     </div>
-    <div id="quiz-score-badge" style="display:none;background:rgba(142,106,163,.15);border:1px solid rgba(142,106,163,.4);border-radius:var(--r-s);padding:4px 10px;">
-      <p id="quiz-score-text" style="font-size:var(--fs-1);font-weight:700;color:#8E6AA3;"></p>
-    </div>
   </div>
   <div id="quiz-body" style="flex:1;padding:24px 20px;max-width:430px;margin:0 auto;width:100%;"></div>
 </div>
@@ -1450,7 +1361,7 @@ window._fsGetDoc = getDoc;
 
   <!-- Sticky header, in the colour of what you're reading (--rc) -->
   <div id="reader-head" style="padding:14px 18px 16px;display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
-    <button onclick="closeChabadPanel()" style="width:38px;height:38px;border-radius:var(--r-s);background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
+    <button onclick="closeChabadPanel()" aria-label="Close" style="width:38px;height:38px;border-radius:var(--r-s);background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;min-width:0;">
@@ -1511,7 +1422,7 @@ window._fsGetDoc = getDoc;
       <div id="native-reader-content" style="display:none;">
         <!-- content injected here -->
       </div>
-      <div id="native-reader-error" style="display:none;background:rgba(192,86,74,.08);border:1px solid rgba(192,86,74,.25);border-radius:var(--r-m);padding:16px;text-align:center;">
+      <div id="native-reader-error" style="display:none;background:color-mix(in srgb, var(--red) 8%, transparent);border:1px solid color-mix(in srgb, var(--red) 25%, transparent);border-radius:var(--r-m);padding:16px;text-align:center;">
         <p style="font-size:var(--fs-2);font-weight:700;color:var(--red);margin-bottom:6px;">Couldn't load text</p>
         <p style="font-size:var(--fs-1);color:var(--t3);margin-bottom:14px;">Opening Chabad.org directly instead</p>
         <a id="reader-fallback-link" href="#" target="_blank" style="font-size:var(--fs-2);font-weight:700;color:var(--blue);">Open in Browser ↗</a>
@@ -1533,7 +1444,7 @@ window._fsGetDoc = getDoc;
         <span id="chabad-mark-xp" style="display:none;"></span>
       </button>
       <!-- Quiz — right half, equal size -->
-      <button id="chabad-quiz-btn" style="display:none;flex:1;padding:12px;border-radius:var(--r-m);background:rgba(142,106,163,.15);border:1.5px solid rgba(142,106,163,.4);color:#8E6AA3;cursor:pointer;font-family:inherit;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
+      <button id="chabad-quiz-btn" style="display:none;flex:1;padding:12px;cursor:pointer;font-family:inherit;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
         <span style="font-size:var(--fs-2);">Review</span>
       </button>
     </div>
@@ -1582,8 +1493,6 @@ window._fsGetDoc = getDoc;
 <!-- ── PROFILE SHEET — slides up from bottom ── -->
 <!-- Toast -->
 <div id="toast"></div>
-<div id="confetti-container"></div>
-<div id="celeb-banner"  style="display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:2000;background:linear-gradient(135deg,#C99A3A,#FFB830);color:#000;padding:14px 28px;border-radius:var(--r-m);font-size:var(--fs-3);font-weight:900;text-align:center;box-shadow:0 8px 32px rgba(201,154,58,.5);white-space:nowrap;"></div>
 
 <script src="/js/chumash-data.js"></script>
 <script src="/js/chumash.js"></script>
@@ -1634,9 +1543,8 @@ window._fsGetDoc = getDoc;
 // ── STATE ─────────────────────────────────────────────────────────────────────
 // Letter avatar — first letter of first name, deterministic color from name
 const AVATAR_COLORS = [
-  ['#C99A3A','#000'],['#5B7DB0','#000'],['#6E9150','#000'],
-  ['#8E6AA3','#fff'],['#C0564A','#fff'],['#FF6B35','#000'],
-  ['#00C9A7','#000'],['#845EC2','#fff'],
+  ['var(--c-chumash)','var(--on-chumash)'],['var(--c-tehillim)','var(--on-tehillim)'],
+  ['var(--c-tanya)','var(--on-tanya)'],['var(--c-rambam)','var(--on-rambam)'],
 ];
 // ════════════════════════════════════════════════════════════════════
 // ZONE 2 · UTILITIES  (avatar colors, letter avatars, icon SVGs)
@@ -1742,7 +1650,6 @@ function _userPayload() {
     streak: user.streak,
     longestStreak: user.longestStreak || 0,
     total: user.total,
-    xp: user.xp,
     quizTotal: user.quizTotal || 0,
     quizCorrect: user.quizCorrect || 0,
     lastDate: user.lastDate || null,
@@ -2003,7 +1910,7 @@ function _openTehillimPeopleManager() {
   modal.id = 'tehillim-people-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
 
-  const BLUE = '#5B7DB0';
+  const BLUE = 'var(--c-tehillim)';
   const opts = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
 
   // Hebrew date drum picker
@@ -2230,7 +2137,7 @@ function _toggleTehillimFixed(label) {
   const btn = document.getElementById('tpm-toggle-' + key);
   if (btn) {
     const on = opts[key];
-    btn.style.background = on ? '#5B7DB0' : 'var(--border)';
+    btn.style.background = on ? 'var(--c-tehillim)' : 'var(--border)';
     const knob = btn.firstElementChild;
     if (knob) { knob.style.right = on ? '3px' : ''; knob.style.left = on ? '' : '3px'; }
   }
@@ -2266,7 +2173,7 @@ function _renderTpmList() {
           + '</div>'
           + '<div style="display:flex;gap:6px;">'
           +   '<button onclick="_editTehillimPerson(' + i + ')" style="padding:5px 10px;border-radius:var(--r-s);border:1px solid var(--border);background:var(--surface);color:var(--t2);font-size:var(--fs-1);font-weight:600;cursor:pointer;font-family:inherit;">Edit</button>'
-          +   '<button onclick="_deleteTehillimPerson(' + i + ')" style="padding:5px 10px;border-radius:var(--r-s);border:1px solid rgba(192,86,74,.2);background:rgba(192,86,74,.06);color:#C0564A;font-size:var(--fs-1);font-weight:600;cursor:pointer;font-family:inherit;">Remove</button>'
+          +   '<button onclick="_deleteTehillimPerson(' + i + ')" style="padding:5px 10px;border-radius:var(--r-s);border:1px solid color-mix(in srgb, var(--red) 20%, transparent);background:color-mix(in srgb, var(--red) 6%, transparent);color:var(--red);font-size:var(--fs-1);font-weight:600;cursor:pointer;font-family:inherit;">Remove</button>'
           + '</div>'
         + '</div>'
       ).join('')
@@ -2463,7 +2370,9 @@ function parseHebcal(data) {
     ? (items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')&&i.title?.includes('1 Chapter'))||items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')))
     : (items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')&&!i.title?.includes('1 Chapter'))||items.find(i=>i.category==='dailyLearning'&&i.title?.startsWith('Rambam')));
 
-  return { parshaName, aliyaNum, aliyaRef, tehTitle, tehChapters, rambamTitle: rambamItem?.title||'Daily Rambam' };
+  // "Rambam: Robbery 13-14" → "Robbery 13-14" (the header and tile already say Rambam)
+  const rambamTitle = String(rambamItem?.title || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '') || 'Daily Rambam';
+  return { parshaName, aliyaNum, aliyaRef, tehTitle, tehChapters, rambamTitle };
 }
 
 // ── Cached Sefaria calendar fetch ────────────────────────────────────────────
@@ -2599,22 +2508,22 @@ async function init() {
     const rambamRef = rambamRefs.join('|') || null; // pipe-separated for multi-ref
 
     schedule = {
-      chumash:  { id:'chumash',  label:'Chumash',  icon:'torah', color:'#C99A3A', xp:25, quizzable:true,
+      chumash:  { id:'chumash',  label:'Chumash',  icon:'torah', quizzable:true,
                   subtitle: getChumashDayLabel(today),
                   chabadUrl: `${base}/torahreading.asp?tdate=${civDate}`,
                   sefariaRef: chumashRef },
 
-      tehillim: { id:'tehillim', label:'Tehillim', icon:'kinor',  color:'#5B7DB0', xp:25, quizzable:false,
+      tehillim: { id:'tehillim', label:'Tehillim', icon:'kinor', quizzable:false,
                   subtitle: getTehillimForDate(today).label,
                   chabadUrl: `${base}/tehillim.asp?tdate=${civDate}`,
                   sefariaRef: tehRef },
 
-      tanya:    { id:'tanya',    label:'Tanya',    icon:'flame',  color:'#8E6AA3', xp:25, quizzable:true,
+      tanya:    { id:'tanya',    label:'Tanya',    icon:'flame', quizzable:true,
                   subtitle: tanyaCalItem?.displayValue?.en || 'Tanya Yomi',
                   chabadUrl: `${base}/tanya.asp?tdate=${encodeURIComponent(tdate)}`,
                   sefariaRef: tanyaRef }, // today's ref e.g. "Tanya, Part I; Likkutei Amarim 37:9" 
 
-      rambam:   { id:'rambam',   label:'Rambam',   icon:'books', color:'#6E9150', xp:25, quizzable:true,
+      rambam:   { id:'rambam',   label:'Rambam',   icon:'books', quizzable:true,
                   subtitle: p.rambamTitle || rambam3Item?.displayValue?.en || 'Rambam Yomi',
                   chabadUrl: user.rambamTrack === 'm'
                     ? `${base}/seferHamitzvos.asp?tdate=${encodeURIComponent(tdate)}`
@@ -2891,7 +2800,7 @@ function parseHebcalForDate(data, d) {
   return {
     parshaName, aliyaNum, aliyaRef,
     tehTitle: tehItem?.title || null,
-    rambamTitle: rambamItem?.title || null,
+    rambamTitle: String(rambamItem?.title || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '') || null,
   };
 }
 
@@ -3160,7 +3069,7 @@ function _showReaderNext(sectionId) {
   }
   const next = _nextStep(sectionId);
   const box = document.getElementById('reader-next');
-  const color = next ? (SECTION_COLORS[next.id] || 'var(--gold)') : '#6E9150';
+  const color = next ? (SECTION_COLORS[next.id] || 'var(--gold)') : 'var(--ok)';
   box.innerHTML = '<p class="rn-done">' + escapeHtml(schedule[sectionId].label) + ' done' + (next ? '' : ' · Chitas complete') + '</p>'
     + '<div class="rn-row">'
     + (next ? '<button class="rn-go" style="--rc:' + (next ? 'var(--c-' + next.id + ')' : color) + ';--rc-on:' + (next ? 'var(--on-' + next.id + ')' : '#fff') + ';" onclick="_goNext(' + next.off + ',\'' + next.id + '\')">Next: ' + escapeHtml(next.label) + '</button>' : '')
@@ -3230,14 +3139,11 @@ function _changeDay(iso, change) {
     }
   }
 
-  const delta = pointsForDay(day) - pointsForDay(before);
-  user.xp = Math.max(0, (user.xp || 0) + delta);
   if (isToday) user.lastDate = iso;
   recalcStreak();
   saveUserCritical();
   _refreshUI();
   return {
-    delta,
     completedNow: !isChitasDay(before) && isChitasDay(day),
     streakMilestone: milestoneReached(streakBefore, user.streak),
     daysMilestone: milestoneReached(totalBefore, user.total),
@@ -3381,7 +3287,6 @@ function openQuiz(sectionId) {
   quizState = { sectionId, level: null, questions: [], current: 0, score: 0, answered: false, missed: [], answers: [] };
   document.getElementById('quiz-title').textContent = s.label + ' review';
   document.getElementById('quiz-subtitle').textContent = s.subtitle;
-  document.getElementById('quiz-score-badge').style.display = 'none';
   const qp = document.getElementById('quiz-panel');
   qp.style.setProperty('--rc', 'var(--c-' + sectionId + ')');
   qp.style.setProperty('--rc-on', 'var(--on-' + sectionId + ')');
@@ -3468,41 +3373,7 @@ async function _startQuiz(level) {
   renderQuestion();
 }
 
-// ════════════════════════════════════════════════════════════════════
-// ZONE 17 · CELEBRATIONS  (confetti, banner, vibrate, card pop)
-// ════════════════════════════════════════════════════════════════════
-// ── CELEBRATIONS ─────────────────────────────────────────────────────────────
-function launchConfetti(count=60) {
-  const container = document.getElementById('confetti-container');
-  if (!container) return;
-  container.innerHTML = '';
-  const colors = ['#C99A3A','#6E9150','#5B7DB0','#8E6AA3','#C0564A','#FF6B35','#fff'];
-  for (let i = 0; i < count; i++) {
-    const el = document.createElement('div');
-    const size = 6 + Math.random() * 8;
-    el.style.cssText = [
-      'position:absolute',
-      'left:' + (Math.random()*100) + '%',
-      'top:-20px',
-      'width:' + size + 'px',
-      'height:' + size + 'px',
-      'background:' + colors[Math.floor(Math.random()*colors.length)],
-      'border-radius:' + (Math.random()>0.5?'50%':'2px'),
-      'animation:confettiFall ' + (1.5+Math.random()*2) + 's ' + (Math.random()*0.8) + 's ease-in forwards',
-    ].join(';');
-    container.appendChild(el);
-  }
-  setTimeout(() => { if (container) container.innerHTML = ''; }, 4000);
-}
 
-function celebrateBanner(msg) {
-  const el = document.getElementById('celeb-banner');
-  if (!el) return;
-  el.textContent = msg;
-  el.style.display = 'block';
-  el.style.animation = 'celebSlide 3s ease forwards';
-  setTimeout(() => { el.style.display = 'none'; el.style.animation = ''; }, 3200);
-}
 
 // Touch feedback: only three moments in the app use it (a section learned, the
 // day complete, a milestone). Off with the switch in Profile. Android only for
@@ -3890,6 +3761,13 @@ function _readerBegin(sid) {
   if (reader) reader.scrollTop = 0;
   _readerProgress(true);
   document.documentElement.classList.add('reader-open');   // the page behind stays where it is
+  // The bottom bar starts as it is in every reader: Mark as learned showing,
+  // nothing else. Each reader then sets it up for itself (a list hides Mark,
+  // Chitas shows Review); nothing carries over from what was open before
+  document.getElementById('reader-next').style.display = 'none';
+  document.getElementById('reader-actions').style.display = 'flex';
+  document.getElementById('chabad-mark-btn').style.display = 'flex';
+  document.getElementById('chabad-quiz-btn').style.display = 'none';
 }
 function _readerEnd() {
   _flushReaderScroll();
@@ -4331,17 +4209,10 @@ function _renderChumashContent() {
   if (!el) return;
 
   const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
-  const RBG = 'background:rgba(201,154,58,.09);border-left:4px solid rgba(201,154,58,.55);';
+  const RBG = 'background:color-mix(in srgb, var(--c-chumash) 9%, transparent);border-left:4px solid color-mix(in srgb, var(--c-chumash) 55%, transparent);';
 
   // Lang toggle
-  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    t += '<button onclick="_setChumashLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-       + (a ? 'background:var(--gold);color:#000;border-color:var(--gold);' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-       + '">' + lb + '</button>';
-  });
-  t += '</div>';
+  let t = _langSeg(lang, "_setChumashLang('LANG')");
 
   // Subtle translation label — tap to change
   const _curTransLabel = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : '';
@@ -4364,10 +4235,10 @@ function _renderChumashContent() {
     // Chapter heading — always shown, style matches Tanya/Rambam
     {
       v += '<div style="' + (chunkIdx > 0 ? 'margin-top:28px;' : '') + 'margin-bottom:16px;'
-         + 'padding:10px 14px;background:rgba(201,154,58,.13);'
+         + 'padding:10px 14px;background:color-mix(in srgb, var(--c-chumash) 13%, transparent);'
          + 'border-left:4px solid var(--gold);border-radius:0 8px 8px 0;">'
          + '<p style="font-size:var(--fs-1);font-weight:700;'
-         + 'color:rgba(201,154,58,.55);margin-bottom:3px;">Chumash</p>'
+         + 'color:color-mix(in srgb, var(--c-chumash) 55%, transparent);margin-bottom:3px;">Chumash</p>'
          + '<p class="rf-header" style="font-size:17px;font-weight:800;color:var(--gold);">' + (multiBook ? bookOf(chunk) + ' ' : 'Chapter ') + chunk.chapter + '</p>'
          + '</div>';
     }
@@ -4689,7 +4560,7 @@ function _renderRambamContent() {
   if (!el) return;
 
   const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
-  const GREEN = '#6E9150';
+  const GREEN = 'var(--c-rambam)';
 
   // Hebrew letters for halacha numbering (alef, beis, gimmel...)
   const HE_NUMS = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י',
@@ -4710,14 +4581,7 @@ function _renderRambamContent() {
   }
 
   // Lang toggle
-  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','עברית'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    t += '<button onclick="_setRambamLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-       + (a ? 'background:' + GREEN + ';color:#000;border-color:' + GREEN + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-       + '">' + lb + '</button>';
-  });
-  t += '</div>';
+  let t = _langSeg(lang, "_setRambamLang('LANG')");
 
   
 
@@ -4726,10 +4590,10 @@ function _renderRambamContent() {
   chapters.forEach((chapter, chIdx) => {
     // Chapter heading — green left-border card, prominent spacing before (except first)
     v += '<div style="' + (chIdx > 0 ? 'margin-top:32px;' : '') + 'margin-bottom:18px;'
-       + 'padding:12px 16px;background:rgba(110,145,80,.13);'
+       + 'padding:12px 16px;background:color-mix(in srgb, var(--c-rambam) 13%, transparent);'
        + 'border-left:4px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
        + '<p style="font-size:var(--fs-1);font-weight:700;'
-       + 'color:rgba(110,145,80,.55);margin-bottom:4px;">Mishneh Torah</p>'
+       + 'color:color-mix(in srgb, var(--c-rambam) 55%, transparent);margin-bottom:4px;">Mishneh Torah</p>'
        + '<p class="rf-header" style="font-size:18px;font-weight:800;color:' + GREEN + ';line-height:1.2;">' + chapter.title + '</p>'
        + '</div>';
 
@@ -4920,7 +4784,7 @@ function _renderTehillimContent() {
   const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
-  const BLUE = '#5B7DB0';
+  const BLUE = 'var(--c-tehillim)';
   const isHe = lang !== 'en'; // Hebrew and Both use the Hebrew layout
 
   // Lang toggle
@@ -5296,8 +5160,6 @@ function openChabadPanel(sectionId) {
 
   markDoneUnlocked = false;
   _setReaderColour('var(--c-' + sectionId + ')', 'var(--on-' + sectionId + ')');
-  document.getElementById('reader-next').style.display = 'none';
-  document.getElementById('reader-actions').style.display = 'flex';
   _updateReaderDayBar(sectionId);
 
   // Header
@@ -5501,7 +5363,7 @@ function _buildSettingsSectionOpts(sectionId) {
   if (sectionId === 'chumash') {
     const lang  = localStorage.getItem('chitas_lang_chumash') || 'both';
     const curId = localStorage.getItem('chitas_chumash_translation') || 'metsudah';
-    html += _rsLangToggle('chumash', lang, '#C99A3A');
+    html += _rsLangToggle('chumash', lang);
     html += _rsDivider();
     // Inline translation picker — radio-style rows, no separate modal
     html += '<div>'
@@ -5511,17 +5373,17 @@ function _buildSettingsSectionOpts(sectionId) {
       const active = t.id === curId;
       const border = i < CHUMASH_TRANSLATIONS.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
       html += '<button onclick="_setChumashTranslationInline(\'' + t.id + '\')"'
-        + ' style="width:100%;padding:10px 13px;background:' + (active ? 'rgba(201,154,58,.1)' : 'transparent') + ';border:none;' + border
+        + ' style="width:100%;padding:10px 13px;background:' + (active ? 'color-mix(in srgb, var(--rc) 10%, transparent)' : 'transparent') + ';border:none;' + border
         + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
-        + '<p style="font-size:var(--fs-2);font-weight:' + (active ? '700' : '600') + ';color:' + (active ? 'var(--gold)' : 'var(--t1)') + ';text-align:left;">' + t.label + '</p>'
-        + (active ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
+        + '<p style="font-size:var(--fs-2);font-weight:' + (active ? '700' : '600') + ';color:var(--t1);text-align:left;">' + t.label + '</p>'
+        + (active ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--rc)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
         + '</button>';
     });
     html += '</div></div>';
 
   } else if (sectionId === 'tehillim') {
     const lang = localStorage.getItem('chitas_lang_tehillim') || 'both';
-    html += _rsLangToggle('tehillim', lang, '#5B7DB0');
+    html += _rsLangToggle('tehillim', lang);
     html += _rsDivider();
     const opts   = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
     const custom = (user.tehillimPeople || []).length;
@@ -5536,12 +5398,12 @@ function _buildSettingsSectionOpts(sectionId) {
 
   } else if (sectionId === 'tanya') {
     const lang = localStorage.getItem('chitas_lang_tanya') || 'both';
-    html += _rsLangToggle('tanya', lang, '#8E6AA3');
+    html += _rsLangToggle('tanya', lang);
 
   } else if (sectionId === 'rambam') {
     const lang  = localStorage.getItem('chitas_lang_rambam') || 'both';
     const track = RAMBAM_TRACKS[user.rambamTrack]?.label || '';
-    html += _rsLangToggle('rambam', lang, '#6E9150');
+    html += _rsLangToggle('rambam', lang);
     html += _rsDivider();
     html += '<div>'
       + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Study Track</p>'
@@ -5599,23 +5461,10 @@ function _buildSettingsSectionOpts(sectionId) {
         const commStr = localStorage.getItem('chitas_daf_commentary') || '';
         const commSet = new Set(commStr.split(',').filter(Boolean));
         if (html) html += _rsDivider();
-        html += '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Commentary</p>'
-          + '<div style="display:flex;gap:6px;">';
-        if (hasRashi) {
-          const on = commSet.has('rashi');
-          html += '<button onclick="_toggleDafCommSettings(\'rashi\')"'
-            + ' style="flex:1;padding:9px 6px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-            + (on ? 'background:#6E915020;color:#6E9150;border-color:#6E9150;' : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
-            + '">רש״י</button>';
-        }
-        if (hasTosafot) {
-          const on = commSet.has('tosafot');
-          html += '<button onclick="_toggleDafCommSettings(\'tosafot\')"'
-            + ' style="flex:1;padding:9px 6px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-            + (on ? 'background:#8E6AA320;color:#8E6AA3;border-color:#8E6AA3;' : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
-            + '">תוספות</button>';
-        }
-        html += '</div></div>';
+        html += '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Commentary</p><div class="tz-opts" style="margin:0">'
+          + (hasRashi ? '<button type="button" class="tz-opt' + (commSet.has('rashi') ? ' on' : '') + '" onclick="_toggleDafCommSettings(\'rashi\')">Rashi</button>' : '')
+          + (hasTosafot ? '<button type="button" class="tz-opt' + (commSet.has('tosafot') ? ' on' : '') + '" onclick="_toggleDafCommSettings(\'tosafot\')">Tosafos</button>' : '')
+          + '</div></div>';
       }
     }
   }
@@ -5626,48 +5475,30 @@ function _buildSettingsSectionOpts(sectionId) {
   el.style.gap = '14px';
 }
 
-function _rsLangToggle(sectionId, lang, color, storageKey, reloadCall) {
-  const key  = storageKey  || 'chitas_lang_' + sectionId;
-  const call = reloadCall  || '_setReaderLang(\'' + sectionId + '\',\'LANG\')';
-  const opts = [['he','עב'], ['both','Both'], ['en','En']];
-  let h = '<div>'
-    + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Language</p>'
-    + '<div style="display:flex;gap:5px;">';
-  opts.forEach(([l, lb]) => {
-    const active = lang === l;
-    const fn = reloadCall
-      ? 'localStorage.setItem(\'' + key + '\',\'' + l + '\');' + reloadCall + ';closeReaderSettings();'
-      : '_setReaderLang(\'' + sectionId + '\',\'' + l + '\')';
-    h += '<button onclick="' + fn + '" style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-1);font-weight:700;cursor:pointer;font-family:inherit;'
-      + (active ? 'background:' + color + ';color:' + (color === '#C99A3A' ? '#000' : '#fff') + ';border-color:' + color + ';'
-               : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
-      + '">' + lb + '</button>';
-  });
-  h += '</div></div>';
-  return h;
+// The Hebrew / Both / English switch, the same in every reader (the
+// segmented bar Tanya and Tehillim started with). `call` is the code to run,
+// with LANG where the choice goes.
+function _langSeg(lang, call) {
+  return '<div class="tz-seg" role="group" aria-label="Language">'
+    + [['he', 'עברית'], ['both', 'Both'], ['en', 'English']].map(([l, lb]) =>
+      '<button type="button"' + (lang === l ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ' onclick="' + call.replace(/LANG/g, l) + '">' + lb + '</button>').join('')
+    + '</div>';
+}
+
+// The gear's Language row: the same switch as at the top of the text
+function _rsLangToggle(sectionId, lang) {
+  return '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Language</p>'
+    + _langSeg(lang, "_setReaderLang('" + sectionId + "','LANG')") + '</div>';
 }
 
 function _rsDivider() {
   return '<div style="height:1px;background:var(--border);margin:0 -16px;"></div>';
 }
 
-// Lang toggle for extra tracks with custom storage key + reload call
-function _rsLangToggleCustom(lang, color, storageKey, reloadCallTemplate) {
-  const opts = [['he','עב'], ['both','Both'], ['en','En']];
-  let h = '<div>'
-    + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Language</p>'
-    + '<div style="display:flex;gap:5px;">';
-  opts.forEach(([l, lb]) => {
-    const active = lang === l;
-    const fn = 'localStorage.setItem(\'' + storageKey + '\',\'' + l + '\');'
-      + reloadCallTemplate.replace('LANG', l);
-    h += '<button onclick="' + fn + '" style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-1);font-weight:700;cursor:pointer;font-family:inherit;'
-      + (active ? 'background:' + color + ';color:#fff;border-color:' + color + ';'
-               : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
-      + '">' + lb + '</button>';
-  });
-  h += '</div></div>';
-  return h;
+// …for an extra track, which keeps its own choice and reloads
+function _rsLangToggleCustom(lang, color, storageKey, reloadCall) {
+  return '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Language</p>'
+    + _langSeg(lang, "localStorage.setItem('" + storageKey + "','LANG');" + reloadCall) + '</div>';
 }
 
 // Inline Chumash translation select — stays inside the popover, rebuilds it after
@@ -5946,11 +5777,6 @@ function renderStats() {
   });
 }
 
-// ════════════════════════════════════════════════════════════════════
-// ZONE 25 · PROFILE SHEET  (name, level bar, city, track, appearance)
-// ════════════════════════════════════════════════════════════════════
-// The Profile tab (was a slide-up sheet; the names are kept so existing calls still work)
-function openProfileSheet() { switchTab('profile'); }
 function renderProfile() {
   document.getElementById('profile-sheet-avatar').innerHTML = letterAvatar(user.name || '?', 52, 20);
   document.getElementById('profile-sheet-name').textContent = isGuest() ? 'Not signed in' : (user.name || 'Your profile');
@@ -6592,16 +6418,6 @@ function markExtraDone(id) {
   fire('Nice! ' + (EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done.', 'done');
   vibrate([10]);
   _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
-  // Animate card
-  const card = document.getElementById('extra-card-' + id);
-  if (card) {
-    const def = EXTRA_TRACK_DEFS[id];
-    card.style.transition = 'transform .15s ease, box-shadow .3s ease';
-    card.style.transform = 'scale(1.02)';
-    card.style.boxShadow = '0 0 20px ' + (def?.color || '#C99A3A') + '55';
-    card.style.borderColor = (def?.color || '#C99A3A') + '70';
-    setTimeout(() => { card.style.transform = ''; card.style.boxShadow = ''; }, 400);
-  }
 }
 
 function unmarkExtraDone(id) {
@@ -6726,7 +6542,7 @@ const EXTRA_TRACK_DEFS = {
     label: 'Hayom Yom',
     desc: 'Daily Chassidic teaching',
     duration: '~2 min',
-    color: '#B85C38',
+    color: 'var(--ink)', onColor: 'var(--on-ink)',   // like its card on Today: cream and ink
     iconPath: '<path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z" stroke="currentColor" stroke-width="1.8" fill="none"/>',
   },
   likkuteiTorah: {
@@ -6836,7 +6652,7 @@ async function openExtraReader(id) {
 
   // Use the same panel as regular sections
   markDoneUnlocked = false;
-  _setReaderColour(def.color, '#fff');
+  _setReaderColour(def.color, def.onColor || '#fff');
   document.getElementById('chabad-panel-title').textContent = def.label;
   document.getElementById('chabad-panel-sub').textContent = 'Loading…';
   document.getElementById('chabad-panel-extlink').style.display = 'none';
@@ -7027,35 +6843,15 @@ function _rerenderDaf() {
   // Lang toggle
   let t = '';
   if (allEn.some(Boolean)) {
-    t += '<div style="display:flex;gap:6px;margin-bottom:12px;">';
-    [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'],['both','Both'],['en','English']].forEach(([l, lb]) => {
-      const a = lang === l;
-      t += '<button onclick="_setDafLang(\''+ l +'\')"'
-        + ' style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-        + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-        + '">' + lb + '</button>';
-    });
-    t += '</div>';
+    t += _langSeg(lang, "_setDafLang('LANG')");
   }
 
   // Commentary toggles
   if (hasRashi || hasTosafot) {
-    t += '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-    if (hasRashi) {
-      const on = commSet.has('rashi');
-      t += '<button onclick="_toggleDafComm(\'rashi\')"'
-        + ' style="flex:1;padding:7px 8px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-1);font-weight:700;cursor:pointer;font-family:inherit;'
-        + (on ? 'background:#6E915020;color:#6E9150;border-color:#6E9150;' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-        + '">Rashi</button>';
-    }
-    if (hasTosafot) {
-      const on = commSet.has('tosafot');
-      t += '<button onclick="_toggleDafComm(\'tosafot\')"'
-        + ' style="flex:1;padding:7px 8px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-1);font-weight:700;cursor:pointer;font-family:inherit;'
-        + (on ? 'background:#8E6AA320;color:#8E6AA3;border-color:#8E6AA3;' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-        + '">Tosafot</button>';
-    }
-    t += '</div>';
+    t += '<div class="tz-opts">'
+      + (hasRashi ? '<button type="button" class="tz-opt' + (commSet.has('rashi') ? ' on' : '') + '" onclick="_toggleDafComm(\'rashi\')">Rashi</button>' : '')
+      + (hasTosafot ? '<button type="button" class="tz-opt' + (commSet.has('tosafot') ? ' on' : '') + '" onclick="_toggleDafComm(\'tosafot\')">Tosafos</button>' : '')
+      + '</div>';
   }
 
   // Heading: like the head of a page of Shas ("מסכת בכורות · דף לה"), when we have it
@@ -7103,8 +6899,8 @@ function _rerenderDaf() {
     }
     if (chips && lang !== 'he') v += '<p class="g-chips-row">' + chips + '</p>';
     if (showR) {
-      v += '<div style="margin-top:8px;padding:9px 12px;background:#6E915018;border-left:4px solid #6E9150AA;border-radius:0 6px 6px 0;">'
-        + '<p style="font-size:var(--fs-1);font-weight:700;color:#6E9150;margin-bottom:5px;">\u05E8\u05E9\"\u05D9</p>';
+      v += '<div style="margin-top:8px;padding:9px 12px;background:color-mix(in srgb, var(--rc) 8%, transparent);border-left:4px solid color-mix(in srgb, var(--rc) 65%, transparent);border-radius:0 6px 6px 0;">'
+        + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--rc);margin-bottom:5px;">\u05E8\u05E9\"\u05D9</p>';
       const rEnText = String(rEn || '').replace(/<[^>]*>/g, '').trim();   // no English Rashi: the Hebrew goes all the way across
       if (lang === 'both' && rEnText) {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">'
@@ -7119,8 +6915,8 @@ function _rerenderDaf() {
       v += '</div>';
     }
     if (showT) {
-      v += '<div style="margin-top:6px;padding:9px 12px;background:#8E6AA318;border-left:4px solid #8E6AA3AA;border-radius:0 6px 6px 0;">'
-        + '<p style="font-size:var(--fs-1);font-weight:700;color:#8E6AA3;margin-bottom:5px;">\u05EA\u05D5\u05E1\u05E4\u05D5\u05EA</p>'
+      v += '<div style="margin-top:6px;padding:9px 12px;background:var(--card2);border-left:4px solid var(--hi);border-radius:0 6px 6px 0;">'
+        + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t2);margin-bottom:5px;">\u05EA\u05D5\u05E1\u05E4\u05D5\u05EA</p>'
         + '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:17px;--rf-lh:1.92;color:var(--t1);">' + tosHe + '</p>'
         + '</div>';
     }
@@ -7298,11 +7094,9 @@ async function _loadHayomYomNative(silent) {
   const dateLabel = isChaiElul ? 'Chai Elul · ' + hd + ' ' + hm : hd + ' ' + hm;
   if (subEl) subEl.textContent = hebMonthSpelling(hd + ' ' + hm);
 
+  // (the header has the date; Chai Elul says so here too)
   let html = '<div style="max-width:680px;margin:0 auto;padding-bottom:40px;">'
-    + '<div style="margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);">'
-    + '<p style="font-size:var(--fs-1);font-weight:700;color:' + COLOR + ';margin-bottom:3px;">' + dateLabel + '</p>'
-    + '<p style="font-size:var(--fs-5);font-weight:500;color:var(--t1);font-family:var(--title-font);">Hayom Yom</p>'
-    + '</div>';
+    + (isChaiElul ? '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:14px;">' + dateLabel + '</p>' : '');
 
   docs.forEach((data, idx) => {
     if (isNonLeapAdar && docs.length === 2) {
@@ -7318,7 +7112,7 @@ async function _loadHayomYomNative(silent) {
       html += '<div style="height:1px;background:var(--border);margin:4px 0 18px;"></div>';
     }
     if ((lang === 'en' || lang === 'both') && data.english && data.english.trim()) {
-      html += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);text-align:justify;">'
+      html += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">'
         + escapeHtml(data.english).replace(/\n/g, '<br>') + '</p>';
     }
     if (isNonLeapAdar && idx === 0 && docs.length === 2) {
@@ -7508,7 +7302,7 @@ async function _ltOpen(i) {
   const contEl = document.getElementById('native-reader-content');
   if (loadEl) loadEl.style.display = 'block';
   if (contEl) contEl.style.display = 'none';
-  document.getElementById('chabad-panel-sub').textContent = m.book + ' · ' + parshaSpelling(piece.parsha);
+  document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaSpelling(piece.parsha);
   const back = '<button type="button" class="lt-back" onclick="_ltBack()">‹ The week\'s maamarim</button>';
   try {
     const res = await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(m.ref) + '?context=0&commentary=0&lang=he')
@@ -7656,8 +7450,8 @@ async function _loadSeferHamitzvos(sectionId, silent) {
         + '<p style="font-size:var(--fs-3);color:var(--t2);margin-bottom:8px;">Sefer HaMitzvos</p>'
         + '<p style="font-size:var(--fs-1);color:var(--t3);margin-bottom:24px;">' + (e.message || '') + '</p>'
         + '<a href="https://www.chabad.org/dailystudy/seferHamitzvos.asp" target="_blank" '
-        + 'style="display:inline-block;padding:12px 24px;border-radius:var(--r-s);background:rgba(110,145,80,.1);'
-        + 'border:1px solid rgba(110,145,80,.3);color:#6E9150;font-weight:700;font-size:var(--fs-2);text-decoration:none;">'
+        + 'style="display:inline-block;padding:12px 24px;border-radius:var(--r-s);background:color-mix(in srgb, var(--c-rambam) 10%, transparent);'
+        + 'border:1px solid color-mix(in srgb, var(--c-rambam) 30%, transparent);color:var(--c-rambam);font-weight:700;font-size:var(--fs-2);text-decoration:none;">'
         + 'Open on Chabad.org ↗</a></div>';
       contEl.style.display = 'block';
     }
@@ -7684,25 +7478,17 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
   if (!contEl) return;
   contEl.style.display = 'block';
 
-  const GREEN = '#6E9150';
+  const GREEN = 'var(--c-rambam)';
   const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
   const langKey = 'chitas_lang_rambam'; // reuse Rambam lang pref
   const lang = localStorage.getItem(langKey) || 'both';
 
   // Lang toggle
-  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    t += '<button onclick="_smSetLang(\'' + l + '\')"'
-      + ' style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-      + (a ? 'background:' + GREEN + ';color:#000;border-color:' + GREEN + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-      + '">' + lb + '</button>';
-  });
-  t += '</div>';
+  let t = _langSeg(lang, "_smSetLang('LANG')");
 
   // Main heading
-  t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + GREEN + '1F;border-left:4px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
-    + '<p style="font-size:var(--fs-1);font-weight:700;color:' + GREEN + '80;margin-bottom:3px;">Sefer HaMitzvos</p>'
+  t += '<div style="margin-bottom:18px;padding:10px 14px;background:color-mix(in srgb, ' + GREEN + ' 12%, transparent);border-left:4px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
+    + '<p style="font-size:var(--fs-1);font-weight:700;color:color-mix(in srgb, ' + GREEN + ' 50%, transparent);margin-bottom:3px;">Sefer HaMitzvos</p>'
     + '<p style="font-size:var(--fs-4);font-weight:800;color:' + GREEN + ';line-height:1.3;">' + displayVal + '</p>'
     + (rambamContext ? '<p style="font-size:var(--fs-1);color:var(--t3);margin-top:4px;">With ' + rambamContext + '</p>' : '')
     + '</div>';
@@ -7714,7 +7500,7 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
   results.forEach(res => {
     // Section heading if multiple refs
     if (results.length > 1) {
-      v += '<div style="margin:20px 0 10px;padding:8px 12px;background:' + GREEN + '14;border-left:4px solid ' + GREEN + '99;border-radius:0 6px 6px 0;">'
+      v += '<div style="margin:20px 0 10px;padding:8px 12px;background:color-mix(in srgb, ' + GREEN + ' 8%, transparent);border-left:4px solid color-mix(in srgb, ' + GREEN + ' 60%, transparent);border-radius:0 6px 6px 0;">'
         + '<p style="font-size:var(--fs-2);font-weight:700;color:' + GREEN + ';">' + res.ref.replace('Sefer HaMitzvot, ', '') + '</p>'
         + '</div>';
     }
@@ -7870,15 +7656,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
   // Lang toggle — only show if we have English
   let t = '';
   if (enSegs.length) {
-    t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-    [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
-      const a = lang === l;
-      t += '<button onclick="localStorage.setItem(\'chitas_lang_extra_' + id + '\',\'' + l + '\');openExtraReader(\'' + id + '\')"'
-        + ' style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-        + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-        + '">' + lb + '</button>';
-    });
-    t += '</div>';
+    t = _langSeg(lang, "localStorage.setItem('chitas_lang_extra_" + id + "','LANG');openExtraReader('" + id + "')");
   }
 
   // Heading
@@ -7888,32 +7666,24 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
     + '</div>';
 
   let v = '';
-  const isLT = id === 'likkuteiTorah';
   const maxLen = Math.max(heSegs.length, enSegs.length);
   for (let i = 0; i < maxLen; i++) {
     const he = heSegs[i] || '';
     const en = enSegs[i] || '';
     if (!he && !en) continue;
 
-    // LT: no dividers, tighter spacing, justified
-    const wrapStyle = isLT
-      ? 'margin-bottom:0.9em;'
-      : 'padding:14px 0;border-bottom:1px solid var(--border);';
-    const heStyle = isLT
-      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.62;color:var(--t1);'
-      : 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:' + (id === 'nachYomi' ? 21 : 19) + 'px;--rf-lh:1.92;color:var(--t1);';   // Nach like Chumash (21px), the rest like Rambam (19px)
-    const enStyle = isLT
-      ? '--rf-sz:15px;--rf-lh:1.78;color:var(--t1);'
-      : '--rf-sz:15px;--rf-lh:1.82;color:var(--t1);';
+    const wrapStyle = 'padding:14px 0;border-bottom:1px solid var(--border);';
+    const heStyle = 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:' + (id === 'nachYomi' ? 21 : 19) + 'px;--rf-lh:1.92;color:var(--t1);';   // Nach like Chumash (21px), the rest like Rambam (19px)
+    const enStyle = '--rf-sz:15px;--rf-lh:1.82;color:var(--t1);';
 
     if (lang === 'both' && he && en) {
-      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + (isLT ? '' : 'padding:14px 0;border-bottom:1px solid var(--border);') + 'align-items:start;">';
+      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + wrapStyle + 'align-items:start;">';
       v += '<p class="rf-body" style="' + enStyle + '">' + en + '</p>';
-      v += '<p class="rf-body' + (isLT ? ' lt-body' : '') + '" style="' + heStyle + '">' + (isLT ? _ltFormatHe(he) : he) + '</p>';
+      v += '<p class="rf-body" style="' + heStyle + '">' + he + '</p>';
       v += '</div>';
     } else if (lang === 'he' || !en) {
       v += '<div style="' + wrapStyle + '">';
-      v += '<p class="rf-body' + (isLT ? ' lt-body' : '') + '" style="' + heStyle + '">' + (isLT ? _ltFormatHe(he) : he) + '</p>';
+      v += '<p class="rf-body" style="' + heStyle + '">' + he + '</p>';
       v += '</div>';
     } else {
       v += '<div style="' + wrapStyle + '">';
@@ -7926,72 +7696,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
-// ── Likkutei Torah: format dibbur hamaschil with drop-word layout ─────────────
-// The opening <b>...</b> of each LT paragraph is the dibbur hamaschil —
-// the quoted pasuk that the maamar begins with.
-// Layout: first WORD of the dibbur is large (float:right in RTL),
-// remaining dibbur words wrap beside it at medium size,
-// body text follows at normal size.
-function _ltFormatHe(he) {
-  // Check if paragraph starts with a <b> tag (dibbur hamaschil)
-  const bMatch = he.match(/^<b>([\s\S]*?)<\/b>([\s\S]*)$/i);
-  if (!bMatch) return he; // no dibbur — return as-is
 
-  const dibbur = bMatch[1].trim();       // full dibbur hamaschil text
-  const body   = bMatch[2].trim();       // rest of paragraph after dibbur
-
-  // Split dibbur into first word and remainder
-  // Hebrew words are separated by spaces; first word ends at first space
-  const spaceIdx = dibbur.search(/\s/);
-  let firstWord, restDibbur;
-  if (spaceIdx === -1) {
-    // Single-word dibbur hamaschil
-    firstWord  = dibbur;
-    restDibbur = '';
-  } else {
-    firstWord  = dibbur.slice(0, spaceIdx);
-    restDibbur = dibbur.slice(spaceIdx + 1).trim();
-  }
-
-  // Build the drop-word layout (RTL float):
-  // The large first word floats to the right.
-  // restDibbur at medium size wraps beside it on the left.
-  // Body text follows below, clearing the float.
-  const FONT = "'DachHeilig','Frank Ruhl Libre',serif";
-
-  const dropWord = '<span style="'
-    + 'float:right;'
-    + 'font-family:' + FONT + ';'
-    + 'font-weight:normal;'
-    + 'font-size:2em;'
-    + 'line-height:1;'
-    + 'margin-left:0.2em;'
-    + 'margin-bottom:0.05em;'
-    + '">' + firstWord + '</span>';
-
-  const middleDibbur = restDibbur
-    ? '<span style="'
-        + 'font-family:' + FONT + ';'
-        + 'font-weight:normal;'
-        + 'font-size:1.15em;'
-        + 'line-height:inherit;'
-        + '">' + restDibbur + '</span> '
-    : '';
-
-  const clearDiv = body
-    ? '<span style="display:block;clear:both;"></span>'
-    : '<span style="display:block;clear:both;"></span>';
-
-  return dropWord + middleDibbur + (body ? body : '') + clearDiv;
-}
-
-// ── HTML flattener (reuse _cleanHtml logic) ────────────────────────────────────
-function _flatHtml(x) {
-  if (!x) return [];
-  if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
-  if (Array.isArray(x)) return x.flatMap(_flatHtml);
-  return [];
-}
 
 // ── Scroll position for extra tracks (persisted by section + date) ─────────────
 function _restoreExtraScroll(id) {
@@ -8110,7 +7815,7 @@ function _renderPsExtraTracks() {
       +   '<p class="ps-row-label">' + def.label + '</p>'
       +   '<p class="ps-row-sub">' + def.desc + '</p>'
       + '</div>'
-      + '<button onclick="_removeExtraTrack(\'' + id + '\');_updateProfileExtras();" class="ps-remove-btn">' + TRASH + '</button>'
+      + '<button onclick="_removeExtraTrack(\'' + id + '\');_updateProfileExtras();" class="ps-remove-btn" aria-label="Remove ' + def.label + '">' + TRASH + '</button>'
       + '</div>';
   }).join('');
 
@@ -9173,15 +8878,7 @@ async function _shbRenderUnit(unit, unitIdx, restoreScroll = 0) {
     + '</div>';
 
   // ── Lang toggle ──────────────────────────────────────────────────────────
-  let langToggle = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    langToggle += '<button onclick="localStorage.setItem(\'chitas_lang_extra_shaarHaBitachon\',\'' + l + '\');openExtraReader(\'shaarHaBitachon\')"'
-      + ' style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-      + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-      + '">' + lb + '</button>';
-  });
-  langToggle += '</div>';
+  const langToggle = _langSeg(lang, "localStorage.setItem('chitas_lang_extra_shaarHaBitachon','LANG');openExtraReader('shaarHaBitachon')");
 
   // ── Chapter heading ──────────────────────────────────────────────────────
   const heading = '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'

@@ -1,17 +1,9 @@
-// Progress rules — points, streak, Chitas days, milestones.
+// Progress rules — streak, Chitas days, milestones. (No points: see DESIGN.md.)
 // Pure functions: they only read the user's history and return numbers, so
 // they're easy to test (tools/test-progress.mjs). Design: see DESIGN.md.
 // Needs js/holidays-data.js (YOM_TOV_DATES) loaded first.
 
 const SECTION_IDS = ['chumash', 'tehillim', 'tanya', 'rambam'];
-
-// The whole points system. A full Chitas day = 4×10 + 10 = 50.
-const POINTS = {
-  section:     10, // each Chitas section learned
-  chitasDay:   10, // bonus for finishing all 4
-  extra:        5, // each extra-learning track (Daf Yomi, Hayom Yom…)
-  quizCorrect:  5, // each correct quiz answer
-};
 
 // Celebrated once each, for streaks and for total Chitas days (18 = חי)
 const MILESTONES = [3, 7, 18, 30, 50, 100, 180, 365, 500, 1000];
@@ -41,16 +33,6 @@ function sectionsDone(done) {
   return SECTION_IDS.filter(id => done && done[id]).length;
 }
 
-// Points a day is worth. When anything changes, add (after − before):
-// unmarking then always takes back exactly what marking gave.
-function pointsForDay(done) {
-  done = done || {};
-  let pts = sectionsDone(done) * POINTS.section;
-  if (isChitasDay(done)) pts += POINTS.chitasDay;
-  for (const id in done) if (done[id] && !SECTION_IDS.includes(id)) pts += POINTS.extra;
-  return pts;
-}
-
 // Streak = Chitas days in a row, counting back from today.
 //  • Today only counts once it's done — but doesn't break the streak until it's over.
 //  • Shabbos / Yom Tov never break it: counted if done, skipped if not.
@@ -72,13 +54,6 @@ function countChitasDays(user, today) {
   let n = isChitasDay(user.done) ? 1 : 0;
   for (const iso in (user.pastDone || {})) if (iso !== todayISO && isChitasDay(user.pastDone[iso])) n++;
   return n;
-}
-
-// Points earned this week (Sunday → today)
-function weekPoints(user, today) {
-  let pts = 0;
-  for (let back = 0; back <= today.getDay(); back++) pts += pointsForDay(dayDone(user, _addDays(today, -back), today));
-  return pts;
 }
 
 // The milestone just reached (if `before` → `after` crossed one), else null
