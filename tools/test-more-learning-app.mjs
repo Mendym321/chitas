@@ -112,6 +112,19 @@ await check('a row opens its reader', async () => {
   closeChabadPanel();
   return r;
 }, 'Nach Yomi');
+await check('nothing carries over in the bottom bar: after a parked track hides Mark on its list, the next reader shows it again', async () => {
+  const shown = id => getComputedStyle(document.getElementById(id)).display !== 'none';
+  const r = [];
+  for (const x of ['likkuteiSichos', 'shaarHaBitachon']) {
+    await openExtraReader(x); await new Promise(z => setTimeout(z, 200));
+    if (x === 'likkuteiSichos') r.push(shown('chabad-mark-btn'));   // its list: no Mark
+    closeChabadPanel(); closeChabadPanel();
+    await openExtraReader('nachYomi'); await new Promise(z => setTimeout(z, 200));
+    r.push(shown('chabad-mark-btn'), shown('reader-actions'), shown('reader-next'));
+    closeChabadPanel();
+  }
+  return r;
+}, [false, true, true, false, true, true, false]);
 if (asked.some(a => a.startsWith('calendars'))) { failed++; console.log('  ✗ a row asked Sefaria\'s calendar:', asked); }
 else console.log('  ✓ no row asked Sefaria\'s calendar');
 

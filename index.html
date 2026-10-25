@@ -103,7 +103,7 @@
   .lrow-t p:last-child { font-size:var(--fs-2); color: var(--t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .check { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--hi); background: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; color: transparent; transition: background .15s, border-color .15s; }
   .check.on { background: var(--c, var(--ok)); border-color: var(--c, var(--ok)); color: #fff; }
-  .lrow-he { font-family: var(--he-font); font-size: 15px; font-weight: 500; color: var(--t3); margin-left: 7px; }
+  
   .tabbar { position: fixed; bottom: calc(14px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 390px; display: flex; justify-content: space-around; padding: 8px; background: var(--ink); border-radius: 22px; z-index: 100; box-shadow: 0 10px 30px rgba(30,20,5,.18); }
   .tabbar button { background: none; border: none; display: flex; align-items: center; gap: 7px; font: 700 var(--fs-2) var(--ui-font); color: var(--ink-soft); padding: 10px 16px; border-radius: 16px; transition: background .2s, color .2s; }
   .tabbar button .tab-l { display: none; }
@@ -113,9 +113,9 @@
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .tile { background: var(--card); border-radius:var(--r-m); padding: 14px; }
   .tile .dot { display: block; width: 8px; height: 8px; border-radius: 50%; margin-bottom: 8px; }
-  .tile-n { font-size:var(--fs-5); font-weight: 700; letter-spacing: -.5px; color: var(--t1); font-variant-numeric: tabular-nums; }
-  .tile-l { font-size:var(--fs-2); color: var(--t2); margin-top: 1px; }
-  .tile-d { font-size:var(--fs-1); color: var(--t3); margin-top: 6px; }
+  
+  
+  
   .cbar + .cbar { margin-top: 11px; }
   .cbar p { display: flex; justify-content: space-between; font-size:var(--fs-2); color: var(--t1); }
   .cbar p span:last-child { color: var(--t3); }
@@ -133,30 +133,15 @@
   @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
   @keyframes pop { 0%{transform:scale(.7);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  @keyframes tickerExitUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-20px) scale(.93)} }
   @keyframes tickerEnterDown { 0%{opacity:0;transform:translateY(18px) scale(.95)} 100%{opacity:1;transform:translateY(0) scale(1)} }
-  @keyframes logoReveal { 0%{transform:scale(.4) rotate(-20deg);opacity:0} 70%{transform:scale(1.08) rotate(2deg)} 100%{transform:scale(1) rotate(0deg);opacity:1} }
-  @keyframes titleReveal { 0%{transform:translateY(24px);opacity:0} 100%{transform:translateY(0);opacity:1} }
-  @keyframes glowPulse { 0%,100%{box-shadow:0 0 30px rgba(201,154,58,.2),0 4px 20px rgba(201,154,58,.3)} 50%{box-shadow:0 0 50px rgba(201,154,58,.35),0 4px 28px rgba(201,154,58,.45)} }
-  @keyframes cardSlide { 0%{transform:translateX(-28px);opacity:0} 100%{transform:translateX(0);opacity:1} }
-  @keyframes quizPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.015)} }
-  @keyframes dotBlink { 0%,100%{opacity:.3} 50%{opacity:1} }
   .ob-bg-glow { display:none !important; position:fixed;inset:0;pointer-events:none;z-index:0;
     background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,154,58,.12) 0%, transparent 70%); }
-  @keyframes flamePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
   @keyframes checkPop { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.3)} 100%{transform:scale(1);opacity:1} }
-  @keyframes streakBurst { 0%{transform:scale(1)} 30%{transform:scale(1.18)} 60%{transform:scale(.95)} 100%{transform:scale(1)} }
-  @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
   @keyframes momentSlide { 0%{transform:scale(.85) translateY(20px);opacity:0} 60%{transform:scale(1.03)} 100%{transform:scale(1) translateY(0);opacity:1} }
-  @keyframes iconBounce { 0%{transform:scale(0) rotate(-15deg);opacity:0} 60%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1) rotate(0);opacity:1} }
-  @keyframes glowRing { 0%,100%{box-shadow:0 0 0 0 rgba(201,154,58,0)} 50%{box-shadow:0 0 0 8px rgba(201,154,58,.12)} }
-  @keyframes celebSlide { 0%{transform:translateY(100%);opacity:0} 20%{transform:translateY(0);opacity:1} 80%{transform:translateY(0);opacity:1} 100%{transform:translateY(100%);opacity:0} }
-  @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-  #confetti-container { position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden; }
   @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
 
-  .anim-up { animation: up .32s ease both; }
-  .anim-fadeup { animation: fadeUp .4s ease both; }
+  
+  
   .spinner { width:30px;height:30px;border:3px solid var(--border);border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite; }
 
   /* Rambam reader — make bold text actually visible */
@@ -173,20 +158,19 @@
   @keyframes toastIn { from { opacity:0; transform:translate(-50%,-10px); } to { opacity:1; transform:translate(-50%,0); } }
 
   /* Bottom nav */
-  #bottom-nav { position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:10px 16px 20px;gap:6px;z-index:100; }
-  .nav-btn { flex:1;padding:7px 4px;border-radius:var(--r-s);border:none;background:transparent;color:var(--t3);font-size:var(--fs-1);font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s; }
-  .nav-btn.active { background:rgba(201,154,58,.12); color:var(--gold); }
+  
+  
 
   /* Cards */
-  .section-card { background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-m);padding:15px 16px;margin-bottom:10px;transition:border-color .3s; }
-  .section-card.done { border-color: rgba(110,145,80,.5); }
+  
+  
 
   /* Skeleton */
-  .skel { background:var(--border);border-radius:var(--r-s);animation:up .35s ease both; }
+  
 
   /* Onboarding input */
-  .ob-input { width:100%;padding:13px 16px;border-radius:var(--r-s);border:1.5px solid var(--border);background:var(--card);color:var(--t1);font-size:var(--fs-3);caret-color:var(--gold);margin-bottom:12px; }
-  .ob-input:focus { border-color:var(--gold); }
+  
+  
 
 
 /* ── App loader overlay ── */
@@ -244,87 +228,26 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .swipe-hint.show  { opacity:1; }
 
 /* Reader slides during swipe */
-#native-reader.swiping-left  { transform:translateX(-40px); transition:transform .25s ease; }
-#native-reader.swiping-right { transform:translateX(40px);  transition:transform .25s ease; }
+
+
 #native-reader.swipe-exit-left  { transform:translateX(-120%); transition:transform .28s cubic-bezier(.4,0,.2,1); opacity:0; }
 #native-reader.swipe-exit-right { transform:translateX(120%);  transition:transform .28s cubic-bezier(.4,0,.2,1); opacity:0; }
-#native-reader.swipe-enter { transform:none; transition:transform .28s cubic-bezier(.22,1,.36,1); opacity:1; }
+
 
 /* ── Drum / wheel date picker ── */
-.drum-picker {
-  display:flex;
-  position:relative;
-  height:132px;
-  border-radius:var(--r-s);
-  overflow:hidden;
-  background:var(--card);
-  border:1px solid var(--border);
-  margin-bottom:12px;
-}
-.drum-picker::before,.drum-picker::after {
-  content:'';
-  position:absolute;
-  left:0;right:0;
-  z-index:4;
-  pointer-events:none;
-}
-.drum-picker::before {
-  top:0;height:44px;
-  background:linear-gradient(to bottom,var(--card) 15%,transparent 100%);
-}
-.drum-picker::after {
-  bottom:0;height:44px;
-  background:linear-gradient(to top,var(--card) 15%,transparent 100%);
-}
-.drum-sel {
-  position:absolute;
-  left:0;right:0;top:50%;
-  transform:translateY(-50%);
-  height:32px;
-  pointer-events:none;
-  z-index:3;
-  border-top:1px solid rgba(91,125,176,.3);
-  border-bottom:1px solid rgba(91,125,176,.3);
-  background:rgba(91,125,176,.05);
-}
-.drum-col {
-  flex:1;
-  overflow-y:scroll;
-  scroll-snap-type:y mandatory;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-  padding:50px 0;
-}
-.drum-col::-webkit-scrollbar{display:none;}
-.drum-col+.drum-col{border-left:1px solid var(--border);}
-.drum-item {
-  height:32px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  scroll-snap-align:center;
-  font-size:var(--fs-2);
-  font-weight:400;
-  color:var(--t3);
-  user-select:none;
-  -webkit-user-select:none;
-}
-.drum-col-label {
-  font-size:var(--fs-1);
-  font-weight:700;
-  
 
-  color:var(--t3);
-  text-align:center;
-}
+
+
+
+
+
+
+
+
+
 
 /* ── Extra track card swipe-to-delete ── */
-.extra-card-inner {
-  position:relative;
-  transition:transform .2s ease;
-  border-radius:var(--r-m);
-  will-change:transform;
-}
+
 
 /* ── Profile sheet design system ── */
 /* All profile rows, modals, and customization sheets share these tokens */
@@ -363,10 +286,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   cursor:pointer;flex-shrink:0;color:#C0564A;
 }
 /* Drag handle */
-.ps-drag-handle {
-  color:var(--t3);cursor:grab;touch-action:none;
-  padding:4px 2px;display:flex;align-items:center;flex-shrink:0;
-}
+
 /* Modal sheet container */
 .ps-modal-sheet {
   background:var(--bg);border-radius:20px 20px 0 0;
@@ -442,17 +362,17 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .cal-d.rest span { top:-3px; }
 .cal-detail { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); min-height:44px; }
 .cal-dd { font-family:var(--title-font); font-size:var(--fs-3); color:var(--t1); }
-.streak-head { display:flex; justify-content:space-between; gap:12px; padding-top:16px; border-top:1px solid var(--border); }
-.streak-head button { background:none; border:none; padding:0; text-align:left; color:inherit; cursor:pointer; }
-.streak-n { font-family:var(--title-font); font-size:var(--fs-6); line-height:1.1; color:var(--t1); }
-.streak-n span { font-family:var(--ui-font); font-size:var(--fs-3); color:var(--t2); }
+
+
+
+
 .cbars { margin-top:14px; }
-.total-row { display:flex; gap:14px; align-items:flex-start; padding:12px 0; border-top:1px solid var(--border); }
-.total-row:last-child { border-bottom:1px solid var(--border); }
-.total-g { flex-shrink:0; padding-top:2px; }
-.total-n { font-family:var(--title-font); font-size:var(--fs-4); color:var(--t1); line-height:1.25; }
-.total-n b { font-weight:600; }
-.total-d { font-size:var(--fs-2); color:var(--t3); margin-top:2px; }
+
+
+
+
+
+
 .t-sec span { font-size:var(--fs-1); color:var(--t3); }
 /* "More learning" (beta): the chip, and the Add learning sheet */
 .beta-chip, .t-sec .beta-chip { display:inline-block; vertical-align:middle; margin:0 auto 0 8px; padding:2px 8px; border-radius:999px; background:var(--card2); color:var(--t2); font-family:var(--ui-font); font-size:11px; font-weight:800; letter-spacing:.3px; }
@@ -512,7 +432,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .lt-head span:first-child { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
 #native-reader-content .lt-m-d b { font-weight:700; color:color-mix(in srgb, #4F5FA8 75%, var(--t1)); }
 .lt-back { background:var(--card2); border:none; border-radius:999px; padding:8px 14px; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t1); cursor:pointer; margin-bottom:16px; }
-.lt-h { direction:rtl; text-align:center; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-weight:normal; font-size:var(--fs-4); color:var(--t2); margin-bottom:14px; }
+
 .lt-sefer { font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; color:var(--t1); }
 .lt-run { display:flex; justify-content:center; gap:10px; font-size:14px; color:var(--t3); letter-spacing:.5px; margin-bottom:10px; }
 .lt-title { text-align:center; font-size:30px; line-height:1.2; margin-bottom:6px; }
@@ -721,14 +641,13 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .thought-k { font:800 15px var(--ui-font); color:var(--t1); margin-bottom:4px; }
 .thought-t { font-family:var(--read-font); font-size:17px; line-height:1.45; color:var(--t2); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .thought-more { display:none; }
-.day-spark { position:relative; width:0; height:0; margin:0 auto; }
-.day-spark i { position:absolute; left:-4px; top:-4px; width:8px; height:8px; border-radius:50%; background:var(--c); opacity:0; animation:spark 1s 1.15s cubic-bezier(.15,.7,.3,1) forwards; }
-@keyframes spark { 0%{opacity:1;transform:translate(0,0) scale(1.2)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)} }
-@media (prefers-reduced-motion: reduce) { .day-spark, .tick-ring { display:none; } .lrow-ic.lift svg { animation:none; } }
+
+
+@media (prefers-reduced-motion: reduce) {  .tick-ring { display:none; } .lrow-ic.lift svg { animation:none; } }
 /* Today, on one page: the week, the day's line, the sections between thin rules */
 #week-strip { display:grid; grid-template-columns:repeat(7,1fr); padding:4px 0 14px; margin-bottom:14px; border-bottom:1px solid var(--border); }
 #progress-card { margin-bottom:6px; }
-.day-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+
 #progress-title { font-family:var(--title-font); font-size:var(--fs-4); font-weight:500; color:var(--t1); }
 .day-line { display:flex; gap:4px; margin:10px 0 8px; }
 .day-line i { flex:1; height:4px; border-radius:2px; background-color:var(--border); background-image:linear-gradient(var(--seg, var(--gold)), var(--seg, var(--gold))); background-repeat:no-repeat; background-size:0% 100%; transition:background-size .6s cubic-bezier(.2,.7,.2,1); }
@@ -834,12 +753,10 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .tanya-fn { color: color-mix(in srgb, var(--c-tanya) 75%, var(--t3)); }
 .tanya-fn.active { color: var(--c-tanya); }
 /* The day complete: four inks draw together into one gold line */
-.day-rule { display:flex; gap:12px; width:180px; animation: dayGap .7s .15s cubic-bezier(.2,.7,.2,1) forwards; }
-.day-rule i { flex:1; height:3px; border-radius:2px; background:var(--c); animation: dayGold .5s .75s ease forwards; }
+
+
 .day-he { font-family:var(--he-font); font-size:30px; color:var(--gold); margin-top:14px; line-height:1; }
-@keyframes dayGap { to { gap:0; } }
-@keyframes dayGold { to { background:var(--gold); } }
-@media (prefers-reduced-motion: reduce) { .day-rule { animation:none; gap:0; } .day-rule i { animation:none; background:var(--gold); } }
+@media (prefers-reduced-motion: reduce) {   }
 /* Landing: on dark, the four rings close one by one and each name appears */
 #onboarding.ob-dark { background:#1F1B16; }
 #ob-welcome { position:relative; z-index:1; min-height:calc(100vh - 48px); display:flex; flex-direction:column; align-items:center; text-align:center; padding:9vh 0 4px; color:#FBF7EF; }
@@ -942,10 +859,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   line-height: 1.65;
 }
 #ls-body-wrap p { margin-bottom: .85em; orphans: 3; widows: 3; }
-#ls-body-wrap .ls-sh {
-  display: block; font-weight: 700; break-after: avoid;
-  column-span: all; margin-bottom: .3em; margin-top: .6em;
-}
+
 /* Two columns on tablets (540–899px) */
 @media (min-width: 540px) {
   #ls-body-wrap {
@@ -1582,8 +1496,6 @@ window._fsGetDoc = getDoc;
 <!-- ── PROFILE SHEET — slides up from bottom ── -->
 <!-- Toast -->
 <div id="toast"></div>
-<div id="confetti-container"></div>
-<div id="celeb-banner"  style="display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:2000;background:linear-gradient(135deg,#C99A3A,#FFB830);color:#000;padding:14px 28px;border-radius:var(--r-m);font-size:var(--fs-3);font-weight:900;text-align:center;box-shadow:0 8px 32px rgba(201,154,58,.5);white-space:nowrap;"></div>
 
 <script src="/js/chumash-data.js"></script>
 <script src="/js/chumash.js"></script>
@@ -1742,7 +1654,6 @@ function _userPayload() {
     streak: user.streak,
     longestStreak: user.longestStreak || 0,
     total: user.total,
-    xp: user.xp,
     quizTotal: user.quizTotal || 0,
     quizCorrect: user.quizCorrect || 0,
     lastDate: user.lastDate || null,
@@ -2599,22 +2510,22 @@ async function init() {
     const rambamRef = rambamRefs.join('|') || null; // pipe-separated for multi-ref
 
     schedule = {
-      chumash:  { id:'chumash',  label:'Chumash',  icon:'torah', color:'#C99A3A', xp:25, quizzable:true,
+      chumash:  { id:'chumash',  label:'Chumash',  icon:'torah', quizzable:true,
                   subtitle: getChumashDayLabel(today),
                   chabadUrl: `${base}/torahreading.asp?tdate=${civDate}`,
                   sefariaRef: chumashRef },
 
-      tehillim: { id:'tehillim', label:'Tehillim', icon:'kinor',  color:'#5B7DB0', xp:25, quizzable:false,
+      tehillim: { id:'tehillim', label:'Tehillim', icon:'kinor', quizzable:false,
                   subtitle: getTehillimForDate(today).label,
                   chabadUrl: `${base}/tehillim.asp?tdate=${civDate}`,
                   sefariaRef: tehRef },
 
-      tanya:    { id:'tanya',    label:'Tanya',    icon:'flame',  color:'#8E6AA3', xp:25, quizzable:true,
+      tanya:    { id:'tanya',    label:'Tanya',    icon:'flame', quizzable:true,
                   subtitle: tanyaCalItem?.displayValue?.en || 'Tanya Yomi',
                   chabadUrl: `${base}/tanya.asp?tdate=${encodeURIComponent(tdate)}`,
                   sefariaRef: tanyaRef }, // today's ref e.g. "Tanya, Part I; Likkutei Amarim 37:9" 
 
-      rambam:   { id:'rambam',   label:'Rambam',   icon:'books', color:'#6E9150', xp:25, quizzable:true,
+      rambam:   { id:'rambam',   label:'Rambam',   icon:'books', quizzable:true,
                   subtitle: p.rambamTitle || rambam3Item?.displayValue?.en || 'Rambam Yomi',
                   chabadUrl: user.rambamTrack === 'm'
                     ? `${base}/seferHamitzvos.asp?tdate=${encodeURIComponent(tdate)}`
@@ -3230,14 +3141,11 @@ function _changeDay(iso, change) {
     }
   }
 
-  const delta = pointsForDay(day) - pointsForDay(before);
-  user.xp = Math.max(0, (user.xp || 0) + delta);
   if (isToday) user.lastDate = iso;
   recalcStreak();
   saveUserCritical();
   _refreshUI();
   return {
-    delta,
     completedNow: !isChitasDay(before) && isChitasDay(day),
     streakMilestone: milestoneReached(streakBefore, user.streak),
     daysMilestone: milestoneReached(totalBefore, user.total),
@@ -3468,41 +3376,7 @@ async function _startQuiz(level) {
   renderQuestion();
 }
 
-// ════════════════════════════════════════════════════════════════════
-// ZONE 17 · CELEBRATIONS  (confetti, banner, vibrate, card pop)
-// ════════════════════════════════════════════════════════════════════
-// ── CELEBRATIONS ─────────────────────────────────────────────────────────────
-function launchConfetti(count=60) {
-  const container = document.getElementById('confetti-container');
-  if (!container) return;
-  container.innerHTML = '';
-  const colors = ['#C99A3A','#6E9150','#5B7DB0','#8E6AA3','#C0564A','#FF6B35','#fff'];
-  for (let i = 0; i < count; i++) {
-    const el = document.createElement('div');
-    const size = 6 + Math.random() * 8;
-    el.style.cssText = [
-      'position:absolute',
-      'left:' + (Math.random()*100) + '%',
-      'top:-20px',
-      'width:' + size + 'px',
-      'height:' + size + 'px',
-      'background:' + colors[Math.floor(Math.random()*colors.length)],
-      'border-radius:' + (Math.random()>0.5?'50%':'2px'),
-      'animation:confettiFall ' + (1.5+Math.random()*2) + 's ' + (Math.random()*0.8) + 's ease-in forwards',
-    ].join(';');
-    container.appendChild(el);
-  }
-  setTimeout(() => { if (container) container.innerHTML = ''; }, 4000);
-}
 
-function celebrateBanner(msg) {
-  const el = document.getElementById('celeb-banner');
-  if (!el) return;
-  el.textContent = msg;
-  el.style.display = 'block';
-  el.style.animation = 'celebSlide 3s ease forwards';
-  setTimeout(() => { el.style.display = 'none'; el.style.animation = ''; }, 3200);
-}
 
 // Touch feedback: only three moments in the app use it (a section learned, the
 // day complete, a milestone). Off with the switch in Profile. Android only for
@@ -3890,6 +3764,13 @@ function _readerBegin(sid) {
   if (reader) reader.scrollTop = 0;
   _readerProgress(true);
   document.documentElement.classList.add('reader-open');   // the page behind stays where it is
+  // The bottom bar starts as it is in every reader: Mark as learned showing,
+  // nothing else. Each reader then sets it up for itself (a list hides Mark,
+  // Chitas shows Review); nothing carries over from what was open before
+  document.getElementById('reader-next').style.display = 'none';
+  document.getElementById('reader-actions').style.display = 'flex';
+  document.getElementById('chabad-mark-btn').style.display = 'flex';
+  document.getElementById('chabad-quiz-btn').style.display = 'none';
 }
 function _readerEnd() {
   _flushReaderScroll();
@@ -4334,14 +4215,7 @@ function _renderChumashContent() {
   const RBG = 'background:rgba(201,154,58,.09);border-left:4px solid rgba(201,154,58,.55);';
 
   // Lang toggle
-  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    t += '<button onclick="_setChumashLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-       + (a ? 'background:var(--gold);color:#000;border-color:var(--gold);' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-       + '">' + lb + '</button>';
-  });
-  t += '</div>';
+  let t = _langSeg(lang, "_setChumashLang('LANG')");
 
   // Subtle translation label — tap to change
   const _curTransLabel = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : '';
@@ -4710,14 +4584,7 @@ function _renderRambamContent() {
   }
 
   // Lang toggle
-  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','עברית'], ['both','Both'], ['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    t += '<button onclick="_setRambamLang(\'' + l + '\')" style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-       + (a ? 'background:' + GREEN + ';color:#000;border-color:' + GREEN + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-       + '">' + lb + '</button>';
-  });
-  t += '</div>';
+  let t = _langSeg(lang, "_setRambamLang('LANG')");
 
   
 
@@ -5296,8 +5163,6 @@ function openChabadPanel(sectionId) {
 
   markDoneUnlocked = false;
   _setReaderColour('var(--c-' + sectionId + ')', 'var(--on-' + sectionId + ')');
-  document.getElementById('reader-next').style.display = 'none';
-  document.getElementById('reader-actions').style.display = 'flex';
   _updateReaderDayBar(sectionId);
 
   // Header
@@ -5626,6 +5491,16 @@ function _buildSettingsSectionOpts(sectionId) {
   el.style.gap = '14px';
 }
 
+// The Hebrew / Both / English switch, the same in every reader (the
+// segmented bar Tanya and Tehillim started with). `call` is the code to run,
+// with LANG where the choice goes.
+function _langSeg(lang, call) {
+  return '<div class="tz-seg" role="group" aria-label="Language">'
+    + [['he', 'עברית'], ['both', 'Both'], ['en', 'English']].map(([l, lb]) =>
+      '<button type="button"' + (lang === l ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ' onclick="' + call.replace(/LANG/g, l) + '">' + lb + '</button>').join('')
+    + '</div>';
+}
+
 function _rsLangToggle(sectionId, lang, color, storageKey, reloadCall) {
   const key  = storageKey  || 'chitas_lang_' + sectionId;
   const call = reloadCall  || '_setReaderLang(\'' + sectionId + '\',\'LANG\')';
@@ -5946,11 +5821,6 @@ function renderStats() {
   });
 }
 
-// ════════════════════════════════════════════════════════════════════
-// ZONE 25 · PROFILE SHEET  (name, level bar, city, track, appearance)
-// ════════════════════════════════════════════════════════════════════
-// The Profile tab (was a slide-up sheet; the names are kept so existing calls still work)
-function openProfileSheet() { switchTab('profile'); }
 function renderProfile() {
   document.getElementById('profile-sheet-avatar').innerHTML = letterAvatar(user.name || '?', 52, 20);
   document.getElementById('profile-sheet-name').textContent = isGuest() ? 'Not signed in' : (user.name || 'Your profile');
@@ -6592,16 +6462,6 @@ function markExtraDone(id) {
   fire('Nice! ' + (EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done.', 'done');
   vibrate([10]);
   _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
-  // Animate card
-  const card = document.getElementById('extra-card-' + id);
-  if (card) {
-    const def = EXTRA_TRACK_DEFS[id];
-    card.style.transition = 'transform .15s ease, box-shadow .3s ease';
-    card.style.transform = 'scale(1.02)';
-    card.style.boxShadow = '0 0 20px ' + (def?.color || '#C99A3A') + '55';
-    card.style.borderColor = (def?.color || '#C99A3A') + '70';
-    setTimeout(() => { card.style.transform = ''; card.style.boxShadow = ''; }, 400);
-  }
 }
 
 function unmarkExtraDone(id) {
@@ -7027,15 +6887,7 @@ function _rerenderDaf() {
   // Lang toggle
   let t = '';
   if (allEn.some(Boolean)) {
-    t += '<div style="display:flex;gap:6px;margin-bottom:12px;">';
-    [['he','\u05E2\u05D1\u05E8\u05D9\u05EA'],['both','Both'],['en','English']].forEach(([l, lb]) => {
-      const a = lang === l;
-      t += '<button onclick="_setDafLang(\''+ l +'\')"'
-        + ' style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-        + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-        + '">' + lb + '</button>';
-    });
-    t += '</div>';
+    t += _langSeg(lang, "_setDafLang('LANG')");
   }
 
   // Commentary toggles
@@ -7690,15 +7542,7 @@ function _renderSeferHamitzvos(displayVal, results, rambamContext) {
   const lang = localStorage.getItem(langKey) || 'both';
 
   // Lang toggle
-  let t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    t += '<button onclick="_smSetLang(\'' + l + '\')"'
-      + ' style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-      + (a ? 'background:' + GREEN + ';color:#000;border-color:' + GREEN + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-      + '">' + lb + '</button>';
-  });
-  t += '</div>';
+  let t = _langSeg(lang, "_smSetLang('LANG')");
 
   // Main heading
   t += '<div style="margin-bottom:18px;padding:10px 14px;background:' + GREEN + '1F;border-left:4px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
@@ -7870,15 +7714,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
   // Lang toggle — only show if we have English
   let t = '';
   if (enSegs.length) {
-    t = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-    [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
-      const a = lang === l;
-      t += '<button onclick="localStorage.setItem(\'chitas_lang_extra_' + id + '\',\'' + l + '\');openExtraReader(\'' + id + '\')"'
-        + ' style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-        + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-        + '">' + lb + '</button>';
-    });
-    t += '</div>';
+    t = _langSeg(lang, "localStorage.setItem('chitas_lang_extra_" + id + "','LANG');openExtraReader('" + id + "')");
   }
 
   // Heading
@@ -7888,32 +7724,24 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
     + '</div>';
 
   let v = '';
-  const isLT = id === 'likkuteiTorah';
   const maxLen = Math.max(heSegs.length, enSegs.length);
   for (let i = 0; i < maxLen; i++) {
     const he = heSegs[i] || '';
     const en = enSegs[i] || '';
     if (!he && !en) continue;
 
-    // LT: no dividers, tighter spacing, justified
-    const wrapStyle = isLT
-      ? 'margin-bottom:0.9em;'
-      : 'padding:14px 0;border-bottom:1px solid var(--border);';
-    const heStyle = isLT
-      ? 'direction:rtl;text-align:justify;text-align-last:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.62;color:var(--t1);'
-      : 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:' + (id === 'nachYomi' ? 21 : 19) + 'px;--rf-lh:1.92;color:var(--t1);';   // Nach like Chumash (21px), the rest like Rambam (19px)
-    const enStyle = isLT
-      ? '--rf-sz:15px;--rf-lh:1.78;color:var(--t1);'
-      : '--rf-sz:15px;--rf-lh:1.82;color:var(--t1);';
+    const wrapStyle = 'padding:14px 0;border-bottom:1px solid var(--border);';
+    const heStyle = 'direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:' + (id === 'nachYomi' ? 21 : 19) + 'px;--rf-lh:1.92;color:var(--t1);';   // Nach like Chumash (21px), the rest like Rambam (19px)
+    const enStyle = '--rf-sz:15px;--rf-lh:1.82;color:var(--t1);';
 
     if (lang === 'both' && he && en) {
-      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + (isLT ? '' : 'padding:14px 0;border-bottom:1px solid var(--border);') + 'align-items:start;">';
+      v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + wrapStyle + 'align-items:start;">';
       v += '<p class="rf-body" style="' + enStyle + '">' + en + '</p>';
-      v += '<p class="rf-body' + (isLT ? ' lt-body' : '') + '" style="' + heStyle + '">' + (isLT ? _ltFormatHe(he) : he) + '</p>';
+      v += '<p class="rf-body" style="' + heStyle + '">' + he + '</p>';
       v += '</div>';
     } else if (lang === 'he' || !en) {
       v += '<div style="' + wrapStyle + '">';
-      v += '<p class="rf-body' + (isLT ? ' lt-body' : '') + '" style="' + heStyle + '">' + (isLT ? _ltFormatHe(he) : he) + '</p>';
+      v += '<p class="rf-body" style="' + heStyle + '">' + he + '</p>';
       v += '</div>';
     } else {
       v += '<div style="' + wrapStyle + '">';
@@ -7926,72 +7754,7 @@ function _renderBilingualReader(id, title, heSegs, enSegs, color, sectionLabel) 
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
-// ── Likkutei Torah: format dibbur hamaschil with drop-word layout ─────────────
-// The opening <b>...</b> of each LT paragraph is the dibbur hamaschil —
-// the quoted pasuk that the maamar begins with.
-// Layout: first WORD of the dibbur is large (float:right in RTL),
-// remaining dibbur words wrap beside it at medium size,
-// body text follows at normal size.
-function _ltFormatHe(he) {
-  // Check if paragraph starts with a <b> tag (dibbur hamaschil)
-  const bMatch = he.match(/^<b>([\s\S]*?)<\/b>([\s\S]*)$/i);
-  if (!bMatch) return he; // no dibbur — return as-is
 
-  const dibbur = bMatch[1].trim();       // full dibbur hamaschil text
-  const body   = bMatch[2].trim();       // rest of paragraph after dibbur
-
-  // Split dibbur into first word and remainder
-  // Hebrew words are separated by spaces; first word ends at first space
-  const spaceIdx = dibbur.search(/\s/);
-  let firstWord, restDibbur;
-  if (spaceIdx === -1) {
-    // Single-word dibbur hamaschil
-    firstWord  = dibbur;
-    restDibbur = '';
-  } else {
-    firstWord  = dibbur.slice(0, spaceIdx);
-    restDibbur = dibbur.slice(spaceIdx + 1).trim();
-  }
-
-  // Build the drop-word layout (RTL float):
-  // The large first word floats to the right.
-  // restDibbur at medium size wraps beside it on the left.
-  // Body text follows below, clearing the float.
-  const FONT = "'DachHeilig','Frank Ruhl Libre',serif";
-
-  const dropWord = '<span style="'
-    + 'float:right;'
-    + 'font-family:' + FONT + ';'
-    + 'font-weight:normal;'
-    + 'font-size:2em;'
-    + 'line-height:1;'
-    + 'margin-left:0.2em;'
-    + 'margin-bottom:0.05em;'
-    + '">' + firstWord + '</span>';
-
-  const middleDibbur = restDibbur
-    ? '<span style="'
-        + 'font-family:' + FONT + ';'
-        + 'font-weight:normal;'
-        + 'font-size:1.15em;'
-        + 'line-height:inherit;'
-        + '">' + restDibbur + '</span> '
-    : '';
-
-  const clearDiv = body
-    ? '<span style="display:block;clear:both;"></span>'
-    : '<span style="display:block;clear:both;"></span>';
-
-  return dropWord + middleDibbur + (body ? body : '') + clearDiv;
-}
-
-// ── HTML flattener (reuse _cleanHtml logic) ────────────────────────────────────
-function _flatHtml(x) {
-  if (!x) return [];
-  if (typeof x === 'string') { const s = _cleanHtml(x); return s ? [s] : []; }
-  if (Array.isArray(x)) return x.flatMap(_flatHtml);
-  return [];
-}
 
 // ── Scroll position for extra tracks (persisted by section + date) ─────────────
 function _restoreExtraScroll(id) {
@@ -9173,15 +8936,7 @@ async function _shbRenderUnit(unit, unitIdx, restoreScroll = 0) {
     + '</div>';
 
   // ── Lang toggle ──────────────────────────────────────────────────────────
-  let langToggle = '<div style="display:flex;gap:6px;margin-bottom:20px;">';
-  [['he','עברית'],['both','Both'],['en','English']].forEach(([l, lb]) => {
-    const a = lang === l;
-    langToggle += '<button onclick="localStorage.setItem(\'chitas_lang_extra_shaarHaBitachon\',\'' + l + '\');openExtraReader(\'shaarHaBitachon\')"'
-      + ' style="flex:1;padding:8px 4px;border-radius:var(--r-s);border:1.5px solid;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;'
-      + (a ? 'background:' + color + ';color:#fff;border-color:' + color + ';' : 'background:var(--card);color:var(--t2);border-color:var(--border);')
-      + '">' + lb + '</button>';
-  });
-  langToggle += '</div>';
+  const langToggle = _langSeg(lang, "localStorage.setItem('chitas_lang_extra_shaarHaBitachon','LANG');openExtraReader('shaarHaBitachon')");
 
   // ── Chapter heading ──────────────────────────────────────────────────────
   const heading = '<div style="margin-bottom:18px;padding:10px 14px;background:' + color + '14;border-left:4px solid ' + color + ';border-radius:0 8px 8px 0;">'

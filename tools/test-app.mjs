@@ -132,29 +132,29 @@ await check('reader day bar: yesterday can go back or forward; from today you ca
   return [...y, document.getElementById('rd-next').disabled, document.getElementById('rd-label').textContent];
 }, [true, false, 'Today', false, 'Today']);
 
-await check('points: finishing all 4 sections = 50, unmarking one takes back 20', () => {
-  user = { ...user, xp: 0, done: {}, pastDone: {}, streak: 0 };
+await check('finishing all 4 sections makes today a Chitas day; unmarking one takes it back', () => {
+  user = { ...user, done: {}, pastDone: {}, streak: 0 };
   ['chumash', 'tehillim', 'tanya', 'rambam'].forEach(markDone);
-  const full = user.xp, streakFull = user.streak;
+  const streakFull = user.streak;
   unmarkDone('rambam');
-  return [full, streakFull, user.xp, user.streak];
-}, [50, 1, 30, 0]);
+  return [streakFull, user.streak, 'xp' in user && user.xp !== 0];
+}, [1, 0, false]);
 
 await check('catching up yesterday restores a 2-day streak', () => {
   const y = new Date(); y.setDate(y.getDate() - 1);
-  user = { ...user, xp: 0, pastDone: {}, done: { chumash: true, tehillim: true, tanya: true, rambam: true } };
+  user = { ...user, pastDone: {}, done: { chumash: true, tehillim: true, tanya: true, rambam: true } };
   dayOffset = -1;
   ['chumash', 'tehillim', 'tanya', 'rambam'].forEach(id => markDonePast(id, dateISO(y)));
   dayOffset = 0;
-  return [user.streak, user.total, user.xp];
-}, [2, 2, 50]);
+  return [user.streak, user.total];
+}, [2, 2]);
 
 await check('week strip shows 7 days', () => document.querySelectorAll('#week-strip button').length, 7);
 
 await check('a malicious name is shown as text, not run (header + profile)', async () => {
   window.__hacked = false;
   user = { ...user, uid: 'u1', name: '<img src=x onerror="window.__hacked=true">', city: '<b onmouseover=x>NYC</b>' };
-  updateHeader(); openProfileSheet();
+  updateHeader(); switchTab('profile');
   await new Promise(r => setTimeout(r, 100));
   closeProfileSheet();
   return [window.__hacked, document.querySelectorAll('#avatar-tab img, #profile-sheet img, #profile-sheet b[onmouseover]').length];
@@ -399,13 +399,13 @@ await check2('after the first section, offers (once) to save progress', async ()
   schedule.tehillim = schedule.tehillim || { id: 'tehillim', label: 'Tehillim', color: '#4A9EFF', subtitle: '' };
   markDone('tehillim');
   await new Promise(r => setTimeout(r, 2100));
-  const r = [user.xp, document.getElementById('signin-title').textContent, user.signinPrompted];
+  const r = [!!user.done.tehillim, document.getElementById('signin-title').textContent, user.signinPrompted];
   closeSignIn();
   return r;
-}, [10, 'Keep your streak safe', true]);
+}, [true, 'Keep your streak safe', true]);
 
 await check2('profile says progress is only on this phone, no "Sign out"', () => {
-  openProfileSheet();
+  switchTab('profile');
   const vis = id => getComputedStyle(document.getElementById(id)).display !== 'none';
   const r = [vis('ps-guest-row'), vis('ps-signout-row')];
   closeProfileSheet();
@@ -421,9 +421,9 @@ await check2('signing in keeps what was done signed out and adds the account\'s 
   await new Promise(r => setTimeout(r, 120)); // bootApp registers its sign-in handler once _fb exists
   openSignIn('streak');
   await window._fb._onAuthReady({ uid: 'acc1', displayName: 'Mendy C', photoURL: '' });
-  return [user.uid, user.name, user.rambamTrack, user.rambamTrackAsked, user.xp, !!user.done.tehillim, !!user.pastDone[iso]?.chumash,
+  return [user.uid, user.name, user.rambamTrack, user.rambamTrackAsked, !!user.done.tehillim, !!user.pastDone[iso]?.chumash,
     getComputedStyle(document.getElementById('signin-sheet')).display];
-}, ['acc1', 'Mendy', '1', true, 210, true, true, 'none']);
+}, ['acc1', 'Mendy', '1', true, true, true, 'none']);
 
 // ── Firebase blocked (ad blocker / offline): the app must still start ─────
 await check2('Delete everything (no account): the phone is cleared and the welcome screen shows', async () => {

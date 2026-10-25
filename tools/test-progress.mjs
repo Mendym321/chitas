@@ -10,7 +10,7 @@ const ctx = {};
 vm.createContext(ctx);
 for (const f of ['../js/holidays-data.js', '../js/progress.js'])
   vm.runInContext(readFileSync(new URL(f, import.meta.url), 'utf8'), ctx);
-const P = vm.runInContext('({ POINTS, pointsForDay, computeStreak, countChitasDays, weekPoints, isRestDay, milestoneReached, nextMilestone, welcomeBack })', ctx);
+const P = vm.runInContext('({ computeStreak, countChitasDays, isRestDay, milestoneReached, nextMilestone, welcomeBack })', ctx);
 
 let failed = 0;
 function check(name, actual, expected) {
@@ -33,12 +33,6 @@ function daysBack(n, from = TODAY) { // ISO dates for the n days before `from`
   return Array.from({ length: n }, (_, i) => { const d = new Date(from); d.setDate(d.getDate() - i - 1); return iso(d); });
 }
 
-console.log('Points:');
-check('a full Chitas day = 50', P.pointsForDay(ALL), 50);
-check('3 of 4 sections = 30', P.pointsForDay({ chumash: true, tehillim: true, tanya: true }), 30);
-check('extra learning = 5 each', P.pointsForDay({ ...ALL, dafYomi: true, hayomYom: true }), 60);
-check('unmarked sections count nothing', P.pointsForDay({ chumash: false }), 0);
-
 console.log('Streak:');
 check('60 days in a row (old bug capped this at 9)',
   P.computeStreak(userWith(daysBack(59), ALL), TODAY), { current: 60, atRisk: false });
@@ -59,8 +53,6 @@ check('Shabbos is never "at risk" (no nagging on Shabbos)',
 console.log('Totals:');
 check('Chitas days counted from history + today',
   P.countChitasDays({ done: ALL, pastDone: { '2026-10-01': ALL, '2026-10-02': { chumash: true } } }, TODAY), 2);
-check('points this week (Sun Oct 11 → Wed Oct 14)',
-  P.weekPoints({ done: { chumash: true }, pastDone: { '2026-10-11': ALL, '2026-10-10': ALL } }, TODAY), 60);
 
 console.log('Milestones:');
 check('crossing 17 → 18 is a milestone (חי)', P.milestoneReached(17, 18), 18);

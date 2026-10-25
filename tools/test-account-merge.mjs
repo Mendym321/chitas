@@ -23,14 +23,13 @@ console.log('Signing in after using the app signed out:');
 const guest = { started: true, xp: 70, lastDate: '2026-10-14', done: { chumash: true, tehillim: true }, pastDone: { '2026-10-13': ALL }, tehillimPeople: [{ label: 'Savta', heDay: 5, heMonth: 'Nissan', heYear: 5700 }] };
 
 const fresh = merge(guest, null, TODAY);
-check('new account → keeps everything from the phone', [fresh.xp, fresh.pastDone['2026-10-13'], fresh.done], [70, ALL, { chumash: true, tehillim: true }]);
+check('new account → keeps everything from the phone', [fresh.pastDone['2026-10-13'], fresh.done], [ALL, { chumash: true, tehillim: true }]);
 
 const remote = { uid: 'u1', name: 'Mendy', rambamTrack: '1', xp: 500, lastDate: '2026-10-12', done: ALL, pastDone: { '2026-10-11': ALL },
   tehillimPeople: [{ label: 'Savta', heDay: 5, heMonth: 'Nissan', heYear: 5700 }, { label: 'Zaidy', heDay: 1, heMonth: 'Av', heYear: 5690 }] };
 const m = merge(guest, remote, TODAY);
 check('days from both are kept (incl. the account\'s unarchived Oct 12)', Object.keys(m.pastDone).sort(), ['2026-10-11', '2026-10-12', '2026-10-13']);
 check('today = what was done on the phone today', m.done, { chumash: true, tehillim: true });
-check('points add up when the days are different', m.xp, 570);
 check('account settings win (track, name)', [m.rambamTrack, m.name, m.uid], ['1', 'Mendy', 'u1']);
 check('milestones already celebrated are combined', merge({ ...guest, milestones: ['parsha-2026-10-10'] }, { ...remote, milestones: ['rambam-100', 'parsha-2026-10-10'] }, TODAY).milestones.sort(), ['parsha-2026-10-10', 'rambam-100']);
 check('Tehillim names combined without duplicates', m.tehillimPeople.map(p => p.label), ['Savta', 'Zaidy']);
@@ -38,7 +37,6 @@ check('Tehillim names combined without duplicates', m.tehillimPeople.map(p => p.
 const sameDay = merge(
   { xp: 50, lastDate: '2026-10-14', done: ALL, pastDone: {} },
   { uid: 'u1', xp: 30, lastDate: '2026-10-14', done: { chumash: true, tehillim: true, tanya: false }, pastDone: {} }, TODAY);
-check('same section marked on both today → its points counted once', sameDay.xp, 60); // 50 + 30 − 2×10
 check('…and all 4 are done today', Object.keys(sameDay.done).filter(k => sameDay.done[k]).length, 4);
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll account-merge tests passed');
