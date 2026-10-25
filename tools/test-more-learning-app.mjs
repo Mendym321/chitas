@@ -224,7 +224,7 @@ asked.length = 0;
 await check('Likkutei Torah opens the week\'s maamarim: Torah Ohr on Lech Lecha', async () => {
   await openExtraReader('likkuteiTorah');
   return [document.getElementById('chabad-panel-sub').textContent, document.querySelectorAll('.lt-m').length,
-          document.querySelectorAll('.lt-m-t')[1].textContent, document.querySelector('.lt-m-d').textContent.startsWith('Torah Ohr · about ')];
+          document.querySelectorAll('.lt-m-t')[1].textContent, document.querySelector('.lt-m-d').textContent.startsWith('about ')];
 }, ['Parshas Lech Lecha', 6, 'אנכי מגן לך', true]);
 if (asked.length) { failed++; console.log('  ✗ the list should need no network:', asked); }
 
@@ -236,6 +236,21 @@ await check('tapping a maamar opens it like the printed sefer (title, bold openi
 if (!asked.some(a => a.startsWith('Torah Ohr, Lech Lecha 2'))) { failed++; console.log('  ✗ the maamar asked for', asked); }
 
 await check('back goes to the list', () => { _ltBack(); return document.querySelectorAll('.lt-m').length; }, 6);
+
+await check('the list shows how far you got: the one you were in last on top to continue, a ring for each, learned when read to the end', async () => {
+  const view = document.getElementById('native-reader').clientHeight, key = n => 'scroll_extra_likkuteiTorah:Torah Ohr, Lech Lecha ' + n + '_2026-10-24';
+  localStorage.setItem(key(1), JSON.stringify({ y: view, h: view * 5, t: 2 }));        // 40%, the last one you were in
+  localStorage.setItem(key(4), JSON.stringify({ y: view, h: view * 4, t: 1 }));        // 50%, earlier
+  localStorage.setItem(key(2), JSON.stringify({ y: view * 2, h: view * 3, t: 3 }));    // to the end
+  _ltShowList();
+  const r = [document.querySelector('.lt-cont-t')?.textContent, document.querySelector('.lt-cont-f span').textContent,
+    document.querySelector('.lt-head').textContent, [...document.querySelectorAll('.lt-m .lt-m-d')].map(e => e.textContent)];
+  [1, 2, 4].forEach(n => localStorage.removeItem(key(n)));
+  _ltShowList();
+  r.push(!document.querySelector('.lt-cont'), document.querySelectorAll('.lt-m').length);
+  return r;
+}, ['ענין לך לך וילך למסעיו ממטה למעלה …', '40% read · about 9 min left', "This week's maamarim1 of 6 learned",
+    ['Learned', 'about 10 min', '50% read', 'about 5 min', 'about 5 min'], true, 6]);
 
 await check('your place in a maamar is kept for the whole week (by its Shabbos)', async () => {
   await _ltOpen(1);
