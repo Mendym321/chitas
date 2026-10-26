@@ -314,7 +314,7 @@ await check('Review on Today: a learned tile is ready to review, then says how i
   return [chip('chumash'), chip('tanya'), chip('tehillim'), chip('rambam'), ready.style.display, [...ready.querySelectorAll('.rr-t p:first-child')].map(p => p.textContent)];
 }, ['Reviewed 3/4', 'Review · 4', null, null, 'block', ['Tanya is ready to review']]);
 
-await check('the reader\'s quiz button: "Quiz yourself · 4", then how it went', async () => {
+await check('the reader\'s quiz button: "Quiz yourself", then how it went', async () => {
   user.done = {}; user.quizDone = {};
   openChabadPanel('tanya'); await new Promise(r => setTimeout(r, 100));
   const label = () => document.getElementById('chabad-quiz-label').textContent + ' | ' + document.getElementById('chabad-quiz-btn').dataset.state;
@@ -324,7 +324,7 @@ await check('the reader\'s quiz button: "Quiz yourself · 4", then how it went',
   openChabadPanel('tanya'); await new Promise(r => setTimeout(r, 100));
   r.push(label()); _closeReaderNow();
   return r;
-}, ['Quiz yourself · 4 | todo', 'Quizzed · 8/10 | done']);
+}, ['Quiz yourself | todo', 'Quizzed · 8/10 | done']);
 
 await check('a quick review and a deep dive both count on the tile (3/4 + 5/6 = 8/10, not 3/4)', () => {
   user.done = { chumash: true }; user.quizDone = { chumash: { quick: { r: 3, n: 4 }, deep: { r: 5, n: 6 } } };
