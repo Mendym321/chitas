@@ -2634,28 +2634,30 @@ function setGreeting() {
   if (noteEl) noteEl.textContent = dayNote(d, getParshaForDate(d)).map(t => t.replace(/^Parshas /, '')).join(' · ');
 }
 
-// A few lines of today's Hayom Yom on Today. One read a day (kept on the phone).
-async function _renderThought(tries = 0) {
+// A few lines of the day's Hayom Yom on Today, for whichever day you're
+// looking at. Today's is kept on the phone (one read a day); another day's
+// comes straight from the same file.
+async function _renderThought() {
   const el = document.getElementById('thought');
   if (!el) return;
-  if (dayOffset !== 0) { el.style.display = 'none'; return; }
-  const today = new Date(), iso = dateISO(today);
+  const off = dayOffset, d = new Date(); d.setDate(d.getDate() + off);
+  const iso = dateISO(d);
   let saved = null;
-  try { saved = JSON.parse(localStorage.getItem('chitas_thought2') || 'null'); } catch (e) {}
+  if (off === 0) { try { saved = JSON.parse(localStorage.getItem('chitas_thought2') || 'null'); } catch (e) {} }
   if (!saved || saved.iso !== iso) {
-    const parts = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(today);
+    const parts = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(d);
     const m = parts.find(p => p.type === 'month').value, n = +parts.find(p => p.type === 'day').value;
     const HEBCAL = { Tishri: 'Tishrei', Heshvan: 'Cheshvan', Shevat: "Sh'vat", Iyar: 'Iyyar' };
     const key = _hayomYomKeys(HEBCAL[m] || m, n)[0];
     try {
       const entry = key && (await _hayomYomData())[key];
       const text = String(entry?.en || '').replace(/\s+/g, ' ').trim();
-      if (!text) return;
+      if (!text) { if (dayOffset === off) el.style.display = 'none'; return; }
       saved = { iso, text: text.length > 320 ? text.slice(0, 320).replace(/\s+\S*$/, '') + '…' : text, date: hebMonthSpelling(n + ' ' + m) };
-      localStorage.setItem('chitas_thought2', JSON.stringify(saved));
+      if (off === 0) localStorage.setItem('chitas_thought2', JSON.stringify(saved));
     } catch (e) { return; }
   }
-  if (dayOffset !== 0) return;
+  if (dayOffset !== off) return;   // you've gone to another day meanwhile
   el.innerHTML = '<p class="thought-k">Hayom Yom · ' + escapeHtml(saved.date) + '</p>'
     + '<p class="thought-t">' + escapeHtml(saved.text) + '</p>'
     + '<p class="thought-more">Read it all</p>';
@@ -3134,10 +3136,21 @@ function _dayName(off) {
 }
 
 // The day bar in the reader (only for the four Chitas sections)
+// Readers that go by the day: Chitas and the daily More learning (Hayom Yom,
+// Daf, Nach, Halacha). Not a weekly one (Likkutei Torah) or a sefer you read
+// through at your own pace.
+function _readsByDay(id) {
+  return SECTION_IDS.includes(id) || (!!EXTRA_TRACK_DEFS[id] && !WEEKLY_TRACKS.includes(id) && !['likkuteiSichos', 'shaarHaBitachon'].includes(id));
+}
+// The same reader, on the day now chosen
+function _reopenReader(id) {
+  if (SECTION_IDS.includes(id)) openChabadPanel(id); else openExtraReader(id);
+}
+
 function _updateReaderDayBar(sectionId) {
   const bar = document.getElementById('reader-daybar');
   if (!bar) return;
-  if (!SECTION_IDS.includes(sectionId)) { bar.style.display = 'none'; return; }
+  if (!_readsByDay(sectionId)) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
   const d = new Date(); d.setDate(d.getDate() + dayOffset);
   const label = document.getElementById('rd-label');
@@ -6559,6 +6572,7 @@ async function _bustTanyaCache() {
     // Get current section before nav changes anything
     const currentSection = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
     if (!currentSection) { action(); return; }
+    if (!_readsByDay(currentSection)) return;   // a list or a sefer: there's no other day to go to
 
     // Exit animation
     reader.classList.add(dir === 'left' ? 'swipe-exit-left' : 'swipe-exit-right');
@@ -6575,7 +6589,7 @@ async function _bustTanyaCache() {
 
       // Re-open the same section for the new day — this triggers a fresh fetch
       setTimeout(() => {
-        openChabadPanel(currentSection);
+        _reopenReader(currentSection);
         // Enter animation
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -6934,6 +6948,7 @@ async function openExtraReader(id) {
   const markLabel = document.getElementById('chabad-mark-label');
   const markXp = document.getElementById('chabad-mark-xp');
   markBtn.dataset.sectionId = id;
+  _updateReaderDayBar(id);
 
   // For the day you're on (a weekly track: its week)
   const weekly = WEEKLY_TRACKS.includes(id);
