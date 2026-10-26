@@ -417,6 +417,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* Appearance is the same switch as Language (.tz-seg); in a Profile row it takes the full width */
 #reader-settings-popover .tz-seg { margin-bottom:0; }
 .ps-row .th-seg { flex-basis:100%; margin:10px 0 2px; }
+.ml-sw[aria-checked="true"]:not([style]) { background:var(--t1); }
+.ps-time { border:none; background:var(--card2); color:var(--t1); font:600 14px var(--ui-font); padding:6px 8px; border-radius:10px; }
 #reader-menu { position:fixed; inset:0; z-index:1001; }
 #reader-menu .rm-shade { position:absolute; inset:0; background:rgba(31,27,22,.45); opacity:0; transition:opacity .2s; }
 #reader-menu .rm-panel { position:absolute; left:0; top:0; bottom:0; width:min(320px, 86vw); background:var(--bg); border-radius:0 var(--r-l) var(--r-l) 0; padding:calc(18px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom)); box-sizing:border-box; display:flex; flex-direction:column; box-shadow:8px 0 30px rgba(0,0,0,.18); transform:translateX(-100%); transition:transform .22s cubic-bezier(.3,.7,.3,1); }
@@ -1353,6 +1355,13 @@ window._fsGetDoc = getDoc;
         <div class="ps-row" style="cursor:default;flex-wrap:wrap;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span><span class="ps-row-label">Appearance</span><div class="tz-seg th-seg" role="group" aria-label="Appearance"><button type="button" data-th="auto" onclick="setThemePref('auto')">Automatic</button><button type="button" data-th="light" onclick="setThemePref('light')">Light</button><button type="button" data-th="dark" onclick="setThemePref('dark')">Dark</button></div></div>
       </div>
 
+      <p class="ps-label" id="ps-phone-label" style="display:none">On this phone</p>
+      <div class="ps-card" id="ps-phone" style="display:none">
+        <div class="ps-row" style="cursor:default;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></span><span class="ps-row-label">Daily reminder<span class="ps-row-sub" style="display:block;">Not on Shabbos or Yom Tov</span></span><button type="button" role="switch" id="ps-rem-sw" class="ml-sw" aria-label="Daily reminder" onclick="setReminder({ on: this.getAttribute('aria-checked') !== 'true' })"></button></div>
+        <label class="ps-row" id="ps-rem-time-row" style="cursor:default;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="ps-row-label">Time</span><input type="time" id="ps-rem-time" class="ps-time" onchange="setReminder({ time: this.value })"></label>
+        <div class="ps-row" style="cursor:default;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M3 9v6M21 9v6"/></svg></span><span class="ps-row-label">Touch feedback</span><button type="button" role="switch" id="ps-hap-sw" class="ml-sw" aria-label="Touch feedback" onclick="setHaptics(this.getAttribute('aria-checked') !== 'true')"></button></div>
+      </div>
+
       <p class="ps-label">About</p>
       <div class="ps-card">
         <button type="button" onclick="openFeedback('feedback')" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="ps-row-label">Send feedback</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
@@ -1536,6 +1545,7 @@ window._fsGetDoc = getDoc;
 <script src="/js/tehillim.js"></script>
 <script src="/js/holidays-data.js"></script>
 <script src="/js/progress.js"></script>
+<script src="/js/reminders.js"></script>
 <script src="/js/account-merge.js"></script>
 <script src="/js/learning-data.js"></script>
 <script src="/js/learning-stats.js"></script>
@@ -2658,6 +2668,67 @@ function _refreshUI() {
   updateHeader();
   if (schedule) updateProgressRing();
   renderStats();
+  _syncReminders();
+}
+
+// ── Daily reminder (the app version only) ────────────────────────────────────
+// When: js/reminders.js. Kept on this phone, not in your account: each phone
+// rings by itself. The phone holds the next two weeks; this refreshes them
+// whenever something changes (marking today done takes today's off).
+function _reminderPref() {
+  try { return JSON.parse(localStorage.getItem('chitas_reminder')) || {}; } catch { return {}; }
+}
+let _reminderSig = null, _reminderRun = Promise.resolve();   // null: what's on the phone is unknown
+// One at a time: two refreshes at once would cancel each other's work
+function _syncReminders() { return (_reminderRun = _reminderRun.then(_syncRemindersNow)); }
+async function _syncRemindersNow() {
+  const LN = _nativePlugin('LocalNotifications');
+  if (!LN || !user) return;
+  const pref = _reminderPref();
+  const plan = pref.on ? reminderPlan(pref.time, new Date(), isChitasDay(user.done)) : [];
+  const sig = plan.map(p => p.id + '@' + p.at.getTime()).join();
+  if (sig === _reminderSig) return;
+  _reminderSig = sig;
+  try {
+    const { notifications = [] } = await LN.getPending();
+    if (notifications.length) await LN.cancel({ notifications: notifications.map(n => ({ id: n.id })) });
+    if (plan.length) await LN.schedule({ notifications: plan.map(p => ({
+      id: p.id, title: 'Chitas', body: "Today's Chumash, Tehillim, Tanya and Rambam.",
+      schedule: { at: p.at, allowWhileIdle: true } })) });
+  } catch (e) { _reminderSig = null; }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) _syncReminders(); });
+
+async function setReminder(change) {
+  const pref = { time: '20:00', ..._reminderPref(), ...change };
+  if (change.on) {
+    const LN = _nativePlugin('LocalNotifications');
+    const p = await Promise.resolve(LN?.requestPermissions?.()).catch(() => null);
+    if (p?.display !== 'granted') { pref.on = false; fire('Notifications for Chitas are off in the phone\'s settings'); }
+  }
+  try { localStorage.setItem('chitas_reminder', JSON.stringify(pref)); } catch {}
+  _reminderSig = null;
+  _showPhonePrefs();
+  await _syncReminders();
+}
+function setHaptics(on) {
+  user.haptics = on;
+  saveUser();
+  _showPhonePrefs();
+  if (on) haptic('tap');
+}
+// Profile's "On this phone": only in the app, where both work
+function _showPhonePrefs() {
+  const native = !!_nativePlugin('LocalNotifications');
+  document.getElementById('ps-phone-label').style.display = native ? '' : 'none';
+  document.getElementById('ps-phone').style.display = native ? '' : 'none';
+  if (!native) return;
+  const pref = _reminderPref();
+  document.getElementById('ps-rem-sw').setAttribute('aria-checked', !!pref.on);
+  const t = document.getElementById('ps-rem-time');
+  t.value = pref.time || '20:00';
+  document.getElementById('ps-rem-time-row').style.display = pref.on ? '' : 'none';
+  document.getElementById('ps-hap-sw').setAttribute('aria-checked', user.haptics !== false);
 }
 
 // "3 days in a row": a plain fact, not a button (Progress has its own tab).
@@ -3421,16 +3492,28 @@ async function _startQuiz(level) {
 
 
 
-// Touch feedback: only three moments in the app use it (a section learned, the
-// day complete, a milestone). Off with the switch in Profile. Android only for
-// now; iPhone browsers don't allow it.
-function vibrate(pattern) {
+// The app version (Capacitor) has the phone's own haptics and notifications;
+// in a browser this is null and the web fallbacks apply
+function _nativePlugin(name) {
+  const C = window.Capacitor;
+  return C?.isNativePlatform?.() ? (C.Plugins?.[name] || null) : null;
+}
+
+// Touch feedback: only three moments in the app use it: 'tap' (a section
+// learned), 'done' (the day finished), 'milestone'. Off with the switch in
+// Profile. In a browser only Android can do it.
+const _HAPTIC_WEB = { tap: [10], done: [12, 70, 12], milestone: [40] };
+function haptic(kind) {
   if (user?.haptics === false) return;
-  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+  try {
+    const H = _nativePlugin('Haptics');
+    if (H) Promise.resolve(kind === 'tap' ? H.impact({ style: 'LIGHT' }) : H.notification({ type: 'SUCCESS' })).catch(() => {});
+    else if (navigator.vibrate) navigator.vibrate(_HAPTIC_WEB[kind]);
+  } catch (e) {}
 }
 
 function celebrateSection(sectionId) {
-  vibrate([10]); // one light tap
+  haptic('tap');
   // After the list has been drawn again (it is, right after marking)
   requestAnimationFrame(() => {
     const tick = document.getElementById('tick-' + sectionId);
@@ -3524,7 +3607,7 @@ const MILESTONE_LINES = {
 };
 function celebrateStreakMilestone(streak) {
   if (!MILESTONE_LINES[streak]) return;
-  vibrate([40]);
+  haptic('milestone');
   setTimeout(() => showMoment({ icon: '<span style="color:var(--gold)">' + icon('flame', 44) + '</span>',
     title: streak + ' days in a row', sub: MILESTONE_LINES[streak], xp: '', btns: [{ label: 'Keep it up', primary: true }] }), 600);
 }
@@ -3533,7 +3616,7 @@ function celebrateStreakMilestone(streak) {
 // The one daily celebration: the four sections' inks draw into one gold line
 // A learning milestone: the section's glyph in its colour, what you finished
 function celebrateLearning(m) {
-  vibrate([40]);
+  haptic('milestone');
   const GLYPH = { chumash: 'torah', tehillim: 'kinor', tanya: 'flame', rambam: 'books' };
   const art = '<span class="lm-ic" style="--c:var(--c-' + m.id + ');--on:var(--on-' + m.id + ');">' + icon(GLYPH[m.id], 44) + '</span>';
   const moment = { icon: art, title: m.title, sub: m.sub, xp: '', btns: [{ label: 'Keep going', primary: true }] };
@@ -3576,7 +3659,7 @@ async function _tanyaPartMilestone(iso) {
 }
 
 function celebrateAllDone(milestone, learn) {
-  vibrate([12, 70, 12]);
+  haptic('done');
   const rule = '<svg class="done-rings" viewBox="0 0 92 92" aria-hidden="true">'
     + [40, 30, 20, 10].map((r, i) => '<circle cx="46" cy="46" r="' + r + '" style="--c:var(--c-' + SECTION_IDS[i] + ');--len:' + (2 * Math.PI * r).toFixed(1) + ';--i:' + i + '"/>').join('')
     + '</svg>'
@@ -5963,6 +6046,7 @@ function renderProfile() {
   if (transEl) transEl.textContent = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Metsudah';
   _updateProfileExtras();
   _showThemePref();
+  _showPhonePrefs();
 }
 // After a change made from the Profile, refresh it
 function closeProfileSheet() {
@@ -6590,7 +6674,7 @@ async function _loadExtraSubtitle(id) {
 function markExtraDone(id) {
   _changeDay(dateISO(new Date()), day => { day[id] = true; });
   fire('Nice! ' + (EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done.', 'done');
-  vibrate([10]);
+  haptic('tap');
   _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
 }
 

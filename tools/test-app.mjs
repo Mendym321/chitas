@@ -514,6 +514,46 @@ const started = await page3.evaluate(() => getComputedStyle(document.getElementB
 if (started) console.log('  ✓ a signed-in user\'s app still opens when Firebase can\'t load');
 else { failed++; console.log('  ✗ app stuck on Loading when Firebase can\'t load'); }
 
+console.log('In the app (a pretend phone):');
+await check('in a browser, Profile has no "On this phone"', () => { switchTab('profile'); return document.getElementById('ps-phone').style.display; }, 'none');
+await page.evaluate(() => {
+  window.__calls = [];
+  const log = (name, ret) => a => { window.__calls.push([name, a]); return Promise.resolve(ret); };
+  window.__pending = [];
+  window.Capacitor = { isNativePlatform: () => true, Plugins: {
+    Haptics: { impact: log('impact'), notification: log('notification') },
+    LocalNotifications: {
+      requestPermissions: log('permission', { display: 'granted' }),
+      getPending: async () => ({ notifications: window.__pending }),
+      cancel: async a => { window.__calls.push(['cancel', a]); window.__pending = []; },
+      schedule: async a => { window.__calls.push(['schedule', a]); window.__pending = a.notifications.map(n => ({ id: n.id })); },
+    } } };
+});
+await check('in the app, Profile shows the reminder and touch switches', () => { renderProfile(); return [document.getElementById('ps-phone').style.display, document.getElementById('ps-rem-sw').getAttribute('aria-checked'), document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, ['', 'false', 'true']);
+await check('turning the reminder on asks first, then puts two weeks on the phone, none on Shabbos', async () => {
+  user.done = {}; window.__calls = [];
+  await setReminder({ on: true }); await new Promise(r => setTimeout(r, 50));
+  const sch = window.__calls.find(c => c[0] === 'schedule')?.[1].notifications || [];
+  return [window.__calls[0][0], sch.length >= 10, sch.some(n => new Date(n.schedule.at).getDay() === 6), document.getElementById('ps-rem-sw').getAttribute('aria-checked'), sch[0]?.body];
+}, ['permission', true, false, 'true', "Today's Chumash, Tehillim, Tanya and Rambam."]);
+await check('a new time moves them', async () => {
+  window.__calls = []; await setReminder({ time: '06:45' }); await new Promise(r => setTimeout(r, 50));
+  const sch = window.__calls.find(c => c[0] === 'schedule')[1].notifications;
+  const t = new Date(sch[sch.length - 1].schedule.at); return t.getHours() + ':' + t.getMinutes();
+}, '6:45');
+await check('nothing changed: the phone is left alone', async () => { window.__calls = []; _refreshUI(); await new Promise(r => setTimeout(r, 50)); return window.__calls.length; }, 0);
+await check('today done: today\'s reminder is taken off', async () => {
+  await setReminder({ time: '23:59' });
+  const todayId = () => { const d = new Date(); return +(d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0')); };
+  const before = window.__pending.some(n => n.id === todayId());
+  user.done = { chumash: true, tehillim: true, tanya: true, rambam: true }; _refreshUI(); await new Promise(r => setTimeout(r, 50));
+  return [isRestDay(new Date()) ? 'rest day' : before, window.__pending.some(n => n.id === todayId())];
+}, [new Date().getDay() === 6 ? 'rest day' : true, false]);
+await check('turning it off clears the phone', async () => { await setReminder({ on: false }); await new Promise(r => setTimeout(r, 50)); return window.__pending.length; }, 0);
+await check('touch feedback uses the phone: a light tap, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
+await check('touch feedback off: nothing', () => { setHaptics(false); window.__calls = []; haptic('tap'); const n = window.__calls.length; setHaptics(true); return [n, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, [0, 'true']);
+await page.evaluate(() => { delete window.Capacitor; user.done = {}; });
+
 // Signed in, but the cloud copy of progress never answers (e.g. a blocker on the database)
 const page4 = await browser.newPage();
 await page4.route(u => !u.href.startsWith(url), r => r.abort());
