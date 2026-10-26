@@ -7352,33 +7352,36 @@ async function _loadHayomYomNative(silent) {
   const dateLabel = isChaiElul ? 'Chai Elul · ' + hd + ' ' + hm : hd + ' ' + hm;
   if (subEl) subEl.textContent = hebMonthSpelling(hd + ' ' + hm);
 
-  // (the header has the date; Chai Elul says so here too)
-  let html = '<div style="max-width:680px;margin:0 auto;padding-bottom:40px;">'
-    + (isChaiElul ? '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:14px;">' + dateLabel + '</p>' : '');
+  // Laid out like the other readers: the language switch on top, then the
+  // text in rows, English on the left and Hebrew on the right. A row pairs a
+  // paragraph with its translation only when both have the same number of
+  // paragraphs; otherwise (about one day in seven) the two stand as whole
+  // columns side by side, so nothing is put next to the wrong paragraph.
+  const heStyle = 'direction:rtl;text-align:right;font-family:' + HE_FONT + ';--rf-sz:19px;--rf-lh:1.92;color:var(--t1);';
+  const enStyle = '--rf-sz:15px;--rf-lh:1.82;color:var(--t1);';
+  const paras = t => (t || '').trim().split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).map(x => escapeHtml(x).replace(/\n/g, '<br>'));
+  const he = (x, extra = '') => '<p class="rf-body" style="' + heStyle + extra + '">' + x + '</p>';
+  const en = (x, extra = '') => '<p class="rf-body" style="' + enStyle + extra + '">' + x + '</p>';
+  const ROW = 'padding:14px 0;border-bottom:1px solid var(--border);';
+
+  let html = _langSeg(lang, "_hayomYomSetLang('LANG')")
+    + (isChaiElul ? '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin:4px 0 6px;">' + dateLabel + '</p>' : '');
 
   docs.forEach((data, idx) => {
     if (isNonLeapAdar && docs.length === 2) {
-      html += '<p style="font-size:var(--fs-1);font-weight:700;color:' + COLOR + ';margin-bottom:10px;">' + (idx === 0 ? 'Adar I' : 'Adar II') + '</p>';
+      html += '<p style="font-size:var(--fs-1);font-weight:700;color:' + COLOR + ';margin:14px 0 2px;">' + (idx === 0 ? 'Adar I' : 'Adar II') + '</p>';
     }
-    if ((lang === 'he' || lang === 'both') && data.hebrew && data.hebrew.trim()) {
-      html += '<p class="rf-body" style="direction:rtl;text-align:justify;text-align-last:right;'
-        + 'font-family:' + HE_FONT + ';--rf-sz:21px;--rf-lh:2.0;color:var(--t1);'
-        + (lang === 'both' ? 'margin-bottom:16px;' : '') + '">'
-        + escapeHtml(data.hebrew).replace(/\n/g, '<br>') + '</p>';
-    }
-    if (lang === 'both' && data.hebrew && data.hebrew.trim() && data.english && data.english.trim()) {
-      html += '<div style="height:1px;background:var(--border);margin:4px 0 18px;"></div>';
-    }
-    if ((lang === 'en' || lang === 'both') && data.english && data.english.trim()) {
-      html += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">'
-        + escapeHtml(data.english).replace(/\n/g, '<br>') + '</p>';
-    }
-    if (isNonLeapAdar && idx === 0 && docs.length === 2) {
-      html += '<div style="height:1px;background:var(--border);margin:24px 0;"></div>';
+    const H = paras(data.hebrew), E = paras(data.english);
+    const show = lang === 'both' && H.length && E.length ? 'both' : (lang === 'en' && E.length) || !H.length ? 'en' : 'he';
+    if (show === 'both' && H.length === E.length) {
+      H.forEach((h, i) => { html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;' + ROW + '">' + en(E[i]) + he(h) + '</div>'; });
+    } else if (show === 'both') {
+      const col = (list, f) => '<div>' + list.map(x => f(x, 'margin-bottom:14px;')).join('') + '</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;padding:14px 0;">' + col(E, en) + col(H, he) + '</div>';
+    } else {
+      (show === 'en' ? E : H).forEach(x => { html += '<div style="' + ROW + '">' + (show === 'en' ? en(x) : he(x)) + '</div>'; });
     }
   });
-
-  html += '</div>';
 
   if (silent || !_readerShows('extra_hayomYom', iso)) return;   // you've moved on
   if (loadEl) loadEl.style.display = 'none';

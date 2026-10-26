@@ -1,0 +1,11 @@
+{
+  "appId": "app.chitas.daily",
+  "appName": "Chitas",
+  "webDir": "www",
+  "server": {
+    "url": "https://chitas.vercel.app"
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}
