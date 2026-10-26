@@ -341,6 +341,45 @@ await check('the reader\'s menu lists today\'s four (what\'s done ticked) and mo
   return r;
 }, [['Chumash ✓', 'Tehillim (now)', 'Tanya', 'Rambam'], 'Chitas · 1 of 4', 'Tanya', true]);
 
+await check('the streak is a plain "N days in a row" (not a button), and not there at 0', () => {
+  const sp = document.getElementById('streak-pill'), r = [sp.tagName];
+  user.streak = 3; updateHeader(); r.push(sp.textContent, sp.style.display);
+  user.streak = 1; updateHeader(); r.push(sp.textContent);
+  user.streak = 0; updateHeader(); r.push(sp.style.display);
+  return r;
+}, ['SPAN', '3 days in a row', '', '1 day in a row', 'none']);
+
+let feedbackSent = null;
+await page.route('**/api/feedback', route => { feedbackSent = route.request().postDataJSON(); route.fulfill({ json: { sent: true } }); });
+const fbCheck = (name, got, expected) => { if (JSON.stringify(got) === JSON.stringify(expected)) console.log('  ✓', name); else { failed++; console.log('  ✗', name, '\n      expected:', expected, '\n      got:     ', got); } };
+let thanks = await page.evaluate(async () => {
+  openFeedback('feedback');
+  document.getElementById('fb-msg').value = 'Love it';
+  document.getElementById('fb-email').value = 'me@example.com';
+  await _sendFeedback('feedback');
+  const t = document.querySelector('#feedback-modal #fb-body').textContent;
+  document.getElementById('feedback-modal').remove();
+  return t.startsWith('Thank you') && t.includes('will answer');
+});
+fbCheck('Send feedback (Profile): the message and email go to /api/feedback, then a thank-you',
+  [feedbackSent?.kind, feedbackSent?.message, feedbackSent?.email, feedbackSent && 'context' in feedbackSent, thanks], ['feedback', 'Love it', 'me@example.com', false, true]);
+await page.evaluate(async () => {
+  openChabadPanel('tanya'); await new Promise(r => setTimeout(r, 200));
+  document.querySelector('#reader-settings-popover .rs-report').click();
+  document.getElementById('fb-msg').value = 'A word is missing';
+  await _sendFeedback('mistake');
+  document.getElementById('feedback-modal').remove(); _closeReaderNow();
+});
+fbCheck('Report a mistake (reader\'s gear): sends what was being read and the day',
+  [feedbackSent?.kind, feedbackSent?.context?.reading.startsWith('Tanya'), /^\d{4}-\d{2}-\d{2}$/.test(feedbackSent?.context?.day)], ['mistake', true, true]);
+feedbackSent = null;
+const short = await page.evaluate(async () => {
+  openFeedback('feedback'); document.getElementById('fb-msg').value = 'a';
+  await _sendFeedback('feedback');
+  const e = document.getElementById('fb-err').textContent; document.getElementById('feedback-modal').remove(); return e;
+});
+fbCheck('too short: says so and sends nothing', [feedbackSent, short], [null, 'Please write a few words.']);
+
 // ── Light and dark: Automatic follows the phone ───────────────────────────
 console.log('Appearance:');
 const isDark = () => page.evaluate(() => document.documentElement.classList.contains('dark'));

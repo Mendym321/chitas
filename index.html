@@ -438,6 +438,15 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #reader-menu .ml-r.rm-cur { background:color-mix(in srgb, var(--k) 12%, var(--card)); }
 #reader-menu .rm-home { margin:10px 12px 0; padding:13px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font-family:inherit; font-size:14px; font-weight:800; cursor:pointer; }
 @media (prefers-reduced-motion: reduce) { #reader-menu .rm-panel, #reader-menu .rm-shade { transition:none; } }
+.rs-report { border:none; border-top:1px solid var(--border); margin:0 -16px -14px; padding:12px 16px; background:none; font-family:inherit; font-size:13px; font-weight:700; color:var(--t2); text-align:left; cursor:pointer; }
+.fb-field { display:block; margin-top:14px; font-size:var(--fs-1); font-weight:700; color:var(--t3); }
+.fb-field textarea, .fb-field input { display:block; width:100%; margin-top:6px; box-sizing:border-box; padding:12px 14px; border:1px solid var(--border); border-radius:var(--r-s); background:var(--card); color:var(--t1); font:400 15px/1.45 var(--ui-font); }
+.fb-field textarea { min-height:120px; resize:vertical; }
+.fb-ctx { margin-top:12px; padding:10px 12px; border-radius:var(--r-s); background:var(--card2); font-size:13px; color:var(--t2); line-height:1.45; }
+.fb-send { display:block; width:100%; margin-top:16px; padding:14px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:800 15px var(--ui-font); cursor:pointer; }
+.fb-send:disabled { opacity:.5; cursor:default; }
+.fb-note { margin-top:10px; font-size:var(--fs-1); color:var(--t3); line-height:1.5; }
+.fb-err { margin-top:10px; font-size:13px; color:var(--red); }
 .ml-foot { font-size:var(--fs-1); color:var(--t3); line-height:1.5; margin:12px 4px 0; }
 .reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
 .seg-n { font-family:var(--ui-font); font-size:11px; font-weight:700; color:var(--t3); }
@@ -482,11 +491,10 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #day-chips { display:flex; gap:8px; margin:2px -20px 14px; padding:0 20px; overflow-x:auto; scrollbar-width:none; }   /* one line, so it never pushes the page down */
 #day-chips > * { padding:7px 12px; border-radius:999px; font:700 13px var(--ui-font); line-height:1.2; }
 #day-chips > *:empty { display:none; }
-#streak-pill { background:var(--ink); color:var(--on-ink); border:none; cursor:pointer; display:flex; align-items:center; gap:6px; }
+#streak-pill { background:var(--ink); color:var(--on-ink); border:none; display:flex; align-items:center; gap:6px; }
 #streak-pill .sp-ic { width:15px; height:15px; fill:none; stroke:var(--c-chumash); stroke-width:3; }
 #streak-pill b { font-weight:800; }
 #heb-chip, #day-note { background:var(--card2); color:var(--t1); }
-#week-summary { display:none; }
 .tiles4 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; margin-top:14px; }
 .stile { position:relative; height:172px; border-radius:var(--r-l); background:var(--c); color:var(--on); padding:14px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; cursor:pointer; -webkit-user-select:none; user-select:none; transition:transform .15s ease; }
 .stile:active { transform:scale(.97); }
@@ -1253,7 +1261,7 @@ window._fsGetDoc = getDoc;
     <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
       <!-- Chips: the streak, the Hebrew date, what kind of day it is -->
       <div id="day-chips">
-        <button id="streak-pill" onclick="switchTab('stats')" aria-label="Days in a row: see your progress"><svg class="sp-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/></svg><b id="streak-pill-num">0</b> days<span id="week-summary"></span></button>
+        <span id="streak-pill"><svg class="sp-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/></svg><b id="streak-pill-num">0</b><span id="streak-pill-unit"> days in a row</span></span>
         <button id="back-today" onclick="goToDay(0)" style="display:none;">Back to today</button>
         <button id="heb-chip" onclick="openDayPicker()" aria-label="Go to a day"><span class="cal-ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></span><span id="heb-chip-t"></span></button>
         <span id="day-note"></span>
@@ -1342,6 +1350,7 @@ window._fsGetDoc = getDoc;
 
       <p class="ps-label">About</p>
       <div class="ps-card">
+        <button type="button" onclick="openFeedback('feedback')" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="ps-row-label">Send feedback</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         <a href="/privacy.html" target="_blank" rel="noopener" class="ps-row" style="text-decoration:none;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg></span><span class="ps-row-label">Privacy</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
         <button onclick="openCredits()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><span class="ps-row-label">Texts and credits</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
       </div>
@@ -1427,6 +1436,7 @@ window._fsGetDoc = getDoc;
     </div>
     <!-- Section-specific options injected here by JS -->
     <div id="rs-section-opts"></div>
+    <button type="button" class="rs-report" onclick="closeReaderSettings();openFeedback('mistake')">Report a mistake in this text</button>
   </div>
 
   <!-- Scroll progress bar (native reader only) -->
@@ -2602,8 +2612,7 @@ function setGreeting() {
   // Away from today, "Back to today" takes the streak's place (one line of chips)
   const bt = document.getElementById('back-today');
   if (bt) bt.style.display = dayOffset === 0 ? 'none' : '';
-  const sp = document.getElementById('streak-pill');
-  if (sp) sp.style.display = dayOffset === 0 ? '' : 'none';
+  _showStreakPill();
   const heb = document.getElementById('heb-chip-t');
   if (heb) heb.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
   const noteEl = document.getElementById('day-note');
@@ -2646,9 +2655,17 @@ function _refreshUI() {
   renderStats();
 }
 
+// "3 days in a row": a plain fact, not a button (Progress has its own tab).
+// Not there at 0, nor away from today ("Back to today" takes its place).
+function _showStreakPill() {
+  const n = user.streak || 0, sp = document.getElementById('streak-pill');
+  if (!sp) return;
+  document.getElementById('streak-pill-num').textContent = n;
+  document.getElementById('streak-pill-unit').textContent = n === 1 ? ' day in a row' : ' days in a row';
+  sp.style.display = dayOffset === 0 && n > 0 ? '' : 'none';
+}
 function updateHeader() {
-  const pill = document.getElementById('streak-pill-num');
-  if (pill) pill.textContent = user.streak || 0;
+  _showStreakPill();
   const at = document.getElementById('avatar-tab');
   if (at) at.textContent = ((user.name || '').trim()[0] || '·').toUpperCase();
   const tb = document.getElementById('tab-books');
@@ -2659,8 +2676,6 @@ function updateHeader() {
 }
 
 function updateStats() {
-  const ws = document.getElementById('week-summary');
-  if (ws) { const n = chitasDaysThisWeek(user, new Date()); ws.textContent = ' · ' + n + ' this week'; }
   renderWeekStrip();
 }
 
@@ -5639,6 +5654,65 @@ function _readerCleanup() {
   const _lspb = document.getElementById('reader-progress-bar');
   if (_lspb) _lspb.style.background = 'var(--gold)';
   closeReaderSettings();
+}
+
+// ── Feedback and mistake reports ─────────────────────────────────────────────
+// One sheet: "Send feedback" (Profile) and "Report a mistake in this text"
+// (the reader's gear, which adds what you were reading). Sent to /api/feedback:
+// saved for the admin page and emailed to chitas.daily@gmail.com.
+let _fbContext = null;
+function openFeedback(kind) {
+  document.getElementById('feedback-modal')?.remove();
+  const mistake = kind === 'mistake';
+  _fbContext = null;
+  if (mistake) {
+    const title = document.getElementById('chabad-panel-title')?.textContent || '';
+    const sub = document.getElementById('chabad-panel-sub')?.textContent || '';
+    _fbContext = { reading: [title, sub].filter(Boolean).join(' · '), day: _rv.iso || _viewedISO(), where: (_readerPlace?.() || {}).a || '' };
+  }
+  const email = window._fb?.getCurrentUser?.()?.email || '';
+  const m = document.createElement('div');
+  m.id = 'feedback-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:flex-end;justify-content:center;';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = '<div class="ps-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="fb-title" style="max-height:90vh;">'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
+    +   '<div><p class="ps-modal-title" id="fb-title">' + (mistake ? 'Report a mistake' : 'Send feedback') + '</p>'
+    +   '<p class="ps-modal-sub">' + (mistake ? 'A missing line, a wrong word, the wrong piece for the day…' : 'An idea, something that didn\'t work, anything.') + '</p></div>'
+    +   '<button onclick="document.getElementById(\'feedback-modal\').remove()" class="ps-modal-close" aria-label="Close">×</button>'
+    + '</div>'
+    + '<div id="fb-body" style="overflow-y:auto;flex:1;padding:4px 20px 24px;">'
+    +   (_fbContext ? '<p class="fb-ctx">' + escapeHtml(_fbContext.reading) + ' · ' + escapeHtml(_fbContext.day) + (_fbContext.where ? '<br>At: “' + escapeHtml(_fbContext.where) + '…”' : '') + '</p>' : '')
+    +   '<label class="fb-field">' + (mistake ? 'What\'s wrong?' : 'Your message') + '<textarea id="fb-msg" maxlength="4000"></textarea></label>'
+    +   '<label class="fb-field">Your email, if you\'d like an answer<input id="fb-email" type="email" autocomplete="email" value="' + escapeHtml(email) + '"></label>'
+    +   '<p id="fb-err" class="fb-err" role="alert"></p>'
+    +   '<button type="button" id="fb-send" class="fb-send" onclick="_sendFeedback(\'' + (mistake ? 'mistake' : 'feedback') + '\')">Send</button>'
+    +   '<p class="fb-note">A real person reads every message.' + (mistake ? ' What you were reading is sent with it.' : '') + '</p>'
+    + '</div></div>';
+  document.body.appendChild(m);
+  setTimeout(() => document.getElementById('fb-msg')?.focus(), 50);
+}
+async function _sendFeedback(kind) {
+  const btn = document.getElementById('fb-send'), err = document.getElementById('fb-err');
+  const message = document.getElementById('fb-msg').value.trim();
+  const email = document.getElementById('fb-email').value.trim();
+  if (message.length < 3) { err.textContent = 'Please write a few words.'; return; }
+  btn.disabled = true; btn.textContent = 'Sending…'; err.textContent = '';
+  try {
+    const token = await window._fb?.getIdToken?.().catch(() => null);
+    const r = await fetch('/api/feedback', { method: 'POST', headers: { 'content-type': 'application/json', ...(token ? { authorization: 'Bearer ' + token } : {}) },
+      body: JSON.stringify({ kind, message, email, context: _fbContext || undefined,
+        app: 'published ' + new Date(document.lastModified).toISOString().slice(0, 10) + (matchMedia('(display-mode: standalone)').matches ? ' · installed' : ' · browser'),
+        device: navigator.userAgent.slice(0, 160) }) });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error || 'Couldn\'t send it.');
+    document.getElementById('fb-body').innerHTML = '<p style="margin:18px 0 6px;font-size:var(--fs-4);font-weight:800;color:var(--t1);">Thank you</p>'
+      + '<p class="fb-note" style="font-size:var(--fs-2);">It\'s sent. A real person reads every message' + (email ? ' and will answer if needed.' : '.') + '</p>'
+      + '<button type="button" class="fb-send" onclick="document.getElementById(\'feedback-modal\').remove()">Done</button>';
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Send';
+    err.innerHTML = escapeHtml(e.message === 'Failed to fetch' ? 'You seem to be offline.' : e.message) + ' Or email <a href="mailto:chitas.daily@gmail.com" style="color:inherit;">chitas.daily@gmail.com</a>.';
+  }
 }
 
 // ── The reader's menu: the day's learning, to move to another without going Home ──

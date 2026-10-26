@@ -55,6 +55,12 @@ Chitas stays the main thing on Today. Below the four tiles and the Hayom Yom car
 ## Getting around from the reader
 Top left in every reader is the menu (where the X was). It slides in from the left: the day you're reading (Today, Yesterday…), the four of Chitas with their circles and "Chitas · 2 of 4", then More learning, each row like Today's (a line in its colour, its name and piece, its circle); the one you're in says "Reading now". Tap one to go straight to it; Home at the bottom closes the reader. A swipe from the left edge opens it too, where the browser leaves the edge free (the installed app); a swipe across the text is still the day before / after. Escape or a tap outside closes it.
 
+## The streak on Today
+"3 days in a row" (1 day in a row), a plain label in the chips row, not a button (Progress has its own tab). Not there at 0, nor away from today. One line, the same height as the other chips.
+
+## Feedback and mistake reports
+"Send feedback" in Profile and "Report a mistake in this text" in the reader's gear open one sheet: a message, an optional email to answer, Send. A mistake report also carries what was being read, the day and the first words on the screen. `/api/feedback` keeps it (feedback/, server only; no user id), emails it to chitas.daily@gmail.com through Resend when `RESEND_API_KEY` is set on Vercel, and lets one person send 10 a day. The admin page lists them, newest first.
+
 ## Light and dark
 Appearance is Automatic, Light or Dark, in Profile and in the reader's settings (the gear), so it can change without leaving the text. Automatic is the default: it follows the phone, also when the phone changes by itself in the evening. Light or Dark is kept on this phone; choosing Automatic again forgets it.
 

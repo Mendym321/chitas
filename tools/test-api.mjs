@@ -16,15 +16,22 @@ const docRef = (col, id) => ({
   async set(v) { store.set(col + '/' + id, v); },
   async create(v) { const k = col + '/' + id; if (store.has(k)) throw new Error('ALREADY_EXISTS'); store.set(k, v); },
   async delete() { store.delete(col + '/' + id); },
+  async update(v) { const k = col + '/' + id; store.set(k, { ...(store.get(k) || {}), ...v }); },
 });
+let autoId = 0;
 // A collection, as much of it as the routes use: doc, select, where ==, count, get
-const query = (col, filters = []) => {
+const query = (col, filters = [], order = null, max = Infinity) => {
   const docs = () => [...store].filter(([k, v]) => k.startsWith(col + '/') && filters.every(([f, val]) => v?.[f] === val))
-    .map(([k, v]) => ({ id: k.slice(col.length + 1), data: () => v, get: f => v?.[f] }));
+    .map(([k, v]) => ({ id: k.slice(col.length + 1), data: () => v, get: f => v?.[f] }))
+    .sort((a, b) => order ? (order[1] === 'desc' ? -1 : 1) * String(a.get(order[0])).localeCompare(String(b.get(order[0]))) : 0)
+    .slice(0, max);
   return {
     doc: id => docRef(col, id),
-    select: () => query(col, filters),
-    where: (f, op, val) => query(col, [...filters, [f, val]]),
+    add: async v => { const r = docRef(col, 'auto' + (++autoId)); await r.set(v); return r; },
+    orderBy: (f, dir = 'asc') => query(col, filters, [f, dir], max),
+    limit: n => query(col, filters, order, n),
+    select: () => query(col, filters, order, max),
+    where: (f, op, val) => query(col, [...filters, [f, val]], order, max),
     count: () => ({ get: async () => ({ data: () => ({ count: docs().length }) }) }),
     get: async () => { const d = docs(); return { docs: d, size: d.length }; },
   };
@@ -229,6 +236,37 @@ console.log('Admin stats API:');
   const r = await run('token-admin');
   check('the admin gets counts', [r.code, r.body.active.today >= 1, r.body.accounts.signIns], [200, true, 1]);
   check('…and nothing personal', ['Private Name', 'Somewhere', 'Bubby', 'u7'].filter(w => JSON.stringify(r.body).includes(w)), []);
+}
+
+console.log('Feedback API:');
+{
+  const { default: fb } = await import('../api/feedback.js');
+  const { default: adminFb } = await import('../api/admin-feedback.js');
+  const sentEmails = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => { if (String(url).startsWith('https://api.resend.com/')) { sentEmails.push({ headers: opts.headers, body: JSON.parse(opts.body) }); return { ok: true }; } return realFetch(url, opts); };
+  const post = async (body, token, ip = '1.2.3.4') => { const res = fakeRes(); await fb({ method: 'POST', body, headers: { 'x-forwarded-for': ip, ...(token ? { authorization: 'Bearer ' + token } : {}) } }, res); return res; };
+  const saved = () => [...store].filter(([k]) => k.startsWith('feedback/')).map(([, v]) => v);
+
+  delete process.env.RESEND_API_KEY;
+  check('too short → 400, nothing saved', [(await post({ message: 'a' })).code, saved().length], [400, 0]);
+  check('a bad email → 400', (await post({ message: 'Hello there', email: 'not-an-email' })).code, 400);
+  const r1 = await post({ message: 'The app is lovely', app: 'v19', device: 'iPhone' });
+  check('signed out, no Resend key → saved, no email tried', [r1.code, saved().length, sentEmails.length, 'emailed' in saved()[0]], [200, 1, 0, false]);
+  process.env.RESEND_API_KEY = 're_test';
+  const r2 = await post({ message: 'Rashi on verse 6 is cut off', kind: 'mistake', email: 'me@example.com',
+    context: { reading: 'Chumash · Lech Lecha · Shishi', day: '2026-10-23', where: 'ויאמר אליו' } }, 'token-u5');
+  const mail = sentEmails[0]?.body;
+  check('a mistake report: saved with what was being read, and emailed', [r2.code, saved().find(f => f.kind === 'mistake')?.context.reading, saved().find(f => f.kind === 'mistake')?.emailed,
+    mail?.to, mail?.reply_to, mail?.subject.startsWith('Mistake report: Chumash'), mail?.text.includes('2026-10-23'), sentEmails[0]?.headers.authorization],
+    [200, 'Chumash · Lech Lecha · Shishi', 'sent', ['chitas.daily@gmail.com'], 'me@example.com', true, true, 'Bearer re_test']);
+  check('no user id is kept with it', saved().some(f => JSON.stringify(f).includes('u5')), false);
+  let last; for (let i = 0; i < 10; i++) last = await post({ message: 'again and again ' + i }, null, '9.9.9.9');
+  check('11th in a day from the same place → 429', [last.code, (await post({ message: 'one more' }, null, '9.9.9.9')).code], [200, 429]);
+  const adminRun = async token => { const res = fakeRes(); await adminFb({ method: 'GET', headers: token ? { authorization: 'Bearer ' + token } : {} }, res); return res; };
+  const a = await adminRun('token-admin');
+  check('admin page: newest first, only for admins', [(await adminRun('token-u5')).code, a.code, a.body.items.length, a.body.items[0].createdAt >= a.body.items.at(-1).createdAt], [403, 200, 12, true]);
+  globalThis.fetch = realFetch; delete process.env.RESEND_API_KEY;
 }
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll API tests passed');

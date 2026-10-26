@@ -64,15 +64,6 @@ function nextMilestone(n) {
   return MILESTONES.find(m => m > n) || null;
 }
 
-// Chitas days so far this week (Sunday → today)
-function chitasDaysThisWeek(user, today) {
-  let n = 0;
-  for (let d = _addDays(today, -today.getDay()); progressISO(d) <= progressISO(today); d = _addDays(d, 1)) {
-    if (isChitasDay(dayDone(user, d, today))) n++;
-  }
-  return n;
-}
-
 // "Welcome back": after a break, when nothing is marked today yet.
 // Returns null, or { missedOff } — the latest missed day (-1 = yesterday)
 // that can still be caught up (within 7 days), or null if none can.

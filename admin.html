@@ -48,6 +48,15 @@
   .note { margin-top: 24px; font-size: 13px; color: var(--t3); line-height: 1.55; }
   .center { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
   .err { color: var(--red); font-size: 14px; }
+  .fb { background: var(--card); border-radius: 22px; padding: 14px 16px; }
+  .fb + .fb { margin-top: 8px; }
+  .fb-top { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--t3); }
+  .fb-kind { font-weight: 800; letter-spacing: .4px; text-transform: uppercase; }
+  .fb-kind.mistake { color: var(--red); }
+  .fb-msg { margin-top: 6px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .fb-ctx { margin-top: 8px; font-size: 13px; color: var(--t2); }
+  .fb-foot { margin-top: 8px; font-size: 13px; color: var(--t3); }
+  .fb-foot a { color: var(--t1); font-weight: 700; }
   .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
 </style>
 </head>
@@ -95,7 +104,25 @@ async function load(fresh) {
     if (r.status === 403) return show('<div class="center"><h1>Not an admin</h1><p class="sub">' + esc(u.email || '') + ' isn\'t on the admin list (ADMIN_UIDS on Vercel).</p><button class="btn quiet" onclick="out()">Sign out</button></div>');
     if (!r.ok) throw new Error(body.error || 'HTTP ' + r.status);
     render(body);
+    loadFeedback(u);
   } catch (e) { show('<div class="center"><p class="err">Couldn\'t load: ' + esc(e.message) + '</p><button class="btn" onclick="load(true)">Try again</button></div>'); }
+}
+
+// Feedback and mistake reports, newest first (what people chose to write)
+async function loadFeedback(u) {
+  const box = document.getElementById('feedback');
+  if (!box) return;
+  try {
+    const r = await fetch('/api/admin-feedback', { headers: { authorization: 'Bearer ' + await u.getIdToken() } });
+    const { items = [], error } = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(error || 'HTTP ' + r.status);
+    box.innerHTML = items.length ? items.map(f => '<div class="fb"><div class="fb-top"><span class="fb-kind ' + (f.kind === 'mistake' ? 'mistake' : '') + '">' + (f.kind === 'mistake' ? 'Mistake in a text' : 'Feedback') + '</span>'
+      + '<span>' + esc(new Date(f.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span></div>'
+      + '<p class="fb-msg">' + esc(f.message) + '</p>'
+      + (f.kind === 'mistake' && f.context ? '<p class="fb-ctx">' + esc(f.context.reading || '') + (f.context.day ? ' · ' + esc(f.context.day) : '') + (f.context.where ? '<br>At: <bdi>' + esc(f.context.where) + '</bdi>' : '') + '</p>' : '')
+      + '<p class="fb-foot">' + (f.email ? '<a href="mailto:' + esc(f.email) + '">Reply to ' + esc(f.email) + '</a>' : 'No email left') + ' · ' + esc(f.app || '') + (f.emailed === 'failed' ? ' · email to you failed' : '') + '</p></div>').join('')
+      : '<p class="sub">Nothing yet.</p>';
+  } catch (e) { box.innerHTML = '<p class="err">Couldn\'t load feedback: ' + esc(e.message) + '</p>'; }
 }
 
 // Columns for 30 days (or 12 weeks): one or two series, the second drawn inside the first
@@ -153,8 +180,9 @@ function render(s) {
 
     + '<h2>New sign-ins, by week</h2><div class="card">' + columns(s.accounts.signedUpByWeek, 'n', null, 'New sign-ins each week') + '</div>'
 
+    + '<h2>Feedback and mistake reports</h2><div id="feedback"><p class="sub">Loading…</p></div>'
     + '<p class="note">Counts only people with an account: someone using the app without signing in keeps their progress on their own phone, so it isn\'t here. '
-    + 'Nothing on this page names anyone, and the server never even reads names, cities or Tehillim names to make it.</p>'
+    + 'The numbers name no one, and the server never even reads names, cities or Tehillim names to make them. Feedback shows only what people chose to write (and an email if they left one).</p>'
   );
 }
 </script>
