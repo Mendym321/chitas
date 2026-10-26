@@ -420,6 +420,33 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #reader-settings-popover .th-seg { margin-left:0; }
 .ps-row .th-seg { flex-basis:100%; margin:10px 0 2px; }
 .th-seg button { padding:8px 10px; }
+#reader-menu { position:fixed; inset:0; z-index:1001; }
+#reader-menu .rm-shade { position:absolute; inset:0; background:rgba(31,27,22,.45); opacity:0; transition:opacity .2s; }
+#reader-menu .rm-panel { position:absolute; left:0; top:0; bottom:0; width:min(320px, 86vw); background:var(--bg); border-radius:0 var(--r-l) var(--r-l) 0; padding:calc(18px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom)); box-sizing:border-box; display:flex; flex-direction:column; box-shadow:8px 0 30px rgba(0,0,0,.18); transform:translateX(-100%); transition:transform .22s cubic-bezier(.3,.7,.3,1); }
+#reader-menu.open .rm-shade { opacity:1; }
+#reader-menu.open .rm-panel { transform:none; }
+#reader-menu .rm-top { display:flex; justify-content:space-between; align-items:center; margin:0 4px 0 12px; }
+#reader-menu .rm-top p { font-size:13px; color:var(--t3); }
+#reader-menu .rm-x { width:36px; height:36px; border-radius:50%; border:none; background:var(--card2); color:var(--t1); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+#reader-menu .rm-x:focus:not(:focus-visible) { outline:none; }
+#reader-menu .rm-x:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
+#reader-menu h2 { margin:2px 12px 0; font-family:var(--title-font); font-size:26px; font-weight:800; letter-spacing:-.4px; color:var(--t1); }
+#reader-menu .rm-list { flex:1; overflow-y:auto; margin-top:6px; }
+#reader-menu .rm-label { margin:14px 12px 4px; font-size:11px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
+#reader-menu .ml-r { border-radius:14px; padding:10px 12px; }
+#reader-menu .ml-r + .ml-r { border-top:none; }
+#reader-menu .ml-r.rm-cur { background:color-mix(in srgb, var(--k) 12%, var(--card)); }
+#reader-menu .rm-home { margin:10px 12px 0; padding:13px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font-family:inherit; font-size:14px; font-weight:800; cursor:pointer; }
+@media (prefers-reduced-motion: reduce) { #reader-menu .rm-panel, #reader-menu .rm-shade { transition:none; } }
+.rs-report { border:none; border-top:1px solid var(--border); margin:0 -16px -14px; padding:12px 16px; background:none; font-family:inherit; font-size:13px; font-weight:700; color:var(--t2); text-align:left; cursor:pointer; }
+.fb-field { display:block; margin-top:14px; font-size:var(--fs-1); font-weight:700; color:var(--t3); }
+.fb-field textarea, .fb-field input { display:block; width:100%; margin-top:6px; box-sizing:border-box; padding:12px 14px; border:1px solid var(--border); border-radius:var(--r-s); background:var(--card); color:var(--t1); font:400 15px/1.45 var(--ui-font); }
+.fb-field textarea { min-height:120px; resize:vertical; }
+.fb-ctx { margin-top:12px; padding:10px 12px; border-radius:var(--r-s); background:var(--card2); font-size:13px; color:var(--t2); line-height:1.45; }
+.fb-send { display:block; width:100%; margin-top:16px; padding:14px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:800 15px var(--ui-font); cursor:pointer; }
+.fb-send:disabled { opacity:.5; cursor:default; }
+.fb-note { margin-top:10px; font-size:var(--fs-1); color:var(--t3); line-height:1.5; }
+.fb-err { margin-top:10px; font-size:13px; color:var(--red); }
 .ml-foot { font-size:var(--fs-1); color:var(--t3); line-height:1.5; margin:12px 4px 0; }
 .reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
 .seg-n { font-family:var(--ui-font); font-size:11px; font-weight:700; color:var(--t3); }
@@ -464,11 +491,10 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #day-chips { display:flex; gap:8px; margin:2px -20px 14px; padding:0 20px; overflow-x:auto; scrollbar-width:none; }   /* one line, so it never pushes the page down */
 #day-chips > * { padding:7px 12px; border-radius:999px; font:700 13px var(--ui-font); line-height:1.2; }
 #day-chips > *:empty { display:none; }
-#streak-pill { background:var(--ink); color:var(--on-ink); border:none; cursor:pointer; display:flex; align-items:center; gap:6px; }
+#streak-pill { background:var(--ink); color:var(--on-ink); border:none; display:flex; align-items:center; gap:6px; }
 #streak-pill .sp-ic { width:15px; height:15px; fill:none; stroke:var(--c-chumash); stroke-width:3; }
 #streak-pill b { font-weight:800; }
 #heb-chip, #day-note { background:var(--card2); color:var(--t1); }
-#week-summary { display:none; }
 .tiles4 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; margin-top:14px; }
 .stile { position:relative; height:172px; border-radius:var(--r-l); background:var(--c); color:var(--on); padding:14px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; cursor:pointer; -webkit-user-select:none; user-select:none; transition:transform .15s ease; }
 .stile:active { transform:scale(.97); }
@@ -1235,7 +1261,7 @@ window._fsGetDoc = getDoc;
     <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
       <!-- Chips: the streak, the Hebrew date, what kind of day it is -->
       <div id="day-chips">
-        <button id="streak-pill" onclick="switchTab('stats')" aria-label="Days in a row: see your progress"><svg class="sp-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/></svg><b id="streak-pill-num">0</b> days<span id="week-summary"></span></button>
+        <span id="streak-pill"><svg class="sp-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/></svg><b id="streak-pill-num">0</b><span id="streak-pill-unit"> days in a row</span></span>
         <button id="back-today" onclick="goToDay(0)" style="display:none;">Back to today</button>
         <button id="heb-chip" onclick="openDayPicker()" aria-label="Go to a day"><span class="cal-ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></span><span id="heb-chip-t"></span></button>
         <span id="day-note"></span>
@@ -1324,6 +1350,7 @@ window._fsGetDoc = getDoc;
 
       <p class="ps-label">About</p>
       <div class="ps-card">
+        <button type="button" onclick="openFeedback('feedback')" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="ps-row-label">Send feedback</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         <a href="/privacy.html" target="_blank" rel="noopener" class="ps-row" style="text-decoration:none;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg></span><span class="ps-row-label">Privacy</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
         <button onclick="openCredits()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><span class="ps-row-label">Texts and credits</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
       </div>
@@ -1365,8 +1392,8 @@ window._fsGetDoc = getDoc;
 
   <!-- Sticky header, in the colour of what you're reading (--rc) -->
   <div id="reader-head" style="padding:14px 18px 16px;display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
-    <button onclick="closeChabadPanel()" aria-label="Close" style="width:38px;height:38px;border-radius:var(--r-s);background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    <button id="reader-menu-btn" onclick="openReaderMenu()" aria-label="Today's learning" aria-haspopup="dialog" style="width:38px;height:38px;border-radius:var(--r-s);background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <div style="flex:1;min-width:0;">
       <p id="chabad-panel-title" style="font-family:var(--title-font);font-weight:800;font-size:var(--fs-5);line-height:1.1;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
@@ -1409,6 +1436,7 @@ window._fsGetDoc = getDoc;
     </div>
     <!-- Section-specific options injected here by JS -->
     <div id="rs-section-opts"></div>
+    <button type="button" class="rs-report" onclick="closeReaderSettings();openFeedback('mistake')">Report a mistake in this text</button>
   </div>
 
   <!-- Scroll progress bar (native reader only) -->
@@ -2584,8 +2612,7 @@ function setGreeting() {
   // Away from today, "Back to today" takes the streak's place (one line of chips)
   const bt = document.getElementById('back-today');
   if (bt) bt.style.display = dayOffset === 0 ? 'none' : '';
-  const sp = document.getElementById('streak-pill');
-  if (sp) sp.style.display = dayOffset === 0 ? '' : 'none';
+  _showStreakPill();
   const heb = document.getElementById('heb-chip-t');
   if (heb) heb.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
   const noteEl = document.getElementById('day-note');
@@ -2628,9 +2655,17 @@ function _refreshUI() {
   renderStats();
 }
 
+// "3 days in a row": a plain fact, not a button (Progress has its own tab).
+// Not there at 0, nor away from today ("Back to today" takes its place).
+function _showStreakPill() {
+  const n = user.streak || 0, sp = document.getElementById('streak-pill');
+  if (!sp) return;
+  document.getElementById('streak-pill-num').textContent = n;
+  document.getElementById('streak-pill-unit').textContent = n === 1 ? ' day in a row' : ' days in a row';
+  sp.style.display = dayOffset === 0 && n > 0 ? '' : 'none';
+}
 function updateHeader() {
-  const pill = document.getElementById('streak-pill-num');
-  if (pill) pill.textContent = user.streak || 0;
+  _showStreakPill();
   const at = document.getElementById('avatar-tab');
   if (at) at.textContent = ((user.name || '').trim()[0] || '·').toUpperCase();
   const tb = document.getElementById('tab-books');
@@ -2641,8 +2676,6 @@ function updateHeader() {
 }
 
 function updateStats() {
-  const ws = document.getElementById('week-summary');
-  if (ws) { const n = chitasDaysThisWeek(user, new Date()); ws.textContent = ' · ' + n + ' this week'; }
   renderWeekStrip();
 }
 
@@ -5585,10 +5618,30 @@ function _setReaderColour(c, on) {
 }
 
 function closeChabadPanel() {
-  // Allow LS to intercept (e.g. X while reading a sicha → back to list)
+  // Allow LS to intercept (e.g. back while reading a sicha → back to list)
   if (window._lsHandleClose && window._lsHandleClose()) return;
-  // X in a Torah Ohr / Likkutei Torah maamar → back to the week's maamarim; X there closes
+  // In a Torah Ohr / Likkutei Torah maamar → back to the week's maamarim; there, it closes
   if (String(_rv.sid).startsWith('extra_likkuteiTorah:')) { _ltBack(); return; }
+  _closeReaderNow();
+}
+// Close the reader whatever is open in it (Home in the menu)
+function _closeReaderNow() {
+  _readerCleanup();
+  // Keep your place; nothing owns the reader until the next open
+  _readerEnd();
+  const reader = document.getElementById('native-reader');
+
+  document.getElementById('chabad-panel').style.display = 'none';
+  document.getElementById('chabad-iframe').src = '';
+  const fontCtrl = document.getElementById('reader-font-controls');
+  if (fontCtrl) fontCtrl.style.display = 'none';
+  markDoneUnlocked = false;
+  if (reader) reader.scrollTop = 0;
+}
+// What one sefer leaves around the text (Likkutei Sichos' bar and pop-ups, the gear)
+function _readerCleanup() {
+  window._lsHandleClose = null;
+  if (typeof _lsInReader !== 'undefined') window._lsInReader = false;
   // Clean up any LS chrome
   document.getElementById('ls-nav-bar')?.remove();
   document.getElementById('ls-fn-popup')?.remove();
@@ -5600,19 +5653,127 @@ function closeChabadPanel() {
   // Reset progress bar to gold
   const _lspb = document.getElementById('reader-progress-bar');
   if (_lspb) _lspb.style.background = 'var(--gold)';
-
-  // Keep your place; nothing owns the reader until the next open
-  _readerEnd();
-  const reader = document.getElementById('native-reader');
-
-  document.getElementById('chabad-panel').style.display = 'none';
-  document.getElementById('chabad-iframe').src = '';
-  const fontCtrl = document.getElementById('reader-font-controls');
-  if (fontCtrl) fontCtrl.style.display = 'none';
   closeReaderSettings();
-  markDoneUnlocked = false;
-  if (reader) reader.scrollTop = 0;
 }
+
+// ── Feedback and mistake reports ─────────────────────────────────────────────
+// One sheet: "Send feedback" (Profile) and "Report a mistake in this text"
+// (the reader's gear, which adds what you were reading). Sent to /api/feedback:
+// saved for the admin page and emailed to chitas.daily@gmail.com.
+let _fbContext = null;
+function openFeedback(kind) {
+  document.getElementById('feedback-modal')?.remove();
+  const mistake = kind === 'mistake';
+  _fbContext = null;
+  if (mistake) {
+    const title = document.getElementById('chabad-panel-title')?.textContent || '';
+    const sub = document.getElementById('chabad-panel-sub')?.textContent || '';
+    _fbContext = { reading: [title, sub].filter(Boolean).join(' · '), day: _rv.iso || _viewedISO(), where: (_readerPlace?.() || {}).a || '' };
+  }
+  const email = window._fb?.getCurrentUser?.()?.email || '';
+  const m = document.createElement('div');
+  m.id = 'feedback-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:flex-end;justify-content:center;';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = '<div class="ps-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="fb-title" style="max-height:90vh;">'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
+    +   '<div><p class="ps-modal-title" id="fb-title">' + (mistake ? 'Report a mistake' : 'Send feedback') + '</p>'
+    +   '<p class="ps-modal-sub">' + (mistake ? 'A missing line, a wrong word, the wrong piece for the day…' : 'An idea, something that didn\'t work, anything.') + '</p></div>'
+    +   '<button onclick="document.getElementById(\'feedback-modal\').remove()" class="ps-modal-close" aria-label="Close">×</button>'
+    + '</div>'
+    + '<div id="fb-body" style="overflow-y:auto;flex:1;padding:4px 20px 24px;">'
+    +   (_fbContext ? '<p class="fb-ctx">' + escapeHtml(_fbContext.reading) + ' · ' + escapeHtml(_fbContext.day) + (_fbContext.where ? '<br>At: “' + escapeHtml(_fbContext.where) + '…”' : '') + '</p>' : '')
+    +   '<label class="fb-field">' + (mistake ? 'What\'s wrong?' : 'Your message') + '<textarea id="fb-msg" maxlength="4000"></textarea></label>'
+    +   '<label class="fb-field">Your email, if you\'d like an answer<input id="fb-email" type="email" autocomplete="email" value="' + escapeHtml(email) + '"></label>'
+    +   '<p id="fb-err" class="fb-err" role="alert"></p>'
+    +   '<button type="button" id="fb-send" class="fb-send" onclick="_sendFeedback(\'' + (mistake ? 'mistake' : 'feedback') + '\')">Send</button>'
+    +   '<p class="fb-note">A real person reads every message.' + (mistake ? ' What you were reading is sent with it.' : '') + '</p>'
+    + '</div></div>';
+  document.body.appendChild(m);
+  setTimeout(() => document.getElementById('fb-msg')?.focus(), 50);
+}
+async function _sendFeedback(kind) {
+  const btn = document.getElementById('fb-send'), err = document.getElementById('fb-err');
+  const message = document.getElementById('fb-msg').value.trim();
+  const email = document.getElementById('fb-email').value.trim();
+  if (message.length < 3) { err.textContent = 'Please write a few words.'; return; }
+  btn.disabled = true; btn.textContent = 'Sending…'; err.textContent = '';
+  try {
+    const token = await window._fb?.getIdToken?.().catch(() => null);
+    const r = await fetch('/api/feedback', { method: 'POST', headers: { 'content-type': 'application/json', ...(token ? { authorization: 'Bearer ' + token } : {}) },
+      body: JSON.stringify({ kind, message, email, context: _fbContext || undefined,
+        app: 'published ' + new Date(document.lastModified).toISOString().slice(0, 10) + (matchMedia('(display-mode: standalone)').matches ? ' · installed' : ' · browser'),
+        device: navigator.userAgent.slice(0, 160) }) });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error || 'Couldn\'t send it.');
+    document.getElementById('fb-body').innerHTML = '<p style="margin:18px 0 6px;font-size:var(--fs-4);font-weight:800;color:var(--t1);">Thank you</p>'
+      + '<p class="fb-note" style="font-size:var(--fs-2);">It\'s sent. A real person reads every message' + (email ? ' and will answer if needed.' : '.') + '</p>'
+      + '<button type="button" class="fb-send" onclick="document.getElementById(\'feedback-modal\').remove()">Done</button>';
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Send';
+    err.innerHTML = escapeHtml(e.message === 'Failed to fetch' ? 'You seem to be offline.' : e.message) + ' Or email <a href="mailto:chitas.daily@gmail.com" style="color:inherit;">chitas.daily@gmail.com</a>.';
+  }
+}
+
+// ── The reader's menu: the day's learning, to move to another without going Home ──
+// The four of Chitas with their circles, then More learning, then Home. A
+// button (not a swipe: a swipe right in the reader is the day before, and
+// Safari owns the left edge).
+function openReaderMenu() {
+  closeReaderSettings();
+  document.getElementById('reader-menu')?.remove();
+  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const iso = dateISO(d), done = dayDone(user, d, new Date());
+  const cur = String(_rv.sid || '').replace(/^extra_/, '').split(':')[0];
+  const row = (id, name, piece, colour, on) => '<button type="button" class="ml-r' + (id === cur ? ' rm-cur' : '') + '" style="--k:' + colour + '" onclick="_readerMenuGo(\'' + id + '\')"' + (id === cur ? ' aria-current="true"' : '') + '>'
+    + '<span class="ml-bar" style="background:' + colour + '"></span>'
+    + '<span class="ml-x"><span class="ml-n" id="rm-name-' + id + '">' + name + '</span><span class="ml-p" id="rm-sub-' + id + '">' + (id === cur ? 'Reading now' + (piece ? ' · ' : '') : '') + escapeHtml(piece || '') + '</span></span>'
+    + _mlCircle(on, colour) + '</button>';
+  const chitas = schedule ? SECTION_IDS.filter(id => schedule[id]) : [];
+  const extras = _shelfTracks().filter(id => EXTRA_TRACK_DEFS[id]);
+  const n = chitas.filter(id => done[id]).length;
+  const when = dayOffset === 0 ? 'Today' : dayOffset === -1 ? 'Yesterday' : dayOffset === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'long' });
+  const m = document.createElement('div');
+  m.id = 'reader-menu';
+  m.innerHTML = '<div class="rm-shade" onclick="closeReaderMenu()"></div>'
+    + '<div class="rm-panel" role="dialog" aria-modal="true" aria-label="' + when + '\'s learning">'
+    +   '<div class="rm-top"><p>' + d.toLocaleDateString('en-US', { weekday: 'long' }) + ' · ' + hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d)) + '</p>'
+    +   '<button type="button" class="rm-x" onclick="closeReaderMenu()" aria-label="Close the menu"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></button></div>'
+    +   '<h2>' + when + '</h2>'
+    +   '<div class="rm-list">'
+    +     (chitas.length ? '<p class="rm-label">Chitas · ' + n + ' of ' + chitas.length + '</p>'
+          + chitas.map(id => row(id, schedule[id].label, id === 'rambam' ? String(schedule[id].subtitle || '') : schedule[id].subtitle, SECTION_COLORS[id], !!done[id])).join('') : '')
+    +     (extras.length ? '<p class="rm-label">More learning</p>'
+          + extras.map(id => row(id, EXTRA_TRACK_DEFS[id].label, '', EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso))).join('') : '')
+    +   '</div>'
+    +   '<button type="button" class="rm-home" onclick="closeReaderMenu();_closeReaderNow()">Home</button>'
+    + '</div>';
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.querySelector('.rm-x').focus();
+  // Each extra's piece (and Torah Ohr's name), from the schedules on the phone
+  extras.filter(id => OFFERED_TRACKS.includes(id)).forEach(id => _trackPiece(id, iso).then(piece => {
+    const el = document.getElementById('rm-sub-' + id);
+    if (!el || !piece) return;
+    el.textContent = (id === cur ? 'Reading now · ' : '') + _trackLine(id, piece).replace(/^Parshas /, '').replace(/ · (Torah Ohr|Likkutei Torah)$/, '');
+    if (id === 'likkuteiTorah' && piece.books === 'Torah Ohr') { const nm = document.getElementById('rm-name-' + id); if (nm) nm.textContent = 'Torah Ohr'; }
+  }).catch(() => {}));
+}
+function closeReaderMenu() {
+  const m = document.getElementById('reader-menu');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(() => m.remove(), 220);
+  document.getElementById('reader-menu-btn')?.focus();
+}
+function _readerMenuGo(id) {
+  closeReaderMenu();
+  const cur = String(_rv.sid || '').replace(/^extra_/, '').split(':')[0];
+  if (id === cur) return;
+  _readerCleanup();
+  if (SECTION_IDS.includes(id)) openChabadPanel(id); else openExtraReader(id);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('reader-menu')) closeReaderMenu(); });
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 24 · STATS TAB  (streak hero, activity grid, section breakdown)
@@ -6270,7 +6431,7 @@ async function _bustTanyaCache() {
       }
     }
     if (!swiping) return;
-    if (fromEdge) return; // edge swipe = close, no day hints
+    if (fromEdge) return; // edge swipe = the menu, no day hints
 
     updateHints(dx);
   }, { passive: true });
@@ -6282,7 +6443,7 @@ async function _bustTanyaCache() {
     const dx = touchCurX - touchStartX;
     clearHints();
     swiping = false;
-    if (fromEdge) { fromEdge = false; if (dx > 80) closeChabadPanel(); return; }
+    if (fromEdge) { fromEdge = false; if (dx > 80) openReaderMenu(); return; }   // from the left edge: the menu (where the browser leaves the edge free)
 
     // Check threshold and direction
     if (dx > THRESHOLD && _canReadDay(dayOffset - 1)) {

@@ -3,7 +3,7 @@
  *
  * Header: Authorization: Bearer <Firebase ID token>
  * Deletes: their progress and settings (users/{uid}), their daily-limit
- * counters (quiz_usage, tanya_usage), and their sign-in itself. Shared,
+ * counters (quiz_usage, tanya_usage, feedback_usage), and their sign-in itself. Shared,
  * anonymous things (saved quizzes, Tanya guides) aren't anyone's data, so stay.
  *
  * It runs on the server because the Firestore rules don't let the app delete
@@ -11,7 +11,7 @@
  */
 import { getDb, verifyUser, deleteAuthUser } from './_lib/firebase.js';
 
-const COLLECTIONS = ['users', 'quiz_usage', 'tanya_usage'];
+const COLLECTIONS = ['users', 'quiz_usage', 'tanya_usage', 'feedback_usage'];
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
