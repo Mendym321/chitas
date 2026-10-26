@@ -414,12 +414,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .ml-sw { position:relative; width:46px; height:28px; border-radius:14px; border:none; padding:0; background:var(--hi); flex-shrink:0; cursor:pointer; transition:background .15s; }
 .ml-sw::after { content:''; position:absolute; left:3px; top:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.2); transition:transform .15s; }
 .ml-sw[aria-checked="true"]::after { transform:translateX(18px); }
-.th-seg { display:flex; gap:2px; margin-left:auto; padding:3px; border-radius:999px; background:var(--card2); }
-.th-seg button { flex:1; padding:6px 10px; border:none; border-radius:999px; background:none; font-family:inherit; font-size:12px; font-weight:700; color:var(--t3); cursor:pointer; white-space:nowrap; }
-.th-seg button[aria-pressed="true"] { background:var(--t1); color:var(--bg); }
-#reader-settings-popover .th-seg { margin-left:0; }
+/* Appearance is the same switch as Language (.tz-seg); in a Profile row it takes the full width */
+#reader-settings-popover .tz-seg { margin-bottom:0; }
 .ps-row .th-seg { flex-basis:100%; margin:10px 0 2px; }
-.th-seg button { padding:8px 10px; }
 #reader-menu { position:fixed; inset:0; z-index:1001; }
 #reader-menu .rm-shade { position:absolute; inset:0; background:rgba(31,27,22,.45); opacity:0; transition:opacity .2s; }
 #reader-menu .rm-panel { position:absolute; left:0; top:0; bottom:0; width:min(320px, 86vw); background:var(--bg); border-radius:0 var(--r-l) var(--r-l) 0; padding:calc(18px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom)); box-sizing:border-box; display:flex; flex-direction:column; box-shadow:8px 0 30px rgba(0,0,0,.18); transform:translateX(-100%); transition:transform .22s cubic-bezier(.3,.7,.3,1); }
@@ -720,8 +717,13 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* ── Buttons: one main (gold) and one quiet (outline) for the whole app ── */
 .btn-primary { background: var(--ink) !important; color: var(--on-ink) !important; border: none !important; font-weight: 700 !important; }
 #chabad-mark-btn, #reader-next .rn-go { background: var(--rc, var(--ink)) !important; color: var(--rc-on, var(--on-ink)) !important; border: none !important; font-weight: 800 !important; border-radius: 999px !important; }
-.btn-quiet, #chabad-quiz-btn, #reader-next .rn-home, #chabad-mark-btn[data-state="done"] { background: var(--card2) !important; border: none !important; color: var(--t1) !important; font-weight: 700 !important; border-radius: 999px !important; }
+.btn-quiet, #reader-next .rn-home, #chabad-mark-btn[data-state="done"] { background: var(--card2) !important; border: none !important; color: var(--t1) !important; font-weight: 700 !important; border-radius: 999px !important; }
 #chabad-mark-btn[data-state="done"] { color: var(--t2) !important; }
+/* Quiz yourself: a real feature, so in the section's colour (a tint), not grey */
+#chabad-quiz-btn { background: color-mix(in srgb, var(--rc) 14%, var(--card)) !important; color: color-mix(in srgb, var(--rc) 62%, var(--t1)) !important; border: 1.5px solid color-mix(in srgb, var(--rc) 38%, transparent) !important; font-weight: 800 !important; border-radius: 999px !important; }
+#chabad-quiz-btn[data-state="done"] { background: var(--card2) !important; color: var(--t2) !important; border-color: transparent !important; font-weight: 700 !important; }
+#chabad-quiz-btn .qz { display:flex; align-items:center; gap:6px; font-size:var(--fs-2); white-space:nowrap; }
+#chabad-quiz-btn .qz svg { flex-shrink:0; }
 .btn-primary, .btn-quiet { padding: 15px; border-radius: 999px; font-size: var(--fs-3); font-family: inherit; cursor: pointer; }
 #reader-next .rn-done { font-size:var(--fs-2); font-weight:600; color:var(--t2); margin:2px 2px 8px; }
 #reader-next .rn-row { display:flex; gap:8px; }
@@ -986,7 +988,10 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #tab-profile > .card, #tab-profile > #ps-guest-row { column-span:all; }
   #tab-profile > .ps-card { break-inside:avoid; }
   #tab-profile > .ps-label { break-after:avoid; }
-  #tab-profile > .ps-label:first-of-type { margin-top:6px; }
+  /* A column's first label loses its top margin, so the space goes under the
+     name card instead: both columns then start on the same line */
+  #tab-profile > .card { margin-bottom:18px; }
+  #tab-profile > .ps-label:first-of-type { margin-top:0; }
   /* The reader: a column about as wide as a printed page */
   #reader-head, #reader-daybar { padding-left:max(24px, calc((100% - 900px) / 2)) !important; padding-right:max(24px, calc((100% - 900px) / 2)) !important; }
   #native-reader > div { max-width:936px; margin:0 auto; }   /* 900 of text inside its 18px sides: lines up with the header and buttons */
@@ -1345,7 +1350,7 @@ window._fsGetDoc = getDoc;
 
       <p class="ps-label">Reading</p>
       <div class="ps-card">
-        <div class="ps-row" style="cursor:default;flex-wrap:wrap;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span><span class="ps-row-label">Appearance</span><div class="th-seg" role="group" aria-label="Appearance"><button type="button" data-th="auto" onclick="setThemePref('auto')">Automatic</button><button type="button" data-th="light" onclick="setThemePref('light')">Light</button><button type="button" data-th="dark" onclick="setThemePref('dark')">Dark</button></div></div>
+        <div class="ps-row" style="cursor:default;flex-wrap:wrap;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span><span class="ps-row-label">Appearance</span><div class="tz-seg th-seg" role="group" aria-label="Appearance"><button type="button" data-th="auto" onclick="setThemePref('auto')">Automatic</button><button type="button" data-th="light" onclick="setThemePref('light')">Light</button><button type="button" data-th="dark" onclick="setThemePref('dark')">Dark</button></div></div>
       </div>
 
       <p class="ps-label">About</p>
@@ -1429,13 +1434,13 @@ window._fsGetDoc = getDoc;
         <button onclick="_readerFontStep(1)" id="rs-font-inc" style="width:36px;height:36px;border-radius:var(--r-s);background:var(--surface);border:1px solid var(--border);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--ui-font);font-size:var(--fs-4);font-weight:800;flex-shrink:0;">A</button>
       </div>
     </div>
-    <!-- Light or dark, without leaving the text -->
-    <div>
-      <p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Appearance</p>
-      <div class="th-seg" role="group" aria-label="Appearance"><button type="button" data-th="auto" onclick="setThemePref('auto')">Automatic</button><button type="button" data-th="light" onclick="setThemePref('light')">Light</button><button type="button" data-th="dark" onclick="setThemePref('dark')">Dark</button></div>
-    </div>
     <!-- Section-specific options injected here by JS -->
     <div id="rs-section-opts"></div>
+    <!-- Light or dark for the whole app, after the options for this text -->
+    <div>
+      <p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Appearance</p>
+      <div class="tz-seg th-seg" role="group" aria-label="Appearance"><button type="button" data-th="auto" onclick="setThemePref('auto')">Automatic</button><button type="button" data-th="light" onclick="setThemePref('light')">Light</button><button type="button" data-th="dark" onclick="setThemePref('dark')">Dark</button></div>
+    </div>
     <button type="button" class="rs-report" onclick="closeReaderSettings();openFeedback('mistake')">Report a mistake in this text</button>
   </div>
 
@@ -1477,7 +1482,7 @@ window._fsGetDoc = getDoc;
       </button>
       <!-- Quiz — right half, equal size -->
       <button id="chabad-quiz-btn" style="display:none;flex:1;padding:12px;cursor:pointer;font-family:inherit;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;">
-        <span style="font-size:var(--fs-2);">Review</span>
+        <span class="qz"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.4M12 17h.01"/></svg><span id="chabad-quiz-label">Quiz yourself</span></span>
       </button>
     </div>
   </div>
@@ -2892,9 +2897,13 @@ function renderSectionsForOffset(iso) {
 
 // Review on Today: a learned section's tile says it's ready to review (or how
 // it went), and a card under the tiles lists what's ready. Today only.
+// Today's review of a section, both levels added up: a quick review (3/4) and a
+// deep dive (5/6) is 8/10, not just the first one taken
 function _reviewOf(id) {
   const d = (user.quizDone || {})[id];
-  return d && typeof d === 'object' ? (reviewResult(d.quick, 'quick') || reviewResult(d.deep, 'deep')) : null;
+  if (!d || typeof d !== 'object') return null;
+  const parts = [reviewResult(d.quick, 'quick'), reviewResult(d.deep, 'deep')].filter(Boolean);
+  return parts.length ? { r: parts.reduce((a, p) => a + p.r, 0), n: parts.reduce((a, p) => a + p.n, 0) } : null;
 }
 function _tileReview(id, learnedToday) {
   if (!learnedToday || !_quizzable(id)) return '';
@@ -4825,10 +4834,7 @@ function _renderTehillimContent() {
   const isHe = lang !== 'en'; // Hebrew and Both use the Hebrew layout
 
   // Lang toggle
-  let t = '<div class="tz-seg" style="margin-bottom:18px;">'
-    + [['he','עברית'], ['both','Both'], ['en','English']].map(([l, lb]) =>
-        '<button class="' + (lang === l ? 'on' : '') + '" onclick="_setTehillimLang(\'' + l + '\')">' + lb + '</button>').join('')
-    + '</div>';
+  let t = _langSeg(lang, "_setTehillimLang('LANG')");
   const isBoth = lang === 'both';
 
   // Small label for the range (the printed page has none, but it helps orientation)
@@ -5085,10 +5091,8 @@ function _renderTanyaContent() {
   const fixEn = e => _tanyaNoteMarkers(e);
 
   // Controls: language, then the guide and nekudos switches
-  let t = '<div class="tz-seg" role="tablist">'
-    + [['he', 'עברית'], ['both', 'Both'], ['en', 'English']].map(([l, lb]) =>
-        '<button class="' + (lang === l ? 'on' : '') + '" onclick="_setTanyaLang(\'' + l + '\')">' + lb + '</button>').join('')
-    + '</div><div class="tz-opts">'
+  let t = _langSeg(lang, "_setTanyaLang('LANG')")
+    + '<div class="tz-opts">'
     + '<button class="tz-opt' + (guideOn ? ' on' : '') + '" onclick="_toggleTanyaOpt(\'guide\')">Guide</button>'
     + (lang !== 'en' ? '<button class="tz-opt' + (nikud ? ' on' : '') + '" onclick="_toggleTanyaOpt(\'nikud\')">נקודות</button>' : '')
     + '</div>';
@@ -5283,12 +5287,10 @@ function openChabadPanel(sectionId) {
   if (_quizzable(sectionId) && (dayOffset || 0) === 0) { // quizzes are on today's portion
     quizBtn.style.display = 'flex';
     quizBtn.onclick = () => { closeChabadPanel(); openQuiz(sectionId); };
-    if (!user.quizDone) user.quizDone = {};
-    if (user.quizDone[sectionId]) {
-      quizBtn.querySelector('span:last-child').textContent = 'Reviewed today';
-    } else {
-      quizBtn.querySelector('span:last-child').textContent = 'Review';
-    }
+    // "Quiz yourself · 4"; after, how it went ("Quizzed · 8/10"), still there for a deep dive
+    const r = _reviewOf(sectionId);
+    quizBtn.dataset.state = r ? 'done' : 'todo';
+    document.getElementById('chabad-quiz-label').textContent = r ? 'Quizzed · ' + r.r + '/' + r.n : 'Quiz yourself';
   } else {
     quizBtn.style.display = 'none';
   }
@@ -5480,10 +5482,7 @@ function _buildSettingsSectionOpts(sectionId) {
     // Lang toggle for bilingual extra tracks
     const hasBilingual = sectionId !== 'likkuteiSichos'; // LS has its own UI
     if (hasBilingual && def) {
-      const reloadFn = isDafType
-        ? '_setDafLang(\'LANG\')'
-        : 'localStorage.setItem(\'' + langKey + '\',\'LANG\');openExtraReader(\'' + sectionId + '\');closeReaderSettings();';
-      html += _rsLangToggleCustom(lang, color, langKey, reloadFn);
+      html += _rsLangToggleCustom(lang, sectionId, langKey);
     }
 
     // Rashi / Tosafos toggles for Gemara tracks
@@ -5523,19 +5522,26 @@ function _langSeg(lang, call) {
 }
 
 // The gear's Language row: the same switch as at the top of the text
+function _rsLangRow(seg) {
+  return '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Language</p>' + seg + '</div>';
+}
 function _rsLangToggle(sectionId, lang) {
-  return '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Language</p>'
-    + _langSeg(lang, "_setReaderLang('" + sectionId + "','LANG')") + '</div>';
+  return _rsLangRow(_langSeg(lang, "_setReaderLang('" + sectionId + "','LANG')"));
 }
 
 function _rsDivider() {
   return '<div style="height:1px;background:var(--border);margin:0 -16px;"></div>';
 }
 
-// …for an extra track, which keeps its own choice and reloads
-function _rsLangToggleCustom(lang, color, storageKey, reloadCall) {
-  return '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Language</p>'
-    + _langSeg(lang, "localStorage.setItem('" + storageKey + "','LANG');" + reloadCall) + '</div>';
+// …for an extra track, which keeps its own choice. Like the core readers,
+// the gear stays open and its switch moves to the new choice
+function _rsLangToggleCustom(lang, id, storageKey) {
+  return _rsLangRow(_langSeg(lang, "_setExtraLangInline('" + id + "','" + storageKey + "','LANG')"));
+}
+async function _setExtraLangInline(id, storageKey, lang) {
+  if (id === 'dafYomi') _setDafLang(lang);
+  else { localStorage.setItem(storageKey, lang); await openExtraReader(id); }
+  if (_settingsOpen) _buildSettingsSectionOpts(id);
 }
 
 // Inline Chumash translation select — stays inside the popover, rebuilds it after
@@ -5602,6 +5608,9 @@ function _openRambamTrackPicker() { changeTrack(); }
 
 function _closeSettingsOnOutsideClick(e) {
   if (!_settingsOpen) return;
+  // A choice inside the gear redraws its options, so the button tapped is
+  // gone by now: that was a tap inside, not outside
+  if (!e.target.isConnected) return;
   const pop  = document.getElementById('reader-settings-popover');
   const gear = document.getElementById('reader-font-controls');
   if (pop && !pop.contains(e.target) && gear && !gear.contains(e.target)) {
@@ -6063,7 +6072,7 @@ function setThemePref(pref) {
 // Mark the current choice on every Automatic / Light / Dark control
 function _showThemePref() {
   const pref = _themePref();
-  document.querySelectorAll('.th-seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.th === pref));
+  document.querySelectorAll('.th-seg button').forEach(b => { b.setAttribute('aria-pressed', b.dataset.th === pref); b.classList.toggle('on', b.dataset.th === pref); });
 }
 function setTheme(mode, save=true) {
   const html = document.documentElement;
@@ -7298,14 +7307,8 @@ function _hayomYomInjectLangToggle() {
   const opts = document.getElementById('rs-section-opts');
   if (!opts) return;
   const lang = window._hayomYomLang || localStorage.getItem('hayomYomLang') || 'both';
-  const btn = (val, label) => {
-    const a = val === lang;
-    return '<button onclick="_hayomYomSetLang(\'' + val + '\')" style="flex:1;padding:7px 4px;border-radius:var(--r-s);border:none;cursor:pointer;font-size:var(--fs-2);font-weight:' + (a?'700':'600') + ';font-family:inherit;background:' + (a?'var(--card)':'transparent') + ';color:' + (a?'var(--t1)':'var(--t3)') + ';transition:all .15s;">' + label + '</button>';
-  };
-  opts.innerHTML = '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Language</p>'
-    + '<div style="display:flex;background:var(--surface);border-radius:var(--r-s);padding:3px;">'
-    + btn('he','Hebrew') + btn('both','Both') + btn('en','English')
-    + '</div></div>';
+  opts.innerHTML = _rsLangRow(_langSeg(lang, "_hayomYomSetLang('LANG')"));
+  opts.style.display = 'flex';
 }
 
 window._hayomYomSetLang = function(lang) {

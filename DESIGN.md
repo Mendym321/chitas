@@ -16,7 +16,7 @@ Read this before changing how anything looks or sounds. The full reasoning, the 
 5. **Quiet voice.** Plain facts ("Tanya and Rambam left", "86 days of Chitas"). No pep talk. A small "Nice! X done." when you tick, a real moment only when the day is finished or a milestone is reached. No emoji.
 6. **Celebrate real things.** The day finished: a full dark screen with the four rings closing. Milestones for real accomplishments. No points or levels.
 7. **Text first in the reader.** Controls stay out of the reading until asked for.
-8. **One of each control.** The Hebrew / Both / English switch is the same segmented bar in every reader and in the gear (`_langSeg`); on/off options (Tanya's Guide and nekudos, Daf's Rashi and Tosafos) are the same chips, in the reader's colour (`--rc`). Colours come from the tokens, never a hex copied in (the old palette is gone from the core readers).
+8. **One of each control.** Every segmented choice is the same bar (`.tz-seg`): Hebrew / Both / English in every reader and in the gear (`_langSeg`), and Automatic / Light / Dark. A choice in the gear keeps the gear open and moves its switch, whichever reader you're in. On/off options (Tanya's Guide and nekudos, Daf's Rashi and Tosafos) are the same chips, in the reader's colour (`--rc`). Colours come from the tokens, never a hex copied in (the old palette is gone from the core readers).
 9. **Every reader starts clean.** The reader is one shared panel; `_readerBegin` resets its bottom bar each time, so nothing one sefer changes carries over to the next.
 
 ## Tokens (in `index.html`, `:root`)
@@ -61,8 +61,13 @@ Top left in every reader is the menu (where the X was). It slides in from the le
 ## Feedback and mistake reports
 "Send feedback" in Profile and "Report a mistake in this text" in the reader's gear open one sheet: a message, an optional email to answer, Send. A mistake report also carries what was being read, the day and the first words on the screen. `/api/feedback` keeps it (feedback/, server only; no user id), emails it to chitas.daily@gmail.com through Resend when `RESEND_API_KEY` is set on Vercel, and lets one person send 10 a day. The admin page lists them, newest first.
 
+## Checking the look
+`cd tools && npm run test:look` (`tools/check-look.mjs`) opens every reader's gear, Profile on a phone and Profile on a computer, in light and dark, and checks: every switch looks the same and shows one choice; no home-made switch; the gear lists Language then Appearance; a new language keeps the gear open; every button has a name; Profile's two columns start on the same line; the sidebar sits beside the page. Add `-- --shots` for pictures in `tools/.look/`.
+
+Run it with the other tests after any change to how something looks. When a new kind of control or screen comes in, add a rule for it here, so the next mismatch is caught by the check instead of by eye.
+
 ## Light and dark
-Appearance is Automatic, Light or Dark, in Profile and in the reader's settings (the gear), so it can change without leaving the text. Automatic is the default: it follows the phone, also when the phone changes by itself in the evening. Light or Dark is kept on this phone; choosing Automatic again forgets it.
+Appearance is Automatic, Light or Dark, in Profile and in the reader's settings (the gear), so it can change without leaving the text. In the gear it comes after the options for the text (Text size, Language, the reader's own), because it changes the whole app. Automatic is the default: it follows the phone, also when the phone changes by itself in the evening. Light or Dark is kept on this phone; choosing Automatic again forgets it.
 
 ## App icon
 The four rings, full and large, on cream (`icons/icon.svg`, rendered to PNGs). A plain square with no rounded corners and no see-through parts: the phone rounds the corners itself, and the App Store turns down icons that are already rounded or transparent.
