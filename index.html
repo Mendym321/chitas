@@ -85,6 +85,10 @@
   }
   body { overflow-x: hidden; overflow-x: clip; }
   html, body { background: var(--bg); color: var(--t1); font-family: var(--ui-font); font-size:var(--fs-3); line-height: 1.45; min-height: 100vh; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+  /* iPhone enlarges some text when turned sideways and doesn't always shrink it back
+     (the reader's Yesterday / Today / Tomorrow bar stayed big). Text sizes are ours;
+     100%, not none, so people can still zoom */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   #app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: 120px; }
 
   /* ── Shared building blocks ─────────────────────────────────────────────── */
