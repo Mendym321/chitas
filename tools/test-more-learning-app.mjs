@@ -334,6 +334,52 @@ await check('next week is a new week: Vayera', async () => {
   return [p.parsha, p.books];
 }, ['Vayera', 'Torah Ohr']);
 
+// Hebcal's date converter, faked from the computer's own Hebrew calendar
+await page.route(/hebcal\.com\/converter/, route => {
+  const q = new URL(route.request().url()).searchParams;
+  const d = new Date(+q.get('gy'), +q.get('gm') - 1, +q.get('gd'), 12);
+  const parts = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(d);
+  const m = parts.find(p => p.type === 'month').value;
+  route.fulfill({ json: { hd: +parts.find(p => p.type === 'day').value, hm: { Heshvan: 'Cheshvan', Tishri: 'Tishrei' }[m] || m }, headers: { 'Access-Control-Allow-Origin': '*' } });
+});
+
+await check('Hayom Yom on Today follows the day you look at (yesterday: 11 Cheshvan)', async () => {
+  user.extraTracks = ['hayomYom', 'dafYomi', 'likkuteiTorah'];
+  const el = document.getElementById('thought');
+  dayOffset = -1; await _renderThought();
+  const r = [el.style.display, el.querySelector('.thought-k')?.textContent];
+  dayOffset = 0; await _renderThought();
+  return r.concat(el.querySelector('.thought-k')?.textContent);
+}, ['block', 'Hayom Yom · 11 Cheshvan', 'Hayom Yom · 12 Cheshvan']);
+
+await check('Hayom Yom\'s reader has the day bar, and the day before shows that day', async () => {
+  await openExtraReader('hayomYom');
+  const bar = document.getElementById('reader-daybar').style.display;
+  _readerGoDay(-1); await new Promise(r => setTimeout(r, 1200));
+  const r = [bar, document.getElementById('chabad-panel-title').textContent, document.getElementById('chabad-panel-sub').textContent, document.getElementById('rd-label').textContent.startsWith('Today')];
+  _readerGoDay(1); await new Promise(r => setTimeout(r, 1200));
+  return r.concat(document.getElementById('chabad-panel-sub').textContent);
+}, ['flex', 'Hayom Yom', '11 Cheshvan', false, '12 Cheshvan']);
+
+await check('Daf Yomi too: the day before is the daf before', async () => {
+  closeChabadPanel();
+  await openExtraReader('dafYomi');
+  const before = document.getElementById('chabad-panel-sub').textContent;
+  _readerGoDay(-1); await new Promise(r => setTimeout(r, 1200));
+  const after = document.getElementById('chabad-panel-sub').textContent;
+  _readerGoDay(1); await new Promise(r => setTimeout(r, 1200));
+  closeChabadPanel();
+  return [before, after];
+}, ['Bechoros 35', 'Bechoros 34']);
+
+await check('the week\'s Likkutei Torah has no day bar, and a swipe doesn\'t change the day', async () => {
+  await openExtraReader('likkuteiTorah');
+  const bar = document.getElementById('reader-daybar').style.display;
+  _readerGoDay(-1); await new Promise(r => setTimeout(r, 600));
+  const off = dayOffset; closeChabadPanel(); closeChabadPanel();
+  return [bar, off];
+}, ['none', 0]);
+
 await check('more than 7 days back is read only', async () => {
   dayOffset = -9;
   _toggleTrack('nachYomi');
