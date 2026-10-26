@@ -380,6 +380,24 @@ const short = await page.evaluate(async () => {
 });
 fbCheck('too short: says so and sends nothing', [feedbackSent, short], [null, 'Please write a few words.']);
 
+// Bereishis 18:10, as Sefaria has it: the English Rashi comes in a different order from the Hebrew
+await check('Chumash: a verse\'s English and Hebrew Rashi aren\'t paired up (the translation orders them differently, 18:10)', () => {
+  const en = ['<b>Next year.</b> at this time next year. This was on Pesach…', '<b>כָּעֵת חַיָּה</b> [means] at this time when there will be life to you…',
+    '<b>I will return.</b> The angel did not foretell…', '<b>That was behind him.</b> The entrance was behind the angel.'];
+  const he = ['שוב אשוב. לֹא בִשְּׂרוֹ הַמַּלְאָךְ…', 'כעת חיה. כָּעֵת הַזֹּאת לַשָּׁנָה הַבָּאָה…', 'כעת חיה. כָּעֵת הַזֹּאת שֶׁתְּהֵא חַיָּה לָכֶם…', 'והוא אחריו. הַפֶּתַח הָיָה אַחַר הַמַּלְאָךְ:'];
+  const draw = rashiMap => {
+    window._chumashData = { torahChunks: [{ ref: 'Genesis 18', chapter: 18, startVerse: 10, en: ['He said, I will return to you next year…'], he: ['וַיֹּאמֶר שׁוֹב אָשׁוּב…'] }], rashiMap };
+    localStorage.setItem('chitas_lang_chumash', 'both'); _rv.sid = 'chumash'; _renderChumashContent();
+    const blocks = [...document.querySelectorAll('#native-reader-content .ch-rashi')];
+    return [blocks.length, blocks[0]?.children[0].children.length, blocks[0]?.children[1].children.length,
+      blocks[0]?.children[1].children[0].textContent.startsWith('שוב אשוב'), blocks[0]?.children[0].children[2].textContent.startsWith('I will return')];
+  };
+  const r = draw({ '18:10': { en, he } });
+  // a text kept on the phone from before (pairs) still shows, the same way
+  r.push(...draw({ '18:10': en.map((e, i) => ({ en: e, he: he[i] })) }));
+  return r;
+}, [1, 4, 4, true, true, 1, 4, 4, true, true]);
+
 // ── Light and dark: Automatic follows the phone ───────────────────────────
 console.log('Appearance:');
 const isDark = () => page.evaluate(() => document.documentElement.classList.contains('dark'));
