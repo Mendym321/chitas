@@ -314,6 +314,12 @@ await check('Review on Today: a learned tile is ready to review, then says how i
   return [chip('chumash'), chip('tanya'), chip('tehillim'), chip('rambam'), ready.style.display, [...ready.querySelectorAll('.rr-t p:first-child')].map(p => p.textContent)];
 }, ['Reviewed 3/4', 'Review · 4', null, null, 'block', ['Tanya is ready to review']]);
 
+await check('a quick review and a deep dive both count on the tile (3/4 + 5/6 = 8/10, not 3/4)', () => {
+  user.done = { chumash: true }; user.quizDone = { chumash: { quick: { r: 3, n: 4 }, deep: { r: 5, n: 6 } } };
+  renderSectionsForOffset(dateISO(new Date()));
+  return document.querySelector('#card-chumash .stile-rv')?.textContent;
+}, 'Reviewed 8/10');
+
 await check('Review right after you learn: marking it in the reader offers the review', () => {
   user.done = {}; user.quizDone = {}; dayOffset = 0;
   document.getElementById('chabad-panel').style.display = 'flex';
