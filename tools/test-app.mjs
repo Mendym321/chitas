@@ -329,6 +329,18 @@ await check('quiz request sends today\'s exact Chumash ref and the sign-in token
 console.log(quizRequest.auth === 'Bearer tok123' && quizRequest.body.section === 'chumash' && quizRequest.body.level === 'quick'
   ? '  ✓ …with section, level and token' : (failed++, '  ✗ quiz request was ' + JSON.stringify(quizRequest)));
 
+await check('the reader\'s menu lists today\'s four (what\'s done ticked) and moves from one to another', async () => {
+  user = { ...user, done: { chumash: true } };
+  openChabadPanel('tehillim'); await new Promise(r => setTimeout(r, 150));
+  openReaderMenu(); await new Promise(r => setTimeout(r, 250));
+  const rows = [...document.querySelectorAll('#reader-menu .ml-r')].slice(0, 4).map(r => r.querySelector('.ml-n').textContent + (r.querySelector('svg[aria-label=Learned]') ? ' ✓' : '') + (r.classList.contains('rm-cur') ? ' (now)' : ''));
+  const label = document.querySelector('#reader-menu .rm-label').textContent;
+  _readerMenuGo('tanya'); await new Promise(r => setTimeout(r, 300));
+  const r = [rows, label, document.getElementById('chabad-panel-title').textContent, !document.getElementById('reader-menu')];
+  _closeReaderNow();
+  return r;
+}, [['Chumash ✓', 'Tehillim (now)', 'Tanya', 'Rambam'], 'Chitas · 1 of 4', 'Tanya', true]);
+
 // ── Light and dark: Automatic follows the phone ───────────────────────────
 console.log('Appearance:');
 const isDark = () => page.evaluate(() => document.documentElement.classList.contains('dark'));

@@ -125,6 +125,41 @@ await check('nothing carries over in the bottom bar: after a parked track hides 
   }
   return r;
 }, [false, true, true, false, true, true, false]);
+await check('the reader\'s menu: the day\'s More learning, the one you\'re in marked, its piece', async () => {
+  await openExtraReader('nachYomi'); await new Promise(r => setTimeout(r, 200));
+  document.getElementById('reader-menu-btn').click();
+  await new Promise(r => setTimeout(r, 300));
+  const m = document.getElementById('reader-menu');
+  return [!!m, [...m.querySelectorAll('.ml-r')].map(r => r.querySelector('.ml-n').textContent + ' | ' + r.querySelector('.ml-p').textContent + (r.classList.contains('rm-cur') ? ' | now' : '')),
+    m.querySelector('[role=dialog]').getAttribute('aria-modal')];
+}, [true, ['Daf Yomi | Bechoros 35', 'Nach Yomi | Reading now · Yirmiyahu 41 | now', 'Halacha Yomis | Siman 10:20–26', 'Torah Ohr | Lech Lecha'], 'true']);
+
+await check('picking another in the menu opens it, and the menu closes', async () => {
+  document.querySelector('#reader-menu .ml-r:nth-of-type(1)').click();
+  await new Promise(r => setTimeout(r, 400));
+  return [document.getElementById('chabad-panel-title').textContent, !document.getElementById('reader-menu'), _rv.sid];
+}, ['Daf Yomi', true, 'extra_dafYomi']);
+
+await check('Home in the menu closes the reader, even from inside a maamar', async () => {
+  await openExtraReader('likkuteiTorah'); await new Promise(r => setTimeout(r, 200)); await _ltOpen(1);
+  openReaderMenu(); await new Promise(r => setTimeout(r, 300));
+  document.querySelector('#reader-menu .rm-home').click();
+  await new Promise(r => setTimeout(r, 300));
+  return [document.getElementById('chabad-panel').style.display, !document.getElementById('reader-menu'), _rv.sid];
+}, ['none', true, null]);
+
+await check('Escape (or tapping outside) closes the menu and leaves the text open', async () => {
+  await openExtraReader('kitzur'); await new Promise(r => setTimeout(r, 200));
+  openReaderMenu(); await new Promise(r => setTimeout(r, 100));
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  await new Promise(r => setTimeout(r, 300));
+  openReaderMenu(); await new Promise(r => setTimeout(r, 100));
+  document.querySelector('#reader-menu .rm-shade').click();
+  await new Promise(r => setTimeout(r, 300));
+  const r = [!document.getElementById('reader-menu'), document.getElementById('chabad-panel').style.display !== 'none'];
+  closeChabadPanel();
+  return r;
+}, [true, true]);
 if (asked.some(a => a.startsWith('calendars'))) { failed++; console.log('  ✗ a row asked Sefaria\'s calendar:', asked); }
 else console.log('  ✓ no row asked Sefaria\'s calendar');
 

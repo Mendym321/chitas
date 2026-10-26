@@ -52,6 +52,9 @@ Chitas stays the main thing on Today. Below the four tiles and the Hayom Yom car
 - **Odd days, said plainly:** Kinnim and Middos have no Gemara: their Vilna pages are the Mishnah, so Daf Yomi shows the mishnayos on each page (read off the Vilna Shas, Me'ilah 22 to Middos 37; Me'ilah 22 also has Kinnim's first perek), with a note where a daf starts or ends inside a mishnah; 30 Cheshvan and 30 Adar I have no Kitzur reading; 15 Elul's "Klalim" isn't on Sefaria; Shoftim has no section in Likkutei Torah. Hebcal's Adar II Kitzur table has four typos, fixed in the generator.
 - Parked, still working for anyone who added them before: Mishnah Yomi, Likkutei Sichos, Sha'ar HaBitachon.
 
+## Getting around from the reader
+Top left in every reader is the menu (where the X was). It slides in from the left: the day you're reading (Today, Yesterday…), the four of Chitas with their circles and "Chitas · 2 of 4", then More learning, each row like Today's (a line in its colour, its name and piece, its circle); the one you're in says "Reading now". Tap one to go straight to it; Home at the bottom closes the reader. A swipe from the left edge opens it too, where the browser leaves the edge free (the installed app); a swipe across the text is still the day before / after. Escape or a tap outside closes it.
+
 ## Light and dark
 Appearance is Automatic, Light or Dark, in Profile and in the reader's settings (the gear), so it can change without leaving the text. Automatic is the default: it follows the phone, also when the phone changes by itself in the evening. Light or Dark is kept on this phone; choosing Automatic again forgets it.
 
