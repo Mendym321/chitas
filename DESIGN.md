@@ -122,5 +122,8 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
 - **Next:** reminders (native app).
 - Points and the leaderboard were removed in Oct 2026 (`user.xp` is still stored so old data isn't lost, but never shown).
 
-## Reminders and touch (planned)
-At most one notification a day, only if the day isn't finished, never on Shabbos or Yom Tov. Location is asked only when someone turns on Shabbos quiet hours, as a city picked from a list. Three haptics in the whole app: a section learned, the day finished, a milestone.
+## Reminders and touch
+Ready for the app version (Capacitor); a browser never shows them. Profile has "On this phone" only inside the app.
+- **Daily reminder** (`js/reminders.js`, tested in `tools/test-reminders.mjs`): at most one a day, at the time you pick (20:00 to start). Never on Shabbos or Yom Tov. The day before, an evening time comes at 12:00 instead, so it never lands after candle lighting (no location needed). Not today once today's Chitas is done. The phone holds the next two weeks; the app refreshes them when it opens and whenever you mark something. Kept on the phone, not in your account. Text: "Today's Chumash, Tehillim, Tanya and Rambam."
+- **Touch feedback** (`haptic()`): three moments only. A section learned is a light tap; the day finished and a milestone are the phone's "success". On by default; a switch turns it off. In a browser only Android can do it.
+- **The app needs** the plugins `@capacitor/haptics` and `@capacitor/local-notifications`. Nothing else changes: the code finds them when it runs inside the app.
