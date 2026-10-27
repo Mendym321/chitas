@@ -33,3 +33,13 @@ function getChumashDayLabel(d) {
   const aliya = d.getDay() === 6 ? 'Shabbos' : 'Aliya ' + (d.getDay() + 1);
   return parsha ? parsha + ' · ' + aliya : aliya;
 }
+
+// The day's place in the parsha, for the reader's heading and its guide line:
+// { parsha: "Vayera", aliyah: 3 } (Shabbos = 7). null on days with no single
+// parsha (Simchas Torah's Vezos Habracha + Bereishis).
+function getChumashDay(d) {
+  const ref = getChumashAliyaRef(d);
+  if (!ref || ref.includes('|')) return null;
+  const parsha = /^Deuteronomy 3[34]:/.test(ref) ? 'Vezot Haberakhah' : getParshaForDate(d);
+  return parsha ? { parsha, aliyah: d.getDay() + 1, ref } : null;
+}

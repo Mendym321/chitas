@@ -746,10 +746,18 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .tz-head { text-align:center; margin:4px 0 22px; }
 .tz-part { font-family:var(--he-font); font-size:15px; color:var(--t3); direction:rtl; }
 .tz-ch { display:flex; align-items:center; justify-content:center; gap:14px; font-family:'Vilna','Frank Ruhl Libre',serif; font-weight:700; font-size:32px; line-height:1.25; color:var(--t1); direction:rtl; }
-.tz-ch::before, .tz-ch::after { content:''; width:44px; height:1px; background:color-mix(in srgb, var(--purple) 55%, transparent); }
+.tz-ch::before, .tz-ch::after { content:''; width:44px; height:1px; background:color-mix(in srgb, var(--rc, var(--purple)) 55%, transparent); }
 .tz-en-label { font-size:12px; color:var(--t3); margin-top:3px; }
 .tz-guide { background:var(--card); border-radius:16px; padding:14px 16px 12px; margin-bottom:24px; }
-.tz-gl { font:600 var(--fs-2) var(--ui-font); color:var(--purple); margin-bottom:3px; }
+.tz-gl { font:600 var(--fs-2) var(--ui-font); color:var(--rc, var(--purple)); margin-bottom:3px; }
+/* Every reader, the same pieces (DESIGN.md: "One look for the readers") */
+.rd-vn { font:800 11px var(--ui-font); color:var(--rc); margin:0 5px 0 0; vertical-align:2px; }
+.rd-he .rd-vn { margin:0 0 0 5px; }
+.rd-ch { display:flex; align-items:center; gap:10px; margin:22px 0 4px; font:800 13px var(--ui-font); color:var(--rc); }
+.rd-ch::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--rc) 30%, transparent); }
+.rd-comm { background:var(--card); border-radius:12px; border-left:4px solid color-mix(in srgb, var(--rc) 55%, transparent); padding:10px 13px; margin:6px 0 8px; }
+.rd-comm-k { font:800 12px var(--ui-font); color:var(--rc); margin-bottom:2px; }
+#chabad-panel-sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .tz-gt { font-family:var(--read-font); font-size:17px; line-height:1.5; color:var(--t1); }
 .tz-gt + .tz-gl { margin-top:12px; }
 
@@ -4380,6 +4388,39 @@ async function _fetchChumashText(ref, keyword){
 }
 
 
+// The one-line guides for Chumash and Rambam (data/guides/chumash.json,
+// rambam.json): written ahead and shipped with the app, like Hayom Yom
+const _guides = {};
+function _guideLines(section, onReady) {
+  if (_guides[section]) return _guides[section];
+  if (_guides[section] === undefined) {
+    _guides[section] = null;   // loading
+    fetch('/data/guides/' + section + '.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
+      .then(d => { _guides[section] = d || {}; onReady && onReady(); });
+  }
+  return null;
+}
+// A reader's on/off option (Guide, Rashi): on unless turned off
+const _readerOpt = (section, name) => localStorage.getItem('chitas_' + section + '_' + name) !== 'off';
+function _toggleReaderOpt(section, name) {
+  const key = 'chitas_' + section + '_' + name;
+  localStorage.setItem(key, _readerOpt(section, name) ? 'off' : 'on');
+  const pos = _readerPlace();
+  ({ chumash: _renderChumashContent, rambam: _renderRambamContent })[section]();
+  _putReaderAt(section, pos);
+}
+const _optChip = (section, name, label) => '<button type="button" class="tz-opt' + (_readerOpt(section, name) ? ' on' : '') + '" aria-pressed="' + _readerOpt(section, name) + '" onclick="_toggleReaderOpt(\'' + section + '\',\'' + name + '\')">' + label + '</button>';
+
+const _TORAH_BOOKS = { Genesis: ['בראשית', 'Bereishis'], Exodus: ['שמות', 'Shemos'], Leviticus: ['ויקרא', 'Vayikra'], Numbers: ['במדבר', 'Bamidbar'], Deuteronomy: ['דברים', 'Devarim'] };
+const _ALIYAH_HE = ['', 'ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שביעי'];
+// "Genesis 19:21-21:4" → "Bereishis 19:21–21:4"; "Genesis 19:1-19:20" → "Bereishis 19:1–20"
+function _torahRefLabel(ref) {
+  const m = String(ref || '').match(/^(\w+) (\d+):(\d+)-(\d+):(\d+)$/);
+  if (!m) return ref || '';
+  const book = (_TORAH_BOOKS[m[1]] || [, m[1]])[1];
+  return book + ' ' + m[2] + ':' + m[3] + '–' + (m[2] === m[4] ? m[5] : m[4] + ':' + m[5]);
+}
+
 function _renderChumashContent() {
   if (_rv.sid !== 'chumash') return;   // another section is on screen
   const { torahChunks, rashiMap } = window._chumashData || {};
@@ -4389,19 +4430,29 @@ function _renderChumashContent() {
   if (!el) return;
 
   const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
-  const RBG = 'background:color-mix(in srgb, var(--c-chumash) 9%, transparent);border-left:4px solid color-mix(in srgb, var(--c-chumash) 55%, transparent);';
+  const day = getChumashDay(new Date((_rv.iso || _viewedISO()) + 'T12:00:00'));
+  const lines = _guideLines('chumash', _renderChumashContent);
+  const guide = day && lines ? day.parsha.split('-').map(p => lines[p + ' ' + day.aliyah]).filter(Boolean).join(' ') : '';
+  const rashiOn = _readerOpt('chumash', 'rashi'), guideOn = _readerOpt('chumash', 'guide');
 
-  // Lang toggle
-  let t = _langSeg(lang, "_setChumashLang('LANG')");
+  // Language, then the options (the translation is chosen in the gear)
+  let t = _langSeg(lang, "_setChumashLang('LANG')")
+    + '<div class="tz-opts">' + (guide ? _optChip('chumash', 'guide', 'Guide') : '') + _optChip('chumash', 'rashi', 'Rashi') + '</div>';
 
-  // Subtle translation label — tap to change
-  const _curTransLabel = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : '';
-  if (_curTransLabel) {
-    t += '<div style="text-align:center;margin-bottom:16px;">'
-      + '<button onclick="_openChumashTranslationPicker()" style="background:none;border:none;font-size:var(--fs-1);color:var(--t3);cursor:pointer;font-family:inherit;padding:2px 8px;border-radius:var(--r-s);">'
-      + _curTransLabel + ' translation · change'
-      + '</button></div>';
+  // Heading like the top of a printed Chumash: book and parsha, then the aliyah
+  if (day) {
+    const book = (_TORAH_BOOKS[day.ref.split(' ')[0]] || [''])[0];
+    const key = _LS_PARSHA_MAP[day.parsha];
+    const heParsha = (Array.isArray(key) ? key : [key]).map(k => _LS_PARSHA_HEB[k]).filter(Boolean).join('–');
+    const enParsha = typeof parshaSpelling === 'function' ? parshaSpelling(day.parsha) : day.parsha;
+    t += '<div class="tz-head">'
+      + '<p class="tz-part" lang="he">' + book + (heParsha ? ' · פרשת ' + heParsha : '') + '</p>'
+      + '<p class="tz-ch" lang="he">' + _ALIYAH_HE[day.aliyah] + '</p>'
+      + '<p class="tz-en-label">' + escapeHtml(enParsha + ' · ' + (day.aliyah === 7 ? 'Shabbos' : 'Aliyah ' + day.aliyah) + ' · ' + _torahRefLabel(day.ref)) + '</p></div>';
+  } else {
+    t += '<div class="tz-head"><p class="tz-en-label">' + escapeHtml(schedule?.chumash?.subtitle || '') + '</p></div>';
   }
+  if (guide && guideOn) t += '<div class="tz-guide"><p class="tz-gl">Today in the parsha</p><p class="tz-gt">' + escapeHtml(guide) + '</p></div>';
 
   let v = '';
 
@@ -4412,16 +4463,8 @@ function _renderChumashContent() {
   const multiBook = new Set(torahChunks.map(bookOf)).size > 1;
 
   torahChunks.forEach((chunk, chunkIdx) => {
-    // Chapter heading — always shown, style matches Tanya/Rambam
-    {
-      v += '<div style="' + (chunkIdx > 0 ? 'margin-top:28px;' : '') + 'margin-bottom:16px;'
-         + 'padding:10px 14px;background:color-mix(in srgb, var(--c-chumash) 13%, transparent);'
-         + 'border-left:4px solid var(--gold);border-radius:0 8px 8px 0;">'
-         + '<p style="font-size:var(--fs-1);font-weight:700;'
-         + 'color:color-mix(in srgb, var(--c-chumash) 55%, transparent);margin-bottom:3px;">Chumash</p>'
-         + '<p class="rf-header" style="font-size:17px;font-weight:800;color:var(--gold);">' + (multiBook ? bookOf(chunk) + ' ' : 'Chapter ') + chunk.chapter + '</p>'
-         + '</div>';
-    }
+    // A new chapter inside the aliyah (the heading already says where it starts)
+    if (chunkIdx > 0 || multiBook) v += '<p class="rd-ch">' + (multiBook ? bookOf(chunk) + ' ' : 'Chapter ') + chunk.chapter + '</p>';
 
     chunk.en.forEach((en, i) => {
       const vn = chunk.startVerse + i;
@@ -4431,12 +4474,13 @@ function _renderChumashContent() {
       const rashiEntry = (rashiMap && rashiMap[rashiKey]) || {};
       const ren = rashiEntry.en || '';
       const rhe = rashiEntry.he || '';
-      const num = '<span style="font-size:var(--fs-1);font-weight:800;color:var(--gold);margin-right:4px;">' + vn + '.</span>';
+      const num = '<span class="rd-vn">' + vn + '</span>';
+      const heNum = '<span class="rd-vn">' + _toHebrewNumeral(vn) + '</span>';
 
       v += '<div style="margin-bottom:2px;">';
 
       // rashiComments is an array of {en, he} — one per distinct Rashi comment.
-      const rashiComments = (rashiMap && rashiMap[rashiKey]) || [];
+      const rashiComments = rashiOn ? ((rashiMap && rashiMap[rashiKey]) || []) : [];
 
       // Bold the dibbur hamatchil (opening quote) of each Hebrew Rashi comment.
       function boldRashiHe(text) {
@@ -4449,22 +4493,22 @@ function _renderChumashContent() {
         // Verse row
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0 14px;border-bottom:1px solid var(--border);">';
         v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + num + (Array.isArray(en) ? en[0] : en) + '</p>';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.92;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.92;color:var(--t1);">' + heNum + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         // One Rashi block per comment — each aligned in two columns
         rashiComments.forEach(rc => {
-          v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
+          v += '<div class="rd-comm"><p class="rd-comm-k">Rashi</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">';
           v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
           v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:18px;--rf-lh:1.92;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
-          v += '</div>';
+          v += '</div></div>';
         });
       } else if (lang === 'he') {
         v += '<div style="padding:16px 0 14px;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.92;color:var(--t1);">' + num + (Array.isArray(he) ? he[0] : he) + '</p>';
+        v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:21px;--rf-lh:1.92;color:var(--t1);">' + heNum + (Array.isArray(he) ? he[0] : he) + '</p>';
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.he) {
-            v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
+            v += '<div class="rd-comm"><p class="rd-comm-k" style="text-align:right">רש״י</p>';
             v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:18px;--rf-lh:1.92;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
             v += '</div>';
           }
@@ -4475,7 +4519,7 @@ function _renderChumashContent() {
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.en) {
-            v += '<div style="' + RBG + 'padding:11px 14px;border-bottom:1px solid var(--border);">';
+            v += '<div class="rd-comm"><p class="rd-comm-k">Rashi</p>';
             v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
             v += '</div>';
           }
@@ -4618,7 +4662,7 @@ async function _loadRambamNative(sectionId, silent) {
     const valid = chapters.filter(ch => ch && (ch.en.length || ch.he.length));
     if (!valid.length) return false;
 
-    if (!silent && _readerShows('rambam', iso)) document.getElementById('chabad-panel-sub').textContent = valid.map(ch => ch.title).join(' · ');
+    if (!silent && _readerShows('rambam', iso)) document.getElementById('chabad-panel-sub').textContent = _rambamSubtitle(valid);
     _textArrived('rambam', iso, { chapters: valid }, silent);
     return true;
 
@@ -4628,6 +4672,17 @@ async function _loadRambamNative(sectionId, silent) {
   }
 }
 
+
+// The header's one line: "Sales 13–15", or each book's chapters when the day crosses books
+function _rambamSubtitle(chapters) {
+  const books = [];
+  chapters.forEach(ch => {
+    const book = ch.title.replace(/\s+\d+$/, '');
+    const last = books[books.length - 1];
+    if (last && last.book === book) last.to = ch.chapter; else books.push({ book, from: ch.chapter, to: ch.chapter });
+  });
+  return books.map(b => b.book + ' ' + b.from + (b.to !== b.from ? '–' + b.to : '')).join(' · ');
+}
 
 // Expand range refs like "Mishneh Torah, Eruvin 3-5" into individual chapter refs
 // ["Mishneh Torah, Eruvin 3", "Mishneh Torah, Eruvin 4", "Mishneh Torah, Eruvin 5"]
@@ -4727,8 +4782,10 @@ async function _fetchRambamChapter(ref) {
   const chMatch = ref.match(/(\d+)$/);
   const chapter = chMatch ? parseInt(chMatch[1]) : 1;
   const title = _rambamChapterTitle(ref);
+  // "משנה תורה, הלכות מכירה" → "הלכות מכירה", for the printed-page heading
+  const heBook = String(heRes?.heTitle || '').replace(/^משנה תורה,?\s*/, '');
 
-  return { ref, title, chapter, en: enSegs, he: heSegs, notes };
+  return { ref, title, heBook, chapter, en: enSegs, he: heSegs, notes };
 }
 
 function _renderRambamContent() {
@@ -4740,7 +4797,6 @@ function _renderRambamContent() {
   if (!el) return;
 
   const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
-  const GREEN = 'var(--c-rambam)';
 
   // Hebrew letters for halacha numbering (alef, beis, gimmel...)
   const HE_NUMS = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י',
@@ -4760,22 +4816,23 @@ function _renderRambamContent() {
       !part ? '' : i % 2 === 0 ? '<b>' + part + '</b>' : '<span class="rb-add">' + part + '</span>').join('') + '</span>';
   }
 
-  // Lang toggle
-  let t = _langSeg(lang, "_setRambamLang('LANG')");
+  const lines = _guideLines('rambam', _renderRambamContent);
+  const guideOf = ch => (lines && lines[ch.title]) || '';
+  const guideOn = _readerOpt('rambam', 'guide');
 
-  
+  // Language, then the options
+  let t = _langSeg(lang, "_setRambamLang('LANG')")
+    + (chapters.some(guideOf) ? '<div class="tz-opts">' + _optChip('rambam', 'guide', 'Guide') + '</div>' : '');
 
   let v = '';
 
   chapters.forEach((chapter, chIdx) => {
-    // Chapter heading — green left-border card, prominent spacing before (except first)
-    v += '<div style="' + (chIdx > 0 ? 'margin-top:32px;' : '') + 'margin-bottom:18px;'
-       + 'padding:12px 16px;background:color-mix(in srgb, var(--c-rambam) 13%, transparent);'
-       + 'border-left:4px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
-       + '<p style="font-size:var(--fs-1);font-weight:700;'
-       + 'color:color-mix(in srgb, var(--c-rambam) 55%, transparent);margin-bottom:4px;">Mishneh Torah</p>'
-       + '<p class="rf-header" style="font-size:18px;font-weight:800;color:' + GREEN + ';line-height:1.2;">' + chapter.title + '</p>'
-       + '</div>';
+    // Each chapter opens like a printed page: the book, then the chapter
+    v += '<div class="tz-head"' + (chIdx > 0 ? ' style="margin-top:34px"' : '') + '>'
+      + '<p class="tz-part" lang="he">משנה תורה' + (chapter.heBook ? ' · ' + escapeHtml(chapter.heBook) : '') + '</p>'
+      + '<p class="tz-ch" lang="he">פרק ' + _toHebrewNumeral(chapter.chapter) + '</p>'
+      + '<p class="tz-en-label">' + escapeHtml(chapter.title.replace(/\s+\d+$/, '') + ' · Chapter ' + chapter.chapter + (chapters.length > 1 ? ' · ' + (chIdx + 1) + ' of ' + chapters.length + ' today' : '')) + '</p></div>';
+    if (guideOn && guideOf(chapter)) v += '<div class="tz-guide"><p class="tz-gl">This chapter</p><p class="tz-gt">' + escapeHtml(guideOf(chapter)) + '</p></div>';
 
     const maxLen = Math.max(chapter.en.length, chapter.he.length);
     for (let i = 0; i < maxLen; i++) {
@@ -4788,19 +4845,17 @@ function _renderRambamContent() {
 
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
       // Rendered as a span before the text — stays inline with the paragraph
-      const enMark = '<span class="rf-header" style="font-size:22px;font-weight:800;color:' + GREEN
-        + ';margin-right:10px;min-width:26px;display:inline-block;vertical-align:middle;line-height:1;">' + num + '</span>';
-      const heMark = '<span class="rf-header" style="font-size:23px;font-weight:800;color:' + GREEN
-        + ';margin-left:10px;font-family:' + HE + ';vertical-align:middle;line-height:1;">' + heNum + '</span>';
+      const enMark = '<span class="rd-vn">' + num + '</span>';
+      const heMark = '<span class="rd-vn">' + heNum + '</span>';
 
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + enMark + en + '</p>';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
