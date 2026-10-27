@@ -10,6 +10,18 @@ const MILESTONES = [3, 7, 18, 30, 50, 100, 180, 365, 500, 1000];
 
 const _YOM_TOV = new Set(typeof YOM_TOV_DATES !== 'undefined' ? YOM_TOV_DATES : []);
 
+// The learning day starts at 4 am, not at midnight. Someone learning at 1 am
+// is almost always finishing the day before (up late, not up early), so until
+// 4 am the app still shows, marks and counts the previous day. Every "what day
+// is it" in the app asks appNow(); only real clock things (reminders, the
+// greeting) use the plain time. Always the phone's own time zone.
+const DAY_STARTS_AT = 4;
+function appNow(now = new Date()) {
+  const d = new Date(now);
+  d.setHours(d.getHours() - DAY_STARTS_AT);
+  return d;
+}
+
 function progressISO(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }

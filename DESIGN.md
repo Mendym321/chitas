@@ -105,6 +105,8 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
 
 ## Days, midnight and more than one device
 - A day is the phone's own calendar date ("2026-10-26"), never worked out through UTC: in New York, UTC is already tomorrow after 8 pm.
+- **The learning day starts at 4 am, not midnight.** Someone learning at 1 am is almost always finishing the day before, so until 4 am Today shows, marks and counts the previous day (`appNow()` in `js/progress.js`; every "what day is it" goes through it). Only real clock things use the plain time: reminders and the greeting.
+- Always the phone's own time zone: travelling, the day follows the phone. Days are saved as plain dates, so they mean the same on every device.
 - Today's marks live in `user.done` until the date moves on; then they are added to that day in the history (`archiveOldToday` in `js/progress.js`). Never skipped, never dropped.
 - The app notices a new day even when it stays open (a check every minute, and on coming back to it).
 - A mark or a Review result goes to the day it was for: from the reader, the day the reader shows, even when finished after midnight.

@@ -12,7 +12,7 @@ const ctx = {};
 vm.createContext(ctx);
 for (const f of ['../js/holidays-data.js', '../js/progress.js'])
   vm.runInContext(readFileSync(new URL(f, import.meta.url), 'utf8'), ctx);
-const P = vm.runInContext('({ archiveOldToday, syncFromCloud, progressISO })', ctx);
+const P = vm.runInContext('({ archiveOldToday, syncFromCloud, progressISO, appNow })', ctx);
 
 let failed = 0;
 function check(name, actual, expected) {
@@ -38,6 +38,13 @@ check('still the same day: nothing moves', P.archiveOldToday({ lastDate: TUE, do
 check('nothing marked: nothing to move', P.archiveOldToday({ lastDate: MON, done: {}, quizDone: {} }, TUE), null);
 check('the clock set back a day: nothing moves', P.archiveOldToday({ lastDate: TUE, done: ALL }, MON), null);
 check('very old saved dates ("Mon Oct 26 2026") still work', P.archiveOldToday({ lastDate: 'Mon Oct 26 2026', done: { tanya: true } }, TUE).pastDone[MON], { tanya: true });
+
+console.log('The learning day starts at 4 am:');
+check('1:30 am Tuesday is still Monday', P.progressISO(P.appNow(new Date('2026-10-27T01:30:00'))), MON);
+check('3:59 am is still Monday', P.progressISO(P.appNow(new Date('2026-10-27T03:59:00'))), MON);
+check('4:00 am is Tuesday', P.progressISO(P.appNow(new Date('2026-10-27T04:00:00'))), TUE);
+check('11 pm is that day', P.progressISO(P.appNow(new Date('2026-10-27T23:00:00'))), TUE);
+check('the night the clocks go back (1 Nov): 3:30 am is still Shabbos', P.progressISO(P.appNow(new Date('2026-11-01T03:30:00'))), '2026-10-31');
 
 console.log('Two devices:');
 const at = s => new Date(s + 'T09:00:00');

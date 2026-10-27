@@ -1828,7 +1828,7 @@ async function _calcTehillimChapter(person) {
   // then compare with today's Gregorian date to get exact age.
   // This is the most reliable method — avoids Hebrew month ordering complexity.
   try {
-    const today = new Date();
+    const today = appNow();
     const todayY = today.getFullYear();
 
     // Get today's Hebrew year first
@@ -2342,14 +2342,14 @@ initTheme();
 // ════════════════════════════════════════════════════════════════════
 // ── APIS ──────────────────────────────────────────────────────────────────────
 function todayISO() {
-  const d = new Date();
+  const d = appNow();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 async function fetchHebcal() {
   // Fetch the whole Sun→Sat week so the parashat item (with full leyning map)
   // is always present regardless of what day of the week it is today.
-  const today = new Date();
+  const today = appNow();
   const dow = today.getDay(); // 0=Sun
   const sun = new Date(today); sun.setDate(today.getDate() - dow);
   const sat = new Date(today); sat.setDate(today.getDate() + (6 - dow));
@@ -2360,7 +2360,7 @@ async function fetchHebcal() {
 }
 
 async function fetchHebDate() {
-  const d = new Date();
+  const d = appNow();
   const url = `https://www.hebcal.com/converter?cfg=json&gy=${d.getFullYear()}&gm=${d.getMonth()+1}&gd=${d.getDate()}&g2h=1`;
   const r = await fetch(url); if(!r.ok) throw new Error('HebDate');
   return r.json();
@@ -2398,7 +2398,7 @@ function parseHebcal(data) {
     const name = (i.title || '').replace(/Parashat |Parasha /, '');
     return REGULAR_PARSHIOT.has(name);
   }) || allParshaItems[0];
-  const dow = new Date().getDay();
+  const dow = appNow().getDay();
   const aliyaNum = dow===6 ? 7 : dow+1;
   const leyning = parshaItem?.leyning || {};
   const aliyaRef = leyning[String(aliyaNum)] || null;
@@ -2431,7 +2431,7 @@ async function fetchSefariaCalendar(date) {
   const iso = date
     ? date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0')
     : null;
-  const isToday = !iso || iso === dateISO(new Date());
+  const isToday = !iso || iso === dateISO(appNow());
 
   if (isToday && _sefariaCalCache) return _sefariaCalCache;
   if (isToday && _sefariaCalFetching) return _sefariaCalFetching;
@@ -2456,7 +2456,7 @@ async function init() {
   // (bootApp already loaded Firestore before calling init, so user is fresh)
   // A new day since the last mark: yesterday's marks move into its history
   // (js/progress.js: archiveOldToday, by the phone's own calendar date)
-  _appDay = dateISO(new Date());
+  _appDay = dateISO(appNow());
   const moved = archiveOldToday(user, _appDay);
   if (moved) { Object.assign(user, moved); recalcStreak(); saveUser(); }
 
@@ -2468,7 +2468,7 @@ async function init() {
   try {
     // Try Firestore daily cache first (written by cron at midnight)
     // Falls back to direct API calls if cache miss
-    const todayISO = dateISO(new Date());
+    const todayISO = dateISO(appNow());
     let _cachedData = null;
     if (window._fb?.loadDailyCache) {
       _cachedData = await window._fb.loadDailyCache(todayISO).catch(() => null);
@@ -2496,7 +2496,7 @@ async function init() {
     }
     const p = parseHebcal(cal);
     const tdate = `${hd.hm} ${hd.hd}, ${hd.hy}`;
-    const civDate = `${new Date().getMonth()+1}/${new Date().getDate()}/${new Date().getFullYear()}`;
+    const civDate = `${appNow().getMonth()+1}/${appNow().getDate()}/${appNow().getFullYear()}`;
     const base = 'https://www.chabad.org/dailystudy';
 
     setGreeting();
@@ -2506,7 +2506,7 @@ async function init() {
     const sefariaItems = sefariaCalRaw?.calendar_items || [];
 
     // Chumash: use hardcoded schedule — 100% reliable, unaffected by holiday overrides
-    const today = new Date();
+    const today = appNow();
     const chumashRef = getChumashAliyaRef(today);
     const parshaForToday = getParshaForDate(today);
     console.log('Chumash: parsha=' + parshaForToday + ' ref=' + chumashRef);
@@ -2563,7 +2563,7 @@ async function init() {
     // Snapshot today's schedule so navDay(0) can restore it without re-fetching
     window._todaySchedule = JSON.parse(JSON.stringify(schedule));
 
-    renderSectionsForOffset(dateISO(new Date()));
+    renderSectionsForOffset(dateISO(appNow()));
 
     // Load today's four ahead of time, quietly, so opening one is instant
     _prefetchAllReaders().catch(() => {});
@@ -2571,7 +2571,7 @@ async function init() {
     hideLoader();
     // Check if we're in Omer period → auto-show Sotah
     _checkSotahOmer().then(() => {
-      const d = new Date();
+      const d = appNow();
       _renderExtraTrackCards(dateISO(d), true);
     }).catch(() => {});
   } catch(e) {
@@ -2596,7 +2596,7 @@ function setGreeting() {
   const firstName = (user.name || '').split(' ')[0];
   const hello = (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening') + (firstName ? ', ' + firstName : '');
   const onToday = !tab || tab === 'tab-learn';
-  const d = new Date(); d.setDate(d.getDate() + dayOffset);
+  const d = appNow(); d.setDate(d.getDate() + dayOffset);
   if (greetEl) greetEl.textContent = tab === 'tab-stats' ? 'Progress' : tab === 'tab-profile' ? 'Profile' : dayOffset === 0 ? 'Today' : _dayName(dayOffset);
   const line = document.getElementById('heb-date-label');
   const away = Math.abs(dayOffset);
@@ -2622,7 +2622,7 @@ function setGreeting() {
 async function _renderThought() {
   const el = document.getElementById('thought');
   if (!el) return;
-  const off = dayOffset, d = new Date(); d.setDate(d.getDate() + off);
+  const off = dayOffset, d = appNow(); d.setDate(d.getDate() + off);
   const iso = dateISO(d);
   let saved = null;
   if (off === 0) { try { saved = JSON.parse(localStorage.getItem('chitas_thought2') || 'null'); } catch (e) {} }
@@ -2669,7 +2669,8 @@ async function _syncRemindersNow() {
   const LN = _nativePlugin('LocalNotifications');
   if (!LN || !user) return;
   const pref = _reminderPref();
-  const plan = pref.on ? reminderPlan(pref.time, new Date(), isChitasDay(user.done)) : [];
+  const sameDay = dateISO(appNow()) === dateISO(new Date());   // past midnight, before 4 am, today's list is still last night's
+  const plan = pref.on ? reminderPlan(pref.time, new Date(), sameDay && isChitasDay(user.done)) : [];
   const sig = plan.map(p => p.id + '@' + p.at.getTime()).join();
   if (sig === _reminderSig) return;
   _reminderSig = sig;
@@ -2691,7 +2692,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) _syn
 var _appDay = null, _hiddenAt = 0;   // var: init() may run before this line
 const _busy = () => document.getElementById('chabad-panel')?.style.display === 'flex' || document.getElementById('quiz-panel')?.style.display === 'flex';
 function _checkNewDay() {
-  const t = dateISO(new Date());
+  const t = dateISO(appNow());
   if (!_appDay || t === _appDay || !user) return;
   const moved = archiveOldToday(user, t);
   if (moved) { Object.assign(user, moved); recalcStreak(); saveUser(); }
@@ -2705,7 +2706,7 @@ async function _pullFromCloud() {
   const remote = await window._fb.loadUser(user.uid).catch(() => null);
   if (!remote) return;
   const before = JSON.stringify(_userPayload());
-  user = { ...user, ...syncFromCloud(user, remote, new Date()) };
+  user = { ...user, ...syncFromCloud(user, remote, appNow()) };
   if (JSON.stringify(_userPayload()) === before) return;
   recalcStreak();
   try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch {}
@@ -2804,7 +2805,7 @@ function updateDayNav() {
   const banner = document.getElementById('day-banner');
   if (banner) {
     banner.style.display = 'none';   // the chips say it now: the day's name, and Back to today
-    const d = new Date(); d.setDate(d.getDate() + dayOffset);
+    const d = appNow(); d.setDate(d.getDate() + dayOffset);
     const name = dayOffset === -1 ? 'Yesterday' : d.getDay() === 6 ? 'Shabbos' : d.toLocaleDateString('en-US', { weekday: 'long' });
     document.getElementById('day-banner-text').textContent = 'Viewing ' + name + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
@@ -2814,7 +2815,7 @@ function updateDayNav() {
 
 async function rebuildScheduleForOffset() {
   if (!schedule) return;
-  const d = new Date();
+  const d = appNow();
   d.setDate(d.getDate() + dayOffset);
   const iso = dateISO(d);
   const civDate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
@@ -3021,10 +3022,10 @@ function _renderReviewReady(done) {
 function _renderWelcomeBack() {
   const el = document.getElementById('welcome-back');
   if (!el) return;
-  const iso = dateISO(new Date());
+  const iso = dateISO(appNow());
   let hidden = false;
   try { hidden = localStorage.getItem('chitas_wb_hide') === iso; } catch (e) {}
-  const wb = dayOffset === 0 && !hidden ? welcomeBack(user, new Date()) : null;
+  const wb = dayOffset === 0 && !hidden ? welcomeBack(user, appNow()) : null;
   if (!wb) { el.style.display = 'none'; return; }
   el.innerHTML = '<button class="wb-x" aria-label="Close" onclick="try{localStorage.setItem(\'chitas_wb_hide\',\'' + iso + '\')}catch(e){};_renderWelcomeBack()">×</button>'
     + '<p class="wb-t">Welcome back</p>'
@@ -3056,7 +3057,7 @@ function updateProgressRing() {
   title.textContent = allDone ? (dayOffset === 0 ? 'Chitas done' : 'Chitas day') : n + ' of 4 done';
   sub.textContent = allDone
     ? (dayOffset === 0 ? 'See you tomorrow' : 'All four learned')
-    : (dayOffset === 0 && new Date().getDay() === 5 ? list + ' left · before Shabbos' : list + ' left');
+    : (dayOffset === 0 && appNow().getDay() === 5 ? list + ' left · before Shabbos' : list + ' left');
   renderWeekStrip();
 }
 
@@ -3066,7 +3067,7 @@ function updateProgressRing() {
 function renderWeekStrip() {
   const el = document.getElementById('week-strip');
   if (!el) return;
-  const today = new Date();
+  const today = appNow();
   const LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const R = 10, C = 2 * Math.PI * R;
   let html = '';
@@ -3094,7 +3095,7 @@ function renderWeekStrip() {
 let _pickMonth = 0, _pickOff = null;
 function openDayPicker() {
   _pickMonth = 0; _pickOff = dayOffset;
-  const today = new Date(), v = new Date(today); v.setDate(today.getDate() + dayOffset);
+  const today = appNow(), v = new Date(today); v.setDate(today.getDate() + dayOffset);
   _pickMonth = (v.getFullYear() - today.getFullYear()) * 12 + v.getMonth() - today.getMonth();
   document.getElementById('day-picker')?.remove();
   const m = document.createElement('div');
@@ -3109,7 +3110,7 @@ function openDayPicker() {
 function _renderDayPicker() {
   const body = document.getElementById('dp-body');
   if (!body) return;
-  const today = new Date(); today.setHours(12, 0, 0, 0);
+  const today = appNow(); today.setHours(12, 0, 0, 0);
   const first = new Date(today.getFullYear(), today.getMonth() + _pickMonth, 1, 12);
   const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
   const heb = d => hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { month: 'long' }).format(d));
@@ -3148,7 +3149,7 @@ function _dayName(off) {
   if (off === 0) return 'Today';
   if (off === -1) return 'Yesterday';
   if (off === 1) return 'Tomorrow';
-  const d = new Date(); d.setDate(d.getDate() + off);
+  const d = appNow(); d.setDate(d.getDate() + off);
   if (off < -6 || off > 6) return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   return d.getDay() === 6 ? 'Shabbos' : d.toLocaleDateString('en-US', { weekday: 'long' });
 }
@@ -3170,7 +3171,7 @@ function _updateReaderDayBar(sectionId) {
   if (!bar) return;
   if (!_readsByDay(sectionId)) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
-  const d = new Date(); d.setDate(d.getDate() + dayOffset);
+  const d = appNow(); d.setDate(d.getDate() + dayOffset);
   const label = document.getElementById('rd-label');
   label.textContent = dayOffset === 0 ? 'Today' : _dayName(dayOffset) + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   label.className = dayOffset === 0 ? '' : 'past';
@@ -3186,7 +3187,7 @@ function _updateReaderDayBar(sectionId) {
 //  2. the next unfinished section of the same day
 //  3. today's unfinished sections (when the day you finished was a past one)
 function _nextStep(sectionId) {
-  const today = new Date();
+  const today = appNow();
   const dayAt = off => { const d = new Date(today); d.setDate(today.getDate() + off); return dayDone(user, d, today); };
   for (let off = dayOffset + 1; off <= 0; off++) {
     if (!dayAt(off)[sectionId]) return { off, id: sectionId, label: (off === 0 ? "Today's " : _dayName(off) + "'s ") + schedule[sectionId].label };
@@ -3240,7 +3241,7 @@ function goToDay(offset) {
 
 // Days from today to a date ("2026-10-26"), by the phone's calendar
 function _offsetOf(iso) {
-  return Math.round((new Date(iso + 'T12:00:00') - new Date(dateISO(new Date()) + 'T12:00:00')) / 864e5);
+  return Math.round((new Date(iso + 'T12:00:00') - new Date(dateISO(appNow()) + 'T12:00:00')) / 864e5);
 }
 
 // Mark a section learned for the day on screen. From the reader, that's the
@@ -3249,7 +3250,7 @@ function _offsetOf(iso) {
 function showConfirm(sectionId, fromReader) {
   const iso = fromReader && _rv.iso ? _rv.iso : _viewedISO();
   if (!schedule || !_canMarkDay(_offsetOf(iso))) return;
-  if (iso === dateISO(new Date())) markDone(sectionId);
+  if (iso === dateISO(appNow())) markDone(sectionId);
   else markDonePast(sectionId, iso);
   renderSectionsForOffset(_viewedISO());
   if (fromReader) _showReaderNext(sectionId);
@@ -3265,7 +3266,7 @@ function showConfirmPast(id, iso) {
 // _changeDay. Points, streak and totals are then recomputed from the rules in
 // js/progress.js — so they can never drift out of sync. See DESIGN.md.
 function _changeDay(iso, change) {
-  const now = new Date();
+  const now = appNow();
   const isToday = iso === dateISO(now);
   const moved = archiveOldToday(user, dateISO(now));   // past midnight: last night's marks are last night's
   if (moved) Object.assign(user, moved);
@@ -3308,7 +3309,7 @@ function _changeDay(iso, change) {
 }
 
 function _viewedISO() {
-  const d = new Date(); d.setDate(d.getDate() + dayOffset);
+  const d = appNow(); d.setDate(d.getDate() + dayOffset);
   return dateISO(d);
 }
 
@@ -3323,7 +3324,7 @@ function unmarkDonePast(id, iso) {
 
 function unmarkDone(id) {
   if (!schedule || !user.done[id]) return;
-  const r = _changeDay(dateISO(new Date()), day => { day[id] = false; });
+  const r = _changeDay(dateISO(appNow()), day => { day[id] = false; });
   renderSectionsForOffset(_viewedISO());
   fire('Unmarked ' + schedule[id].label, 'xp');
 }
@@ -3349,20 +3350,20 @@ function _logTanya(id, iso) {
 
 function markDone(id) {
   if (user.done[id] || !schedule) return;
-  _logTanya(id, dateISO(new Date()));
+  _logTanya(id, dateISO(appNow()));
   const s = schedule[id];
-  _addLifetimeCounts(id, dateISO(new Date()));
-  const r = _changeDay(dateISO(new Date()), day => { day[id] = true; });
+  _addLifetimeCounts(id, dateISO(appNow()));
+  const r = _changeDay(dateISO(appNow()), day => { day[id] = true; });
 
   // Learned: its next open starts at the top (closing the reader now doesn't save the place again)
-  try { localStorage.removeItem(_scrollKey(id, dateISO(new Date()))); } catch(e) {}
+  try { localStorage.removeItem(_scrollKey(id, dateISO(appNow()))); } catch(e) {}
   if (_rv.sid === id) _rv.touched = false;
 
   if (!r.completedNow) fire('Nice! ' + s.label + ' done.', 'done');
 
   celebrateSection(id);
   // The day complete is its own moment (with the milestone's line, if one was reached)
-  if (id === 'tanya') _tanyaPartMilestone(dateISO(new Date()));
+  if (id === 'tanya') _tanyaPartMilestone(dateISO(appNow()));
   if (r.completedNow) celebrateAllDone(r.streakMilestone, r.learnMilestone);
   else if (r.learnMilestone) celebrateLearning(r.learnMilestone);
   else if (r.streakMilestone) celebrateStreakMilestone(r.streakMilestone);
@@ -3429,7 +3430,7 @@ function _quizzable(sectionId) {
 // Points are given once per section, per level, per day
 // Where a day's Review results are kept: today's in quizDone, others in pastQuizDone
 function _quizDay(iso) {
-  if (!iso || iso === dateISO(new Date())) { if (!user.quizDone) user.quizDone = {}; return user.quizDone; }
+  if (!iso || iso === dateISO(appNow())) { if (!user.quizDone) user.quizDone = {}; return user.quizDone; }
   if (!user.pastQuizDone) user.pastQuizDone = {};
   return (user.pastQuizDone[iso] = user.pastQuizDone[iso] || {});
 }
@@ -3478,15 +3479,15 @@ function openQuiz(sectionId) {
 
 // Which passage the quiz is about — the same one the reader shows today
 async function _quizPassage(sectionId) {
-  if (sectionId === 'chumash') return { refs: getChumashAliyaRef(new Date()).split('|') };
+  if (sectionId === 'chumash') return { refs: getChumashAliyaRef(appNow()).split('|') };
   if (sectionId === 'rambam') {
-    const today = dateISO(new Date());
+    const today = dateISO(appNow());
     if (!_textFor('rambam', today) && dayOffset === 0) await _loadRambamNative('rambam', true);
     const refs = (_textFor('rambam', today)?.chapters || []).map(c => c.ref).filter(Boolean).slice(0, 3);
     return refs.length ? { refs } : null;
   }
   if (sectionId === 'tanya') {
-    const today = dateISO(new Date());
+    const today = dateISO(appNow());
     if (!_textFor('tanya', today) && dayOffset === 0) await _loadTanyaNative('tanya', true);
     const t = _textFor('tanya', today);
     return t?.quizRef ? { tanya: t.quizRef } : null;
@@ -3820,7 +3821,7 @@ function showQuizResults() {
   const missed = total - score;
 
   // Saved once per section, per level, per day (retries are for learning)
-  const moved = archiveOldToday(user, dateISO(new Date()));   // past midnight: last night's results stay last night's
+  const moved = archiveOldToday(user, dateISO(appNow()));   // past midnight: last night's results stay last night's
   if (moved) Object.assign(user, moved);
   if (!_quizLevelDone(sectionId, level)) {
     const day = _quizDay(quizState.iso);
@@ -5040,7 +5041,7 @@ async function _loadTanyaNative(sectionId, silent) {
     }
 
     const dateStr = iso;
-    const isToday = iso === dateISO(new Date());
+    const isToday = iso === dateISO(appNow());
 
     // Fetch today + tomorrow from /api/tanya-boundary (server-side, no CORS)
     // Falls back to Sefaria calendar for today if Chabad.org parse fails
@@ -5865,8 +5866,8 @@ async function _sendFeedback(kind) {
 function openReaderMenu() {
   closeReaderSettings();
   document.getElementById('reader-menu')?.remove();
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
-  const iso = dateISO(d), done = dayDone(user, d, new Date());
+  const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
+  const iso = dateISO(d), done = dayDone(user, d, appNow());
   const cur = String(_rv.sid || '').replace(/^extra_/, '').split(':')[0];
   const row = (id, name, piece, colour, on) => '<button type="button" class="ml-r' + (id === cur ? ' rm-cur' : '') + '" style="--k:' + colour + '" onclick="_readerMenuGo(\'' + id + '\')"' + (id === cur ? ' aria-current="true"' : '') + '>'
     + '<span class="ml-bar" style="background:' + colour + '"></span>'
@@ -5927,7 +5928,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.g
 // small closed sefer, today outlined. Tap a day to see what you learned.
 let _calMonth = 0;   // 0 = this month, -1 = last month, ...
 function _learningMonthHTML() {
-  const today = new Date();
+  const today = appNow();
   const first = new Date(today.getFullYear(), today.getMonth() + _calMonth, 1);
   const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
   const heb = d => hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { month: 'long' }).format(d));
@@ -5955,7 +5956,7 @@ function _learningMonthHTML() {
 }
 function _calMove(n) { _calMonth = Math.min(0, _calMonth + n); document.getElementById('learning-cal').innerHTML = _learningMonthHTML(); }
 function _calTap(iso) {
-  const today = new Date();
+  const today = appNow();
   const d = new Date(iso + 'T12:00:00');
   const done = SECTION_IDS.filter(id => dayDone(user, d, today)[id]);
   const off = Math.round((d - new Date(dateISO(today) + 'T12:00:00')) / 86400000);
@@ -5994,7 +5995,7 @@ function _reviewCardHTML(today) {
 
 function renderStats() {
   const ids = SECTION_IDS;
-  const today = new Date();
+  const today = appNow();
   // Everything here is derived from the days you marked + the real calendar
   // (js/learning-stats.js, js/learning-data.js), so it's always consistent.
   const ov = learningOverview(user, today, user.rambamTrack);
@@ -6330,7 +6331,7 @@ async function resetProgress() {
   const keep = { uid: user.uid, name: user.name, photoURL: user.photoURL, city: user.city,
     rambamTrack: user.rambamTrack, tehillimPeople: user.tehillimPeople, tehillimFixedOpts: user.tehillimFixedOpts,
     extraTracks: user.extraTracks, ...(user.isAdmin ? { isAdmin: user.isAdmin } : {}), ...(user.role ? { role: user.role } : {}) };
-  user = { ...blankUser(), ...keep, lastDate: dateISO(new Date()) };
+  user = { ...blankUser(), ...keep, lastDate: dateISO(appNow()) };
   try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch {}
   if (user.uid && window._fb?.replaceUser) {
     // Keep account fields the app doesn't normally save (e.g. the admin flag)
@@ -6344,7 +6345,7 @@ async function resetProgress() {
   updateStats();
   updateHeader();
   renderStats();
-  if (schedule) renderSectionsForOffset(dateISO(new Date()));
+  if (schedule) renderSectionsForOffset(dateISO(appNow()));
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -6391,7 +6392,7 @@ async function _bustTanyaCache() {
   // Use /api/tanya-boundary (same as the app) to get the correct chapterSlug + verse range
   for (const offset of [0, -1]) {
     try {
-      const d = new Date(); d.setDate(d.getDate() + offset);
+      const d = appNow(); d.setDate(d.getDate() + offset);
       const tomorrow = new Date(d); tomorrow.setDate(d.getDate() + 1);
       const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 
@@ -6683,13 +6684,13 @@ function _renderExtraTrackCards(iso, isToday) {
 async function _loadExtraSubtitle(id) {
   const el = document.getElementById('extra-sub-' + id) || document.createElement('p');   // (the Today row has no line for it)
   try {
-    const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+    const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
     // Only Mishnah Yomi still asks Sefaria's calendar; the rest know their piece offline
     const items = id === 'mishnahYomi' ? ((await fetchSefariaCalendar(d))?.calendar_items || []) : [];
 
     if (id === 'likkuteiSichos') {
       // Show this week's parsha name
-      const d2 = new Date(); d2.setDate(d2.getDate() + (dayOffset || 0));
+      const d2 = appNow(); d2.setDate(d2.getDate() + (dayOffset || 0));
       const parshaEn = getParshaForDate(d2);
       // "Vayakhel-Pekudei" → ['vayakhel','pekudei'] → "ויקהל · פקודי"
       const lsKeys = parshaEn ? _lsParshaKeys(parshaEn) : [];
@@ -6724,7 +6725,7 @@ async function _loadExtraSubtitle(id) {
 
 // Mark done / unmark for extra tracks
 function markExtraDone(id) {
-  _changeDay(dateISO(new Date()), day => { day[id] = true; });
+  _changeDay(dateISO(appNow()), day => { day[id] = true; });
   fire('Nice! ' + (EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done.', 'done');
   haptic('tap');
   _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
@@ -6732,7 +6733,7 @@ function markExtraDone(id) {
 
 function unmarkExtraDone(id) {
   if (!user.done?.[id]) return;
-  _changeDay(dateISO(new Date()), day => { day[id] = false; });
+  _changeDay(dateISO(appNow()), day => { day[id] = false; });
   _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
 }
 
@@ -6804,7 +6805,7 @@ function _trackLine(id, piece) {
 // (Sunday to Shabbos) counts for the whole week. The day it was marked, or null.
 const WEEKLY_TRACKS = ['likkuteiTorah'];
 function _trackDoneOn(id, iso) {
-  const now = new Date();
+  const now = appNow();
   const doneOn = i => !!dayDone(user, new Date(i + 'T12:00:00'), now)[id];
   if (!WEEKLY_TRACKS.includes(id)) return doneOn(iso) ? iso : null;
   const d = new Date(weekShabbos(iso) + 'T12:00:00Z');
@@ -6817,7 +6818,7 @@ function _trackDoneOn(id, iso) {
 // Tick or untick a track for the day you're on (only today and the last 7 days)
 function _toggleTrack(id) {
   const iso = _viewedISO(), on = _trackDoneOn(id, iso);
-  if (on) { if (on === dateISO(new Date())) unmarkExtraDone(id); else unmarkExtraDonePast(id, on); return; }
+  if (on) { if (on === dateISO(appNow())) unmarkExtraDone(id); else unmarkExtraDonePast(id, on); return; }
   if (!_canMarkDay(dayOffset)) { fire('Read only. You can mark today and the last 7 days.'); return; }
   if (dayOffset === 0) markExtraDone(id); else markExtraDonePast(id, iso);
 }
@@ -7357,7 +7358,7 @@ async function _loadHayomYomNative(silent) {
     if (subEl)    subEl.textContent = 'Hayom Yom';
     if (loadEl)   loadEl.style.display = 'block';
     if (contEl)   contEl.style.display = 'none';
-    const d0 = new Date(); d0.setDate(d0.getDate() + (dayOffset || 0));
+    const d0 = appNow(); d0.setDate(d0.getDate() + (dayOffset || 0));
     const tdate = (d0.getMonth()+1) + '/' + d0.getDate() + '/' + d0.getFullYear();
     if (extEl) {
       extEl.href = 'https://www.chabad.org/dailystudy/hayomyom.asp?tdate=' + tdate;
@@ -7369,7 +7370,7 @@ async function _loadHayomYomNative(silent) {
   // ── Get Hebrew date ──────────────────────────────────────────────────────
   let hm, hd;
   try {
-    const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+    const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
     const url = 'https://www.hebcal.com/converter?cfg=json'
       + '&gy=' + d.getFullYear() + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1';
     const heb = await (await fetch(url)).json();
@@ -7652,7 +7653,7 @@ function _ltBack() {
 
 async function _loadMishnahYomi() {
   const def = EXTRA_TRACK_DEFS.mishnahYomi;
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
   const cal = await fetchSefariaCalendar(d);
   const item = (cal.calendar_items || []).find(i =>
     i.title?.en === 'Mishnah Yomit' || (i.title?.en || '').includes('Mishnah')
@@ -7856,7 +7857,7 @@ async function _loadSotah() {
   if (contEl) contEl.style.display = 'none';
 
   try {
-    const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+    const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
     let info = (dayOffset === 0) ? window._sotahDaf : null;
     if (!info) info = await getSotahDafForDate(d).catch(() => null);
     if (!info) throw new Error('Not currently in the Omer period');
@@ -8136,7 +8137,7 @@ function _renderPsExtraTracks() {
 // Rules live in js/progress.js (tested). This just stores the results on the
 // user so they're saved.
 function recalcStreak() {
-  const today = new Date();
+  const today = appNow();
   user.streak = computeStreak(user, today).current;
   user.longestStreak = Math.max(user.longestStreak || 0, user.streak);
   user.total = countChitasDays(user, today);
@@ -8186,7 +8187,7 @@ async function getSotahDafForDate(d) {
 
 // ── Auto-show Sotah during Omer ───────────────────────────────────────────────
 async function _checkSotahOmer() {
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset || 0));
+  const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
   const info = await getSotahDafForDate(d).catch(() => null);
   window._sotahDaf = info; // null = not in Omer
   if (info) {
@@ -8260,7 +8261,7 @@ function bootApp() {
     // days or counting points twice (js/account-merge.js)
     if (isGuest()) {
       const wasGuest = !!user.started;
-      const merged = mergeGuestIntoAccount(wasGuest ? user : blankUser(), remote, new Date());
+      const merged = mergeGuestIntoAccount(wasGuest ? user : blankUser(), remote, appNow());
       user = {
         ...blankUser(), ...merged,
         uid: fbUser.uid,
@@ -8288,7 +8289,7 @@ function bootApp() {
       const local = user.uid === fbUser.uid ? user : blankUser();
       user = {
         ...blankUser(),
-        ...syncFromCloud(local, remote, new Date()),
+        ...syncFromCloud(local, remote, appNow()),
         uid: fbUser.uid,
         photoURL: fbUser.photoURL || '',
         longestStreak: Math.max(remote.longestStreak || 0, local.longestStreak || 0),
@@ -9402,7 +9403,7 @@ async function _openLSSichaList() {
     return;
   }
 
-  const d = new Date(); d.setDate(d.getDate() + (dayOffset||0));
+  const d = appNow(); d.setDate(d.getDate() + (dayOffset||0));
   const parshaEn   = getParshaForDate(d);
   const parshaKeys = parshaEn ? _lsParshaKeys(parshaEn) : [];
   const mode       = _lsGetMode();
@@ -9714,7 +9715,7 @@ async function _lsOpenReader(idx) {
   if (!item) return;
 
   const cid        = item.page + '_' + item.vol;
-  const d          = new Date(); d.setDate(d.getDate() + (dayOffset||0));
+  const d          = appNow(); d.setDate(d.getDate() + (dayOffset||0));
   const parshaEn   = getParshaForDate(d);
   const parshaHeb  = parshaEn ? _lsParshaKeys(parshaEn).map(k => _lsParshaHeb(k)).join(' · ') : '';
 

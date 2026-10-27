@@ -1,8 +1,9 @@
 /**
  * Browser test: marks made late at night, on New York time, are still there
- * in the morning; on reload, with the app left open past midnight, from the
- * reader and from a Review, and when another device saved meanwhile.
- * The clock is faked (Monday 26 Oct 2026, 11:50 pm), the internet blocked.
+ * in the morning; on reload, with the app left open overnight, from the
+ * reader and from a Review, and when another device saved meanwhile. The
+ * learning day starts at 4 am: until then it's still the day before.
+ * The clock is faked (Monday 26 Oct 2026, late at night), the internet blocked.
  *
  * Run:  cd tools && npm run test:midnight
  */
@@ -32,8 +33,8 @@ const ALL = { chumash: true, tehillim: true, tanya: true, rambam: true };
 const SUN = '2026-10-25', MON = '2026-10-26', TUE = '2026-10-27';
 
 // A page on New York time at a given moment, with this user saved on the phone
-async function open(at, saved, { cloud } = {}) {
-  const context = await browser.newContext({ timezoneId: 'America/New_York', serviceWorkers: 'block' });
+async function open(at, saved, { cloud, zone = 'America/New_York' } = {}) {
+  const context = await browser.newContext({ timezoneId: zone, serviceWorkers: 'block' });
   const page = await context.newPage();
   page.__errors = [];
   page.on('pageerror', e => page.__errors.push(e.message.split('\n')[0]));
@@ -73,13 +74,36 @@ console.log('Marked last night, opened this morning:');
   await page.context().close();
 }
 
-console.log('The app left open past midnight:');
+console.log('Up late: until 4 am it is still the day before:');
+{
+  const page = await open(`${TUE}T01:30:00-04:00`, { ...base, lastDate: MON, done: { chumash: true }, pastDone: {} });
+  ok('at 1:30 am Today shows Monday, with Monday\'s marks', [await page.evaluate(() => _viewedISO()), (await state(page)).done], [MON, { chumash: true }]);
+  await page.evaluate(() => markDone('tehillim'));
+  ok('a mark at 1:30 am counts for Monday', (await state(page)).done, { chumash: true, tehillim: true });
+  ok('no errors', page.__errors, []);
+  await page.context().close();
+}
+
+console.log('Other time zones: the phone\'s own clock:');
+{
+  const page = await open(`${TUE}T01:30:00+02:00`, { ...base, lastDate: MON, done: { tanya: true }, pastDone: {} }, { zone: 'Asia/Jerusalem' });
+  ok('in Jerusalem at 1:30 am it is still Monday', [await page.evaluate(() => _viewedISO()), (await state(page)).done], [MON, { tanya: true }]);
+  await page.context().close();
+  const morning = await open(`${TUE}T08:00:00+02:00`, { ...base, lastDate: MON, done: { tanya: true }, pastDone: {} }, { zone: 'Asia/Jerusalem' });
+  ok('and at 8 am Monday\'s Tanya is Monday\'s', [(await state(morning)).past[MON], await morning.evaluate(() => _viewedISO())], [{ tanya: true }, TUE]);
+  await morning.context().close();
+}
+
+console.log('The app left open overnight:');
 {
   const page = await open(`${MON}T23:50:00-04:00`, { ...base, lastDate: MON, done: { chumash: true }, pastDone: {} });
   await page.evaluate(() => markDone('tehillim'));
   await page.clock.runFor(15 * 60e3);              // 12:05 am
+  ok('at 12:05 am it is still Monday', [(await state(page)).done, await page.evaluate(() => _appDay)], [{ chumash: true, tehillim: true }, MON]);
+  await page.clock.fastForward(4 * 3600e3);         // 4:05 am (jumps ahead, like a phone waking up)
+  await page.clock.runFor(61e3);                   // and the minute check
   const s = await state(page);
-  ok('at 12:05 Monday\'s marks are Monday\'s', s.past[MON], { chumash: true, tehillim: true });
+  ok('at 4:05 am Monday\'s marks are Monday\'s', s.past[MON], { chumash: true, tehillim: true });
   ok('and Today is Tuesday, with nothing marked', [s.done, await page.evaluate(() => _viewedISO()), await page.evaluate(() => _appDay)], [{}, TUE, TUE]);
   await page.evaluate(() => markDone('chumash'));
   ok('a mark now counts for Tuesday only', (await state(page)).done, { chumash: true });
@@ -87,23 +111,23 @@ console.log('The app left open past midnight:');
   await page.context().close();
 }
 
-console.log('The reader opened before midnight, marked after:');
+console.log('The reader opened before 4 am, marked after:');
 {
-  const page = await open(`${MON}T23:55:00-04:00`, { ...base, lastDate: MON, done: {}, pastDone: {} });
+  const page = await open(`${TUE}T03:55:00-04:00`, { ...base, lastDate: MON, done: {}, pastDone: {} });
   await page.evaluate(() => openChabadPanel('tanya'));
-  await page.clock.runFor(10 * 60e3);              // 12:05 am, reader still open
+  await page.clock.runFor(10 * 60e3);              // 4:05 am, reader still open
   await page.evaluate(() => showConfirm('tanya', true));
   const s = await state(page);
-  ok('last night\'s Tanya is marked for Monday, the day it was read', [s.past[MON]?.tanya, s.done.tanya], [true, undefined]);
+  ok('the night\'s Tanya is marked for Monday, the day it was read', [s.past[MON]?.tanya, s.done.tanya], [true, undefined]);
   await page.evaluate(() => _closeReaderNow());
   ok('closing the reader: Today moves on to Tuesday', await page.evaluate(() => [dayOffset, _appDay, _viewedISO()]), [0, TUE, TUE]);
   ok('no errors', page.__errors, []);
   await page.context().close();
 }
 
-console.log('A Review started before midnight, finished after:');
+console.log('A Review started before 4 am, finished after:');
 {
-  const page = await open(`${MON}T23:55:00-04:00`, { ...base, uid: 'u1', lastDate: MON, done: { tanya: true }, pastDone: {} }, { cloud: { ...base, uid: 'u1', lastDate: MON, done: { tanya: true }, pastDone: {} } });
+  const page = await open(`${TUE}T03:55:00-04:00`, { ...base, uid: 'u1', lastDate: MON, done: { tanya: true }, pastDone: {} }, { cloud: { ...base, uid: 'u1', lastDate: MON, done: { tanya: true }, pastDone: {} } });
   await page.waitForTimeout(300);
   await page.evaluate(() => {
     openQuiz('tanya');
@@ -111,7 +135,7 @@ console.log('A Review started before midnight, finished after:');
       questions: Array.from({ length: 4 }, (_, i) => ({ q: 'Q' + i, options: ['a', 'b', 'c', 'd'], answer: 0, explanation: 'x', quote: '' })),
       answers: [0, 1, 2, 3].map(i => ({ q: 'Q' + i, options: ['a', 'b', 'c', 'd'], answer: 0, right: i < 3, quote: '' })) };
   });
-  await page.clock.runFor(10 * 60e3);              // 12:05 am
+  await page.clock.runFor(10 * 60e3);              // 4:05 am
   await page.evaluate(() => { try { showQuizResults(); } catch (e) { window.__qerr = e.message + ' @ ' + (e.stack || '').split('\n')[1]; } });
   const s = await state(page);
   ok('the result is Monday\'s', s.pastQuiz[MON], { tanya: { quick: { r: 3, n: 4 } } });
@@ -128,7 +152,7 @@ console.log('Marked on the laptop at night, the phone left open:');
   // Meanwhile the laptop saves Tehillim, Tanya and Rambam to the cloud
   await page.evaluate(() => { window.__cloud = { ...window.__cloud, done: { chumash: true, tehillim: true, tanya: true, rambam: true } }; });
   await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); document.dispatchEvent(new Event('visibilitychange')); });
-  await page.clock.runFor(11 * 3600e3);            // the phone sleeps until 8 am
+  await page.clock.fastForward(11 * 3600e3);        // the phone sleeps until 8 am
   await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange')); });
   await page.waitForTimeout(300);
   const s = await state(page);
