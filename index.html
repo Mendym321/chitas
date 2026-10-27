@@ -2431,7 +2431,7 @@ async function fetchSefariaCalendar(date) {
   const iso = date
     ? date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0')
     : null;
-  const isToday = !iso || iso === new Date().toISOString().slice(0,10);
+  const isToday = !iso || iso === dateISO(new Date());
 
   if (isToday && _sefariaCalCache) return _sefariaCalCache;
   if (isToday && _sefariaCalFetching) return _sefariaCalFetching;
@@ -2454,29 +2454,11 @@ async function fetchSefariaCalendar(date) {
 async function init() {
   // FIX 2: day-rollover runs AFTER we've confirmed we have the latest data
   // (bootApp already loaded Firestore before calling init, so user is fresh)
-  const todayISO2 = dateISO(new Date()); // compare as ISO strings — reliable cross-browser
-  const todayLegacy = new Date().toDateString(); // handle old data saved as toDateString
-  const lastDateISO = user.lastDate
-    ? (user.lastDate.includes('-') ? user.lastDate : dateISO(new Date(user.lastDate)))
-    : null;
-  if (lastDateISO && lastDateISO !== todayISO2) {
-    const prev = new Date(lastDateISO);
-    const yest = new Date(); yest.setDate(yest.getDate()-1);
-    if (!user.pastDone) user.pastDone = {};
-    if (!user.pastQuizDone) user.pastQuizDone = {};
-    const prevISO = dateISO(prev);
-    // Only archive if not already archived (guard against double-init)
-    if (!user.pastDone[prevISO]) {
-      user.pastDone[prevISO] = { ...user.done };
-      user.pastQuizDone[prevISO] = { ...user.quizDone };
-    }
-    user.done = {};
-    user.quizDone = {};
-    // Recalc streak based on actual completion history
-    // (don't blindly zero — yesterday might have been completed)
-    recalcStreak();
-    saveUser();
-  }
+  // A new day since the last mark: yesterday's marks move into its history
+  // (js/progress.js: archiveOldToday, by the phone's own calendar date)
+  _appDay = dateISO(new Date());
+  const moved = archiveOldToday(user, _appDay);
+  if (moved) { Object.assign(user, moved); recalcStreak(); saveUser(); }
 
   recalcStreak(); // always derive streak + totals from history (js/progress.js)
   updateHeader();
@@ -2486,7 +2468,7 @@ async function init() {
   try {
     // Try Firestore daily cache first (written by cron at midnight)
     // Falls back to direct API calls if cache miss
-    const todayISO = new Date().toISOString().slice(0, 10);
+    const todayISO = dateISO(new Date());
     let _cachedData = null;
     if (window._fb?.loadDailyCache) {
       _cachedData = await window._fb.loadDailyCache(todayISO).catch(() => null);
@@ -2700,6 +2682,42 @@ async function _syncRemindersNow() {
   } catch (e) { _reminderSig = null; }
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) _syncReminders(); });
+
+// ── A new day while the app is open, and other devices ──────────────────────
+// A phone keeps the app open for days, so "today" can't only be worked out at
+// start. Every minute, and whenever you come back to the app, it checks: past
+// midnight, last night's marks move into last night, and Today starts fresh.
+// Back after a while, it first gets what other devices saved meanwhile.
+var _appDay = null, _hiddenAt = 0;   // var: init() may run before this line
+const _busy = () => document.getElementById('chabad-panel')?.style.display === 'flex' || document.getElementById('quiz-panel')?.style.display === 'flex';
+function _checkNewDay() {
+  const t = dateISO(new Date());
+  if (!_appDay || t === _appDay || !user) return;
+  const moved = archiveOldToday(user, t);
+  if (moved) { Object.assign(user, moved); recalcStreak(); saveUser(); }
+  if (_busy()) return;          // the reader or a Review keeps its day; Today catches up after
+  _appDay = t;
+  dayOffset = 0;
+  init();
+}
+async function _pullFromCloud() {
+  if (!user?.uid || isGuest() || !window._fb?.loadUser) return;
+  const remote = await window._fb.loadUser(user.uid).catch(() => null);
+  if (!remote) return;
+  const before = JSON.stringify(_userPayload());
+  user = { ...user, ...syncFromCloud(user, remote, new Date()) };
+  if (JSON.stringify(_userPayload()) === before) return;
+  recalcStreak();
+  try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch {}
+  _refreshUI();
+  if (!_busy() && schedule) renderSectionsForOffset(_viewedISO());
+}
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden) { _hiddenAt = Date.now(); return; }
+  if (_hiddenAt && Date.now() - _hiddenAt > 60e3) await _pullFromCloud();
+  _checkNewDay();
+});
+setInterval(_checkNewDay, 60e3);
 
 async function setReminder(change) {
   const pref = { time: '20:00', ..._reminderPref(), ...change };
@@ -3220,14 +3238,20 @@ function goToDay(offset) {
   if (offset !== dayOffset) navDay(offset - dayOffset);
 }
 
+// Days from today to a date ("2026-10-26"), by the phone's calendar
+function _offsetOf(iso) {
+  return Math.round((new Date(iso + 'T12:00:00') - new Date(dateISO(new Date()) + 'T12:00:00')) / 864e5);
+}
+
+// Mark a section learned for the day on screen. From the reader, that's the
+// day the reader shows: Tanya opened at 11:50 pm and marked at 12:05 is
+// last night's Tanya.
 function showConfirm(sectionId, fromReader) {
-  if (!schedule || !_canMarkDay(dayOffset)) return;
-  const isToday = dayOffset === 0;
-  const d2 = new Date(); d2.setDate(d2.getDate() + dayOffset);
-  const iso = dateISO(d2);
-  if (isToday) markDone(sectionId);
+  const iso = fromReader && _rv.iso ? _rv.iso : _viewedISO();
+  if (!schedule || !_canMarkDay(_offsetOf(iso))) return;
+  if (iso === dateISO(new Date())) markDone(sectionId);
   else markDonePast(sectionId, iso);
-  renderSectionsForOffset(iso);
+  renderSectionsForOffset(_viewedISO());
   if (fromReader) _showReaderNext(sectionId);
 }
 
@@ -3243,6 +3267,8 @@ function showConfirmPast(id, iso) {
 function _changeDay(iso, change) {
   const now = new Date();
   const isToday = iso === dateISO(now);
+  const moved = archiveOldToday(user, dateISO(now));   // past midnight: last night's marks are last night's
+  if (moved) Object.assign(user, moved);
   if (!user.pastDone) user.pastDone = {};
   if (!isToday && !user.pastDone[iso]) user.pastDone[iso] = {};
   if (!user.done) user.done = {};
@@ -3401,8 +3427,14 @@ function _quizzable(sectionId) {
 }
 
 // Points are given once per section, per level, per day
+// Where a day's Review results are kept: today's in quizDone, others in pastQuizDone
+function _quizDay(iso) {
+  if (!iso || iso === dateISO(new Date())) { if (!user.quizDone) user.quizDone = {}; return user.quizDone; }
+  if (!user.pastQuizDone) user.pastQuizDone = {};
+  return (user.pastQuizDone[iso] = user.pastQuizDone[iso] || {});
+}
 function _quizLevelDone(sectionId, level) {
-  const d = (user.quizDone || {})[sectionId];
+  const d = _quizDay(quizState.iso)[sectionId];
   return !!(d && typeof d === 'object' && d[level] != null);
 }
 
@@ -3414,7 +3446,9 @@ function openQuiz(sectionId) {
   const s = schedule[sectionId];
   if (!s) return;
   if (isGuest()) { openSignIn('quiz'); return; }
-  quizState = { sectionId, level: null, questions: [], current: 0, score: 0, answered: false, missed: [], answers: [] };
+  // The day this Review is for: the reader's day if it's open, else the day on screen
+  const iso = document.getElementById('chabad-panel')?.style.display === 'flex' && _rv.iso ? _rv.iso : _viewedISO();
+  quizState = { sectionId, iso, level: null, questions: [], current: 0, score: 0, answered: false, missed: [], answers: [] };
   document.getElementById('quiz-title').textContent = s.label + ' review';
   document.getElementById('quiz-subtitle').textContent = s.subtitle;
   const qp = document.getElementById('quiz-panel');
@@ -3693,6 +3727,7 @@ function celebrateAllDone(milestone, learn) {
 function closeQuiz() {
   document.getElementById('quiz-panel').style.display = 'none';
   quizState = { sectionId: null, level: null, questions: [], current: 0, score: 0, answered: false, missed: [] };
+  _checkNewDay();
 }
 
 function renderQuestion() {
@@ -3785,10 +3820,12 @@ function showQuizResults() {
   const missed = total - score;
 
   // Saved once per section, per level, per day (retries are for learning)
-  if (!user.quizDone) user.quizDone = {};
+  const moved = archiveOldToday(user, dateISO(new Date()));   // past midnight: last night's results stay last night's
+  if (moved) Object.assign(user, moved);
   if (!_quizLevelDone(sectionId, level)) {
-    const prev = user.quizDone[sectionId];
-    user.quizDone[sectionId] = { ...(prev && typeof prev === 'object' ? prev : {}), [level]: { r: score, n: total } };
+    const day = _quizDay(quizState.iso);
+    const prev = day[sectionId];
+    day[sectionId] = { ...(prev && typeof prev === 'object' ? prev : {}), [level]: { r: score, n: total } };
     user.quizTotal   = (user.quizTotal   || 0) + total;
     user.quizCorrect = (user.quizCorrect || 0) + score;
     saveUser();
@@ -5742,6 +5779,7 @@ function _closeReaderNow() {
   if (fontCtrl) fontCtrl.style.display = 'none';
   markDoneUnlocked = false;
   if (reader) reader.scrollTop = 0;
+  _checkNewDay();   // read past midnight: Today catches up now
 }
 // What one sefer leaves around the text (Likkutei Sichos' bar and pop-ups, the gear)
 function _readerCleanup() {
@@ -8245,51 +8283,16 @@ function bootApp() {
     if (remote) { // Firestore doc exists — restore regardless of rambamTrack
       // If rambamTrack is missing from the remote doc, keep whatever local has
       if (!remote.rambamTrack && user.rambamTrack) remote.rambamTrack = user.rambamTrack;
-      // Merge strategy: Firestore wins on all fields EXCEPT fields where
-      // local is clearly more recent (lastDate is today and remote is older)
-      // Normalize both dates to ISO for reliable comparison
-      const _toISO = d => {
-        if (!d) return null;
-        if (typeof d === 'string' && d.includes('-')) return d.slice(0,10);
-        const parsed = new Date(d);
-        return isNaN(parsed) ? null : dateISO(parsed);
+      // This phone's copy and the cloud's, as one: both brought up to today,
+      // then every mark either has is kept (js/progress.js: syncFromCloud)
+      const local = user.uid === fbUser.uid ? user : blankUser();
+      user = {
+        ...blankUser(),
+        ...syncFromCloud(local, remote, new Date()),
+        uid: fbUser.uid,
+        photoURL: fbUser.photoURL || '',
+        longestStreak: Math.max(remote.longestStreak || 0, local.longestStreak || 0),
       };
-      const localLastISO  = _toISO(user.lastDate);
-      const remoteLastISO = _toISO(remote.lastDate);
-      const localIsNewer = user.uid === fbUser.uid &&
-        localLastISO && remoteLastISO &&
-        localLastISO > remoteLastISO;
-
-      if (localIsNewer) {
-        // Local has activity from today that hasn't synced yet — keep it
-        // but pull non-activity fields from remote (name, city, track, etc.)
-        user = {
-          ...blankUser(),
-          ...remote,
-          uid: fbUser.uid,
-          photoURL: fbUser.photoURL || '',
-          // Keep local values for today's in-progress data
-          xp: Math.max(user.xp, remote.xp || 0),
-          streak: Math.max(user.streak, remote.streak || 0),
-          total: Math.max(user.total, remote.total || 0),
-          done: user.done || {},
-          quizDone: user.quizDone || {},
-          lastDate: user.lastDate,
-        };
-      } else {
-        // Remote is equal or newer — use it, but always take max for key stats
-        // (protects against Firestore having stale streak:0 for existing users)
-        user = {
-          ...blankUser(),
-          ...remote,
-          uid: fbUser.uid,
-          photoURL: fbUser.photoURL || '',
-          streak: Math.max(remote.streak || 0, user.uid === fbUser.uid ? (user.streak || 0) : 0),
-          xp: Math.max(remote.xp || 0, user.uid === fbUser.uid ? (user.xp || 0) : 0),
-          total: Math.max(remote.total || 0, user.uid === fbUser.uid ? (user.total || 0) : 0),
-          longestStreak: Math.max(remote.longestStreak || 0, user.uid === fbUser.uid ? (user.longestStreak || 0) : 0),
-        };
-      }
 
       try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
       // Write back to Firestore so the cloud copy is current
