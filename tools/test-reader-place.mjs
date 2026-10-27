@@ -139,7 +139,7 @@ async function goDay(delta) { await page.evaluate(d => _readerGoDay(d), delta); 
 // Which passage the reader is showing (the name its first verse starts with)
 const readerShows = () => page.evaluate(() => {
   for (const el of document.querySelectorAll('#native-reader-content p, #native-reader-content .tz-p')) {
-    const m = el.textContent.match(/^\s*(?:\d+\.)?((?!Rashi)[A-Za-z][^\n]*?) v1\./);
+    const m = el.textContent.match(/^\s*(?:\d+\.?)?((?!Rashi)[A-Za-z][^\n]*?) v1\./);   // the verse number, then the text
     if (m) return m[1];
   }
   return null;

@@ -115,6 +115,40 @@ for (const scheme of ['light', 'dark']) {
   ok('Profile: every button has a name', !(await page.evaluate(UNNAMED, '#tab-profile')).length, await page.evaluate(UNNAMED, '#tab-profile'));
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/profile-${scheme}.png`, fullPage: true });
 
+  // The readers share one set of pieces: printed-page heading, white guide
+  // card, option chips, small numbers (DESIGN.md: "One look for the readers")
+  console.log(`\nThe readers look alike (${scheme}):`);
+  const pieces = await page.evaluate(async () => {
+    const out = {};
+    const open = sec => { _readerBegin(sec); _rv.iso = '2026-10-27'; _setReaderColour('var(--c-' + sec + ')', 'var(--on-' + sec + ')'); document.getElementById('chabad-panel').style.display = 'flex'; document.getElementById('native-reader-content').style.display = 'block'; };
+    const look = () => {
+      const c = document.getElementById('native-reader-content');
+      const st = (sel, keys) => { const e = c.querySelector(sel); if (!e) return null; const cs = getComputedStyle(e); return keys.map(k => cs[k]).join(' '); };
+      return { head: st('.tz-head .tz-ch', ['fontFamily', 'fontSize', 'fontWeight']), label: st('.tz-head .tz-en-label', ['fontSize', 'color']),
+        card: st('.tz-guide', ['backgroundColor', 'borderRadius']), cardLabel: !!c.querySelector('.tz-guide .tz-gl'),
+        chips: [...c.querySelectorAll('.tz-opts > *')].every(b => b.matches('button.tz-opt')) && !!c.querySelector('.tz-opt'),
+        numbers: c.querySelectorAll('.rd-vn').length > 0 || !c.querySelector('[style*="font-size:22px"]'),
+        tinted: [...c.querySelectorAll('[style*="border-left:4px"]')].length };
+    };
+    for (const sec of ['chumash', 'rambam']) {
+      open(sec);
+      if (sec === 'chumash') { window._chumashData = { torahChunks: [{ ref: 'Genesis 19:1-19:2', chapter: 19, startVerse: 1, en: ['The two angels came to Sedom', 'He said'], he: ['וַיָּבֹאוּ', 'וַיֹּאמֶר'] }], rashiMap: { '19:1': [{ en: 'Two', he: 'שני' }] } }; }
+      else { window._rambamData = { chapters: [{ ref: 'Mishneh Torah, Sales 13', title: 'Sales 13', heBook: 'הלכות מכירה', chapter: 13, en: ['When a person exchanges'], he: ['המחליף'], notes: [] }] }; }
+      const render = () => sec === 'chumash' ? _renderChumashContent() : _renderRambamContent();
+      render(); await new Promise(r => setTimeout(r, 400)); render();   // the guide lines arrive from their file
+      out[sec] = look();
+      _closeReaderNow();
+    }
+    return out;
+  });
+  for (const sec of ['chumash', 'rambam']) {
+    const x = pieces[sec];
+    ok(`${sec}: printed-page heading, guide card, chips, small numbers`, x.head && x.label && x.card && x.cardLabel && x.chips && x.numbers, x);
+    ok(`${sec}: no old tinted heading boxes`, x.tinted === 0, x.tinted);
+  }
+  ok('Chumash and Rambam headings look the same', pieces.chumash.head === pieces.rambam.head && pieces.chumash.label === pieces.rambam.label, [pieces.chumash.head, pieces.rambam.head]);
+  ok('Chumash and Rambam guide cards look the same', pieces.chumash.card === pieces.rambam.card, [pieces.chumash.card, pieces.rambam.card]);
+
   console.log(`\nOne switch, one look (${scheme}):`);
   ok('every switch shows exactly one choice', looks.every(s => s.chosen === 1 && s.pressedMatchesOn), looks.filter(s => s.chosen !== 1 || !s.pressedMatchesOn));
   for (const part of ['box', 'on', 'off']) {
