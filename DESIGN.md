@@ -71,7 +71,7 @@ Chumash, Tanya and Rambam are built from the same pieces, top to bottom:
 6. The text, English left and Hebrew right, with small numbers in the reader's colour (`.rd-vn`).
 7. Commentary (Rashi) in the same card shape with a colour bar on the side (`.rd-comm`), so it never looks like the guide.
 
-**Guide lines** for Chumash and Rambam are written ahead, one line per aliyah or chapter, from the text itself: `data/guides/chumash.json` ("Vayera 3") and `data/guides/rambam.json` ("Sales 13"). Written in batches and reviewed before they go in; a day without a line simply shows no card and no Guide chip. Tanya's guide is made on demand by AI (see Tanya).
+**Guide lines** for Chumash and Rambam are written ahead, one line per aliyah or chapter, from the text itself: `data/guides/chumash.json` ("Vayera 3") and `data/guides/rambam.json` ("Sales 13"). Each aliyah and each Rambam chapter is read in full before its line is written (not only its opening). Written in batches and reviewed before they go in; a day without a line simply shows no card and no Guide chip. Tanya's guide is made on demand by AI (see Tanya).
 
 ## Checking the look
 `cd tools && npm run test:look` (`tools/check-look.mjs`) opens every reader's gear, Profile on a phone and Profile on a computer, in light and dark, and checks: every switch looks the same and shows one choice; Chumash and Rambam use the readers' shared pieces (heading, guide card, chips, numbers) and look the same; no home-made switch; the gear lists Language then Appearance; a new language keeps the gear open; every button has a name; Profile's two columns start on the same line; the sidebar sits beside the page. Add `-- --shots` for pictures in `tools/.look/`.
