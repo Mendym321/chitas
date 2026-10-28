@@ -549,9 +549,18 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .om-he { direction:rtl; text-align:right; font-family:'OTSiddur','Shlomo','Noto Serif Hebrew',serif; font-size:23px; line-height:1.6; color:var(--t1); margin-top:14px; }
 .om-count { font-size:26px; padding-top:12px; border-top:1px solid var(--border); }
 .om-en { font-family:var(--read-font); font-size:15px; line-height:1.5; color:var(--t2); margin-top:4px; }
-.om-sefirah { margin-top:16px; text-align:center; font:700 15px var(--ui-font); color:var(--t1); }
-.om-sefirah span { font-weight:400; }
-#omer-modal .om-note { margin-top:14px; border-top:1px solid var(--border); padding-top:12px; }
+#om-body .om-en, #om-body .om-note, #om-body .tz-seg { direction:ltr; text-align:left; }
+#om-body .tz-seg { margin-bottom:4px; }
+.om-line { display:grid; grid-template-columns:1fr 1.3fr 1.1fr .7fr; gap:6px; margin:16px 0 6px; direction:ltr; }
+.om-line > div { padding:9px 4px; border-radius:var(--r-s); background:var(--card2); text-align:center; }
+.om-line p:first-child { font:700 11px var(--ui-font); color:var(--t3); white-space:nowrap; }
+.om-line p[lang="he"] { font-family:'OTSiddur','Shlomo',serif; font-size:19px; color:var(--t1); margin-top:2px; }
+.om-line p:nth-child(3) { font-size:10.5px; color:var(--t3); line-height:1.25; }
+.om-k { margin-top:22px; padding-top:14px; border-top:1px solid var(--border); direction:ltr; text-align:left; }
+.om-after { font-size:20px; margin-top:12px; }
+.om-ana { margin-top:6px; }
+#om-body mark { background:color-mix(in srgb, var(--gold) 32%, transparent); color:inherit; border-radius:4px; padding:0 2px; }
+#omer-modal .om-note { margin-top:18px; border-top:1px solid var(--border); padding-top:12px; }
 #welcome-back { position:relative; margin:12px 0 4px; padding:16px 18px; border-radius:var(--r-m); background:var(--card); }
 .wb-t { font:800 18px var(--ui-font); color:var(--t1); }
 .wb-s { font-size:14px; color:var(--t2); margin-top:2px; }
@@ -561,7 +570,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .stile-rv { position:absolute; top:14px; right:14px; z-index:1; padding:5px 10px; border-radius:999px; border:none; background:color-mix(in srgb, var(--ink) 88%, transparent); color:var(--on-ink); font:800 11px/1.2 var(--ui-font); cursor:pointer; }
 .stile-rv.done { cursor:default; }
 #review-ready { margin:12px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
-#review-ready .rr-k, #omer .rr-k, .rv-k { font:800 12px/1.2 var(--ui-font); letter-spacing:.6px; color:var(--t3); text-transform:uppercase; }
+#review-ready .rr-k, #omer .rr-k, .om-k, .rv-k { font:800 12px/1.2 var(--ui-font); letter-spacing:.6px; color:var(--t3); text-transform:uppercase; }
 .rr-row { display:flex; align-items:center; gap:12px; padding:10px 0; }
 .rr-row + .rr-row { border-top:1px solid var(--border); }
 .rr-sq { width:40px; height:40px; border-radius:14px; background:var(--c); color:var(--on); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -8028,27 +8037,52 @@ function _renderOmer(iso, isToday) {
   el.style.display = 'block';
 }
 
-// The words to say on night n: the bracha, the count, and its sefirah
+// The words to say on night n, as in the Chabad siddur: the bracha, the count,
+// the night's line (its word in Ana Bekoach, its sefirah, its word in
+// Lamenatzeach, its letter), then what is said after counting with the night's
+// words marked. Hebrew, or Hebrew with our English under each piece.
 function _openOmerCount(n) {
-  const c = omerCount(n);
+  const c = omerCount(n), a = omerAfter(n);
   if (!c) return;
-  document.getElementById('omer-modal')?.remove();
-  const m = document.createElement('div');
+  let lang = 'both';
+  try { lang = localStorage.getItem('chitas_omer_lang') || 'both'; } catch (e) {}
+  const en = t => lang === 'both' ? '<p class="om-en">' + t + '</p>' : '';
+  const L = c.line;
+  const body = _langSegLike([['he', 'עברית'], ['both', 'Both']], lang, '_setOmerLang')
+    + '<p class="om-he">' + OMER_BRACHA_HE + '</p>' + en(OMER_BRACHA_EN)
+    + '<p class="om-he om-count">' + c.he + ':</p>' + en(c.en + '.')
+    + '<div class="om-line">'
+    +   '<div><p>Ana Bekoach</p><p lang="he">' + L.ana + '</p></div>'
+    +   '<div><p>Sefirah</p><p lang="he">' + L.sefirah + '</p><p>' + c.sefirah.en + '</p></div>'
+    +   '<div><p>Lamenatzeach</p><p lang="he">' + L.word + '</p></div>'
+    +   '<div><p>Letter</p><p lang="he">' + L.letter + '</p></div>'
+    + '</div>'
+    + '<p class="rr-k om-k">After counting</p>'
+    + '<p class="om-he om-after">' + a.harachaman + '</p>' + en(OMER_AFTER_EN.harachaman)
+    + '<p class="om-he om-after">' + a.psalm + '</p>' + en(OMER_AFTER_EN.psalm)
+    + a.ana.map((l, i) => '<p class="om-he om-after om-ana">' + l + '</p>' + en(OMER_AFTER_EN.ana[i])).join('')
+    + '<p class="om-he om-after">' + a.baruchShem + '</p>' + en(OMER_AFTER_EN.baruchShem)
+    + '<p class="om-he om-after">' + a.ribono + '</p>' + en(OMER_AFTER_EN.ribono)
+    + '<p class="om-note">Forgot last night? Count during the day without the bracha, and from tonight go on with it. If a whole day went by without counting, go on counting without the bracha.</p>';
+  let m = document.getElementById('omer-modal');
+  if (m) { m.querySelector('#om-body').innerHTML = body; return; }
+  m = document.createElement('div');
   m.id = 'omer-modal';
+  m.dataset.night = n;
   m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
   m.onclick = e => { if (e.target === m) m.remove(); };
-  m.innerHTML = '<div class="ps-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="om-title" style="max-height:90vh;">'
+  m.innerHTML = '<div class="ps-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="om-title" style="max-height:92vh;">'
     + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
     +   '<div><p class="ps-modal-title" id="om-title">Night ' + n + ' of the Omer</p><p class="ps-modal-sub">Count after nightfall, standing</p></div>'
     +   '<button type="button" onclick="document.getElementById(\'omer-modal\').remove()" class="ps-modal-close" aria-label="Close">×</button>'
     + '</div>'
-    + '<div style="overflow-y:auto;flex:1;padding:8px 20px 26px;">'
-    +   '<p class="om-he" lang="he">' + OMER_BRACHA_HE + '</p><p class="om-en">' + OMER_BRACHA_EN + '</p>'
-    +   '<p class="om-he om-count" lang="he">' + c.he + '</p><p class="om-en">' + c.en + '.</p>'
-    +   '<p class="om-sefirah">' + c.sefirah.en + ' · <span lang="he">' + c.sefirah.he + '</span></p>'
-    +   '<p class="om-note">Forgot last night? Count during the day without the bracha, and from tonight go on with it. If a whole day went by without counting, go on counting without the bracha.</p>'
-    + '</div></div>';
+    + '<div id="om-body" lang="he" style="overflow-y:auto;flex:1;padding:12px 20px 26px;">' + body + '</div></div>';
   document.body.appendChild(m);
+}
+function _setOmerLang(lang) {
+  try { localStorage.setItem('chitas_omer_lang', lang); } catch (e) {}
+  const m = document.getElementById('omer-modal');
+  if (m) _openOmerCount(+m.dataset.night);
 }
 
 // ── App loader ────────────────────────────────────────────────────────────────

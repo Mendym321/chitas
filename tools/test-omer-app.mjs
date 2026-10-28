@@ -64,10 +64,16 @@ console.log('On Today:');
   ok('Sotah isn\'t also in More learning', await p.evaluate(() => !!document.querySelector('#more-learning [data-id="sotah"]')), false);
   if (SHOTS) { await p.evaluate(() => document.getElementById('omer').scrollIntoView({ block: 'center' })); await p.waitForTimeout(1200); await p.screenshot({ path: join(SHOTS, 'omer-today.png') }); }
   await p.click('text=Count tonight');
-  ok('the words for night 9', await p.evaluate(() => [document.getElementById('om-title').textContent, document.querySelector('.om-count').textContent, document.querySelector('.om-sefirah').textContent]),
-    ['Night 9 of the Omer', 'הַיּוֹם תִּשְׁעָה יָמִים, שֶׁהֵם שָׁבוּעַ אֶחָד וּשְׁנֵי יָמִים לָעֹמֶר', 'Gevurah shebiGevurah · גְּבוּרָה שֶׁבִּגְבוּרָה']);
+  ok('night 9 as in the siddur, with its line', await p.evaluate(() => [document.getElementById('om-title').textContent, document.querySelector('.om-count').textContent,
+    [...document.querySelectorAll('.om-line p[lang="he"]')].map(e => e.textContent)]),
+    ['Night 9 of the Omer', 'הַיּוֹם תִּשְׁעָה יָמִים שֶׁהֵם שָׁבֽוּעַ אֶחָד וּשְׁנֵי יָמִים לָעֹֽמֶר:'.normalize('NFC'), ['רנת', 'גבורה שבגבורה', 'בארץ', 'נ']]);
   ok('with the bracha first', await p.evaluate(() => document.querySelector('#omer-modal .om-he').textContent.includes('סְפִירַת הָעֹמֶר')), true);
-  if (SHOTS) await p.screenshot({ path: join(SHOTS, 'omer-count.png') });
+  ok('after counting, tonight\'s words are marked', await p.evaluate(() => [...document.querySelectorAll('#om-body mark')].map(e => e.textContent)),
+    ['בָּאָֽרֶץ'.normalize('NFC'), 'רִנַּת'.normalize('NFC'), 'גְּבוּרָה שֶׁבִּגְבוּרָה']);
+  if (SHOTS) { await p.screenshot({ path: join(SHOTS, 'omer-count.png') }); await p.evaluate(() => document.querySelector('.om-k').scrollIntoView()); await p.screenshot({ path: join(SHOTS, 'omer-after.png') }); }
+  await p.evaluate(() => _setOmerLang('he'));
+  ok('Hebrew only: no English, and it stays that way', [await p.evaluate(() => document.querySelectorAll('#om-body .om-en').length), await p.evaluate(() => localStorage.getItem('chitas_omer_lang'))], [0, 'he']);
+  await p.evaluate(() => _setOmerLang('both'));
   await p.evaluate(() => document.getElementById('omer-modal').remove());
   await p.click('#omer >> text=Sotah');
   await p.waitForFunction(() => document.querySelector('#native-reader-content')?.textContent.includes('Gemara'), null, { timeout: 5000 }).catch(() => {});
