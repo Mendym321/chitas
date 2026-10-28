@@ -109,6 +109,59 @@ await page.click('[aria-label="Rebbe\'s chapter"]');
 ok('turning the Rebbe off takes his chapter out of the reader', [await page.evaluate(() => user.tehillimFixedOpts.rebbe), (await personal()).length], [false, 4]);
 ok('no errors', errors, []);
 
+// Elul: a fresh page on 2 Elul 5787 (Sat 4 Sep 2027), then on Yom Kippur (Mon 11 Oct 2027)
+async function openOn(iso) {
+  const p = await browser.newPage({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
+  p.__errors = []; p.on('pageerror', e => p.__errors.push(e.message.split('\n')[0]));
+  await p.clock.install({ time: new Date(iso + 'T10:00:00') });
+  await p.route(u => !u.href.startsWith(url), r => {
+    const u = r.request().url(), H = { 'Access-Control-Allow-Origin': '*' };
+    if (u.includes('hebcal.com')) return r.fulfill({ headers: H, json: { items: [] } });
+    if (!u.includes('sefaria.org/api/texts/Psalms')) return r.abort();
+    const m = u.match(/Psalms\.(\d+)(?:[:\d]*-(\d+))?/), n = m[2] ? +m[2] - +m[1] + 1 : 1;
+    const ch = Array(2).fill(HE), ce = Array(2).fill(EN);
+    return r.fulfill({ headers: H, json: n > 1 ? { he: Array(n).fill(ch), text: Array(n).fill(ce) } : { he: ch, text: ce } });
+  });
+  await p.addInitScript(d => { try { if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1');
+    localStorage.setItem('chitas_v78', JSON.stringify({ uid: '', name: 'M', rambamTrack: '3', started: true, lastDate: d, done: {}, tehillimFixedOpts: { rebbe: false, rebbetzin: false } })); } } catch {} }, iso);
+  await p.goto(url, { waitUntil: 'load' });
+  await p.waitForFunction(() => typeof schedule !== 'undefined' && schedule && schedule.tehillim, null, { timeout: 8000 }).catch(() => {});
+  await p.evaluate(() => openChabadPanel('tehillim'));
+  await p.waitForFunction(() => document.querySelector('#native-reader-content .th-chapter'), null, { timeout: 5000 }).catch(() => {});
+  return p;
+}
+const elulPart = p => p.evaluate(() => {
+  const e = document.querySelector('.th-elul');
+  return e && [e.querySelector('.th-personal-head p').textContent, [...e.querySelectorAll('.th-ch-num')].length, [...e.querySelectorAll('.th-day')].map(x => x.textContent)];
+});
+
+console.log('Elul:');
+{
+  const p = await openOn('2027-09-04');
+  ok('Today\'s line says the Elul chapters too', await p.evaluate(() => schedule.tehillim.subtitle), 'Psalms 10–17 + Elul 4–6');
+  ok('the reader has the three after the day\'s', await elulPart(p), ['Elul Tehillim', 3, []]);
+  ok('chapters 4, 5, 6 (ד ה ו)', await p.evaluate(() => [...document.querySelectorAll('.th-elul .th-ch-num')].map(e => e.textContent)), ['ד.', 'ה.', 'ו.']);
+  ok('they come before Personal Tehillim', await p.evaluate(() => !!(document.querySelector('.th-elul').compareDocumentPosition(document.getElementById('tehillim-personal')) & Node.DOCUMENT_POSITION_FOLLOWING)), true);
+  await p.evaluate(() => _setTehillimLang('both'));
+  ok('and stay through a language change', (await elulPart(p))[1], 3);
+  await p.evaluate(() => { document.getElementById('app-loader')?.remove(); document.querySelector('.th-elul').scrollIntoView(); });
+  await p.screenshot({ path: new URL('./.look/tehillim-elul.png', import.meta.url).pathname }).catch(() => {});
+  ok('no errors', p.__errors, []);
+  await p.close();
+}
+{
+  const p = await openOn('2027-10-11');
+  ok('Yom Kippur: 36 chapters in four nines, each under when it\'s said', await elulPart(p), ['Yom Kippur Tehillim', 36, ['Before Kol Nidrei', 'Before going to sleep', 'After Musaf', 'After Ne\'ilah']]);
+  ok('Today\'s line', await p.evaluate(() => schedule.tehillim.subtitle), 'Psalms 55–59 + Yom Kippur 115–150');
+  ok('no errors', p.__errors, []);
+  await p.close();
+}
+{
+  const p = await openOn('2027-10-12');
+  ok('the day after: no Elul part', await elulPart(p), null);
+  await p.close();
+}
+
 await browser.close(); server.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll Tehillim app tests passed');
 process.exit(failed ? 1 : 0);

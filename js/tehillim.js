@@ -97,3 +97,24 @@ function personalTehillimChapter(birth, d) {
   const chapter = now.year - year + (reached ? 1 : 0);
   return chapter < 1 ? null : Math.min(chapter, 150);
 }
+
+// ── Elul ─────────────────────────────────────────────────────────────────────
+// From 1 Elul to 9 Tishrei, three more chapters each day (1–3, 4–6 … 112–114),
+// and on Yom Kippur the last 36 in four nines (Hayom Yom, 1 Elul). Elul always
+// has 29 days, so the day fixes the chapters.
+const ELUL_YK_TIMES = ['Before Kol Nidrei', 'Before going to sleep', 'After Musaf', 'After Ne\'ilah'];
+
+// → null outside the season, else { label, groups: [{ when, from, to }] }
+function elulTehillim(d) {
+  const h = hebrewDateOf(d);
+  const n = h.month === 'Elul' ? h.day : h.month === 'Tishrei' && h.day <= 9 ? 29 + h.day : 0;
+  if (n) return { label: 'Elul ' + (3 * n - 2) + '–' + 3 * n, groups: [{ when: '', from: 3 * n - 2, to: 3 * n }] };
+  if (h.month === 'Tishrei' && h.day === 10)
+    return { label: 'Yom Kippur 115–150', groups: ELUL_YK_TIMES.map((when, i) => ({ when, from: 115 + 9 * i, to: 123 + 9 * i })) };
+  return null;
+}
+// How many chapters that adds on day d (0 outside the season)
+function elulTehillimCount(d) {
+  const e = elulTehillim(d);
+  return e ? e.groups.reduce((n, g) => n + g.to - g.from + 1, 0) : 0;
+}
