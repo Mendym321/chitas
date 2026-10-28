@@ -8062,7 +8062,7 @@ function _openOmerCount(n) {
     + '<p class="om-he om-after">' + a.psalm + '</p>' + en(OMER_AFTER_EN.psalm)
     + a.ana.map((l, i) => '<p class="om-he om-after om-ana">' + l + '</p>' + en(OMER_AFTER_EN.ana[i])).join('')
     + '<p class="om-he om-after">' + a.baruchShem + '</p>' + en(OMER_AFTER_EN.baruchShem)
-    + '<p class="om-he om-after">' + a.ribono + '</p>' + en(OMER_AFTER_EN.ribono)
+    + '<p class="om-he om-after">' + a.ribono + '</p>' + en(OMER_AFTER_EN.ribono.replace('{sefirah}', c.sefirah.en))
     + '<p class="om-note">Forgot last night? Count during the day without the bracha, and from tonight go on with it. If a whole day went by without counting, go on counting without the bracha.</p>';
   let m = document.getElementById('omer-modal');
   if (m) { m.querySelector('#om-body').innerHTML = body; return; }

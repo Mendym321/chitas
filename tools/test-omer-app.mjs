@@ -70,6 +70,7 @@ console.log('On Today:');
   ok('with the bracha first', await p.evaluate(() => document.querySelector('#omer-modal .om-he').textContent.includes('סְפִירַת הָעֹמֶר')), true);
   ok('after counting, tonight\'s words are marked', await p.evaluate(() => [...document.querySelectorAll('#om-body mark')].map(e => e.textContent)),
     ['בָּאָֽרֶץ'.normalize('NFC'), 'רִנַּת'.normalize('NFC'), 'גְּבוּרָה שֶׁבִּגְבוּרָה']);
+  ok('the English of Ribono shel Olam names tonight\'s sefirah', await p.evaluate(() => [...document.querySelectorAll('#om-body .om-en')].at(-1).textContent.includes('in the sefirah of Gevurah shebiGevurah be repaired')), true);
   if (SHOTS) { await p.screenshot({ path: join(SHOTS, 'omer-count.png') }); await p.evaluate(() => document.querySelector('.om-k').scrollIntoView()); await p.screenshot({ path: join(SHOTS, 'omer-after.png') }); }
   await p.evaluate(() => _setOmerLang('he'));
   ok('Hebrew only: no English, and it stays that way', [await p.evaluate(() => document.querySelectorAll('#om-body .om-en').length), await p.evaluate(() => localStorage.getItem('chitas_omer_lang'))], [0, 'he']);
