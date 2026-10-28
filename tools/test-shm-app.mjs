@@ -103,6 +103,20 @@ console.log('A day that isn\'t a mitzvah (Fri 8 Jan 2027, day 1):');
   await p.close();
 }
 
+console.log('Switching tracks from the reader\'s gear:');
+{
+  const p = await openOn('2026-10-28');
+  await p.evaluate(() => { user.rambamTrack = '3'; });
+  await p.evaluate(() => openChabadPanel('rambam'));
+  await p.waitForTimeout(600);
+  await p.evaluate(() => selectTrackInline('m', false));
+  await p.waitForFunction(() => document.querySelector('#native-reader-content .tz-ch')?.textContent === 'מצות לא תעשה רנא', null, { timeout: 5000 }).catch(() => {});
+  ok('the open reader shows Sefer HaMitzvos at once, no need to go out and back', await p.evaluate(() => [_rv.sid, document.getElementById('chabad-panel').style.display, document.getElementById('chabad-panel-sub').textContent]),
+    ['rambam', 'flex', 'Negative Commandment 251']);
+  ok('no errors', p.__errors, []);
+  await p.close();
+}
+
 await browser.close(); server.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll Sefer HaMitzvos app tests passed');
 process.exit(failed ? 1 : 0);
