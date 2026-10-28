@@ -149,6 +149,30 @@ for (const scheme of ['light', 'dark']) {
   ok('Chumash and Rambam headings look the same', pieces.chumash.head === pieces.rambam.head && pieces.chumash.label === pieces.rambam.label, [pieces.chumash.head, pieces.rambam.head]);
   ok('Chumash and Rambam guide cards look the same', pieces.chumash.card === pieces.rambam.card, [pieces.chumash.card, pieces.rambam.card]);
 
+  // Rambam's guide headings: before the halacha where a topic starts, in Tanya's type, gone with the Guide
+  const rh = await page.evaluate(async () => {
+    _readerBegin('rambam'); _rv.iso = '2026-10-28'; _setReaderColour('var(--c-rambam)', 'var(--on-rambam)');
+    document.getElementById('chabad-panel').style.display = 'flex'; document.getElementById('native-reader-content').style.display = 'block';
+    window._rambamData = { chapters: [{ ref: 'Mishneh Torah, Sales 17', title: 'Sales 17', heBook: 'הלכות מכירה', chapter: 17,
+      en: Array.from({ length: 9 }, (_, i) => 'Halacha ' + (i + 1)), he: Array.from({ length: 9 }, () => 'הלכה'), notes: [] }] };
+    localStorage.removeItem('chitas_rambam_guide');
+    _renderRambamContent(); await new Promise(r => setTimeout(r, 400)); _renderRambamContent();
+    const c = document.getElementById('native-reader-content');
+    // which halacha follows each heading
+    const at = [...c.querySelectorAll('.rb-h')].map(h => h.nextElementSibling.textContent.match(/Halacha (\d+)/)?.[1]);
+    const font = e => { const cs = getComputedStyle(e); return [cs.fontFamily, cs.fontSize, cs.fontWeight].join(' '); };
+    const tanya = Object.assign(document.createElement('p'), { className: 'tz-h' }); c.appendChild(tanya);
+    const same = font(c.querySelector('.rb-h')) === font(tanya);
+    _toggleReaderOpt('rambam', 'guide');
+    const off = c.querySelectorAll('.rb-h').length;
+    _toggleReaderOpt('rambam', 'guide');
+    _closeReaderNow();
+    return { at, same, off };
+  });
+  ok('Rambam headings come before halachos 1, 2, 3, 6 and 9 of Sales 17', rh.at.join() === '1,2,3,6,9', rh.at);
+  ok('in the same type as Tanya\'s headings', rh.same);
+  ok('and the Guide switch hides them', rh.off === 0, rh.off);
+
   console.log(`\nOne switch, one look (${scheme}):`);
   ok('every switch shows exactly one choice', looks.every(s => s.chosen === 1 && s.pressedMatchesOn), looks.filter(s => s.chosen !== 1 || !s.pressedMatchesOn));
   for (const part of ['box', 'on', 'off']) {

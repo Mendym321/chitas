@@ -1,0 +1,688 @@
+{
+ "Sales 16": [
+  [
+   1,
+   "Seeds that don't sprout"
+  ],
+  [
+   3,
+   "Goods taken to another town"
+  ],
+  [
+   5,
+   "What the buyer meant to use it for"
+  ],
+  [
+   6,
+   "A new blemish made by the buyer"
+  ],
+  [
+   8,
+   "Land used before the defect was found"
+  ],
+  [
+   9,
+   "A hidden defect that destroys it"
+  ],
+  [
+   12,
+   "Food that turns out to be forbidden"
+  ]
+ ],
+ "Sales 17": [
+  [
+   1,
+   "Better or worse than promised"
+  ],
+  [
+   2,
+   "Not what was named at all"
+  ],
+  [
+   3,
+   "Wine that turns to vinegar"
+  ],
+  [
+   6,
+   "What \"aged wine\" and the like promise"
+  ],
+  [
+   9,
+   "A kneading tray means a finished one"
+  ]
+ ],
+ "Sales 18": [
+  [
+   1,
+   "No deceiving, Jew or gentile"
+  ],
+  [
+   2,
+   "Making goods look better than they are"
+  ],
+  [
+   5,
+   "Mixing produce, wine and oil"
+  ],
+  [
+   9,
+   "How much dregs and dirt a buyer accepts"
+  ],
+  [
+   12,
+   "Where there is a local custom"
+  ]
+ ],
+ "Sales 19": [
+  [
+   1,
+   "Property under dispute"
+  ],
+  [
+   3,
+   "The seller answers for the buyer's loss"
+  ],
+  [
+   5,
+   "A promise to cover losses beyond control"
+  ],
+  [
+   8,
+   "Selling without taking responsibility"
+  ]
+ ],
+ "Sales 20": [
+  [
+   1,
+   "Haggling, then taking it without a word"
+  ],
+  [
+   2,
+   "Not sure who the seller was"
+  ],
+  [
+   4,
+   "When the seller says who bought"
+  ],
+  [
+   5,
+   "Who has to prove what"
+  ],
+  [
+   10,
+   "Born before or after the sale?"
+  ],
+  [
+   12,
+   "The larger one or the smaller one"
+  ],
+  [
+   14,
+   "Proof falls on the one who held it"
+  ]
+ ],
+ "Sales 21": [
+  [
+   1,
+   "A sale without stating the amount"
+  ],
+  [
+   5,
+   "Standard sizes: houses, graves, ditches, paths"
+  ],
+  [
+   13,
+   "Boundaries drawn in the deed"
+  ],
+  [
+   18,
+   "What the words of a sale include"
+  ],
+  [
+   22,
+   "Half a field"
+  ]
+ ],
+ "Sales 22": [
+  [
+   1,
+   "Selling what doesn't exist yet"
+  ],
+  [
+   3,
+   "A sale at the market price"
+  ],
+  [
+   5,
+   "What isn't yours yet"
+  ],
+  [
+   8,
+   "Money given along with land"
+  ],
+  [
+   9,
+   "Entrusted objects and loans"
+  ],
+  [
+   10,
+   "Giving to someone not yet born"
+  ],
+  [
+   13,
+   "Things with no substance"
+  ],
+  [
+   15,
+   "Pledges to the Temple and the poor"
+  ]
+ ],
+ "Sales 23": [
+  [
+   1,
+   "Selling a thing for what it yields"
+  ],
+  [
+   5,
+   "Land for a set time"
+  ],
+  [
+   9,
+   "Dovecotes and beehives"
+  ],
+  [
+   15,
+   "Trees bought for lumber"
+  ]
+ ],
+ "Sales 24": [
+  [
+   1,
+   "Three trees bring land with them"
+  ],
+  [
+   6,
+   "Two trees don't"
+  ],
+  [
+   8,
+   "Keeping the trees, selling the land"
+  ],
+  [
+   11,
+   "\"Except one tree\" and other wordings"
+  ],
+  [
+   14,
+   "What the deed should say"
+  ],
+  [
+   16,
+   "An upper storey, and family graves"
+  ]
+ ],
+ "Sales 25": [
+  [
+   1,
+   "What selling a house includes"
+  ],
+  [
+   6,
+   "A courtyard"
+  ],
+  [
+   7,
+   "An olive press"
+  ],
+  [
+   9,
+   "A bathhouse"
+  ]
+ ],
+ "Sales 26": [
+  [
+   1,
+   "Selling a town"
+  ],
+  [
+   2,
+   "Selling a field"
+  ],
+  [
+   5,
+   "A gift includes more than a sale"
+  ],
+  [
+   7,
+   "Local custom decides"
+  ]
+ ],
+ "Sales 27": [
+  [
+   1,
+   "A ship, a wagon, a donkey"
+  ],
+  [
+   5,
+   "The price doesn't prove what was meant"
+  ],
+  [
+   6,
+   "Servants and animals"
+  ],
+  [
+   10,
+   "A reservoir, a dump, a hive"
+  ]
+ ],
+ "Sales 28": [
+  [
+   1,
+   "\"Land to sow a kor\": rocks and hollows"
+  ],
+  [
+   5,
+   "Measured exactly, or roughly"
+  ],
+  [
+   12,
+   "Boundaries that don't match the size"
+  ],
+  [
+   13,
+   "A field the buyer already knows"
+  ]
+ ],
+ "Sales 29": [
+  [
+   1,
+   "Who can't buy or sell"
+  ],
+  [
+   6,
+   "Children"
+  ],
+  [
+   12,
+   "Coming of age, and inherited land before twenty"
+  ],
+  [
+   18,
+   "Someone drunk"
+  ]
+ ],
+ "Sales 30": [
+  [
+   1,
+   "Bought for someone without his knowing"
+  ],
+  [
+   2,
+   "Servants and wives: the master or husband decides"
+  ],
+  [
+   7,
+   "Selling on Shabbos"
+  ]
+ ],
+ "Ownerless Property and Gifts 1": [
+  [
+   1,
+   "Ownerless things: first to take them"
+  ],
+  [
+   6,
+   "A convert's estate"
+  ],
+  [
+   14,
+   "Land bought from a gentile"
+  ]
+ ],
+ "Ownerless Property and Gifts 2": [
+  [
+   1,
+   "How ownerless land is taken"
+  ],
+  [
+   9,
+   "Acts that don't count"
+  ],
+  [
+   14,
+   "Pledges held by or from a convert"
+  ],
+  [
+   17,
+   "Servants, and a convert who wasn't dead"
+  ]
+ ],
+ "Ownerless Property and Gifts 3": [
+  [
+   1,
+   "How a gift is acquired"
+  ],
+  [
+   5,
+   "Saying what you give"
+  ],
+  [
+   6,
+   "Gifts with conditions"
+  ],
+  [
+   11,
+   "A gift to a gentile"
+  ],
+  [
+   12,
+   "Gifts to a wife or a servant"
+  ]
+ ],
+ "Ownerless Property and Gifts 4": [
+  [
+   1,
+   "A gift can't be refused once taken"
+  ],
+  [
+   4,
+   "Sending a gift through someone"
+  ],
+  [
+   6,
+   "Who can receive for another"
+  ],
+  [
+   10,
+   "The deed of a gift"
+  ],
+  [
+   13,
+   "Disputes over a gift"
+  ]
+ ],
+ "Ownerless Property and Gifts 5": [
+  [
+   1,
+   "A gift must be public"
+  ],
+  [
+   6,
+   "Two deeds for one field"
+  ]
+ ],
+ "Ownerless Property and Gifts 6": [
+  [
+   1,
+   "Reading the giver's intent"
+  ],
+  [
+   2,
+   "Everything to one son, or to a wife"
+  ],
+  [
+   8,
+   "When the wife gives up her ketubah"
+  ],
+  [
+   12,
+   "A bride who gives her property away"
+  ],
+  [
+   14,
+   "Gifts sent home, and a son's wedding house"
+  ],
+  [
+   17,
+   "Engagements: promises and gifts"
+  ]
+ ],
+ "Ownerless Property and Gifts 7": [
+  [
+   1,
+   "Shushvinut: wedding gifts that come back"
+  ],
+  [
+   5,
+   "When it must be repaid"
+  ],
+  [
+   9,
+   "If one of them dies"
+  ],
+  [
+   13,
+   "Five rules of shushvinut"
+  ],
+  [
+   14,
+   "Gifts pressed on someone, and wedding wine"
+  ]
+ ],
+ "Ownerless Property and Gifts 8": [
+  [
+   1,
+   "A dying man's gift"
+  ],
+  [
+   8,
+   "It takes effect only at death"
+  ],
+  [
+   14,
+   "If he recovers"
+  ],
+  [
+   23,
+   "Gifts made fearing death"
+  ],
+  [
+   25,
+   "A second illness"
+  ]
+ ],
+ "Ownerless Property and Gifts 9": [
+  [
+   1,
+   "Kept secret until his death"
+  ],
+  [
+   3,
+   "The words that give"
+  ],
+  [
+   9,
+   "Debts he admits, and his servants"
+  ],
+  [
+   13,
+   "Refusing, and changing his mind"
+  ],
+  [
+   20,
+   "Sales by a dying man"
+  ],
+  [
+   22,
+   "Healthy or dying? Disputes"
+  ]
+ ],
+ "Ownerless Property and Gifts 10": [
+  [
+   1,
+   "\"Give him a maneh\""
+  ],
+  [
+   3,
+   "\"He has a maneh with me\""
+  ],
+  [
+   8,
+   "When the heirs say it was paid"
+  ],
+  [
+   12,
+   "Money sent with a messenger"
+  ],
+  [
+   13,
+   "Several gifts, not enough money"
+  ],
+  [
+   15,
+   "Living in a house, eating from a tree"
+  ]
+ ],
+ "Ownerless Property and Gifts 11": [
+  [
+   1,
+   "Who the gift means"
+  ],
+  [
+   7,
+   "\"A portion\": how much"
+  ],
+  [
+   10,
+   "A wife's portion like a son's"
+  ],
+  [
+   12,
+   "\"Movable property\" and \"my property\""
+  ],
+  [
+   16,
+   "A gift on top of what is owed"
+  ],
+  [
+   20,
+   "A daughter's marriage and dowry"
+  ],
+  [
+   23,
+   "What he really meant"
+  ]
+ ],
+ "Ownerless Property and Gifts 12": [
+  [
+   1,
+   "\"My son shall inherit\""
+  ],
+  [
+   3,
+   "\"To you, and after you to him\""
+  ],
+  [
+   13,
+   "Land given to a son after death"
+  ],
+  [
+   14,
+   "Dates and wording in a deed"
+  ],
+  [
+   17,
+   "Those who refuse gifts"
+  ]
+ ],
+ "Neighbors 1": [
+  [
+   1,
+   "Dividing what partners own"
+  ],
+  [
+   2,
+   "Too small to divide: buy or sell"
+  ],
+  [
+   4,
+   "How big is big enough"
+  ]
+ ],
+ "Neighbors 2": [
+  [
+   1,
+   "Four cubits in front of each door"
+  ],
+  [
+   9,
+   "Agreeing to divide"
+  ],
+  [
+   12,
+   "After brothers divide"
+  ],
+  [
+   14,
+   "A wall for privacy"
+  ]
+ ],
+ "Neighbors 3": [
+  [
+   1,
+   "Sharing the cost of a wall"
+  ],
+  [
+   5,
+   "Roofs, and courtyards at different heights"
+  ],
+  [
+   8,
+   "Stones from a fallen wall"
+  ],
+  [
+   9,
+   "Shared springs, drains and rivers"
+  ]
+ ],
+ "Neighbors 4": [
+  [
+   1,
+   "A loft above someone's house"
+  ],
+  [
+   8,
+   "Gardens on a hillside"
+  ],
+  [
+   10,
+   "Trees the river carried off"
+  ]
+ ],
+ "Neighbors 5": [
+  [
+   1,
+   "What partners in a courtyard must share"
+  ],
+  [
+   3,
+   "What a courtyard may be used for"
+  ],
+  [
+   6,
+   "Windows and doors that look in"
+  ],
+  [
+   12,
+   "Lanes: gates and entrances"
+  ]
+ ],
+ "Neighbors 6": [
+  [
+   1,
+   "What a town can require of everyone"
+  ],
+  [
+   8,
+   "Competition: a new shop or trade"
+  ],
+  [
+   11,
+   "Noise and traffic in a lane"
+  ],
+  [
+   13,
+   "A cistern or garden reached through a neighbor's"
+  ]
+ ]
+}
