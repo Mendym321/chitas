@@ -152,6 +152,14 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
 - English in Both is 14.5px, as in Tanya.
 - Tested in the browser by `tools/test-tehillim-app.mjs` (`npm run test:tehillim`).
 
+## Sefiras HaOmer and Sotah
+- **The days** (`js/omer.js`, tested against Hebcal for every year to 5805 in `tools/test-omer.mjs`): night 1 is the night before 16 Nissan, day 49 is 5 Sivan. Sotah: day 1 has no daf; day n is daf n (2 to 49). Worked out on the phone, no internet.
+- **On Today**, from the first day of Pesach to Erev Shavuos, a card under the four: the day and its sefirah, "Count tonight" (night n, after nightfall), and Sotah with today's daf, its circle and how many of the 48 are learned (all 48: the siyum). Optional: not one of the four rings. Sotah lives here, not in More learning.
+- **Count tonight** opens the words: the bracha, the count and the sefirah, in Hebrew and English, and what to do if you forgot (count by day without the bracha; after a whole day, go on without it). The 49 counts are in `js/omer-data.js`, made by `tools/generate-omer.mjs` from Hebcal in the Chabad siddur's spelling (לָעֹמֶר, שְׁלֹשָׁה). Read every line after making it.
+- **"Tonight"** follows the learning day: at 1:30 am after night 1 it is still day 1, and the count shown is night 2.
+- **The Sotah reader** has the head of a page of Shas ("מסכת סוטה · דף ח") with the day of the Omer under it.
+- Tested in the browser by `tools/test-omer-app.mjs` (`npm run test:omer`).
+
 ## Reminders and touch
 Ready for the app version (Capacitor); a browser never shows them. Profile has "On this phone" only inside the app.
 - **Daily reminder** (`js/reminders.js`, tested in `tools/test-reminders.mjs`): at most one a day, at the time you pick (20:00 to start). Never on Shabbos or Yom Tov. The day before, an evening time comes at 12:00 instead, so it never lands after candle lighting (no location needed). Not today once today's Chitas is done. The phone holds the next two weeks; the app refreshes them when it opens and whenever you mark something. Kept on the phone, not in your account. Text: "Today's Chumash, Tehillim, Tanya and Rambam."

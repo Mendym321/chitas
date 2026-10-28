@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "generate": "node generate-chumash-data.mjs",
-    "test": "node test-more-learning.mjs && node test-chumash.mjs && node test-tehillim.mjs && node test-progress.mjs && node test-learning-stats.mjs && node test-day-note.mjs && node test-quiz-core.mjs && node test-tanya-split.mjs && node test-account-merge.mjs && node --no-warnings test-admin.mjs && node --no-warnings test-admin-stats.mjs && node test-reminders.mjs && node test-new-day.mjs",
+    "test": "node test-more-learning.mjs && node test-chumash.mjs && node test-tehillim.mjs && node test-omer.mjs && node test-progress.mjs && node test-learning-stats.mjs && node test-day-note.mjs && node test-quiz-core.mjs && node test-tanya-split.mjs && node test-account-merge.mjs && node --no-warnings test-admin.mjs && node --no-warnings test-admin-stats.mjs && node test-reminders.mjs && node test-new-day.mjs",
     "test:app": "node test-app.mjs",
     "test:place": "node test-reader-place.mjs",
     "test:api": "node --experimental-test-module-mocks --no-warnings test-api.mjs",
@@ -14,7 +14,8 @@
     "test:more": "node test-more-learning-app.mjs",
     "test:look": "node check-look.mjs",
     "test:midnight": "node test-midnight.mjs",
-    "test:tehillim": "node test-tehillim-app.mjs"
+    "test:tehillim": "node test-tehillim-app.mjs",
+    "test:omer": "node test-omer-app.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",

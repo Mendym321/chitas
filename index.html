@@ -540,6 +540,18 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .tiles4.dragging .stile { transform:none !important; transition:none !important; }
 #day-chips::-webkit-scrollbar { display:none; }
 #day-chips > * { flex-shrink:0; white-space:nowrap; }
+#omer { margin:12px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
+.om-day { font:800 17px/1.25 var(--ui-font); color:var(--t1); margin-top:6px; }
+.om-sef { font-size:13px; color:var(--t3); margin:1px 0 6px; }
+.om-sef span, .om-sefirah span { font-family:'OTSiddur','Shlomo',serif; font-size:16px; }
+#omer .om-row { padding:11px 0; border-top:1px solid var(--border); width:100%; }
+.om-note { font-size:13px; color:var(--t3); line-height:1.45; padding:8px 0 10px; }
+.om-he { direction:rtl; text-align:right; font-family:'OTSiddur','Shlomo','Noto Serif Hebrew',serif; font-size:23px; line-height:1.6; color:var(--t1); margin-top:14px; }
+.om-count { font-size:26px; padding-top:12px; border-top:1px solid var(--border); }
+.om-en { font-family:var(--read-font); font-size:15px; line-height:1.5; color:var(--t2); margin-top:4px; }
+.om-sefirah { margin-top:16px; text-align:center; font:700 15px var(--ui-font); color:var(--t1); }
+.om-sefirah span { font-weight:400; }
+#omer-modal .om-note { margin-top:14px; border-top:1px solid var(--border); padding-top:12px; }
 #welcome-back { position:relative; margin:12px 0 4px; padding:16px 18px; border-radius:var(--r-m); background:var(--card); }
 .wb-t { font:800 18px var(--ui-font); color:var(--t1); }
 .wb-s { font-size:14px; color:var(--t2); margin-top:2px; }
@@ -549,7 +561,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .stile-rv { position:absolute; top:14px; right:14px; z-index:1; padding:5px 10px; border-radius:999px; border:none; background:color-mix(in srgb, var(--ink) 88%, transparent); color:var(--on-ink); font:800 11px/1.2 var(--ui-font); cursor:pointer; }
 .stile-rv.done { cursor:default; }
 #review-ready { margin:12px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
-#review-ready .rr-k, .rv-k { font:800 12px/1.2 var(--ui-font); letter-spacing:.6px; color:var(--t3); text-transform:uppercase; }
+#review-ready .rr-k, #omer .rr-k, .rv-k { font:800 12px/1.2 var(--ui-font); letter-spacing:.6px; color:var(--t3); text-transform:uppercase; }
 .rr-row { display:flex; align-items:center; gap:12px; padding:10px 0; }
 .rr-row + .rr-row { border-top:1px solid var(--border); }
 .rr-sq { width:40px; height:40px; border-radius:14px; background:var(--c); color:var(--on); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -1341,6 +1353,7 @@ window._fsGetDoc = getDoc;
       <!-- Actual sections -->
       <div id="tiles-wrap"><div id="sections-list" class="tiles4" style="display:none;"></div></div>
       <p id="day-readonly" style="display:none;"></p>
+      <div id="omer" style="display:none;"></div>
       <div id="review-ready" style="display:none;"></div>
       <div id="welcome-back" style="display:none;"></div>
 
@@ -1576,6 +1589,8 @@ window._fsGetDoc = getDoc;
 <script src="/js/chumash-data.js"></script>
 <script src="/js/chumash.js"></script>
 <script src="/js/tehillim.js"></script>
+<script src="/js/omer-data.js"></script>
+<script src="/js/omer.js"></script>
 <script src="/js/holidays-data.js"></script>
 <script src="/js/progress.js"></script>
 <script src="/js/reminders.js"></script>
@@ -2763,6 +2778,7 @@ function renderSectionsForOffset(iso) {
   _syncMoreLearning();
   _renderThought();
   _renderWelcomeBack();
+  _renderOmer(iso, isToday);
 }
 
 // Review on Today: a learned section's tile says it's ready to review (or how
@@ -6476,8 +6492,7 @@ async function _bustTanyaCache() {
 // Chitas. Edit turns them on and off. Nothing added yet: one row that says
 // what you can add.
 function _shelfTracks() {
-  const tracks = _shownTracks();
-  return window._sotahDaf ? ['sotah', ...tracks.filter(t => t !== 'sotah')] : tracks;   // Sotah during the Omer, without adding it
+  return _shownTracks().filter(t => t !== 'sotah');   // Sotah is in the Omer card
 }
 const _mlCircle = (on, colour) => on
   ? '<svg width="26" height="26" viewBox="0 0 26 26" role="img" aria-label="Learned"><circle cx="13" cy="13" r="12" fill="' + colour + '"/><path d="M8 13.4l3.2 3.2 6.6-7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
@@ -7744,7 +7759,9 @@ async function _loadSotah() {
     const bLen = Math.max(bHeSegs.length, bEnSegs.length);
 
     window._dafData = {
-      title: subtitle, color: def.color, daf,
+      title: 'Sotah ' + daf, color: def.color, daf,
+      head: 'מסכת סוטה · דף ' + _toHebrewNumeral(daf), kind: 'Talmud Bavli',
+      note: 'Day ' + omerDay + ' of the Omer' + (daf === 49 ? ': the last daf, finishing the masechta before Shavuos' : ': a daf a day until Shavuos'),
       aHe: aHeSegs, aEn: aEnSegs,
       aRashiHe: mapToArr(aLen, aRashiMap, 'he'),
       aRashiEn: mapToArr(aLen, aRashiMap, 'en'),
@@ -7969,54 +7986,69 @@ function recalcStreak() {
 }
 
 
-// ── Sotah / Sefirat HaOmer ────────────────────────────────────────────────────
-// Chabad minhag: learn Masechet Sotah during the Omer (49 days)
-// Day 1 of Omer (16 Nissan) = Daf 2, Day 2 = Daf 3 ... Day 49 = Daf 50
-// Formula: daf = omerDay + 1
-// Learning begins 17 Nissan (Day 2 Omer = Daf 3) — first day you'd actually learn
-// Wait: 16 Nissan is Pesach II (Yom Tov), so learning starts 17 Nissan
-// But daf count starts from 16 Nissan Day 1 = Daf 2 to keep alignment
-// Returns { daf, omerDay, inOmer } for a given Gregorian date
-// Uses Hebcal Hebrew date converter
-
+// ── Sotah / Sefiras HaOmer ────────────────────────────────────────────────────
+// The day of the Omer and its daf come from js/omer.js, on the phone (day 1
+// has no daf; day n is daf n). → { daf, omerDay } or null
 async function getSotahDafForDate(d) {
-  const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  const heb = await fetch('https://www.hebcal.com/converter?cfg=json&gy=' + d.getFullYear()
-    + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1')
-    .then(r => r.json()).catch(() => null);
-  if (!heb) return null;
-
-  const { hm, hd, hy } = heb;
-
-  // Omer runs 16 Nissan → 5 Sivan (Diaspora: day 1 = 16 Nissan, day 49 = 4 Sivan)
-  // Sotah daf = omerDay + 1  (day 1 → daf 2, day 49 → daf 50)
-  let omerDay = null;
-
-  if (hm === 'Nisan' && hd >= 16) {
-    omerDay = hd - 15; // 16 Nissan = day 1
-  } else if (hm === 'Iyyar') {
-    omerDay = 15 + hd; // Iyyar 1 = day 16
-  } else if (hm === 'Sivan' && hd <= 5) {
-    omerDay = 44 + hd; // Sivan 1 = day 45, Sivan 5 = day 49
-  }
-
-  // Learning: day 2 (daf 2) through day 49 (daf 49)
-  // Day 1 (16 Nissan) has no corresponding daf
-  if (!omerDay || omerDay < 2 || omerDay > 49) return null;
-
-  const daf = omerDay; // daf = omer day directly
-  return { daf, omerDay, hm, hd };
+  const n = omerDay(d), daf = sotahDaf(n);
+  return daf ? { daf, omerDay: n } : null;
+}
+function _checkSotahOmer() {
+  const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
+  window._sotahDaf = sotahDaf(omerDay(d)) ? { daf: sotahDaf(omerDay(d)), omerDay: omerDay(d) } : null;
+  return Promise.resolve();
 }
 
+// ── Sefiras HaOmer on Today ──────────────────────────────────────────────────
+// From the first night of the Omer to Shavuos, a card under the four: the day
+// and its sefirah, tonight's count (opens the words to say) and the day's daf
+// of Sotah with its circle. Optional: it isn't one of the four rings.
+function _renderOmer(iso, isToday) {
+  const el = document.getElementById('omer');
+  if (!el) return;
+  const day = new Date(iso + 'T12:00:00'), next = new Date(iso + 'T12:00:00');
+  next.setDate(next.getDate() + 1);
+  const n = omerDay(day), tonight = isToday ? omerDay(next) : null, daf = sotahDaf(n);
+  if (!n && !tonight) { el.style.display = 'none'; return; }
+  const c = n && omerCount(n), sotah = EXTRA_TRACK_DEFS.sotah;
+  let h = '<p class="rr-k">Sefiras HaOmer</p>';
+  if (n) h += '<p class="om-day">Day ' + n + ' of the Omer</p><p class="om-sef">' + c.sefirah.en + ' · <span lang="he">' + c.sefirah.he + '</span></p>';
+  else h += '<p class="om-day">The Omer starts tonight</p>';
+  if (tonight) h += '<button type="button" class="ml-r om-row" onclick="_openOmerCount(' + tonight + ')">'
+    + '<span class="ml-bar" style="background:var(--gold)"></span><span class="ml-x"><span class="ml-n">Count tonight</span><span class="ml-p">Night ' + tonight + ' · after nightfall</span></span>' + _ML_CHEV + '</button>';
+  // How many of this year's dafim so far are learned (day 2 to this day)
+  let learned = 0;
+  for (let k = 2; k <= (n || 0); k++) { const d = new Date(day); d.setDate(d.getDate() - (n - k)); if (_trackDoneOn('sotah', dateISO(d))) learned++; }
+  const sub = learned === 48 ? 'All 48 dafim: a siyum on Maseches Sotah' : 'Daf ' + daf + (daf === 49 ? ', the last' : '') + (learned ? ' · ' + learned + ' of 48 learned' : '');
+  if (daf) h += '<button type="button" class="ml-r om-row" onclick="openExtraReader(\'sotah\')">'
+    + '<span class="ml-bar" style="background:' + sotah.color + '"></span><span class="ml-x"><span class="ml-n">Sotah</span><span class="ml-p">' + sub + '</span></span>'
+    + _mlCircle(!!_trackDoneOn('sotah', iso), sotah.color) + '</button>';
+  else if (n === 1) h += '<p class="om-note">Sotah starts tomorrow with daf 2, a daf a day until Shavuos.</p>';
+  el.innerHTML = h;
+  el.style.display = 'block';
+}
 
-// ── Auto-show Sotah during Omer ───────────────────────────────────────────────
-async function _checkSotahOmer() {
-  const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
-  const info = await getSotahDafForDate(d).catch(() => null);
-  window._sotahDaf = info; // null = not in Omer
-  if (info) {
-    _syncMoreLearning();
-  }
+// The words to say on night n: the bracha, the count, and its sefirah
+function _openOmerCount(n) {
+  const c = omerCount(n);
+  if (!c) return;
+  document.getElementById('omer-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'omer-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = '<div class="ps-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="om-title" style="max-height:90vh;">'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+    +   '<div><p class="ps-modal-title" id="om-title">Night ' + n + ' of the Omer</p><p class="ps-modal-sub">Count after nightfall, standing</p></div>'
+    +   '<button type="button" onclick="document.getElementById(\'omer-modal\').remove()" class="ps-modal-close" aria-label="Close">×</button>'
+    + '</div>'
+    + '<div style="overflow-y:auto;flex:1;padding:8px 20px 26px;">'
+    +   '<p class="om-he" lang="he">' + OMER_BRACHA_HE + '</p><p class="om-en">' + OMER_BRACHA_EN + '</p>'
+    +   '<p class="om-he om-count" lang="he">' + c.he + '</p><p class="om-en">' + c.en + '.</p>'
+    +   '<p class="om-sefirah">' + c.sefirah.en + ' · <span lang="he">' + c.sefirah.he + '</span></p>'
+    +   '<p class="om-note">Forgot last night? Count during the day without the bracha, and from tonight go on with it. If a whole day went by without counting, go on counting without the bracha.</p>'
+    + '</div></div>';
+  document.body.appendChild(m);
 }
 
 // ── App loader ────────────────────────────────────────────────────────────────
