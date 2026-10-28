@@ -74,9 +74,9 @@ function learningStats(user, today, rambamTrack) {
     if (monthOver && m.firstDay === 1 && m.done === m.count) tehillimBooks++;
   }
 
-  // Chapters of Tehillim said (from each day's portion you marked)
+  // Chapters of Tehillim said (from each day's portion you marked, with Elul's)
   let tehillimChapters = 0;
-  for (const d of days) if (did(d, 'tehillim')) tehillimChapters += tehillimChapterCount(getTehillimForDate(d).ref);
+  for (const d of days) if (did(d, 'tehillim')) tehillimChapters += tehillimChapterCount(getTehillimForDate(d).ref) + elulTehillimCount(d);
 
   // Rambam: chapters per day depends on your track
   const perDay = rambamTrack === '1' ? 1 : rambamTrack === 'm' ? 0 : 3;

@@ -725,7 +725,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
 .th-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; direction:ltr; padding:10px 0; border-bottom:1px solid var(--border); }
 .th-row .th-text { direction:rtl; text-indent:0; text-align:right; text-align-last:auto; }
-.th-row .th-en { margin:0; --rf-sz:16px; --rf-lh:1.5; }
+.th-row .th-en { margin:0; --rf-sz:14.5px; --rf-lh:1.5; }   /* as Tanya's Both */
+.th-note { font-size:13px; color:var(--t3); margin-top:4px; direction:ltr; }
 .th-wait { font-size:var(--fs-1); color:var(--t3); text-align:center; padding:6px 0 4px; direction:ltr; }
 .th-wait button { border:none; background:none; color:var(--c-tehillim); font:700 var(--fs-1) var(--ui-font); cursor:pointer; padding:0; }
 .th-personal { margin-top:30px; padding-top:18px; border-top:1px solid var(--border); }
@@ -2320,7 +2321,7 @@ async function init() {
                   sefariaRef: chumashRef },
 
       tehillim: { id:'tehillim', label:'Tehillim', icon:'kinor', quizzable:false,
-                  subtitle: getTehillimForDate(today).label,
+                  subtitle: _tehillimSubtitle(today),
                   chabadUrl: `${base}/tehillim.asp?tdate=${civDate}`,
                   sefariaRef: tehRef },
 
@@ -2662,7 +2663,7 @@ async function rebuildScheduleForOffset() {
       s.sefariaRef = getChumashAliyaRef(d) || p?.aliyaRef || null;
     }
     if (s.id === 'tehillim') {
-      s.subtitle = getTehillimForDate(d).label;
+      s.subtitle = _tehillimSubtitle(d);
       // Rebuild sefariaRef from tehTitle for past days
       if (p?.tehTitle) {
         const m = p.tehTitle.match(/(\d+)(?:[\s\-–]+?(\d+))?/);
@@ -4707,42 +4708,23 @@ function _thChapters(raw) {
 async function _loadTehillimNative(sectionId, silent) {
   const iso = _textLoading('tehillim', silent);
   try {
-    // Monthly cycle lives in js/tehillim.js (shared with the home screen, tested)
+    // Monthly cycle and Elul live in js/tehillim.js (shared with the home screen, tested)
     const viewedDay = new Date(iso + 'T12:00:00');
-    const { day: dayNum, ref, label: tehLabel } = getTehillimForDate(viewedDay);
-    // Days 25–26 are part of Psalm 119 — verse numbers start where the range starts
-    const startVerse = parseInt((ref.match(/:(\d+)-/) || [])[1] || '1', 10);
+    const { day: dayNum, ref } = getTehillimForDate(viewedDay);
+    const elul = elulTehillim(viewedDay);
+    // In Elul the three (on Yom Kippur 36) more chapters come with the day's, in one download
+    const elulRef = elul && 'Psalms.' + elul.groups[0].from + '-' + elul.groups.at(-1).to;
+    const [d, e] = await Promise.all([_fetchTehillim(ref), elulRef ? _fetchTehillim(elulRef).catch(() => null) : null]);
 
-    const d = await _fetchTehillim(ref);
+    const chapters = _thBuildChapters(ref, d);
+    if (!chapters.length) return false;
+    const elulChapters = e ? _thBuildChapters(elulRef, e) : [];
+    const elulPart = elul && { label: elul.label, failed: !elulChapters.length,
+      groups: elul.groups.map(g => ({ when: g.when, chapters: elulChapters.filter(c => c.psalmNum >= g.from && c.psalmNum <= g.to) })) };
 
-    // Build psalm number list from ref
-    const psalmNums = [];
-    const rangeM = ref.match(/Psalms\.(\d+)(?:-(\d+))?/);
-    if (rangeM) {
-      const from = parseInt(rangeM[1]), to = rangeM[2] ? parseInt(rangeM[2]) : from;
-      for (let p = from; p <= to; p++) psalmNums.push(p);
-    }
-
-    const heChapters = _thChapters(d.he), enChapters = _thChapters(d.text);
-
-    if (!heChapters.length && !enChapters.length) return false;
-
-    // Build chapters array: [{psalmNum, he:[...], en:[...]}, ...]
-    const maxCh = Math.max(heChapters.length, enChapters.length, psalmNums.length);
-    const chapters = [];
-    for (let c = 0; c < maxCh; c++) {
-      chapters.push({
-        psalmNum: psalmNums[c] || (psalmNums[0] + c),
-        startVerse: c === 0 ? startVerse : 1,
-        he: heChapters[c] || [],
-        en: enChapters[c] || [],
-      });
-    }
-
-    const psalmLabel = tehLabel;
-
+    const psalmLabel = _tehillimSubtitle(viewedDay);
     if (!silent && _readerShows('tehillim', iso)) document.getElementById('chabad-panel-sub').textContent = psalmLabel;
-    _textArrived('tehillim', iso, { chapters, psalmLabel, dayNum, iso }, silent);
+    _textArrived('tehillim', iso, { chapters, psalmLabel, dayNum, iso, elul: elulPart }, silent);
     _personalPsalms(viewedDay).forEach(p => _loadPsalm(p.chapter));   // so they're ready with it
     return true;
 
@@ -4750,6 +4732,23 @@ async function _loadTehillimNative(sectionId, silent) {
     console.error('Tehillim reader error:', e);
     return false;
   }
+}
+
+// Sefaria's text of a Tehillim ref → [{ psalmNum, startVerse, he: [...], en: [...] }]
+// (days 25–26 are part of Psalm 119: the verses start where the range starts)
+function _thBuildChapters(ref, d) {
+  const startVerse = parseInt((ref.match(/:(\d+)-/) || [])[1] || '1', 10);
+  const m = ref.match(/Psalms\.(\d+)(?:[:\d]*-(\d+))?/), from = m ? +m[1] : 1;
+  const he = _thChapters(d.he), en = _thChapters(d.text);
+  return Array.from({ length: Math.max(he.length, en.length) }, (_, c) => ({
+    psalmNum: from + c, startVerse: c === 0 ? startVerse : 1, he: he[c] || [], en: en[c] || [],
+  }));
+}
+
+// "Psalms 1–9", and in Elul "Psalms 1–9 + Elul 4–6"
+function _tehillimSubtitle(d) {
+  const e = elulTehillim(d);
+  return getTehillimForDate(d).label + (e ? ' + ' + e.label : '');
 }
 
 // Convert integer to Hebrew gematria string (1=א, 2=ב ... 150=קנ)
@@ -4790,10 +4789,22 @@ function _renderTehillimContent() {
     v += _thChapterHTML(ch, lang, chIdx === 0 && dayNum ? (isHe ? 'יום ' + _toHebrewNumeral(dayNum) : 'Day ' + dayNum) : '');
   });
 
-  el.innerHTML = t + top + v
+  el.innerHTML = t + top + v + _elulTehillimHTML(window._tehillimData.elul, lang)
     + '<div id="tehillim-personal">' + _personalPsalmsHTML(lang) + '</div>'
     + '<p style="font-size:var(--fs-1);color:var(--t3);text-align:center;margin-top:12px;padding-bottom:8px;">— End of today\'s Tehillim —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+}
+
+// From 1 Elul to Yom Kippur: the day's three more chapters (on Yom Kippur the
+// last 36, each nine under when it's said), after the day's and marked with them
+function _elulTehillimHTML(elul, lang) {
+  if (!elul) return '';
+  const yk = elul.groups.length > 1;
+  let h = '<div class="th-personal th-elul"><div class="th-personal-head"><p>' + (yk ? 'Yom Kippur Tehillim' : 'Elul Tehillim') + '</p></div>'
+    + '<p class="th-note">' + (yk ? 'The last 36 chapters, nine at a time.' : 'Three more chapters each day, from Rosh Chodesh Elul to Yom Kippur.') + '</p>';
+  if (elul.failed) return h + '<p class="th-wait">Couldn\'t load these chapters. <button type="button" onclick="_dropTexts(\'tehillim\');_reopenReader(\'tehillim\')">Try again</button></p></div>';
+  elul.groups.forEach(g => g.chapters.forEach((ch, i) => { h += _thChapterHTML(ch, lang, i === 0 && g.when ? escapeHtml(g.when) : ''); }));
+  return h + '</div>';
 }
 
 // One chapter of Tehillim laid out like a printed Tehillim; under its number a
