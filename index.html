@@ -444,6 +444,27 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .fb-ctx { margin-top:12px; padding:10px 12px; border-radius:var(--r-s); background:var(--card2); font-size:13px; color:var(--t2); line-height:1.45; }
 .fb-send { display:block; width:100%; margin-top:16px; padding:14px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:800 15px var(--ui-font); cursor:pointer; }
 .fb-send:disabled { opacity:.5; cursor:default; }
+/* Personal Tehillim sheet */
+.tpm-label { margin:16px 0 8px; font-size:var(--fs-1); font-weight:700; color:var(--t3); }
+.tpm-list { background:var(--card); border:1px solid var(--border); border-radius:var(--r-s); overflow:hidden; }
+.tpm-row { display:flex; align-items:center; gap:10px; padding:11px 14px; }
+.tpm-list .tpm-row + .tpm-row { border-top:1px solid var(--border); }
+.tpm-who { flex:1; min-width:0; text-align:left; }
+.tpm-who p:first-child { font-size:var(--fs-2); font-weight:700; color:var(--t1); }
+.tpm-who p + p { margin-top:1px; font-size:13px; color:var(--t3); }
+.tpm-grip { color:var(--t3); padding:6px 2px; touch-action:none; cursor:grab; display:flex; }
+.tpm-open { flex:1; min-width:0; display:flex; align-items:center; gap:10px; border:none; background:none; padding:0; font-family:inherit; color:var(--t3); cursor:pointer; }
+.tpm-row.tpm-drag { background:var(--hi); }
+.tpm-row.tpm-over { opacity:.5; }
+.tpm-empty { font-size:var(--fs-2); color:var(--t3); line-height:1.45; }
+.tpm-undo { margin-top:10px; font-size:var(--fs-2); color:var(--t2); }
+.tpm-undo button, .tpm-foot button { border:none; background:none; padding:0; font:700 var(--fs-2) var(--ui-font); color:var(--t1); cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.tpm-date { display:grid; grid-template-columns:.62fr 1.08fr 1.7fr; gap:8px; margin-top:12px; }
+.tpm-sel { width:100%; box-sizing:border-box; padding:11px 26px 11px 10px; border:1px solid var(--border); border-radius:var(--r-s); background:var(--card) url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="%23888" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>') no-repeat right 9px center; color:var(--t1); font:600 15px var(--ui-font); appearance:none; -webkit-appearance:none; cursor:pointer; }
+.tpm-en { margin-top:12px; padding-right:10px; background-image:none; min-height:46px; }
+.tpm-sunset { padding:12px 2px 0; }
+.tpm-foot { display:flex; justify-content:space-between; margin-top:14px; }
+.tpm-foot .tpm-remove { color:var(--red); }
 .fb-note { margin-top:10px; font-size:var(--fs-1); color:var(--t3); line-height:1.5; }
 .fb-err { margin-top:10px; font-size:13px; color:var(--red); }
 .ml-foot { font-size:var(--fs-1); color:var(--t3); line-height:1.5; margin:12px 4px 0; }
@@ -702,12 +723,15 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .th-text { text-align:justify; text-indent:1.6em; color:var(--t1); --rf-sz:16px; --rf-lh:1.65; font-size:var(--rf-sz); line-height:var(--rf-lh); }
 .th-chapter.he .th-text { font-family:'OTSiddur','Shlomo','Noto Serif Hebrew',serif; --rf-sz:21px; --rf-lh:1.62; text-align-last:right; }
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
-.th-pair { margin-bottom:12px; }
+.th-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; direction:ltr; padding:10px 0; border-bottom:1px solid var(--border); }
+.th-row .th-text { direction:rtl; text-indent:0; text-align:right; text-align-last:auto; }
+.th-row .th-en { margin:0; --rf-sz:16px; --rf-lh:1.5; }
+.th-wait { font-size:var(--fs-1); color:var(--t3); text-align:center; padding:6px 0 4px; direction:ltr; }
+.th-wait button { border:none; background:none; color:var(--c-tehillim); font:700 var(--fs-1) var(--ui-font); cursor:pointer; padding:0; }
 .th-personal { margin-top:30px; padding-top:18px; border-top:1px solid var(--border); }
 .th-personal-head { display:flex; align-items:center; justify-content:space-between; }
 .th-personal-head p { font:800 var(--fs-3) var(--ui-font); color:var(--t1); }
 .th-personal-head button { display:flex; align-items:center; gap:5px; padding:7px 12px; border-radius:999px; border:none; background:var(--card2); color:var(--t1); font:700 13px var(--ui-font); cursor:pointer; }
-.th-pair .th-text { text-indent:0; margin-bottom:3px; }
 .th-en { direction:ltr; text-align:left; font-size:15px; line-height:1.5; color:var(--t2); }
 /* Reader: day bar + up next */
 #reader-daybar { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
@@ -1821,524 +1845,269 @@ function _showMainApp() {
   document.getElementById('main-app').style.display = 'block';
 }
 
-// ── Tehillim personal chapter helpers ────────────────────────────────────────
-const HEB_MONTHS = ['Nissan','Iyar','Sivan','Tammuz','Av','Elul','Tishrei','Cheshvan','Kislev','Tevet','Shevat','Adar','Adar II'];
+// ── Personal Tehillim ─────────────────────────────────────────────────────────
+// Each person's chapter comes from their Hebrew birthday, worked out on the
+// phone (personalTehillimChapter, js/tehillim.js), so it's there at once.
 
-// Fixed people always shown
+// Always offered; each can be turned off
 const TEHILLIM_FIXED = [
   { label: 'Rebbe', heDay: 11, heMonth: 'Nissan', heYear: 5662 },
   { label: 'Rebbetzin', heDay: 25, heMonth: 'Adar', heYear: 5661 },
 ];
 
-
-async function _calcTehillimChapter(person) {
-  // Strategy: convert the person's Hebrew birthday to Gregorian using Hebcal,
-  // then compare with today's Gregorian date to get exact age.
-  // This is the most reliable method — avoids Hebrew month ordering complexity.
-  try {
-    const today = appNow();
-    const todayY = today.getFullYear();
-
-    // Get today's Hebrew year first
-    const todayHebUrl = `https://www.hebcal.com/converter?cfg=json&gy=${todayY}&gm=${today.getMonth()+1}&gd=${today.getDate()}&g2h=1`;
-    const todayHeb = await fetch(todayHebUrl).then(r => r.json());
-    const todayHebYear = todayHeb.hy;
-
-    // Convert this year's instance of the person's Hebrew birthday to Gregorian
-    const birthThisYearUrl = `https://www.hebcal.com/converter?cfg=json&hy=${todayHebYear}&hm=${encodeURIComponent(person.heMonth)}&hd=${person.heDay}&h2g=1`;
-    const birthThisYear = await fetch(birthThisYearUrl).then(r => r.json());
-
-    let age = todayHebYear - person.heYear;
-
-    // Check if this year's birthday has occurred yet
-    if (birthThisYear && birthThisYear.gy) {
-      const birthdayThisYear = new Date(birthThisYear.gy, birthThisYear.gm - 1, birthThisYear.gd);
-      // If birthday hasn't happened yet this Hebrew year, subtract 1
-      if (today < birthdayThisYear) age--;
-    }
-
-    // Chapter = year they are currently IN = age + 1
-    const chapter = age + 1;
-    return Math.max(1, Math.min(chapter, 150));
-  } catch(e) {
-    console.error('Tehillim chapter calc error:', e);
-    return null;
-  }
+// Everyone whose chapter is said, with it, on day `d` (people not yet born are left out)
+function _personalPsalms(d) {
+  const opts = user.tehillimFixedOpts || {};
+  const fixed = TEHILLIM_FIXED.filter(p => opts[p.label.toLowerCase()] !== false);
+  return [...fixed, ...(user.tehillimPeople || [])]
+    .map(p => ({ ...p, chapter: personalTehillimChapter(p, d) }))
+    .filter(p => p.chapter);
 }
 
-async function _buildPersonalPsalms() {
-  const opts = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
-  const fixed = TEHILLIM_FIXED.filter(p => {
-    if (p.label === 'Rebbe') return opts.rebbe !== false;
-    if (p.label === 'Rebbetzin') return opts.rebbetzin !== false;
-    return true;
-  });
-  const people = [...fixed, ...(user.tehillimPeople || [])];
-  const results = await Promise.all(people.map(async p => ({
-    ...p,
-    chapter: await _calcTehillimChapter(p)
-  })));
-  return results;
+// A chapter's text, in the same translation and cleaned the same way as the
+// day's Tehillim. Downloaded once: _psalmText[n] is { he, en }, 'loading' or 'failed'.
+const _psalmText = {};
+function _loadPsalm(n, again) {
+  if (_psalmText[n] && !(again && _psalmText[n] === 'failed')) return;
+  _psalmText[n] = 'loading';
+  _fetchTehillim('Psalms.' + n).then(d => {
+    const he = _thChapters(d.he)[0] || [], en = _thChapters(d.text)[0] || [];
+    _psalmText[n] = he.length || en.length ? { he, en } : 'failed';
+  }).catch(() => { _psalmText[n] = 'failed'; })
+    .then(() => _renderPersonalPsalms());
 }
 
-// Render personal psalms section (called after main tehillim render)
-
-// ── Psalm text cache — avoid re-fetching the same psalm repeatedly ────────────
-window._psalmCache = {};
-async function _fetchPsalm(num) {
-  if (window._psalmCache[num]) return window._psalmCache[num];
-  const d = await fetch('https://www.sefaria.org/api/texts/Psalms.' + num + '?context=0&commentary=0').then(r => r.json());
-  function flat(x) {
-    if (!x) return [];
-    if (typeof x === 'string') return [_cleanHtml(x)].filter(Boolean);
-    if (Array.isArray(x)) return x.flatMap(flat);
-    return [];
-  }
-  const result = { heSegs: flat(d.he||[]), enSegs: flat(d.text||[]) };
-  window._psalmCache[num] = result;
-  return result;
+// The day the Tehillim on screen is for
+function _tehillimDay() {
+  const iso = window._tehillimData?.iso;
+  return iso ? new Date(iso + 'T12:00:00') : appNow();
 }
 
-// Generation counter — cancels stale renders when reader reopens
-let _personalPsalmsGen = 0;
-
-async function _renderPersonalPsalms() {
-  // Increment generation — any previous in-flight render will bail when it checks
-  const myGen = ++_personalPsalmsGen;
-
-  // Wait for the div to exist (renderTehillimContent must have run first)
-  let el = document.getElementById('tehillim-personal');
-  if (!el) {
-    // Poll briefly — it should appear within a frame or two
-    for (let i = 0; i < 20; i++) {
-      await new Promise(r => setTimeout(r, 50));
-      el = document.getElementById('tehillim-personal');
-      if (el) break;
-    }
-    if (!el) return;
-  }
-
-  if (myGen !== _personalPsalmsGen) return; // stale
-  el.innerHTML = '<p style="font-size:var(--fs-1);color:var(--t3);text-align:center;padding:16px 0;">Loading personal chapters…</p>';
-
-  const people = await _buildPersonalPsalms();
-  if (myGen !== _personalPsalmsGen) return; // stale
-  if (!people.length) { el.innerHTML = ''; return; }
-
-  const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
-
-  // Same layout as today's Tehillim, with whose chapter it is under the number
+// Under the day's Tehillim: each person's chapter, with their name under its
+// number. Drawn with the text and again as each chapter arrives, so it never
+// waits on anything else.
+function _personalPsalmsHTML(lang) {
+  const people = _personalPsalms(_tehillimDay());
   let h = '<div class="th-personal">'
     + '<div class="th-personal-head"><p>Personal Tehillim</p>'
-    +   '<button onclick="_openTehillimPeopleManager()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add person</button>'
+    +   '<button type="button" onclick="_openTehillimPeopleManager()">' + (people.length ? 'People' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add person') + '</button>'
     + '</div>';
-
-  // Fetch all psalms using cache — no duplicate requests
-  const psalmResults = await Promise.all(people.map(async p => {
-    if (!p.chapter) return null;
-    try {
-      const data = await _fetchPsalm(p.chapter);
-      return { ...p, ...data };
-    } catch(e) { return { ...p, heSegs: [], enSegs: [] }; }
-  }));
-  if (myGen !== _personalPsalmsGen) return; // stale — reader was closed
-
-  psalmResults.forEach(p => {
-    if (!p) return;
-    h += _thChapterHTML({ psalmNum: p.chapter, startVerse: 1, he: p.heSegs || [], en: p.enSegs || [] }, lang,
-      lang === 'en' ? 'For ' + escapeHtml(p.label) : escapeHtml(p.label));
+  if (!people.length) h += '<p class="th-wait">Add the people in your life, and each one\'s chapter appears here.</p>';
+  people.forEach(p => {
+    _loadPsalm(p.chapter);
+    const t = _psalmText[p.chapter], who = lang === 'en' ? 'For ' + escapeHtml(p.label) : escapeHtml(p.label);
+    if (t && typeof t === 'object') { h += _thChapterHTML({ psalmNum: p.chapter, startVerse: 1, he: t.he, en: t.en }, lang, who); return; }
+    h += '<div class="th-chapter' + (lang !== 'en' ? ' he' : '') + '"><p class="th-ch-num">' + (lang !== 'en' ? _toHebrewNumeral(p.chapter) + '.' : 'Psalm ' + p.chapter) + '</p><p class="th-day">' + who + '</p>'
+      + (t === 'failed'
+        ? '<p class="th-wait">Couldn\'t load this chapter. <button type="button" onclick="_loadPsalm(' + p.chapter + ', true);_renderPersonalPsalms()">Try again</button></p>'
+        : '<p class="th-wait">Loading…</p>')
+      + '</div>';
   });
-
-  h += '</div>';
-  if (myGen !== _personalPsalmsGen) return; // final stale check
-  // Re-get el in case DOM was rebuilt
-  const freshEl = document.getElementById('tehillim-personal');
-  if (freshEl) freshEl.innerHTML = h;
+  return h + '</div>';
 }
 
-// ── Tehillim people manager ───────────────────────────────────────────────────
+// Draw it again (a chapter arrived, or someone was added, changed or turned off)
+function _renderPersonalPsalms() {
+  const el = document.getElementById('tehillim-personal');
+  if (el && _rv.sid === 'tehillim') el.innerHTML = _personalPsalmsHTML(localStorage.getItem('chitas_lang_tehillim') || 'he');
+}
+
+// ── Tehillim people sheet ─────────────────────────────────────────────────────
+// One sheet with two views: the list (the Rebbe and Rebbetzin with a switch
+// each, then your people, each with today's chapter) and the form to add or
+// change someone. A birthday is picked as a Hebrew date (day, month, year,
+// with Adar I and II only in a leap year) or as an English date (with "born
+// after sunset", since the Hebrew day starts at nightfall); the form shows the
+// Hebrew birthday and the chapter as you pick, and saves only a complete date.
+let _tpm = null;   // { view: 'list'|'form', idx, name, tab: 'he'|'en', he: {day, month, year}, en, sunset, removed }
+
 function _openTehillimPeopleManager() {
-  const existing = document.getElementById('tehillim-people-modal');
-  if (existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'tehillim-people-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
-
-  const BLUE = 'var(--c-tehillim)';
-  const opts = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
-
-  // Hebrew date drum picker
-  const MONTHS = ['Tishrei','Cheshvan','Kislev','Tevet','Shevat','Adar','Adar II','Nissan','Iyar','Sivan','Tammuz','Av','Elul'];
-  const hebYearEnd = new Date().getFullYear() + 3761;
-  const YEARS = [];
-  for (let y = hebYearEnd; y >= 5700; y--) YEARS.push(y);
-
-  const ENG_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const currentYear = new Date().getFullYear();
-  const ENG_YEARS = [];
-  for (let y = currentYear; y >= currentYear - 100; y--) ENG_YEARS.push(y);
-
-  function engDrumPicker() {
-    const MONTHS_ENG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const nowY = new Date().getFullYear();
-    const SEL_STYLE = 'width:100%;padding:9px 28px 9px 10px;border-radius:var(--r-s);border:1px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:var(--fs-2);appearance:none;-webkit-appearance:none;background-image:url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="%23888" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>\');background-repeat:no-repeat;background-position:right 10px center;cursor:pointer;';
-    const LABEL_STYLE = 'font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:4px;display:block;';
-    const monthOpts = MONTHS_ENG.map(m => '<option value="' + m + '">' + m + '</option>').join('');
-    const dayOpts   = Array.from({length:31}, (_,i) => '<option value="'+(i+1)+'">'+(i+1)+'</option>').join('');
-    const yearOpts  = Array.from({length:101}, (_,i) => { const y = nowY-i; return '<option value="'+y+'">'+y+'</option>'; }).join('');
-    return '<div style="display:flex;gap:8px;margin-bottom:12px;">'
-      + '<div style="flex:1.3;display:flex;flex-direction:column;">'
-      +   '<label style="' + LABEL_STYLE + '">Month</label>'
-      +   '<select id="eng-sel-month" onchange="window._tpmEngSelChange()" style="' + SEL_STYLE + '">' + monthOpts + '</select>'
-      + '</div>'
-      + '<div style="flex:.65;display:flex;flex-direction:column;">'
-      +   '<label style="' + LABEL_STYLE + '">Day</label>'
-      +   '<select id="eng-sel-day" onchange="window._tpmEngSelChange()" style="' + SEL_STYLE + '">' + dayOpts + '</select>'
-      + '</div>'
-      + '<div style="flex:.85;display:flex;flex-direction:column;">'
-      +   '<label style="' + LABEL_STYLE + '">Year</label>'
-      +   '<select id="eng-sel-year" onchange="window._tpmEngSelChange()" style="' + SEL_STYLE + '">' + yearOpts + '</select>'
-      + '</div>'
-      + '</div>';
-  }
-
-  function drumPicker(state) {
-    const SEL = 'width:100%;padding:9px 28px 9px 10px;border-radius:var(--r-s);border:1px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:var(--fs-2);appearance:none;-webkit-appearance:none;background-image:url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="%23888" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>\');background-repeat:no-repeat;background-position:right 10px center;cursor:pointer;';
-    const LBL = 'font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:4px;display:block;';
-    const dayOpts   = Array.from({length:30}, (_,i) => '<option value="'+(i+1)+'">'+(i+1)+'</option>').join('');
-    const monthOpts = MONTHS.map(m => '<option value="' + m + '">' + m + '</option>').join('');
-    const yearOpts  = YEARS.map(y => '<option value="' + y + '">' + y + '</option>').join('');
-    return '<div style="display:flex;gap:8px;margin-bottom:12px;">'
-      + '<div style="flex:1.3;display:flex;flex-direction:column;">'
-      +   '<label style="' + LBL + '">Month</label>'
-      +   '<select id="drum-month" onchange="window._tpmHebSelChange()" style="' + SEL + '">' + monthOpts + '</select>'
-      + '</div>'
-      + '<div style="flex:.65;display:flex;flex-direction:column;">'
-      +   '<label style="' + LBL + '">Day</label>'
-      +   '<select id="drum-day" onchange="window._tpmHebSelChange()" style="' + SEL + '">' + dayOpts + '</select>'
-      + '</div>'
-      + '<div style="flex:.85;display:flex;flex-direction:column;">'
-      +   '<label style="' + LBL + '">Year</label>'
-      +   '<select id="drum-year" onchange="window._tpmHebSelChange()" style="' + SEL + '">' + yearOpts + '</select>'
-      + '</div>'
-      + '</div>';
-  }
-
-  // Store current picker state
-  window._tpmState = {
-    day: 1,
-    month: 'Tishrei',
-    year: 5786, // sensible default
-    editIdx: -1,
-  };
-
-  modal.innerHTML = '<div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:90vh;display:flex;flex-direction:column;padding:0 0 env(safe-area-inset-bottom);">'
-    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;">'
-    +   '<div><p class="ps-modal-title">Personal Tehillim</p><p class="ps-modal-sub">Chapters for the people in your life</p></div>'
-    +   '<button onclick="document.getElementById(\'tehillim-people-modal\').remove()" class="ps-modal-close">×</button>'
+  document.getElementById('tehillim-people-modal')?.remove();
+  _tpm = { view: 'list' };
+  const m = document.createElement('div');
+  m.id = 'tehillim-people-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  m.onclick = e => { if (e.target === m) _tpmClose(); };
+  m.innerHTML = '<div class="ps-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="tpm-title" style="max-height:90vh;">'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+    +   '<div><p class="ps-modal-title" id="tpm-title"></p><p class="ps-modal-sub" id="tpm-sub"></p></div>'
+    +   '<button type="button" onclick="_tpmClose()" class="ps-modal-close" aria-label="Close">×</button>'
     + '</div>'
-    + '<div style="overflow-y:auto;flex:1;padding:16px 20px;">'
-
-    // Fixed people toggles
-    +   '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Always included</p>'
-    +   '<div id="tpm-fixed-list" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-s);overflow:hidden;margin-bottom:16px;">'
-    +     _fixedPersonRow('Rebbe', opts.rebbe !== false, BLUE)
-    +     _fixedPersonRow('Rebbetzin', opts.rebbetzin !== false, BLUE)
-    +   '</div>'
-
-    // User people — with drag handles
-    +   '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">My people</p>'
-    +   '<div id="tpm-list" style="margin-bottom:16px;"></div>'
-
-    // Add / edit form
-    +   '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-m);padding:14px;" id="tpm-form">'
-    +     '<p id="tpm-form-title" style="font-size:var(--fs-2);font-weight:700;color:var(--t1);margin-bottom:10px;">Add person</p>'
-    +     '<input id="tpm-label" type="text" placeholder="Name (e.g. Devorah, Husband)" maxlength="30"'
-    +       ' style="width:100%;padding:10px 12px;border-radius:var(--r-s);border:1px solid var(--border);background:var(--surface);color:var(--t1);font-family:inherit;font-size:var(--fs-2);margin-bottom:12px;box-sizing:border-box;">'
-    +     '<div style="display:flex;gap:0;margin-bottom:12px;background:var(--surface);border-radius:var(--r-s);padding:3px;">'
-    +       '<button id="tpm-tab-heb" onclick="_tpmSetTab(\'heb\')" style="flex:1;padding:7px;border-radius:var(--r-s);border:none;font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;background:var(--card);color:var(--t1);">Hebrew date</button>'
-    +       '<button id="tpm-tab-eng" onclick="_tpmSetTab(\'eng\')" style="flex:1;padding:7px;border-radius:var(--r-s);border:none;font-size:var(--fs-2);font-weight:600;cursor:pointer;font-family:inherit;background:transparent;color:var(--t3);">English date</button>'
-    +     '</div>'
-    +     '<div id="tpm-heb-picker">'
-    +     '<p style="font-size:var(--fs-1);color:var(--t3);margin-bottom:8px;">Hebrew birthday</p>'
-    +     drumPicker(window._tpmState)
-    +     '</div>'
-    +     '<div id="tpm-eng-picker" style="display:none;">'
-    +     '<p style="font-size:var(--fs-1);color:var(--t3);margin-bottom:8px;">English birthday</p>'
-    +     engDrumPicker()
-    +     '<p id="tpm-eng-converted" style="font-size:var(--fs-1);color:var(--t3);margin-bottom:8px;min-height:16px;"></p>'
-    +     '</div>'
-    +     '<button id="tpm-submit-btn" onclick="_addTehillimPerson()" style="width:100%;padding:12px;border-radius:var(--r-s);border:none;background:' + BLUE + ';color:#fff;font-weight:700;font-size:var(--fs-2);cursor:pointer;font-family:inherit;">Add</button>'
-    +   '</div>'
-    + '</div>'
+    + '<div id="tpm-body" style="overflow-y:auto;flex:1;padding:4px 20px 24px;"></div>'
     + '</div>';
+  document.body.appendChild(m);
+  _tpmDraw();
+}
+function _tpmClose() { document.getElementById('tehillim-people-modal')?.remove(); _tpm = null; }
 
-  document.body.appendChild(modal);
-  _renderTpmList();
-  // Initialize Hebrew selects to current state
-  setTimeout(() => {
-    const dm = document.getElementById('drum-month');
-    const dd = document.getElementById('drum-day');
-    const dy = document.getElementById('drum-year');
-    if (dm) dm.value = window._tpmState.month || 'Tishrei';
-    if (dd) dd.value = String(window._tpmState.day || 1);
-    if (dy) dy.value = String(window._tpmState.year || 5786);
-  }, 80);
+function _tpmDraw() {
+  const body = document.getElementById('tpm-body');
+  if (!body || !_tpm) return;
+  const form = _tpm.view === 'form', editing = form && _tpm.idx >= 0;
+  document.getElementById('tpm-title').textContent = !form ? 'Personal Tehillim' : editing ? 'Edit ' + (user.tehillimPeople[_tpm.idx]?.label || '') : 'Add a person';
+  document.getElementById('tpm-sub').textContent = !form ? 'Each person\'s chapter for their year of life, after the day\'s Tehillim' : 'Their chapter comes from their Hebrew birthday';
+  body.innerHTML = form ? _tpmFormHTML() : _tpmListHTML();
+  if (form) _tpmResult();
 }
 
-// Drum scroll handler — visual update + state update
-window._tpmCurrentTab = 'heb';
-
-window._tpmSetTab = function(tab) {
-  window._tpmCurrentTab = tab;
-  const hebPicker = document.getElementById('tpm-heb-picker');
-  const engPicker = document.getElementById('tpm-eng-picker');
-  const hebBtn = document.getElementById('tpm-tab-heb');
-  const engBtn = document.getElementById('tpm-tab-eng');
-  if (tab === 'heb') {
-    if (hebPicker) hebPicker.style.display = '';
-    if (engPicker) engPicker.style.display = 'none';
-    if (hebBtn) { hebBtn.style.background = 'var(--card)'; hebBtn.style.color = 'var(--t1)'; hebBtn.style.fontWeight = '700'; }
-    if (engBtn) { engBtn.style.background = 'transparent'; engBtn.style.color = 'var(--t3)'; engBtn.style.fontWeight = '600'; }
-  } else {
-    if (hebPicker) hebPicker.style.display = 'none';
-    if (engPicker) engPicker.style.display = '';
-    if (engBtn) { engBtn.style.background = 'var(--card)'; engBtn.style.color = 'var(--t1)'; engBtn.style.fontWeight = '700'; }
-    if (hebBtn) { hebBtn.style.background = 'transparent'; hebBtn.style.color = 'var(--t3)'; hebBtn.style.fontWeight = '600'; }
-    // Init English selects to today's date
-    setTimeout(() => {
-      const ENG_MONTHS_LOCAL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      const engNow = new Date();
-      window._tpmEngState = { day: engNow.getDate(), month: ENG_MONTHS_LOCAL[engNow.getMonth()], year: engNow.getFullYear() };
-      const ms = document.getElementById('eng-sel-month');
-      const ds = document.getElementById('eng-sel-day');
-      const ys = document.getElementById('eng-sel-year');
-      if (ms) ms.value = window._tpmEngState.month;
-      if (ds) ds.value = String(window._tpmEngState.day);
-      if (ys) ys.value = String(window._tpmEngState.year);
-    }, 80);
+// ── The list ──
+function _tpmListHTML() {
+  const now = appNow(), opts = user.tehillimFixedOpts || {}, people = user.tehillimPeople || [];
+  const ch = p => { const c = personalTehillimChapter(p, now); return c ? 'Chapter ' + c : 'Not born yet'; };
+  let h = '<p class="tpm-label">The Rebbe and Rebbetzin</p><div class="tpm-list">'
+    + TEHILLIM_FIXED.map(p => {
+      const key = p.label.toLowerCase(), on = opts[key] !== false;
+      return '<div class="tpm-row"><div class="tpm-who"><p>' + p.label + '</p><p>' + ch(p) + '</p></div>'
+        + '<button type="button" role="switch" class="ml-sw" aria-checked="' + on + '" aria-label="' + p.label + '\'s chapter" onclick="_toggleTehillimFixed(\'' + key + '\')"></button></div>';
+    }).join('') + '</div>';
+  h += '<p class="tpm-label">Your people</p>';
+  if (people.length) {
+    h += '<div class="tpm-list" id="tpm-people">' + people.map((p, i) =>
+      '<div class="tpm-row" id="tpm-row-' + i + '" data-idx="' + i + '">'
+      + (people.length > 1 ? '<span class="tpm-grip" aria-hidden="true" ontouchstart="_tpmTouchStart(event,' + i + ')" ontouchmove="_tpmTouchMove(event)" ontouchend="_tpmTouchEnd(event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="8" x2="19" y2="8"/><line x1="5" y1="16" x2="19" y2="16"/></svg></span>' : '')
+      + '<button type="button" class="tpm-open" onclick="_tpmEdit(' + i + ')"><span class="tpm-who"><p>' + escapeHtml(p.label) + '</p><p>' + escapeHtml(p.heDay + ' ' + (hebrewMonthName(p.heMonth) || p.heMonth) + ' ' + p.heYear) + ' · ' + ch(p) + '</p></span>'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button></div>').join('') + '</div>';
+  } else if (!_tpm.removed) {
+    h += '<p class="tpm-empty">Add your family and friends. Each one\'s chapter appears under the day\'s Tehillim, and moves on by itself on their birthday.</p>';
   }
-};
+  if (_tpm.removed) h += '<p class="tpm-undo">' + escapeHtml(_tpm.removed.person.label) + ' removed. <button type="button" onclick="_tpmUndo()">Undo</button></p>';
+  return h + '<button type="button" class="fb-send" onclick="_tpmEdit(-1)">Add a person</button>';
+}
 
-// Hebrew date select change handler
-window._tpmHebSelChange = function() {
-  const dm = document.getElementById('drum-month');
-  const dd = document.getElementById('drum-day');
-  const dy = document.getElementById('drum-year');
-  if (!dm || !dd || !dy) return;
-  window._tpmState.month = dm.value;
-  window._tpmState.day   = parseInt(dd.value);
-  window._tpmState.year  = parseInt(dy.value);
-};
-
-// Update item opacity/size based on distance from center
-// English date select change handler — replaces the old drum scroll handler
-window._tpmEngSelChange = function() {
-  const ms = document.getElementById('eng-sel-month');
-  const ds = document.getElementById('eng-sel-day');
-  const ys = document.getElementById('eng-sel-year');
-  if (!ms || !ds || !ys) return;
-  if (!window._tpmEngState) window._tpmEngState = {};
-  window._tpmEngState.month = ms.value;
-  window._tpmEngState.day   = parseInt(ds.value);
-  window._tpmEngState.year  = parseInt(ys.value);
-  _tpmConvertEngToHeb();
-};
-
-window._tpmConvertEngToHeb = async function() {
-  if (!window._tpmEngState) return;
-  const ENG_MONTHS_IDX = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const m = ENG_MONTHS_IDX.indexOf(window._tpmEngState.month) + 1;
-  const d = window._tpmEngState.day;
-  const y = window._tpmEngState.year;
-  if (!m || !d || !y) return;
-  const convEl = document.getElementById('tpm-eng-converted');
-  if (convEl) convEl.textContent = 'Converting…';
-  try {
-    const heb = await fetch(
-      'https://www.hebcal.com/converter?cfg=json&gy=' + y + '&gm=' + m + '&gd=' + d + '&g2h=1'
-    ).then(r => r.json());
-    if (heb?.hd && heb?.hm && heb?.hy) {
-      const MONTH_NORM = { 'Nisan':'Nissan','Iyyar':'Iyar','Tamuz':'Tammuz','Shvat':'Shevat' };
-      const month = MONTH_NORM[heb.hm] || heb.hm;
-      // Store converted Hebrew date in tpmState so _addTehillimPerson picks it up
-      window._tpmState.day   = heb.hd;
-      window._tpmState.month = month;
-      window._tpmState.year  = heb.hy;
-      if (convEl) convEl.textContent = '→ ' + heb.hd + ' ' + month + ' ' + heb.hy;
-    } else {
-      if (convEl) convEl.textContent = 'Could not convert — check date';
-    }
-  } catch(e) {
-    if (convEl) convEl.textContent = 'Connection error';
-  }
-};
-
-
-// Scroll a drum column to a specific value
-
-// Turn the Rebbe's / Rebbetzin's chapter on or off.
-// Called with 'Rebbe'/'Rebbetzin' (people manager) or 'rebbe'/'rebbetzin' (profile).
 function _toggleTehillimFixed(label) {
   const key = String(label).toLowerCase();
   if (key !== 'rebbe' && key !== 'rebbetzin') return;
   const opts = { rebbe: true, rebbetzin: true, ...(user.tehillimFixedOpts || {}) };
-  opts[key] = opts[key] === false; // flip
+  opts[key] = opts[key] === false;
   user.tehillimFixedOpts = opts;
+  _tpmSaved();
+}
+// After any change: save, and show it everywhere
+function _tpmSaved() {
   saveUser();
-
-  // Update the switch in the people manager, if it's open
-  const btn = document.getElementById('tpm-toggle-' + key);
-  if (btn) {
-    const on = opts[key];
-    btn.style.background = on ? 'var(--c-tehillim)' : 'var(--border)';
-    const knob = btn.firstElementChild;
-    if (knob) { knob.style.right = on ? '3px' : ''; knob.style.left = on ? '' : '3px'; }
-  }
   _renderPersonalPsalms();
+  _updateProfileExtras();
+  _tpmDraw();
 }
 
-function _fixedPersonRow(label, active, color) {
-  return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);">'
-    + '<span style="font-size:var(--fs-2);font-weight:600;color:var(--t1);">' + label + '</span>'
-    + '<button id="tpm-toggle-' + label.toLowerCase() + '" onclick="_toggleTehillimFixed(\'' + label + '\')" style="width:44px;height:26px;border-radius:var(--r-m);border:none;background:' + (active ? color : 'var(--border)') + ';position:relative;cursor:pointer;transition:background .15s;">'
-    +   '<div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;' + (active ? 'right:3px;' : 'left:3px;') + 'transition:all .15s;"></div>'
-    + '</button>'
-    + '</div>';
+// ── The form ──
+function _tpmEdit(idx) {
+  const p = idx >= 0 ? user.tehillimPeople?.[idx] : null;
+  _tpm = { view: 'form', idx, name: p?.label || '', tab: p?.enDate ? 'en' : 'he', sunset: !!p?.afterSunset, en: p?.enDate || '',
+    he: p ? { day: +p.heDay, month: hebrewMonthName(p.heMonth) || '', year: +p.heYear } : { day: 0, month: '', year: 0 } };
+  _tpmDraw();
+  if (!p) setTimeout(() => document.getElementById('tpm-name')?.focus(), 50);
 }
 
-function _renderTpmList() {
-  const el = document.getElementById('tpm-list');
-  if (!el) return;
-  const people = user.tehillimPeople || [];
-  if (!people.length) {
-    el.innerHTML = '<p style="font-size:var(--fs-2);color:var(--t3);padding:4px 0 8px;">No people added yet.</p>';
-    return;
+function _tpmFormHTML() {
+  const t = _tpm, he = t.he, sel = (id, ph, items, cur) => '<select id="' + id + '" class="tpm-sel" onchange="_tpmPick()" aria-label="' + ph + '"><option value="">' + ph + '</option>'
+    + items.map(([v, l]) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>';
+  const nowY = hebrewDateOf(appNow()).year, years = [];
+  for (let y = nowY; y >= 5660; y--) years.push([y, y + ' (' + (y - 3761) + '–' + String(y - 3760).slice(2) + ')']);
+  const months = (he.year ? hebrewMonthsOf(he.year) : hebrewMonthsOf(5784).map(m => m === 'Adar I' ? 'Adar' : m).filter(m => m !== 'Adar II')).map(m => [m, m]);
+  const days = Array.from({ length: he.month ? hebrewMonthDays(he.month) : 30 }, (_, i) => [i + 1, i + 1]);
+  const today = dateISO(new Date());
+  return '<label class="fb-field">Name<input id="tpm-name" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Devorah, Abba" value="' + escapeHtml(t.name) + '" oninput="_tpm.name=this.value;_tpmResult()"></label>'
+    + '<p class="tpm-label" style="margin-top:16px;">Birthday</p>'
+    + _langSegLike([['he', 'Hebrew date'], ['en', 'English date']], t.tab, '_tpmTab')
+    + (t.tab === 'he'
+      ? '<div class="tpm-date">' + sel('tpm-day', 'Day', days, he.day || '') + sel('tpm-month', 'Month', months, he.month) + sel('tpm-year', 'Year', years, he.year || '') + '</div>'
+      : '<input id="tpm-en" class="tpm-sel tpm-en" type="date" min="1900-01-01" max="' + today + '" value="' + escapeHtml(t.en) + '" onchange="_tpm.en=this.value;_tpmResult()" aria-label="English birthday">'
+        + '<div class="tpm-row tpm-sunset"><div class="tpm-who"><p>Born after sunset</p><p>The Hebrew date is then the next day</p></div>'
+        + '<button type="button" role="switch" class="ml-sw" aria-checked="' + t.sunset + '" aria-label="Born after sunset" onclick="_tpm.sunset=!_tpm.sunset;this.setAttribute(\'aria-checked\',_tpm.sunset);_tpmResult()"></button></div>')
+    + '<p id="tpm-result" class="fb-ctx" aria-live="polite"></p>'
+    + '<button type="button" id="tpm-save" class="fb-send" onclick="_tpmSave()">' + (t.idx >= 0 ? 'Save' : 'Add') + '</button>'
+    + '<div class="tpm-foot"><button type="button" onclick="_tpm.view=\'list\';_tpmDraw()">Cancel</button>'
+    + (t.idx >= 0 ? '<button type="button" class="tpm-remove" onclick="_tpmRemove(' + t.idx + ')">Remove</button>' : '') + '</div>';
+}
+// A two-way switch in the shared look (the Language switch's .tz-seg)
+function _langSegLike(items, cur, fn) {
+  return '<div class="tz-seg" role="group">' + items.map(([v, l]) => '<button type="button"' + (v === cur ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ' onclick="' + fn + '(\'' + v + '\')">' + l + '</button>').join('') + '</div>';
+}
+function _tpmTab(tab) {
+  // Carry the date over: an English date becomes its Hebrew one
+  if (tab === 'he' && _tpm.tab === 'en') { const b = _tpmBirth(); if (b) _tpm.he = { day: b.heDay, month: b.heMonth, year: b.heYear }; }
+  _tpm.tab = tab;
+  _tpmDraw();
+}
+function _tpmPick() {
+  const v = id => document.getElementById(id)?.value || '';
+  _tpm.he = { day: +v('tpm-day') || 0, month: v('tpm-month'), year: +v('tpm-year') || 0 };
+  // A year without Adar I/II, or a day the month doesn't have: fix the choice
+  if (_tpm.he.year && _tpm.he.month && !hebrewMonthsOf(_tpm.he.year).includes(_tpm.he.month))
+    _tpm.he.month = _tpm.he.month.startsWith('Adar') ? (isHebrewLeapYear(_tpm.he.year) ? '' : 'Adar') : '';
+  if (_tpm.he.month && _tpm.he.day > hebrewMonthDays(_tpm.he.month)) _tpm.he.day = 0;
+  _tpmDraw();
+}
+// The birthday as it's kept: { heDay, heMonth, heYear } (plus the English date it came from)
+function _tpmBirth() {
+  const t = _tpm;
+  if (t.tab === 'en') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(t.en)) return null;
+    const d = new Date(t.en + 'T12:00:00');
+    if (t.sunset) d.setDate(d.getDate() + 1);
+    const h = hebrewDateOf(d);
+    return { heDay: h.day, heMonth: h.month, heYear: h.year, enDate: t.en, afterSunset: t.sunset };
   }
-  el.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-s);overflow:hidden;">'
-    + people.map((p, i) =>
-        '<div id="tpm-row-' + i + '" data-idx="' + i + '" style="display:flex;align-items:center;padding:11px 14px;border-bottom:' + (i < people.length-1 ? '1px solid var(--border)' : 'none') + ';gap:10px;cursor:default;">'
-          + '<div id="tpm-handle-' + i + '" ontouchstart="_tpmTouchStart(event,' + i + ')" ontouchmove="_tpmTouchMove(event)" ontouchend="_tpmTouchEnd(event)" style="cursor:grab;touch-action:none;color:var(--t3);padding:6px 4px;" title="Drag to reorder">'
-          +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
-          + '</div>'
-          + '<div style="flex:1;min-width:0;">'
-          +   '<p style="font-size:var(--fs-2);font-weight:600;color:var(--t1);">' + escapeHtml(p.label) + '</p>'
-          +   '<p style="font-size:var(--fs-1);color:var(--t3);">' + escapeHtml(p.heDay + ' ' + p.heMonth + ' ' + p.heYear) + '</p>'
-          + '</div>'
-          + '<div style="display:flex;gap:6px;">'
-          +   '<button onclick="_editTehillimPerson(' + i + ')" style="padding:5px 10px;border-radius:var(--r-s);border:1px solid var(--border);background:var(--surface);color:var(--t2);font-size:var(--fs-1);font-weight:600;cursor:pointer;font-family:inherit;">Edit</button>'
-          +   '<button onclick="_deleteTehillimPerson(' + i + ')" style="padding:5px 10px;border-radius:var(--r-s);border:1px solid color-mix(in srgb, var(--red) 20%, transparent);background:color-mix(in srgb, var(--red) 6%, transparent);color:var(--red);font-size:var(--fs-1);font-weight:600;cursor:pointer;font-family:inherit;">Remove</button>'
-          + '</div>'
-        + '</div>'
-      ).join('')
-    + '</div>';
+  return t.he.day && t.he.month && t.he.year ? { heDay: t.he.day, heMonth: t.he.month, heYear: t.he.year } : null;
+}
+// What the picked date means, and whether it can be saved
+function _tpmResult() {
+  const out = document.getElementById('tpm-result'), btn = document.getElementById('tpm-save');
+  if (!out || !btn) return;
+  const b = _tpmBirth(), ch = b && personalTehillimChapter(b, appNow());
+  out.textContent = !b ? (_tpm.tab === 'he' ? 'Pick the day, month and year.' : 'Pick the date they were born.')
+    : !ch ? 'That birthday hasn\'t come yet.'
+    : 'Hebrew birthday ' + b.heDay + ' ' + b.heMonth + ' ' + b.heYear + '. Says chapter ' + ch + ' now.';
+  btn.disabled = !(ch && _tpm.name.trim());
+}
+function _tpmSave() {
+  const b = _tpmBirth(), name = _tpm.name.trim().slice(0, 30);
+  if (!b || !name || !personalTehillimChapter(b, appNow())) return;
+  const people = user.tehillimPeople = user.tehillimPeople || [];
+  const person = { label: name, ...b };
+  if (_tpm.idx >= 0 && _tpm.idx < people.length) people[_tpm.idx] = person; else people.push(person);
+  _tpm = { view: 'list' };
+  _tpmSaved();
+}
+function _tpmRemove(idx) {
+  const people = user.tehillimPeople || [];
+  if (!people[idx]) return;
+  const [person] = people.splice(idx, 1);
+  _tpm = { view: 'list', removed: { person, idx } };
+  _tpmSaved();
+}
+function _tpmUndo() {
+  const r = _tpm?.removed;
+  if (!r) return;
+  (user.tehillimPeople = user.tehillimPeople || []).splice(Math.min(r.idx, user.tehillimPeople.length), 0, r.person);
+  _tpm = { view: 'list' };
+  _tpmSaved();
 }
 
-// Touch-based reorder for Tehillim people (works on iOS + Android)
-let _tpmTouchIdx = -1, _tpmTouchStartY = 0, _tpmTouchCurY = 0;
-
+// Drag the grip to change the order (touch: iPhone and Android)
+let _tpmTouchIdx = -1;
 window._tpmTouchStart = function(e, idx) {
   _tpmTouchIdx = idx;
-  _tpmTouchStartY = e.touches[0].clientY;
-  _tpmTouchCurY   = _tpmTouchStartY;
-  const row = document.getElementById('tpm-row-' + idx);
-  if (row) row.style.background = 'var(--hi)';
+  document.getElementById('tpm-row-' + idx)?.classList.add('tpm-drag');
   e.preventDefault();
 };
-
 window._tpmTouchMove = function(e) {
   if (_tpmTouchIdx === -1) return;
-  _tpmTouchCurY = e.touches[0].clientY;
   e.preventDefault();
-  // Find which row we're hovering over
-  const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-  const row = el?.closest('[id^="tpm-row-"]');
-  // Highlight target row
-  document.querySelectorAll('[id^="tpm-row-"]').forEach(r => r.style.opacity = '1');
-  if (row && row.id !== 'tpm-row-' + _tpmTouchIdx) {
-    row.style.opacity = '0.5';
-  }
+  const row = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY)?.closest('[id^="tpm-row-"]');
+  document.querySelectorAll('[id^="tpm-row-"]').forEach(r => r.classList.toggle('tpm-over', r === row && r.id !== 'tpm-row-' + _tpmTouchIdx));
 };
-
 window._tpmTouchEnd = function(e) {
   if (_tpmTouchIdx === -1) return;
-  // Find drop target
-  const el = document.elementFromPoint(
-    e.changedTouches[0].clientX, e.changedTouches[0].clientY
-  );
-  const targetRow = el?.closest('[id^="tpm-row-"]');
-  const targetIdx = targetRow ? parseInt(targetRow.dataset.idx) : -1;
-
-  // Reset styles
-  document.querySelectorAll('[id^="tpm-row-"]').forEach(r => {
-    r.style.background = '';
-    r.style.opacity = '1';
-  });
-
-  if (targetIdx !== -1 && targetIdx !== _tpmTouchIdx) {
-    const people = user.tehillimPeople || [];
-    const item = people.splice(_tpmTouchIdx, 1)[0];
-    people.splice(targetIdx, 0, item);
-    user.tehillimPeople = people;
-    saveUser();
-    _renderTpmList();
-    _renderPersonalPsalms();
-  }
+  const row = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)?.closest('[id^="tpm-row-"]');
+  const to = row ? parseInt(row.dataset.idx, 10) : -1, from = _tpmTouchIdx;
   _tpmTouchIdx = -1;
+  if (to === -1 || to === from) { _tpmDraw(); return; }
+  const people = user.tehillimPeople || [];
+  people.splice(to, 0, people.splice(from, 1)[0]);
+  _tpmSaved();
 };
-
-
-function _addTehillimPerson() {
-  const label = document.getElementById('tpm-label')?.value.trim();
-  const { day: heDay, month: heMonth, year: heYear, editIdx } = window._tpmState || {};
-  if (!label) { alert('Please enter a name.'); return; }
-  if (!user.tehillimPeople) user.tehillimPeople = [];
-
-  const person = { label, heDay, heMonth, heYear };
-  if (editIdx >= 0 && editIdx < user.tehillimPeople.length) {
-    // Editing existing
-    user.tehillimPeople[editIdx] = person;
-  } else {
-    // Adding new
-    user.tehillimPeople.push(person);
-  }
-  saveUser();
-  document.getElementById('tehillim-people-modal')?.remove();
-  _renderPersonalPsalms();
-}
-
-function _editTehillimPerson(idx) {
-  const p = user.tehillimPeople?.[idx];
-  if (!p) return;
-  window._tpmState = { day: p.heDay, month: p.heMonth, year: p.heYear, editIdx: idx };
-  const labelEl = document.getElementById('tpm-label');
-  if (labelEl) labelEl.value = p.label;
-  const titleEl = document.getElementById('tpm-form-title');
-  if (titleEl) titleEl.textContent = 'Edit person';
-  const btnEl = document.getElementById('tpm-submit-btn');
-  if (btnEl) btnEl.textContent = 'Save changes';
-  // Set Hebrew select values to person's date
-  setTimeout(() => {
-    const dm = document.getElementById('drum-month');
-    const dd = document.getElementById('drum-day');
-    const dy = document.getElementById('drum-year');
-    if (dm && p.heMonth) dm.value = p.heMonth;
-    if (dd && p.heDay)   dd.value = String(p.heDay);
-    if (dy && p.heYear)  dy.value = String(p.heYear);
-  }, 80);
-  document.getElementById('tpm-form')?.scrollIntoView({ behavior: 'smooth' });
-}
-
-function _deleteTehillimPerson(idx) {
-  if (!user.tehillimPeople) return;
-  user.tehillimPeople.splice(idx, 1);
-  saveUser();
-  // Re-render modal list
-  _openTehillimPeopleManager();
-  _renderPersonalPsalms();
-}
-
 
 // ob-name removed (name comes from Google)
 
@@ -4186,7 +3955,7 @@ function _keepText(sid, iso, data) {
 function _dropTexts(sid) { [..._dayTexts.keys()].filter(k => k.startsWith(sid + '|')).forEach(k => _dayTexts.delete(k)); }
 
 const _TEXT_SLOT = { chumash: '_chumashData', tehillim: '_tehillimData', tanya: '_tanyaData', rambam: '_rambamData' };
-const _TEXT_DRAW = { chumash: () => _renderChumashContent(), tehillim: () => { _renderTehillimContent(); _renderPersonalPsalms(); }, tanya: () => _renderTanyaContent(), rambam: () => _renderRambamContent() };
+const _TEXT_DRAW = { chumash: () => _renderChumashContent(), tehillim: () => _renderTehillimContent(), tanya: () => _renderTanyaContent(), rambam: () => _renderRambamContent() };
 // A load starting: which day it's for (the day you're on now), with the
 // loading spinner if it's for the reader on screen
 function _textLoading(sid, silent) {
@@ -4908,11 +4677,32 @@ function _setRambamLang(lang) {
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 21c · TEHILLIM NATIVE READER
-//   Fetches Koren Jerusalem Bible (same as Chumash) from Sefaria.
-//   Chapters listed in schedule.tehillim.sefariaRef as pipe-separated:
-//   "Psalms 18|Psalms 19|Psalms 20|Psalms 21|Psalms 22"
-//   Hebrew + English toggle (no Both — matches Chabad.org pattern).
+//   The day's chapters (js/tehillim.js) from Sefaria in the Koren translation,
+//   then each person's chapter (Personal Tehillim). Hebrew, English, or both
+//   side by side.
 // ════════════════════════════════════════════════════════════════════
+
+// Tehillim from Sefaria in the Koren translation (as Chumash), or Sefaria's
+// usual English if Koren has none; the same for the day's and personal chapters
+async function _fetchTehillim(ref) {
+  const get = q => fetch('https://www.sefaria.org/api/texts/' + ref + '?context=0&commentary=0' + q).then(r => r.json());
+  const d = await get('&ven=' + encodeURIComponent('The Koren Jerusalem Bible'));
+  if (!_thChapters(d.text)[0]?.length) d.text = (await get('')).text;
+  return d;
+}
+function _thClean(s) {
+  return String(s || '')
+    .replace(/<[^>]*>/g, '')            // HTML tags
+    .replace(/\{[\u05E4\u05E1]\}/g, '')  // Sefaria's {פ} / {ס} section marks (not in a printed Tehillim)
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+// Sefaria gives one chapter as a list of verses, several as a list of those
+// → always a list of chapters, each a list of clean verses
+function _thChapters(raw) {
+  if (!raw || !raw.length) return [];
+  return (Array.isArray(raw[0]) ? raw : [raw]).map(ch => ch.map(_thClean));
+}
 
 async function _loadTehillimNative(sectionId, silent) {
   const iso = _textLoading('tehillim', silent);
@@ -4923,19 +4713,7 @@ async function _loadTehillimNative(sectionId, silent) {
     // Days 25–26 are part of Psalm 119 — verse numbers start where the range starts
     const startVerse = parseInt((ref.match(/:(\d+)-/) || [])[1] || '1', 10);
 
-    // Fetch with Koren version (same as Chumash) — single range fetch
-    const korenVen = encodeURIComponent('The Koren Jerusalem Bible');
-    const url = 'https://www.sefaria.org/api/texts/' + ref + '?context=0&ven=' + korenVen;
-    const d = await fetch(url).then(r => r.json());
-
-    function cleanV(s) {
-      if (!s) return '';
-      return s
-        .replace(/<[^>]*>/g, '')           // strip HTML tags
-        .replace(/\{[\u05E4\u05E1]\}/g, '') // Sefaria's {פ} / {ס} section marks (not in a printed Tehillim)
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
+    const d = await _fetchTehillim(ref);
 
     // Build psalm number list from ref
     const psalmNums = [];
@@ -4945,25 +4723,7 @@ async function _loadTehillimNative(sectionId, silent) {
       for (let p = from; p <= to; p++) psalmNums.push(p);
     }
 
-    // Keep chapter structure: d.he / d.text are arrays of chapters,
-    // each chapter is an array of verse strings.
-    // Normalise so chapters is always [[verse, verse,...], ...]
-    function toChapters(raw) {
-      if (!raw || !raw.length) return [];
-      // Already nested (range fetch): [[v1,v2,...],[v1,v2,...]]
-      if (Array.isArray(raw[0])) return raw.map(ch => ch.map(cleanV));
-      // Flat (single chapter): [v1, v2, ...]
-      return [raw.map(cleanV)];
-    }
-
-    const heChapters = toChapters(d.he);
-    let   enChapters = toChapters(d.text);
-
-    // Fallback if Koren not available
-    if (!enChapters.length || !enChapters[0]?.length) {
-      const fb = await fetch('https://www.sefaria.org/api/texts/' + ref + '?context=0').then(r => r.json());
-      enChapters = toChapters(fb.text);
-    }
+    const heChapters = _thChapters(d.he), enChapters = _thChapters(d.text);
 
     if (!heChapters.length && !enChapters.length) return false;
 
@@ -4982,12 +4742,8 @@ async function _loadTehillimNative(sectionId, silent) {
     const psalmLabel = tehLabel;
 
     if (!silent && _readerShows('tehillim', iso)) document.getElementById('chabad-panel-sub').textContent = psalmLabel;
-    _textArrived('tehillim', iso, { chapters, psalmLabel, dayNum }, silent);
-
-    // Pre-warm personal psalm cache in background — so personal sections load instantly
-    _buildPersonalPsalms().then(people => {
-      Promise.all(people.filter(p => p.chapter).map(p => _fetchPsalm(p.chapter))).catch(() => {});
-    }).catch(() => {});
+    _textArrived('tehillim', iso, { chapters, psalmLabel, dayNum, iso }, silent);
+    _personalPsalms(viewedDay).forEach(p => _loadPsalm(p.chapter));   // so they're ready with it
     return true;
 
   } catch(e) {
@@ -5035,7 +4791,7 @@ function _renderTehillimContent() {
   });
 
   el.innerHTML = t + top + v
-    + '<div id="tehillim-personal"></div>'
+    + '<div id="tehillim-personal">' + _personalPsalmsHTML(lang) + '</div>'
     + '<p style="font-size:var(--fs-1);color:var(--t3);text-align:center;margin-top:12px;padding-bottom:8px;">— End of today\'s Tehillim —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
@@ -5049,12 +4805,12 @@ function _thChapterHTML(ch, lang, line) {
     + '<p class="th-ch-num">' + (isHe ? _toHebrewNumeral(ch.psalmNum) + '.' : 'Psalm ' + ch.psalmNum) + '</p>';
   if (line) v += '<p class="th-day">' + line + '</p>';
   if (isBoth) {
-    // Each passuk in Hebrew, with its English right under it
+    // Each passuk side by side, English on the left and Hebrew on the right (as Chumash)
     v += ch.he.map((text, i) => {
-      if (!text) return '';
+      if (!text && !ch.en[i]) return '';
       const n = (ch.startVerse || 1) + i;
-      return '<div class="th-pair"><p class="th-text rf-body"><span class="th-v">' + _toHebrewNumeral(n) + '</span>' + text + '</p>'
-        + (ch.en[i] ? '<p class="th-en">' + ch.en[i] + '</p>' : '') + '</div>';
+      return '<div class="th-row"><p class="th-en rf-body"><span class="th-v">' + n + '</span>' + (ch.en[i] || '') + '</p>'
+        + '<p class="th-text rf-body"><span class="th-v">' + _toHebrewNumeral(n) + '</span>' + text + '</p></div>';
     }).join('');
   } else if (verses.length) {
     v += '<p class="th-text rf-body">' + verses.map((text, i) => {
@@ -5068,7 +4824,9 @@ function _thChapterHTML(ch, lang, line) {
 
 function _setTehillimLang(lang) {
   localStorage.setItem('chitas_lang_tehillim', lang);
+  const pos = _readerPlace();
   _renderTehillimContent();
+  _putReaderAt('tehillim', pos);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -5610,7 +5368,7 @@ function _buildSettingsSectionOpts(sectionId) {
     html += '</div></div>';
 
   } else if (sectionId === 'tehillim') {
-    const lang = localStorage.getItem('chitas_lang_tehillim') || 'both';
+    const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
     html += _rsLangToggle('tehillim', lang);
     html += _rsDivider();
     const opts   = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
@@ -5751,7 +5509,7 @@ function _toggleDafCommSettings(val) {
 // Central lang setter — called from within the popover for core sections
 function _setReaderLang(sectionId, lang) {
   if (sectionId === 'chumash')  { _setChumashLang(lang); }
-  else if (sectionId === 'tehillim') { localStorage.setItem('chitas_lang_tehillim', lang); _renderTehillimContent(); }
+  else if (sectionId === 'tehillim') { _setTehillimLang(lang); }
   else if (sectionId === 'tanya')    { localStorage.setItem('chitas_lang_tanya',    lang); _renderTanyaContent(); }
   else if (sectionId === 'rambam')   { localStorage.setItem('chitas_lang_rambam',   lang); _renderRambamContent(); }
   // Re-render section options so the active button updates

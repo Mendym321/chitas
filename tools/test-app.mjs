@@ -62,7 +62,8 @@ await check('sign out finishes and shows a message', async () => {
 await check('Rebbe toggle in Personal Tehillim turns him off', () => {
   user.tehillimFixedOpts = { rebbe: true, rebbetzin: true };
   _openTehillimPeopleManager();
-  document.getElementById('tpm-toggle-rebbe').click();
+  document.querySelector('[aria-label="Rebbe\'s chapter"]').click();
+  _tpmClose();
   return user.tehillimFixedOpts.rebbe;
 }, false);
 
@@ -160,12 +161,11 @@ await check('a malicious name is shown as text, not run (header + profile)', asy
   return [window.__hacked, document.querySelectorAll('#avatar-tab img, #profile-sheet img, #profile-sheet b[onmouseover]').length];
 }, [false, 0]);
 
-await check('Personal Tehillim builds its list without crashing (offline → no chapters yet)', async () => {
+await check('Personal Tehillim: who is said, with their chapters, worked out offline', () => {
   user.tehillimFixedOpts = { rebbe: true, rebbetzin: false };
   user.tehillimPeople = [{ label: 'Savta', heDay: 5, heMonth: 'Nissan', heYear: 5700 }];
-  const people = await _buildPersonalPsalms();
-  return people.map(p => p.label);
-}, ['Rebbe', 'Savta']);
+  return _personalPsalms(new Date('2026-10-28T12:00:00')).map(p => p.label + ' ' + p.chapter);
+}, ['Rebbe 125', 'Savta 87']);
 
 await check('Your learning: totals (halachos of Rambam), consistency bars and a nudge for the section you miss', () => {
   const pastDone = {};
@@ -254,13 +254,13 @@ await check('Rambam (real Sefaria text): a book with no brackets is shown in reg
   return [root.classList.contains('rb-plain'), +getComputedStyle(root).fontWeight < 600];
 }, [true, true], { robbery: RAMBAM.robbery_13_1 });
 
-await check('Tehillim "Both": each passuk in Hebrew with its English under it', () => {
+await check('Tehillim "Both": each passuk side by side, English and Hebrew', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
   localStorage.setItem('chitas_lang_tehillim', 'both');
   (_rv.sid = 'tehillim', _renderTehillimContent());
-  const pairs = [...document.querySelectorAll('#native-reader-content .th-pair')];
-  return pairs.map(p => [p.querySelector('.th-v').textContent, p.querySelector('.th-en').textContent]);
-}, [['א', 'For the leader'], ['ב', 'And he said']]);
+  const rows = [...document.querySelectorAll('#native-reader-content .th-chapter:not(#tehillim-personal *) .th-row')];
+  return rows.map(r => [r.querySelector('.th-text .th-v').textContent, r.querySelector('.th-en').textContent]);
+}, [['א', '1For the leader'], ['ב', '2And he said']]);
 
 await check('Tehillim looks like a printed Tehillim: chapter "יח.", day "יום ג", Hebrew verse letters', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר', 'יְהוָה'], en: [] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };

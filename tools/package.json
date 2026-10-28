@@ -13,7 +13,8 @@
     "generate:cycles": "node generate-cycles.mjs",
     "test:more": "node test-more-learning-app.mjs",
     "test:look": "node check-look.mjs",
-    "test:midnight": "node test-midnight.mjs"
+    "test:midnight": "node test-midnight.mjs",
+    "test:tehillim": "node test-tehillim-app.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
