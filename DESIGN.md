@@ -144,6 +144,12 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
 - **Next:** reminders (native app).
 - Points and the leaderboard were removed in Oct 2026 (`user.xp` is still stored so old data isn't lost, but never shown).
 
+## Personal Tehillim
+- **The chapter:** each person says the chapter for the year of life they're in, and moves to the next one on their Hebrew birthday (the Rebbe, born 11 Nissan 5662, says 125 from 11 Nissan 5786). An Adar birthday is kept in Adar II in a leap year. Worked out on the phone (`personalTehillimChapter` in `js/tehillim.js`), checked against Hebcal for 3000 birthdays in `tools/test-tehillim.mjs`. No internet is needed to know the chapter, only to download its text.
+- **In the reader:** under the day's Tehillim, drawn with it. Each chapter fills in as it arrives (in Koren, cleaned like the day's), and it stays through every language change. Both is side by side, English left and Hebrew right, like Chumash.
+- **The sheet:** the Rebbe and Rebbetzin each with the shared switch, then your people with today's chapter. Tap a person to change them. A birthday is a Hebrew date (day, month, year back to 5660; Adar I and II only in a leap year; only the days a month can have) or an English date with "Born after sunset". The form says what the date means ("Hebrew birthday 14 Adar II 5784. Says chapter 3 now.") and Add waits until a name and a whole date are in. Remove offers Undo.
+- Tested in the browser by `tools/test-tehillim-app.mjs` (`npm run test:tehillim`).
+
 ## Reminders and touch
 Ready for the app version (Capacitor); a browser never shows them. Profile has "On this phone" only inside the app.
 - **Daily reminder** (`js/reminders.js`, tested in `tools/test-reminders.mjs`): at most one a day, at the time you pick (20:00 to start). Never on Shabbos or Yom Tov. The day before, an evening time comes at 12:00 instead, so it never lands after candle lighting (no location needed). Not today once today's Chitas is done. The phone holds the next two weeks; the app refreshes them when it opens and whenever you mark something. Kept on the phone, not in your account. Text: "Today's Chumash, Tehillim, Tanya and Rambam."

@@ -39,3 +39,61 @@ function tehillimChapterCount(ref) {
   if (ref.includes(':')) return 0.5;
   return +m[2] - +m[1] + 1;
 }
+
+// ── Personal Tehillim ─────────────────────────────────────────────────────────
+// Each person says the chapter for the year of life they're in: on their Hebrew
+// birthday they move to the next one (the Rebbe, born 11 Nissan 5662, says 125
+// from 11 Nissan 5786). Worked out on the phone with the browser's Hebrew
+// calendar, so it needs no internet and gives an answer at once.
+
+// The months in their order in the year. A leap year has Adar I and Adar II;
+// another year's single Adar takes Adar II's place.
+const HEBREW_MONTHS = ['Tishrei', 'Cheshvan', 'Kislev', 'Tevet', 'Shevat', 'Adar I', 'Adar II', 'Nissan', 'Iyar', 'Sivan', 'Tammuz', 'Av', 'Elul'];
+// Any spelling (the browser's, Hebcal's, ours) → ours
+const _HE_MONTH = { tishri: 'Tishrei', tishrei: 'Tishrei', heshvan: 'Cheshvan', cheshvan: 'Cheshvan', marcheshvan: 'Cheshvan', kislev: 'Kislev', tevet: 'Tevet', teves: 'Tevet',
+  shevat: 'Shevat', "sh'vat": 'Shevat', shvat: 'Shevat', adar: 'Adar', 'adar i': 'Adar I', 'adar ii': 'Adar II', nisan: 'Nissan', nissan: 'Nissan',
+  iyar: 'Iyar', iyyar: 'Iyar', sivan: 'Sivan', tamuz: 'Tammuz', tammuz: 'Tammuz', av: 'Av', elul: 'Elul' };
+function hebrewMonthName(s) { return _HE_MONTH[String(s || '').trim().toLowerCase()] || null; }
+
+function isHebrewLeapYear(y) { return (7 * y + 1) % 19 < 7; }
+
+// The months of a year, as a birthday picker lists them
+function hebrewMonthsOf(year) {
+  const leap = isHebrewLeapYear(year);
+  return HEBREW_MONTHS.flatMap(m => m === 'Adar I' ? [leap ? 'Adar I' : 'Adar'] : m === 'Adar II' && !leap ? [] : [m]);
+}
+// Months that always have 29 days (Cheshvan and Kislev vary, so they allow 30)
+function hebrewMonthDays(month) {
+  return ['Tevet', 'Adar', 'Adar II', 'Iyar', 'Tammuz', 'Elul'].includes(hebrewMonthName(month)) ? 29 : 30;
+}
+
+// A day on the phone's calendar → { day, month, year }, e.g. { day: 3, month: 'Kislev', year: 5750 }.
+// (The browser's Hebrew calendar: see the note on 5806 above.)
+function hebrewDateOf(d) {
+  const p = {};
+  new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).formatToParts(d).forEach(x => { p[x.type] = x.value; });
+  return { day: parseInt(p.day, 10), month: hebrewMonthName(p.month), year: parseInt(p.year, 10) };
+}
+
+// Where a month falls in `year` (1 = Tishrei). A birthday in Adar of an
+// ordinary year is kept in Adar II in a leap year; Adar I and Adar II are both
+// plain Adar in an ordinary year.
+function _hebrewMonthPlace(month, year) {
+  const m = hebrewMonthName(month);
+  if (m === 'Adar') return 7;
+  if (m === 'Adar I') return isHebrewLeapYear(year) ? 6 : 7;
+  return HEBREW_MONTHS.indexOf(m) + 1;
+}
+
+// The chapter a person born on { heDay, heMonth, heYear } says on day `d`;
+// null if the birthday isn't complete or hasn't happened yet. A birthday on the
+// 30th of a month that has 29 days that year moves on with the next month.
+function personalTehillimChapter(birth, d) {
+  const day = parseInt(birth?.heDay, 10), year = parseInt(birth?.heYear, 10), month = hebrewMonthName(birth?.heMonth);
+  if (!day || !year || !month) return null;
+  const now = hebrewDateOf(d);
+  const here = _hebrewMonthPlace(now.month, now.year), theirs = _hebrewMonthPlace(month, now.year);
+  const reached = here > theirs || (here === theirs && now.day >= day);
+  const chapter = now.year - year + (reached ? 1 : 0);
+  return chapter < 1 ? null : Math.min(chapter, 150);
+}

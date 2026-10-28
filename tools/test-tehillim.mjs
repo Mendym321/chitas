@@ -4,12 +4,13 @@
  */
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { HDate } from '@hebcal/core';
+import { HDate, HebrewCalendar } from '@hebcal/core';
 
 const ctx = { Intl, Date };
 vm.createContext(ctx);
 vm.runInContext(readFileSync(new URL('../js/tehillim.js', import.meta.url), 'utf8'), ctx);
 const getTehillimForDate = vm.runInContext('getTehillimForDate', ctx);
+const [personalTehillimChapter, hebrewDateOf, hebrewMonthsOf, hebrewMonthDays] = vm.runInContext('[personalTehillimChapter, hebrewDateOf, hebrewMonthsOf, hebrewMonthDays]', ctx);
 
 let failed = 0;
 function check(name, actual, expected) {
@@ -40,6 +41,38 @@ for (let d = day('2025-10-01'); d < day('2045-09-01'); d.setDate(d.getDate() + 1
 }
 check('Hebrew day matches Hebcal', wrongDay.slice(0, 3).join(', '), '');
 check('last day of every month reaches Psalm 150', unfinished.slice(0, 3).join(', '), '');
+
+console.log('Personal Tehillim:');
+const REBBE = { heDay: 11, heMonth: 'Nissan', heYear: 5662 }, REBBETZIN = { heDay: 25, heMonth: 'Adar', heYear: 5661 };
+check('the Rebbe on 17 Cheshvan 5787 → 125', personalTehillimChapter(REBBE, day('2026-10-28')), 125);
+check('the Rebbe from 11 Nissan 5787 → 126', personalTehillimChapter(REBBE, day('2027-04-18')), 126);
+check('the Rebbe the day before → still 125', personalTehillimChapter(REBBE, day('2027-04-17')), 125);
+check('the Rebbetzin now → 126', personalTehillimChapter(REBBETZIN, day('2026-10-28')), 126);
+check('the Rebbetzin on 25 Adar I 5787 (leap year) → still 126', personalTehillimChapter(REBBETZIN, day('2027-03-04')), 126);
+check('the Rebbetzin on 25 Adar II 5787 → 127', personalTehillimChapter(REBBETZIN, day('2027-04-03')), 127);
+check('older spellings still work (Hebcal\'s "Nisan")', personalTehillimChapter({ ...REBBE, heMonth: 'Nisan' }, day('2026-10-28')), 125);
+check('a birthday still to come → no chapter', personalTehillimChapter({ heDay: 1, heMonth: 'Nissan', heYear: 5787 }, day('2026-10-28')), null);
+check('not filled in → no chapter', personalTehillimChapter({ heDay: 3, heMonth: '', heYear: 5750 }, day('2026-10-28')), null);
+check('born 1 Dec 1989 → 3 Kislev 5750', JSON.stringify(hebrewDateOf(day('1989-12-01'))), JSON.stringify({ day: 3, month: 'Kislev', year: 5750 }));
+check('a leap year lists Adar I and Adar II', hebrewMonthsOf(5787).filter(m => m.startsWith('Adar')).join(), 'Adar I,Adar II');
+check('an ordinary year lists one Adar', hebrewMonthsOf(5786).filter(m => m.startsWith('Adar')).join(), 'Adar');
+check('Tevet has 29 days, Shevat 30', [hebrewMonthDays('Tevet'), hebrewMonthDays('Shevat')].join(), '29,30');
+
+// Against Hebcal's own birthday rules, for 3000 birthdays 1900–2026 on 40 days 2026–2044
+console.log('3000 birthdays checked against Hebcal:');
+let seed = 7; const rnd = n => { seed = (seed * 16807) % 2147483647; return seed % n; };
+const wrong = [];
+for (let i = 0; i < 3000; i++) {
+  const born = new Date(1900 + rnd(127), rnd(12), 1 + rnd(28), 12);
+  const on = new Date(2026 + rnd(18), rnd(12), 1 + rnd(28), 12);
+  const hOn = new HDate(on), hBorn = new HDate(born);
+  const bday = HebrewCalendar.getBirthdayOrAnniversary(hOn.getFullYear(), born);
+  let want = hOn.getFullYear() - hBorn.getFullYear() + (hOn.abs() >= bday.abs() ? 1 : 0);
+  want = want < 1 ? null : Math.min(want, 150);
+  const b = hebrewDateOf(born), got = personalTehillimChapter({ heDay: b.day, heMonth: b.month, heYear: b.year }, on);
+  if (got !== want) wrong.push(born.toDateString() + ' on ' + on.toDateString() + ': ' + got + ' not ' + want);
+}
+check('every chapter matches Hebcal', wrong.slice(0, 3).join(' | '), '');
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll Tehillim tests passed');
 process.exit(failed ? 1 : 0);
