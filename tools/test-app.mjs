@@ -527,29 +527,54 @@ await page.evaluate(() => {
       getPending: async () => ({ notifications: window.__pending }),
       cancel: async a => { window.__calls.push(['cancel', a]); window.__pending = []; },
       schedule: async a => { window.__calls.push(['schedule', a]); window.__pending = a.notifications.map(n => ({ id: n.id })); },
+      addListener: (ev, f) => { window.__tap = f; },
     } } };
 });
-await check('in the app, Profile shows the reminder and touch switches', () => { renderProfile(); return [document.getElementById('ps-phone').style.display, document.getElementById('ps-rem-sw').getAttribute('aria-checked'), document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, ['', 'false', 'true']);
-await check('turning the reminder on asks first, then puts two weeks on the phone, none on Shabbos', async () => {
+await check('in the app, Profile shows Reminders (off) and touch feedback', () => { localStorage.removeItem('chitas_reminders'); localStorage.removeItem('chitas_reminder'); renderProfile(); return [document.getElementById('ps-phone').style.display, document.getElementById('ps-rem-sub').textContent, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, ['', 'Off', 'true']);
+await check('an old single reminder becomes all four at its time', () => { localStorage.setItem('chitas_reminder', JSON.stringify({ on: true, time: '20:00' })); const t = _reminderTimes(); localStorage.removeItem('chitas_reminder'); return t; }, { chumash: '20:00', tehillim: '20:00', tanya: '20:00', rambam: '20:00' });
+await page.evaluate(() => { window.__sched = () => window.__calls.filter(c => c[0] === 'schedule').at(-1)?.[1].notifications || []; });
+await check('turning Tanya on asks first, then puts its reminders on the phone, none on Shabbos', async () => {
   user.done = {}; window.__calls = [];
-  await setReminder({ on: true }); await new Promise(r => setTimeout(r, 50));
-  const sch = window.__calls.find(c => c[0] === 'schedule')?.[1].notifications || [];
-  return [window.__calls[0][0], sch.length >= 10, sch.some(n => new Date(n.schedule.at).getDay() === 6), document.getElementById('ps-rem-sw').getAttribute('aria-checked'), sch[0]?.body];
-}, ['permission', true, false, 'true', "Today's Chumash, Tehillim, Tanya and Rambam."]);
-await check('a new time moves them', async () => {
-  window.__calls = []; await setReminder({ time: '06:45' }); await new Promise(r => setTimeout(r, 50));
-  const sch = window.__calls.find(c => c[0] === 'schedule')[1].notifications;
-  const t = new Date(sch[sch.length - 1].schedule.at); return t.getHours() + ':' + t.getMinutes();
-}, '6:45');
-await check('nothing changed: the phone is left alone', async () => { window.__calls = []; _refreshUI(); await new Promise(r => setTimeout(r, 50)); return window.__calls.length; }, 0);
-await check('today done: today\'s reminder is taken off', async () => {
-  await setReminder({ time: '23:59' });
-  const todayId = () => { const d = new Date(); return +(d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0')); };
-  const before = window.__pending.some(n => n.id === todayId());
-  user.done = { chumash: true, tehillim: true, tanya: true, rambam: true }; _refreshUI(); await new Promise(r => setTimeout(r, 50));
-  return [isRestDay(new Date()) ? 'rest day' : before, window.__pending.some(n => n.id === todayId())];
-}, [new Date().getDay() === 6 ? 'rest day' : true, false]);
-await check('turning it off clears the phone', async () => { await setReminder({ on: false }); await new Promise(r => setTimeout(r, 50)); return window.__pending.length; }, 0);
+  openReminders();
+  document.querySelector('[aria-label="Tanya reminder"]').click(); await new Promise(r => setTimeout(r, 80));
+  const n = window.__sched();
+  return [window.__calls[0][0], n.length >= 10, n.some(x => new Date(x.schedule.at).getDay() === 6), new Date(n.at(-1).schedule.at).getHours() + ':' + String(new Date(n.at(-1).schedule.at).getMinutes()).padStart(2, '0'), n.at(-1).title, n.at(-1).extra];
+}, ['permission', true, false, '7:00', 'Tanya', { open: 'tanya' }]);
+await check('a quick pick moves it; the sheet shows the choice', async () => {
+  window.__calls = []; document.querySelector('.rem-row .tz-opt:nth-child(2)').click(); await new Promise(r => setTimeout(r, 80));
+  return [new Date(window.__sched().at(-1).schedule.at).getHours() + ':' + new Date(window.__sched().at(-1).schedule.at).getMinutes(), document.querySelector('.rem-row .tz-opt.on').textContent];
+}, ['8:30', 'After Shacharis']);
+await check('two sections at one time come as one, saying what\'s waiting', async () => {
+  await setReminderTime('tehillim', '08:30'); await new Promise(r => setTimeout(r, 80));
+  const x = window.__sched().at(-1); return [x.title, x.body.includes('Psalms'), x.body.includes('Today\'s portion')];
+}, ['Tehillim and Tanya', true, true]);
+await check('nothing changed: the phone is left alone', async () => { window.__calls = []; _refreshUI(); await new Promise(r => setTimeout(r, 80)); return window.__calls.length; }, 0);
+await check('Tanya learned today: today\'s reminder is only Tehillim now', async () => {
+  await setReminderTime('tanya', '23:58'); await setReminderTime('tehillim', '23:58');
+  const todayId = () => { const d = new Date(); return +(d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0')) * 100; };
+  user.done = { tanya: true }; _refreshUI(); await new Promise(r => setTimeout(r, 80));
+  const t = window.__sched().find(n => n.id === todayId());
+  return isRestDay(new Date()) || isRestDay(new Date(Date.now() + 864e5)) || new Date().getHours() >= 23 ? 'Tehillim' : t && t.title;
+}, 'Tehillim');
+await check('turning them all off clears the phone', async () => { await setReminderTime('tanya', null); await setReminderTime('tehillim', null); await new Promise(r => setTimeout(r, 80)); document.getElementById('reminders-modal')?.remove(); return [window.__pending.length, document.getElementById('ps-rem-sub').textContent]; }, [0, 'Off']);
+await check('tapping a reminder opens what it was about', async () => {
+  window.__tap({ notification: { extra: { open: 'tehillim' } } }); await new Promise(r => setTimeout(r, 200));
+  const opened = [document.getElementById('chabad-panel').style.display, _rv.sid];
+  _closeReaderNow();
+  window.__tap({ notification: { extra: { omer: 9 } } });
+  const omer = document.getElementById('om-title')?.textContent; document.getElementById('omer-modal')?.remove();
+  return [...opened, omer];
+}, ['flex', 'tehillim', 'Night 9 of the Omer']);
+await check('a reminder that hasn\'t matched a week: one kind question on Today', async () => {
+  localStorage.setItem('chitas_reminders', JSON.stringify({ rambam: '15:00' })); localStorage.removeItem('chitas_rem_nudge');
+  const pd = {}; for (let k = 1; k <= 12; k++) { const d = new Date(); d.setDate(d.getDate() - k); pd[dateISO(d)] = { chumash: true }; }
+  user.pastDone = pd; dayOffset = 0; _renderReminderNudge();
+  const el = document.getElementById('rem-nudge'); const shown = [el.style.display, el.querySelector('.wb-t').textContent];
+  el.querySelectorAll('.wb-go')[1].click();
+  const after = el.style.display;
+  localStorage.removeItem('chitas_reminders'); user.pastDone = {};
+  return [...shown, after];
+}, ['block', 'Your Rambam reminder', 'none']);
 await check('touch feedback uses the phone: a light tap, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
 await check('touch feedback off: nothing', () => { setHaptics(false); window.__calls = []; haptic('tap'); const n = window.__calls.length; setHaptics(true); return [n, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, [0, 'true']);
 await page.evaluate(() => { delete window.Capacitor; user.done = {}; });

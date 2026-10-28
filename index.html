@@ -818,6 +818,12 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .sm-digest .sm-where { font-size:12px; color:var(--t3); margin-top:8px; }
 .sm-same, .sm-soon { font-size:13px; color:var(--t3); text-align:center; margin:10px 0; }
 .sm-soon button { border:none; background:none; padding:0; color:var(--rc); font:700 13px var(--ui-font); cursor:pointer; }
+.rem-row + .rem-row { border-top:1px solid var(--border); }
+.rem-when { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:0 14px 12px; }
+.rem-when .tz-opts { margin:0; flex-wrap:wrap; gap:6px; }
+.rem-when .tz-opt { white-space:nowrap; padding:6px 11px; }
+#reminders-modal { --rc:var(--t1); }   /* the chosen time in ink, not a section colour */
+#rem-nudge { position:relative; margin:12px 0 0; padding:14px 16px; border-radius:var(--r-m); background:var(--card); }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .tz-p { margin-bottom:16px; }
@@ -1375,6 +1381,7 @@ window._fsGetDoc = getDoc;
       <div id="omer" style="display:none;"></div>
       <div id="review-ready" style="display:none;"></div>
       <div id="welcome-back" style="display:none;"></div>
+      <div id="rem-nudge" style="display:none;"></div>
 
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
@@ -1422,8 +1429,7 @@ window._fsGetDoc = getDoc;
 
       <p class="ps-label" id="ps-phone-label" style="display:none">On this phone</p>
       <div class="ps-card" id="ps-phone" style="display:none">
-        <div class="ps-row" style="cursor:default;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></span><span class="ps-row-label">Daily reminder<span class="ps-row-sub" style="display:block;">Not on Shabbos or Yom Tov</span></span><button type="button" role="switch" id="ps-rem-sw" class="ml-sw" aria-label="Daily reminder" onclick="setReminder({ on: this.getAttribute('aria-checked') !== 'true' })"></button></div>
-        <label class="ps-row" id="ps-rem-time-row" style="cursor:default;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="ps-row-label">Time</span><input type="time" id="ps-rem-time" class="ps-time" onchange="setReminder({ time: this.value })"></label>
+        <button type="button" class="ps-row" id="ps-rem-row" onclick="openReminders()"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></span><span class="ps-row-label">Reminders</span><span id="ps-rem-sub" class="ps-row-val"></span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         <div class="ps-row" style="cursor:default;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M3 9v6M21 9v6"/></svg></span><span class="ps-row-label">Touch feedback</span><button type="button" role="switch" id="ps-hap-sw" class="ml-sw" aria-label="Touch feedback" onclick="setHaptics(this.getAttribute('aria-checked') !== 'true')"></button></div>
       </div>
 
@@ -2469,32 +2475,65 @@ function _refreshUI() {
   _syncReminders();
 }
 
-// ── Daily reminder (the app version only) ────────────────────────────────────
-// When: js/reminders.js. Kept on this phone, not in your account: each phone
-// rings by itself. The phone holds the next two weeks; this refreshes them
-// whenever something changes (marking today done takes today's off).
-function _reminderPref() {
-  try { return JSON.parse(localStorage.getItem('chitas_reminder')) || {}; } catch { return {}; }
+// ── Reminders (the app version only) ─────────────────────────────────────────
+// When: js/reminders.js. Each section at its own time, or none, and the Omer
+// if chosen. Kept on this phone, not in your account: each phone rings by
+// itself. The phone holds the next two weeks; this refreshes them whenever
+// something changes (learning a section takes today's reminder for it off).
+// What a reminder says is what's waiting ("Rambam · Sales 16–18"); a tap opens it.
+const REMINDER_NAMES = { chumash: 'Chumash', tehillim: 'Tehillim', tanya: 'Tanya', rambam: 'Rambam', hayomYom: 'Hayom Yom' };
+const REMINDER_PICKS = [['Morning', '07:00'], ['After Shacharis', '08:30'], ['Afternoon', '15:00'], ['Evening', '20:30']];
+// { chumash: '08:30', tanya: '07:00', omer: '20:30', … }. The old single
+// reminder ({ on, time }) becomes all four at its time.
+function _reminderTimes() {
+  try {
+    const t = JSON.parse(localStorage.getItem('chitas_reminders') || 'null');
+    if (t) return t;
+    const old = JSON.parse(localStorage.getItem('chitas_reminder') || 'null');
+    if (old?.on) return { chumash: old.time || '20:00', tehillim: old.time || '20:00', tanya: old.time || '20:00', rambam: old.time || '20:00' };
+  } catch {}
+  return {};
 }
-let _reminderSig = null, _reminderRun = Promise.resolve();   // null: what's on the phone is unknown
+let _reminderSig = null, _reminderRun = Promise.resolve(), _reminderTaps = false;   // null: what's on the phone is unknown
 // One at a time: two refreshes at once would cancel each other's work
 function _syncReminders() { return (_reminderRun = _reminderRun.then(_syncRemindersNow)); }
 async function _syncRemindersNow() {
   const LN = _nativePlugin('LocalNotifications');
   if (!LN || !user) return;
-  const pref = _reminderPref();
+  if (!_reminderTaps) {   // a tap opens what it was about
+    _reminderTaps = true;
+    LN.addListener?.('localNotificationActionPerformed', a => {
+      const x = a?.notification?.extra || {};
+      if (x.omer) _openOmerCount(x.omer);
+      else if (x.open) { dayOffset = 0; x.open === 'hayomYom' ? openExtraReader('hayomYom') : openChabadPanel(x.open); }
+    });
+  }
   const sameDay = dateISO(appNow()) === dateISO(new Date());   // past midnight, before 4 am, today's list is still last night's
-  const plan = pref.on ? reminderPlan(pref.time, new Date(), sameDay && isChitasDay(user.done)) : [];
-  const sig = plan.map(p => p.id + '@' + p.at.getTime()).join();
+  const plan = reminderPlans(_reminderTimes(), new Date(), sameDay ? (user.done || {}) : {});
+  const notes = plan.map(p => ({ id: p.id, ..._reminderText(p), schedule: { at: p.at, allowWhileIdle: true }, extra: p.omer ? { omer: p.omer } : { open: p.sections[0] } }));
+  const sig = notes.map(n => n.id + '@' + n.schedule.at.getTime() + n.body).join();
   if (sig === _reminderSig) return;
   _reminderSig = sig;
   try {
     const { notifications = [] } = await LN.getPending();
     if (notifications.length) await LN.cancel({ notifications: notifications.map(n => ({ id: n.id })) });
-    if (plan.length) await LN.schedule({ notifications: plan.map(p => ({
-      id: p.id, title: 'Chitas', body: "Today's Chumash, Tehillim, Tanya and Rambam.",
-      schedule: { at: p.at, allowWhileIdle: true } })) });
+    if (notes.length) await LN.schedule({ notifications: notes });
   } catch (e) { _reminderSig = null; }
+}
+// What's waiting, in a few words, for the day of the reminder
+function _reminderText(p) {
+  if (p.omer) { const c = omerCount(p.omer); return { title: 'Sefiras HaOmer', body: 'Count tonight: night ' + p.omer + ' · ' + c.sefirah.en }; }
+  const d = p.at, today = dateISO(d) === dateISO(appNow());
+  const what = sec => ({
+    chumash: () => getChumashDayLabel(d),
+    tehillim: () => _tehillimSubtitle(d),
+    tanya: () => (today && schedule?.tanya?.subtitle) || 'Today\'s portion',
+    rambam: () => user.rambamTrack === 'm' ? shmSubtitle(d) : (today && schedule?.rambam?.subtitle) || 'Today\'s chapters',
+    hayomYom: () => 'Today\'s thought',
+  }[sec]?.() || '');
+  const names = p.sections.map(sec => sec === 'rambam' && user.rambamTrack === 'm' ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec]);
+  if (p.sections.length >= 4) return { title: 'Chitas', body: 'Today\'s ' + names.slice(0, -1).join(', ') + ' and ' + names.at(-1) + '.' };
+  return { title: names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names.at(-1) : names[0], body: p.sections.map(what).filter(Boolean).join(' · ') };
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) _syncReminders(); });
 
@@ -2534,17 +2573,55 @@ document.addEventListener('visibilitychange', async () => {
 });
 setInterval(_checkNewDay, 60e3);
 
-async function setReminder(change) {
-  const pref = { time: '20:00', ..._reminderPref(), ...change };
-  if (change.on) {
+// A section's reminder: a time ('HH:MM') or null for off
+async function setReminderTime(sec, time) {
+  const times = { ..._reminderTimes() };
+  const first = !Object.values(times).some(Boolean);
+  if (time && first) {   // the first one on: the phone asks
     const LN = _nativePlugin('LocalNotifications');
     const p = await Promise.resolve(LN?.requestPermissions?.()).catch(() => null);
-    if (p?.display !== 'granted') { pref.on = false; fire('Notifications for Chitas are off in the phone\'s settings'); }
+    if (p?.display !== 'granted') { fire('Notifications for Chitas are off in the phone\'s settings'); _drawReminders(); return; }
   }
-  try { localStorage.setItem('chitas_reminder', JSON.stringify(pref)); } catch {}
+  if (time) times[sec] = time; else delete times[sec];
+  try { localStorage.setItem('chitas_reminders', JSON.stringify(times)); localStorage.removeItem('chitas_reminder'); } catch {}
   _reminderSig = null;
+  _drawReminders();
   _showPhonePrefs();
   await _syncReminders();
+}
+// The sheet: each section with a switch, and when on, quick picks and a time
+function openReminders() {
+  document.getElementById('reminders-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'reminders-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = '<div class="ps-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="rem-title" style="max-height:90vh;">'
+    + '<div class="ps-modal-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+    +   '<div><p class="ps-modal-title" id="rem-title">Reminders</p><p class="ps-modal-sub">Each at the time you learn it</p></div>'
+    +   '<button type="button" onclick="document.getElementById(\'reminders-modal\').remove()" class="ps-modal-close" aria-label="Close">×</button>'
+    + '</div><div id="rem-body" style="overflow-y:auto;flex:1;padding:4px 20px 24px;"></div></div>';
+  document.body.appendChild(m);
+  _drawReminders();
+}
+function _drawReminders() {
+  const body = document.getElementById('rem-body');
+  if (!body) return;
+  const times = _reminderTimes();
+  const row = (sec, name, sub, picks) => {
+    const t = times[sec], on = !!t;
+    return '<div class="rem-row"><div class="tpm-row"><div class="tpm-who"><p>' + name + '</p>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>'
+      + '<button type="button" role="switch" class="ml-sw" aria-checked="' + on + '" aria-label="' + name + ' reminder" onclick="setReminderTime(\'' + sec + '\',' + (on ? 'null' : '\'' + picks[0][1] + '\'') + ')"></button></div>'
+      + (on ? '<div class="rem-when"><div class="tz-opts">' + picks.map(([l, v]) => '<button type="button" class="tz-opt' + (v === t ? ' on' : '') + '" onclick="setReminderTime(\'' + sec + '\',\'' + v + '\')">' + l + '</button>').join('') + '</div>'
+        + '<input type="time" class="ps-time" value="' + t + '" aria-label="' + name + ' time" onchange="this.value && setReminderTime(\'' + sec + '\',this.value)"></div>' : '')
+      + '</div>';
+  };
+  const learning = ['chumash', 'tehillim', 'tanya', 'rambam'].concat((user.extraTracks || []).includes('hayomYom') ? ['hayomYom'] : []);
+  body.innerHTML = '<p class="tpm-label">Your learning</p><div class="tpm-list">'
+    + learning.map(sec => row(sec, sec === 'rambam' && user.rambamTrack === 'm' ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec], '', REMINDER_PICKS)).join('') + '</div>'
+    + '<p class="tpm-label">In its season</p><div class="tpm-list">'
+    + row('omer', 'Counting the Omer', 'Tonight\'s count, during Sefirah', [['20:00', '20:00'], ['21:00', '21:00'], ['22:00', '22:00']]) + '</div>'
+    + '<p class="tpm-empty" style="margin-top:14px;">Each one says what\'s waiting, and opens it. Nothing for what you\'ve already learned that day. Reminders at the same time come together. Never on Shabbos or Yom Tov; the day before, only those up to 12:00.</p>';
 }
 function setHaptics(on) {
   user.haptics = on;
@@ -2558,11 +2635,9 @@ function _showPhonePrefs() {
   document.getElementById('ps-phone-label').style.display = native ? '' : 'none';
   document.getElementById('ps-phone').style.display = native ? '' : 'none';
   if (!native) return;
-  const pref = _reminderPref();
-  document.getElementById('ps-rem-sw').setAttribute('aria-checked', !!pref.on);
-  const t = document.getElementById('ps-rem-time');
-  t.value = pref.time || '20:00';
-  document.getElementById('ps-rem-time-row').style.display = pref.on ? '' : 'none';
+  const times = _reminderTimes();
+  const on = [...REMINDER_SECTIONS, 'omer'].filter(sec => times[sec]);
+  document.getElementById('ps-rem-sub').textContent = !on.length ? 'Off' : on.length === 1 ? (REMINDER_NAMES[on[0]] || 'Omer') + ' ' + times[on[0]] : on.length + ' on';
   document.getElementById('ps-hap-sw').setAttribute('aria-checked', user.haptics !== false);
 }
 
@@ -2800,6 +2875,26 @@ function renderSectionsForOffset(iso) {
   _renderThought();
   _renderWelcomeBack();
   _renderOmer(iso, isToday);
+  _renderReminderNudge();
+}
+
+// A reminder that hasn't matched your days for a week (js/reminders.js):
+// ask once, kindly, whether to move it or turn it off. Not again for a month.
+function _renderReminderNudge() {
+  const el = document.getElementById('rem-nudge');
+  if (!el) return;
+  let seen = {};
+  try { seen = JSON.parse(localStorage.getItem('chitas_rem_nudge') || '{}'); } catch {}
+  const times = _reminderTimes(), now = appNow();
+  const sec = _nativePlugin('LocalNotifications') && dayOffset === 0 ? reminderNudge(times, user.pastDone, now) : null;
+  if (!sec || (seen[sec] && (now - new Date(seen[sec] + 'T12:00:00')) / 864e5 < 30)) { el.style.display = 'none'; return; }
+  const name = sec === 'rambam' && user.rambamTrack === 'm' ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec];
+  const keep = "try{const s=JSON.parse(localStorage.getItem('chitas_rem_nudge')||'{}');s['" + sec + "']='" + dateISO(now) + "';localStorage.setItem('chitas_rem_nudge',JSON.stringify(s))}catch(e){};_renderReminderNudge()";
+  el.innerHTML = '<p class="wb-t" style="font-size:16px;">Your ' + name + ' reminder</p>'
+    + '<p class="wb-s">It comes at ' + times[sec] + ', and that hasn\'t been when you learn it lately. Would another time suit you better?</p>'
+    + '<button class="wb-go" onclick="' + keep + ';openReminders()">Change it</button> '
+    + '<button class="wb-go" style="background:var(--card2);color:var(--t1);" onclick="' + keep + '">Keep it</button>';
+  el.style.display = 'block';
 }
 
 // Review on Today: a learned section's tile says it's ready to review (or how
