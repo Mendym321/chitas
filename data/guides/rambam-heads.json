@@ -2,197 +2,201 @@
  "Sales 16": [
   [
    1,
-   "Seeds that don't sprout"
+   "The starting case: seeds that don't grow"
   ],
   [
    3,
-   "Goods taken to another town"
+   "The same logic: goods taken to another town"
   ],
   [
    5,
-   "What the buyer meant to use it for"
+   "What the buyer meant it for"
   ],
   [
    6,
-   "A new blemish made by the buyer"
-  ],
-  [
-   8,
-   "Land used before the defect was found"
+   "If the buyer adds damage of his own"
   ],
   [
    9,
-   "A hidden defect that destroys it"
+   "A defect that destroys the item"
   ],
   [
    12,
-   "Food that turns out to be forbidden"
+   "Last: food that turns out forbidden"
   ]
  ],
  "Sales 17": [
   [
    1,
-   "Better or worse than promised"
+   "The main rule: better or worse than said"
   ],
   [
    2,
-   "Not what was named at all"
+   "A bigger mistake: the wrong kind"
   ],
   [
    3,
-   "Wine that turns to vinegar"
+   "A case that comes up: wine going sour"
   ],
   [
    6,
-   "What \"aged wine\" and the like promise"
+   "What the seller's words promise"
   ],
   [
    9,
-   "A kneading tray means a finished one"
+   "One more example"
   ]
  ],
  "Sales 18": [
   [
    1,
-   "No deceiving, Jew or gentile"
+   "The basic rule: no deceiving"
   ],
   [
    2,
-   "Making goods look better than they are"
+   "Examples: dressing up the goods"
+  ],
+  [
+   4,
+   "What is allowed"
   ],
   [
    5,
-   "Mixing produce, wine and oil"
+   "Mixing produce"
+  ],
+  [
+   6,
+   "Water and dregs in wine and oil"
   ],
   [
    9,
-   "How much dregs and dirt a buyer accepts"
+   "How much waste a buyer accepts"
   ],
   [
    12,
-   "Where there is a local custom"
+   "Local custom comes first"
   ]
  ],
  "Sales 19": [
   [
    1,
-   "Property under dispute"
+   "First: tell the buyer about a dispute"
   ],
   [
    3,
-   "The seller answers for the buyer's loss"
+   "The seller stands behind the sale"
   ],
   [
    5,
-   "A promise to cover losses beyond control"
+   "A promise to cover the unexpected"
   ],
   [
    8,
-   "Selling without taking responsibility"
+   "And if he says he isn't responsible"
   ]
  ],
  "Sales 20": [
   [
    1,
-   "Haggling, then taking it without a word"
+   "A case of haggling"
   ],
   [
    2,
-   "Not sure who the seller was"
+   "When the buyer can't remember the seller"
   ],
   [
    4,
-   "When the seller says who bought"
+   "Whose word counts"
   ],
   [
    5,
-   "Who has to prove what"
+   "The general rule: the claimant must prove"
   ],
   [
    10,
-   "Born before or after the sale?"
+   "Applied: born before or after the sale?"
   ],
   [
    12,
-   "The larger one or the smaller one"
+   "The bigger one or the smaller one"
   ],
   [
    14,
-   "Proof falls on the one who held it"
+   "Where the doubt arose decides"
   ]
  ],
  "Sales 21": [
   [
    1,
-   "A sale without stating the amount"
+   "The rule: you must know what you're buying"
   ],
   [
    5,
-   "Standard sizes: houses, graves, ditches, paths"
+   "Set sizes when none is said"
   ],
   [
    13,
-   "Boundaries drawn in the deed"
+   "Drawing the boundaries"
   ],
   [
    18,
-   "What the words of a sale include"
+   "What the words of a sale cover"
   ],
   [
    22,
-   "Half a field"
+   "Last: selling half a field"
   ]
  ],
  "Sales 22": [
   [
    1,
-   "Selling what doesn't exist yet"
+   "The rule: no selling what doesn't exist yet"
   ],
   [
    3,
-   "A sale at the market price"
+   "Not the same: a sale at the market price"
   ],
   [
    5,
-   "What isn't yours yet"
+   "Also not his yet"
+  ],
+  [
+   6,
+   "Two exceptions, to help the poor"
   ],
   [
    8,
-   "Money given along with land"
-  ],
-  [
-   9,
-   "Entrusted objects and loans"
+   "The same rule with gifts and deposits"
   ],
   [
    10,
-   "Giving to someone not yet born"
+   "Nor to someone not yet born"
   ],
   [
    13,
-   "Things with no substance"
+   "Nor something with no substance"
   ],
   [
    15,
-   "Pledges to the Temple and the poor"
+   "Pledges to charity are different"
   ]
  ],
  "Sales 23": [
   [
    1,
-   "Selling a thing for what it yields"
+   "What can be sold: a thing for its yield"
   ],
   [
    5,
-   "Land for a set time"
+   "Compared: land for a set time, and renting"
   ],
   [
    9,
-   "Dovecotes and beehives"
+   "Applied to doves and bees"
   ],
   [
    15,
-   "Trees bought for lumber"
+   "Last: trees cut for wood"
   ]
  ],
  "Sales 24": [
@@ -206,25 +210,29 @@
   ],
   [
    8,
-   "Keeping the trees, selling the land"
+   "The reverse: keeping the trees"
   ],
   [
    11,
-   "\"Except one tree\" and other wordings"
+   "Reading the seller's words"
   ],
   [
    14,
-   "What the deed should say"
+   "What to write in the deed"
   ],
   [
    16,
-   "An upper storey, and family graves"
+   "Two more things a seller keeps"
   ]
  ],
  "Sales 25": [
   [
    1,
-   "What selling a house includes"
+   "The rule: extras aren't included"
+  ],
+  [
+   5,
+   "Applied: a house"
   ],
   [
    6,
@@ -242,29 +250,29 @@
  "Sales 26": [
   [
    1,
-   "Selling a town"
+   "More examples: a town"
   ],
   [
    2,
-   "Selling a field"
+   "A field"
   ],
   [
    5,
-   "A gift includes more than a sale"
+   "Gifts are read more generously"
   ],
   [
    7,
-   "Local custom decides"
+   "The real rule: local custom"
   ]
  ],
  "Sales 27": [
   [
    1,
-   "A ship, a wagon, a donkey"
+   "More examples: ships, wagons, animals"
   ],
   [
    5,
-   "The price doesn't prove what was meant"
+   "The price proves nothing"
   ],
   [
    6,
@@ -272,25 +280,25 @@
   ],
   [
    10,
-   "A reservoir, a dump, a hive"
+   "A few last cases"
   ]
  ],
  "Sales 28": [
   [
    1,
-   "\"Land to sow a kor\": rocks and hollows"
+   "Selling land by its size"
   ],
   [
    5,
-   "Measured exactly, or roughly"
+   "Exact or approximate?"
   ],
   [
    12,
-   "Boundaries that don't match the size"
+   "When the boundaries say otherwise"
   ],
   [
    13,
-   "A field the buyer already knows"
+   "When the buyer knows the field"
   ]
  ],
  "Sales 29": [
@@ -300,35 +308,35 @@
   ],
   [
    6,
-   "Children"
+   "Children: a special allowance"
   ],
   [
    12,
-   "Coming of age, and inherited land before twenty"
+   "Grown up, but not for inherited land"
   ],
   [
    18,
-   "Someone drunk"
+   "Last: someone drunk"
   ]
  ],
  "Sales 30": [
   [
    1,
-   "Bought for someone without his knowing"
+   "Buying for someone else"
   ],
   [
    2,
-   "Servants and wives: the master or husband decides"
+   "The same with servants and wives"
   ],
   [
    7,
-   "Selling on Shabbos"
+   "Last: sales on Shabbos"
   ]
  ],
  "Ownerless Property and Gifts 1": [
   [
    1,
-   "Ownerless things: first to take them"
+   "A new topic: ownerless things"
   ],
   [
    6,
@@ -342,29 +350,29 @@
  "Ownerless Property and Gifts 2": [
   [
    1,
-   "How ownerless land is taken"
+   "How to take ownerless land"
   ],
   [
    9,
-   "Acts that don't count"
+   "What doesn't count"
   ],
   [
    14,
-   "Pledges held by or from a convert"
+   "Pledges and a convert's estate"
   ],
   [
    17,
-   "Servants, and a convert who wasn't dead"
+   "Two last cases"
   ]
  ],
  "Ownerless Property and Gifts 3": [
   [
    1,
-   "How a gift is acquired"
+   "Now gifts: how they're acquired"
   ],
   [
    5,
-   "Saying what you give"
+   "Say what you're giving"
   ],
   [
    6,
@@ -372,7 +380,7 @@
   ],
   [
    11,
-   "A gift to a gentile"
+   "Who may be given a gift"
   ],
   [
    12,
@@ -382,69 +390,69 @@
  "Ownerless Property and Gifts 4": [
   [
    1,
-   "A gift can't be refused once taken"
+   "Once received, it's his"
   ],
   [
    4,
-   "Sending a gift through someone"
+   "Sending it with a messenger"
   ],
   [
    6,
-   "Who can receive for another"
+   "Who can accept for someone"
   ],
   [
    10,
-   "The deed of a gift"
+   "Writing the deed"
   ],
   [
    13,
-   "Disputes over a gift"
+   "When they disagree"
   ]
  ],
  "Ownerless Property and Gifts 5": [
   [
    1,
-   "A gift must be public"
+   "The rule: gifts must be public"
   ],
   [
    6,
-   "Two deeds for one field"
+   "When two deeds clash"
   ]
  ],
  "Ownerless Property and Gifts 6": [
   [
    1,
-   "Reading the giver's intent"
+   "The key: what the giver meant"
   ],
   [
    2,
-   "Everything to one son, or to a wife"
+   "Applied: everything to one son, or to a wife"
   ],
   [
    8,
-   "When the wife gives up her ketubah"
+   "What the wife gives up"
   ],
   [
    12,
-   "A bride who gives her property away"
+   "The reverse: a bride's gift"
   ],
   [
    14,
-   "Gifts sent home, and a son's wedding house"
+   "Gifts at home and at a wedding"
   ],
   [
    17,
-   "Engagements: promises and gifts"
+   "Engagement gifts"
   ]
  ],
  "Ownerless Property and Gifts 7": [
   [
    1,
-   "Shushvinut: wedding gifts that come back"
+   "A gift that is really a loan: shushvinut"
   ],
   [
    5,
-   "When it must be repaid"
+   "When it must be returned"
   ],
   [
    9,
@@ -452,17 +460,17 @@
   ],
   [
    13,
-   "Five rules of shushvinut"
+   "The five rules, in short"
   ],
   [
    14,
-   "Gifts pressed on someone, and wedding wine"
+   "Real gifts, by contrast"
   ]
  ],
  "Ownerless Property and Gifts 8": [
   [
    1,
-   "A dying man's gift"
+   "A new topic: gifts of the dying"
   ],
   [
    8,
@@ -470,11 +478,11 @@
   ],
   [
    14,
-   "If he recovers"
+   "If he gets better"
   ],
   [
    23,
-   "Gifts made fearing death"
+   "Fearing death, though not ill"
   ],
   [
    25,
@@ -484,125 +492,125 @@
  "Ownerless Property and Gifts 9": [
   [
    1,
-   "Kept secret until his death"
+   "More on gifts of the dying"
   ],
   [
    3,
-   "The words that give"
+   "Which words make a gift"
   ],
   [
    9,
-   "Debts he admits, and his servants"
+   "What he admits he owes"
   ],
   [
    13,
-   "Refusing, and changing his mind"
+   "Refusing, or changing his mind"
   ],
   [
    20,
-   "Sales by a dying man"
+   "Sales, by contrast"
   ],
   [
    22,
-   "Healthy or dying? Disputes"
+   "When they argue: was he ill?"
   ]
  ],
  "Ownerless Property and Gifts 10": [
   [
    1,
-   "\"Give him a maneh\""
+   "The dying man's instructions"
   ],
   [
    3,
-   "\"He has a maneh with me\""
+   "When it sounds like a debt"
   ],
   [
    8,
-   "When the heirs say it was paid"
+   "The heirs say it was paid"
   ],
   [
    12,
-   "Money sent with a messenger"
+   "A messenger who can't deliver"
   ],
   [
    13,
-   "Several gifts, not enough money"
+   "Not enough for everyone"
   ],
   [
    15,
-   "Living in a house, eating from a tree"
+   "Last: things with no substance"
   ]
  ],
  "Ownerless Property and Gifts 11": [
   [
    1,
-   "Who the gift means"
+   "Who he meant"
   ],
   [
    7,
-   "\"A portion\": how much"
+   "How much \"a portion\" is"
   ],
   [
    10,
-   "A wife's portion like a son's"
+   "A wife's share"
   ],
   [
    12,
-   "\"Movable property\" and \"my property\""
+   "What \"my property\" covers"
   ],
   [
    16,
-   "A gift on top of what is owed"
+   "On top of what's owed, or instead?"
   ],
   [
    20,
-   "A daughter's marriage and dowry"
+   "A daughter's marriage"
   ],
   [
    23,
-   "What he really meant"
+   "Reading his real intent"
   ]
  ],
  "Ownerless Property and Gifts 12": [
   [
    1,
-   "\"My son shall inherit\""
+   "\"Let my son inherit\""
   ],
   [
    3,
-   "\"To you, and after you to him\""
+   "To one person, then another"
   ],
   [
    13,
-   "Land given to a son after death"
+   "The land now, its use later"
   ],
   [
    14,
-   "Dates and wording in a deed"
+   "How deeds are worded"
   ],
   [
    17,
-   "Those who refuse gifts"
+   "A closing thought: refusing gifts"
   ]
  ],
  "Neighbors 1": [
   [
    1,
-   "Dividing what partners own"
+   "A new topic: partners dividing"
   ],
   [
    2,
-   "Too small to divide: buy or sell"
+   "When it can't be divided"
   ],
   [
    4,
-   "How big is big enough"
+   "What counts as big enough"
   ]
  ],
  "Neighbors 2": [
   [
    1,
-   "Four cubits in front of each door"
+   "Dividing a shared courtyard"
   ],
   [
    9,
@@ -620,69 +628,69 @@
  "Neighbors 3": [
   [
    1,
-   "Sharing the cost of a wall"
+   "Paying for the wall"
   ],
   [
    5,
-   "Roofs, and courtyards at different heights"
+   "Roofs and courtyards on different levels"
   ],
   [
    8,
-   "Stones from a fallen wall"
+   "A fallen wall's stones"
   ],
   [
    9,
-   "Shared springs, drains and rivers"
+   "Water shared by several"
   ]
  ],
  "Neighbors 4": [
   [
    1,
-   "A loft above someone's house"
+   "A house with a loft above"
   ],
   [
    8,
-   "Gardens on a hillside"
+   "Gardens on a slope"
   ],
   [
    10,
-   "Trees the river carried off"
+   "Trees moved by a river"
   ]
  ],
  "Neighbors 5": [
   [
    1,
-   "What partners in a courtyard must share"
+   "What partners must build together"
   ],
   [
    3,
-   "What a courtyard may be used for"
+   "What they may stop each other doing"
   ],
   [
    6,
-   "Windows and doors that look in"
+   "Privacy: windows and doors"
   ],
   [
    12,
-   "Lanes: gates and entrances"
+   "Lanes"
   ]
  ],
  "Neighbors 6": [
   [
    1,
-   "What a town can require of everyone"
+   "Now a whole town"
   ],
   [
    8,
-   "Competition: a new shop or trade"
+   "Competition"
   ],
   [
    11,
-   "Noise and traffic in a lane"
+   "Noise and traffic"
   ],
   [
    13,
-   "A cistern or garden reached through a neighbor's"
+   "Passing through a neighbor's property"
   ]
  ]
 }
