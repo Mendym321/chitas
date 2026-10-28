@@ -810,6 +810,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .tz-ai { font-size:11px; color:var(--t3); margin-top:10px; }
 .tz-h { display:flex; align-items:center; gap:10px; font:600 13px var(--ui-font); color:var(--purple); margin:26px 0 10px; }
 .tz-h::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--purple) 22%, transparent); }
+.rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
+.rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .tz-p { margin-bottom:16px; }
 .tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
 .tz-en { font-family:var(--read-font); --rf-sz:16px; --rf-lh:1.5; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
@@ -4613,11 +4615,14 @@ function _renderRambamContent() {
 
   const lines = _guideLines('rambam', _renderRambamContent);
   const guideOf = ch => (lines && lines[ch.title]) || '';
+  // The guide's small headings, each before the halacha where a topic starts
+  const heads = _guideLines('rambam-heads', _renderRambamContent);
+  const headsOf = ch => Object.fromEntries((heads && heads[ch.title]) || []);
   const guideOn = _readerOpt('rambam', 'guide');
 
   // Language, then the options
   let t = _langSeg(lang, "_setRambamLang('LANG')")
-    + (chapters.some(guideOf) ? '<div class="tz-opts">' + _optChip('rambam', 'guide', 'Guide') + '</div>' : '');
+    + (chapters.some(ch => guideOf(ch) || Object.keys(headsOf(ch)).length) ? '<div class="tz-opts">' + _optChip('rambam', 'guide', 'Guide') + '</div>' : '');
 
   let v = '';
 
@@ -4628,6 +4633,7 @@ function _renderRambamContent() {
       + '<p class="tz-ch" lang="he">פרק ' + _toHebrewNumeral(chapter.chapter) + '</p>'
       + '<p class="tz-en-label">' + escapeHtml(chapter.title.replace(/\s+\d+$/, '') + ' · Chapter ' + chapter.chapter + (chapters.length > 1 ? ' · ' + (chIdx + 1) + ' of ' + chapters.length + ' today' : '')) + '</p></div>';
     if (guideOn && guideOf(chapter)) v += '<div class="tz-guide"><p class="tz-gl">This chapter</p><p class="tz-gt">' + escapeHtml(guideOf(chapter)) + '</p></div>';
+    const hs = guideOn ? headsOf(chapter) : {};
 
     const maxLen = Math.max(chapter.en.length, chapter.he.length);
     for (let i = 0; i < maxLen; i++) {
@@ -4640,6 +4646,7 @@ function _renderRambamContent() {
 
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
       // Rendered as a span before the text — stays inline with the paragraph
+      if (hs[num]) v += '<p class="tz-h rb-h">' + escapeHtml(hs[num]) + '</p>';
       const enMark = '<span class="rd-vn">' + num + '</span>';
       const heMark = '<span class="rd-vn">' + heNum + '</span>';
 
