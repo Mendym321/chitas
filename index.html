@@ -810,6 +810,14 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .tz-ai { font-size:11px; color:var(--t3); margin-top:10px; }
 .tz-h { display:flex; align-items:center; gap:10px; font:600 13px var(--ui-font); color:var(--purple); margin:26px 0 10px; }
 .tz-h::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--purple) 22%, transparent); }
+.sm-row { padding:14px 0 13px; border-bottom:1px solid var(--border); }
+.sm-row.both { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+.sm-row i, .tz-guide i { font-style:italic; }
+.sm-digest .sm-name { font:800 17px/1.3 var(--ui-font); color:var(--t1); margin-bottom:3px; }
+.sm-digest .sm-verse { font-family:var(--read-font); font-style:italic; font-size:15px; color:var(--t2); margin-bottom:8px; }
+.sm-digest .sm-where { font-size:12px; color:var(--t3); margin-top:8px; }
+.sm-same, .sm-soon { font-size:13px; color:var(--t3); text-align:center; margin:10px 0; }
+.sm-soon button { border:none; background:none; padding:0; color:var(--rc); font:700 13px var(--ui-font); cursor:pointer; }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .tz-p { margin-bottom:16px; }
@@ -1602,6 +1610,8 @@ window._fsGetDoc = getDoc;
 <script src="/js/tehillim.js"></script>
 <script src="/js/omer-data.js"></script>
 <script src="/js/omer.js"></script>
+<script src="/js/sefer-hamitzvos-data.js"></script>
+<script src="/js/sefer-hamitzvos.js"></script>
 <script src="/js/holidays-data.js"></script>
 <script src="/js/progress.js"></script>
 <script src="/js/reminders.js"></script>
@@ -2357,7 +2367,7 @@ async function init() {
                   sefariaRef: tanyaRef }, // today's ref e.g. "Tanya, Part I; Likkutei Amarim 37:9" 
 
       rambam:   { id:'rambam',   label:'Rambam',   icon:'books', quizzable:true,
-                  subtitle: p.rambamTitle || rambam3Item?.displayValue?.en || 'Rambam Yomi',
+                  subtitle: user.rambamTrack === 'm' ? shmSubtitle(today) : p.rambamTitle || rambam3Item?.displayValue?.en || 'Rambam Yomi',
                   chabadUrl: user.rambamTrack === 'm'
                     ? `${base}/seferHamitzvos.asp?tdate=${encodeURIComponent(tdate)}`
                     : `${base}/rambam.asp?rambamChapters=${user.rambamTrack==='3'?3:1}&tdate=${encodeURIComponent(tdate)}`,
@@ -2707,7 +2717,7 @@ async function rebuildScheduleForOffset() {
       s.subtitle = hebrewNoYear;
     }
     if (s.id === 'rambam') {
-      s.subtitle = p?.rambamTitle || 'Daily Rambam';
+      s.subtitle = user.rambamTrack === 'm' ? shmSubtitle(d) : p?.rambamTitle || 'Daily Rambam';
     }
   });
 
@@ -7534,169 +7544,98 @@ async function _loadMishnahYomi() {
 // ── Shared bilingual reader renderer ──────────────────────────────────────────
 
 // ════════════════════════════════════════════════════════════════════
-// SEFER HAMITZVOS NATIVE READER
-// Sefaria: "Sefer HaMitzvot" — positive + negative mitzvot
-// Calendar item title: "Daily Mitzvah" or "Sefer HaMitzvos"
+// SEFER HAMITZVOS READER
+//   The day's mitzvos from js/sefer-hamitzvos.js (on the phone, in order).
+//   Our own text where we have it (data/sefer-hamitzvos.json: the mitzvah's
+//   name, verse, a short digest, then the whole text in our English with Ibn
+//   Tibbon's Hebrew, tidied, paragraph by paragraph). For a mitzvah we
+//   haven't written yet: Ibn Tibbon's Hebrew from Sefaria.
 // ════════════════════════════════════════════════════════════════════
-// Draws straight into the reader, so it only loads for the reader on screen
+let _shmTexts = null;
 async function _loadSeferHamitzvos(sectionId, silent) {
   if (silent) return false;
   const iso = _textLoading('rambam', silent);
-  try {
-
-    // Hebcal has Sefer HaMitzvos under category 'seferHaMitzvot'
-    // Title format: "Day 46: P155" or "Day 46: N23" or "Day 46: P3, N180"
-    const hebcal = await fetch(
-      'https://www.hebcal.com/hebcal?v=1&cfg=json&dsm=on&d=on&start=' + iso + '&end=' + iso + '&lg=s'
-    ).then(r => r.json()).catch(() => null);
-
-    const items = hebcal?.items || [];
-    const mItem = items.find(i =>
-      i.category === 'seferHaMitzvot' ||
-      (i.title || '').match(/P\d+|N\d+/)
-    );
-
-    if (!mItem) {
-      throw new Error('Sefer HaMitzvos not found in Hebcal. Categories: '
-        + [...new Set(items.map(i => i.category))].join(', '));
-    }
-
-    const title = mItem.title || '';
-
-    // Parse all P/N numbers from the title
-    const allPos = [...title.matchAll(/P(\d+)/g)].map(m =>
-      'Sefer HaMitzvot, Positive Commandments ' + m[1]);
-    const allNeg = [...title.matchAll(/N(\d+)/g)].map(m =>
-      'Sefer HaMitzvot, Negative Commandments ' + m[1]);
-    const refs = [...allPos, ...allNeg];
-
-    if (!refs.length) throw new Error('Could not parse mitzvah refs from: ' + title);
-
-    // Fetch each ref from Sefaria (same pattern as Rambam)
-    const results = await Promise.all(refs.map(async ref => {
-      const enc = encodeURIComponent(ref);
-      // Get versions first to pick best English
-      const versions = await fetch('https://www.sefaria.org/api/texts/versions/' + enc)
-        .then(r => r.json()).catch(() => []);
-      const enVersions = Array.isArray(versions) ? versions.filter(v => v.language === 'en') : [];
-      const picked = enVersions.find(v => (v.versionTitle || '').toLowerCase().includes('touger'))
-        || enVersions.find(v => (v.versionTitle || '').toLowerCase().includes('moznaim'))
-        || enVersions[0];
-
-      const url = picked
-        ? 'https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0&ven=' + encodeURIComponent(picked.versionTitle)
-        : 'https://www.sefaria.org/api/texts/' + enc + '?context=0&commentary=0';
-
-      const d = await fetch(url).then(r => r.json()).catch(() => null);
-      return {
-        ref,
-        en: _flatHtml(d?.text || []),
-        he: _flatHtml(d?.he || []),
-        versionTitle: d?.versionTitle || '',
-      };
-    }));
-
-    // Also get 3-chapter Rambam for context label
-    const rambam3 = items.find(i =>
-      i.category === 'dailyLearning' && (i.title || '').includes('Rambam') && !(i.title || '').includes('1 Chapter')
-    );
-
-    if (!_readerShows('rambam', iso)) return true;    // you've moved on
-    document.getElementById('chabad-panel-sub').textContent = title;
-    _renderSeferHamitzvos(title, results, rambam3?.title || '');
-    _putReaderAt('rambam');
-    return true;
-
-  } catch(e) {
-    console.error('Sefer HaMitzvos error:', e);
-    if (contEl) {
-      contEl.innerHTML = '<div style="padding:32px 20px;text-align:center;">'
-        + '<p style="font-size:var(--fs-3);color:var(--t2);margin-bottom:8px;">Sefer HaMitzvos</p>'
-        + '<p style="font-size:var(--fs-1);color:var(--t3);margin-bottom:24px;">' + (e.message || '') + '</p>'
-        + '<a href="https://www.chabad.org/dailystudy/seferHamitzvos.asp" target="_blank" '
-        + 'style="display:inline-block;padding:12px 24px;border-radius:var(--r-s);background:color-mix(in srgb, var(--c-rambam) 10%, transparent);'
-        + 'border:1px solid color-mix(in srgb, var(--c-rambam) 30%, transparent);color:var(--c-rambam);font-weight:700;font-size:var(--fs-2);text-decoration:none;">'
-        + 'Open on Chabad.org ↗</a></div>';
-      contEl.style.display = 'block';
-    }
-    if (loadEl) loadEl.style.display = 'none';
-    return false;
-  }
+  const reading = shmReading(new Date(iso + 'T12:00:00'));
+  if (!_shmTexts) _shmTexts = await fetch('/data/sefer-hamitzvos.json').then(r => r.ok ? r.json() : null).catch(() => null);
+  const own = _shmTexts || {};
+  const results = await Promise.all(reading.items.map(async item => {
+    if (!item.id || own[item.id]) return { item, own: own[item.id] || null };
+    const ref = 'Sefer HaMitzvot, ' + (item.positive ? 'Positive' : 'Negative') + ' Commandments ' + item.n;
+    const d = await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(ref) + '?context=0&commentary=0&vhe=' + encodeURIComponent('Sefer HaMitzvot, Warsaw 1883'))
+      .then(r => r.json()).catch(() => null);
+    return { item, he: _shmSplit(_flatHtml(d?.he || []).join(' ')), failed: !d };
+  }));
+  if (!_readerShows('rambam', iso)) return true;    // you've moved on
+  // The same mitzvah as yesterday (the Rambam is still on its laws)?
+  const prev = new Date(iso + 'T12:00:00'); prev.setDate(prev.getDate() - 1);
+  const same = shmReading(prev).items.map(i => i.id || i.other).join() === reading.items.map(i => i.id || i.other).join();
+  window._smData = { reading, results, same };
+  document.getElementById('chabad-panel-sub').textContent = shmSubtitle(new Date(iso + 'T12:00:00'));
+  _renderSeferHamitzvos();
+  _putReaderAt('rambam');
+  return true;
 }
 
+// Ibn Tibbon's Hebrew as Sefaria has it, one long paragraph → a few
+// paragraphs at sentence ends, without the source note at the end
+function _shmSplit(he) {
+  const s = he.replace(/\s*\([^()]*\):?\s*$/, '').trim().split(/(?<=[.:])\s+/);
+  const out = [];
+  for (let i = 0; i < s.length; i += 3) out.push(s.slice(i, i + 3).join(' '));
+  return out.filter(Boolean);
+}
 
-// Sefer HaMitzvos in another language, keeping your passage
 function _smSetLang(l) {
   const place = _readerPlace();
   localStorage.setItem('chitas_lang_rambam', l);
-  const a = window._smArgs || [];
-  _renderSeferHamitzvos(a[0] || '', window._smResults || [], a[1] || '');
+  _renderSeferHamitzvos();
   _putReaderAt('rambam', place);
 }
 
-function _renderSeferHamitzvos(displayVal, results, rambamContext) {
-  window._smArgs = [displayVal, rambamContext];
+function _renderSeferHamitzvos() {
+  const { reading, results, same } = window._smData || {};
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
+  if (!reading || !contEl) return;
   if (loadEl) loadEl.style.display = 'none';
-  if (!contEl) return;
   contEl.style.display = 'block';
-
-  const GREEN = 'var(--c-rambam)';
+  const lang = localStorage.getItem('chitas_lang_rambam') || 'both';
   const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
-  const langKey = 'chitas_lang_rambam'; // reuse Rambam lang pref
-  const lang = localStorage.getItem(langKey) || 'both';
+  const heP = t => '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + t + '</p>';
+  const enP = t => '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + t + '</p>';
+  const row = (en, he) => lang === 'both' && en && he
+    ? '<div class="sm-row both">' + enP(en) + heP(he) + '</div>'
+    : '<div class="sm-row">' + (lang === 'en' && en ? enP(en) : he ? heP(he) : enP(en)) + '</div>';
 
-  // Lang toggle
-  let t = _langSeg(lang, "_smSetLang('LANG')");
-
-  // Main heading
-  t += '<div style="margin-bottom:18px;padding:10px 14px;background:color-mix(in srgb, ' + GREEN + ' 12%, transparent);border-left:4px solid ' + GREEN + ';border-radius:0 8px 8px 0;">'
-    + '<p style="font-size:var(--fs-1);font-weight:700;color:color-mix(in srgb, ' + GREEN + ' 50%, transparent);margin-bottom:3px;">Sefer HaMitzvos</p>'
-    + '<p style="font-size:var(--fs-4);font-weight:800;color:' + GREEN + ';line-height:1.3;">' + displayVal + '</p>'
-    + (rambamContext ? '<p style="font-size:var(--fs-1);color:var(--t3);margin-top:4px;">With ' + rambamContext + '</p>' : '')
-    + '</div>';
-
-  // Cache for lang toggle re-render
-  window._smResults = results;
-
-  let v = '';
-  results.forEach(res => {
-    // Section heading if multiple refs
-    if (results.length > 1) {
-      v += '<div style="margin:20px 0 10px;padding:8px 12px;background:color-mix(in srgb, ' + GREEN + ' 8%, transparent);border-left:4px solid color-mix(in srgb, ' + GREEN + ' 60%, transparent);border-radius:0 6px 6px 0;">'
-        + '<p style="font-size:var(--fs-2);font-weight:700;color:' + GREEN + ';">' + res.ref.replace('Sefer HaMitzvot, ', '') + '</p>'
-        + '</div>';
+  let v = _langSeg(lang, "_smSetLang('LANG')");
+  if (same) v += '<p class="sm-same">The same as yesterday: the Rambam is still on its laws.</p>';
+  results.forEach((r, k) => {
+    const it = r.item, o = r.own;
+    // Like the top of a printed page: the book, then the mitzvah
+    v += '<div class="tz-head"' + (k > 0 ? ' style="margin-top:34px"' : '') + '>'
+      + '<p class="tz-part" lang="he">ספר המצוות</p>'
+      + '<p class="tz-ch" lang="he">' + (it.id ? (it.positive ? 'מצות עשה ' : 'מצות לא תעשה ') + _toHebrewNumeral(it.n) : escapeHtml(it.he || it.en)) + '</p>'
+      + '<p class="tz-en-label">' + escapeHtml(it.en + (results.length > 1 ? ' · ' + (k + 1) + ' of ' + results.length + ' today' : '') + ' · Day ' + reading.day) + '</p></div>';
+    if (!it.id) {   // the introduction, the Principles, the prayers…
+      v += '<div class="tz-guide"><p class="tz-gl">Today</p><p class="tz-gt">' + escapeHtml(it.en) + '. Read it on Chabad.org with the button at the top.</p></div>';
+      return;
     }
-
-    const maxLen = Math.max(res.he.length, res.en.length);
-    for (let i = 0; i < maxLen; i++) {
-      const he = res.he[i] || '';
-      const en = res.en[i] || '';
-      if (!he && !en) continue;
-
-      if (lang === 'both' && he && en) {
-        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 0;border-bottom:1px solid var(--border);align-items:start;">';
-        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;color:var(--t1);">' + he + '</p>';
-        v += '</div>';
-      } else if (lang === 'he' || !en) {
-        v += '<div style="padding:16px 0;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;color:var(--t1);">' + he + '</p>';
-        v += '</div>';
-      } else {
-        v += '<div style="padding:16px 0;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;color:var(--t1);">' + en + '</p>';
-        v += '</div>';
-      }
+    if (o) {
+      v += '<div class="tz-guide sm-digest"><p class="sm-name">' + escapeHtml(o.name) + '</p>'
+        + '<p class="sm-verse">' + escapeHtml(o.verse) + '</p>'
+        + '<p class="tz-gt">' + escapeHtml(o.digest) + '</p>'
+        + (o.where ? '<p class="sm-where">' + escapeHtml(o.where) + '</p>' : '') + '</div>';
+      o.en.forEach((en, i) => { v += row(en, escapeHtml(o.he[i] || '')); });
+    } else if (r.he && r.he.length) {
+      v += '<p class="sm-soon">Our English for this mitzvah is on its way. Here is the Hebrew.</p>';
+      r.he.forEach(he => { v += row('', he); });
+    } else {
+      v += '<p class="sm-soon">Couldn\'t load this mitzvah. <button type="button" onclick="_reopenReader(\'rambam\')">Try again</button></p>';
     }
   });
-
-  if (!v) {
-    v = '<p style="padding:20px;color:var(--t3);text-align:center;">No text available for today.</p>';
-  }
-
-  contEl.innerHTML = t + v + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
+  if (reading.note) v += '<p class="sm-soon">' + escapeHtml(reading.note) + '</p>';
+  contEl.innerHTML = v + '<p style="font-size:var(--fs-1);color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s Sefer HaMitzvos —</p>'
+    + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }
 
 
