@@ -6040,14 +6040,17 @@ async function selectTrackInline(newTrack, firstTime) {
     return;
   }
   // Change track WITHOUT wiping any data
+  const reading = _rv.sid === 'rambam';    // changed from the reader's gear
   user.rambamTrack = newTrack;
   _dropTexts('rambam');
   saveUser();
   document.getElementById('inline-track-picker')?.remove();
-  // Rebuild schedule for the new track and re-render
-  init();
   closeProfileSheet();
   fire('Rambam track updated', 'done');
+  // Rebuild the schedule for the new track, and if the reader is open, show
+  // the new track's text in it right away
+  await init();
+  if (reading && _rv.sid === 'rambam') openChabadPanel('rambam');
 }
 
 // ════════════════════════════════════════════════════════════════════
