@@ -4230,7 +4230,9 @@ async function _fetchSingleRef(ref, keyword){
   const url=picked
     ?`${SEFARIA}/api/texts/${enc}?context=0&commentary=0&ven=${encodeURIComponent(picked.versionTitle)}`
     :`${SEFARIA}/api/texts/${enc}?context=0&commentary=0`;
-  const d=await fetch(url).then(r=>r.json());
+  const d=await fetch(url).then(r=>r.json()).catch(()=>null);
+  // Refused or not reached: say so, so the reader can show something is missing
+  if(!d||d.error||(!(d.text||[]).length&&!(d.he||[]).length))return{en:[],he:[],versionTitle:'',failed:true};
   console.log(ref+' -> "'+d.versionTitle+'"');
   // _perVerse: preserve one entry per verse (null = no content for that verse).
   // This is critical for Rashi — Sefaria returns sparse arrays where missing
@@ -4256,20 +4258,19 @@ async function _fetchSingleRef(ref, keyword){
   return{en:perVerse(d.text||[]),he:perVerse(d.he||[]),versionTitle:d.versionTitle};
 }
 
-// Rashi for an aliyah: each chapter it touches, asked for whole ("Rashi on
-// Genesis 19"), never as a verse range: Sefaria can drop a commentary range
-// like "19:21-150", and with it a chapter's Rashi. Each chapter on its own,
-// so one that fails doesn't take the others; verses outside the aliyah are
-// simply never shown. → { chunks: [{ chapter, startVerse: 1, en, he }] }
+// Rashi for an aliyah: asked for the same way as the verses, chapter by
+// chapter. A chapter that comes back empty or refused is asked for once more,
+// whole ("Rashi on Genesis 19"); verses outside the aliyah are never shown.
+// One that still fails is marked failed, and the reader says so.
 async function _fetchRashi(ref) {
-  const m = String(ref).match(/^(.+?)\s+(\d+)(?::\d+)?(?:-(?:(\d+):)?\d+)?$/);
-  if (!m) return { chunks: [], versionTitle: '' };
-  const book = m[1], from = +m[2], to = m[3] ? +m[3] : from;
-  const chunks = await Promise.all(Array.from({ length: to - from + 1 }, (_, k) => from + k).map(ch =>
-    _fetchSingleRef('Rashi on ' + book + ' ' + ch, 'metsudah')
-      .then(r => ({ ref: 'Rashi on ' + book + ' ' + ch, chapter: ch, startVerse: 1, en: r.en, he: r.he, versionTitle: r.versionTitle }))
-      .catch(() => ({ chapter: ch, startVerse: 1, en: [], he: [] }))));
-  return { chunks, versionTitle: chunks.find(c => c.versionTitle)?.versionTitle || '' };
+  const r = await _fetchChumashText('Rashi on ' + ref, 'metsudah').catch(() => ({ chunks: [], versionTitle: '' }));
+  const chunks = await Promise.all(r.chunks.map(async c => {
+    if (!c.failed) return c;
+    const book = c.ref.replace(/\s+\d+(:.*)?$/, ''), whole = book + ' ' + c.chapter;
+    const w = await _fetchSingleRef(whole, 'metsudah').catch(() => ({ failed: true }));
+    return w.failed ? c : { ref: whole, chapter: c.chapter, startVerse: 1, en: w.en, he: w.he };
+  }));
+  return { chunks, versionTitle: r.versionTitle || chunks.find(c => c.versionTitle)?.versionTitle || '' };
 }
 
 // Split spanning refs into per-chapter chunks so ven= works.
@@ -4289,8 +4290,8 @@ async function _fetchChumashText(ref, keyword){
     }
     const fetched=await Promise.all(chunkDefs.map(d=>_fetchSingleRef(d.chunkRef,keyword)));
     return{
-      chunks:chunkDefs.map((d,i)=>({ref:d.chunkRef,chapter:d.chapter,startVerse:d.startVerse,en:fetched[i].en,he:fetched[i].he})),
-      versionTitle:fetched[0].versionTitle,
+      chunks:chunkDefs.map((d,i)=>({ref:d.chunkRef,chapter:d.chapter,startVerse:d.startVerse,en:fetched[i].en,he:fetched[i].he,failed:fetched[i].failed})),
+      versionTitle:fetched.find(f=>f.versionTitle)?.versionTitle||'',
     };
   }
   // Single-chapter ref
@@ -4300,7 +4301,7 @@ async function _fetchChumashText(ref, keyword){
   const chapter=chMatch?parseInt(chMatch[1]):1;
   const result=await _fetchSingleRef(ref,keyword);
   return{
-    chunks:[{ref,chapter,startVerse,en:result.en,he:result.he}],
+    chunks:[{ref,chapter,startVerse,en:result.en,he:result.he,failed:result.failed}],
     versionTitle:result.versionTitle,
   };
 }
@@ -4371,6 +4372,9 @@ function _renderChumashContent() {
     t += '<div class="tz-head"><p class="tz-en-label">' + escapeHtml(schedule?.chumash?.subtitle || '') + '</p></div>';
   }
   if (guide && guideOn) t += '<div class="tz-guide"><p class="tz-gl">Today in the parsha</p><p class="tz-gt">' + escapeHtml(guide) + '</p></div>';
+  // Part of the day didn't come from Sefaria: say so instead of showing less
+  const missing = (window._chumashData || {}).missing || {};
+  if (missing.torah || (missing.rashi && rashiOn)) t += '<p class="sm-soon" id="ch-missing">Some of today\'s ' + (missing.torah ? 'Chumash' : 'Rashi') + ' didn\'t load. <button type="button" onclick="_dropTexts(\'chumash\');_reopenReader(\'chumash\')">Try again</button></p>';
 
   let v = '';
 
@@ -4479,7 +4483,9 @@ async function _loadChumashNative(sectionId, silent) {
       Promise.all(refs.map(_fetchRashi)).then(joinChunks),
     ]);
 
-    if (!torah.chunks.length) return false;
+    if (!torah.chunks.length || torah.chunks.every(c => c.failed)) return false;
+    // Part of the text or of Rashi didn't come: the reader says so, with Try again
+    const missing = { torah: torah.chunks.some(c => c.failed), rashi: rashi.chunks.some(c => c.failed) };
 
     // Build rashiMap keyed by "chapter:verseNum".
     // Each value is { en: string[], he: string[] } — one element per Rashi comment.
@@ -4505,7 +4511,7 @@ async function _loadChumashNative(sectionId, silent) {
     });
 
     if (!silent && _readerShows('chumash', iso)) document.getElementById('chabad-panel-sub').textContent = aliyahRef;
-    _textArrived('chumash', iso, { torahChunks: torah.chunks, rashiMap, ref: aliyahRef, versionTitle: torah.versionTitle }, silent);
+    _textArrived('chumash', iso, { torahChunks: torah.chunks, rashiMap, ref: aliyahRef, versionTitle: torah.versionTitle, missing }, silent);
     return true;
 
   } catch(e) {

@@ -2,8 +2,9 @@
  * Browser test: every Rashi of the day's aliyah is shown. Vayera's fourth
  * aliyah (Bereishis 19:21–21:4, Wed 28 Oct 2026) runs over three chapters and
  * has 58 Rashis on 29 verses. Sefaria's real text (tools/fixtures); here
- * Sefaria refuses a Rashi verse range, as it can, so the app must ask for
- * whole chapters.
+ * Sefaria refuses the Rashi range "19:21-150", so the app must ask for that
+ * chapter again, whole. Then a chapter that doesn't come at all: the reader
+ * says so, and Try again brings it.
  *
  * Run:  cd tools && npm run test:rashi
  */
@@ -32,6 +33,7 @@ const ok = (name, actual, expected) => {
 };
 
 const asked = [];
+let down = '';   // a chapter Sefaria doesn't answer for
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
 const errors = []; page.on('pageerror', e => errors.push(e.message.split('\n')[0]));
 await page.clock.install({ time: new Date('2026-10-28T10:00:00') });
@@ -45,7 +47,8 @@ await page.route(u => !u.href.startsWith(url), r => {
   const [, rashi, ch, a, b] = m;
   if (rashi) {
     asked.push(u.match(/texts\/([^?]+)/)[1]);
-    if (a) return r.fulfill({ headers: H, json: { error: 'Ending ref is beyond the end of the text' } });   // a Rashi verse range: refused
+    if (b && +b >= 150) return r.fulfill({ headers: H, json: { error: 'Ending ref is beyond the end of the text' } });   // refused
+    if (ch === down) return r.abort();
   }
   const t = (rashi ? FIX.rashi : FIX.torah)[ch], from = a ? +a - 1 : 0, to = b ? +b : undefined;
   return r.fulfill({ headers: H, json: { versionTitle: 'x', text: t.en.slice(from, to), he: t.he.slice(from, to) } });
@@ -63,11 +66,23 @@ const r = await page.evaluate(() => ({ ref: window._chumashData?.ref, shown: doc
   first: document.querySelector('#native-reader-content .rd-comm .rf-body')?.textContent.slice(0, 30) }));
 ok('the aliyah', r.ref, 'Genesis 19:21-21:4');
 ok('all 58 Rashis are shown, chapter 19 included', r.shown, 58);
-ok('Rashi asked for whole chapters only', [...new Set(asked)].sort(), ['Rashi on Genesis 19', 'Rashi on Genesis 20', 'Rashi on Genesis 21']);
+ok('the refused chapter asked for again, whole', [...new Set(asked)].sort(), ['Rashi on Genesis 19', 'Rashi on Genesis 19:21-150', 'Rashi on Genesis 20', 'Rashi on Genesis 21:1-4']);
+ok('nothing missing: no note', await page.evaluate(() => !!document.getElementById('ch-missing')), false);
 await page.evaluate(() => { localStorage.setItem('chitas_lang_chumash', 'en'); _renderChumashContent(); });
 ok('English only: still all 58', await page.evaluate(() => document.querySelectorAll('#native-reader-content .rd-comm').length), 58);
 await page.evaluate(() => { localStorage.setItem('chitas_lang_chumash', 'he'); _renderChumashContent(); });
 ok('Hebrew only: still all 58', await page.evaluate(() => document.querySelectorAll('#native-reader-content .rd-comm').length), 58);
+
+console.log('A chapter of Rashi that does not come:');
+down = '20';
+await page.evaluate(() => { localStorage.setItem('chitas_lang_chumash', 'both'); _dropTexts('chumash'); _reopenReader('chumash'); });
+await page.waitForFunction(() => document.getElementById('ch-missing'), null, { timeout: 8000 }).catch(() => {});
+ok('the reader says so', await page.evaluate(() => document.getElementById('ch-missing')?.textContent), "Some of today's Rashi didn't load. Try again");
+ok('the rest of Rashi is still there (19 and 21)', await page.evaluate(() => document.querySelectorAll('#native-reader-content .rd-comm').length), 30);
+down = '';
+await page.click('#ch-missing button');
+await page.waitForFunction(() => !document.getElementById('ch-missing') && document.querySelectorAll('#native-reader-content .rd-comm').length === 58, null, { timeout: 8000 }).catch(() => {});
+ok('Try again brings all 58', await page.evaluate(() => [!!document.getElementById('ch-missing'), document.querySelectorAll('#native-reader-content .rd-comm').length]), [false, 58]);
 ok('no errors', errors, []);
 
 await browser.close(); server.close();
