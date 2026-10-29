@@ -166,4 +166,31 @@ export const WRITTEN = {
   ],
 },
 
+'Kuntres Acharon 4|1|9': {
+  intro: 'The last note weighed prayer against Torah learned without intention. This long note asks: if Torah is greater than prayer, why is prayer now the main way to refine the world?',
+  summary: "Torah and mitzvos add light in Atzilut, which is united with G-d anyway. Prayer draws G-d's own light down to change our world, healing the sick and bringing rain.",
+  segs: [
+    ['The question', [['דבזמן הזה', 'that in the contemporary'], ['אף שתלמוד', 'though Torah study is']]],
+    ['Torah: light inside Atzilut', [['פירוש אור', 'This means that through'], ['בפנימית', 'into the inner aspect'], ['דהיינו המשכות', 'This Light is an']]],
+    ['Mitzvos: its outer side', [['שהם בחינות', 'meaning netzach-hod-yesod'], ['רק שמתלבשים', 'Subsequently they clothe themselves']]],
+    ['Prayer: light that changes the world', [['לא בדרך התלבשות', 'not merely through “garbs,”'], ['שיתרפא החולה', 'The ill will be']]],
+    ['', [['שאין שינוי', 'there is no modification'], ['וגם במצות', 'Even those mitzvot that'], ['השינוי הוא', 'that change is effected'], ['שהיא המשכת', 'The latter calls forth']]],
+    ['So prayer needs a rising from below', [['אי אפשר בלי', 'is impossible without the']]],
+    ['', []],
+    ['The fire of love', [['היא בחינת רשפי', 'is (the love of'], ['ונקראת מאדך', 'and described as meodecha'], ['והיינו על ידי', 'This is through the']]],
+    ['Life of the moment, eternal life', [['ותורה חיי עולם', 'Torah (by contrast is'], ['כי רמח פקודין', 'for the 248 commandments']]],
+  ],
+},
+
+'Kuntres Acharon 4|10|13': {
+  recap: "Prayer draws G-d's light into our world, while Torah and mitzvos add light in Atzilut. Today he explains how the 613 mitzvos divide that light.",
+  summary: 'Each mitzvah draws light into its own part of the divine "body," through love and awe. That is why Moshe longed so for the mitzvos of the Land.',
+  segs: [
+    ['Two sources for the mitzvos', [['ושסה לא תעשה', 'and the 365 prohibitions'], ['ובמקום אחר', 'Elsewhere we find that'], ['שהוא לבנונית', 'is the pristine whiteness']]],
+    ['', [['על ידי המשכת', 'through drawing the Light'], ['הכלולין', 'as contained within'], ['ומקור המוחין', 'The source of (this)', 'Both are true'], ['הוא הענג', 'which is the supreme'], ['ומתחלקת ההמשכה', 'The Light drawn forth'], ['כגון בצדקה', 'For instance, through charity'], ['נמשך אור', 'the Light of the En'], ['לחיצוניות הכלי', 'into the external aspect of the vessel'], ['ובקיום הדינין', 'while through observing a'], ['וברחמים', 'and through mercy (into']]],
+    ['The path: love and awe', [['שהן דחילו', 'which are love and'], ['שהן בחינות מוחין', 'meaning major or minor']]],
+    ['Why Moshe longed for the Land', [['שהן תכלית', 'for these are the'], ['להמשיך אור', 'to call forth the'], ['לברר הכלים', 'to purify the vessels'], ['שבהן הן הרפח', 'These worlds are the'], ['על ידי תורה ומצות', '(The purification is effected)']]],
+  ],
+},
+
 };
