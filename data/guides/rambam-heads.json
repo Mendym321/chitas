@@ -692,5 +692,535 @@
    13,
    "Passing through a neighbor's property"
   ]
+ ],
+ "Neighbors 7": [
+  [
+   1,
+   "A window that's already there"
+  ],
+  [
+   5,
+   "A new window into a courtyard"
+  ],
+  [
+   6,
+   "Once he didn't object"
+  ],
+  [
+   8,
+   "Moving a window: the way of Sedom"
+  ],
+  [
+   10,
+   "Brothers who divided a courtyard"
+  ]
+ ],
+ "Neighbors 8": [
+  [
+   1,
+   "A ledge over the courtyard"
+  ],
+  [
+   4,
+   "Ladders"
+  ],
+  [
+   5,
+   "Drainpipes and gutters"
+  ],
+  [
+   7,
+   "Beams in a wall"
+  ]
+ ],
+ "Neighbors 9": [
+  [
+   1,
+   "Keeping away from a neighbor's wall"
+  ],
+  [
+   7,
+   "Dovecotes, drainpipes and walls"
+  ],
+  [
+   10,
+   "Cisterns at the property line"
+  ],
+  [
+   11,
+   "Upstairs and downstairs"
+  ]
+ ],
+ "Neighbors 10": [
+  [
+   1,
+   "Keeping a town pleasant"
+  ],
+  [
+   5,
+   "Damage that comes by itself"
+  ],
+  [
+   6,
+   "Water through the ceiling"
+  ],
+  [
+   7,
+   "Roots and branches"
+  ]
+ ],
+ "Neighbors 11": [
+  [
+   1,
+   "Dust, chaff and shaking"
+  ],
+  [
+   4,
+   "When silence gives up the right"
+  ],
+  [
+   5,
+   "Noise and customers"
+  ],
+  [
+   6,
+   "Who has to prove it"
+  ]
+ ],
+ "Neighbors 12": [
+  [
+   1,
+   "Dividing a field"
+  ],
+  [
+   4,
+   "A new topic: the neighbor's right to buy"
+  ],
+  [
+   6,
+   "Sales it doesn't cover"
+  ],
+  [
+   11,
+   "Who has to prove it"
+  ],
+  [
+   13,
+   "Orphans and women"
+  ],
+  [
+   16,
+   "Who counts as a neighbor"
+  ]
+ ],
+ "Neighbors 13": [
+  [
+   1,
+   "A sale called a gift"
+  ],
+  [
+   4,
+   "Swaps and tricks"
+  ],
+  [
+   7,
+   "The buyer as the neighbor's agent"
+  ],
+  [
+   9,
+   "Losing the right"
+  ],
+  [
+   13,
+   "A minor, a wife, a servant"
+  ]
+ ],
+ "Neighbors 14": [
+  [
+   1,
+   "Buy now or step aside"
+  ],
+  [
+   2,
+   "Giving up the right"
+  ],
+  [
+   3,
+   "Away, sick or a child"
+  ],
+  [
+   4,
+   "A low or high price"
+  ],
+  [
+   5,
+   "Who comes first"
+  ]
+ ],
+ "Agents and Partners 1": [
+  [
+   1,
+   "A new topic: agents"
+  ],
+  [
+   2,
+   "Going against the instructions"
+  ],
+  [
+   5,
+   "Bought the wrong thing"
+  ],
+  [
+   6,
+   "Paying a debt through an agent"
+  ]
+ ],
+ "Agents and Partners 2": [
+  [
+   1,
+   "Who may be an agent"
+  ],
+  [
+   4,
+   "Did the buyer know?"
+  ],
+  [
+   6,
+   "Brokers"
+  ],
+  [
+   9,
+   "An agent who claims a loss"
+  ]
+ ],
+ "Agents and Partners 3": [
+  [
+   1,
+   "Power of attorney"
+  ],
+  [
+   3,
+   "A partner may sue for all"
+  ],
+  [
+   5,
+   "Collecting through an agent"
+  ],
+  [
+   7,
+   "Loans: the Geonim's rule"
+  ],
+  [
+   9,
+   "What the agent may not give away"
+  ]
+ ],
+ "Agents and Partners 4": [
+  [
+   1,
+   "A new topic: forming a partnership"
+  ],
+  [
+   2,
+   "Craftsmen sharing earnings"
+  ],
+  [
+   3,
+   "Sharing profit and loss"
+  ],
+  [
+   4,
+   "Ending a partnership"
+  ]
+ ],
+ "Agents and Partners 5": [
+  [
+   1,
+   "Keeping to the usual way"
+  ],
+  [
+   4,
+   "Taking the goods elsewhere"
+  ],
+  [
+   7,
+   "Savings and rescues"
+  ],
+  [
+   9,
+   "Dividing without the partner"
+  ],
+  [
+   10,
+   "Forbidden partnerships"
+  ]
+ ],
+ "Agents and Partners 6": [
+  [
+   1,
+   "Partnership or investment"
+  ],
+  [
+   2,
+   "Half loan, half trust"
+  ],
+  [
+   3,
+   "Splitting with no agreement"
+  ],
+  [
+   4,
+   "Agreed shares"
+  ],
+  [
+   5,
+   "The Rambam's own view"
+  ]
+ ],
+ "Agents and Partners 7": [
+  [
+   1,
+   "A large loss"
+  ],
+  [
+   2,
+   "Loss, then profit"
+  ],
+  [
+   3,
+   "One contract or two"
+  ],
+  [
+   4,
+   "What the worker may not do"
+  ],
+  [
+   7,
+   "Buying produce, running a store"
+  ]
+ ],
+ "Agents and Partners 8": [
+  [
+   1,
+   "Raising animals for a share"
+  ],
+  [
+   4,
+   "How long he must keep them"
+  ],
+  [
+   5,
+   "Sharecroppers"
+  ],
+  [
+   7,
+   "Brothers who don't divide"
+  ]
+ ],
+ "Agents and Partners 9": [
+  [
+   1,
+   "The partner's oath"
+  ],
+  [
+   4,
+   "Who must take it"
+  ],
+  [
+   7,
+   "After they separate"
+  ]
+ ],
+ "Agents and Partners 10": [
+  [
+   1,
+   "Disputed terms"
+  ],
+  [
+   2,
+   "\"We already divided\""
+  ],
+  [
+   5,
+   "A claimed loss"
+  ],
+  [
+   6,
+   "A debt claimed for both"
+  ]
+ ],
+ "Slaves 1": [
+  [
+   1,
+   "A new topic: the Jewish servant"
+  ],
+  [
+   3,
+   "Sold to a gentile"
+  ],
+  [
+   5,
+   "Not sold like a slave"
+  ],
+  [
+   6,
+   "No pointless work"
+  ],
+  [
+   9,
+   "As your equal"
+  ]
+ ],
+ "Slaves 2": [
+  [
+   1,
+   "How he is acquired"
+  ],
+  [
+   2,
+   "Six years, or the Jubilee"
+  ],
+  [
+   5,
+   "Illness and running away"
+  ],
+  [
+   7,
+   "Redeeming him"
+  ],
+  [
+   12,
+   "The five ways he goes free"
+  ]
+ ],
+ "Slaves 3": [
+  [
+   1,
+   "His family's support"
+  ],
+  [
+   3,
+   "A Canaanite maidservant as wife"
+  ],
+  [
+   6,
+   "Piercing the ear"
+  ],
+  [
+   12,
+   "Sold by the court or by himself"
+  ],
+  [
+   14,
+   "The parting gift"
+  ]
+ ],
+ "Slaves 4": [
+  [
+   1,
+   "The Jewish maidservant"
+  ],
+  [
+   5,
+   "Freed by growing up"
+  ],
+  [
+   7,
+   "Marrying her"
+  ],
+  [
+   10,
+   "She may not be sold on"
+  ]
+ ],
+ "Slaves 5": [
+  [
+   1,
+   "A new topic: the Canaanite slave"
+  ],
+  [
+   2,
+   "Freed with money"
+  ],
+  [
+   3,
+   "Freed with a document"
+  ],
+  [
+   4,
+   "A tooth, an eye, a limb"
+  ],
+  [
+   11,
+   "Only if done on purpose"
+  ]
+ ],
+ "Slaves 6": [
+  [
+   1,
+   "Handing over the release"
+  ],
+  [
+   4,
+   "A dying master's wishes"
+  ],
+  [
+   5,
+   "Like a get in six ways"
+  ]
+ ],
+ "Slaves 7": [
+  [
+   1,
+   "Cutting the tie completely"
+  ],
+  [
+   3,
+   "Two slaves, one document"
+  ],
+  [
+   4,
+   "Half free"
+  ]
+ ],
+ "Slaves 8": [
+  [
+   1,
+   "Sold to a gentile"
+  ],
+  [
+   6,
+   "Taken out of Eretz Yisrael"
+  ],
+  [
+   10,
+   "A slave who flees to Eretz Yisrael"
+  ],
+  [
+   12,
+   "A slave who won't take on the mitzvos"
+  ],
+  [
+   13,
+   "Freed by being treated as free"
+  ]
+ ],
+ "Slaves 9": [
+  [
+   1,
+   "Who becomes a Canaanite slave"
+  ],
+  [
+   6,
+   "Freeing a slave"
+  ],
+  [
+   7,
+   "His food"
+  ],
+  [
+   8,
+   "Closing: the way of mercy"
+  ]
  ]
 }

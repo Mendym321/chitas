@@ -72,6 +72,8 @@ await page.evaluate(() => _setTehillimLang('en'));
 ok('English: the people stay', await personal(), ['For Rebbe', 'For Rebbetzin', 'For Devorah']);
 await page.evaluate(() => _setReaderLang('tehillim', 'both'));
 ok('Both from the gear: the people stay', (await personal()).length, 3);
+await page.evaluate(() => document.querySelector('#native-reader-content .th-chapter:not(#tehillim-personal *)')?.scrollIntoView()); await page.waitForTimeout(400);
+await page.screenshot({ path: new URL('./.look/tehillim-both.png', import.meta.url).pathname }).catch(() => {});
 ok('Both is side by side: English left, Hebrew right', await page.evaluate(() => { const r = document.querySelector('.th-row'); const [en, he] = r.children; return [getComputedStyle(r).display, en.getBoundingClientRect().left < he.getBoundingClientRect().left, en.classList.contains('th-en')]; }), ['grid', true, true]);
 
 console.log('The people sheet:');

@@ -48,6 +48,10 @@ mock.module('../api/_lib/firebase.js', { namedExports: {
   deleteAuthUser: async uid => { deletedAuth.push(uid); },
 }});
 
+// ── Written Tanya guides: none at first; a test below adds one ───────────────
+const written = {};
+mock.module('../api/_lib/tanya-written-data.js', { namedExports: { WRITTEN: written } });
+
 // ── Pretend Vercel background work: collect it so tests can wait for it ──────
 const background = [];
 mock.module('@vercel/functions', { namedExports: { waitUntil: p => background.push(p) } });
@@ -213,6 +217,23 @@ check('prepare again (bust) by a normal user → 403', (await tanya({ ...T, bust
 const callsB = claudeCalls;
 const b1 = await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
 check('prepare again by an admin → prepared again', [b1.status, claudeCalls - callsB], [202, 1]);
+
+// A guide written ahead (api/_lib/tanya-written-data.js) → used, no AI call
+const { writtenKey } = await import('../api/_lib/tanya-written.js');
+check('written guides are keyed by book, chapter and verses', [writtenKey('Tanya,_Part_IV;_Iggeret_HaKodesh.29', 1, 8), writtenKey(P.chapterSlug, P.startVerse, P.endVerse)],
+  ['Iggeret HaKodesh 29|1|8', 'Likkutei Amarim 1|2|end']);
+written[writtenKey(P.chapterSlug, P.startVerse, P.endVerse)] = { chapterIntro: '', recap: 'Written recap.', summary: 'Written summary.', segments: [
+  { index: 1, heading: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', heading: 'The first soul' }, { he: 'ונפש השנית', en: 'The second soul', heading: '' }] },
+  { index: 2, heading: '', splits: [] }] };
+const callsW = claudeCalls;
+await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
+const w1 = await tanya(T, null);
+check('a written guide → used as is, no AI call, costs nothing', [claudeCalls - callsW, w1.json.recap, w1.json.blocks.length, store.get('tanya_enhanced/' + guideDocId(P.chapterSlug, P.startVerse, P.endVerse)).usage.costUSD],
+  [0, 'Written recap.', 4, 0]);
+written[writtenKey(P.chapterSlug, P.startVerse, P.endVerse)].segments[0].splits[1].he = 'מילים שלא קיימות';
+await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
+const w2 = await tanya(T, null);
+check('a written guide with a cut that isn\'t in the text → the AI prepares it instead', [claudeCalls - callsW, w2.json.recap], [1, 'So far: every Jew has two souls.']);
 
 claude.close();
 console.log('Delete account API:');
