@@ -71,7 +71,7 @@ Chumash, Tanya and Rambam are built from the same pieces, top to bottom:
 6. The text, English left and Hebrew right, with small numbers in the reader's colour (`.rd-vn`).
 7. Commentary (Rashi) in the same card shape with a colour bar on the side (`.rd-comm`), so it never looks like the guide.
 
-**When Sefaria doesn't send part of the day.** Chumash and Rashi are asked for chapter by chapter. A Rashi chapter that comes back empty or refused is asked for once more, whole. Whatever still doesn't come, the reader says so under the heading ("Some of today's Rashi didn't load. Try again"), never just showing less (`tools/test-chumash-rashi.mjs`).
+**When Sefaria doesn't send part of the day.** Rashi is always asked for as a verse range, chapter by chapter ("Rashi on Genesis 20:1-150"): asked for whole ("Rashi on Genesis 20"), Sefaria sends a chapter that shows nothing. Whatever still doesn't come, the reader says so under the heading ("Some of today's Rashi didn't load. Try again"), never just showing less (`tools/test-chumash-rashi.mjs`).
 
 **Guide lines** for Chumash and Rambam are written ahead, one line per aliyah or chapter, from the text itself: `data/guides/chumash.json` ("Vayera 3") and `data/guides/rambam.json` ("Sales 13"). Each aliyah and each Rambam chapter is read in full before its line is written (not only its opening). Written in batches and reviewed before they go in; a day without a line simply shows no card and no Guide chip. Tanya's guide is made on demand by AI (see Tanya).
 

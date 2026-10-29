@@ -1,10 +1,11 @@
 /**
  * Browser test: every Rashi of the day's aliyah is shown. Vayera's fourth
  * aliyah (Bereishis 19:21–21:4, Wed 28 Oct 2026) runs over three chapters and
- * has 58 Rashis on 29 verses. Sefaria's real text (tools/fixtures); here
- * Sefaria refuses the Rashi range "19:21-150", so the app must ask for that
- * chapter again, whole. Then a chapter that doesn't come at all: the reader
- * says so, and Try again brings it.
+ * has 58 Rashis on 29 verses. Sefaria's real text (tools/fixtures). As on the
+ * real Sefaria, a verse range ("Rashi on Genesis 20:1-150") brings the Rashi
+ * and a whole chapter ("Rashi on Genesis 20") brings nothing to show: on the
+ * phone, chapter 20 had no Rashi. Then a chapter that doesn't come at all:
+ * the reader says so, and Try again brings it.
  *
  * Run:  cd tools && npm run test:rashi
  */
@@ -47,7 +48,7 @@ await page.route(u => !u.href.startsWith(url), r => {
   const [, rashi, ch, a, b] = m;
   if (rashi) {
     asked.push(u.match(/texts\/([^?]+)/)[1]);
-    if (b && +b >= 150) return r.fulfill({ headers: H, json: { error: 'Ending ref is beyond the end of the text' } });   // refused
+    if (!a) return r.fulfill({ headers: H, json: { versionTitle: 'x', text: [], he: [] } });   // whole chapter: nothing to show
     if (ch === down) return r.abort();
   }
   const t = (rashi ? FIX.rashi : FIX.torah)[ch], from = a ? +a - 1 : 0, to = b ? +b : undefined;
@@ -66,7 +67,7 @@ const r = await page.evaluate(() => ({ ref: window._chumashData?.ref, shown: doc
   first: document.querySelector('#native-reader-content .rd-comm .rf-body')?.textContent.slice(0, 30) }));
 ok('the aliyah', r.ref, 'Genesis 19:21-21:4');
 ok('all 58 Rashis are shown, chapter 19 included', r.shown, 58);
-ok('the refused chapter asked for again, whole', [...new Set(asked)].sort(), ['Rashi on Genesis 19', 'Rashi on Genesis 19:21-150', 'Rashi on Genesis 20', 'Rashi on Genesis 21:1-4']);
+ok('Rashi asked for as verse ranges only', [...new Set(asked)].sort(), ['Rashi on Genesis 19:21-150', 'Rashi on Genesis 20:1-150', 'Rashi on Genesis 21:1-4']);
 ok('nothing missing: no note', await page.evaluate(() => !!document.getElementById('ch-missing')), false);
 await page.evaluate(() => { localStorage.setItem('chitas_lang_chumash', 'en'); _renderChumashContent(); });
 ok('English only: still all 58', await page.evaluate(() => document.querySelectorAll('#native-reader-content .rd-comm').length), 58);
