@@ -67,4 +67,49 @@ export const WRITTEN = {
   ],
 },
 
+'Iggeret HaKodesh 30|1|end': {
+  intro: "The last letter explained why the halachos are the Torah's crown. This one is an appeal for charity: today he asks people not to give less than they used to.",
+  summary: 'Every coin of charity adds up to a "great account." Giving draws G-d\'s endless kindness into a world of numbers, joining the two extremes in peace.',
+  segs: [
+    ['When a regular is missing', [['כל הרגיל לבא', '“Whoever is accustomed'], ['הקדוש ברוך הוא שואל', 'the Holy One, blessed'], ['שנאמר מי', 'for it is said']]],
+    ['So too with charity', [['ובפרט מצות הצדקה', 'and especially the precept'], ['הגם שהיא בלי נדר', 'Though it is without', "Don't give less than before"], ['אף על פי כן', 'nevertheless, it is not'], ['לתת מגרעות', 'to make a diminution'], ['מאשר כבר הורגלו', 'relative to what they'], ['להחיות רוח', 'to revive the spirit'], ['היא בחינת סוכת', 'It is “the Hut']]],
+    ['Every coin adds up', [['כמאמר רבותינו', 'Thus our Sages, of'], ['על דרך מאמר', 'and as the saying'], ['כשהוא בעיר', 'When He is in'], ['היא בחינת ומקום', 'It is the aspect']]],
+    ['Why: an arousal from below', [['המשכת חיים', '[the issuance of life'], ['אתערותא דלעילא', 'elicits an arousal from'], ['הוא הארת והמשכת', 'i.e., a radiation and'], ['אשר לגדולתו', '[to whose greatness there'], ['אל בחינת מלכותך', 'to the aspect of'], ['המחיה כל הברואים', 'It animates all the'], ['שהן בבחינת מספר', 'which are in a category'], ['כמו שכתוב אלף', 'as it is written: “A thousand']]],
+    ['The "great account"', [['כי פירוש שלום', 'The meaning of “peace”', 'Charity makes peace between extremes'], ['שהן קצה השמים', '(In our context) these are'], ['וקצה השמים לתתא', 'and the extremity of the inferior'], ['בחינת גבול', '(that is, in) a category'], ['ודי למבין', 'and suffice this for']]],
+  ],
+},
+
+'Iggeret HaKodesh 31|1|end': {
+  intro: 'The last letter urged steady giving to charity. This one explains the Tikkunim\'s words that the Shechinah is "sick" in exile, through a parable of the body.',
+  summary: 'Souls are the Shechinah\'s limbs; bound together, life flows through them back to G-d. Groundless hatred broke that bond, so the Shechinah is "sick" in exile.',
+  segs: [
+    ['The Shechinah is sick', []],
+    ["A parable: the body's blood", [['שסיבת החולי', 'The cause of illness'], ['היא התפשטות', 'lies in the extension'], ['וסובב סובב', 'and turning round and'], ['והגידים', 'through the veins'], ['וחוזר אל הלב', 'and returns to the']]],
+    ['Health', [['תמידי כסדרו', 'in its proper order'], ['אזי האדם בריא', 'man is perfectly healthy'], ['כי כל האברים', 'For all the limbs']]],
+    ['Illness', [['המונע ומעכב', 'restraining, hindering, or'], ['אזי נפסק', 'then this bond'], ['ואזי נופל', 'and man will fall']]],
+    ['The souls: limbs of the Shechinah', [['הנה כל נשמות', 'all the souls of'], ['הנקראת בשם לב', 'which is called the'], ['וכמו שכתוב ושכנתי', 'and as it is written: “And I'], ['פירוש כי לשון', 'That is, the term'], ['שוכן בעולמות', 'dwells in the worlds']]],
+    ['Why life comes through souls', [['לפי שכל הנבראים', 'This is so because'], ['דכולא קמיה', 'for all that are'], ['ואי אפשר להם', 'Thus it is impossible'], ['להיות נבראים', 'to become creatures ex'], ['כי אם על ידי הנשמות', '(This is made possible) only'], ['וקדמו לבריאת', 'and preceded the creation'], ['כמאמר רבותינו', 'Thus our Sages, of']]],
+    ['Life flows down and back up', [['מעליונים לתחתונים', 'from the upper worlds'], ['הן כמו שכתוב בספר', 'are as stated in'], ['ובכתבי האריזל', 'In the writings of'], ['וכמו שכתוב והחיות', 'and as it is written: “And the animals']]],
+    ['', [['נקראת השכינה', 'it follows that the'], ['להורות לנו', 'This teaches us that', 'United, life flows around'], ['אזי סיבוב', 'the circulation and flow'], ['ונעוץ סופן', 'and “their culmination is'], ['לקשר ולחבר', 'to bind and join'], ['וכמו שכתוב אתם', 'And thus it is written'], ['כולכם דייקא', '[stating expressly: “all'], ['ראשיכם', 'your heads…from']]],
+    ['Why the exile', [['כי חורבן בית שני', 'that the destruction of'], ['והסתלקות השכינה', 'and the withdrawal of'], ['הכל היה בעון', 'all this was because', 'The cause: groundless hatred'], ['ולכן נקראת חולה', 'And that is why'], ['כמו שכתוב סומך', 'As for “He raises']]],
+  ],
+},
+
+'Iggeret HaKodesh 32|1|end': {
+  intro: 'The last letter said groundless hatred left the Shechinah "sick" in exile. This last letter blesses those who give charity, and explains why tzedakah "stands forever."',
+  summary: "The kindness in our charity is hidden like a seed until the Resurrection, when G-d's light will shine in it. Charity from one's own heart draws that light down.",
+  segs: [
+    ['A blessing for the givers', [['לרצון להם', 'that they may be'], ['כה יתן', 'So may the L–rd'], ['ונדיב על נדיבות', 'And he who is'], ['להיות גדול', 'to be great in'], ['ותחשב לו', 'and it will be']]],
+    ['Why tzedakah is feminine', [['עומדת לשון נקבה', 'omedet, in feminine gender'], ['שמקבל התעוררות', 'because he receives the'], ['אף על פי כן', 'Nevertheless, it stands']]],
+    ['', [['מנדבת לבם', 'out of the generosity'], ['הן הנה חיות', 'are alive and subsist'], ['שאז הוא זמן', 'Then there will be', 'Hidden until the Resurrection'], ['מבחינת סובב', 'from the rank of'], ['וכמו שנתבאר', 'and as explained at']]],
+    ['Light needs a vessel', [['להתלבש בו', 'wherein the light'], ['כמו הגוף לנשמה', 'just as the body'], ['כמו שכתוב הלא', 'Thus it is written:'], ['מה אש', 'just as fire does'], ['אלא כשנאחזת', 'except when it is']]],
+    ['The vessel: kindness', [['היא מדת החסד', 'is the attribute of'], ['ליתן ולהשפיע', 'to give and effuse'], ['כמו שכתוב בתיקונים', 'Thus it is stated in'], ['ואתקריאו', 'and in this preparation'], ['וכל הגוף נכלל', 'and the whole body'], ['וכך אמר הפייט', 'And thus said the']]],
+    ['', [['שנאמר זרעו', 'as it is written: ‘Sow'], ['שהקציר הוא', 'For the harvest is', 'Like a seed in the ground'], ['וכך הוא הצדקה', 'It is likewise with'], ['היא טמונה', 'it is hidden and'], ['שיתלבש ויאיר', 'when the light of'], ['ואיהו וגרמוהי', 'And (when) He is'], ['וכל שכן', 'thus a fortiori and'], ['הסובב כל עלמין מלמעלה', 'which encompasses all worlds']]],
+    ['', [['שמקבלת הארה', 'For it receives a'], ['המתלבש בתוכה', 'which vests itself in']]],
+    ['Tzedek: kindness from within', [['היא מדת החסד המתעוררת', 'It is the attribute'], ['על ידי התעוררות', 'through the arousal of'], ['ולדבקה בו', 'to cleave to Him']]],
+    ['', [['וכמים הפנים', '[“As waters (reflect)'], ['אתערותא דלעילא', 'elicits an arousal from'], ['למטה מטה', 'to the nethermost in'], ['כמבואר במכתב', 'as explained at length']]],
+    ['', [['שמוליך וממשיך', 'For (tzedek) leads'], ['וכעת עת לקצר', 'But now is a', 'Closing'], ['הטיבה', 'Be beneficient, O'], ['כנפש תדרשנו', 'as is the wish']]],
+  ],
+},
+
 };
