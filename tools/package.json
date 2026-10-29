@@ -16,7 +16,8 @@
     "test:midnight": "node test-midnight.mjs",
     "test:tehillim": "node test-tehillim-app.mjs",
     "test:omer": "node test-omer-app.mjs",
-    "test:shm": "node test-shm-app.mjs"
+    "test:shm": "node test-shm-app.mjs",
+    "test:rashi": "node test-chumash-rashi.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
