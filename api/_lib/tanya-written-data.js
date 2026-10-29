@@ -112,4 +112,58 @@ export const WRITTEN = {
   ],
 },
 
+'Kuntres Acharon 1|1|end': {
+  intro: "Iggeret HaKodesh ended with charity drawing G-d's light into this world. Kuntres Acharon adds notes on earlier chapters; today: how reading the Torah's stories binds us to G-d's wisdom.",
+  summary: "Thought alone binds the soul above but draws nothing down; speech and deed bring G-d's light into this world. To rise, words need love and awe.",
+  segs: [
+    ['', []],
+    ['The question', []],
+    ['How high each one reaches', [['כמו שהאדם עוסק', 'that just as man'], ['וכן יש לומר', 'This might also apply', 'Thought'], ['אבל הדבור', 'But uttered speech, we', 'Speech'], ['או לבריאה', 'or to Beriah through'], ['או ליצירה', 'or to Yetzirah through'], ['ובמקרא סליק', 'Through Scripture it rises'], ['משום דבקע', 'for “it pierces'], ['מה שאין כן בהרהור', 'In contrast, thought (affects']]],
+    ['But the Zohar says thought does nothing', [['דהרהור לא עביד', 'that simply thinking achieves'], ['והיינו אפילו לטב', 'meaning that it does'], ['יש לומר דהיינו', 'But this refers only', 'The answer: it draws nothing down'], ['רק מחשבתו נשארה', 'The thought simply remains'], ['בתוספת וריבוי', 'The increase in illumination'], ['שעיקר היחוד', 'for the Union is'], ['רק הפירות', 'Only the fruits reach'], ['מה שאין כן בהרהור לא', 'However, through mere thinking'], ['ולכן לא יצא', 'Hence he has not'], ['רק להמשיך', 'which is only to'], ['כמו שכתוב בעץ', 'as Etz Chaim 26']]],
+    ['Rising up needs love and awe', [['דבלא דחילו', 'for without awe and'], ['וכמו שכתוב בשער', 'as explained in Shaar']]],
+    ['"Pierces firmaments"', [['והיינו אפילו בלא', 'means even without awe'], ['במכל שכן', 'by a fortiori reasoning'], ['היינו רקיעין דוקא', 'This, however, refers only'], ['וכל שכן בנפש', 'It certainly does not'], ['וזהו שכתוב בתקונים', 'This is the intention']]],
+  ],
+},
+
+'Kuntres Acharon 2|1|end': {
+  intro: 'The last note showed that speech and deed draw G-d\'s light down, while thought alone does not. This one asks why the Arizal says only mitzvos of action bring the union "face to face."',
+  summary: 'Good deeds lift up the good hidden in the physical world, and that lifting must come first. So thought alone can\'t do it; deeds and spoken words can.',
+  segs: [
+    ['Only deeds', [['שאין החזרת', 'the statement that there'], ['וטעם הדבר', 'The reason is that']]],
+    ['Why action?', [['יובן ממה שכתוב', 'lies in the statement'], ['כי צריך תחלה', 'that the first step'], ['ומיין נוקבין דנוקבא הן', 'and the mayin nukvin']]],
+    ['Clearing away the thorns', [['הנאחזים באחוריים', 'that attach themselves to'], ['והיינו על ידי', 'This pruning is effected'], ['המלובש במצות', 'that is enclothed in'], ['לקדושת האצילות', 'to the sanctity of']]],
+    ['Prayer counts as a deed', [['דעקימת שפתיו', 'for the movement of'], ['כי הן מנפש', 'Utterances are from the']]],
+    ['', [['ומיצירה לבריאה', 'and from Yetzirah to']]],
+    ['Why thought alone does nothing', [['כי בלי העלאת', 'for without elevating'], ['אי אפשר להמשיך', 'it is impossible to'], ['כי רוצה לינק', 'for its desire is'], ['כמו שכתוב בשער מן', 'as written in Shaar'], ['ועיין זהר', 'See also Zohar,'], ['והן כוונות התפלה', 'These are the intentions'], ['כי נפש רוח נשמה', 'For their very own']]],
+  ],
+},
+
+'Kuntres Acharon 3|1|1': {
+  intro: 'The last note showed why deeds, not thought alone, draw G-d\'s light down. Today\'s note asks about Torah and prayer said without proper intention: where do they go?',
+  summary: 'Torah learned without intention still creates angels in Yetzirah. Prayer with intention creates angels in Beriah, but prayer without it is thrown down.',
+  segs: [
+    ['The question', [['דעל ידי תורה', 'that through Torah without', 'Torah'], ['ושם הביא', 'There he quotes Zohar'], ['דלית קלא', '“There is no voice'], ['והנה מכוונת התפלה', 'Through intention in prayer', 'Prayer'], ['ובלא כוונה', 'Without intention it is'], ['כמו שכתוב בזהר פרשת', 'So it is stated'], ['ועיין שם פרשת', 'See also Parashat Vayakhel']]],
+  ],
+},
+
+'Kuntres Acharon 3|2|3': {
+  recap: 'Prayer without intention is thrown down, yet Torah without intention still creates angels. Today he explains the difference between them.',
+  summary: 'Torah learned simply is still understood, so it rises; only learning for honor stays below. Prayer with stray thoughts can be lifted later by one prayer said with intention.',
+  segs: [
+    ['Torah is still understood', [['כי לימוד התורה', 'For in the study'], ['דבלאו הכי', 'for otherwise it is'], ['רק שלומד סתם', 'It is only that'], ['מאהבת ה שבלבו', 'out of the manifest'], ['רק מאהבה המסותרת', 'but only out of'], ['אך אינו לומד', 'But he does not', 'Not learning for honor'], ['דהא לא סליק', '“For this does not'], ['והיינו משום', 'That is because his']]],
+    ['Prayer with stray thoughts', [['אלא מפני שכוונתו', '(But since his intention', 'It can still be fixed'], ['לחזור ולעלות', 'that it may still'], ['אפילו תפלה אחת', 'even one full prayer'], ['כמו שכתוב במקדש', 'Thus is written in']]],
+  ],
+},
+
+'Kuntres Acharon 3|4|end': {
+  recap: 'Torah learned without intention still rises, and prayer with stray thoughts can be lifted later. Today he settles two Zohar passages about how high prayer goes.',
+  summary: '"Rising" means different things at different levels. Even invalid prayer is above Torah learned for honor, and plain Torah rises like the breath of children learning.',
+  segs: [
+    ['Two Zohar passages', [['ובפרשת ויקהל', 'while in Vayakhel the'], ['עד אוירא', 'to the atmosphere of'], ['לא קשה מידי', 'This seeming contradiction is', 'Two different firmaments'], ['דרקיע תתאה', 'The expression in Parashat'], ['ודפרשת ויקהל', 'In Parashat Vayakhel the'], ['כמו שכתוב בעץ', 'This is supported by']]],
+    ['', [['דגם תפלה פסולה', 'that even invalid prayer'], ['והוא בזעיר', 'and this (chamber) is'], ['לא קשה מידי שהרי', 'This is no difficulty,'], ['כמו שכתוב דף', 'as noted on page'], ['אלא ודאי', 'It is certain, therefore,', 'Not the same kind of rising'], ['ואין ערוך', 'and there can be'], ['ודי למבין', 'This will suffice for']]],
+    ['', [['ממונה על הלבושים', 'are the garments that'], ['אף שהן', 'though they are in']]],
+    ['Which is higher?', [['שהיא תחת השמש', 'for such Torah attains'], ['אבל תורה סתם', 'But simple Torah, without', 'Plain Torah rises'], ['לא גרעא', 'is not inferior to'], ['דסליק לעילא מפני', 'which ascends because it'], ['וסליק לעילא אף', 'It ascends, though it'], ['ועיין שם', 'See 255b, (where it']]],
+  ],
+},
+
 };
