@@ -4256,6 +4256,22 @@ async function _fetchSingleRef(ref, keyword){
   return{en:perVerse(d.text||[]),he:perVerse(d.he||[]),versionTitle:d.versionTitle};
 }
 
+// Rashi for an aliyah: each chapter it touches, asked for whole ("Rashi on
+// Genesis 19"), never as a verse range: Sefaria can drop a commentary range
+// like "19:21-150", and with it a chapter's Rashi. Each chapter on its own,
+// so one that fails doesn't take the others; verses outside the aliyah are
+// simply never shown. → { chunks: [{ chapter, startVerse: 1, en, he }] }
+async function _fetchRashi(ref) {
+  const m = String(ref).match(/^(.+?)\s+(\d+)(?::\d+)?(?:-(?:(\d+):)?\d+)?$/);
+  if (!m) return { chunks: [], versionTitle: '' };
+  const book = m[1], from = +m[2], to = m[3] ? +m[3] : from;
+  const chunks = await Promise.all(Array.from({ length: to - from + 1 }, (_, k) => from + k).map(ch =>
+    _fetchSingleRef('Rashi on ' + book + ' ' + ch, 'metsudah')
+      .then(r => ({ ref: 'Rashi on ' + book + ' ' + ch, chapter: ch, startVerse: 1, en: r.en, he: r.he, versionTitle: r.versionTitle }))
+      .catch(() => ({ chapter: ch, startVerse: 1, en: [], he: [] }))));
+  return { chunks, versionTitle: chunks.find(c => c.versionTitle)?.versionTitle || '' };
+}
+
 // Split spanning refs into per-chapter chunks so ven= works.
 // Returns { chunks: [{ref, chapter, startVerse, en, he}], versionTitle }
 // Single-chapter refs return a one-element chunks array for consistency.
@@ -4460,7 +4476,7 @@ async function _loadChumashNative(sectionId, silent) {
     const joinChunks = parts => ({ chunks: parts.flatMap(p => p.chunks), versionTitle: parts[0]?.versionTitle || '' });
     const [torah, rashi] = await Promise.all([
       Promise.all(refs.map(r => _fetchChumashText(r, transKeyword))).then(joinChunks),
-      Promise.all(refs.map(r => _fetchChumashText('Rashi on ' + r, 'metsudah').catch(() => ({ chunks: [], versionTitle: '' })))).then(joinChunks),
+      Promise.all(refs.map(_fetchRashi)).then(joinChunks),
     ]);
 
     if (!torah.chunks.length) return false;
