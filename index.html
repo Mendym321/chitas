@@ -746,6 +746,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
 .th-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; direction:ltr; padding:4px 0; }
 .th-row .th-text { direction:rtl; text-indent:0; text-align:right; text-align-last:auto; }
+.th-rashi { font-size:.86em; color:var(--t3); }
 .th-row .th-en { margin:0; --rf-sz:14.5px; --rf-lh:1.5; }   /* as Tanya's Both */
 .th-note { font-size:13px; color:var(--t3); margin-top:4px; direction:ltr; }
 .th-wait { font-size:var(--fs-1); color:var(--t3); text-align:center; padding:6px 0 4px; direction:ltr; }
@@ -4848,11 +4849,19 @@ function _setRambamLang(lang) {
 //   side by side.
 // ════════════════════════════════════════════════════════════════════
 
-// Tehillim from Sefaria in the Koren translation (as Chumash), or Sefaria's
-// usual English if Koren has none; the same for the day's and personal chapters
+// Tehillim's English: Rabbi Silverstein (explained with Rashi, in brackets) or
+// Koren. Chosen in the reader's gear; the day's and personal chapters alike.
+const TEHILLIM_TRANSLATIONS = [
+  { id: 'silverstein', label: 'Rabbi Silverstein', sub: 'Explained with Rashi', ven: 'The Rashi Ketuvim by Rabbi Shraga Silverstein' },
+  { id: 'koren', label: 'Koren', sub: 'The Koren Jerusalem Bible', ven: 'The Koren Jerusalem Bible' },
+];
+const _tehillimTrans = () => TEHILLIM_TRANSLATIONS.find(t => t.id === localStorage.getItem('chitas_tehillim_translation')) || TEHILLIM_TRANSLATIONS[0];
+
+// Tehillim from Sefaria in the chosen translation, or Sefaria's usual English
+// if that one has none
 async function _fetchTehillim(ref) {
   const get = q => fetch('https://www.sefaria.org/api/texts/' + ref + '?context=0&commentary=0' + q).then(r => r.json());
-  const d = await get('&ven=' + encodeURIComponent('The Koren Jerusalem Bible'));
+  const d = await get('&ven=' + encodeURIComponent(_tehillimTrans().ven));
   if (!_thChapters(d.text)[0]?.length) d.text = (await get('')).text;
   return d;
 }
@@ -4860,6 +4869,7 @@ function _thClean(s) {
   return String(s || '')
     .replace(/<[^>]*>/g, '')            // HTML tags
     .replace(/\{[\u05E4\u05E1]\}/g, '')  // Sefaria's {פ} / {ס} section marks (not in a printed Tehillim)
+    .replace(/\b([LG])[\s\u00A0\u2000-\u200B]+(rd|d)\b/g, '$1-$2')   // "L rd", "G d" (the hyphen lost in Sefaria's copy) → L-rd, G-d
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -4972,6 +4982,18 @@ function _elulTehillimHTML(elul, lang) {
   return h + '</div>';
 }
 
+// Silverstein's explanation from Rashi, in [brackets] (they can nest), shown
+// small and light so the verse itself still reads straight through
+function _thNotes(en) {
+  let out = '', depth = 0;
+  for (const c of String(en || '')) {
+    if (c === '[') { if (depth++ === 0) out += '<span class="th-rashi">'; out += c; }
+    else if (c === ']' && depth) { out += c; if (--depth === 0) out += '</span>'; }
+    else out += c;
+  }
+  return out + (depth ? '</span>' : '');
+}
+
 // One chapter of Tehillim laid out like a printed Tehillim; under its number a
 // small line (the day of the month, or whose personal chapter it is)
 function _thChapterHTML(ch, lang, line) {
@@ -4986,17 +5008,27 @@ function _thChapterHTML(ch, lang, line) {
     v += ch.he.map((text, i) => {
       if (!text && !ch.en[i]) return '';
       const n = (ch.startVerse || 1) + i;
-      return '<div class="th-row"><p class="th-en rf-body"><span class="th-v">' + n + '</span>' + (ch.en[i] || '') + '</p>'
+      return '<div class="th-row"><p class="th-en rf-body"><span class="th-v">' + n + '</span>' + _thNotes(ch.en[i]) + '</p>'
         + '<p class="th-text rf-body"><span class="th-v">' + _toHebrewNumeral(n) + '</span>' + text + '</p></div>';
     }).join('');
   } else if (verses.length) {
     v += '<p class="th-text rf-body">' + verses.map((text, i) => {
       if (!text) return '';
       const n = (ch.startVerse || 1) + i;
-      return '<span class="th-v">' + (isHe ? _toHebrewNumeral(n) : n) + '</span>' + text;
+      return '<span class="th-v">' + (isHe ? _toHebrewNumeral(n) : n) + '</span>' + (isHe ? text : _thNotes(text));
     }).join(' ') + '</p>';
   }
   return v + '</div>';
+}
+
+// Another English for Tehillim: every day's and every person's chapter again,
+// keeping your place
+function _setTehillimTranslation(id) {
+  localStorage.setItem('chitas_tehillim_translation', id);
+  _dropTexts('tehillim');
+  Object.keys(_psalmText).forEach(k => delete _psalmText[k]);
+  _buildSettingsSectionOpts('tehillim');
+  if (_rv.sid === 'tehillim') { _flushReaderScroll(); _loadTehillimNative('tehillim'); }
 }
 
 function _setTehillimLang(lang) {
@@ -5547,6 +5579,23 @@ function _buildSettingsSectionOpts(sectionId) {
   } else if (sectionId === 'tehillim') {
     const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
     html += _rsLangToggle('tehillim', lang);
+    html += _rsDivider();
+    const curT = _tehillimTrans().id;
+    html += '<div>'
+      + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Translation</p>'
+      + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-s);overflow:hidden;">';
+    TEHILLIM_TRANSLATIONS.forEach((t, i) => {
+      const active = t.id === curT;
+      const border = i < TEHILLIM_TRANSLATIONS.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
+      html += '<button onclick="_setTehillimTranslation(\'' + t.id + '\')"'
+        + ' style="width:100%;padding:10px 13px;background:' + (active ? 'color-mix(in srgb, var(--rc) 10%, transparent)' : 'transparent') + ';border:none;' + border
+        + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
+        + '<span style="text-align:left;"><span style="display:block;font-size:var(--fs-2);font-weight:' + (active ? '700' : '600') + ';color:var(--t1);">' + t.label + '</span>'
+        + '<span style="display:block;font-size:var(--fs-1);color:var(--t3);">' + t.sub + '</span></span>'
+        + (active ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--rc)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
+        + '</button>';
+    });
+    html += '</div></div>';
     html += _rsDivider();
     const opts   = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
     const custom = (user.tehillimPeople || []).length;
@@ -6282,7 +6331,7 @@ function openCredits() {
     + '<p class="cr-h">Texts, from Sefaria (sefaria.org)</p>'
     + row('Chumash', 'Hebrew text, with The Koren Jerusalem Bible translation')
     + row('Rashi', 'The Metsudah Chumash / Rashi translation, Metsudah Publications')
-    + row('Tehillim', 'Hebrew text, with The Koren Jerusalem Bible translation')
+    + row('Tehillim', 'Hebrew text, with Rabbi Shraga Silverstein\'s translation (The Rashi Ketuvim) or The Koren Jerusalem Bible')
     + row('Tanya', 'Hebrew text and English translation as published on Sefaria')
     + row('Rambam', 'Mishneh Torah, translated by Rabbi Eliyahu Touger, Moznaim Publishing')
     + row('Daf Yomi', 'Talmud Bavli, with the William Davidson Edition translation')
