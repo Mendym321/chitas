@@ -744,7 +744,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .th-text { text-align:justify; text-indent:1.6em; color:var(--t1); --rf-sz:16px; --rf-lh:1.65; font-size:var(--rf-sz); line-height:var(--rf-lh); }
 .th-chapter.he .th-text { font-family:'OTSiddur','Shlomo','Noto Serif Hebrew',serif; --rf-sz:21px; --rf-lh:1.62; text-align-last:right; }
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
-.th-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; direction:ltr; }
+.th-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; direction:ltr; padding:4px 0; }
 .th-row .th-text { direction:rtl; text-indent:0; text-align:right; text-align-last:auto; }
 .th-row .th-en { margin:0; --rf-sz:14.5px; --rf-lh:1.5; }   /* as Tanya's Both */
 .th-note { font-size:13px; color:var(--t3); margin-top:4px; direction:ltr; }
@@ -4981,11 +4981,14 @@ function _thChapterHTML(ch, lang, line) {
     + '<p class="th-ch-num">' + (isHe ? _toHebrewNumeral(ch.psalmNum) + '.' : 'Psalm ' + ch.psalmNum) + '</p>';
   if (line) v += '<p class="th-day">' + line + '</p>';
   if (isBoth) {
-    // English and Hebrew side by side, each running on as one paragraph like
-    // a printed bilingual Tehillim (not a box for every passuk)
-    const run = (arr, num) => arr.map((text, i) => text ? '<span class="th-v">' + num((ch.startVerse || 1) + i) + '</span>' + text : '').filter(Boolean).join(' ');
-    v += '<div class="th-row"><p class="th-en rf-body">' + run(ch.en, n => n) + '</p>'
-      + '<p class="th-text rf-body">' + run(ch.he, _toHebrewNumeral) + '</p></div>';
+    // Each passuk side by side, English left and Hebrew right, lined up verse
+    // by verse with no rules between them, so it still reads as one text
+    v += ch.he.map((text, i) => {
+      if (!text && !ch.en[i]) return '';
+      const n = (ch.startVerse || 1) + i;
+      return '<div class="th-row"><p class="th-en rf-body"><span class="th-v">' + n + '</span>' + (ch.en[i] || '') + '</p>'
+        + '<p class="th-text rf-body"><span class="th-v">' + _toHebrewNumeral(n) + '</span>' + text + '</p></div>';
+    }).join('');
   } else if (verses.length) {
     v += '<p class="th-text rf-body">' + verses.map((text, i) => {
       if (!text) return '';
