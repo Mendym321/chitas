@@ -254,13 +254,13 @@ await check('Rambam (real Sefaria text): a book with no brackets is shown in reg
   return [root.classList.contains('rb-plain'), +getComputedStyle(root).fontWeight < 600];
 }, [true, true], { robbery: RAMBAM.robbery_13_1 });
 
-await check('Tehillim "Both": English and Hebrew side by side, each one running paragraph', () => {
+await check('Tehillim "Both": each passuk side by side, English and Hebrew, no rules between', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
   localStorage.setItem('chitas_lang_tehillim', 'both');
   (_rv.sid = 'tehillim', _renderTehillimContent());
   const rows = [...document.querySelectorAll('#native-reader-content .th-chapter:not(#tehillim-personal *) .th-row')];
-  return rows.map(r => [r.querySelector('.th-text').textContent, r.querySelector('.th-en').textContent]);
-}, [['אלַמְנַצֵּחַ בוַיֹּאמַר', '1For the leader 2And he said']]);
+  return rows.map(r => [r.querySelector('.th-text .th-v').textContent, r.querySelector('.th-en').textContent, getComputedStyle(r).borderBottomStyle]);
+}, [['א', '1For the leader', 'none'], ['ב', '2And he said', 'none']]);
 
 await check('Tehillim looks like a printed Tehillim: chapter "יח.", day "יום ג", Hebrew verse letters', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר', 'יְהוָה'], en: [] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
