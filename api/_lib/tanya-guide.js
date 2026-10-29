@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { applySplits } from './tanya-split.js';
 import { cleanTanyaHtml, isHagahahHtml, withoutNotes } from './tanya-text.js';
+import { writtenGuide } from './tanya-written.js';
 
 export const MODEL = 'claude-opus-5-5';
 const SEFARIA = 'https://www.sefaria.org';
@@ -152,6 +153,15 @@ export function assemble(ai, heSegs, enSegs, hagahah, startVerse) {
   return blocks;
 }
 
+// A guide written ahead (tanya-written.js), cut into the live text: the blocks,
+// or null if it doesn't fit (a segment or a cut it names isn't in the text)
+export function writtenBlocks(w, heSegs, enSegs, hagahah, startVerse) {
+  if (!w || (w.segments || []).length !== heSegs.length) return null;
+  const segs = segmentsInOrder(w.segments, heSegs.length, startVerse);
+  const fits = heSegs.every((he, i) => applySplits(he, enSegs[i], segs[i].splits || []).length === (segs[i].splits || []).length + 1);
+  return fits ? assemble(w, heSegs, enSegs, hagahah, startVerse) : null;
+}
+
 const words = s => withoutNotes(s).split(/\s+/).filter(Boolean).length;
 // Higher is better: small pieces, and some headings
 export function score(blocks) {
@@ -186,6 +196,23 @@ async function generate(db, cacheDoc, chapterSlug, startVerse, endVerse) {
     const prev = await fetchChapter(chapterSlug.replace(/\.\d+$/, '.' + (chapterNum - 1)));
     previous = prev.allEn.slice(-3).map(x => cleanTanyaHtml(x)).join(' ');
   }
+  // Written ahead for this portion? Then no AI call at all
+  const w = writtenGuide(chapterSlug, startVerse, endVerse);
+  const wBlocks = writtenBlocks(w, heSegs, enSegs, hagahah, startVerse);
+  if (w && !wBlocks) console.warn('tanya guide: the written guide for', chapterSlug, startVerse, "doesn't fit the text; asking the AI");
+  if (wBlocks) {
+    const guide = {
+      slug: chapterSlug, startVerse, endVerse: endVerse ?? 'end',
+      intro: startVerse === 1 ? String(w.chapterIntro || '').trim() : '',
+      recap: startVerse > 1 ? String(w.recap || '').trim() : '',
+      summary: String(w.summary || '').trim(),
+      notes, blocks: wBlocks, model: 'written', generatedAt: new Date().toISOString(),
+      usage: { inputTokens: 0, outputTokens: 0, costUSD: 0 },
+    };
+    await cacheDoc.set(guide);
+    return guide;
+  }
+
   const book = chapterSlug.replace(/\.\d+$/, '').replace(/_/g, ' ');  // e.g. "Tanya, Part IV; Iggeret HaKodesh"
   const ask = feedback => askAI({ book, chapterNum, startVerse, heSegs, enSegs: enSegs.map(withoutNotes), before, previous, feedback });
   let ai = await ask();

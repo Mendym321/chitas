@@ -1,0 +1,70 @@
+// The written Tanya guides (see tanya-written.js). Batch 1: Iggeret HaKodesh 29
+// to Kuntres Acharon 4 (30 Oct to 13 Nov 2026).
+//
+// Each segment: [its heading, [[Hebrew start, English start, heading], ...]],
+// the starts copied from the text (vowels and punctuation don't matter).
+export const WRITTEN = {
+
+'Iggeret HaKodesh 29|1|8': {
+  intro: 'The last letter consoled Rabbi Levi Yitzchak of Berditchev on his son\'s passing. This one asks why the halachos are called "the crown of the Torah," and begins to answer.',
+  summary: "A soul can't take in G-d's delight directly; it would melt away. It needs a garment made from that light, as Moshe went up inside the cloud.",
+  segs: [
+    ['The verse', []],
+    ['Three sayings of the Sages', [['זה המשתמש', 'this applies to one'], ['תנא דבי אליהו', 'It was taught in']]],
+    ['The questions', [['וגם למה השונה', 'and, also, why expressly'], ['וכן להבין מאמר', 'Furthermore, one needs'], ['אפילו לא שנה', 'that even if one'], ['ולמה אינו יוצא', 'Why is one’s duty']]],
+    ['A teaching of the Arizal', [['עד שיקיים כל', 'until he has fulfilled'], ['להשלים לבושי נפשו', 'This is in order', 'Garments for the soul'], ['שלא יהא לבושא', 'so that there will not'], ['לבד מצות התלויות', 'Excepted are the commandments'], ['שהוא מוציא', 'because he discharges'], ['והטעם הוא', 'The reason is in'], ['אחת מהנה', 'so that “Not one']]],
+    ['Why the soul needs garments', [['כי להיות שנפש', 'For the nefesh, ruach'], ['ואי אפשר לשום', 'and it is impossible'], ['בבורא ויוצר הכל', 'of the Creator and Former']]],
+    ['Even through many layers', [['והאציל בבחינת', 'and caused an emanation'], ['בבחינת צמצומים עצומים', 'by way of immense contractions'], ['הידועים ליודעי חן', 'known to the students'], ['ונקראים באדרא רבה', 'in the Idra Rabbah'], ['וכדכתיב בדניאל', 'and as written in Daniel'], ['אף על פי כן', 'nevertheless, neither the nefesh', 'Still too much to bear'], ['כי טוב ומתוק', 'For the light is good'], ['לשון נעימות', '(Noam) expresses pleasantness'], ['כמו שכתוב אז', 'as it is written: “Then'], ['והשביע בצחצחות', '“And He will satisfy']]],
+    ['', [['שלא תצא מנרתקה', 'without leaving its husk'], ['אם לא שמבחינת', 'were it not that', 'The way out: a garment of that light'], ['בדרך השתלשלות מדריגה', 'by way of an evolution'], ['עד שיברא ממנה', 'until a single garment']]],
+    ['', [['תוכל ליהנות', '(the soul) can derive'], ['ולא תתבטל ממציאותה', 'without becoming existentially'], ['וכמשל הרואה', 'It is analogous', 'Like looking at the sun through glass'], ['וכמו שכתוב ויבא', 'Thus it is written: “And Moses'], ['שנתלבש בענן', 'that is, he vested'], ['כמו שכתוב בזהר חלק', 'Thus it is explained in']]],
+  ],
+},
+
+'Iggeret HaKodesh 29|9|13': {
+  recap: "The soul can only enjoy G-d's delight through a garment made of His light. Today he asks which level of that light the garment comes from.",
+  summary: "The garment comes from the outer side of G-d's delight: His will. Just as in us, will is the outer side of delight.",
+  segs: [
+    ['The light kept for the righteous', [['הנקרא בשם נועם', 'is termed the “pleasantness'], ['וד מאות עלמין', 'and the “400 worlds'], ['כמו שכתוב ארבע', '[as it is written: “400'], ['הנה יש בו', 'In (this light) there', 'Many levels in this light'], ['אך הארה מועטת', 'But the minute radiation'], ['היא מבחינת מדרגה', 'is of the rank'], ['ונקראת בשם', 'Metaphorically speaking, it is'], ['כמו שכתוב בזהר דף', 'as stated in the Zohar']]],
+    ['A parable from our own soul', [['שמתענגת ממה', 'for (the soul) delights'], ['כמו מהשכלת', 'as, for example, in'], ['ובחינת חיצוניות', 'The aspect of the chitzoniyut', 'Will is the outer side of delight'], ['היא בחינת כח הרצון', 'is the aspect of the faculty'], ['שהוא רוצה', '(the soul) wills that']]],
+    ['So too above', [['הרצון העליון', 'The will of the Supreme'], ['לבחינת ענג העליון', 'of the aspect of the Supreme']]],
+    ['Only a parable', [['שהוא יתברך ורצונו', 'for He, blessed be He,'], ['ולא כרצון האדם', '[and not like the will'], ['אף על פי כן דברה', 'nevertheless, the Torah speaks', 'Why a parable still helps'], ['במשל ומליצה', 'with allegory and metaphor'], ['וכנראה בחוש', '(This composition of the soul)', 'You can feel it yourself'], ['שכשאדם משכיל', 'For when a person'], ['אזי באותה רגע', 'then, at least, at'], ['מכלל שהתענוג', 'Thus it follows that'], ['רק שמלובש', 'except that it is'], ['וכשהאדם מרגיש', 'Thus when man senses'], ['אזי מרגיש גם', 'he, then, also senses']]],
+    ['Why binah is the World to Come', [['שהיא בחינת התגלות', 'For it is the state'], ['שמשיגים הצדיקים', 'which the righteous apprehend'], ['דאורייתא מחכמה', 'For The Torah derives']]],
+  ],
+},
+
+'Iggeret HaKodesh 29|14|18': {
+  recap: "The soul's garment comes from G-d's will, the outer side of His delight. Today he shows how the mitzvos, which carry that will, become the garment.",
+  summary: 'G-d\'s will, the "crown," reaches down to us through the mitzvos like pillars. Through them the soul climbs up, clothed in that will.',
+  segs: [
+    ['The Supernal Will: the crown', [['ובו תרך עמודי', 'In it there are'], ['פירוש דרך משל', 'That is, by way', 'Pillars in a great house'], ['נצבים בארץ', 'standing in the ground'], ['ככה ממש', 'precisely so, metaphorically'], ['והוא מלשון כותרת', '(Keter) is an idiom'], ['שהוא מכתיר', 'for it surrounds and']]],
+    ['The will dressed in the mitzvos', [['שרובם ככולם', 'practically all of which'], ['וגם התלויות בדבור', '[even those related to'], ['וגם התלויות במחשבה', 'and also those relating'], ['הרי המצוה ניתנה', 'For the commandment is'], ['שהוא בעל בחירה', 'because he has the choice'], ['מה שאין כן הנשמה', 'The soul without a body']]],
+    ['The mitzvos are the pillars', [['נצבים מרום המעלות', 'that stand from the peak'], ['והן על דרך משל', 'Metaphorically speaking, they are', 'Hollow pillars around the soul'], ['שמקיפין ומלבישין', 'which encompass and garb'], ['ודרך עמודים אלו', 'By way of these pillars', 'Climbing up through them'], ['לצרור בצרור', 'to be bound up in'], ['פירוש להיות צרורות', 'that is, to be bound'], ['ועל ידי לבוש זה', 'And by means of this'], ['שלמעלה ממעלת', 'which transcend the rank']]],
+    ['A note: inner and outer', [['הנה מודעת זאת', 'the students of Kabbalah'], ['שיש בכל בחינה', 'within every aspect and level'], ['כמה בחינות פנים', 'There are several aspects']]],
+    ["The Rabbis' mitzvos count too", [['שהרי כבר נאמר', 'for it was already'], ['אלא הן יוצאות', 'Rather, they derive'], ['להלביש תריג', 'to garb the 613']]],
+  ],
+},
+
+'Iggeret HaKodesh 29|19|21': {
+  recap: "The mitzvos are pillars of G-d's will; through them the soul rises and is clothed in it. Today he brings the Zohar's words on this and answers a question.",
+  summary: "Even the higher Eden's garment comes from Torah learned for its own sake, and learning is an act. Intention is great only because of G-d's will in it.",
+  segs: [
+    ['The Zohar says the same', [['דאינון עובדין', 'that “The good deeds'], ['וחמי כו', 'and they see']]],
+    ['A question: the higher Eden', [['שהלבושים שם', 'where the garments are'], ['אבל בגן עדן העליון', 'while in the Higher'], ['באורייתא וצלותא', 'with respect to Torah and prayer'], ['כמו שכתוב בזהר שם', '[as mentioned in the Zohar'], ['הרי הכוונה', 'however, this devotion', 'But that too means Torah'], ['מאהבת ה', 'out of the love'], ['ומצות תלמוד תורה', '[The commandment to study'], ['דעקימת שפתיו', 'for the motion of'], ['והרהור לאו', 'and meditation is not'], ['ואינו יוצא', 'thus one does not'], ['וכן בתפלה', 'The same applies to']]],
+    ['', [['אלא מצד הארת', 'but because of the'], ['כמו שנתבאר', 'as explained at length']]],
+  ],
+},
+
+'Iggeret HaKodesh 29|22|end': {
+  recap: "The soul's garment comes from G-d's will, clothed in the mitzvos. Today he shows where that will is revealed, and answers why halachos are called the crown.",
+  summary: "G-d's will, hidden in the Written Torah, is revealed in the Oral Torah's halachos. That will is above wisdom like a crown, so halachos are the Torah's crown.",
+  segs: [
+    ['Hidden in the Written Torah', [['המלובש בתריג', 'vested in the 613'], ['הוא מופלא ומכוסה', 'is hidden and covered'], ['ואינו מתגלה', 'It is manifest only'], ['כמו מצות תפילין', 'For example, the precept', 'Example: tefillin'], ['שנאמר בתורה שבכתב', 'in the Written Torah it'], ['והיו לטוטפות', 'and they shall be for frontlets'], ['והוא מאמר סתום', 'This is an indistinct'], ['שלא פירש הכתוב', 'for Scripture did not'], ['והיכן הוא', 'and where is'], ['עד שפירשה', 'until the Oral Torah'], ['שצריך לקשור', 'that one needs to bind'], ['ובתוכם', 'and four portions'], ['והבתים יהיו', 'Also, the boxes are'], ['ומקושרים ברצועות', 'and to be tied'], ['וכל שאר פרטי', 'and all the other'], ['ועל ידך היא', 'Also, “on your hand”'], ['ובין עיניך זה', 'and “between your eyes” refers']]],
+    ['', [['אינן גלויות', 'they are not revealed'], ['כמצות לא תעשה שנאמר', 'For instance, the prohibitory', 'Example: work on Shabbos'], ['ולא פירש מה', 'it does not explain'], ['ובתורה שבעל פה נתפרש', 'In the Oral Torah,'], ['ולא טלטול', 'and not to the carrying']]],
+    ['', [['הן סתומות', 'they are indistinct']]],
+    ['The Oral Torah: the mother', [['כמו שכתוב בזהר', 'as stated in the Zohar'], ['משום שעל דרך משל', 'Metaphorically speaking, just as', 'Like a mother giving birth'], ['והאם מוציאתו', 'and the mother brings'], ['בלידתה ולד', '[when giving birth'], ['ככה ממש כל', 'so, in precisely like'], ['באים מההעלם', 'emerge from concealment'], ['ורישיה דקרא', 'And the beginning of', 'The Written Torah: the father'], ['קאי אתורה', 'refers to the Written']]],
+    ['Back to the verse', [['כי התורה שבעל פה', 'For the Oral Torah'], ['המולידה', 'who gives birth to'], ['כמו שכתוב ועלמות', 'as it is written “And alamot'], ['אלו הלכות', 'referring to the halachot']]],
+    ['', [['הנעלם בתורה', 'concealed in the Written'], ['ורצון העליון', 'And the will of'], ['וכמו כתר ועטרה', 'just as a crown'], ['לכן נקראו ההלכות', 'The halachot, therefore, are', 'The answer: the halachos are the crown'], ['והשונה הלכות', 'and “Whoever studies halachot'], ['על ידי התלבשות', 'by investing his nefesh']]],
+  ],
+},
+
+};
