@@ -4258,19 +4258,25 @@ async function _fetchSingleRef(ref, keyword){
   return{en:perVerse(d.text||[]),he:perVerse(d.he||[]),versionTitle:d.versionTitle};
 }
 
-// Rashi for an aliyah: asked for the same way as the verses, chapter by
-// chapter. A chapter that comes back empty or refused is asked for once more,
-// whole ("Rashi on Genesis 19"); verses outside the aliyah are never shown.
-// One that still fails is marked failed, and the reader says so.
+// Rashi for an aliyah, chapter by chapter, always as a verse range
+// ("Rashi on Genesis 20:1-150"). Asked for whole ("Rashi on Genesis 20"),
+// Sefaria sends a chapter of Rashi that shows nothing: Vayera's fourth aliyah
+// lost all of chapter 20 that way. A chapter with no Rashi to show is marked
+// failed, and the reader says so. → { chunks: [{ chapter, startVerse, en, he, failed }] }
 async function _fetchRashi(ref) {
-  const r = await _fetchChumashText('Rashi on ' + ref, 'metsudah').catch(() => ({ chunks: [], versionTitle: '' }));
-  const chunks = await Promise.all(r.chunks.map(async c => {
-    if (!c.failed) return c;
-    const book = c.ref.replace(/\s+\d+(:.*)?$/, ''), whole = book + ' ' + c.chapter;
-    const w = await _fetchSingleRef(whole, 'metsudah').catch(() => ({ failed: true }));
-    return w.failed ? c : { ref: whole, chapter: c.chapter, startVerse: 1, en: w.en, he: w.he };
+  const m = String(ref).match(/^(.+?)\s+(\d+)(?::(\d+))?(?:-(?:(\d+):)?(\d+))?$/);
+  if (!m) return { chunks: [], versionTitle: '' };
+  const book = m[1], ch1 = +m[2], v1 = m[3] ? +m[3] : 1;
+  const chapters = m[5] && !m[3] && !m[4];   // "Genesis 21-22": whole chapters
+  const ch2 = m[4] ? +m[4] : chapters ? +m[5] : ch1, v2 = m[5] && !chapters ? +m[5] : 150;
+  const chunks = await Promise.all(Array.from({ length: ch2 - ch1 + 1 }, (_, k) => ch1 + k).map(async ch => {
+    const from = ch === ch1 ? v1 : 1, to = ch === ch2 ? v2 : 150;
+    const r = 'Rashi on ' + book + ' ' + ch + ':' + from + '-' + to;
+    const t = await _fetchSingleRef(r, 'metsudah').catch(() => ({ en: [], he: [] }));
+    const shows = (t.en || []).some(Boolean) || (t.he || []).some(Boolean);
+    return { ref: r, chapter: ch, startVerse: from, en: t.en || [], he: t.he || [], versionTitle: t.versionTitle, failed: !shows };
   }));
-  return { chunks, versionTitle: r.versionTitle || chunks.find(c => c.versionTitle)?.versionTitle || '' };
+  return { chunks, versionTitle: chunks.find(c => c.versionTitle)?.versionTitle || '' };
 }
 
 // Split spanning refs into per-chapter chunks so ven= works.
