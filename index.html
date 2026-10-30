@@ -770,6 +770,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #chabad-mark-btn, #reader-next .rn-go { background: var(--rc, var(--ink)) !important; color: var(--rc-on, var(--on-ink)) !important; border: none !important; font-weight: 800 !important; border-radius: 999px !important; }
 .btn-quiet, #reader-next .rn-home, #chabad-mark-btn[data-state="done"] { background: var(--card2) !important; border: none !important; color: var(--t1) !important; font-weight: 700 !important; border-radius: 999px !important; }
 #chabad-mark-btn[data-state="done"] { color: var(--t2) !important; }
+#chabad-mark-btn[data-state="past"] { background: none !important; color: var(--t2) !important; font-weight: 700 !important; padding: 8px !important; }
+#chabad-mark-btn[data-state="past"] #chabad-mark-label { display:flex; align-items:center; gap:6px; font-size: var(--fs-1) !important; }
+#chabad-mark-btn .mk-k { display:block; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.75; margin-bottom:1px; }
 /* Quiz yourself: a real feature, so in the section's colour (a tint), not grey */
 #chabad-quiz-btn { background: color-mix(in srgb, var(--rc) 14%, var(--card)) !important; color: color-mix(in srgb, var(--rc) 62%, var(--t1)) !important; border: 1.5px solid color-mix(in srgb, var(--rc) 38%, transparent) !important; font-weight: 800 !important; border-radius: 999px !important; }
 #chabad-quiz-btn[data-state="done"] { background: var(--card2) !important; color: var(--t2) !important; border-color: transparent !important; font-weight: 700 !important; }
@@ -3221,6 +3224,35 @@ function _changeDay(iso, change) {
   };
 }
 
+// The reader's bottom button, for the day on screen:
+//  - today: "Mark as learned", or a quiet "Learned"
+//  - a past day you learned: no button, a small line ("✓ You learned this on Wednesday")
+//  - a past day you missed (within the last week): "Catch up · Mark Wednesday as learned"
+//  - further back, or ahead: read only
+function _setMarkBtn(markBtn, doneOnDay, onMark, weekly) {
+  const label = document.getElementById('chabad-mark-label');
+  const xp = document.getElementById('chabad-mark-xp');
+  const name = _dayName(dayOffset);
+  const when = dayOffset === -1 ? 'yesterday' : 'on ' + name;
+  if (xp) xp.textContent = '';
+  const set = (state, text, click) => {
+    markBtn.dataset.state = state;
+    markBtn.style.cursor = click ? 'pointer' : 'default';
+    markBtn.onclick = click;
+    if (label) label.innerHTML = text;
+  };
+  if (doneOnDay) {
+    if (dayOffset === 0) set('done', weekly ? 'Learned this week' : 'Learned', null);
+    else set('past', '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> You learned this ' + (weekly ? 'week' : escapeHtml(when)), null);
+  } else if (!_canMarkDay(dayOffset)) {
+    set('done', dayOffset > 0 ? 'Mark it on the day' : 'Read only', null);
+  } else if (dayOffset === 0) {
+    set('todo', weekly ? 'Mark this week as learned' : 'Mark as learned', onMark);
+  } else {
+    set('todo', '<span class="mk-k">Catch up</span>Mark ' + escapeHtml(dayOffset === -1 ? 'yesterday' : name) + ' as learned', onMark);
+  }
+}
+
 function _viewedISO() {
   const d = appNow(); d.setDate(d.getDate() + dayOffset);
   return dateISO(d);
@@ -5421,28 +5453,10 @@ function openChabadPanel(sectionId) {
   const markBtn = document.getElementById('chabad-mark-btn');
   markBtn.dataset.sectionId = sectionId;
 
-  const markLabel = document.getElementById('chabad-mark-label');
-  const markXp    = document.getElementById('chabad-mark-xp');
-  if (user.done[sectionId]) {
-    markBtn.dataset.state = 'done';
-    markBtn.style.cursor = 'default';
-    if (markLabel) markLabel.textContent = 'Learned';
-    if (markXp)    markXp.textContent    = '';
-    markBtn.onclick = null;
-  } else {
-    markBtn.dataset.state = 'todo';
-    markBtn.style.cursor = 'pointer';
-    if (markLabel) markLabel.textContent = 'Mark as learned';
-
-    markBtn.onclick = () => showConfirm(sectionId, true);
-  }
-  // Days outside the last week (and days ahead) can be read, not marked
-  if (!_canMarkDay(dayOffset)) {
-    markBtn.dataset.state = 'done';
-    markBtn.style.cursor = 'default';
-    if (markLabel) markLabel.textContent = dayOffset > 0 ? 'Mark it on the day' : 'Read only';
-    markBtn.onclick = null;
-  }
+  // For the day on screen (not always today): learned that day, a missed day
+  // you can still mark, or one you can only read
+  const dayMap = dayOffset === 0 ? (user.done || {}) : ((user.pastDone || {})[_viewedISO()] || {});
+  _setMarkBtn(markBtn, !!dayMap[sectionId], () => showConfirm(sectionId, true));
 
   // ── Quiz button — show for quizzable sections always ──
   const quizBtn = document.getElementById('chabad-quiz-btn');
@@ -7039,22 +7053,7 @@ async function openExtraReader(id) {
   // For the day you're on (a weekly track: its week)
   const weekly = WEEKLY_TRACKS.includes(id);
   if (markXp) markXp.textContent = '';
-  if (_trackDoneOn(id, _viewedISO())) {
-    markBtn.dataset.state = 'done';
-    markBtn.style.cursor = 'default';
-    if (markLabel) markLabel.textContent = weekly ? 'Learned this week' : 'Learned';
-    markBtn.onclick = null;
-  } else if (!_canMarkDay(dayOffset)) {
-    markBtn.dataset.state = 'done';
-    markBtn.style.cursor = 'default';
-    if (markLabel) markLabel.textContent = 'Read only';
-    markBtn.onclick = null;
-  } else {
-    markBtn.dataset.state = 'todo';
-    markBtn.style.cursor = 'pointer';
-    if (markLabel) markLabel.textContent = weekly ? 'Mark this week as learned' : 'Mark as learned';
-    markBtn.onclick = () => { _toggleTrack(id); closeChabadPanel(); };
-  }
+  _setMarkBtn(markBtn, _trackDoneOn(id, _viewedISO()), () => { _toggleTrack(id); closeChabadPanel(); }, weekly);
 
   // Hide quiz button
   const quizBtn = document.getElementById('chabad-quiz-btn');
