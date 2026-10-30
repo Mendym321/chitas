@@ -737,16 +737,19 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .th-range { font-size:var(--fs-1); color:var(--t3); margin-bottom:6px; text-align:center; }
 .th-chapter { margin-top:22px; }
 .th-chapter.he { direction:rtl; }
-.th-ch-num { text-align:center; font-size:30px; font-weight:700; color:var(--t1); line-height:1.2; margin-bottom:6px; }
-.th-chapter.he .th-ch-num { font-family:'OTSiddur','Shlomo',serif; font-size:34px; }
-.th-day { font-size:13px; color:var(--t1); margin-bottom:6px; }
-.th-chapter.he .th-day { font-family:'OTSiddur','Shlomo',serif; font-size:16px; text-align:right; }
+.th-ch-num { text-align:center; font-size:calc(25px * var(--rf-scale, 1)); font-weight:700; color:var(--t1); line-height:1.2; margin-bottom:6px; }
+.th-chapter.he .th-ch-num { font-family:'OTSiddur','Shlomo',serif; font-size:calc(28px * var(--rf-scale, 1)); }
+.th-day { font-size:calc(13px * var(--rf-scale, 1)); color:var(--t1); margin-bottom:6px; }
+.th-chapter.he .th-day { font-family:'OTSiddur','Shlomo',serif; font-size:calc(16px * var(--rf-scale, 1)); text-align:right; }
 .th-text { text-align:justify; text-indent:1.6em; color:var(--t1); --rf-sz:16px; --rf-lh:1.65; font-size:var(--rf-sz); line-height:var(--rf-lh); }
 .th-chapter.he .th-text { font-family:'OTSiddur','Shlomo','Noto Serif Hebrew',serif; --rf-sz:21px; --rf-lh:1.62; text-align-last:right; }
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
+.th-chapter.he .th-text .th-v { vertical-align:baseline; }   /* on the line, as a printed Tehillim */
 .th-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; direction:ltr; padding:4px 0; }
 .th-row .th-text { direction:rtl; text-indent:0; text-align:right; text-align-last:auto; }
-.th-row .th-en { margin:0; --rf-sz:14.5px; --rf-lh:1.5; }   /* as Tanya's Both */
+.th-sv { font-weight:700; }
+.th-sv .th-rashi { font-weight:400; }
+.th-row .th-en { margin:0; --rf-sz:15.5px; --rf-lh:1.5; color:var(--t1); }   /* as Tanya's Both */
 .th-note { font-size:13px; color:var(--t3); margin-top:4px; direction:ltr; }
 .th-wait { font-size:var(--fs-1); color:var(--t3); text-align:center; padding:6px 0 4px; direction:ltr; }
 .th-wait button { border:none; background:none; color:var(--c-tehillim); font:700 var(--fs-1) var(--ui-font); cursor:pointer; padding:0; }
@@ -790,10 +793,10 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .tz-opt { border:1px solid var(--border); background:none; border-radius:20px; padding:5px 12px; font:600 12px var(--ui-font); color:var(--t3); cursor:pointer; }
 .tz-opt.on { border-color:color-mix(in srgb, var(--rc, var(--purple)) 50%, transparent); color:var(--rc, var(--purple)); background:color-mix(in srgb, var(--rc, var(--purple)) 10%, transparent); }
 .tz-head { text-align:center; margin:4px 0 22px; }
-.tz-part { font-family:var(--he-font); font-size:15px; color:var(--t3); direction:rtl; }
-.tz-ch { display:flex; align-items:center; justify-content:center; gap:14px; font-family:'Vilna','Frank Ruhl Libre',serif; font-weight:700; font-size:32px; line-height:1.25; color:var(--t1); direction:rtl; }
+.tz-part { font-family:var(--he-font); font-size:calc(15px * var(--rf-scale, 1)); color:var(--t3); direction:rtl; }
+.tz-ch { display:flex; align-items:center; justify-content:center; gap:14px; font-family:'Vilna','Frank Ruhl Libre',serif; font-weight:700; font-size:calc(32px * var(--rf-scale, 1)); line-height:1.25; color:var(--t1); direction:rtl; }
 .tz-ch::before, .tz-ch::after { content:''; width:44px; height:1px; background:color-mix(in srgb, var(--rc, var(--purple)) 55%, transparent); }
-.tz-en-label { font-size:12px; color:var(--t3); margin-top:3px; }
+.tz-en-label { font-size:calc(12px * var(--rf-scale, 1)); color:var(--t3); margin-top:3px; }
 .tz-guide { background:var(--card); border-radius:16px; padding:14px 16px 12px; margin-bottom:24px; }
 .tz-gl { font:600 var(--fs-2) var(--ui-font); color:var(--rc, var(--purple)); margin-bottom:3px; }
 /* Every reader, the same pieces (DESIGN.md: "One look for the readers") */
@@ -4848,11 +4851,19 @@ function _setRambamLang(lang) {
 //   side by side.
 // ════════════════════════════════════════════════════════════════════
 
-// Tehillim from Sefaria in the Koren translation (as Chumash), or Sefaria's
-// usual English if Koren has none; the same for the day's and personal chapters
+// Tehillim's English: Rabbi Silverstein (explained with Rashi, in brackets) or
+// Koren. Chosen in the reader's gear; the day's and personal chapters alike.
+const TEHILLIM_TRANSLATIONS = [
+  { id: 'silverstein', label: 'Rabbi Silverstein', sub: 'Explained with Rashi', ven: 'The Rashi Ketuvim by Rabbi Shraga Silverstein' },
+  { id: 'koren', label: 'Koren', sub: 'The Koren Jerusalem Bible', ven: 'The Koren Jerusalem Bible' },
+];
+const _tehillimTrans = () => TEHILLIM_TRANSLATIONS.find(t => t.id === localStorage.getItem('chitas_tehillim_translation')) || TEHILLIM_TRANSLATIONS[0];
+
+// Tehillim from Sefaria in the chosen translation, or Sefaria's usual English
+// if that one has none
 async function _fetchTehillim(ref) {
   const get = q => fetch('https://www.sefaria.org/api/texts/' + ref + '?context=0&commentary=0' + q).then(r => r.json());
-  const d = await get('&ven=' + encodeURIComponent('The Koren Jerusalem Bible'));
+  const d = await get('&ven=' + encodeURIComponent(_tehillimTrans().ven));
   if (!_thChapters(d.text)[0]?.length) d.text = (await get('')).text;
   return d;
 }
@@ -4860,6 +4871,7 @@ function _thClean(s) {
   return String(s || '')
     .replace(/<[^>]*>/g, '')            // HTML tags
     .replace(/\{[\u05E4\u05E1]\}/g, '')  // Sefaria's {פ} / {ס} section marks (not in a printed Tehillim)
+    .replace(/\b([LG])[\s\u00A0\u2000-\u200B]+(rd|d)\b/g, '$1-$2')   // "L rd", "G d" (the hyphen lost in Sefaria's copy) → L-rd, G-d
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -4972,6 +4984,22 @@ function _elulTehillimHTML(elul, lang) {
   return h + '</div>';
 }
 
+// Silverstein's verse in bold, and what he adds to it from Rashi (in [ ] or
+// ( ) in his text, which can nest) in regular weight without the brackets, as
+// the Rambam reader shows the translator's additions. Koren stays as it is.
+function _thNotes(en) {
+  en = String(en || '');
+  if (_tehillimTrans().id !== 'silverstein') return en;
+  let out = '', depth = 0;
+  for (const c of en) {
+    if (c === '[' || c === '(') { if (depth++ === 0) out += '<span class="th-rashi">'; }
+    else if ((c === ']' || c === ')') && depth) { if (--depth === 0) out += '</span>'; }
+    else out += c;
+  }
+  if (depth) out += '</span>';
+  return '<span class="th-sv">' + out.replace(/\s+/g, ' ').replace(/ ([,.;:!?])/g, '$1') + '</span>';
+}
+
 // One chapter of Tehillim laid out like a printed Tehillim; under its number a
 // small line (the day of the month, or whose personal chapter it is)
 function _thChapterHTML(ch, lang, line) {
@@ -4986,17 +5014,27 @@ function _thChapterHTML(ch, lang, line) {
     v += ch.he.map((text, i) => {
       if (!text && !ch.en[i]) return '';
       const n = (ch.startVerse || 1) + i;
-      return '<div class="th-row"><p class="th-en rf-body"><span class="th-v">' + n + '</span>' + (ch.en[i] || '') + '</p>'
+      return '<div class="th-row"><p class="th-en rf-body"><span class="th-v">' + n + '</span>' + _thNotes(ch.en[i]) + '</p>'
         + '<p class="th-text rf-body"><span class="th-v">' + _toHebrewNumeral(n) + '</span>' + text + '</p></div>';
     }).join('');
   } else if (verses.length) {
     v += '<p class="th-text rf-body">' + verses.map((text, i) => {
       if (!text) return '';
       const n = (ch.startVerse || 1) + i;
-      return '<span class="th-v">' + (isHe ? _toHebrewNumeral(n) : n) + '</span>' + text;
+      return '<span class="th-v">' + (isHe ? _toHebrewNumeral(n) : n) + '</span>' + (isHe ? text : _thNotes(text));
     }).join(' ') + '</p>';
   }
   return v + '</div>';
+}
+
+// Another English for Tehillim: every day's and every person's chapter again,
+// keeping your place
+function _setTehillimTranslation(id) {
+  localStorage.setItem('chitas_tehillim_translation', id);
+  _dropTexts('tehillim');
+  Object.keys(_psalmText).forEach(k => delete _psalmText[k]);
+  _buildSettingsSectionOpts('tehillim');
+  if (_rv.sid === 'tehillim') { _flushReaderScroll(); _loadTehillimNative('tehillim'); }
 }
 
 function _setTehillimLang(lang) {
@@ -5442,8 +5480,8 @@ function _applyReaderFontSize(sectionId) {
   const step  = _getReaderFontStep(sectionId);
   const scale = _FONT_SCALES[step];
 
-  // Single <style> tag — target only .rf-body elements (body text paragraphs).
-  // Headers use .rf-header and are NOT scaled.
+  // Single <style> tag: the text (.rf-body) scales, and the printed-page
+  // headings (chapter numbers, the day line) follow it through --rf-scale.
   // Tanya hagahah uses .rf-hagahah and scales at a smaller base.
   let styleEl = document.getElementById('reader-font-style');
   if (!styleEl) {
@@ -5454,7 +5492,7 @@ function _applyReaderFontSize(sectionId) {
   styleEl.textContent = `
     #native-reader-content .rf-body   { font-size: calc(var(--rf-sz, 18px) * ${scale}) !important; line-height: var(--rf-lh, 2.0) !important; }
     #native-reader-content .rf-hagahah { font-size: calc(var(--rf-sz, 15px) * ${scale} * 0.87) !important; }
-    #native-reader-content .rf-header  { /* static — intentionally not scaled */ }
+    #native-reader-content { --rf-scale: ${scale}; }
   `;
 
   // Update the settings popover slider if it's visible
@@ -5547,6 +5585,23 @@ function _buildSettingsSectionOpts(sectionId) {
   } else if (sectionId === 'tehillim') {
     const lang = localStorage.getItem('chitas_lang_tehillim') || 'he';
     html += _rsLangToggle('tehillim', lang);
+    html += _rsDivider();
+    const curT = _tehillimTrans().id;
+    html += '<div>'
+      + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Translation</p>'
+      + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-s);overflow:hidden;">';
+    TEHILLIM_TRANSLATIONS.forEach((t, i) => {
+      const active = t.id === curT;
+      const border = i < TEHILLIM_TRANSLATIONS.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
+      html += '<button onclick="_setTehillimTranslation(\'' + t.id + '\')"'
+        + ' style="width:100%;padding:10px 13px;background:' + (active ? 'color-mix(in srgb, var(--rc) 10%, transparent)' : 'transparent') + ';border:none;' + border
+        + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
+        + '<span style="text-align:left;"><span style="display:block;font-size:var(--fs-2);font-weight:' + (active ? '700' : '600') + ';color:var(--t1);">' + t.label + '</span>'
+        + '<span style="display:block;font-size:var(--fs-1);color:var(--t3);">' + t.sub + '</span></span>'
+        + (active ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--rc)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
+        + '</button>';
+    });
+    html += '</div></div>';
     html += _rsDivider();
     const opts   = user.tehillimFixedOpts || { rebbe: true, rebbetzin: true };
     const custom = (user.tehillimPeople || []).length;
@@ -6282,7 +6337,7 @@ function openCredits() {
     + '<p class="cr-h">Texts, from Sefaria (sefaria.org)</p>'
     + row('Chumash', 'Hebrew text, with The Koren Jerusalem Bible translation')
     + row('Rashi', 'The Metsudah Chumash / Rashi translation, Metsudah Publications')
-    + row('Tehillim', 'Hebrew text, with The Koren Jerusalem Bible translation')
+    + row('Tehillim', 'Hebrew text, with Rabbi Shraga Silverstein\'s translation (The Rashi Ketuvim) or The Koren Jerusalem Bible')
     + row('Tanya', 'Hebrew text and English translation as published on Sefaria')
     + row('Rambam', 'Mishneh Torah, translated by Rabbi Eliyahu Touger, Moznaim Publishing')
     + row('Daf Yomi', 'Talmud Bavli, with the William Davidson Edition translation')

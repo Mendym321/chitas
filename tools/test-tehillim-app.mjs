@@ -164,6 +164,63 @@ console.log('Elul:');
   await p.close();
 }
 
+// Translation: Rabbi Silverstein by default (Rashi's explanation in light
+// brackets, "L rd" mended to "L-rd"), Koren from the gear. Sefaria's real text.
+console.log('Translation:');
+{
+  const FX = JSON.parse(await readFile(new URL('./fixtures/psalms-83-87.json', import.meta.url), 'utf8'));
+  const p = await browser.newPage({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
+  p.__errors = []; p.on('pageerror', e => p.__errors.push(e.message.split('\n')[0]));
+  await p.clock.install({ time: new Date('2026-10-28T10:00:00') });
+  const vens = [];
+  await p.route(u => !u.href.startsWith(url), r => {
+    const u = decodeURIComponent(r.request().url()), H = { 'Access-Control-Allow-Origin': '*' };
+    if (u.includes('hebcal.com')) return r.fulfill({ headers: H, json: { items: [] } });
+    if (!u.includes('sefaria.org/api/texts/Psalms')) return r.abort();
+    const ven = (u.match(/ven=([^&]+)/) || [])[1] || ''; vens.push(ven);
+    const tr = /Silverstein/.test(ven) ? 'silverstein' : 'koren';
+    const m = u.match(/Psalms\.(\d+)(?:-(\d+))?/), from = +m[1], to = +(m[2] || m[1]);
+    const chs = Array.from({ length: to - from + 1 }, (_, k) => FX[from + k] || { he: ['א'], [tr]: ['x'] });
+    const one = to === from;
+    return r.fulfill({ headers: H, json: { he: one ? chs[0].he : chs.map(c => c.he), text: one ? chs[0][tr] : chs.map(c => c[tr]) } });
+  });
+  await p.addInitScript(() => { try { if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1');
+    localStorage.setItem('chitas_lang_tehillim', 'both');
+    localStorage.setItem('chitas_v78', JSON.stringify({ uid: '', name: 'M', rambamTrack: '3', started: true, lastDate: '2026-10-28', done: {}, tehillimFixedOpts: { rebbe: false, rebbetzin: false } })); } } catch {} });
+  await p.goto(url, { waitUntil: 'load' });
+  await p.waitForFunction(() => typeof schedule !== 'undefined' && schedule && schedule.tehillim, null, { timeout: 8000 }).catch(() => {});
+  await p.evaluate(() => openChabadPanel('tehillim'));
+  await p.waitForFunction(() => document.querySelector('#native-reader-content .th-row'), null, { timeout: 5000 }).catch(() => {});
+  const v3 = () => p.evaluate(() => { const r = document.querySelectorAll('#native-reader-content .th-chapter')[1]?.querySelectorAll('.th-row')[2]; return r && [r.querySelector('.th-en').textContent, [...r.querySelectorAll('.th-rashi')].map(x => x.textContent + ':' + getComputedStyle(x).fontWeight), r.querySelector('.th-sv') ? getComputedStyle(r.querySelector('.th-sv')).fontWeight : null]; });
+  ok('Silverstein first', /Silverstein/.test(vens[0] || ''), true);
+  ok('84:3: the verse bold, Rashi\'s words regular without brackets, "L-rd", "G-d" mended', await v3(),
+    ['3My soul desires and longs for the destroyed courts of the L-rd. My heart and flesh sing i.e., pray for their restoration to the living G-d.', ['destroyed:400', 'i.e., pray for their restoration:400'], '700']);
+  await p.evaluate(() => { document.getElementById('app-loader')?.remove(); document.querySelectorAll('#native-reader-content .th-chapter')[1].scrollIntoView(); });
+  await p.waitForTimeout(400);
+  await p.screenshot({ path: new URL('./.look/tehillim-silverstein.png', import.meta.url).pathname }).catch(() => {});
+  await p.evaluate(() => setTheme('dark', false));
+  await p.waitForTimeout(300);
+  await p.screenshot({ path: new URL('./.look/tehillim-silverstein-dark.png', import.meta.url).pathname }).catch(() => {});
+  await p.evaluate(() => setTheme('light', false));
+  const headSize = () => p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('#native-reader-content .th-ch-num')).fontSize));
+  const h0 = await headSize();
+  await p.evaluate(() => { localStorage.setItem('chitas_fontsize_tehillim', '4'); _applyReaderFontSize('tehillim'); });
+  ok('the chapter number grows with the text size', Math.round(await headSize() / h0 * 100), 145);
+  await p.evaluate(() => document.querySelectorAll('#native-reader-content .th-chapter')[1].scrollIntoView()); await p.waitForTimeout(300);
+  await p.screenshot({ path: new URL('./.look/tehillim-large.png', import.meta.url).pathname }).catch(() => {});
+  await p.evaluate(() => { localStorage.removeItem('chitas_fontsize_tehillim'); _applyReaderFontSize('tehillim'); });
+  ok('the English is in the main ink, not grey', await p.evaluate(() => getComputedStyle(document.querySelector('.th-row .th-en')).color === getComputedStyle(document.querySelector('.th-row .th-text')).color), true);
+  await p.evaluate(() => { openReaderSettings(); });
+  await p.waitForTimeout(300);
+  await p.screenshot({ path: new URL('./.look/tehillim-translation-gear.png', import.meta.url).pathname }).catch(() => {});
+  await p.evaluate(() => _setTehillimTranslation('koren'));
+  await p.waitForFunction(() => /dwelling places/.test(document.getElementById('native-reader-content').textContent), null, { timeout: 5000 }).catch(() => {});
+  ok('Koren from the gear: the text comes again in Koren, not bold', [(await v3())?.[0].slice(0, 30), (await v3())?.[2]], ['3My soul longs, indeed, it fai', null]);
+  ok('the gear shows Koren chosen', await p.evaluate(() => [...document.querySelectorAll('#rs-section-opts button')].find(b => b.querySelector('svg polyline') && /Koren|Silverstein/.test(b.textContent))?.textContent), 'KorenThe Koren Jerusalem Bible');
+  ok('no errors', p.__errors, []);
+  await p.close();
+}
+
 await browser.close(); server.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll Tehillim app tests passed');
 process.exit(failed ? 1 : 0);
