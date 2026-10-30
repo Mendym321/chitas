@@ -746,7 +746,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
 .th-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; direction:ltr; padding:4px 0; }
 .th-row .th-text { direction:rtl; text-indent:0; text-align:right; text-align-last:auto; }
-.th-rashi { font-size:.86em; color:var(--t3); }
+.th-sv { font-weight:600; }
+.th-sv .th-rashi { font-weight:400; }
 .th-row .th-en { margin:0; --rf-sz:14.5px; --rf-lh:1.5; }   /* as Tanya's Both */
 .th-note { font-size:13px; color:var(--t3); margin-top:4px; direction:ltr; }
 .th-wait { font-size:var(--fs-1); color:var(--t3); text-align:center; padding:6px 0 4px; direction:ltr; }
@@ -4982,16 +4983,20 @@ function _elulTehillimHTML(elul, lang) {
   return h + '</div>';
 }
 
-// Silverstein's explanation from Rashi, in [brackets] (they can nest), shown
-// small and light so the verse itself still reads straight through
+// Silverstein's verse in bold, and what he adds to it from Rashi (in [ ] or
+// ( ) in his text, which can nest) in regular weight without the brackets, as
+// the Rambam reader shows the translator's additions. Koren stays as it is.
 function _thNotes(en) {
+  en = String(en || '');
+  if (_tehillimTrans().id !== 'silverstein') return en;
   let out = '', depth = 0;
-  for (const c of String(en || '')) {
-    if (c === '[') { if (depth++ === 0) out += '<span class="th-rashi">'; out += c; }
-    else if (c === ']' && depth) { out += c; if (--depth === 0) out += '</span>'; }
+  for (const c of en) {
+    if (c === '[' || c === '(') { if (depth++ === 0) out += '<span class="th-rashi">'; }
+    else if ((c === ']' || c === ')') && depth) { if (--depth === 0) out += '</span>'; }
     else out += c;
   }
-  return out + (depth ? '</span>' : '');
+  if (depth) out += '</span>';
+  return '<span class="th-sv">' + out.replace(/\s+/g, ' ').replace(/ ([,.;:!?])/g, '$1') + '</span>';
 }
 
 // One chapter of Tehillim laid out like a printed Tehillim; under its number a

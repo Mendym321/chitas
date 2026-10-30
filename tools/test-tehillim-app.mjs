@@ -191,19 +191,23 @@ console.log('Translation:');
   await p.waitForFunction(() => typeof schedule !== 'undefined' && schedule && schedule.tehillim, null, { timeout: 8000 }).catch(() => {});
   await p.evaluate(() => openChabadPanel('tehillim'));
   await p.waitForFunction(() => document.querySelector('#native-reader-content .th-row'), null, { timeout: 5000 }).catch(() => {});
-  const v3 = () => p.evaluate(() => { const r = document.querySelectorAll('#native-reader-content .th-chapter')[1]?.querySelectorAll('.th-row')[2]; return r && [r.querySelector('.th-en').textContent, [...r.querySelectorAll('.th-rashi')].map(x => x.textContent)]; });
+  const v3 = () => p.evaluate(() => { const r = document.querySelectorAll('#native-reader-content .th-chapter')[1]?.querySelectorAll('.th-row')[2]; return r && [r.querySelector('.th-en').textContent, [...r.querySelectorAll('.th-rashi')].map(x => x.textContent + ':' + getComputedStyle(x).fontWeight), r.querySelector('.th-sv') ? getComputedStyle(r.querySelector('.th-sv')).fontWeight : null]; });
   ok('Silverstein first', /Silverstein/.test(vens[0] || ''), true);
-  ok('84:3, with Rashi\'s words in light brackets and "L-rd", "G-d" mended', await v3(),
-    ['3My soul desires and longs for the [(destroyed)] courts of the L-rd. My heart and flesh sing [i.e., pray for their restoration] to the living G-d.', ['[(destroyed)]', '[i.e., pray for their restoration]']]);
+  ok('84:3: the verse bold, Rashi\'s words regular without brackets, "L-rd", "G-d" mended', await v3(),
+    ['3My soul desires and longs for the destroyed courts of the L-rd. My heart and flesh sing i.e., pray for their restoration to the living G-d.', ['destroyed:400', 'i.e., pray for their restoration:400'], '600']);
   await p.evaluate(() => { document.getElementById('app-loader')?.remove(); document.querySelectorAll('#native-reader-content .th-chapter')[1].scrollIntoView(); });
   await p.waitForTimeout(400);
   await p.screenshot({ path: new URL('./.look/tehillim-silverstein.png', import.meta.url).pathname }).catch(() => {});
+  await p.evaluate(() => setTheme('dark', false));
+  await p.waitForTimeout(300);
+  await p.screenshot({ path: new URL('./.look/tehillim-silverstein-dark.png', import.meta.url).pathname }).catch(() => {});
+  await p.evaluate(() => setTheme('light', false));
   await p.evaluate(() => { openReaderSettings(); });
   await p.waitForTimeout(300);
   await p.screenshot({ path: new URL('./.look/tehillim-translation-gear.png', import.meta.url).pathname }).catch(() => {});
   await p.evaluate(() => _setTehillimTranslation('koren'));
   await p.waitForFunction(() => /dwelling places/.test(document.getElementById('native-reader-content').textContent), null, { timeout: 5000 }).catch(() => {});
-  ok('Koren from the gear: the text comes again in Koren', (await v3())?.[0].slice(0, 30), '3My soul longs, indeed, it fai');
+  ok('Koren from the gear: the text comes again in Koren, not bold', [(await v3())?.[0].slice(0, 30), (await v3())?.[2]], ['3My soul longs, indeed, it fai', null]);
   ok('the gear shows Koren chosen', await p.evaluate(() => [...document.querySelectorAll('#rs-section-opts button')].find(b => b.querySelector('svg polyline') && /Koren|Silverstein/.test(b.textContent))?.textContent), 'KorenThe Koren Jerusalem Bible');
   ok('no errors', p.__errors, []);
   await p.close();
