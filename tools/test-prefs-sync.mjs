@@ -42,6 +42,7 @@ async function device({ signedIn = true, seed = {} } = {}) {
   await page.exposeFunction('__savePrefs', (uid, prefs) => { writes.push({ uid, keys: Object.keys(prefs) }); Object.assign(cloud.prefs, prefs); });
   await page.route(u => !u.href.startsWith(url), r => {
     const u = r.request().url(), H = { 'Access-Control-Allow-Origin': '*' };
+    if (u.includes('hebcal.com/converter')) return r.fulfill({ headers: H, json: { hd: 12, hm: 'Cheshvan', hy: 5787 } });
     if (u.includes('hebcal.com')) return r.fulfill({ headers: H, json: { items: [] } });
     return r.abort();
   });
@@ -99,6 +100,21 @@ console.log('A new device takes the account\'s choices over its defaults:');
 const tablet = await device({ seed: { chitas_lang_tehillim: 'en' } });
 await loadAccount(tablet);
 ok('its old setting gives way to the account', await get(tablet, 'chitas_lang_tehillim'), 'he');
+
+console.log('The reader that\'s open is drawn again, quietly, on the same words:');
+await tablet.evaluate(() => { localStorage.setItem('hayomYomLang', 'he'); window._hayomYomLang = null; });
+await tablet.evaluate(() => openExtraReader('hayomYom'));
+await tablet.waitForFunction(() => document.querySelector('#native-reader-content .hy-he'), null, { timeout: 8000 }).catch(() => {});
+await tablet.evaluate(() => document.querySelector('#native-reader-content .hy-he').dataset.mark = 'first');
+const shown = p => p.evaluate(() => [_rv.sid, !!document.querySelector('#native-reader-content .hy-he'), !!document.querySelector('#native-reader-content .hy-en'), document.querySelector('#native-reader-content [data-mark]')?.dataset.mark || 'drawn again']);
+ok('Hayom Yom open on the tablet, in Hebrew', await shown(tablet), ['extra_hayomYom', true, false, 'first']);
+cloud.prefs.chitas_lang_rambam = { v: 'en', t: Date.parse(now()) + 1e6 };   // another reader's choice
+await loadAccount(tablet); await tablet.waitForTimeout(600);
+ok('another reader\'s choice leaves it alone', await shown(tablet), ['extra_hayomYom', true, false, 'first']);
+cloud.prefs.hayomYomLang = { v: 'both', t: Date.parse(now()) + 2e6 };       // its own, from the laptop
+await loadAccount(tablet); await tablet.waitForTimeout(1500);
+ok('its own choice: drawn again at once, in Both, still open', await shown(tablet), ['extra_hayomYom', true, true, 'drawn again']);
+ok('…with no message', await tablet.evaluate(() => [...document.querySelectorAll('.toast, #toast')].filter(e => e.offsetParent && e.textContent.trim()).length), 0);
 
 console.log('Signed out:');
 const guest = await device({ signedIn: false });
