@@ -406,8 +406,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .ml-tile:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
 .ml-tile-top { display:flex; align-items:center; justify-content:space-between; min-height:28px; }
 .ml-tile-bar { width:22px; height:4px; border-radius:2px; background:var(--c); }
-.ml-tile .check { width:28px; height:28px; border-color:color-mix(in srgb, var(--c) 55%, transparent); }
-.ml-tile .check.on { background:var(--c); border-color:var(--c); color:#fff; }
+.ml-tile .check, .om-row .check { width:28px; height:28px; border-color:color-mix(in srgb, var(--c) 55%, transparent); }
+.ml-tile .check.on, .om-row .check.on { background:var(--c); border-color:var(--c); color:#fff; }
 .ml-tile .ml-n { display:block; font-size:16px; font-weight:800; }
 .ml-tile .ml-p { display:block; margin-top:1px; font-size:12.5px; line-height:1.35; color:var(--t2); }
 .ml-tile.done { background:color-mix(in srgb, var(--c) 7%, var(--card)); }
@@ -6913,29 +6913,36 @@ async function _loadExtraSubtitle(id) {
 }
 
 // Mark done / unmark for extra tracks
+// After marking or unmarking a sefer: its tile, and the Omer card (Sotah) too
+function _refreshTracks() {
+  const iso = _viewedISO();
+  _renderExtraTrackCards(iso, dayOffset === 0);
+  _renderOmer(iso, dayOffset === 0);
+}
+
 function markExtraDone(id) {
   _changeDay(dateISO(appNow()), day => { day[id] = true; });
   fire('Nice! ' + (EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' done.', 'done');
   haptic('tap');
-  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
+  _refreshTracks();
 }
 
 function unmarkExtraDone(id) {
   if (!user.done?.[id]) return;
   _changeDay(dateISO(appNow()), day => { day[id] = false; });
-  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
+  _refreshTracks();
 }
 
 function markExtraDonePast(id, iso) {
   _changeDay(iso, day => { day[id] = true; });
   fire((EXTRA_TRACK_DEFS[id]?.label || 'Learning') + ' marked', 'xp');
-  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
+  _refreshTracks();
 }
 
 function unmarkExtraDonePast(id, iso) {
   if (!user.pastDone?.[iso]?.[id]) return;
   _changeDay(iso, day => { day[id] = false; });
-  _renderExtraTrackCards(_viewedISO(), dayOffset === 0);
+  _refreshTracks();
 }
 
 // ── Extra daily learning tracks ───────────────────────────────────────────────
@@ -8284,9 +8291,12 @@ function _renderOmer(iso, isToday) {
   let learned = 0;
   for (let k = 2; k <= (n || 0); k++) { const d = new Date(day); d.setDate(d.getDate() - (n - k)); if (_trackDoneOn('sotah', dateISO(d))) learned++; }
   const sub = learned === 48 ? 'All 48 dafim: a siyum on Maseches Sotah' : 'Daf ' + daf + (daf === 49 ? ', the last' : '') + (learned ? ' · ' + learned + ' of 48 learned' : '');
-  if (daf) h += '<button type="button" class="ml-r om-row" onclick="openExtraReader(\'sotah\')">'
+  // Sotah's row: tap to read; the box marks the daf learned, like More learning's tiles
+  const sOn = !!_trackDoneOn('sotah', iso), tick = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+  if (daf) h += '<div class="ml-r om-row" role="button" tabindex="0" style="--c:' + sotah.color + ';" onclick="openExtraReader(\'sotah\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openExtraReader(\'sotah\')}">'
     + '<span class="ml-bar" style="background:' + sotah.color + '"></span><span class="ml-x"><span class="ml-n">Sotah</span><span class="ml-p">' + sub + '</span></span>'
-    + _mlCircle(!!_trackDoneOn('sotah', iso), sotah.color) + '</button>';
+    + (_canMarkDay(_offsetOf(iso)) ? '<button type="button" class="check' + (sOn ? ' on' : '') + '" aria-label="' + (sOn ? 'Unmark' : 'Mark done:') + ' Sotah daf ' + daf + '" onclick="event.stopPropagation();_toggleTrack(\'sotah\')">' + tick + '</button>'
+      : (sOn ? '<span class="check on" aria-label="Learned">' + tick + '</span>' : '')) + '</div>';
   else if (n === 1) h += '<p class="om-note">Sotah starts tomorrow with daf 2, a daf a day until Shavuos.</p>';
   el.innerHTML = h;
   el.style.display = 'block';
