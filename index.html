@@ -4136,14 +4136,14 @@ document.addEventListener('click', _prefsSoon, true);
 window._cloudPrefsIn = p => {
   if (!p || typeof p !== 'object') p = {};
   _prefsNoticed();                                   // this device's own changes first, dated
-  const known = _prefsKnown();
+  const known = _prefsKnown(), came = [];
   let moved = false;
   for (const k in p) {
     const c = p[k];
     if (!_isPrefKey(k) || !c || typeof c !== 'object' || !((c.t || 0) > (known[k] ? known[k].t || 0 : 0))) continue;
     const v = c.v == null ? null : String(c.v);
     try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {}
-    known[k] = { v, t: c.t }; delete _prefsOut[k]; moved = true;
+    known[k] = { v, t: c.t }; delete _prefsOut[k]; moved = true; came.push(k);
     try {   // what the app keeps from the old choice goes with it
       if (k === 'hayomYomLang') window._hayomYomLang = null;
       if (k === 'chitas_chumash_translation') _dropTexts('chumash');
@@ -4151,10 +4151,27 @@ window._cloudPrefsIn = p => {
     } catch {}
   }
   if (moved) try { localStorage.setItem('chitas_prefs_known', JSON.stringify(known)); } catch {}
+  if (came.length) setTimeout(() => _redrawForPrefs(came), 50);
   // Newer here than in the account (or not there yet): send
   for (const k in known) if (_isPrefKey(k) && (known[k].t || 0) > ((p[k] && p[k].t) || 0)) _prefsOut[k] = known[k];
   if (Object.keys(_prefsOut).length) _prefsSoon();
 };
+
+// The reader a choice belongs to ('tehillim', 'extra_hayomYom', …), or null (the Omer's)
+const _prefSid = k => /^chitas_lang_extra_/.test(k) ? 'extra_' + k.slice(18)
+  : k === 'hayomYomLang' ? 'extra_hayomYom' : k === 'chitas_daf_commentary' ? 'extra_dafYomi'
+  : ((k.match(/^chitas_(?:lang_)?(chumash|tehillim|tanya|rambam)(?:_|$)/) || [])[1] || null);
+// A choice from another device for the reader that's open: it's drawn again
+// at once, quietly, on the same words (as when you change it in the gear).
+// Not inside a maamar or sicha (a piece within a piece): it's used next time.
+function _redrawForPrefs(keys) {
+  const sid = String(_rv.sid || '');
+  if (!sid || sid.includes(':') || !keys.some(k => _prefSid(k) === sid)) return;
+  if (document.getElementById('chabad-panel')?.style.display === 'none') return;
+  if (_rv.touched) _storePlace(_readerPlace());      // keep these words
+  const id = sid.replace(/^extra_/, '');
+  try { _reopenReader(id); } catch (e) { console.warn('prefs redraw:', e?.message); }
+}
 
 // Save a place for the piece on screen (at the top: forget it, so it opens at the top)
 function _storePlace(place) {
