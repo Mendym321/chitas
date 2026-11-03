@@ -529,6 +529,18 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .lt-sefer .lt-open { font-weight:400; font-size:1.4em; line-height:1; }   /* the opening words: the title's face, larger */
 .lt-sefer .lt-em { font-weight:400; font-size:1.15em; }
 .lt-sefer .lt-body small { font-size:.78em; color:var(--t2); }
+.hy-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; direction:rtl; margin:14px 0 18px; padding:9px 2px 8px; border-top:3px double var(--t1); border-bottom:1px solid var(--border); font-family:'DachHeilig','Frank Ruhl Libre',serif; color:var(--t1); }
+.hy-head span { font-size:17px; }
+.hy-head b { font-weight:400; font-size:23px; }
+.hy-head-en { direction:ltr; font-family:var(--ui-font); }
+.hy-head-en span { font-size:13px; font-weight:600; color:var(--t2); }
+.hy-head-en b { font-size:17px; font-weight:800; }
+.hy-he { direction:rtl; text-align:justify; text-align-last:right; text-indent:1.4em; font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-synthesis:none; --rf-sz:21px; --rf-lh:1.6; color:var(--t1); margin:0 0 .55em; }
+.hy-en { --rf-sz:17px; --rf-lh:1.6; color:var(--t1); margin:0 0 .7em; }
+.hy-pair { margin-bottom:22px; }
+.hy-pair .hy-he { margin-bottom:.35em; }
+.hy-pair .hy-en { color:var(--t2); }
+@media (min-width:700px) { .hy-pair { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; } .hy-pair > .hy-he { order:2; } .hy-pair > :first-child:not(.hy-he) { order:2; } .hy-pair .hy-en { color:var(--t1); } }
 .lt-pg { display:inline-block; font-family:var(--ui-font); font-size:10px; font-weight:700; color:var(--t3); border:1px solid var(--border); border-radius:999px; padding:0 6px; margin:0 3px; line-height:16px; vertical-align:middle; text-indent:0; }
 .ml-foot { margin:12px 4px 0; font-size:var(--fs-1); color:var(--t3); line-height:1.45; }
 /* ── Direction C: header and rings, chips, tiles ── */
@@ -1210,6 +1222,7 @@ window._fb = {
       const snap = await getDoc(doc(db, 'users', uid));
       const data = snap.exists() ? snap.data() : null;
       if (data) window._cloudPlacesIn?.(data.places);   // your places in the reader, from your other devices
+      if (data) window._cloudPrefsIn?.(data.prefs || {});   // your reading choices, from your other devices
       return data;
     } catch(e) { console.error('loadUser:', e); return null; }
   },
@@ -1220,6 +1233,12 @@ window._fb = {
     const args = [];
     for (const k in places) args.push(new FieldPath('places', k), places[k]);
     drop.forEach(k => args.push(new FieldPath('places', k), deleteField()));
+    if (args.length) await updateDoc(doc(db, 'users', uid), ...args);
+  },
+  // Your reading choices (see _sendPrefs): each its own field inside prefs, like places
+  async savePrefs(uid, prefs) {
+    const args = [];
+    for (const k in prefs) args.push(new FieldPath('prefs', k), prefs[k]);
     if (args.length) await updateDoc(doc(db, 'users', uid), ...args);
   },
 
@@ -4065,6 +4084,76 @@ function _sendPlaces() {
   });
 }
 
+// ── YOUR READING CHOICES ON EVERY DEVICE ─────────────────────────────────────
+// Signed in, the choices you make in the readers (language, translation,
+// Rashi, the guides, nekudos, Daf commentary, the Omer's language) follow you:
+// each is kept in your account (users/{you}, in prefs: one field per choice,
+// never your progress), dated, and the newest wins. Text size, light/dark and
+// reminders stay with the device: they belong to its screen. A choice goes
+// out a moment after you make it (or when you leave the app) and comes in
+// with your account when the app opens or comes back (loadUser).
+const _PREF_KEYS = ['chitas_lang_chumash', 'chitas_lang_tehillim', 'chitas_lang_tanya', 'chitas_lang_rambam', 'hayomYomLang',
+  'chitas_chumash_translation', 'chitas_tehillim_translation', 'chitas_chumash_rashi', 'chitas_chumash_guide', 'chitas_rambam_guide',
+  'chitas_tanya_nikud', 'chitas_tanya_guide', 'chitas_daf_commentary', 'chitas_omer_lang'];
+const _isPrefKey = k => _PREF_KEYS.includes(k) || /^chitas_lang_extra_[A-Za-z]+$/.test(k);
+var _prefsOut = {}, _prefsTimer = null;
+function _prefsKnown() { try { return JSON.parse(localStorage.getItem('chitas_prefs_known') || '{}') || {}; } catch { return {}; } }
+// This device's choices that changed since the last look, dated now. The very
+// first look dates them long ago: the account's (from your other devices)
+// then win, and a choice you make from now on wins over both.
+function _prefsNoticed() {
+  let first = false, known;
+  try { first = localStorage.getItem('chitas_prefs_known') === null; } catch {}
+  known = _prefsKnown();
+  const keys = new Set(Object.keys(known)), t = first ? 1 : Date.now();
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (_isPrefKey(k)) keys.add(k); } } catch {}
+  let changed = first;
+  for (const k of keys) {
+    if (!_isPrefKey(k)) continue;
+    let v = null; try { v = localStorage.getItem(k); } catch {}
+    if ((known[k] ? known[k].v : null) === v) continue;
+    known[k] = { v, t }; _prefsOut[k] = known[k]; changed = true;
+  }
+  if (changed) try { localStorage.setItem('chitas_prefs_known', JSON.stringify(known)); } catch {}
+}
+function _sendPrefs() {
+  clearTimeout(_prefsTimer); _prefsTimer = null;
+  _prefsNoticed();
+  if (!_placesSynced() || !window._fb?.savePrefs) return;
+  const out = _prefsOut; _prefsOut = {};
+  if (!Object.keys(out).length) return;
+  window._fb.savePrefs(user.uid, out).catch(e => {
+    console.warn('prefs:', e?.message);
+    for (const k in out) if (!_prefsOut[k]) _prefsOut[k] = out[k];   // try again with the next one
+  });
+}
+const _prefsSoon = () => { clearTimeout(_prefsTimer); _prefsTimer = setTimeout(_sendPrefs, 2000); };
+// Choices are made with a tap (the gear, Profile, a reader's switch): a moment after any tap, look
+document.addEventListener('click', _prefsSoon, true);
+// From the account: a choice made more recently on another device is used here
+window._cloudPrefsIn = p => {
+  if (!p || typeof p !== 'object') p = {};
+  _prefsNoticed();                                   // this device's own changes first, dated
+  const known = _prefsKnown();
+  let moved = false;
+  for (const k in p) {
+    const c = p[k];
+    if (!_isPrefKey(k) || !c || typeof c !== 'object' || !((c.t || 0) > (known[k] ? known[k].t || 0 : 0))) continue;
+    const v = c.v == null ? null : String(c.v);
+    try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {}
+    known[k] = { v, t: c.t }; delete _prefsOut[k]; moved = true;
+    try {   // what the app keeps from the old choice goes with it
+      if (k === 'hayomYomLang') window._hayomYomLang = null;
+      if (k === 'chitas_chumash_translation') _dropTexts('chumash');
+      if (k === 'chitas_tehillim_translation') { _dropTexts('tehillim'); Object.keys(_psalmText).forEach(x => delete _psalmText[x]); }
+    } catch {}
+  }
+  if (moved) try { localStorage.setItem('chitas_prefs_known', JSON.stringify(known)); } catch {}
+  // Newer here than in the account (or not there yet): send
+  for (const k in known) if (_isPrefKey(k) && (known[k].t || 0) > ((p[k] && p[k].t) || 0)) _prefsOut[k] = known[k];
+  if (Object.keys(_prefsOut).length) _prefsSoon();
+};
+
 // Save a place for the piece on screen (at the top: forget it, so it opens at the top)
 function _storePlace(place) {
   if (!_rv.sid || !place) return;
@@ -4088,6 +4177,7 @@ function _flushReaderScroll() {
   if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
   _saveSpecialPlace(true) || _savePlace();
   _sendPlaces();   // and to your account now, not in 30 seconds
+  _sendPrefs();
 }
 // Phones close apps without warning: save whenever the app goes out of view
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') _flushReaderScroll(); });
@@ -7529,7 +7619,6 @@ function _hayomYomData() {
 async function _loadHayomYomNative(silent) {
   const def    = EXTRA_TRACK_DEFS.hayomYom;
   const COLOR  = def ? def.color : '#B85C38';
-  const HE_FONT = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
 
   const loadEl   = document.getElementById('native-reader-loading');
   const contEl   = document.getElementById('native-reader-content');
@@ -7573,7 +7662,7 @@ async function _loadHayomYomNative(silent) {
   let docs = [];
   try {
     const all = await _hayomYomData();
-    for (const key of keys) if (all[key]) docs.push({ key, hebrew: all[key].he, english: all[key].en });
+    for (const key of keys) if (all[key]) docs.push({ key, hebrew: all[key].he, english: all[key].en, day: all[key].day });
   } catch(e) {
     console.error('Hayom Yom:', e);
     if (!silent) _hayomYomError('Could not load Hayom Yom.');
@@ -7591,35 +7680,40 @@ async function _loadHayomYomNative(silent) {
   const dateLabel = isChaiElul ? 'Chai Elul · ' + hd + ' ' + hm : hd + ' ' + hm;
   if (subEl) subEl.textContent = hebMonthSpelling(hd + ' ' + hm);
 
-  // Laid out like the other readers: the language switch on top, then the
-  // text in rows, English on the left and Hebrew on the right. A row pairs a
-  // paragraph with its translation only when both have the same number of
-  // paragraphs; otherwise (about one day in seven) the two stand as whole
-  // columns side by side, so nothing is put next to the wrong paragraph.
-  const heStyle = 'direction:rtl;text-align:right;font-family:' + HE_FONT + ';--rf-sz:19px;--rf-lh:1.92;color:var(--t1);';
-  const enStyle = '--rf-sz:15px;--rf-lh:1.82;color:var(--t1);';
+  // Laid out like the printed Hayom Yom: the day's line between two rules
+  // (weekday, date, year), then the text as a page: Hebrew in the Heilig
+  // face, justified, each paragraph's first line indented, no lines between
+  // paragraphs. The bracketed expansions ("צ"צ [צמח צדק]") are left out, as
+  // in print. Both: each Hebrew paragraph with its English under it on a
+  // phone, side by side on a wide screen; when the paragraphs don't pair up
+  // (about one day in seven), the whole Hebrew, then the whole English.
   const paras = t => (t || '').trim().split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).map(x => escapeHtml(x).replace(/\n/g, '<br>'));
-  const he = (x, extra = '') => '<p class="rf-body" style="' + heStyle + extra + '">' + x + '</p>';
-  const en = (x, extra = '') => '<p class="rf-body" style="' + enStyle + extra + '">' + x + '</p>';
-  const ROW = 'padding:14px 0;border-bottom:1px solid var(--border);';
+  const heClean = t => String(t || '').replace(/\s*\[[^\]\n]*\]/g, '').replace(/ +([,.:;?!])/g, '$1');
+  const he = x => '<p class="rf-body hy-he" lang="he">' + x + '</p>';
+  const en = x => '<p class="rf-body hy-en">' + x + '</p>';
+  // The day's line as the book prints it: the date in the middle (the same
+  // date every year), and beside it that day's weekday and year in the book's
+  // own calendar (19 Kislev 5703 to 18 Kislev 5704; day: [weekday, year], from
+  // tools/generate-hayom-yom-days.mjs). Today's weekday would be wrong there.
+  const gersh = h => h.length === 1 ? h + '׳' : h.slice(0, -1) + '״' + h.slice(-1);
+  const HE_MONTH = { Tishrei: 'תשרי', Cheshvan: 'חשון', Kislev: 'כסלו', Tevet: 'טבת', "Sh'vat": 'שבט', Adar: 'אדר', 'Adar I': 'אדר א׳', 'Adar II': 'אדר ב׳', Nisan: 'ניסן', Iyyar: 'אייר', Sivan: 'סיון', Tamuz: 'תמוז', Av: 'מנחם אב', Elul: 'אלול' };
+  const HE_DAY = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת קודש'];
+  const EN_DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Shabbos'];
+  const orig = Array.isArray(docs[0].day) ? docs[0].day : null;
+  const head = lang === 'en'
+    ? '<div class="hy-head hy-head-en"><span>' + (orig ? EN_DAY[orig[0]] : '') + '</span><b>' + escapeHtml(hebMonthSpelling(hd + ' ' + hm)) + '</b><span>' + (orig ? orig[1] : '') + '</span></div>'
+    : '<div class="hy-head"><span>' + (orig ? HE_DAY[orig[0]] : '') + '</span><b>' + gersh(hebNumeral(+hd)) + ' ' + (HE_MONTH[hm] || hm) + '</b><span>' + (orig ? 'ה׳' + gersh(hebNumeral(orig[1] % 1000)) : '') + '</span></div>';
 
-  let html = _langSeg(lang, "_hayomYomSetLang('LANG')")
-    + (isChaiElul ? '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin:4px 0 6px;">' + dateLabel + '</p>' : '');
+  let html = _langSeg(lang, "_hayomYomSetLang('LANG')") + head
+    + (isChaiElul ? '<p class="lbl" style="margin:0 0 10px;">' + dateLabel + '</p>' : '');
 
   docs.forEach((data, idx) => {
-    if (isNonLeapAdar && docs.length === 2) {
-      html += '<p style="font-size:var(--fs-1);font-weight:700;color:' + COLOR + ';margin:14px 0 2px;">' + (idx === 0 ? 'Adar I' : 'Adar II') + '</p>';
-    }
-    const H = paras(data.hebrew), E = paras(data.english);
+    if (isNonLeapAdar && docs.length === 2) html += '<p class="lbl" style="margin:16px 0 8px;">' + (idx === 0 ? 'Adar I' : 'Adar II') + '</p>';
+    const H = paras(heClean(data.hebrew)), E = paras(data.english);
     const show = lang === 'both' && H.length && E.length ? 'both' : (lang === 'en' && E.length) || !H.length ? 'en' : 'he';
-    if (show === 'both' && H.length === E.length) {
-      H.forEach((h, i) => { html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;' + ROW + '">' + en(E[i]) + he(h) + '</div>'; });
-    } else if (show === 'both') {
-      const col = (list, f) => '<div>' + list.map(x => f(x, 'margin-bottom:14px;')).join('') + '</div>';
-      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;padding:14px 0;">' + col(E, en) + col(H, he) + '</div>';
-    } else {
-      (show === 'en' ? E : H).forEach(x => { html += '<div style="' + ROW + '">' + (show === 'en' ? en(x) : he(x)) + '</div>'; });
-    }
+    if (show === 'both' && H.length === E.length) H.forEach((h, i) => { html += '<div class="hy-pair">' + he(h) + en(E[i]) + '</div>'; });
+    else if (show === 'both') html += '<div class="hy-pair"><div>' + H.map(he).join('') + '</div><div>' + E.map(en).join('') + '</div></div>';
+    else html += '<div class="hy-page">' + (show === 'en' ? E.map(en) : H.map(he)).join('') + '</div>';
   });
 
   if (silent || !_readerShows('extra_hayomYom', iso)) return;   // you've moved on
