@@ -80,6 +80,7 @@ for (const scheme of ['light', 'dark']) {
   console.log(`\nThe reader's gear (${scheme}):`);
   const page = await open(390, scheme);
   const looks = [];
+  ok('on a phone, the bottom bar is its three tabs only', await page.evaluate(() => [...document.querySelectorAll('.tabbar > *')].filter(e => getComputedStyle(e).display !== 'none').length) === 3);
   for (const id of [...READERS, 'hayomYom', ...EXTRAS]) {
     await page.evaluate(id => (['chumash', 'tehillim', 'tanya', 'rambam', 'hayomYom'].includes(id) ? openChabadPanel(id) : openExtraReader(id)), id).catch(e => ok(`${id}: opens`, false, e.message.split('\n')[0]));
     await page.waitForTimeout(400);
@@ -197,6 +198,17 @@ for (const scheme of ['light', 'dark']) {
   ok('both columns start on the same line', new Set(d.firstRow).size === 1, d.firstRow);
   ok('the sidebar sits beside the page, not over it', d.sideLeft);
   ok('every sidebar item is labelled', d.sideNamed);
+  // The sidebar: paper, words not icons, the day's learning, you at the foot
+  const sb = await desk.evaluate(() => {
+    const side = document.querySelector('.tabbar'), vis = e => !!e && e.getClientRects().length > 0;   // (works for drawings too)
+    return { icons: [...side.querySelectorAll('svg, .tab-glyph, .tab-av')].filter(e => vis(e) && !e.closest('.side-logo, .side-r')).map(e => e.outerHTML.slice(0, 90)).length,
+      list: [...side.querySelectorAll('.side-r')].map(e => e.textContent.trim()).slice(0, 4),
+      me: vis(side.querySelector('.side-me')) && side.querySelector('.side-me').classList.contains('on'),
+      ink: getComputedStyle(side).backgroundColor === getComputedStyle(document.documentElement).getPropertyValue('--ink') };
+  });
+  ok('the sidebar has no icons beside its words', sb.icons === 0, sb);
+  ok('the sidebar lists the day\'s Chitas', JSON.stringify(sb.list) === '["Chumash","Tehillim","Tanya","Rambam"]', sb.list);
+  ok('you, at its foot, open Profile (and show it\'s open)', sb.me, sb);
   if (SHOTS) await desk.waitForTimeout(1200);   // the loading screen finishes fading
   if (SHOTS) await desk.screenshot({ path: `${SHOTS}/desk-profile-${scheme}.png` });
   await desk.close();
