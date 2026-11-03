@@ -18,6 +18,7 @@ Read this before changing how anything looks or sounds. The full reasoning, the 
 7. **Text first in the reader.** Controls stay out of the reading until asked for.
 8. **One of each control.** Every segmented choice is the same bar (`.tz-seg`): Hebrew / Both / English in every reader and in the gear (`_langSeg`), and Automatic / Light / Dark. A choice in the gear keeps the gear open and moves its switch, whichever reader you're in. On/off options (Tanya's Guide and nekudos, Daf's Rashi and Tosafos) are the same chips, in the reader's colour (`--rc`). Colours come from the tokens, never a hex copied in (the old palette is gone from the core readers).
 9. **Every reader starts clean.** The reader is one shared panel; `_readerBegin` resets its bottom bar each time, so nothing one sefer changes carries over to the next.
+10. **One label, one gap, one header.** Every small section heading (Today, the ☰ menu, the gear, every pop-up, Profile, Progress) is the same label: 12px, heavy, small capitals, `--t3` (`.lbl` and the rule beside it). On Today, blocks sit 20px apart (16px between the cards under the tiles) and 28px before a labelled section. Every pop-up opens with the same header: title, a grey line under it, a round × on the right (the calendar too; its Today button sits under the month). A name is spelled one way everywhere (`parshaSpelling`, `_chumashLine`: Chayei Sarah, Aliya). Quiet controls stay quiet: removing a track is a grey bin, as it keeps its history.
 
 ## Tokens (in `index.html`, `:root`)
 | | |

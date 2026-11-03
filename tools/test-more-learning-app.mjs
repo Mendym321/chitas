@@ -140,7 +140,7 @@ await check('the reader\'s menu: the day\'s More learning, the one you\'re in ma
   const m = document.getElementById('reader-menu');
   return [!!m, [...m.querySelectorAll('.rm-row')].map(r => r.querySelector('.rm-n').textContent + ' | ' + r.querySelector('.rm-p').textContent + (r.classList.contains('rm-cur') ? ' | now' : '')),
     m.querySelector('[role=dialog]').getAttribute('aria-modal')];
-}, [true, ['Daf Yomi | Bechoros 35', 'Nach Yomi | Reading now · Yirmiyahu 41 | now', 'Halacha Yomis | Siman 10:20–26', 'Torah Ohr | Lech Lecha'], 'true']);
+}, [true, ['Daf Yomi | Bechoros 35', 'Nach Yomi | Yirmiyahu 41 | now', 'Halacha Yomis | Siman 10:20–26', 'Torah Ohr | Lech Lecha'], 'true']);
 
 await check('picking another in the menu opens it, and the menu closes', async () => {
   document.querySelector('#reader-menu .rm-row').click();

@@ -285,9 +285,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* Remove (trash) button */
 .ps-remove-btn {
   width:28px;height:28px;border-radius:var(--r-s);border:none;
-  background:color-mix(in srgb, var(--red) 8%, transparent);
+  background:var(--card2);
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex-shrink:0;color:var(--red);
+  cursor:pointer;flex-shrink:0;color:var(--t3);   /* quiet: removing a track keeps its history, and it can be added back */
 }
 /* Drag handle */
 
@@ -377,7 +377,11 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 
 
 
-.t-sec span { font-size:var(--fs-1); color:var(--t3); }
+/* One label style for every small section heading in the app (Today, menu, sheets, gear, Profile, Progress) */
+.lbl, .ml-label > span, #reader-menu .rm-label, .lt-head span:first-child, #review-ready .rr-k, #omer .rr-k, .om-k, .rv-k, .cr-h, .ps-label, .tpm-label, .t-sec { font:800 12px/1.3 var(--ui-font); letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
+.lbl { margin-bottom:8px; }
+.t-sec span { font-weight:500; letter-spacing:0; text-transform:none; }
+.t-sec button { letter-spacing:0; text-transform:none; }
 /* "More learning" (beta): the chip, and the Add learning sheet */
 .beta-chip, .t-sec .beta-chip { display:inline-block; vertical-align:middle; margin:0 auto 0 8px; padding:2px 8px; border-radius:999px; background:var(--card2); color:var(--t2); font-family:var(--ui-font); font-size:11px; font-weight:800; letter-spacing:.3px; }
 .ps-modal-title .beta-chip { margin-left:6px; position:relative; top:-2px; }
@@ -397,7 +401,6 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .g-chips-row { text-align:right; margin-top:4px; }
 /* More learning: your seforim (dark cloth, gold bands, a ribbon when learned) on Today and on the shelf */
 .ml-label { display:flex; justify-content:space-between; align-items:baseline; margin:28px 4px 10px; }
-.ml-label > span { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
 .ml-label .beta-chip { text-transform:none; letter-spacing:.3px; margin-left:6px; }
 .ml-label button { background:none; border:none; padding:4px 0; font-family:inherit; font-size:13px; font-weight:700; color:var(--t2); cursor:pointer; }
 .ml-card { background:var(--card); border-radius:var(--r-m); overflow:hidden; }
@@ -460,7 +463,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #reader-menu .rm-x:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
 #reader-menu h2 { margin:0; font-family:var(--title-font); font-size:26px; font-weight:800; letter-spacing:-.4px; color:var(--t1); }
 #reader-menu .rm-list { flex:1; overflow-y:auto; margin-top:6px; }
-#reader-menu .rm-label { margin:14px 12px 4px; font-size:11px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
+#reader-menu .rm-label { margin:14px 12px 4px; }
 #reader-menu .ml-r { border-radius:14px; padding:10px 12px; }
 #reader-menu .ml-r + .ml-r { border-top:none; }
 #reader-menu .ml-r.rm-cur { background:color-mix(in srgb, var(--k) 12%, var(--card)); }
@@ -470,11 +473,12 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .fb-field { display:block; margin-top:14px; font-size:var(--fs-1); font-weight:700; color:var(--t3); }
 .fb-field textarea, .fb-field input { display:block; width:100%; margin-top:6px; box-sizing:border-box; padding:12px 14px; border:1px solid var(--border); border-radius:var(--r-s); background:var(--card); color:var(--t1); font:400 15px/1.45 var(--ui-font); }
 .fb-field textarea { min-height:120px; resize:vertical; }
+.fb-field textarea:focus, .fb-field input:focus { outline:none; border-color:var(--t3); box-shadow:0 0 0 3px color-mix(in srgb, var(--t3) 16%, transparent); }   /* a soft ring, so you still see where you're typing */
 .fb-ctx { margin-top:12px; padding:10px 12px; border-radius:var(--r-s); background:var(--card2); font-size:13px; color:var(--t2); line-height:1.45; }
 .fb-send { display:block; width:100%; margin-top:16px; padding:14px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:800 15px var(--ui-font); cursor:pointer; }
 .fb-send:disabled { opacity:.5; cursor:default; }
 /* Personal Tehillim sheet */
-.tpm-label { margin:16px 0 8px; font-size:var(--fs-1); font-weight:700; color:var(--t3); }
+.tpm-label { margin:16px 0 8px; }
 .tpm-list { background:var(--card); border:1px solid var(--border); border-radius:var(--r-s); overflow:hidden; }
 .tpm-row { display:flex; align-items:center; gap:10px; padding:11px 14px; }
 .tpm-list .tpm-row + .tpm-row { border-top:1px solid var(--border); }
@@ -509,7 +513,6 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .lt-m-t { display:block; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-size:20px; line-height:1.4; }
 .lt-m-d { display:block; direction:ltr; text-align:right; font-size:var(--fs-1); color:var(--t3); margin-top:2px; }
 .lt-head { display:flex; justify-content:space-between; align-items:baseline; margin:20px 4px 8px; font-size:13px; color:var(--t3); }
-.lt-head span:first-child { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
 #native-reader-content .lt-m-d b { font-weight:700; color:color-mix(in srgb, #4F5FA8 75%, var(--t1)); }
 .lt-back { background:var(--card2); border:none; border-radius:999px; padding:8px 14px; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t1); cursor:pointer; margin-bottom:16px; }
 
@@ -599,7 +602,6 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .stile-rv { position:absolute; top:14px; right:14px; z-index:1; padding:5px 10px; border-radius:999px; border:none; background:color-mix(in srgb, var(--ink) 88%, transparent); color:var(--on-ink); font:800 11px/1.2 var(--ui-font); cursor:pointer; }
 .stile-rv.done { cursor:default; }
 #review-ready { margin:16px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
-#review-ready .rr-k, #omer .rr-k, .om-k, .rv-k { font:800 12px/1.2 var(--ui-font); letter-spacing:.6px; color:var(--t3); text-transform:uppercase; }
 .rr-row { display:flex; align-items:center; gap:12px; padding:10px 0; }
 .rr-row + .rr-row { border-top:1px solid var(--border); }
 .rr-sq { width:40px; height:40px; border-radius:14px; background:var(--c); color:var(--on); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -655,11 +657,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #day-readonly { margin:10px 0 4px; padding:10px 14px; border-radius:16px; background:var(--card); font-size:13px; line-height:1.4; color:var(--t2); }
 #day-readonly b { color:var(--t1); }
 #day-picker { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
-.dp-sheet { width:100%; max-width:430px; background:var(--bg); border-radius:28px 28px 0 0; padding:10px 20px calc(22px + env(safe-area-inset-bottom)); animation:up .28s cubic-bezier(.2,.7,.2,1); }
-.dp-grab { width:40px; height:5px; border-radius:3px; background:var(--hi); margin:0 auto 12px; }
-.dp-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-.dp-head p { font:800 24px var(--ui-font); letter-spacing:-.4px; color:var(--t1); }
-.dp-today { padding:8px 14px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:700 14px var(--ui-font); cursor:pointer; }
+.dp-sheet { width:100%; max-width:430px; background:var(--bg); border-radius:28px 28px 0 0; padding:18px 20px calc(22px + env(safe-area-inset-bottom)); animation:up .28s cubic-bezier(.2,.7,.2,1); }
+.dp-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }   /* the same header as every other pop-up */
+.cal-head .dp-today { width:auto; height:auto; margin-top:6px; padding:4px 12px; border-radius:999px; border:none; background:var(--card2); color:var(--t1); font:700 13px var(--ui-font); cursor:pointer; }
 .dp-cal { background:var(--card); border-radius:22px; padding:12px 10px 8px; }
 .dp-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px 0; }
 .dp-grid b { text-align:center; font-size:11px; font-weight:700; color:var(--t3); padding-bottom:4px; }
@@ -678,7 +678,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .del-s { font-size:15px; line-height:1.5; color:var(--t2); }
 .del-go { margin-top:18px; width:100%; height:52px; border-radius:999px; border:none; background:var(--red); color:#fff; font:800 16px var(--ui-font); cursor:pointer; }
 .del-no { margin-top:8px; width:100%; height:52px; border-radius:999px; border:none; background:var(--card2); color:var(--t1); font:700 16px var(--ui-font); cursor:pointer; }
-.cr-h { margin:18px 0 6px; font:700 12px var(--ui-font); letter-spacing:.4px; text-transform:uppercase; color:var(--t3); }
+.cr-h { margin:18px 0 6px; }
 .cr-row { padding:10px 0; border-top:1px solid var(--border); }
 .cr-row p:first-child { font:700 15px var(--ui-font); color:var(--t1); }
 .cr-row p:last-child { font-size:14px; line-height:1.45; color:var(--t2); margin-top:2px; }
@@ -723,7 +723,6 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 @keyframes ringClose { to { stroke-dashoffset:0; } }
 @media (prefers-reduced-motion: reduce) { .done-rings circle { animation:none; stroke-dashoffset:0; } #today-rings .rf { transition:none; } }
 /* Profile and settings: grouped rounded cards */
-.ps-label { text-transform:uppercase; font-weight:700; font-size:12px; letter-spacing:.4px; }
 .ps-card { border-radius:var(--r-m); }
 .ps-icon { border-radius:12px; }
 /* Life: the day's character, the inks in the rows, motion when you tick */
@@ -1080,6 +1079,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #tiles-wrap { margin:0; padding:6px 0 4px; }
   .tiles4 { grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; }
   .stile { height:210px; }
+  .ml-tiles { grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; }   /* like the Chitas tiles above */
+  #week-strip { grid-template-columns:repeat(7, 84px); }   /* the week stays a week, not spread across the screen */
   /* One width for everything on a page: no box stops short of the tiles */
   #tab-stats, #tab-profile { padding-left:0 !important; padding-right:0 !important; }
   #stats-content { display:grid; grid-template-columns:1fr 1fr; column-gap:24px; grid-auto-flow:row dense; }
@@ -1111,7 +1112,6 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #day-picker, #del-sheet, #credits-sheet, #signin-sheet, body > div[style*="align-items:flex-end"], body > div[style*="align-items: flex-end"] { align-items:center !important; }
   #signin-sheet > div, body > div[style*="align-items: flex-end"] > div { border-radius:28px !important; border-bottom:1px solid var(--border) !important; }
   .dp-sheet, .ps-modal-sheet { max-width:480px !important; border-radius:28px !important; }
-  .dp-grab { display:none; }
   #moment-modal.m-full #moment-card { max-width:none !important; }
 }
 </style>
@@ -1553,7 +1553,7 @@ window._fsGetDoc = getDoc;
   <div id="reader-settings-popover" style="display:none;position:absolute;top:67px;right:12px;z-index:10;width:260px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-m);box-shadow:0 8px 32px rgba(0,0,0,.35);padding:14px 16px;flex-direction:column;gap:16px;animation:up .18s ease both;">
     <!-- Font size row -->
     <div>
-      <p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Text Size</p>
+      <p class="lbl">Text size</p>
       <div style="display:flex;align-items:center;gap:8px;">
         <button onclick="_readerFontStep(-1)" id="rs-font-dec" style="width:36px;height:36px;border-radius:var(--r-s);background:var(--surface);border:1px solid var(--border);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--ui-font);font-size:var(--fs-1);font-weight:800;flex-shrink:0;">A</button>
         <div id="rs-font-dots" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;"></div>
@@ -1564,7 +1564,7 @@ window._fsGetDoc = getDoc;
     <div id="rs-section-opts"></div>
     <!-- Light or dark for the whole app, after the options for this text -->
     <div>
-      <p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Appearance</p>
+      <p class="lbl">Appearance</p>
       <div class="tz-seg th-seg" role="group" aria-label="Appearance"><button type="button" data-th="auto" onclick="setThemePref('auto')">Automatic</button><button type="button" data-th="light" onclick="setThemePref('light')">Light</button><button type="button" data-th="dark" onclick="setThemePref('dark')">Dark</button></div>
     </div>
     <button type="button" class="rs-report" onclick="closeReaderSettings();openFeedback('mistake')">Report a mistake in this text</button>
@@ -2908,7 +2908,7 @@ function renderSectionsForOffset(iso) {
       + _tileReview(s.id, isToday && done)
       + '<div class="stile-top">' + (markable ? '<button class="check' + (done ? ' on' : '') + '" id="tick-' + s.id + '" aria-label="' + (done ? 'Unmark ' : 'Mark done: ') + s.label + '" onclick="event.stopPropagation();' + tickAction + '">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>' + '</button>' : (done ? '<span class="check on" aria-label="Learned"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>' : ''))
       + '</div>'
-      + '<div class="stile-t"><p>' + s.label + '</p><p>' + (s.id === 'chumash' ? String(s.subtitle || '').replace(/^([^·]+?)( ·|$)/, (m, name, rest) => parshaSpelling(name.trim()) + rest) : String(s.subtitle || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '')) + '</p></div>'
+      + '<div class="stile-t"><p>' + s.label + '</p><p>' + (s.id === 'chumash' ? _chumashLine(s.subtitle) : String(s.subtitle || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '')) + '</p></div>'
       + '</div>';
   }).join('');
 
@@ -3057,8 +3057,9 @@ function openDayPicker() {
   const m = document.createElement('div');
   m.id = 'day-picker';
   m.onclick = e => { if (e.target === m) m.remove(); };
-  m.innerHTML = '<div class="dp-sheet" role="dialog" aria-label="Go to a day"><div class="dp-grab"></div>'
-    + '<div class="dp-head"><p>Go to a day</p><button class="dp-today" onclick="_pickDay(0)">Today</button></div>'
+  m.innerHTML = '<div class="dp-sheet" role="dialog" aria-modal="true" aria-labelledby="dp-title">'
+    + '<div class="dp-head"><div><p class="ps-modal-title" id="dp-title">Go to a day</p><p class="ps-modal-sub">Read any day, or catch up on the last week</p></div>'
+    + '<button type="button" class="ps-modal-close" aria-label="Close" onclick="document.getElementById(\'day-picker\').remove()">×</button></div>'
     + '<div id="dp-body"></div></div>';
   document.body.appendChild(m);
   _renderDayPicker();
@@ -3085,7 +3086,8 @@ function _renderDayPicker() {
     : _canMarkDay(_pickOff) ? 'You can still mark this day.' : 'Read only. You can mark today and the last 7 days.';
   body.innerHTML = '<div class="dp-cal"><div class="cal-head">'
     + '<button onclick="_pickMonth--;_renderDayPicker()" aria-label="Previous month">‹</button>'
-    + '<div><p class="cal-m">' + first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + '</p><p class="t-caption">' + (h1 === h2 ? h1 : h1 + ' – ' + h2) + '</p></div>'
+    + '<div><p class="cal-m">' + first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + '</p><p class="t-caption">' + (h1 === h2 ? h1 : h1 + ' – ' + h2) + '</p>'
+    + (dayOffset !== 0 || _pickOff !== 0 || _pickMonth !== 0 ? '<button type="button" class="dp-today" onclick="_pickDay(0)">Today</button>' : '') + '</div>'
     + '<button onclick="_pickMonth++;_renderDayPicker()" aria-label="Next month"' + (_pickMonth >= 2 ? ' disabled' : '') + '>›</button></div>'
     + '<div class="dp-grid">' + cells + '</div></div>'
     + '<div class="dp-info"><p>' + sel.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + ' · '
@@ -4497,7 +4499,7 @@ function _renderChumashContent() {
     t += '<div class="tz-head">'
       + '<p class="tz-part" lang="he">' + book + (heParsha ? ' · פרשת ' + heParsha : '') + '</p>'
       + '<p class="tz-ch" lang="he">' + _ALIYAH_HE[day.aliyah] + '</p>'
-      + '<p class="tz-en-label">' + escapeHtml(enParsha + ' · ' + (day.aliyah === 7 ? 'Shabbos' : 'Aliyah ' + day.aliyah) + ' · ' + _torahRefLabel(day.ref)) + '</p></div>';
+      + '<p class="tz-en-label">' + escapeHtml(enParsha + ' · ' + (day.aliyah === 7 ? 'Shabbos' : 'Aliya ' + day.aliyah) + ' · ' + _torahRefLabel(day.ref)) + '</p></div>';
   } else {
     t += '<div class="tz-head"><p class="tz-en-label">' + escapeHtml(schedule?.chumash?.subtitle || '') + '</p></div>';
   }
@@ -5671,7 +5673,7 @@ function _buildSettingsSectionOpts(sectionId) {
     html += _rsDivider();
     // Inline translation picker — radio-style rows, no separate modal
     html += '<div>'
-      + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Translation</p>'
+      + '<p class="lbl">Translation</p>'
       + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-s);overflow:hidden;">';
     CHUMASH_TRANSLATIONS.forEach((t, i) => {
       const active = t.id === curId;
@@ -5691,7 +5693,7 @@ function _buildSettingsSectionOpts(sectionId) {
     html += _rsDivider();
     const curT = _tehillimTrans().id;
     html += '<div>'
-      + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Translation</p>'
+      + '<p class="lbl">Translation</p>'
       + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-s);overflow:hidden;">';
     TEHILLIM_TRANSLATIONS.forEach((t, i) => {
       const active = t.id === curT;
@@ -5711,7 +5713,7 @@ function _buildSettingsSectionOpts(sectionId) {
     const fixed  = (opts.rebbe !== false ? 1 : 0) + (opts.rebbetzin !== false ? 1 : 0);
     const total  = fixed + custom;
     html += '<div>'
-      + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Personal Tehillim</p>'
+      + '<p class="lbl">Personal Tehillim</p>'
       + '<button onclick="closeReaderSettings();_openTehillimPeopleManager();" style="width:100%;padding:10px 12px;border-radius:var(--r-s);background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:var(--fs-2);font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;">'
       + '<span>' + (total === 0 ? 'Add people' : total + ' ' + (total === 1 ? 'person' : 'people')) + '</span>'
       + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
@@ -5727,7 +5729,7 @@ function _buildSettingsSectionOpts(sectionId) {
     html += _rsLangToggle('rambam', lang);
     html += _rsDivider();
     html += '<div>'
-      + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Study Track</p>'
+      + '<p class="lbl">Study track</p>'
       + '<button onclick="closeReaderSettings();_openRambamTrackPicker();" style="width:100%;padding:10px 12px;border-radius:var(--r-s);background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:var(--fs-2);font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;">'
       + '<span>' + track + '</span>'
       + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>'
@@ -5746,7 +5748,7 @@ function _buildSettingsSectionOpts(sectionId) {
     if (isLS) {
       const on = _lsTransMode;
       html += '<div>'
-        + '<p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Translation Mode</p>'
+        + '<p class="lbl">Translation mode</p>'
         + '<button onclick="_lsToggleTransMode(' + (!on) + ')" style="width:100%;padding:10px 13px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;'
         + (on ? 'background:rgba(142,106,163,.12);color:#8E6AA3;border-color:#8E6AA3;' : 'background:var(--surface);color:var(--t2);border-color:var(--border);')
         + '">'
@@ -5779,7 +5781,7 @@ function _buildSettingsSectionOpts(sectionId) {
         const commStr = localStorage.getItem('chitas_daf_commentary') || '';
         const commSet = new Set(commStr.split(',').filter(Boolean));
         if (html) html += _rsDivider();
-        html += '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Commentary</p><div class="tz-opts" style="margin:0">'
+        html += '<div><p class="lbl">Commentary</p><div class="tz-opts" style="margin:0">'
           + (hasRashi ? '<button type="button" class="tz-opt' + (commSet.has('rashi') ? ' on' : '') + '" onclick="_toggleDafCommSettings(\'rashi\')">Rashi</button>' : '')
           + (hasTosafot ? '<button type="button" class="tz-opt' + (commSet.has('tosafot') ? ' on' : '') + '" onclick="_toggleDafCommSettings(\'tosafot\')">Tosafos</button>' : '')
           + '</div></div>';
@@ -5805,7 +5807,7 @@ function _langSeg(lang, call) {
 
 // The gear's Language row: the same switch as at the top of the text
 function _rsLangRow(seg) {
-  return '<div><p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:8px;">Language</p>' + seg + '</div>';
+  return '<div><p class="lbl">Language</p>' + seg + '</div>';
 }
 function _rsLangToggle(sectionId, lang) {
   return _rsLangRow(_langSeg(lang, "_setReaderLang('" + sectionId + "','LANG')"));
@@ -6025,7 +6027,7 @@ function openReaderMenu(stay) {
   const tick = colour => '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="' + colour + '" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
   const row = (id, name, piece, colour, on, mark) => '<button type="button" class="rm-row' + (on ? ' done' : '') + (id === cur ? ' rm-cur' : '') + '" style="--k:' + colour + '" onclick="_readerMenuGo(\'' + id + '\')"' + (id === cur ? ' aria-current="true"' : '') + '>'
     + '<span class="rm-ic">' + mark + '</span>'
-    + '<span class="rm-txt"><span class="rm-n" id="rm-name-' + id + '">' + name + '</span><span class="rm-p" id="rm-sub-' + id + '">' + (id === cur ? 'Reading now' + (piece ? ' · ' : '') : '') + escapeHtml(piece || '') + '</span></span>'
+    + '<span class="rm-txt"><span class="rm-n" id="rm-name-' + id + '">' + name + '</span><span class="rm-p" id="rm-sub-' + id + '">' + escapeHtml(piece || '') + '</span></span>'
     + (on ? '<span class="rm-end" role="img" aria-label="Learned">' + tick(colour) + '</span>' : '<span class="rm-end rm-go">' + chev(1) + '</span>') + '</button>';
   const chitas = schedule ? SECTION_IDS.filter(id => schedule[id]) : [];
   const extras = _shelfTracks().filter(id => EXTRA_TRACK_DEFS[id]);
@@ -6046,7 +6048,7 @@ function openReaderMenu(stay) {
     +     (dayOffset !== 0 ? '<button type="button" class="rm-tool" onclick="_menuDay(0)">Today</button>' : '') + '</div>'
     +   '<div class="rm-list">'
     +     (chitas.length ? '<p class="rm-label">Chitas · ' + n + ' of ' + chitas.length + ' learned</p>'
-          + chitas.map(id => row(id, schedule[id].label, id === 'rambam' ? String(schedule[id].subtitle || '') : schedule[id].subtitle, SECTION_COLORS[id], !!done[id], icon(GLYPH[id], 22))).join('') : '')
+          + chitas.map(id => row(id, schedule[id].label, id === 'chumash' ? _chumashLine(schedule[id].subtitle) : String(schedule[id].subtitle || ''), SECTION_COLORS[id], !!done[id], icon(GLYPH[id], 22))).join('') : '')
     +     (extras.length ? '<p class="rm-label">More learning</p>'
           + extras.map(id => row(id, EXTRA_TRACK_DEFS[id].label, '', EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso), '<span class="rm-dot"></span>')).join('') : '')
     +   '</div>'
@@ -6059,7 +6061,7 @@ function openReaderMenu(stay) {
   extras.filter(id => OFFERED_TRACKS.includes(id)).forEach(id => _trackPiece(id, iso).then(piece => {
     const el = document.getElementById('rm-sub-' + id);
     if (!el || !piece) return;
-    el.textContent = (id === cur ? 'Reading now · ' : '') + _trackLine(id, piece).replace(/^Parshas /, '').replace(/ · (Torah Ohr|Likkutei Torah)$/, '');
+    el.textContent = _trackLine(id, piece).replace(/^Parshas /, '').replace(/ · (Torah Ohr|Likkutei Torah)$/, '');
     if (id === 'likkuteiTorah' && piece.books === 'Torah Ohr') { const nm = document.getElementById('rm-name-' + id); if (nm) nm.textContent = 'Torah Ohr'; }
   }).catch(() => {}));
 }
@@ -6988,6 +6990,8 @@ async function _trackPiece(id, iso) {
   return day ? day[{ dafYomi: 'daf', nachYomi: 'nach', kitzur: 'kitzur' }[id]] : undefined;
 }
 // The line under a track's name: today's piece
+// Chumash's line ("Chayei Sara · Aliya 3"), with the parsha spelled as everywhere in the app
+function _chumashLine(sub) { return String(sub || '').replace(/^([^·]+?)( ·|$)/, (m, name, rest) => parshaSpelling(name.trim()) + rest); }
 function _trackLine(id, piece) {
   if (id === 'likkuteiTorah') {
     if (!piece.parsha) return 'No parsha this week';
@@ -8165,7 +8169,7 @@ function _openChumashTranslationPicker() {
       + 'style="width:100%;padding:14px 16px;background:transparent;border:none;' + border
       + 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;">'
       + '<div style="text-align:left;">'
-      +   '<p style="font-size:var(--fs-2);font-weight:700;color:' + (active ? 'var(--gold)' : 'var(--t1)') + ';margin-bottom:2px;">' + t.label + '</p>'
+      +   '<p style="font-size:var(--fs-2);font-weight:700;color:var(--t1);margin-bottom:2px;">' + t.label + '</p>'
       +   '<p style="font-size:var(--fs-1);color:var(--t3);">' + t.sub + '</p>'
       + '</div>'
       + (active ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
