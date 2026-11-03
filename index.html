@@ -396,7 +396,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .g-chips span { font-family:'Vilna',serif; font-size:11px; font-weight:700; line-height:16px; padding:0 6px; border-radius:999px; background:var(--card2); color:var(--t2); }
 .g-chips-row { text-align:right; margin-top:4px; }
 /* More learning: your seforim (dark cloth, gold bands, a ribbon when learned) on Today and on the shelf */
-.ml-label { display:flex; justify-content:space-between; align-items:baseline; margin:22px 4px 8px; }
+.ml-label { display:flex; justify-content:space-between; align-items:baseline; margin:28px 4px 10px; }
 .ml-label > span { font-size:var(--fs-1); font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
 .ml-label .beta-chip { text-transform:none; letter-spacing:.3px; margin-left:6px; }
 .ml-label button { background:none; border:none; padding:4px 0; font-family:inherit; font-size:13px; font-weight:700; color:var(--t2); cursor:pointer; }
@@ -406,10 +406,10 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .ml-tile:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
 .ml-tile-top { display:flex; align-items:center; justify-content:space-between; min-height:28px; }
 .ml-tile-bar { width:22px; height:4px; border-radius:2px; background:var(--c); }
-.ml-tile .check, .om-row .check { width:28px; height:28px; border-color:color-mix(in srgb, var(--c) 55%, transparent); }
+.ml-tile .check, .om-row .check { width:28px; height:28px; border-color:color-mix(in srgb, var(--c) 75%, transparent); }
 .ml-tile .check.on, .om-row .check.on { background:var(--c); border-color:var(--c); color:#fff; }
 .ml-tile .ml-n { display:block; font-size:16px; font-weight:800; }
-.ml-tile .ml-p { display:block; margin-top:1px; font-size:12.5px; line-height:1.35; color:var(--t2); }
+.ml-tile .ml-p { display:block; margin-top:1px; font-size:13px; line-height:1.35; color:var(--t2); }
 .ml-tile.done { background:color-mix(in srgb, var(--c) 7%, var(--card)); }
 .ml-tile.done .ml-tile-bar, .ml-tile.done .ml-tile-t { opacity:.55; }
 .ml-r { display:flex; align-items:center; gap:14px; width:100%; padding:13px 16px; background:none; border:none; font-family:inherit; text-align:left; color:var(--t1); cursor:pointer; }
@@ -558,18 +558,18 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .stile-art.lift svg { animation:glyphLift .6s cubic-bezier(.2,.7,.2,1); }
 #tab-learn .group { background:var(--card); border-radius:var(--r-m); border:none; overflow:hidden; }
 #tab-learn .lrow { padding-left:14px; padding-right:14px; }
-#heb-chip { display:flex; align-items:center; gap:6px; padding:5px 12px 5px 6px !important; border:none; cursor:pointer; }
-#heb-chip .cal-ic { width:22px; height:22px; border-radius:50%; background:var(--ink); color:var(--on-ink); display:grid; place-items:center; }
+#heb-chip { display:flex; align-items:center; gap:6px; border:none; cursor:pointer; }
+#heb-chip .cal-ic { display:grid; place-items:center; color:var(--t2); }   /* a plain icon, so the chips read as one set */
 #back-today { background:var(--ink); color:var(--on-ink); border:none; cursor:pointer; }
 /* Only the tiles move when you swipe: they slide inside their own window,
    the page never gets wider (no zoom or shift), and nothing above them moves */
-#tiles-wrap { overflow:hidden; margin:0 -20px; padding:14px 20px 4px; }
+#tiles-wrap { overflow:hidden; margin:0 -20px; padding:6px 20px 4px; }   /* 14 under the week line + 6 = 20 above the tiles */
 #tab-learn #sections-list { margin-top:0; }
 .tiles4 { touch-action:pan-y; }
 .tiles4.dragging .stile { transform:none !important; transition:none !important; }
 #day-chips::-webkit-scrollbar { display:none; }
 #day-chips > * { flex-shrink:0; white-space:nowrap; }
-#omer { margin:12px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
+#omer { margin:16px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
 .om-day { font:800 17px/1.25 var(--ui-font); color:var(--t1); margin-top:6px; }
 .om-sef { font-size:13px; color:var(--t3); margin:1px 0 6px; }
 .om-sef span, .om-sefirah span { font-family:'OTSiddur','Shlomo',serif; font-size:16px; }
@@ -590,7 +590,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .om-ana { margin-top:6px; }
 #om-body mark { background:color-mix(in srgb, var(--gold) 32%, transparent); color:inherit; border-radius:4px; padding:0 2px; }
 #omer-modal .om-note { margin-top:18px; border-top:1px solid var(--border); padding-top:12px; }
-#welcome-back { position:relative; margin:12px 0 4px; padding:16px 18px; border-radius:var(--r-m); background:var(--card); }
+#welcome-back { position:relative; margin:16px 0 0; padding:16px 18px; border-radius:var(--r-m); background:var(--card); }
 .wb-t { font:800 18px var(--ui-font); color:var(--t1); }
 .wb-s { font-size:14px; color:var(--t2); margin-top:2px; }
 .wb-go { margin-top:12px; padding:9px 16px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:700 14px var(--ui-font); cursor:pointer; }
@@ -598,7 +598,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* Review: ready on Today, and right after reading */
 .stile-rv { position:absolute; top:14px; right:14px; z-index:1; padding:5px 10px; border-radius:999px; border:none; background:color-mix(in srgb, var(--ink) 88%, transparent); color:var(--on-ink); font:800 11px/1.2 var(--ui-font); cursor:pointer; }
 .stile-rv.done { cursor:default; }
-#review-ready { margin:12px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
+#review-ready { margin:16px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
 #review-ready .rr-k, #omer .rr-k, .om-k, .rv-k { font:800 12px/1.2 var(--ui-font); letter-spacing:.6px; color:var(--t3); text-transform:uppercase; }
 .rr-row { display:flex; align-items:center; gap:12px; padding:10px 0; }
 .rr-row + .rr-row { border-top:1px solid var(--border); }
@@ -737,8 +737,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .check { position:relative; }
 .tick-ring { position:absolute; inset:-2px; border-radius:50%; border:2px solid var(--c, var(--gold)); pointer-events:none; animation:tickRing .7s ease-out forwards; }
 @keyframes tickRing { from{transform:scale(1);opacity:.8} to{transform:scale(2.1);opacity:0} }
-#thought { display:block; width:100%; text-align:left; margin:12px 0 4px; padding:16px 18px; border:none; border-radius:var(--r-m); background:var(--card2); color:inherit; cursor:pointer; font:inherit; }
-.thought-k { font:800 15px var(--ui-font); color:var(--t1); margin-bottom:4px; }
+#thought { display:block; width:100%; text-align:left; margin:16px 0 0; padding:16px 18px; border:none; border-radius:var(--r-m); background:var(--card2); color:inherit; cursor:pointer; font:inherit; }
+.thought-k { font:800 16px var(--ui-font); color:var(--t1); margin-bottom:4px; }
 .thought-t { font-family:var(--read-font); font-size:17px; line-height:1.45; color:var(--t2); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .thought-more { display:none; }
 
@@ -755,7 +755,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #progress-sub { font-size:var(--fs-2); color:var(--t2); }
 #tab-learn .group { background:none; border-radius:0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:visible; }
 #tab-learn .lrow { background:none; padding-left:0; padding-right:0; }
-#tab-learn #skeletons, #tab-learn #sections-list { margin-top:14px; }
+#tab-learn #skeletons { margin-top:14px; }
 .tab-glyph { display:block; width:22px; height:22px; }
 .tab-av { position:relative; display:grid; place-items:center; width:22px; height:22px; border-radius:50%; border:1.6px solid currentColor; font:600 12px var(--ui-font); line-height:1; }
 #avatar-dot { position:absolute; top:-3px; right:-3px; width:8px; height:8px; border-radius:50%; background:var(--c-chumash); border:2px solid var(--ink); }
@@ -858,7 +858,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rem-when .tz-opts { margin:0; flex-wrap:wrap; gap:6px; }
 .rem-when .tz-opt { white-space:nowrap; padding:6px 11px; }
 #reminders-modal { --rc:var(--t1); }   /* the chosen time in ink, not a section colour */
-#rem-nudge { position:relative; margin:12px 0 0; padding:14px 16px; border-radius:var(--r-m); background:var(--card); }
+#rem-nudge { position:relative; margin:16px 0 0; padding:14px 16px; border-radius:var(--r-m); background:var(--card); }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .tz-p { margin-bottom:16px; }
@@ -1077,7 +1077,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   .side-logo circle { fill:none; stroke-width:9; }
   #app-head { padding-left:0; padding-right:0; }
   #tab-learn { padding-left:0 !important; padding-right:0 !important; }
-  #tiles-wrap { margin:0; padding:14px 0 4px; }
+  #tiles-wrap { margin:0; padding:6px 0 4px; }
   .tiles4 { grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; }
   .stile { height:210px; }
   /* One width for everything on a page: no box stops short of the tiles */
