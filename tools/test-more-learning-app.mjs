@@ -73,7 +73,7 @@ console.log('More learning (beta):');
 await page.evaluate(() => { user.extraTracks = []; user.done = {}; user.pastDone = {}; dayOffset = 0; _syncMoreLearning(); });
 
 // Is a track's row on Today marked learned (its circle filled)?
-await page.evaluate(() => { window.__ticked = id => !!document.querySelector('#more-learning .ml-r[data-id="' + id + '"] svg[aria-label="Learned"]'); });
+await page.evaluate(() => { window.__ticked = id => !!document.querySelector('#more-learning .ml-tile[data-id="' + id + '"] .check.on'); });
 
 await check('with nothing added yet, Today has one row that says what you can add', () => {
   const box = document.getElementById('more-learning');
@@ -96,22 +96,30 @@ await check('a switch turns a track on (and off)', () => {
   return [user.extraTracks, document.getElementById('ml-add-dafYomi').getAttribute('aria-checked')];
 }, [['dafYomi', 'kitzur', 'likkuteiTorah', 'nachYomi'], 'true']);
 
-await check('Today: a card with a row for each, in its colour, with its name and today\'s piece (no network needed), and Edit', async () => {
+await check('Today: a small tile for each, in its colour, with its name and today\'s piece (no network needed), and Edit', async () => {
   _closeExtraMenu();
   user.extraTracks = ['dafYomi', 'nachYomi', 'kitzur', 'likkuteiTorah']; _renderExtraTrackCards(_viewedISO(), true);
   await new Promise(r => setTimeout(r, 300));
   const box = document.getElementById('more-learning');
-  return [[...box.querySelectorAll('.ml-r')].map(r => r.querySelector('.ml-n').textContent + ' | ' + r.querySelector('.ml-p').textContent),
-    getComputedStyle(box.querySelector('.ml-r[data-id=kitzur] .ml-bar')).backgroundColor, box.querySelector('.ml-label button').textContent];
+  return [[...box.querySelectorAll('.ml-tile')].map(r => r.querySelector('.ml-n').textContent + ' | ' + r.querySelector('.ml-p').textContent),
+    getComputedStyle(box.querySelector('.ml-tile[data-id=kitzur] .ml-tile-bar')).backgroundColor, box.querySelector('.ml-label button').textContent];
 }, [['Daf Yomi | Bechoros 35', 'Nach Yomi | Yirmiyahu 41', 'Halacha Yomis | Siman 10:20–26', 'Torah Ohr | Lech Lecha'], 'rgb(47, 127, 134)', 'Edit']);
 
-await check('a row opens its reader', async () => {
-  document.querySelector('#more-learning .ml-r[data-id=nachYomi]').click();
+await check('a tile opens its reader', async () => {
+  document.querySelector('#more-learning .ml-tile[data-id=nachYomi]').click();
   await new Promise(r => setTimeout(r, 300));
   const r = document.getElementById('chabad-panel-title').textContent;
   closeChabadPanel();
   return r;
 }, 'Nach Yomi');
+await check('the box in a tile\'s corner marks it learned, without opening it, and unmarks it', async () => {
+  document.querySelector('#more-learning .ml-tile[data-id=kitzur] .check').click();
+  await new Promise(r => setTimeout(r, 300));
+  const r = [__ticked('kitzur'), document.querySelector('#more-learning .ml-tile[data-id=kitzur]').classList.contains('done'), document.getElementById('chabad-panel').style.display === 'flex'];
+  document.querySelector('#more-learning .ml-tile[data-id=kitzur] .check').click();
+  await new Promise(r => setTimeout(r, 300));
+  return r.concat(__ticked('kitzur'));
+}, [true, true, false, false]);
 await check('nothing carries over in the bottom bar: after a parked track hides Mark on its list, the next reader shows it again', async () => {
   const shown = id => getComputedStyle(document.getElementById(id)).display !== 'none';
   const r = [];

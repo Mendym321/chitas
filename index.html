@@ -401,6 +401,17 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .ml-label .beta-chip { text-transform:none; letter-spacing:.3px; margin-left:6px; }
 .ml-label button { background:none; border:none; padding:4px 0; font-family:inherit; font-size:13px; font-weight:700; color:var(--t2); cursor:pointer; }
 .ml-card { background:var(--card); border-radius:var(--r-m); overflow:hidden; }
+.ml-tiles { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ml-tile { display:flex; flex-direction:column; justify-content:space-between; gap:10px; min-height:96px; padding:12px; border-radius:var(--r-m); background:color-mix(in srgb, var(--c) 15%, var(--card)); color:var(--t1); cursor:pointer; text-align:left; }
+.ml-tile:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
+.ml-tile-top { display:flex; align-items:center; justify-content:space-between; min-height:28px; }
+.ml-tile-bar { width:22px; height:4px; border-radius:2px; background:var(--c); }
+.ml-tile .check { width:28px; height:28px; border-color:color-mix(in srgb, var(--c) 55%, transparent); }
+.ml-tile .check.on { background:var(--c); border-color:var(--c); color:#fff; }
+.ml-tile .ml-n { display:block; font-size:16px; font-weight:800; }
+.ml-tile .ml-p { display:block; margin-top:1px; font-size:12.5px; line-height:1.35; color:var(--t2); }
+.ml-tile.done { background:color-mix(in srgb, var(--c) 7%, var(--card)); }
+.ml-tile.done .ml-tile-bar, .ml-tile.done .ml-tile-t { opacity:.55; }
 .ml-r { display:flex; align-items:center; gap:14px; width:100%; padding:13px 16px; background:none; border:none; font-family:inherit; text-align:left; color:var(--t1); cursor:pointer; }
 .ml-r + .ml-r { border-top:1px solid var(--border); }
 .ml-bar { width:4px; align-self:stretch; border-radius:2px; flex-shrink:0; }
@@ -1421,7 +1432,7 @@ window._fsGetDoc = getDoc;
       <!-- A few lines of today's Hayom Yom (tap to read it all) -->
       <button id="thought" onclick="openExtraReader('hayomYom')" style="display:none;"></button>
 
-      <!-- More learning (beta): a card with a row for each (colour line, name, today's piece, its circle) -->
+      <!-- More learning (beta): a small tile for each (its colour, name, today's piece, and a box to mark it) -->
       <div id="more-learning" style="display:none;"></div>
 
 
@@ -6841,13 +6852,19 @@ function _renderExtraTrackCards(iso, isToday) {
       + '<span class="ml-p">Add Daf Yomi, Nach, Halacha or Likkutei Torah</span></span>' + _ML_CHEV + '</button>';
     return;
   }
+  // Small tiles, two across, a lighter kin of Chitas's: tap one to read it;
+  // the box in its corner marks it learned for the day, as on Chitas's tiles
+  // (where marking isn't open, a learned one just shows its check)
+  const markable = _canMarkDay(dayOffset);
+  const tick = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
   box.innerHTML = '<div class="ml-label"><span>More learning<span class="beta-chip">Beta</span></span><button type="button" onclick="_openExtraTracksMenu()">Edit</button></div>'
-    + '<div class="ml-card">' + ids.map(id => {
+    + '<div class="ml-tiles">' + ids.map(id => {
       const def = EXTRA_TRACK_DEFS[id], on = !!_trackDoneOn(id, iso);
-      return '<button type="button" class="ml-r" data-id="' + id + '" onclick="openExtraReader(\'' + id + '\')">'
-        + '<span class="ml-bar" style="background:' + def.color + '"></span>'
-        + '<span class="ml-x"><span class="ml-n" id="ml-name-' + id + '">' + def.label + '</span><span class="ml-p" id="extra-sub-' + id + '">&nbsp;</span></span>'
-        + _mlCircle(on, def.color) + '</button>';
+      return '<div class="ml-tile' + (on ? ' done' : '') + '" data-id="' + id + '" style="--c:' + def.color + ';" role="button" tabindex="0" onclick="openExtraReader(\'' + id + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openExtraReader(\'' + id + '\')}">'
+        + '<div class="ml-tile-top"><span class="ml-tile-bar"></span>'
+        + (markable ? '<button type="button" class="check' + (on ? ' on' : '') + '" aria-label="' + (on ? 'Unmark ' : 'Mark done: ') + def.label + '" onclick="event.stopPropagation();_toggleTrack(\'' + id + '\')">' + tick + '</button>'
+          : (on ? '<span class="check on" aria-label="Learned">' + tick + '</span>' : ''))
+        + '</div><div class="ml-tile-t"><span class="ml-n" id="ml-name-' + id + '">' + def.label + '</span><span class="ml-p" id="extra-sub-' + id + '">&nbsp;</span></div></div>';
     }).join('') + '</div>';
   ids.forEach(id => _loadExtraSubtitle(id));
 }
