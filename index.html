@@ -2805,7 +2805,7 @@ async function rebuildScheduleForOffset() {
     }
     if (s.id === 'tanya') {
       // Hebrew date without the year e.g. "3 Tammuz"
-      const hebrewNoYear = hd ? hd.hd + ' ' + hd.hm : 'Tanya Yomi';
+      const hebrewNoYear = hd?.hd && hd?.hm ? hd.hd + ' ' + hd.hm : 'Tanya Yomi';
       s.subtitle = hebrewNoYear;
     }
     if (s.id === 'rambam') {
