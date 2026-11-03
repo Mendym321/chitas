@@ -450,14 +450,12 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #reader-menu .rm-tool { display:flex; align-items:center; gap:6px; height:34px; padding:0 14px; border-radius:999px; border:none; background:var(--card2); color:var(--t1); font:700 13px var(--ui-font); cursor:pointer; }
 #reader-menu .rm-row { display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; border:none; border-radius:14px; background:none; font-family:inherit; text-align:left; color:var(--t1); cursor:pointer; }
 #reader-menu .rm-row.rm-cur { background:color-mix(in srgb, var(--k) 12%, var(--card)); }
-#reader-menu .rm-ic { width:24px; display:flex; justify-content:center; color:var(--k); flex-shrink:0; }
-#reader-menu .rm-dot { width:8px; height:8px; border-radius:50%; background:var(--k); }
 #reader-menu .rm-txt { flex:1; min-width:0; }
 #reader-menu .rm-n { display:block; font-size:16px; font-weight:800; }
 #reader-menu .rm-p { display:block; margin-top:1px; font-size:13px; line-height:1.35; color:var(--t3); }
 #reader-menu .rm-end { display:flex; flex-shrink:0; }
 #reader-menu .rm-go { color:var(--t3); }
-#reader-menu .rm-row.done .rm-ic, #reader-menu .rm-row.done .rm-txt { opacity:.5; }
+#reader-menu .rm-row.done .rm-txt { opacity:.5; }   /* just the names: no icons or dots; a colour only in the tick and the one you're reading */
 #reader-menu .rm-x { width:36px; height:36px; border-radius:50%; border:none; background:var(--card2); color:var(--t1); display:flex; align-items:center; justify-content:center; cursor:pointer; }
 #reader-menu .rm-x:focus:not(:focus-visible) { outline:none; }
 #reader-menu .rm-x:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
@@ -6131,11 +6129,9 @@ function openReaderMenu(stay) {
   const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
   const iso = dateISO(d), done = dayDone(user, d, appNow());
   const cur = String(_rv.sid || '').replace(/^extra_/, '').split(':')[0];
-  const GLYPH = { chumash: 'torah', tehillim: 'kinor', tanya: 'flame', rambam: 'books' };
   const chev = dir => '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="' + (dir < 0 ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6') + '"/></svg>';
   const tick = colour => '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="' + colour + '" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-  const row = (id, name, piece, colour, on, mark) => '<button type="button" class="rm-row' + (on ? ' done' : '') + (id === cur ? ' rm-cur' : '') + '" style="--k:' + colour + '" onclick="_readerMenuGo(\'' + id + '\')"' + (id === cur ? ' aria-current="true"' : '') + '>'
-    + '<span class="rm-ic">' + mark + '</span>'
+  const row = (id, name, piece, colour, on) => '<button type="button" class="rm-row' + (on ? ' done' : '') + (id === cur ? ' rm-cur' : '') + '" style="--k:' + colour + '" onclick="_readerMenuGo(\'' + id + '\')"' + (id === cur ? ' aria-current="true"' : '') + '>'
     + '<span class="rm-txt"><span class="rm-n" id="rm-name-' + id + '">' + name + '</span><span class="rm-p" id="rm-sub-' + id + '">' + escapeHtml(piece || '') + '</span></span>'
     + (on ? '<span class="rm-end" role="img" aria-label="Learned">' + tick(colour) + '</span>' : '<span class="rm-end rm-go">' + chev(1) + '</span>') + '</button>';
   const chitas = schedule ? SECTION_IDS.filter(id => schedule[id]) : [];
@@ -6157,9 +6153,9 @@ function openReaderMenu(stay) {
     +     (dayOffset !== 0 ? '<button type="button" class="rm-tool" onclick="_menuDay(0)">Today</button>' : '') + '</div>'
     +   '<div class="rm-list">'
     +     (chitas.length ? '<p class="rm-label">Chitas · ' + n + ' of ' + chitas.length + ' learned</p>'
-          + chitas.map(id => row(id, schedule[id].label, id === 'chumash' ? _chumashLine(schedule[id].subtitle) : String(schedule[id].subtitle || ''), SECTION_COLORS[id], !!done[id], icon(GLYPH[id], 22))).join('') : '')
+          + chitas.map(id => row(id, schedule[id].label, id === 'chumash' ? _chumashLine(schedule[id].subtitle) : String(schedule[id].subtitle || ''), SECTION_COLORS[id], !!done[id])).join('') : '')
     +     (extras.length ? '<p class="rm-label">More learning</p>'
-          + extras.map(id => row(id, EXTRA_TRACK_DEFS[id].label, '', EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso), '<span class="rm-dot"></span>')).join('') : '')
+          + extras.map(id => row(id, EXTRA_TRACK_DEFS[id].label, '', EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso))).join('') : '')
     +   '</div>'
     +   '<button type="button" class="rm-home" onclick="closeReaderMenu();_closeReaderNow()">Home</button>'
     + '</div>';
