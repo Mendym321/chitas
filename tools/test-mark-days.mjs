@@ -93,6 +93,37 @@ console.log("Today's Chumash already learned:");
   await p.close();
 }
 
+console.log("The reader's menu: days, the calendar, Today:");
+{
+  const p = await open(false);
+  const menu = () => p.evaluate(() => { const m = document.getElementById('reader-menu'); return m && {
+    when: m.querySelector('.rm-when h2').textContent, today: [...m.querySelectorAll('.rm-tool')].some(b => b.textContent === 'Today'),
+    rows: [...m.querySelectorAll('.rm-row')].slice(0, 4).map(r => r.querySelector('.rm-n').textContent + (r.classList.contains('done') ? ' ✓' : '')),
+    reader: document.getElementById('rd-label').textContent }; });
+  await p.evaluate(() => openReaderMenu()); await p.waitForTimeout(300);
+  ok('today: the day, a calendar, no Today button', await menu(), { when: 'Today', today: false, rows: ['Chumash', 'Tehillim', 'Tanya', 'Rambam'], reader: 'Today' });
+  await p.screenshot({ path: shot('menu-today') });
+  await p.click('#reader-menu .rm-step[aria-label="The day before"]'); await p.waitForTimeout(900);
+  ok('‹ : the reader goes to yesterday, and the menu stays open on it', await menu(), { when: 'Yesterday', today: true, rows: ['Chumash', 'Tehillim', 'Tanya', 'Rambam'], reader: 'Yesterday, Oct 29' });
+  await p.click('#reader-menu .rm-step[aria-label="The day before"]'); await p.waitForTimeout(900);
+  ok('learned stays in its place, quieter, with a check', (await menu()).rows, ['Chumash ✓', 'Tehillim', 'Tanya', 'Rambam']);
+  ok('…and can still be opened', await p.evaluate(() => { const r = document.querySelector('#reader-menu .rm-row.done'); return !!r && !r.disabled && !!r.onclick; }), true);
+  await p.screenshot({ path: shot('menu-past') });
+  await p.evaluate(() => setTheme('dark', false)); await p.waitForTimeout(200);
+  await p.screenshot({ path: shot('menu-past-dark') });
+  await p.evaluate(() => setTheme('light', false));
+  await p.click('#reader-menu .rm-tool:has-text("Today")'); await p.waitForTimeout(900);
+  ok('Today: back to today, in the reader and the menu', await menu(), { when: 'Today', today: false, rows: ['Chumash', 'Tehillim', 'Tanya', 'Rambam'], reader: 'Today' });
+  await p.click('#reader-menu .rm-tool:has-text("Calendar")'); await p.waitForTimeout(400);
+  ok('Calendar: the month opens (and the menu closes)', await p.evaluate(() => [!!document.getElementById('day-picker'), !document.getElementById('reader-menu')]), [true, true]);
+  await p.evaluate(() => { _pickOff = -2; _renderDayPicker(); });
+  await p.click('#day-picker .dp-go'); await p.waitForTimeout(1200);
+  ok('picking Wednesday opens Wednesday in the reader', await p.evaluate(() => [!document.getElementById('day-picker'), document.getElementById('rd-label').textContent, document.getElementById('chabad-panel').style.display]), [true, 'Wednesday, Oct 28', 'flex']);
+  ok('…with its own words at the bottom', (await btn(p)).slice(0, 2), ['past', 'You learned this on Wednesday']);
+  ok('no errors', p.__errors, []);
+  await p.close();
+}
+
 await browser.close(); server.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll mark-day tests passed');
 process.exit(failed ? 1 : 0);

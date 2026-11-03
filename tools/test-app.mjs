@@ -351,13 +351,13 @@ await check('the reader\'s menu lists today\'s four (what\'s done ticked) and mo
   user = { ...user, done: { chumash: true } };
   openChabadPanel('tehillim'); await new Promise(r => setTimeout(r, 150));
   openReaderMenu(); await new Promise(r => setTimeout(r, 250));
-  const rows = [...document.querySelectorAll('#reader-menu .ml-r')].slice(0, 4).map(r => r.querySelector('.ml-n').textContent + (r.querySelector('svg[aria-label=Learned]') ? ' ✓' : '') + (r.classList.contains('rm-cur') ? ' (now)' : ''));
+  const rows = [...document.querySelectorAll('#reader-menu .rm-row')].slice(0, 4).map(r => r.querySelector('.rm-n').textContent + (r.querySelector('[aria-label=Learned]') ? ' ✓' : '') + (r.classList.contains('rm-cur') ? ' (now)' : ''));
   const label = document.querySelector('#reader-menu .rm-label').textContent;
   _readerMenuGo('tanya'); await new Promise(r => setTimeout(r, 300));
   const r = [rows, label, document.getElementById('chabad-panel-title').textContent, !document.getElementById('reader-menu')];
   _closeReaderNow();
   return r;
-}, [['Chumash ✓', 'Tehillim (now)', 'Tanya', 'Rambam'], 'Chitas · 1 of 4', 'Tanya', true]);
+}, [['Chumash ✓', 'Tehillim (now)', 'Tanya', 'Rambam'], 'Chitas · 1 of 4 learned', 'Tanya', true]);
 
 await check('the streak is a plain "N days in a row" (not a button), and not there at 0', () => {
   const sp = document.getElementById('streak-pill'), r = [sp.tagName];

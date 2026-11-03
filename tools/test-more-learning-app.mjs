@@ -130,12 +130,12 @@ await check('the reader\'s menu: the day\'s More learning, the one you\'re in ma
   document.getElementById('reader-menu-btn').click();
   await new Promise(r => setTimeout(r, 300));
   const m = document.getElementById('reader-menu');
-  return [!!m, [...m.querySelectorAll('.ml-r')].map(r => r.querySelector('.ml-n').textContent + ' | ' + r.querySelector('.ml-p').textContent + (r.classList.contains('rm-cur') ? ' | now' : '')),
+  return [!!m, [...m.querySelectorAll('.rm-row')].map(r => r.querySelector('.rm-n').textContent + ' | ' + r.querySelector('.rm-p').textContent + (r.classList.contains('rm-cur') ? ' | now' : '')),
     m.querySelector('[role=dialog]').getAttribute('aria-modal')];
 }, [true, ['Daf Yomi | Bechoros 35', 'Nach Yomi | Reading now · Yirmiyahu 41 | now', 'Halacha Yomis | Siman 10:20–26', 'Torah Ohr | Lech Lecha'], 'true']);
 
 await check('picking another in the menu opens it, and the menu closes', async () => {
-  document.querySelector('#reader-menu .ml-r:nth-of-type(1)').click();
+  document.querySelector('#reader-menu .rm-row').click();
   await new Promise(r => setTimeout(r, 400));
   return [document.getElementById('chabad-panel-title').textContent, !document.getElementById('reader-menu'), _rv.sid];
 }, ['Daf Yomi', true, 'extra_dafYomi']);
