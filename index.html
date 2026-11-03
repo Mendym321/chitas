@@ -529,14 +529,16 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .lt-sefer .lt-open { font-weight:400; font-size:1.4em; line-height:1; }   /* the opening words: the title's face, larger */
 .lt-sefer .lt-em { font-weight:400; font-size:1.15em; }
 .lt-sefer .lt-body small { font-size:.78em; color:var(--t2); }
-.hy-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; direction:rtl; margin:14px 0 18px; padding:9px 2px 8px; border-top:3px double var(--t1); border-bottom:1px solid var(--border); font-family:'DachHeilig','Frank Ruhl Libre',serif; color:var(--t1); }
-.hy-head span { font-size:17px; }
-.hy-head b { font-weight:400; font-size:23px; }
+.hy-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; direction:rtl; margin:14px 0 18px; padding:9px 2px 8px; border-top:3px double var(--t1); border-bottom:1px solid var(--border); font-family:'Vilna','Frank Ruhl Libre',serif; color:var(--t1); }   /* the day's line in Vilna, like Dvar Malchus's */
+.hy-head span { font-size:17px; font-weight:600; }
+.hy-head b { font-weight:700; font-size:24px; }
 .hy-head-en { direction:ltr; font-family:var(--ui-font); }
 .hy-head-en span { font-size:13px; font-weight:600; color:var(--t2); }
 .hy-head-en b { font-size:17px; font-weight:800; }
 .hy-he { direction:rtl; text-align:justify; text-align-last:right; text-indent:1.4em; font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-synthesis:none; --rf-sz:21px; --rf-lh:1.6; color:var(--t1); margin:0 0 .55em; }
 .hy-en { --rf-sz:17px; --rf-lh:1.6; color:var(--t1); margin:0 0 .7em; }
+/* A phone's line is too short to justify without big gaps between words: there the lines end where they end */
+@media (max-width:599px) { .hy-he { text-align:right; } }
 .hy-pair { margin-bottom:22px; }
 .hy-pair .hy-he { margin-bottom:.35em; }
 .hy-pair .hy-en { color:var(--t2); }
