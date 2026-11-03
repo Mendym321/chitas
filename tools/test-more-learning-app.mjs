@@ -369,6 +369,15 @@ await check('Hayom Yom\'s reader has the day bar, and the day before shows that 
   return r.concat(document.getElementById('chabad-panel-sub').textContent);
 }, ['flex', 'Hayom Yom', '11 Cheshvan', false, '12 Cheshvan']);
 
+await check('Hayom Yom reads like the printed page: the day\'s line, the Hebrew in Heilig, no bracketed additions', async () => {
+  window._hayomYomLang = 'he'; await openExtraReader('hayomYom'); await new Promise(r => setTimeout(r, 800));
+  const head = document.querySelector('#native-reader-content .hy-head')?.textContent || '';
+  const he = [...document.querySelectorAll('#native-reader-content .hy-he')];
+  const r = [/יום שישי/.test(head), /י״ב חשון/.test(head), he.length > 0, he.every(p => !p.textContent.includes('[')), getComputedStyle(he[0]).fontFamily.includes('DachHeilig')];
+  window._hayomYomLang = null; closeChabadPanel();
+  return r;
+}, [true, true, true, true, true]);
+
 await check('Daf Yomi too: the day before is the daf before', async () => {
   closeChabadPanel();
   await openExtraReader('dafYomi');

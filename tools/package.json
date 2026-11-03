@@ -19,7 +19,8 @@
     "test:shm": "node test-shm-app.mjs",
     "test:rashi": "node test-chumash-rashi.mjs",
     "test:markdays": "node test-mark-days.mjs",
-    "test:placesync": "node test-place-sync.mjs"
+    "test:placesync": "node test-place-sync.mjs",
+    "test:prefsync": "node test-prefs-sync.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
