@@ -424,12 +424,30 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #reader-menu .rm-panel { position:absolute; left:0; top:0; bottom:0; width:min(320px, 86vw); background:var(--bg); border-radius:0 var(--r-l) var(--r-l) 0; padding:calc(18px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom)); box-sizing:border-box; display:flex; flex-direction:column; box-shadow:8px 0 30px rgba(0,0,0,.18); transform:translateX(-100%); transition:transform .22s cubic-bezier(.3,.7,.3,1); }
 #reader-menu.open .rm-shade { opacity:1; }
 #reader-menu.open .rm-panel { transform:none; }
-#reader-menu .rm-top { display:flex; justify-content:space-between; align-items:center; margin:0 4px 0 12px; }
-#reader-menu .rm-top p { font-size:13px; color:var(--t3); }
+#reader-menu .rm-top { display:flex; justify-content:flex-end; margin:0 4px; }
+#reader-menu.stay .rm-panel, #reader-menu.stay .rm-shade { transition:none; }
+#reader-menu .rm-day { display:flex; align-items:center; gap:10px; margin:2px 12px 0; }
+#reader-menu .rm-when { flex:1; text-align:center; min-width:0; }
+#reader-menu .rm-when h2 { margin:0; }
+#reader-menu .rm-when p { margin-top:2px; font-size:13px; color:var(--t3); }
+#reader-menu .rm-step { width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--card); color:var(--t2); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+#reader-menu .rm-step:disabled { visibility:hidden; }
+#reader-menu .rm-tools { display:flex; justify-content:center; gap:8px; margin:12px 12px 0; }
+#reader-menu .rm-tool { display:flex; align-items:center; gap:6px; height:34px; padding:0 14px; border-radius:999px; border:none; background:var(--card2); color:var(--t1); font:700 13px var(--ui-font); cursor:pointer; }
+#reader-menu .rm-row { display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; border:none; border-radius:14px; background:none; font-family:inherit; text-align:left; color:var(--t1); cursor:pointer; }
+#reader-menu .rm-row.rm-cur { background:color-mix(in srgb, var(--k) 12%, var(--card)); }
+#reader-menu .rm-ic { width:24px; display:flex; justify-content:center; color:var(--k); flex-shrink:0; }
+#reader-menu .rm-dot { width:8px; height:8px; border-radius:50%; background:var(--k); }
+#reader-menu .rm-txt { flex:1; min-width:0; }
+#reader-menu .rm-n { display:block; font-size:16px; font-weight:800; }
+#reader-menu .rm-p { display:block; margin-top:1px; font-size:13px; line-height:1.35; color:var(--t3); }
+#reader-menu .rm-end { display:flex; flex-shrink:0; }
+#reader-menu .rm-go { color:var(--t3); }
+#reader-menu .rm-row.done .rm-ic, #reader-menu .rm-row.done .rm-txt { opacity:.5; }
 #reader-menu .rm-x { width:36px; height:36px; border-radius:50%; border:none; background:var(--card2); color:var(--t1); display:flex; align-items:center; justify-content:center; cursor:pointer; }
 #reader-menu .rm-x:focus:not(:focus-visible) { outline:none; }
 #reader-menu .rm-x:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
-#reader-menu h2 { margin:2px 12px 0; font-family:var(--title-font); font-size:26px; font-weight:800; letter-spacing:-.4px; color:var(--t1); }
+#reader-menu h2 { margin:0; font-family:var(--title-font); font-size:26px; font-weight:800; letter-spacing:-.4px; color:var(--t1); }
 #reader-menu .rm-list { flex:1; overflow-y:auto; margin-top:6px; }
 #reader-menu .rm-label { margin:14px 12px 4px; font-size:11px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
 #reader-menu .ml-r { border-radius:14px; padding:10px 12px; }
@@ -1091,7 +1109,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp }
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteField, FieldPath, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -1179,8 +1197,19 @@ window._fb = {
   async loadUser(uid) {
     try {
       const snap = await getDoc(doc(db, 'users', uid));
-      return snap.exists() ? snap.data() : null;
+      const data = snap.exists() ? snap.data() : null;
+      if (data) window._cloudPlacesIn?.(data.places);   // your places in the reader, from your other devices
+      return data;
     } catch(e) { console.error('loadUser:', e); return null; }
+  },
+
+  // Your places in the reader (see _syncPlaces): each one its own field inside
+  // places, written and removed one by one, so this never touches your progress
+  async savePlaces(uid, places, drop = []) {
+    const args = [];
+    for (const k in places) args.push(new FieldPath('places', k), places[k]);
+    drop.forEach(k => args.push(new FieldPath('places', k), deleteField()));
+    if (args.length) await updateDoc(doc(db, 'users', uid), ...args);
   },
 
 
@@ -2794,7 +2823,7 @@ async function rebuildScheduleForOffset() {
     }
     if (s.id === 'tanya') {
       // Hebrew date without the year e.g. "3 Tammuz"
-      const hebrewNoYear = hd ? hd.hd + ' ' + hd.hm : 'Tanya Yomi';
+      const hebrewNoYear = hd?.hd && hd?.hm ? hd.hd + ' ' + hd.hm : 'Tanya Yomi';
       s.subtitle = hebrewNoYear;
     }
     if (s.id === 'rambam') {
@@ -3018,7 +3047,7 @@ function openDayPicker() {
   m.id = 'day-picker';
   m.onclick = e => { if (e.target === m) m.remove(); };
   m.innerHTML = '<div class="dp-sheet" role="dialog" aria-label="Go to a day"><div class="dp-grab"></div>'
-    + '<div class="dp-head"><p>Go to a day</p><button class="dp-today" onclick="document.getElementById(\'day-picker\').remove();goToDay(0)">Today</button></div>'
+    + '<div class="dp-head"><p>Go to a day</p><button class="dp-today" onclick="_pickDay(0)">Today</button></div>'
     + '<div id="dp-body"></div></div>';
   document.body.appendChild(m);
   _renderDayPicker();
@@ -3050,7 +3079,7 @@ function _renderDayPicker() {
     + '<div class="dp-grid">' + cells + '</div></div>'
     + '<div class="dp-info"><p>' + sel.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + ' · '
     + hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(sel)) + '</p><p>' + what + '</p></div>'
-    + '<button class="dp-go" onclick="document.getElementById(\'day-picker\').remove();goToDay(' + _pickOff + ')">' + (_pickOff === dayOffset ? 'Stay on ' : 'Open ') + escapeHtml(_dayName(_pickOff)) + '</button>';
+    + '<button class="dp-go" onclick="_pickDay(' + _pickOff + ')">' + (_pickOff === dayOffset ? 'Stay on ' : 'Open ') + escapeHtml(_dayName(_pickOff)) + '</button>';
 }
 
 // A day as a small ring in four quarters, one per section, coloured when learned
@@ -3300,8 +3329,13 @@ function markDone(id) {
   _addLifetimeCounts(id, dateISO(appNow()));
   const r = _changeDay(dateISO(appNow()), day => { day[id] = true; });
 
-  // Learned: its next open starts at the top (closing the reader now doesn't save the place again)
-  try { localStorage.removeItem(_scrollKey(id, dateISO(appNow()))); } catch(e) {}
+  // Learned: its next open starts at the top, here and on your other devices
+  // (closing the reader now doesn't save the place again)
+  try {
+    const key = _scrollKey(id, dateISO(appNow())), top = { y: 0, t: Date.now() };
+    localStorage.setItem(key, JSON.stringify(top));
+    _syncPlace(key, top);
+  } catch(e) {}
   if (_rv.sid === id) _rv.touched = false;
 
   if (!r.completedNow) fire('Nice! ' + s.label + ' done.', 'done');
@@ -3971,11 +4005,51 @@ function _scrollKey(sid, iso = _viewedISO()) {
 }
 
 function _savedPlace(sid, iso = _rv.iso || _viewedISO()) {
+  const key = _scrollKey(sid, iso);
+  let here = null;
   try {
-    const val = localStorage.getItem(_scrollKey(sid, iso));
-    if (val === null) return null;
-    return val[0] === '{' ? JSON.parse(val) : { y: parseInt(val) || 0 };   // a place, or pixels (older saves)
-  } catch (e) { return null; }
+    const val = localStorage.getItem(key);
+    if (val !== null) here = val[0] === '{' ? JSON.parse(val) : { y: parseInt(val) || 0 };   // a place, or pixels (older saves)
+  } catch (e) {}
+  // The same piece read on another device more recently: that place
+  const there = _placesSynced() ? _cloudPlaces[key] : null;
+  if (there && typeof there === 'object' && (there.t || 0) > ((here && here.t) || 0)) return there;
+  return here;
+}
+
+// ── YOUR PLACE ON EVERY DEVICE ────────────────────────────────────────────────
+// Signed in, every place is also kept in your account (users/{you}, in
+// places: one field per piece, each written on its own, never your progress),
+// and the newer of this device's and the account's is the one used. They come
+// with your account when the app opens or comes back (loadUser); they go when
+// you stop reading (close, switch, leave the app), and at most every 30
+// seconds while you scroll. Only the last week's are kept. See DESIGN.md.
+var _cloudPlaces = {}, _placesOut = {}, _placesTimer = null, _placesPruned = false;
+window._cloudPlacesIn = p => { _cloudPlaces = (p && typeof p === 'object') ? { ...p, ..._placesOut } : { ..._placesOut }; };
+const _placesSynced = () => !!(user && user.uid && !isGuest() && window._fb?.savePlaces);
+function _syncPlace(key, place) {
+  if (!_placesSynced()) return;
+  _cloudPlaces[key] = place;
+  _placesOut[key] = place;
+  if (!_placesTimer) _placesTimer = setTimeout(_sendPlaces, 30e3);
+}
+function _sendPlaces() {
+  clearTimeout(_placesTimer); _placesTimer = null;
+  if (!_placesSynced()) return;
+  const out = _placesOut; _placesOut = {};
+  // Once a session: places from more than a week ago go (every key ends in its date)
+  const drop = [];
+  if (!_placesPruned) {
+    _placesPruned = true;
+    const old = new Date(appNow()); old.setDate(old.getDate() - 9);
+    const cut = dateISO(old);
+    for (const k in _cloudPlaces) { const d = k.slice(-10); if (/^\d{4}-\d\d-\d\d$/.test(d) && d < cut && !out[k]) { drop.push(k); delete _cloudPlaces[k]; } }
+  }
+  if (!Object.keys(out).length && !drop.length) return;
+  window._fb.savePlaces(user.uid, out, drop).catch(e => {
+    console.warn('places:', e?.message);
+    for (const k in out) if (!_placesOut[k]) _placesOut[k] = out[k];   // try again with the next one
+  });
 }
 
 // Save a place for the piece on screen (at the top: forget it, so it opens at the top)
@@ -3983,8 +4057,11 @@ function _storePlace(place) {
   if (!_rv.sid || !place) return;
   const key = _scrollKey(_rv.sid, _rv.iso);
   try {
-    if (!place.y) localStorage.removeItem(key);
-    else { localStorage.setItem(key, JSON.stringify({ ...place, t: Date.now() })); _pruneScrollKeys(); }
+    // At the top is kept too (dated), so a newer "top" here beats an older place from another device
+    const saved = place.y ? { ...place, t: Date.now() } : { y: 0, t: Date.now() };
+    localStorage.setItem(key, JSON.stringify(saved));
+    _pruneScrollKeys();
+    _syncPlace(key, saved);
   } catch (e) {}
 }
 // Save where you are now, if it's yours to save (rule 2)
@@ -3997,6 +4074,7 @@ function _savePlace() {
 function _flushReaderScroll() {
   if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
   _saveSpecialPlace(true) || _savePlace();
+  _sendPlaces();   // and to your account now, not in 30 seconds
 }
 // Phones close apps without warning: save whenever the app goes out of view
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') _flushReaderScroll(); });
@@ -5919,41 +5997,53 @@ async function _sendFeedback(kind) {
 }
 
 // ── The reader's menu: the day's learning, to move to another without going Home ──
-// The four of Chitas with their circles, then More learning, then Home. A
-// button (not a swipe: a swipe right in the reader is the day before, and
-// Safari owns the left edge).
-function openReaderMenu() {
+// At the top the day, with ‹ › to step a day, a calendar for any day, and
+// Today when you're on another day: the reader moves with it. Then the four of
+// Chitas, always in the same order, and More learning: tap one to read it. A
+// learned one is quieter, with a check, and can still be opened (no circles:
+// they looked like boxes to tick). Home at the bottom. A button (not a swipe:
+// a swipe right in the reader is the day before, and Safari owns the left edge).
+function openReaderMenu(stay) {
   closeReaderSettings();
   document.getElementById('reader-menu')?.remove();
   const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
   const iso = dateISO(d), done = dayDone(user, d, appNow());
   const cur = String(_rv.sid || '').replace(/^extra_/, '').split(':')[0];
-  const row = (id, name, piece, colour, on) => '<button type="button" class="ml-r' + (id === cur ? ' rm-cur' : '') + '" style="--k:' + colour + '" onclick="_readerMenuGo(\'' + id + '\')"' + (id === cur ? ' aria-current="true"' : '') + '>'
-    + '<span class="ml-bar" style="background:' + colour + '"></span>'
-    + '<span class="ml-x"><span class="ml-n" id="rm-name-' + id + '">' + name + '</span><span class="ml-p" id="rm-sub-' + id + '">' + (id === cur ? 'Reading now' + (piece ? ' · ' : '') : '') + escapeHtml(piece || '') + '</span></span>'
-    + _mlCircle(on, colour) + '</button>';
+  const GLYPH = { chumash: 'torah', tehillim: 'kinor', tanya: 'flame', rambam: 'books' };
+  const chev = dir => '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="' + (dir < 0 ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6') + '"/></svg>';
+  const tick = colour => '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="' + colour + '" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const row = (id, name, piece, colour, on, mark) => '<button type="button" class="rm-row' + (on ? ' done' : '') + (id === cur ? ' rm-cur' : '') + '" style="--k:' + colour + '" onclick="_readerMenuGo(\'' + id + '\')"' + (id === cur ? ' aria-current="true"' : '') + '>'
+    + '<span class="rm-ic">' + mark + '</span>'
+    + '<span class="rm-txt"><span class="rm-n" id="rm-name-' + id + '">' + name + '</span><span class="rm-p" id="rm-sub-' + id + '">' + (id === cur ? 'Reading now' + (piece ? ' · ' : '') : '') + escapeHtml(piece || '') + '</span></span>'
+    + (on ? '<span class="rm-end" role="img" aria-label="Learned">' + tick(colour) + '</span>' : '<span class="rm-end rm-go">' + chev(1) + '</span>') + '</button>';
   const chitas = schedule ? SECTION_IDS.filter(id => schedule[id]) : [];
   const extras = _shelfTracks().filter(id => EXTRA_TRACK_DEFS[id]);
   const n = chitas.filter(id => done[id]).length;
-  const when = dayOffset === 0 ? 'Today' : dayOffset === -1 ? 'Yesterday' : dayOffset === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'long' });
+  const when = dayOffset === 0 ? 'Today' : dayOffset === -1 ? 'Yesterday' : dayOffset === 1 ? 'Tomorrow' : d.getDay() === 6 ? 'Shabbos' : d.toLocaleDateString('en-US', { weekday: 'long' });
+  const step = off => _canReadDay(off) ? ' onclick="_menuDay(' + off + ')"' : ' disabled';
   const m = document.createElement('div');
   m.id = 'reader-menu';
   m.innerHTML = '<div class="rm-shade" onclick="closeReaderMenu()"></div>'
     + '<div class="rm-panel" role="dialog" aria-modal="true" aria-label="' + when + '\'s learning">'
-    +   '<div class="rm-top"><p>' + d.toLocaleDateString('en-US', { weekday: 'long' }) + ' · ' + hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d)) + '</p>'
-    +   '<button type="button" class="rm-x" onclick="closeReaderMenu()" aria-label="Close the menu"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></button></div>'
-    +   '<h2>' + when + '</h2>'
+    +   '<div class="rm-top"><button type="button" class="rm-x" onclick="closeReaderMenu()" aria-label="Close the menu"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></button></div>'
+    +   '<div class="rm-day">'
+    +     '<button type="button" class="rm-step" aria-label="The day before"' + step(dayOffset - 1) + '>' + chev(-1) + '</button>'
+    +     '<div class="rm-when"><h2>' + when + '</h2><p>' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' · ' + hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d)) + '</p></div>'
+    +     '<button type="button" class="rm-step" aria-label="The day after"' + step(dayOffset + 1) + '>' + chev(1) + '</button>'
+    +   '</div>'
+    +   '<div class="rm-tools"><button type="button" class="rm-tool" onclick="closeReaderMenu();openDayPicker()">' + icon('calendar', 16) + 'Calendar</button>'
+    +     (dayOffset !== 0 ? '<button type="button" class="rm-tool" onclick="_menuDay(0)">Today</button>' : '') + '</div>'
     +   '<div class="rm-list">'
-    +     (chitas.length ? '<p class="rm-label">Chitas · ' + n + ' of ' + chitas.length + '</p>'
-          + chitas.map(id => row(id, schedule[id].label, id === 'rambam' ? String(schedule[id].subtitle || '') : schedule[id].subtitle, SECTION_COLORS[id], !!done[id])).join('') : '')
+    +     (chitas.length ? '<p class="rm-label">Chitas · ' + n + ' of ' + chitas.length + ' learned</p>'
+          + chitas.map(id => row(id, schedule[id].label, id === 'rambam' ? String(schedule[id].subtitle || '') : schedule[id].subtitle, SECTION_COLORS[id], !!done[id], icon(GLYPH[id], 22))).join('') : '')
     +     (extras.length ? '<p class="rm-label">More learning</p>'
-          + extras.map(id => row(id, EXTRA_TRACK_DEFS[id].label, '', EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso))).join('') : '')
+          + extras.map(id => row(id, EXTRA_TRACK_DEFS[id].label, '', EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso), '<span class="rm-dot"></span>')).join('') : '')
     +   '</div>'
     +   '<button type="button" class="rm-home" onclick="closeReaderMenu();_closeReaderNow()">Home</button>'
     + '</div>';
   document.body.appendChild(m);
-  requestAnimationFrame(() => m.classList.add('open'));
-  m.querySelector('.rm-x').focus();
+  if (stay) m.classList.add('open', 'stay'); else requestAnimationFrame(() => m.classList.add('open'));
+  m.querySelector(stay ? '.rm-when' : '.rm-x')?.focus?.();
   // Each extra's piece (and Torah Ohr's name), from the schedules on the phone
   extras.filter(id => OFFERED_TRACKS.includes(id)).forEach(id => _trackPiece(id, iso).then(piece => {
     const el = document.getElementById('rm-sub-' + id);
@@ -5961,6 +6051,27 @@ function openReaderMenu() {
     el.textContent = (id === cur ? 'Reading now · ' : '') + _trackLine(id, piece).replace(/^Parshas /, '').replace(/ · (Torah Ohr|Likkutei Torah)$/, '');
     if (id === 'likkuteiTorah' && piece.books === 'Torah Ohr') { const nm = document.getElementById('rm-name-' + id); if (nm) nm.textContent = 'Torah Ohr'; }
   }).catch(() => {}));
+}
+// Another day from the reader (the menu's ‹ › and Today, or the calendar):
+// the reader moves to that day, as with its own day bar; from the menu, the
+// menu stays open and shows that day
+async function _menuDay(off, fromCalendar) {
+  if (!_canReadDay(off)) return;
+  const menuOpen = !fromCalendar && !!document.getElementById('reader-menu');
+  if (off !== dayOffset) {
+    const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
+    _flushReaderScroll();
+    const ready = navDay(off - dayOffset);
+    if (sid && _readsByDay(sid)) setTimeout(() => _reopenReader(sid), 60);
+    await ready;
+  }
+  if (menuOpen) openReaderMenu(true);
+}
+// The calendar's day: in the reader, open it there; on Today, go to it
+function _pickDay(off) {
+  document.getElementById('day-picker')?.remove();
+  if (document.getElementById('chabad-panel')?.style.display === 'flex') _menuDay(off, true);
+  else goToDay(off);
 }
 function closeReaderMenu() {
   const m = document.getElementById('reader-menu');
