@@ -1076,14 +1076,33 @@ html.reader-open, html.reader-open body { overflow: hidden; }
    A sidebar instead of the bottom pill; Today's four tiles in one row; the
    reader's text in a page-wide column; Progress in two columns; pop-ups as
    centred boxes. Below 1000px nothing here applies. */
-.side-logo { display:none; }
+.side-logo, .tabbar .side-only { display:none; }
 @media (min-width: 1000px) {
   #app { max-width:none; padding-bottom:40px; }
   #main-app { margin-left:260px; max-width:1060px; padding:12px 48px 0; }
-  .tabbar { left:20px; top:20px; bottom:20px; transform:none; width:220px; max-width:none; flex-direction:column; justify-content:flex-start; gap:6px; padding:18px 12px; }
-  .tabbar button { width:100%; justify-content:flex-start; padding:12px 14px; }
+  .tabbar { transform:none; max-width:none; flex-direction:column; justify-content:flex-start; }
+  .tabbar button { width:100%; justify-content:flex-start; }
   .tabbar button .tab-l { display:inline; }
-  .side-logo { display:flex; align-items:center; gap:10px; padding:4px 10px 18px; color:var(--on-ink); font:800 22px var(--ui-font); letter-spacing:-.5px; }
+  /* The sidebar: paper like the page, words not icons, the day's learning, you at the foot */
+  .tabbar { left:0; top:0; bottom:0; width:240px; border-radius:0; background:var(--surface); box-shadow:none; border-right:1px solid var(--border); padding:28px 16px 20px; gap:2px; overflow-y:auto; }
+  .tabbar > button > svg, .tabbar .tab-glyph, .tabbar .tab-av { display:none; }
+  .tabbar > button.nav-tab { color:var(--t2); padding:10px 12px; border-radius:10px; font-size:15px; }
+  .tabbar > button.nav-tab.on { background:var(--card2); color:var(--t1); }
+  .tabbar > button.nav-tab[data-tab="profile"]:not(.side-me) { display:none; }
+  #main-app { margin-left:240px !important; }
+  .tabbar .side-only { display:block; }
+  .tabbar #side-list { flex:1; }
+  .side-l { margin:22px 12px 6px; }
+  .tabbar .side-r { display:flex; justify-content:space-between; align-items:center; width:100%; padding:7px 12px; border:none; border-radius:10px; background:none; font:600 14px var(--ui-font); color:var(--t1); cursor:pointer; text-align:left; }
+  .tabbar .side-r:hover { background:var(--card2); }
+  .tabbar .side-r.done { color:var(--t3); }
+  .tabbar .side-r svg { width:15px; height:15px; flex-shrink:0; }
+  .tabbar > button.side-me { display:flex; align-items:center; gap:10px; margin-top:12px; padding:12px; border-top:1px solid var(--border); border-radius:10px; }
+  .side-av { width:32px; height:32px; border-radius:50%; background:var(--c-rambam); color:#fff; display:grid; place-items:center; font:800 14px var(--ui-font); flex-shrink:0; }
+  .side-me-t { text-align:left; }
+  .side-me-t b { display:block; font:700 14px var(--ui-font); color:var(--t1); }
+  .side-me-t small { display:block; font:500 12px var(--ui-font); color:var(--t3); }
+  .side-logo { display:flex; align-items:center; gap:10px; padding:0 10px 26px; color:var(--t1); font:800 22px var(--ui-font); letter-spacing:-.5px; }
   .side-logo svg { width:34px; height:34px; }
   .side-logo circle { fill:none; stroke-width:9; }
   #app-head { padding-left:0; padding-right:0; }
@@ -1397,6 +1416,9 @@ window._fsGetDoc = getDoc;
       <button class="nav-tab" data-tab="profile" onclick="switchTab('profile')">
         <span class="tab-av"><span id="avatar-tab"></span><span id="avatar-dot" style="display:none;"></span></span><span class="tab-l">Profile</span>
       </button>
+      <!-- On a computer only: the day's learning, and you (Profile) at the foot -->
+      <div id="side-list" class="side-only"></div>
+      <button class="nav-tab side-me side-only" data-tab="profile" onclick="switchTab('profile')"><span class="side-av" id="side-av"></span><span class="side-me-t"><b id="side-name"></b><small>Profile and settings</small></span></button>
     </nav>
 
     <!-- ── LEARN TAB ── -->
@@ -2715,8 +2737,30 @@ function _showStreakPill() {
   document.getElementById('streak-pill-unit').textContent = n === 1 ? ' day in a row' : ' days in a row';
   sp.style.display = dayOffset === 0 && n > 0 ? '' : 'none';
 }
+// On a computer, the sidebar lists the day's learning like the reader's menu:
+// names only, a check in its colour when learned; a click opens it
+function _renderSideList() {
+  const box = document.getElementById('side-list');
+  if (!box || !window.matchMedia?.('(min-width:1000px)').matches) return;
+  const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
+  const iso = dateISO(d), done = dayDone(user, d, appNow());
+  const tick = c => '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="' + c + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const row = (id, name, colour, on, open) => '<button type="button" class="side-r' + (on ? ' done' : '') + '" onclick="' + open + '"><span id="side-n-' + id + '">' + escapeHtml(name) + '</span>' + (on ? '<span role="img" aria-label="Learned">' + tick(colour) + '</span>' : '') + '</button>';
+  const chitas = schedule ? SECTION_IDS.filter(id => schedule[id]) : [];
+  const extras = _shelfTracks().filter(id => EXTRA_TRACK_DEFS[id]);
+  box.innerHTML = (chitas.length ? '<p class="lbl side-l">Chitas · ' + chitas.filter(id => done[id]).length + ' of ' + chitas.length + '</p>'
+      + chitas.map(id => row(id, schedule[id].label, SECTION_COLORS[id], !!done[id], "openChabadPanel('" + id + "')")).join('') : '')
+    + (extras.length ? '<p class="lbl side-l">More learning</p>'
+      + extras.map(id => row(id, EXTRA_TRACK_DEFS[id].label, EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso), "openExtraReader('" + id + "')")).join('') : '');
+  if (extras.includes('likkuteiTorah')) _trackPiece('likkuteiTorah', iso).then(p => { const n = document.getElementById('side-n-likkuteiTorah'); if (n && p && p.books === 'Torah Ohr') n.textContent = 'Torah Ohr'; }).catch(() => {});
+}
+window.matchMedia?.('(min-width:1000px)').addEventListener?.('change', () => _renderSideList());
+
 function updateHeader() {
   _showStreakPill();
+  const sa = document.getElementById('side-av'), sn = document.getElementById('side-name');
+  if (sa) sa.textContent = ((user.name || '').trim()[0] || '·').toUpperCase();
+  if (sn) sn.textContent = (user.name || '').trim() || 'You';
   const at = document.getElementById('avatar-tab');
   if (at) at.textContent = ((user.name || '').trim()[0] || '·').toUpperCase();
   const tb = document.getElementById('tab-books');
@@ -3023,6 +3067,7 @@ function updateProgressRing() {
     const tseg = document.getElementById('tab-seg-' + i);    // the Today tab's little ring
     if (tseg) { tseg.setAttribute('stroke-opacity', done[id] ? '1' : '.3'); tseg.setAttribute('stroke', done[id] ? SECTION_COLORS[id] : 'currentColor'); }
   });
+  try { _renderSideList(); } catch (e) {}
   const n = sectionsDone(done);
   const allDone = n === 4;
   const title = document.getElementById('progress-title');
@@ -6950,6 +6995,7 @@ const _mlCircle = (on, colour) => on
   : '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11.5" fill="none" stroke="var(--hi)" stroke-width="2"/></svg>';
 const _ML_CHEV = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
 function _renderExtraTrackCards(iso, isToday) {
+  try { _renderSideList(); } catch (e) {}   // the sidebar's list too
   const box = document.getElementById('more-learning');
   if (!box) return;
   const ids = _shelfTracks();
