@@ -7642,13 +7642,13 @@ async function _loadHayomYomNative(silent) {
   }
 
   // ── Get Hebrew date ──────────────────────────────────────────────────────
-  let hm, hd, hy;
+  let hm, hd;
   try {
     const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
     const url = 'https://www.hebcal.com/converter?cfg=json'
       + '&gy=' + d.getFullYear() + '&gm=' + (d.getMonth()+1) + '&gd=' + d.getDate() + '&g2h=1';
     const heb = await (await fetch(url)).json();
-    hm = heb.hm; hd = heb.hd; hy = heb.hy;
+    hm = heb.hm; hd = heb.hd;
   } catch(e) {
     if (!silent) _hayomYomError('Could not determine Hebrew date.');
     return;
@@ -7662,7 +7662,7 @@ async function _loadHayomYomNative(silent) {
   let docs = [];
   try {
     const all = await _hayomYomData();
-    for (const key of keys) if (all[key]) docs.push({ key, hebrew: all[key].he, english: all[key].en });
+    for (const key of keys) if (all[key]) docs.push({ key, hebrew: all[key].he, english: all[key].en, day: all[key].day });
   } catch(e) {
     console.error('Hayom Yom:', e);
     if (!silent) _hayomYomError('Could not load Hayom Yom.');
@@ -7691,13 +7691,18 @@ async function _loadHayomYomNative(silent) {
   const heClean = t => String(t || '').replace(/\s*\[[^\]\n]*\]/g, '').replace(/ +([,.:;?!])/g, '$1');
   const he = x => '<p class="rf-body hy-he" lang="he">' + x + '</p>';
   const en = x => '<p class="rf-body hy-en">' + x + '</p>';
-  const d0 = appNow(); d0.setDate(d0.getDate() + (dayOffset || 0));
+  // The day's line as the book prints it: the date in the middle (the same
+  // date every year), and beside it that day's weekday and year in the book's
+  // own calendar (19 Kislev 5703 to 18 Kislev 5704; day: [weekday, year], from
+  // tools/generate-hayom-yom-days.mjs). Today's weekday would be wrong there.
   const gersh = h => h.length === 1 ? h + '׳' : h.slice(0, -1) + '״' + h.slice(-1);
   const HE_MONTH = { Tishrei: 'תשרי', Cheshvan: 'חשון', Kislev: 'כסלו', Tevet: 'טבת', "Sh'vat": 'שבט', Adar: 'אדר', 'Adar I': 'אדר א׳', 'Adar II': 'אדר ב׳', Nisan: 'ניסן', Iyyar: 'אייר', Sivan: 'סיון', Tamuz: 'תמוז', Av: 'מנחם אב', Elul: 'אלול' };
   const HE_DAY = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת קודש'];
+  const EN_DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Shabbos'];
+  const orig = Array.isArray(docs[0].day) ? docs[0].day : null;
   const head = lang === 'en'
-    ? '<div class="hy-head hy-head-en"><span>' + d0.toLocaleDateString('en-US', { weekday: 'long' }) + '</span><b>' + escapeHtml(hebMonthSpelling(hd + ' ' + hm)) + '</b><span>' + (hy || '') + '</span></div>'
-    : '<div class="hy-head"><span>' + HE_DAY[d0.getDay()] + '</span><b>' + gersh(hebNumeral(+hd)) + ' ' + (HE_MONTH[hm] || hm) + '</b><span>' + (hy ? 'ה׳' + gersh(hebNumeral(hy % 1000)) : '') + '</span></div>';
+    ? '<div class="hy-head hy-head-en"><span>' + (orig ? EN_DAY[orig[0]] : '') + '</span><b>' + escapeHtml(hebMonthSpelling(hd + ' ' + hm)) + '</b><span>' + (orig ? orig[1] : '') + '</span></div>'
+    : '<div class="hy-head"><span>' + (orig ? HE_DAY[orig[0]] : '') + '</span><b>' + gersh(hebNumeral(+hd)) + ' ' + (HE_MONTH[hm] || hm) + '</b><span>' + (orig ? 'ה׳' + gersh(hebNumeral(orig[1] % 1000)) : '') + '</span></div>';
 
   let html = _langSeg(lang, "_hayomYomSetLang('LANG')") + head
     + (isChaiElul ? '<p class="lbl" style="margin:0 0 10px;">' + dateLabel + '</p>' : '');
