@@ -1091,7 +1091,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp }
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteField, FieldPath, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -1179,8 +1179,19 @@ window._fb = {
   async loadUser(uid) {
     try {
       const snap = await getDoc(doc(db, 'users', uid));
-      return snap.exists() ? snap.data() : null;
+      const data = snap.exists() ? snap.data() : null;
+      if (data) window._cloudPlacesIn?.(data.places);   // your places in the reader, from your other devices
+      return data;
     } catch(e) { console.error('loadUser:', e); return null; }
+  },
+
+  // Your places in the reader (see _syncPlaces): each one its own field inside
+  // places, written and removed one by one, so this never touches your progress
+  async savePlaces(uid, places, drop = []) {
+    const args = [];
+    for (const k in places) args.push(new FieldPath('places', k), places[k]);
+    drop.forEach(k => args.push(new FieldPath('places', k), deleteField()));
+    if (args.length) await updateDoc(doc(db, 'users', uid), ...args);
   },
 
 
@@ -3300,8 +3311,13 @@ function markDone(id) {
   _addLifetimeCounts(id, dateISO(appNow()));
   const r = _changeDay(dateISO(appNow()), day => { day[id] = true; });
 
-  // Learned: its next open starts at the top (closing the reader now doesn't save the place again)
-  try { localStorage.removeItem(_scrollKey(id, dateISO(appNow()))); } catch(e) {}
+  // Learned: its next open starts at the top, here and on your other devices
+  // (closing the reader now doesn't save the place again)
+  try {
+    const key = _scrollKey(id, dateISO(appNow())), top = { y: 0, t: Date.now() };
+    localStorage.setItem(key, JSON.stringify(top));
+    _syncPlace(key, top);
+  } catch(e) {}
   if (_rv.sid === id) _rv.touched = false;
 
   if (!r.completedNow) fire('Nice! ' + s.label + ' done.', 'done');
@@ -3971,11 +3987,51 @@ function _scrollKey(sid, iso = _viewedISO()) {
 }
 
 function _savedPlace(sid, iso = _rv.iso || _viewedISO()) {
+  const key = _scrollKey(sid, iso);
+  let here = null;
   try {
-    const val = localStorage.getItem(_scrollKey(sid, iso));
-    if (val === null) return null;
-    return val[0] === '{' ? JSON.parse(val) : { y: parseInt(val) || 0 };   // a place, or pixels (older saves)
-  } catch (e) { return null; }
+    const val = localStorage.getItem(key);
+    if (val !== null) here = val[0] === '{' ? JSON.parse(val) : { y: parseInt(val) || 0 };   // a place, or pixels (older saves)
+  } catch (e) {}
+  // The same piece read on another device more recently: that place
+  const there = _placesSynced() ? _cloudPlaces[key] : null;
+  if (there && typeof there === 'object' && (there.t || 0) > ((here && here.t) || 0)) return there;
+  return here;
+}
+
+// ── YOUR PLACE ON EVERY DEVICE ────────────────────────────────────────────────
+// Signed in, every place is also kept in your account (users/{you}, in
+// places: one field per piece, each written on its own, never your progress),
+// and the newer of this device's and the account's is the one used. They come
+// with your account when the app opens or comes back (loadUser); they go when
+// you stop reading (close, switch, leave the app), and at most every 30
+// seconds while you scroll. Only the last week's are kept. See DESIGN.md.
+var _cloudPlaces = {}, _placesOut = {}, _placesTimer = null, _placesPruned = false;
+window._cloudPlacesIn = p => { _cloudPlaces = (p && typeof p === 'object') ? { ...p, ..._placesOut } : { ..._placesOut }; };
+const _placesSynced = () => !!(user && user.uid && !isGuest() && window._fb?.savePlaces);
+function _syncPlace(key, place) {
+  if (!_placesSynced()) return;
+  _cloudPlaces[key] = place;
+  _placesOut[key] = place;
+  if (!_placesTimer) _placesTimer = setTimeout(_sendPlaces, 30e3);
+}
+function _sendPlaces() {
+  clearTimeout(_placesTimer); _placesTimer = null;
+  if (!_placesSynced()) return;
+  const out = _placesOut; _placesOut = {};
+  // Once a session: places from more than a week ago go (every key ends in its date)
+  const drop = [];
+  if (!_placesPruned) {
+    _placesPruned = true;
+    const old = new Date(appNow()); old.setDate(old.getDate() - 9);
+    const cut = dateISO(old);
+    for (const k in _cloudPlaces) { const d = k.slice(-10); if (/^\d{4}-\d\d-\d\d$/.test(d) && d < cut && !out[k]) { drop.push(k); delete _cloudPlaces[k]; } }
+  }
+  if (!Object.keys(out).length && !drop.length) return;
+  window._fb.savePlaces(user.uid, out, drop).catch(e => {
+    console.warn('places:', e?.message);
+    for (const k in out) if (!_placesOut[k]) _placesOut[k] = out[k];   // try again with the next one
+  });
 }
 
 // Save a place for the piece on screen (at the top: forget it, so it opens at the top)
@@ -3983,8 +4039,11 @@ function _storePlace(place) {
   if (!_rv.sid || !place) return;
   const key = _scrollKey(_rv.sid, _rv.iso);
   try {
-    if (!place.y) localStorage.removeItem(key);
-    else { localStorage.setItem(key, JSON.stringify({ ...place, t: Date.now() })); _pruneScrollKeys(); }
+    // At the top is kept too (dated), so a newer "top" here beats an older place from another device
+    const saved = place.y ? { ...place, t: Date.now() } : { y: 0, t: Date.now() };
+    localStorage.setItem(key, JSON.stringify(saved));
+    _pruneScrollKeys();
+    _syncPlace(key, saved);
   } catch (e) {}
 }
 // Save where you are now, if it's yours to save (rule 2)
@@ -3997,6 +4056,7 @@ function _savePlace() {
 function _flushReaderScroll() {
   if (_scrollSaveTimer) { clearTimeout(_scrollSaveTimer); _scrollSaveTimer = null; }
   _saveSpecialPlace(true) || _savePlace();
+  _sendPlaces();   // and to your account now, not in 30 seconds
 }
 // Phones close apps without warning: save whenever the app goes out of view
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') _flushReaderScroll(); });

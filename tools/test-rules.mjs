@@ -4,7 +4,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, getDocs, collection, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, getDocs, collection, deleteDoc, updateDoc, deleteField, FieldPath } from 'firebase/firestore';
 
 const env = await initializeTestEnvironment({
   projectId: 'demo-chitas',
@@ -38,6 +38,24 @@ await check('you can save your progress', assertSucceeds(setDoc(doc(alice, 'user
 await check('a new account can create its document', assertSucceeds(setDoc(doc(bob, 'users/bob'), { name: 'Bob', streak: 0 })));
 await check('Reset progress (replace the whole document) works', assertSucceeds(setDoc(doc(alice, 'users/alice'), { name: 'Alice', streak: 0 })));
 await check('an admin can reset and keep isAdmin', assertSucceeds(setDoc(doc(admin, 'users/admin1'), { name: 'Admin', streak: 0, isAdmin: true })));
+
+console.log('Your place in the reader (the app\'s savePlaces):');
+{
+  const key = 'scroll_extra_likkuteiTorah:Torah Ohr, Lech Lecha 2_2026-10-24';   // spaces, a comma and a colon in a key
+  await check('you can save a place, one field inside places', assertSucceeds(updateDoc(doc(alice, 'users/alice'), new FieldPath('places', 'scroll_chumash_2026-10-28'), { y: 900, a: 'He replied', t: 1 }, new FieldPath('places', key), { y: 0, t: 2 })));
+  await check('and remove an old one', assertSucceeds(updateDoc(doc(alice, 'users/alice'), new FieldPath('places', key), deleteField())));
+  await check('your progress is untouched by it', (async () => {
+    const d = (await getDoc(doc(alice, 'users/alice'))).data();
+    if (d.name !== 'Alice' || d.streak !== 0 || d.places?.['scroll_chumash_2026-10-28']?.y !== 900 || key in d.places) throw new Error(JSON.stringify(d));
+  })());
+  await check('a progress save leaves your places alone', (async () => {
+    await setDoc(doc(alice, 'users/alice'), { streak: 5 }, { merge: true });
+    const d = (await getDoc(doc(alice, 'users/alice'))).data();
+    if (d.places?.['scroll_chumash_2026-10-28']?.y !== 900) throw new Error(JSON.stringify(d));
+  })());
+  await check('someone else can\'t write your places', assertFails(updateDoc(doc(bob, 'users/alice'), new FieldPath('places', 'x_2026-10-28'), { y: 1 })));
+  await check('can\'t make yourself admin through it', assertFails(updateDoc(doc(alice, 'users/alice'), new FieldPath('places', 'x_2026-10-28'), { y: 1 }, 'isAdmin', true)));
+}
 
 console.log('Other people\'s data:');
 await check('someone else can\'t read your progress', assertFails(getDoc(doc(bob, 'users/alice'))));
