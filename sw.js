@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v55';
+const VERSION     = 'v57';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
