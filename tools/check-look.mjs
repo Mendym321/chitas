@@ -81,7 +81,7 @@ for (const scheme of ['light', 'dark']) {
   const page = await open(390, scheme);
   const looks = [];
   await page.evaluate(() => openChabadPanel('rambam')); await page.waitForTimeout(300);
-  ok('on a phone, the reader has ☰ and no ‹ (back is in the menu)', await page.evaluate(() => [!!document.getElementById('reader-menu-btn').getClientRects().length, !document.getElementById('reader-home-btn').getClientRects().length]).then(r => r[0] && r[1]));
+  ok('on a phone, the reader has ☰, and the tab still says Today', await page.evaluate(() => !!document.getElementById('reader-menu-btn').getClientRects().length && document.querySelector('.tabbar .nav-tab[data-tab="learn"]').textContent.includes('Today') && !document.querySelector('.tabbar .tab-home').getClientRects().length));
   await page.evaluate(() => closeChabadPanel());
   ok('on a phone, the bottom bar is its three tabs only', await page.evaluate(() => [...document.querySelectorAll('.tabbar > *')].filter(e => getComputedStyle(e).display !== 'none').length) === 3);
   for (const id of [...READERS, 'hayomYom', ...EXTRAS]) {
@@ -234,12 +234,13 @@ for (const scheme of ['light', 'dark']) {
   // Back to Today: the ‹ in the banner, the logo, and Esc each close the reader
   const shownR = () => desk.evaluate(() => document.getElementById('chabad-panel').style.display !== 'none');
   const backs = {};
-  await desk.click('#reader-home-btn'); await desk.waitForTimeout(300); backs.arrow = !(await shownR());
+  backs.says = await desk.evaluate(() => document.querySelector('.tabbar .nav-tab[data-tab="learn"]').innerText.trim());
+  await desk.click('.tabbar .nav-tab[data-tab="learn"]'); await desk.waitForTimeout(300); backs.home = !(await shownR());
   await desk.evaluate(() => openChabadPanel('rambam')); await desk.waitForTimeout(400);
   await desk.click('.tabbar .side-logo'); await desk.waitForTimeout(300); backs.logo = !(await shownR());
   await desk.evaluate(() => openChabadPanel('rambam')); await desk.waitForTimeout(400);
   await desk.keyboard.press('Escape'); await desk.waitForTimeout(300); backs.esc = !(await shownR());
-  ok('reading: ‹, the logo and Esc each go back to Today', backs.arrow && backs.logo && backs.esc, backs);
+  ok('reading: Home, the logo and Esc each go back to Today', backs.says === 'Home' && backs.home && backs.logo && backs.esc, backs);
   await desk.evaluate(() => { try { localStorage.removeItem('chitas_pane_folded'); } catch {} if (document.getElementById('chabad-panel').style.display !== 'none') closeChabadPanel(); });
   if (SHOTS) await desk.waitForTimeout(1200);   // the loading screen finishes fading
   if (SHOTS) await desk.screenshot({ path: `${SHOTS}/desk-profile-${scheme}.png` });
