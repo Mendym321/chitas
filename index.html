@@ -1119,6 +1119,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #chabad-panel { left:280px !important; }
   #reader-head { border-radius:0 !important; }
   #reader-menu-btn, #reader-daybar { display:none !important; }
+  #reader-home-btn { display:flex !important; }   /* ‹ back to Today, where the phone has ☰ */
+  .tabbar .side-logo { cursor:pointer; }   /* the logo goes home, as on most sites */
   .tabbar .side-fold { display:none; }
   html.reader-open .tabbar .side-fold { display:block; position:absolute; top:28px; right:16px; width:auto; padding:4px 10px; border:none; border-radius:999px; background:none; font:600 12px var(--ui-font); color:var(--t3); cursor:pointer; }
   html.reader-open .tabbar .side-fold:hover { background:var(--card2); color:var(--t1); }
@@ -1437,7 +1439,7 @@ window._fsGetDoc = getDoc;
 
     <!-- Bottom tab bar -->
     <nav class="tabbar" id="tabbar">
-      <div class="side-logo" aria-hidden="true"><svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="40" stroke="#E0A030"/><circle cx="46" cy="46" r="29" stroke="#4E7ACB"/><circle cx="46" cy="46" r="18" stroke="#9560BA"/><circle cx="46" cy="46" r="7" stroke="#659444"/></svg><span>Chitas</span></div>
+      <div class="side-logo" aria-hidden="true" onclick="switchTab('learn')"><svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="40" stroke="#E0A030"/><circle cx="46" cy="46" r="29" stroke="#4E7ACB"/><circle cx="46" cy="46" r="18" stroke="#9560BA"/><circle cx="46" cy="46" r="7" stroke="#659444"/></svg><span>Chitas</span></div>
       <button class="nav-tab on" data-tab="learn" onclick="switchTab('learn')">
         <svg viewBox="0 0 24 24" style="transform:rotate(-90deg)"><circle id="tab-seg-0" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-0.9"/><circle id="tab-seg-1" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-14.2"/><circle id="tab-seg-2" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-27.6"/><circle id="tab-seg-3" cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2.6" stroke-dasharray="11.6 41.8" stroke-dashoffset="-40.9"/></svg><span class="tab-l">Today</span>
       </button>
@@ -1599,6 +1601,9 @@ window._fsGetDoc = getDoc;
   <div id="reader-head" style="padding:14px 18px 16px;display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
     <button id="reader-menu-btn" onclick="openReaderMenu()" aria-label="Today's learning" aria-haspopup="dialog" style="width:38px;height:38px;border-radius:var(--r-s);background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    </button>
+    <button id="reader-home-btn" onclick="closeChabadPanel()" aria-label="Back to Today" title="Back to Today (Esc)" style="display:none;width:38px;height:38px;border-radius:var(--r-s);align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <div style="flex:1;min-width:0;">
       <p id="chabad-panel-title" style="font-family:var(--title-font);font-weight:800;font-size:var(--fs-5);line-height:1.1;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
@@ -6335,6 +6340,14 @@ function _readerMenuGo(id) {
   if (SECTION_IDS.includes(id)) openChabadPanel(id); else openExtraReader(id);
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('reader-menu')) closeReaderMenu(); });
+// On a computer, Esc closes the reader (back to Today), unless something is open on top of it: that closes first
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || e.defaultPrevented || !window.matchMedia?.('(min-width:1000px)').matches) return;
+  if (document.getElementById('chabad-panel')?.style.display === 'none' || document.getElementById('reader-menu')) return;
+  if (_settingsOpen) { closeReaderSettings(); return; }
+  if ([...document.querySelectorAll('#day-picker, [id$="-modal"], .rn-popup, #quiz-panel')].some(el => el.getClientRects().length)) return;   // a pop-up on screen
+  closeChabadPanel();
+});
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 24 · STATS TAB  (streak hero, activity grid, section breakdown)
