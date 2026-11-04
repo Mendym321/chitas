@@ -7798,12 +7798,7 @@ async function _loadHayomYomNative(silent) {
     if (subEl)    subEl.textContent = 'Hayom Yom';
     if (loadEl)   loadEl.style.display = 'block';
     if (contEl)   contEl.style.display = 'none';
-    const d0 = appNow(); d0.setDate(d0.getDate() + (dayOffset || 0));
-    const tdate = (d0.getMonth()+1) + '/' + d0.getDate() + '/' + d0.getFullYear();
-    if (extEl) {
-      extEl.href = 'https://www.chabad.org/dailystudy/hayomyom.asp?tdate=' + tdate;
-      extEl.style.display = 'flex';
-    }
+    if (extEl) extEl.style.display = 'none';   // the text and our translation are here: no link away
     _hayomYomInjectLangToggle();
   }
 
