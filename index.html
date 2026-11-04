@@ -1130,7 +1130,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #side-unfold { display:none; }
   html.reader-open.pane-folded .tabbar { display:none; }
   html.reader-open.pane-folded #chabad-panel { left:0 !important; }
-  html.reader-open.pane-folded #side-unfold { display:flex; position:fixed; left:20px; top:92px; z-index:1004; align-items:center; gap:6px; height:34px; padding:0 14px; border:none; border-radius:999px; background:var(--card2); color:var(--t1); font:700 13px var(--ui-font); box-shadow:0 1px 3px rgba(0,0,0,.08); cursor:pointer; }
+  html.reader-open.pane-folded #side-unfold { display:flex; position:fixed; left:20px; top:96px; z-index:1004; align-items:center; gap:8px; height:38px; padding:0 16px 0 12px; border:1px solid var(--border); border-radius:999px; background:var(--card); color:var(--t1); font:700 13px var(--ui-font); box-shadow:0 2px 8px rgba(0,0,0,.08); cursor:pointer; }   /* the list icon and the day, on a card: plainly a button */
+  html.reader-open.pane-folded #side-unfold:hover { background:var(--card2); }
   /* Today on a computer: the pane has the day, so no date chip */
   #heb-chip { display:none !important; }
   #app-head { padding-left:0; padding-right:0; }
@@ -1457,7 +1458,7 @@ window._fsGetDoc = getDoc;
       <div id="side-list" class="side-only"></div>
       <button class="nav-tab side-me side-only" data-tab="profile" onclick="switchTab('profile')"><span class="side-av" id="side-av"></span><span class="side-me-t"><b id="side-name"></b><small>Profile and settings</small></span></button>
     </nav>
-    <button type="button" id="side-unfold" onclick="_foldPane(false)" title="Show the list ( [ )"></button>
+    <button type="button" id="side-unfold" onclick="_foldPane(false)" title="Show the list ( [ )" aria-label="Show the day's list"></button>
 
     <!-- ── LEARN TAB ── -->
     <div id="tab-learn" class="screen active" style="padding:20px 20px 0;">
@@ -2815,7 +2816,7 @@ function _renderSideList() {
     }).catch(() => {});
   });
   const un = document.getElementById('side-unfold');
-  if (un) un.textContent = _dayName(dayOffset) + ' · ' + n + ' of 4';
+  if (un) un.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>' + escapeHtml(_dayName(dayOffset)) + ' · ' + n + ' of 4</span>';
 }
 // The pane's ‹ › and "Back to today": in the reader it moves there (as the
 // reader's own day bar does on a phone); on Today, Today moves
