@@ -773,6 +773,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .wk-day { display:flex; flex-direction:column; align-items:center; gap:6px; padding:2px 0 4px; background:none; border:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .wk-letter { font-size:var(--fs-1); font-weight:500; color:var(--t3); }
 .wk-day.on .wk-letter { color:var(--gold); font-weight:700; }
+#app-sub, .wk-num { display:none; }   /* on a computer only */
 /* Tehillim, laid out like a printed Tehillim (_renderTehillimContent) */
 .th-range { font-size:var(--fs-1); color:var(--t3); margin-bottom:6px; text-align:center; }
 .th-chapter { margin-top:22px; }
@@ -1149,7 +1150,14 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   .tiles4 { grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; }
   .stile { height:210px; }
   .ml-tiles { grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; }   /* like the Chitas tiles above */
-  #week-strip { grid-template-columns:repeat(7, 84px); }   /* the week stays a week, not spread across the screen */
+  /* Today: the parsha (or the day) as a quiet line under the title instead of the chips; the
+     week across the page, each day with its date */
+  #day-chips { display:none !important; }
+  #app-sub { display:block; margin:6px 0 0; font:500 15px var(--ui-font); color:var(--t2); }
+  #app-sub:empty { display:none; }
+  #week-strip { padding:8px 0 18px; margin-top:14px; }
+  .wk-num { display:block; margin-top:-2px; font:700 15px var(--ui-font); color:var(--t1); }
+  .wk-day.on .wk-num { color:var(--gold); }
   /* One width for everything on a page: no box stops short of the tiles */
   #tab-stats, #tab-profile { padding-left:0 !important; padding-right:0 !important; }
   #stats-content { display:grid; grid-template-columns:1fr 1fr; column-gap:24px; grid-auto-flow:row dense; }
@@ -1433,6 +1441,7 @@ window._fsGetDoc = getDoc;
       <div style="flex:1;min-width:0;">
         <p id="heb-date-label" class="t-caption">Loading…</p>
         <h1 id="greeting" class="t-title">Today</h1>
+        <p id="app-sub"></p>   <!-- on a computer: what kind of day it is, under the title (the chips row is not there) -->
       </div>
       <svg id="today-rings" viewBox="0 0 92 92" role="img" aria-label="Today's four sections">
         <circle class="rt" cx="46" cy="46" r="40" style="--c:var(--c-chumash)"/><circle id="ring-0" class="rf" cx="46" cy="46" r="40" style="--c:var(--c-chumash);--len:251.3"/>
@@ -2561,6 +2570,8 @@ function setGreeting() {
   if (heb) heb.textContent = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
   const noteEl = document.getElementById('day-note');
   if (noteEl) noteEl.textContent = dayNote(d, getParshaForDate(d)).map(t => t.replace(/^Parshas /, '')).join(' · ');
+  const sub = document.getElementById('app-sub');
+  if (sub) sub.textContent = dayNote(d, getParshaForDate(d)).join(' · ');
 }
 
 // A few lines of the day's Hayom Yom on Today, for whichever day you're
@@ -3191,7 +3202,7 @@ function renderWeekStrip() {
         : _quarterRing(dayDone(user, d, today), 13, 10, 3.4);
     const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + (rest ? ' (Shabbos / Yom Tov)' : ' · ' + n + ' of 4');
     html += '<button class="wk-day' + (viewing ? ' on' : '') + '" onclick="goToDay(' + off + ')" aria-label="' + label + '" title="' + label + '">'
-      + '<span class="wk-letter">' + (off === 0 ? 'Today' : LETTERS[d.getDay()]) + '</span>'
+      + '<span class="wk-letter">' + (off === 0 ? 'Today' : LETTERS[d.getDay()]) + '</span><span class="wk-num">' + d.getDate() + '</span>'
       + '<svg width="26" height="26" viewBox="0 0 26 26">' + shape + '</svg>'
       + '</button>';
   }
