@@ -70,7 +70,7 @@ Chumash, Tanya and Rambam are built from the same pieces, top to bottom:
 4. A printed-page heading (`.tz-head`): the book above, the big Hebrew word (Chumash: the aliyah, שלישי; Tanya: פרק מא; Rambam: פרק יג, at the top of each of the day's chapters), the English line under it.
 5. The guide card (`.tz-guide`, white): Chumash "Today in the parsha", Tanya "So far in this chapter", Rambam "This chapter".
 6. The text, English left and Hebrew right, with small numbers in the reader's colour (`.rd-vn`).
-7. Commentary (Rashi) in the same card shape with a colour bar on the side (`.rd-comm`), so it never looks like the guide.
+7. Commentary (Rashi) on a soft card under its verse (`.rd-comm`), with no label and no colour bar: it's the only commentary, and its bold opening words say it's Rashi, as in a printed chumash.
 
 - **The reader's bottom button follows the day on screen** (`_setMarkBtn`, tested in `tools/test-mark-days.mjs`), not today: today, "Mark as learned" or a quiet "Learned"; a past day you learned, no button, a small line "✓ You learned this on Wednesday"; a past day you missed, within the last week, "Catch up · Mark Wednesday as learned", and after it the next step (the next missed day, or today); further back, read only. Chitas and More learning alike.
 

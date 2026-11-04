@@ -848,8 +848,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rd-he .rd-vn { margin:0 0 0 5px; }
 .rd-ch { display:flex; align-items:center; gap:10px; margin:22px 0 4px; font:800 13px var(--ui-font); color:var(--rc); }
 .rd-ch::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--rc) 30%, transparent); }
-.rd-comm { background:var(--card); border-radius:12px; border-left:4px solid color-mix(in srgb, var(--rc) 55%, transparent); padding:10px 13px; margin:6px 0 8px; }
-.rd-comm-k { font:800 12px var(--ui-font); color:var(--rc); margin-bottom:2px; }
+.rd-comm { background:var(--card); border-radius:12px; padding:10px 14px; margin:6px 0 8px; }   /* Rashi: no label and no side bar (it's the only commentary; the bold opening words say it), just a soft ground */
 #chabad-panel-sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .tz-gt { font-family:var(--read-font); font-size:17px; line-height:1.5; color:var(--t1); }
 .tz-gt + .tz-gl { margin-top:12px; }
@@ -4803,7 +4802,7 @@ function _renderChumashContent() {
         v += '</div>';
         // One Rashi block per comment — each aligned in two columns
         rashiComments.forEach(rc => {
-          v += '<div class="rd-comm"><p class="rd-comm-k">Rashi</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">';
+          v += '<div class="rd-comm"><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">';
           v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
           v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:18px;--rf-lh:1.92;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
           v += '</div></div>';
@@ -4814,7 +4813,7 @@ function _renderChumashContent() {
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.he) {
-            v += '<div class="rd-comm"><p class="rd-comm-k" style="text-align:right">רש״י</p>';
+            v += '<div class="rd-comm">';
             v += '<p class="rf-body" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:18px;--rf-lh:1.92;color:var(--t1);">' + boldRashiHe(rc.he) + '</p>';
             v += '</div>';
           }
@@ -4825,7 +4824,7 @@ function _renderChumashContent() {
         v += '</div>';
         rashiComments.forEach(rc => {
           if (rc.en) {
-            v += '<div class="rd-comm"><p class="rd-comm-k">Rashi</p>';
+            v += '<div class="rd-comm">';
             v += '<p class="rf-body" style="--rf-sz:13px;--rf-lh:1.72;color:var(--t1);font-weight:400;">' + rc.en + '</p>';
             v += '</div>';
           }
