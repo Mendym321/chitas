@@ -192,7 +192,7 @@ for (const scheme of ['light', 'dark']) {
     const firstOf = x => tops.filter(t => t.x === x)[0]?.y;
     const xs = [...new Set(tops.map(t => t.x))];
     const side = document.querySelector('.tabbar'), main = document.getElementById('main-app');
-    return { cols: xs.length, firstRow: xs.map(firstOf), sideLeft: side.getBoundingClientRect().right <= main.getBoundingClientRect().left + 1, sideNamed: [...side.querySelectorAll('button')].every(b => b.textContent.trim()) };
+    return { cols: xs.length, firstRow: xs.map(firstOf), sideLeft: side.getBoundingClientRect().right <= main.getBoundingClientRect().left + 1, sideNamed: [...side.querySelectorAll('button')].every(b => b.textContent.trim() || b.getAttribute('aria-label')) };
   });
   ok('Profile is in two columns', d.cols === 2, d);
   ok('both columns start on the same line', new Set(d.firstRow).size === 1, d.firstRow);
@@ -201,14 +201,34 @@ for (const scheme of ['light', 'dark']) {
   // The sidebar: paper, words not icons, the day's learning, you at the foot
   const sb = await desk.evaluate(() => {
     const side = document.querySelector('.tabbar'), vis = e => !!e && e.getClientRects().length > 0;   // (works for drawings too)
-    return { icons: [...side.querySelectorAll('svg, .tab-glyph, .tab-av')].filter(e => vis(e) && !e.closest('.side-logo, .side-r')).map(e => e.outerHTML.slice(0, 90)).length,
-      list: [...side.querySelectorAll('.side-r')].map(e => e.textContent.trim()).slice(0, 4),
+    return { icons: [...side.querySelectorAll('svg, .tab-glyph, .tab-av')].filter(e => vis(e) && !e.closest('.side-logo, .side-r, .side-step')).map(e => e.outerHTML.slice(0, 90)).length,
+      list: [...side.querySelectorAll('.side-r b')].map(e => e.textContent.trim()).slice(0, 4),
+      day: side.querySelector('.side-day h3')?.textContent, steps: side.querySelectorAll('.side-step button').length,
       me: vis(side.querySelector('.side-me')) && side.querySelector('.side-me').classList.contains('on'),
       ink: getComputedStyle(side).backgroundColor === getComputedStyle(document.documentElement).getPropertyValue('--ink') };
   });
   ok('the sidebar has no icons beside its words', sb.icons === 0, sb);
   ok('the sidebar lists the day\'s Chitas', JSON.stringify(sb.list) === '["Chumash","Tehillim","Tanya","Rambam"]', sb.list);
   ok('you, at its foot, open Profile (and show it\'s open)', sb.me, sb);
+  ok('the pane has the day, with a calendar and ‹ ›', sb.day === 'Today' && sb.steps === 3, sb);
+  // Reading: the pane stays beside the text, which has a solid banner and no ☰ or day bar; [ folds the pane
+  await desk.evaluate(() => switchTab('learn'));
+  await desk.evaluate(() => openChabadPanel('rambam')); await desk.waitForTimeout(600);
+  const rd = await desk.evaluate(() => {
+    const side = document.querySelector('.tabbar').getBoundingClientRect(), panel = document.getElementById('chabad-panel').getBoundingClientRect();
+    const shown = id => { const e = document.getElementById(id); return !!e && e.getClientRects().length > 0; };
+    return { beside: side.width > 0 && panel.left >= side.right - 1, menu: shown('reader-menu-btn'), daybar: shown('reader-daybar'),
+      corners: getComputedStyle(document.getElementById('reader-head')).borderBottomLeftRadius, cur: document.querySelector('.side-r.cur b')?.textContent };
+  });
+  ok('reading: the pane stays beside the text, the one open highlighted', rd.beside && rd.cur === 'Rambam', rd);
+  ok('reading: no ☰ and no day bar (the pane has both)', !rd.menu && !rd.daybar, rd);
+  ok('reading: the banner is solid, no rounded corners', rd.corners === '0px', rd);
+  await desk.keyboard.press('[');
+  const folded = await desk.evaluate(() => [document.querySelector('.tabbar').getClientRects().length === 0, Math.round(document.getElementById('chabad-panel').getBoundingClientRect().left), document.getElementById('side-unfold').getClientRects().length > 0]);
+  await desk.keyboard.press('[');
+  const back = await desk.evaluate(() => document.querySelector('.tabbar').getClientRects().length > 0);
+  ok('[ folds the pane away (the text takes the width, a pill brings it back) and back', JSON.stringify(folded) === '[true,0,true]' && back, { folded, back });
+  await desk.evaluate(() => { try { localStorage.removeItem('chitas_pane_folded'); } catch {} closeChabadPanel(); });
   if (SHOTS) await desk.waitForTimeout(1200);   // the loading screen finishes fading
   if (SHOTS) await desk.screenshot({ path: `${SHOTS}/desk-profile-${scheme}.png` });
   await desk.close();
