@@ -62,7 +62,7 @@ let claudeCalls = 0;
 const fakeQuiz = { questions: [
   { question: 'What did G-d plant?', options: ['A garden in Eden', 'A vineyard', 'A forest', 'Wheat'], correctIndex: 0, explanation: 'The verse says He planted a garden.', quote: 'planted a garden in Eden' },
   { question: 'Where did the river go out from?', options: ['Eden', 'Egypt', 'Sinai', 'Canaan'], correctIndex: 0, explanation: 'It went out of Eden.', quote: 'a river went out of Eden' },
-  { question: 'What was man formed from?', options: ['Dust of the ground', 'Water', 'Fire', 'Light'], correctIndex: 0, explanation: 'Dust.', quote: 'dust of the ground' },
+  { question: 'What was man formed from?', options: ['Dust of the ground', 'Clay from a river', 'Sand of the sea', 'Ash from a fire'], correctIndex: 0, explanation: 'Dust.', quote: 'dust of the ground' },
   { question: 'What did Rashi say?', options: ['Something invented', 'b', 'c', 'd'], correctIndex: 0, explanation: 'x', quote: 'this sentence is not in the passage at all' },
   { question: 'Who was put in the garden?', options: ['The man', 'An angel', 'Noach', 'Moshe'], correctIndex: 0, explanation: 'He put the man there.', quote: 'there He put the man' },
 ]};
