@@ -25,7 +25,7 @@ import { LEVELS, validateQuizRequest, checkQuestions } from './_lib/quiz-core.js
 export const config = { maxDuration: 60 };
 
 const MODEL = 'claude-opus-5-5';
-const CACHE_VERSION = 'v1';          // bump to regenerate every saved quiz
+const CACHE_VERSION = 'v2';   // v2: options alike in length (the longest was usually the answer)          // bump to regenerate every saved quiz
 const NEW_QUIZZES_PER_DAY = 20;      // per user; saved quizzes don't count
 const MAX_CHARS = 16000;             // keep the passage a sensible size
 
@@ -45,13 +45,14 @@ Rules for every question:
 - It must be answerable from the passage alone, not from outside knowledge.
 - "quote": copy 5–25 consecutive words from the passage, exactly as written, that show the answer is right.
 - Exactly 4 options with one correct answer ("correctIndex" is 0–3). Wrong options should tempt someone who skimmed but be clearly wrong to someone who read carefully. No "all of the above" or "none of the above".
+- Make the 4 options alike in length, grammar and detail, within a few words of each other, so nothing but the content gives the answer away. Write each wrong option as fully and specifically as the right one. The right answer must not be the longest or the most carefully worded: sometimes make it the shortest.
 - "explanation": 1–2 warm, plain sentences that teach why the answer is right, pointing back to the text.
 - Spread the questions across the whole passage, in the order it is learned.
 - Write respectfully, the way the passage itself does (for example "G-d" if it writes that).`;
 
 const LEVEL_TEXT = {
-  quick: `Level: Quick review. Write ${LEVELS.quick.count} questions on the main points — what happened or was said, who did what, what the law is, the central idea. Keep the wording simple and direct.`,
-  deep: `Level: Deep dive. Write ${LEVELS.deep.count} questions that test understanding, not just recall — why something is so; for Chumash, what Rashi is bothered by and how he answers; for Tanya, the reasoning and the analogies; for Rambam, how similar cases differ and why. Make the wrong options close but wrong.`,
+  quick: `Level: Quick review. Write ${LEVELS.quick.count + 2} questions on the main points — what happened or was said, who did what, what the law is, the central idea. Keep the wording simple and direct.`,
+  deep: `Level: Deep dive. Write ${LEVELS.deep.count + 2} questions that test understanding, not just recall — why something is so; for Chumash, what Rashi is bothered by and how he answers; for Tanya, the reasoning and the analogies; for Rambam, how similar cases differ and why. Make the wrong options close but wrong.`,
 };
 
 async function fetchPassage(req) {
