@@ -578,6 +578,19 @@ await check('a reminder that hasn\'t matched a week: one kind question on Today'
 await check('touch feedback uses the phone: a light tap, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
 await check('touch feedback off: nothing', () => { setHaptics(false); window.__calls = []; haptic('tap'); const n = window.__calls.length; setHaptics(true); return [n, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, [0, 'true']);
 await page.evaluate(() => { delete window.Capacitor; user.done = {}; });
+await check('Hebrew numbers: 15 and 16 are טו and טז, also after hundreds (Tehillim 115, 116)', () => [15, 16, 22, 115, 116, 119].map(_toHebrewNumeral), ['טו', 'טז', 'כב', 'קטו', 'קטז', 'קיט']);
+await check('Rambam: halacha 15 and 16 marked טו and טז (never יה, יו), and 22 in letters too', async () => {
+  const keep = schedule.rambam;
+  schedule.rambam = { id: 'rambam', label: 'Rambam', subtitle: 'Gifts 7', chabadUrl: 'about:blank', sefariaRef: null };
+  const n = 22, he = Array.from({ length: n }, (_, i) => 'הלכה ' + (i + 1)), en = Array.from({ length: n }, (_, i) => 'Halacha ' + (i + 1));
+  localStorage.setItem('chitas_lang_rambam', 'he');
+  _keepText('rambam', _viewedISO(), { chapters: [{ title: 'Gifts 7', chapter: 7, en, he }] });
+  openChabadPanel('rambam'); await new Promise(z => setTimeout(z, 600));
+  const marks = [...document.querySelectorAll('#native-reader-content .rd-vn')].map(e => e.textContent.trim()).filter(m => /[\u05d0-\u05ea]/.test(m));
+  const r = [marks[14], marks[15], marks[21], marks.some(m => m === 'יה' || m === 'יו')];
+  closeChabadPanel(); _dropTexts('rambam'); schedule.rambam = keep; localStorage.removeItem('chitas_lang_rambam');
+  return r;
+}, ['טו', 'טז', 'כב', false]);
 await check('a text fetched ahead of time still names itself in the header (Rambam: "Gifts 6–8", not "Daily Rambam")', async () => {
   const keep = schedule.rambam;
   schedule.rambam = { id: 'rambam', label: 'Rambam', subtitle: 'Daily Rambam', chabadUrl: 'about:blank', sefariaRef: null };
