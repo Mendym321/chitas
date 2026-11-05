@@ -81,6 +81,7 @@ for (const scheme of ['light', 'dark']) {
   const page = await open(390, scheme);
   const looks = [];
   await page.evaluate(() => openChabadPanel('rambam')); await page.waitForTimeout(300);
+  ok('on a phone, a fade under the floating bar (nothing dark meets it)', await page.evaluate(() => /gradient/.test(getComputedStyle(document.getElementById('main-app'), '::after').backgroundImage)));
   ok('on a phone, the reader has ☰, and the tab still says Today', await page.evaluate(() => !!document.getElementById('reader-menu-btn').getClientRects().length && document.querySelector('.tabbar .nav-tab[data-tab="learn"]').textContent.includes('Today') && !document.querySelector('.tabbar .tab-home').getClientRects().length));
   await page.evaluate(() => closeChabadPanel());
   ok('on a phone, the bottom bar is its three tabs only', await page.evaluate(() => [...document.querySelectorAll('.tabbar > *')].filter(e => getComputedStyle(e).display !== 'none').length) === 3);
@@ -213,6 +214,7 @@ for (const scheme of ['light', 'dark']) {
   ok('the sidebar has no icons beside its words', sb.icons === 0, sb);
   ok('the sidebar lists the day\'s Chitas', JSON.stringify(sb.list) === '["Chumash","Tehillim","Tanya","Rambam"]', sb.list);
   ok('you, at its foot, open Profile (and show it\'s open)', sb.me, sb);
+  ok('on a computer, no fade (there is no floating bar)', await desk.evaluate(() => getComputedStyle(document.getElementById('main-app'), '::after').content === 'none'));
   ok('the pane has the day, with a calendar and ‹ ›', sb.day === 'Today' && sb.steps === 3, sb);
   // Reading: the pane stays beside the text, which has a solid banner and no ☰ or day bar; [ folds the pane
   await desk.evaluate(() => switchTab('learn'));
