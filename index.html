@@ -5108,10 +5108,6 @@ function _renderRambamContent() {
 
   const HE = "'Vilna','Shlomo','Noto Serif Hebrew',serif";
 
-  // Hebrew letters for halacha numbering (alef, beis, gimmel...)
-  const HE_NUMS = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י',
-                   'יא','יב','יג','יד','יה','יו',
-                   'יז','יח','יט','כ','כא'];
 
   // Touger translation: the Rambam's own words vs the translator's additions.
   // Sefaria's copy marks the translator's added words (and sources) with
@@ -5155,7 +5151,7 @@ function _renderRambamContent() {
       if (!enRaw && !he) continue;
       const en = _rambamNoteMarkers(styleBrackets(enRaw), chIdx);
       const num    = i + 1;
-      const heNum  = HE_NUMS[i] || String(num);  // alef, beis... fallback to arabic
+      const heNum  = _toHebrewNumeral(num);   // the shared helper: 15 טו, 16 טז, and every number
 
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
       // Rendered as a span before the text — stays inline with the paragraph
@@ -5312,9 +5308,9 @@ function _toHebrewNumeral(n) {
   const hunds = ['','\u05E7','\u05E8','\u05E9','\u05EA'];
   if (n <= 0 || n > 999) return String(n);
   let h = Math.floor(n/100), t = Math.floor((n%100)/10), o = n%10;
-  // Special cases: 15=טו, 16=טז
-  if (h===0 && t===1 && o===5) return '\u05D8\u05D5';
-  if (h===0 && t===1 && o===6) return '\u05D8\u05D6';
+  // 15 and 16 are טו and טז, never יה and יו (the Name), also after hundreds: 115 קטו, 116 קטז
+  if (t===1 && o===5) return (hunds[h]||'') + '\u05D8\u05D5';
+  if (t===1 && o===6) return (hunds[h]||'') + '\u05D8\u05D6';
   return (hunds[h]||'') + (tens[t]||'') + (ones[o]||'');
 }
 

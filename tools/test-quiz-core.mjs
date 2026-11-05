@@ -2,7 +2,7 @@
  * Tests for api/_lib/quiz-core.js — request checks and question checks.
  * Run:  cd tools && npm test
  */
-import { validateQuizRequest, checkQuestions, normalizeForMatch } from '../api/_lib/quiz-core.js';
+import { validateQuizRequest, checkQuestions, normalizeForMatch, lengthGivesAway } from '../api/_lib/quiz-core.js';
 
 let failed = 0;
 function check(name, actual, expected) {
@@ -32,6 +32,11 @@ check('same question twice → kept once', checkQuestions([good, good], TEXT, 'q
 const shuffled = checkQuestions([good], TEXT, 'quick', () => 0)[0];
 check('after shuffling, "answer" still points at the right option', shuffled.options[shuffled.answer], 'He rested on it');
 check('quick review stops at 4', checkQuestions(Array.from({ length: 8 }, (_, i) => ({ ...good, question: 'Q' + i })), TEXT, 'quick').length, 4);
+const long = { ...good, options: ['Because He rested on it from all the work of creating the world', 'It was first', 'Adam was made', 'It rained'] };
+check('the right answer far longer than every wrong one → dropped (length gives it away)', checkQuestions([long], TEXT, 'quick').length, 0);
+check('options of about the same length → kept', checkQuestions([{ ...good, options: ['He rested on it', 'It was the first', 'Adam was made', 'It rained then'] }], TEXT, 'quick').length, 1);
+check('a wrong option the longest → fine', lengthGivesAway(['He rested', 'Because it was the very first day of all of creation', 'Adam', 'Rain'], 0), false);
+check('a little longer only (a few letters) → fine', lengthGivesAway(['He rested on it', 'It was first', 'Adam was made', 'It rained'], 0), false);
 check('curly quotes match straight ones', normalizeForMatch('“G-d’s”') === normalizeForMatch('"G-d\'s"'), true);
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll quiz-core tests passed');

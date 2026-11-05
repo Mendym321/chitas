@@ -48,6 +48,15 @@ export function normalizeForMatch(s) {
     .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 }
 
+// The right answer is the longest by a clear margin (a quarter longer than
+// every wrong one, and a dozen characters at least): length alone would give
+// it away, so the question isn't used.
+export function lengthGivesAway(options, correct) {
+  const len = options.map(o => String(o || '').trim().length);
+  const longestWrong = Math.max(...len.filter((_, i) => i !== correct));
+  return len[correct] > longestWrong * 1.25 && len[correct] - longestWrong >= 12;
+}
+
 // Keep only questions that are well-formed AND whose supporting quote really
 // appears in the passage (so every answer is grounded in today's text).
 // Options are shuffled here, so the right answer isn't always "A".
@@ -64,6 +73,7 @@ export function checkQuestions(raw, sourceText, level, random = Math.random) {
     if (!question || !explanation || options.length !== 4 || options.some(o => !o)) continue;
     if (new Set(options.map(normalizeForMatch)).size !== 4) continue;          // duplicate options
     if (!Number.isInteger(correct) || correct < 0 || correct > 3) continue;
+    if (lengthGivesAway(options, correct)) continue;                            // the longest is the answer: a giveaway
     const nq = normalizeForMatch(quote);
     if (nq.split(' ').length < 3 || !src.includes(nq)) continue;              // not really in the text
     if (seen.has(normalizeForMatch(question))) continue;
