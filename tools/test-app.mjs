@@ -578,6 +578,35 @@ await check('a reminder that hasn\'t matched a week: one kind question on Today'
 await check('touch feedback uses the phone: a light tap, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
 await check('touch feedback off: nothing', () => { setHaptics(false); window.__calls = []; haptic('tap'); const n = window.__calls.length; setHaptics(true); return [n, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, [0, 'true']);
 await page.evaluate(() => { delete window.Capacitor; user.done = {}; });
+await check('another day: its own Tehillim and Rambam from the week\'s calendar (not Sunday\'s), on your Rambam track', () => {
+  const week = { items: [1, 2, 3, 4, 5].flatMap(n => [
+    { category: 'dailyLearning', date: '2026-11-0' + n, title: 'Psalms ' + n },
+    { category: 'dailyLearning', date: '2026-11-0' + n, title: 'Rambam (1 Chapter): Gifts ' + n },
+    { category: 'dailyLearning', date: '2026-11-0' + n, title: 'Rambam: Gifts ' + (n * 3) + '-' + (n * 3 + 2) }]) };
+  const keep = user.rambamTrack, thu = new Date(2026, 10, 5, 12);
+  user.rambamTrack = '3'; const three = parseHebcalForDate(week, thu);
+  user.rambamTrack = '1'; const one = parseHebcalForDate(week, thu);
+  user.rambamTrack = keep;
+  return [three.tehTitle, three.rambamTitle, one.rambamTitle];
+}, ['Psalms 5', 'Gifts 15-17', 'Gifts 5']);
+await check('Rambam and Tanya tiles take their piece\'s name when the text arrives (not "Daily Rambam" or the date), and keep it when drawn again', async () => {
+  const keep = { r: schedule.rambam, t: schedule.tanya }, iso = _viewedISO();
+  schedule.rambam = { ...keep.r, subtitle: 'Daily Rambam' }; schedule.tanya = { ...keep.t, subtitle: '25 Cheshvan' };
+  _dropTexts('rambam'); _dropTexts('tanya');
+  renderSectionsForOffset(iso);
+  const line = id => document.querySelector('#card-' + id + ' .stile-t p:last-child')?.textContent;
+  const before = [line('rambam'), line('tanya')];
+  _textArrived('rambam', iso, { chapters: [6, 7, 8].map(n => ({ title: 'Gifts ' + n, chapter: n, en: ['x'], he: ['y'] })) }, true);   // fetched in the background
+  _textArrived('tanya', iso, { blocks: [], notes: [], chapterLabel: 'Iggeret HaKodesh · Epistle 29' }, true);
+  const arrived = [line('rambam'), line('tanya')];
+  schedule.rambam.subtitle = 'Daily Rambam'; schedule.tanya.subtitle = '25 Cheshvan';   // the day drawn again from the calendar
+  renderSectionsForOffset(iso);
+  const redrawn = [line('rambam'), line('tanya')];
+  const k = user.rambamTrack; user.rambamTrack = 'm'; schedule.rambam.subtitle = 'Mitzvah 12'; renderSectionsForOffset(iso);
+  const shm = line('rambam'); user.rambamTrack = k;
+  _dropTexts('rambam'); _dropTexts('tanya'); schedule.rambam = keep.r; schedule.tanya = keep.t; renderSectionsForOffset(iso);
+  return [before, arrived, redrawn, shm];
+}, [['Daily Rambam', '25 Cheshvan'], ['Gifts 6–8', 'Iggeret HaKodesh · Epistle 29'], ['Gifts 6–8', 'Iggeret HaKodesh · Epistle 29'], 'Mitzvah 12']);
 await check('Hebrew numbers: 15 and 16 are טו and טז, also after hundreds (Tehillim 115, 116)', () => [15, 16, 22, 115, 116, 119].map(_toHebrewNumeral), ['טו', 'טז', 'כב', 'קטו', 'קטז', 'קיט']);
 await check('Rambam: halacha 15 and 16 marked טו and טז (never יה, יו), and 22 in letters too', async () => {
   const keep = schedule.rambam;

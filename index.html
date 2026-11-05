@@ -208,6 +208,8 @@
 /* While the reader is open, the page behind it doesn't scroll (and keeps its place) */
 html.reader-open, html.reader-open body { overflow: hidden; }
 #main-app.ready { opacity: 1; }
+/* What scrolls toward the floating bar fades into the page first, so nothing dark meets the dark bar (phone) */
+@media (max-width:999px) { #main-app::after { content:''; position:fixed; left:0; right:0; bottom:0; height:calc(116px + env(safe-area-inset-bottom)); background:linear-gradient(to bottom, color-mix(in srgb, var(--bg) 0%, transparent), var(--bg) 58%); pointer-events:none; z-index:99; } }
 
 /* ── Reader swipe navigation ── */
 #day-peek { position:absolute; z-index:1; overflow:hidden; background:var(--bg); pointer-events:none; }
@@ -2998,7 +3000,11 @@ async function rebuildScheduleForOffset() {
 }
 
 function parseHebcalForDate(data, d) {
-  const items = data.items || [];
+  const all = data.items || [];
+  // The week comes at once (for its parsha): the day's own entries, by their date ("2026-11-05")
+  const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const day = all.filter(i => String(i.date || '').slice(0, 10) === iso);
+  const items = all;
   // Skip holiday Shabbos readings — use the regular weekly parsha
   const allParshaItems = items.filter(i => i.category === 'parashat');
   const parshaItem = allParshaItems.find(i => {
@@ -3011,11 +3017,15 @@ function parseHebcalForDate(data, d) {
   // Extract the correct aliyah ref for this day-of-week from Hebcal leyning data
   const leyning = parshaItem?.leyning || {};
   const aliyaRef = leyning[String(aliyaNum)] || null;
-  const tehItem = items.find(i => i.category === 'dailyLearning' && (i.title?.startsWith('Psalms') || i.title?.startsWith('Tehillim')));
+  // Tehillim and Rambam: that day's (not the first in the week), and the Rambam of your track
+  const learn = (day.length ? day : all).filter(i => i.category === 'dailyLearning');
+  const tehItem = learn.find(i => i.title?.startsWith('Psalms') || i.title?.startsWith('Tehillim'));
   const rt = user.rambamTrack;
   const rambamItem = rt === 'm'
-    ? items.find(i => i.category === 'dailyLearning' && (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos')))
-    : items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
+    ? learn.find(i => i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos'))
+    : rt === '1'
+      ? (learn.find(i => i.title?.startsWith('Rambam') && i.title.includes('1 Chapter')) || learn.find(i => i.title?.startsWith('Rambam')))
+      : (learn.find(i => i.title?.startsWith('Rambam') && !i.title.includes('1 Chapter')) || learn.find(i => i.title?.startsWith('Rambam')));
 
   return {
     parshaName, aliyaNum, aliyaRef,
@@ -3035,6 +3045,8 @@ function renderSectionsForOffset(iso) {
   const list = document.getElementById('sections-list');
   list.style.display = 'grid';
   if (!schedule) return;
+  // A text already here for this day names its tile (Rambam's chapters, Tanya's chapter)
+  ['rambam', 'tanya'].forEach(sid => { const t = _textFor(sid, iso); if (t && schedule[sid] && !(sid === 'rambam' && user.rambamTrack === 'm')) { const sub = _textSubtitle(sid, t); if (sub) schedule[sid].subtitle = sub; } });
 
   // Use today's done if offset=0, else pastDone
   const isToday = dayOffset === 0;
@@ -4472,8 +4484,22 @@ function _readerLoading(on) {
 // A load's text has arrived: keep it under its day, and if that's what the
 // reader is showing, draw it and put you back at your place (rule 1: a load
 // for a section or day you've left draws nothing)
+// Rambam's and Tanya's tiles name the day's piece once its text is here
+// ("Gifts 6–8", "Iggeret HaKodesh · Epistle 29"): the calendar's line can be
+// missing ("Daily Rambam") or only the date (Tanya), and the text is what's read
+function _tileFromText(sid, iso, data) {
+  if ((sid !== 'rambam' && sid !== 'tanya') || iso !== _viewedISO() || !schedule?.[sid]) return;
+  if (sid === 'rambam' && user.rambamTrack === 'm') return;   // Sefer HaMitzvos names itself
+  const sub = _textSubtitle(sid, data);
+  if (!sub || schedule[sid].subtitle === sub) return;
+  schedule[sid].subtitle = sub;
+  const line = document.querySelector('#card-' + sid + ' .stile-t p:last-child');
+  if (line) line.textContent = sub;
+  try { _renderSideList(); } catch (e) {}
+}
 function _textArrived(sid, iso, data, silent) {
   _keepText(sid, iso, data);
+  _tileFromText(sid, iso, data);
   if (!silent && _readerShows(sid, iso) && !_rv.drawn) _drawText(sid, data);   // (once: a second copy doesn't redraw it)
 }
 // The header's line under the title says what this text is ("Gifts 6–8",
@@ -4487,8 +4513,7 @@ function _textSubtitle(sid, data) {
 function _drawText(sid, data, place) {
   const sub = _textSubtitle(sid, data);
   if (sub && !(sid === 'rambam' && user.rambamTrack === 'm')) document.getElementById('chabad-panel-sub').textContent = sub;
-  // The day's schedule only had a placeholder: the tile and the menu say it too from now on
-  if (sid === 'rambam' && sub && user.rambamTrack !== 'm' && schedule?.rambam && /^(Daily Rambam|Rambam Yomi)$/.test(schedule.rambam.subtitle || '') && _rv.iso === _viewedISO()) schedule.rambam.subtitle = sub;
+  _tileFromText(sid, _rv.iso, data);   // the tile and the menu say it too
   window[_TEXT_SLOT[sid]] = data;          // what the section's drawing (and its notes) read
   _rv.drawn = true;
   _readerLoading(false);
