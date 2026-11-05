@@ -578,6 +578,15 @@ await check('a reminder that hasn\'t matched a week: one kind question on Today'
 await check('touch feedback uses the phone: a light tap, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
 await check('touch feedback off: nothing', () => { setHaptics(false); window.__calls = []; haptic('tap'); const n = window.__calls.length; setHaptics(true); return [n, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, [0, 'true']);
 await page.evaluate(() => { delete window.Capacitor; user.done = {}; });
+await check('a text fetched ahead of time still names itself in the header (Rambam: "Gifts 6–8", not "Daily Rambam")', async () => {
+  const keep = schedule.rambam;
+  schedule.rambam = { id: 'rambam', label: 'Rambam', subtitle: 'Daily Rambam', chabadUrl: 'about:blank', sefariaRef: null };
+  _keepText('rambam', _viewedISO(), { chapters: [6, 7, 8].map(n => ({ title: 'Gifts ' + n, chapter: n, en: ['If Reuven died'], he: ['מת ראובן'] })) });
+  openChabadPanel('rambam'); await new Promise(z => setTimeout(z, 600));
+  const r = [document.getElementById('chabad-panel-sub').textContent, schedule.rambam.subtitle];
+  closeChabadPanel(); _dropTexts('rambam'); schedule.rambam = keep;
+  return r;
+}, ['Gifts 6–8', 'Gifts 6–8']);
 
 // Signed in, but the cloud copy of progress never answers (e.g. a blocker on the database)
 const page4 = await browser.newPage();

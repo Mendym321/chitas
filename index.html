@@ -4476,7 +4476,19 @@ function _textArrived(sid, iso, data, silent) {
   _keepText(sid, iso, data);
   if (!silent && _readerShows(sid, iso) && !_rv.drawn) _drawText(sid, data);   // (once: a second copy doesn't redraw it)
 }
+// The header's line under the title says what this text is ("Gifts 6–8",
+// "Psalms 108–112"): set whenever a text is drawn, also when it was fetched
+// ahead of time, so a placeholder ("Daily Rambam") never stays
+function _textSubtitle(sid, data) {
+  if (!data) return '';
+  if (sid === 'rambam') return data.chapters?.length ? _rambamSubtitle(data.chapters) : '';
+  return { chumash: data.ref, tehillim: data.psalmLabel, tanya: data.chapterLabel }[sid] || '';
+}
 function _drawText(sid, data, place) {
+  const sub = _textSubtitle(sid, data);
+  if (sub && !(sid === 'rambam' && user.rambamTrack === 'm')) document.getElementById('chabad-panel-sub').textContent = sub;
+  // The day's schedule only had a placeholder: the tile and the menu say it too from now on
+  if (sid === 'rambam' && sub && user.rambamTrack !== 'm' && schedule?.rambam && /^(Daily Rambam|Rambam Yomi)$/.test(schedule.rambam.subtitle || '') && _rv.iso === _viewedISO()) schedule.rambam.subtitle = sub;
   window[_TEXT_SLOT[sid]] = data;          // what the section's drawing (and its notes) read
   _rv.drawn = true;
   _readerLoading(false);
