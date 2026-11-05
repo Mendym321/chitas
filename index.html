@@ -2998,7 +2998,11 @@ async function rebuildScheduleForOffset() {
 }
 
 function parseHebcalForDate(data, d) {
-  const items = data.items || [];
+  const all = data.items || [];
+  // The week comes at once (for its parsha): the day's own entries, by their date ("2026-11-05")
+  const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const day = all.filter(i => String(i.date || '').slice(0, 10) === iso);
+  const items = all;
   // Skip holiday Shabbos readings — use the regular weekly parsha
   const allParshaItems = items.filter(i => i.category === 'parashat');
   const parshaItem = allParshaItems.find(i => {
@@ -3011,11 +3015,15 @@ function parseHebcalForDate(data, d) {
   // Extract the correct aliyah ref for this day-of-week from Hebcal leyning data
   const leyning = parshaItem?.leyning || {};
   const aliyaRef = leyning[String(aliyaNum)] || null;
-  const tehItem = items.find(i => i.category === 'dailyLearning' && (i.title?.startsWith('Psalms') || i.title?.startsWith('Tehillim')));
+  // Tehillim and Rambam: that day's (not the first in the week), and the Rambam of your track
+  const learn = (day.length ? day : all).filter(i => i.category === 'dailyLearning');
+  const tehItem = learn.find(i => i.title?.startsWith('Psalms') || i.title?.startsWith('Tehillim'));
   const rt = user.rambamTrack;
   const rambamItem = rt === 'm'
-    ? items.find(i => i.category === 'dailyLearning' && (i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos')))
-    : items.find(i => i.category === 'dailyLearning' && i.title?.startsWith('Rambam'));
+    ? learn.find(i => i.title?.includes('Mitzvot') || i.title?.includes('Mitzvos'))
+    : rt === '1'
+      ? (learn.find(i => i.title?.startsWith('Rambam') && i.title.includes('1 Chapter')) || learn.find(i => i.title?.startsWith('Rambam')))
+      : (learn.find(i => i.title?.startsWith('Rambam') && !i.title.includes('1 Chapter')) || learn.find(i => i.title?.startsWith('Rambam')));
 
   return {
     parshaName, aliyaNum, aliyaRef,

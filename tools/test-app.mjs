@@ -578,6 +578,17 @@ await check('a reminder that hasn\'t matched a week: one kind question on Today'
 await check('touch feedback uses the phone: a light tap, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
 await check('touch feedback off: nothing', () => { setHaptics(false); window.__calls = []; haptic('tap'); const n = window.__calls.length; setHaptics(true); return [n, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, [0, 'true']);
 await page.evaluate(() => { delete window.Capacitor; user.done = {}; });
+await check('another day: its own Tehillim and Rambam from the week\'s calendar (not Sunday\'s), on your Rambam track', () => {
+  const week = { items: [1, 2, 3, 4, 5].flatMap(n => [
+    { category: 'dailyLearning', date: '2026-11-0' + n, title: 'Psalms ' + n },
+    { category: 'dailyLearning', date: '2026-11-0' + n, title: 'Rambam (1 Chapter): Gifts ' + n },
+    { category: 'dailyLearning', date: '2026-11-0' + n, title: 'Rambam: Gifts ' + (n * 3) + '-' + (n * 3 + 2) }]) };
+  const keep = user.rambamTrack, thu = new Date(2026, 10, 5, 12);
+  user.rambamTrack = '3'; const three = parseHebcalForDate(week, thu);
+  user.rambamTrack = '1'; const one = parseHebcalForDate(week, thu);
+  user.rambamTrack = keep;
+  return [three.tehTitle, three.rambamTitle, one.rambamTitle];
+}, ['Psalms 5', 'Gifts 15-17', 'Gifts 5']);
 await check('Hebrew numbers: 15 and 16 are טו and טז, also after hundreds (Tehillim 115, 116)', () => [15, 16, 22, 115, 116, 119].map(_toHebrewNumeral), ['טו', 'טז', 'כב', 'קטו', 'קטז', 'קיט']);
 await check('Rambam: halacha 15 and 16 marked טו and טז (never יה, יו), and 22 in letters too', async () => {
   const keep = schedule.rambam;
