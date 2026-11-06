@@ -13,7 +13,7 @@
 <title>Chitas</title>
 <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 @font-face {
   font-family: 'Taamey Frank CLM';
@@ -574,7 +574,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #omer { margin:16px 0 0; padding:14px 16px 6px; border-radius:var(--r-m); background:var(--card); }
 .om-day { font:800 17px/1.25 var(--ui-font); color:var(--t1); margin-top:6px; }
 .om-sef { font-size:13px; color:var(--t3); margin:1px 0 6px; }
-.om-sef span, .om-sefirah span { font-family:'OTSiddur','Shlomo',serif; font-size:16px; }
+.om-sef span { font-family:'OTSiddur','Shlomo',serif; font-size:16px; }
 #omer .om-row { padding:11px 0; border-top:1px solid var(--border); width:100%; }
 .om-note { font-size:13px; color:var(--t3); line-height:1.45; padding:8px 0 10px; }
 .om-he { direction:rtl; text-align:right; font-family:'OTSiddur','Shlomo','Noto Serif Hebrew',serif; font-size:23px; line-height:1.6; color:var(--t1); margin-top:14px; }
@@ -1208,21 +1208,6 @@ const gProvider = new GoogleAuthProvider();
 
 // Expose to global scope so regular scripts can call them
 window._fb = {
-  // Load pre-cached daily data (written by cron at midnight)
-  async loadDailyCache(iso) {
-    try {
-      const snap = await getDoc(doc(db, 'cache', iso));
-      if (!snap.exists()) return null;
-      const data = snap.data();
-      // Only use if it was generated for today (not stale)
-      if (data.date !== iso) return null;
-      return data;
-    } catch(e) {
-      console.warn('Cache read failed:', e);
-      return null;
-    }
-  },
-
   // Sign in with Google
   async signInGoogle() {
     try {
@@ -2428,34 +2413,11 @@ async function init() {
   renderStats();
 
   try {
-    // Try Firestore daily cache first (written by cron at midnight)
-    // Falls back to direct API calls if cache miss
-    const todayISO = dateISO(appNow());
-    let _cachedData = null;
-    if (window._fb?.loadDailyCache) {
-      _cachedData = await window._fb.loadDailyCache(todayISO).catch(() => null);
-    }
-
-    let cal, hd, sefariaCalRaw;
-    if (_cachedData) {
-      // Use cached data — near-instant
-      console.log('Using daily cache from Firestore ✓');
-      cal         = _cachedData.hebcalWeek;
-      hd          = _cachedData.hebdate;
-      sefariaCalRaw = { calendar_items: _cachedData.sefariaCalendar };
-      // Seed the Sefaria calendar cache so all subsequent calls use it too
-      _sefariaCalCache = sefariaCalRaw;
-      // Also seed tanya-boundary so _loadTanyaNative doesn't re-fetch
-      if (_cachedData.tanya) window._cachedTanyaBoundary = _cachedData.tanya;
-    } else {
-      // No cache — fetch everything in parallel (normal path)
-      console.log('No daily cache — fetching APIs directly');
-      [cal, hd, sefariaCalRaw] = await Promise.all([
-        fetchHebcal(),
-        fetchHebDate(),
-        fetchSefariaCalendar(null),
-      ]);
-    }
+    const [cal, hd, sefariaCalRaw] = await Promise.all([
+      fetchHebcal(),
+      fetchHebDate(),
+      fetchSefariaCalendar(null),
+    ]);
     const p = parseHebcal(cal);
     const tdate = `${hd.hm} ${hd.hd}, ${hd.hy}`;
     const civDate = `${appNow().getMonth()+1}/${appNow().getDate()}/${appNow().getFullYear()}`;
@@ -2470,8 +2432,6 @@ async function init() {
     // Chumash: use hardcoded schedule — 100% reliable, unaffected by holiday overrides
     const today = appNow();
     const chumashRef = getChumashAliyaRef(today);
-    const parshaForToday = getParshaForDate(today);
-    console.log('Chumash: parsha=' + parshaForToday + ' ref=' + chumashRef);
 
     // Tehillim: build ref from Hebcal chapter list
     // If multiple chapters, fetch them individually and combine
@@ -2878,11 +2838,6 @@ function updateStats() {
   renderWeekStrip();
 }
 
-
-// ════════════════════════════════════════════════════════════════════
-// ZONE 11 · XP / LEVEL SYSTEM
-// ════════════════════════════════════════════════════════════════════
-// ── XP / LEVEL SYSTEM ────────────────────────────────────────────────────────
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 12 · DAY NAVIGATOR  (prev/next day, date display)
@@ -4567,8 +4522,6 @@ function unlockMarkDone() {
 //   Fetches Koren Torah + Metsudah Rashi from Sefaria.
 //   Two-column layout, Hebrew/Both/English toggle.
 //   NOTE: All functions prefixed _ to avoid naming conflicts.
-//   TODO: Add Tanya reader here (same pattern, flowing prose)
-//   TODO: Add Rambam reader here (same pattern, Touger translation)
 // ════════════════════════════════════════════════════════════════════
 // ── CHUMASH NATIVE READER ─────────────────────────────────────────────────
 
@@ -4628,12 +4581,6 @@ function _flatHtml(x){
   if(Array.isArray(x))return x.flatMap(_flatHtml);
   return[];
 }
-function _flatPlain(x){
-  if(!x)return[];
-  if(typeof x==='string'){const s=x.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();return s?[s]:[];}
-  if(Array.isArray(x))return x.flatMap(_flatPlain);
-  return[];
-}
 
 // Fetch a single non-spanning ref with preferred translation keyword
 async function _fetchSingleRef(ref, keyword){
@@ -4652,7 +4599,6 @@ async function _fetchSingleRef(ref, keyword){
   const d=await fetch(url).then(r=>r.json()).catch(()=>null);
   // Refused or not reached: say so, so the reader can show something is missing
   if(!d||d.error||(!(d.text||[]).length&&!(d.he||[]).length))return{en:[],he:[],versionTitle:'',failed:true};
-  console.log(ref+' -> "'+d.versionTitle+'"');
   // _perVerse: preserve one entry per verse (null = no content for that verse).
   // This is critical for Rashi — Sefaria returns sparse arrays where missing
   // verses are empty strings or empty arrays, and we must NOT collapse them
@@ -5003,7 +4949,6 @@ async function _loadRambamNative(sectionId, silent) {
       refs = _expandRambamRefs(['Mishneh Torah, ' + item.title]);
     }
 
-    console.log('Rambam', dateStr, item?.title, '->', refs);
     if (!refs.length) return false;
 
     // Fetch each chapter from Sefaria
@@ -5053,7 +4998,6 @@ function _expandRambamRefs(refs) {
     }
   });
   const result = [...new Set(out)];
-  console.log('Rambam expanded:', refs, '→', result);
   return result;
 }
 
@@ -5483,18 +5427,13 @@ async function _loadTanyaNative(sectionId, silent) {
     const dateStr = iso;
     const isToday = iso === dateISO(appNow());
 
-    // Fetch today + tomorrow from /api/tanya-boundary (server-side, no CORS)
-    // Falls back to Sefaria calendar for today if Chabad.org parse fails
-    // Fetch today + tomorrow refs from boundary proxy (server-side, date params work)
-    // Use cached boundary from Firestore daily cache if available
-    const boundary = (isToday && window._cachedTanyaBoundary)
-      ? window._cachedTanyaBoundary
-      : await fetch('/api/tanya-boundary?date=' + dateStr)
-          .then(r => r.json()).catch(() => null);
+    // Today's and tomorrow's starting points, from /api/tanya-boundary (the
+    // server reads them; falls back to the Sefaria calendar for today)
+    const boundary = await fetch('/api/tanya-boundary?date=' + dateStr)
+      .then(r => r.json()).catch(() => null);
     const todayRef = boundary?.today || (isToday ? schedule?.tanya?.sefariaRef : null) || null;
     const tomorrowRef = boundary?.tomorrow || null;
     const isApproximate = boundary?.isApproximate ?? true;
-    console.log('Tanya: today=' + todayRef + ' tomorrow=' + tomorrowRef + ' approximate=' + isApproximate);
     if (!todayRef) return false;
     const tp = parseTanyaRef(todayRef);
     const tn = tomorrowRef ? parseTanyaRef(tomorrowRef) : null;
@@ -5580,9 +5519,6 @@ async function _loadTanyaNative(sectionId, silent) {
 
     const hePortion = allHe.slice(startV - 1, endV);
     const enPortion = allEn.slice(startV - 1, endV);
-    console.log('Tanya: ch' + (t?.chapter || tp.chapter) + ' v' + startV + '-' + endV
-      + ' of ' + allHe.length + ' | he=' + hePortion.length + ' en=' + enPortion.length
-      + (n ? ' | tomorrow ' + n.chapter + ':' + n.verse : ' | no tomorrow'));
 
     if (!hePortion.length && !enPortion.length) return false;
 
@@ -6865,60 +6801,6 @@ async function _prefetchAllReaders() {
 }
 
 
-// ── Tanya cache buster — regenerates today's and yesterday's cached entries ────
-async function _bustTanyaCache() {
-  const btn = document.querySelector('[onclick="_bustTanyaCache()"]');
-  if (btn) { btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
-
-  const results = [];
-
-  // Use /api/tanya-boundary (same as the app) to get the correct chapterSlug + verse range
-  for (const offset of [0, -1]) {
-    try {
-      const d = appNow(); d.setDate(d.getDate() + offset);
-      const tomorrow = new Date(d); tomorrow.setDate(d.getDate() + 1);
-      const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-
-      const boundary = await fetch('/api/tanya-boundary?date=' + iso).then(r => r.json()).catch(() => null);
-      if (!boundary?.todayUrl) { results.push((offset===0?'Today':'Yesterday') + ': no boundary'); continue; }
-
-      function parseSlug(url) {
-        if (!url) return null;
-        const m = url.match(/\.([0-9]+)\.([0-9]+)$/);
-        if (!m) return null;
-        return { chapterSlug: url.substring(0, url.lastIndexOf('.')), chapter: parseInt(m[1]), verse: parseInt(m[2]) };
-      }
-
-      const t = parseSlug(boundary.todayUrl);
-      const n = parseSlug(boundary.tomorrowUrl);
-      if (!t) { results.push((offset===0?'Today':'Yesterday') + ': could not parse slug'); continue; }
-
-      const startVerse = t.verse;
-      const sameChapter = n && t.chapterSlug === n.chapterSlug;
-      const endVerse = (sameChapter && n.verse > startVerse) ? n.verse - 1 : null;
-
-      const apiUrl = '/api/tanya-enhance'
-        + '?chapterSlug=' + encodeURIComponent(t.chapterSlug)
-        + '&startVerse=' + startVerse
-        + (endVerse !== null ? '&endVerse=' + endVerse : '')
-        + '&bust=1';
-
-      const token = await window._fb?.getIdToken?.().catch(() => null);
-      const result = await fetch(apiUrl, { headers: token ? { Authorization: 'Bearer ' + token } : {} })
-        .then(r => r.json()).catch(e => ({ error: e.message }));
-      const label = offset === 0 ? 'Today' : 'Yesterday';
-      results.push(label + ' (' + t.chapterSlug + ' v' + startVerse + '): ' + (result.source || result.error || 'done'));
-    } catch(e) {
-      results.push((offset===0?'Today':'Yesterday') + ' error: ' + e.message);
-    }
-  }
-
-  if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
-  fire(results.join(' | '), 'gold');
-  // Reload Tanya data if panel is open
-  _dropTexts('tanya');
-  _prefetchAllReaders().catch(() => {});
-}
 
 
 // ── Today: swipe across the tiles for the day before / after ──────────────────
@@ -7156,9 +7038,6 @@ async function _bustTanyaCache() {
 function _shelfTracks() {
   return _shownTracks().filter(t => t !== 'sotah');   // Sotah is in the Omer card
 }
-const _mlCircle = (on, colour) => on
-  ? '<svg width="26" height="26" viewBox="0 0 26 26" role="img" aria-label="Learned"><circle cx="13" cy="13" r="12" fill="' + colour + '"/><path d="M8 13.4l3.2 3.2 6.6-7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-  : '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11.5" fill="none" stroke="var(--hi)" stroke-width="2"/></svg>';
 const _ML_CHEV = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
 function _renderExtraTrackCards(iso, isToday) {
   try { _renderSideList(); } catch (e) {}   // the sidebar's list too
@@ -8842,7 +8721,6 @@ async function _lsLoadDict() {
     const snap  = await gd(col(_db, 'lsDict'));
     _lsDict = {};
     snap.forEach(d => { _lsDict[d.id] = d.data(); });
-    console.log('[lsDict] Loaded', Object.keys(_lsDict).length, 'words');
   } catch(e) {
     console.warn('[lsDict] Load failed:', e.message);
     _lsDict = null; // reset so it retries next time
@@ -10614,7 +10492,6 @@ bootApp();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
       .catch(err => console.warn('SW registration failed:', err));
   });
 }
