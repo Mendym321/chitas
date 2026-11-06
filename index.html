@@ -1347,7 +1347,7 @@ window._fsGetDoc = getDoc;
 </div>
 <script>
   // Collect errors from the start, and show the rescue screen if the app
-  // still isn't on screen after 12 seconds. (Kept tiny and old-browser safe.)
+  // still isn't on screen after 15 seconds on screen. (Kept tiny and old-browser safe.)
   window.__bootErrors = [];
   window.addEventListener('error', function (e) { window.__bootErrors.push((e.message || 'error') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '')); });
   window.addEventListener('unhandledrejection', function (e) { var r = e.reason; window.__bootErrors.push('Promise: ' + (r && (r.message || r))); });
@@ -1357,12 +1357,26 @@ window._fsGetDoc = getDoc;
     var mOn = m && getComputedStyle(m).display !== 'none' && getComputedStyle(m).opacity !== '0';
     return obOn || mOn;
   }
-  setTimeout(function () {
-    if (__appVisible()) return;
+  // Only the time the page is actually on screen counts: a tab left in the
+  // background (or put to sleep, or reloaded there by the phone) has its
+  // loading paused too, so its minutes away aren't a failure. 15 seconds on
+  // screen without the app, and the rescue shows; if the app does appear
+  // after all (a slow network waking up), the rescue goes away by itself.
+  var __onScreenMs = 0;
+  var __rescueWatch = setInterval(function () {
+    var rescue = document.getElementById('rescue');
+    if (rescue.style.display === 'block') {                       // shown, and the app came after all: away with it
+      if (window.__appVisible()) { rescue.style.display = 'none'; clearInterval(__rescueWatch); }
+      return;
+    }
+    if (document.hidden) return;                                  // in the background: doesn't count
+    __onScreenMs += 1000;
+    if (__onScreenMs < 15000) return;
+    if (window.__appVisible()) { clearInterval(__rescueWatch); return; }   // started: nothing more to watch
     document.getElementById('rescue-details').textContent =
       (window.__bootErrors.join('\n') || 'No error message') + '\n\n' + navigator.userAgent + '\nsigned in: ' + !!(window._fb && window._fb._authUser) + ', firebase loaded: ' + !!window._fb;
-    document.getElementById('rescue').style.display = 'block';
-  }, 12000);
+    rescue.style.display = 'block';
+  }, 1000);
   // Repair: drop the offline copy (service worker + caches) — keeps your saved progress
   function __rescueRepair() {
     var done = function () { location.reload(); };
