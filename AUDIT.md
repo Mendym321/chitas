@@ -34,7 +34,7 @@ The second deep check, before launch: every part of the app, the server, offline
 **Before launch, decide:**
 4. ~~Parked readers~~ *Done:* taken out of the app (about 120 KB smaller) and kept, with notes on what they need, in `archive/likkutei-sichos/`.
 4b. **Android:** the project is in `app/android` (icon, splash, sign-in set up). Left for you: Android Studio, the Firebase file and the SHA-1 (`app/README.md`, Part 3), and the Google Play account ($25) to publish.
-5. **Content runway:** written Tanya guides end **13 Nov 2026** (after that the AI writes each day's guide, a few cents a day); Chumash guide lines end after **Toldos**; Rambam guide lines end at **Slaves 9**. Without lines, the readers still work, just without the one-line guides. Write the next batches, or accept the AI/no-line fallback.
+5. **Content runway** (batch 2 written 6 Nov): written Tanya guides now run to **22 Nov 2026** (the end of Kuntres Acharon 4; after that the AI writes each day's guide, a few cents a day); Chumash guide lines through **Vayishlach (28 Nov)**; Rambam guide lines through **Borrowing and Deposit 5 (22 Nov)**. Without lines the readers still work, just without the one-line guides. Next batch due before 22 Nov.
 
 **Nice to have:**
 6. `index.html` is about 600 KB (most of it script). It's fine on a phone after the first visit (kept offline), but splitting the parked readers out (or removing them, item 4) is the cheapest win.
