@@ -67,13 +67,9 @@ await check('Rebbe toggle in Personal Tehillim turns him off', () => {
   return user.tehillimFixedOpts.rebbe;
 }, false);
 
-await check('Likkutei Sichos card shows this week\'s parsha', async () => {
-  dayOffset = 0;
-  const el = Object.assign(document.createElement('p'), { id: 'extra-sub-likkuteiSichos' });
-  document.body.appendChild(el);
-  await _loadExtraSubtitle('likkuteiSichos');
-  return el.textContent.startsWith('Sichos · ');
-}, true);
+await check('the Chumash header knows each parsha\'s Hebrew name, double ones too', () =>
+  ['Vayera', 'Chayei Sara', 'Vayakhel-Pekudei'].map(p => { const k = _PARSHA_KEY[p]; return (Array.isArray(k) ? k : [k]).map(x => _PARSHA_HE[x]).join('–'); }),
+  ['וירא', 'חיי שרה', 'ויקהל–פקודי']);
 
 await check('Mark Done in the reader saves it and offers the next section of the day', () => {
   const sec = (id, color) => ({ id, label: id[0].toUpperCase() + id.slice(1), icon: 'book', color, xp: 25, subtitle: '', chabadUrl: '' });

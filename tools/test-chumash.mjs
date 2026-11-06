@@ -58,7 +58,7 @@ for (let d = day('2025-10-01'); d < day('2046-08-01'); d.setDate(d.getDate() + 1
 check('has a Chumash portion', missing.slice(0, 3).join(', '), '');
 check('every ref is "Book ch:v-ch:v" (or several joined by |)', badFormat.slice(0, 3).join(', '), '');
 
-// The parsha name is shared with other features (Likkutei Sichos, subtitles)
+// The parsha name is shared with other features (the Chumash header, subtitles)
 check('uses app spelling ("Bereishit")', getParshaForDate(day('2026-10-10')), 'Bereishit');
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll tests passed');

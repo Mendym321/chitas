@@ -1,0 +1,20 @@
+<!-- The pop-up and dictionary modal the Likkutei Sichos reader used (from index.html). -->
+<div id="ls-trans-popup" style="display:none;"></div>
+
+<!-- LS Dictionary Admin Input Modal -->
+<div id="ls-dict-modal" style="display:none;position:fixed;inset:0;z-index:1300;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;" onclick="if(event.target.id==='ls-dict-modal')_lsDictModalClose()">
+  <div style="background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-width:430px;padding:20px 20px calc(20px + env(safe-area-inset-bottom));">
+    <div style="display:flex;justify-content:center;margin-bottom:12px;"><div style="width:36px;height:4px;border-radius:2px;background:var(--border);"></div></div>
+    <p style="font-size:var(--fs-4);font-weight:800;color:var(--t1);margin-bottom:4px;">Add Translation</p>
+    <p id="ls-dict-modal-word" style="font-family:'DachHeilig','Frank Ruhl Libre',serif;font-size:26px;color:#8E6AA3;direction:rtl;margin-bottom:16px;"></p>
+    <div style="margin-bottom:12px;">
+      <p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:6px;">Translation</p>
+      <input id="ls-dict-trans-input" type="text" placeholder="English translation..." style="width:100%;padding:11px 13px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:15px;font-family:inherit;box-sizing:border-box;outline:none;">
+    </div>
+    <div style="margin-bottom:18px;">
+      <p style="font-size:var(--fs-1);font-weight:700;color:var(--t3);margin-bottom:6px;">Notes (optional)</p>
+      <input id="ls-dict-notes-input" type="text" placeholder="e.g. grammar note, alternate meaning..." style="width:100%;padding:11px 13px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t1);font-size:14px;font-family:inherit;box-sizing:border-box;outline:none;">
+    </div>
+    <button onclick="_lsDictModalSave()" style="width:100%;padding:14px;border-radius:12px;background:#8E6AA3;border:none;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;">Save to Dictionary</button>
+  </div>
+</div>

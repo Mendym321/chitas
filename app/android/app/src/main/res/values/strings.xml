@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Chitas</string>
+    <string name="title_activity_main">Chitas</string>
+    <string name="package_name">app.chitas.daily</string>
+    <string name="custom_url_scheme">app.chitas.daily</string>
+</resources>

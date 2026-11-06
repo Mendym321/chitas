@@ -1,0 +1,12 @@
+# The iPhone project is made on your Mac (npx cap add ios); not kept here
+ios/
+# Firebase's files for the apps: kept on your computer (app/README.md, Part 1)
+google-services.json
+GoogleService-Info.plist
+# Copied in by "npx cap sync" every time
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/capacitor-cordova-android-plugins/
+android/capacitor.settings.gradle
+android/app/capacitor.build.gradle

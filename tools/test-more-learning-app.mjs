@@ -120,19 +120,16 @@ await check('the box in a tile\'s corner marks it learned, without opening it, a
   await new Promise(r => setTimeout(r, 300));
   return r.concat(__ticked('kitzur'));
 }, [true, true, false, false]);
-await check('nothing carries over in the bottom bar: after a parked track hides Mark on its list, the next reader shows it again', async () => {
-  const shown = id => getComputedStyle(document.getElementById(id)).display !== 'none';
-  const r = [];
-  for (const x of ['likkuteiSichos', 'shaarHaBitachon']) {
-    await openExtraReader(x); await new Promise(z => setTimeout(z, 200));
-    if (x === 'likkuteiSichos') r.push(shown('chabad-mark-btn'));   // its list: no Mark
-    closeChabadPanel(); closeChabadPanel();
-    await openExtraReader('nachYomi'); await new Promise(z => setTimeout(z, 200));
-    r.push(shown('chabad-mark-btn'), shown('reader-actions'), shown('reader-next'));
-    closeChabadPanel();
-  }
-  return r;
-}, [false, true, true, false, true, true, false]);
+await check('someone who had added a reader that was taken out (Likkutei Sichos, Sha\'ar HaBitachon, Mishnah Yomi): it isn\'t shown, and opening it does nothing', async () => {
+  const before = user.extraTracks.slice();
+  user.extraTracks = before.concat(['likkuteiSichos', 'shaarHaBitachon', 'mishnahYomi']);
+  _renderExtraTrackCards(_viewedISO(), true);
+  const tiles = [...document.querySelectorAll('#more-learning .ml-tile')].map(t => t.dataset.id);
+  await openExtraReader('likkuteiSichos');
+  const opened = document.getElementById('chabad-panel').style.display === 'flex';
+  user.extraTracks = before; _renderExtraTrackCards(_viewedISO(), true);
+  return [tiles.some(id => ['likkuteiSichos', 'shaarHaBitachon', 'mishnahYomi'].includes(id)), opened];
+}, [false, false]);
 await check('the reader\'s menu: the day\'s More learning, the one you\'re in marked, its piece', async () => {
   await openExtraReader('nachYomi'); await new Promise(r => setTimeout(r, 200));
   document.getElementById('reader-menu-btn').click();

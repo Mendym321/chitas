@@ -1,11 +1,14 @@
 {
   "name": "chitas-app",
   "private": true,
-  "description": "The phone app: the live site inside a native shell, with haptics and reminders. See README.md.",
+  "description": "The phone app (iPhone and Android): the live site inside a native shell, with haptics, reminders and the phone's own sign-in. See README.md.",
   "scripts": {
-    "ios": "cap sync ios && cap open ios"
+    "ios": "cap sync ios && cap open ios",
+    "android": "cap sync android && cap open android"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "8.5.2",
+    "@capacitor/android": "8.5.3",
     "@capacitor/core": "8.5.3",
     "@capacitor/haptics": "8.0.2",
     "@capacitor/ios": "8.5.3",
