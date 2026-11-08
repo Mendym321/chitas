@@ -216,6 +216,15 @@ for (const scheme of ['light', 'dark']) {
   ok('you, at its foot, open Profile (and show it\'s open)', sb.me, sb);
   ok('on a computer, no fade (there is no floating bar)', await desk.evaluate(() => getComputedStyle(document.getElementById('main-app'), '::after').content === 'none'));
   ok('the pane has the day, with a calendar and ‹ ›', sb.day === 'Today' && sb.steps === 3, sb);
+  // Hayom Yom is on Today for everyone, so the pane has it too (under More learning), and it opens
+  const hy = await desk.evaluate(async () => {
+    const r = [...document.querySelectorAll('.side-r')].find(b => b.querySelector('b')?.textContent.trim() === 'Hayom Yom');
+    if (!r) return { row: false };
+    r.click(); await new Promise(z => setTimeout(z, 500));
+    const out = { row: true, opened: _rv.sid, cur: document.querySelector('.side-r.cur b')?.textContent };
+    _closeReaderNow(); return out;
+  });
+  ok('the pane lists Hayom Yom, and a click opens it there', hy.row && hy.opened === 'extra_hayomYom' && hy.cur === 'Hayom Yom', hy);
   // Reading: the pane stays beside the text, which has a solid banner and no ☰ or day bar; [ folds the pane
   await desk.evaluate(() => switchTab('learn'));
   await desk.evaluate(() => openChabadPanel('rambam')); await desk.waitForTimeout(600);

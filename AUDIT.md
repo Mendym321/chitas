@@ -1,3 +1,47 @@
+# Launch audit (November 2026)
+
+The second deep check, before launch: every part of the app, the server, offline use, and what's still to do. The older audit (October) follows below, for history.
+
+## What this check fixed
+
+| What | Why it mattered |
+|---|---|
+| The app waited for a Firestore "daily cache" on every start | Nothing has written that cache since the nightly job was removed, so every open paid one wasted database round trip *before* loading the day. Removed: the day now starts loading right away. |
+| Offline: Vilna and OT Siddur fonts weren't kept | Tanya's Hebrew and the Hayom Yom header fell back to another font with no internet. Now kept on the first visit. |
+| Offline: a font fetched the first time often wasn't kept | The service worker copied it after handing it to the page, so the copy failed quietly. Now it copies first. |
+| Offline: Google Fonts were never kept | A rule meant for Firebase also caught `fonts.googleapis.com`. Fixed, and the font link now asks in a way that can be kept. |
+| The store of fetched texts grew for ever | Now the newest 400 are kept and older ones dropped. |
+| `api/sefaria-calendar` passed the date in a form Sefaria doesn't read | The date is now passed as `year/month/day` (like `api/tanya-boundary`), and only whole numbers in range get through. Only the parked Mishnah Yomi used it. |
+| Unused code | `api/rambam-refs.js` (an open endpoint nothing called), `_bustTanyaCache` (its button is gone), `_flatPlain`, `_mlCircle`, an unused CSS rule, an empty "XP" section, old TODOs. |
+| Debug messages in the browser console | 8 `console.log` lines removed (warnings for real problems stay). |
+| Notes, tests and store screenshots were public on the website | `.vercelignore` now keeps `tools/`, `docs/`, `*.md` and `reminders.png` off chitas.vercel.app. |
+| No test for offline use | New `npm run test:offline`. It fails on the old service worker (5 checks) and passes on the new one. |
+
+## Checked and fine
+
+- **Server:** every endpoint checks the method; quiz, feedback and delete need sign-in; admin pages check admin; quiz, feedback and the Tanya guide have daily limits; the Tanya guide only prepares last week through tomorrow.
+- **Database rules:** only you can read your progress; nobody can make themselves admin (tested by `npm run test:rules`).
+- **Code:** no other function is unused; every CSS class is used; every saved setting is both written and read.
+- **Privacy page, support page, delete account, credits:** present and match what the app does.
+
+## Launch checklist
+
+**Blockers (must do before the stores):**
+1. **Sign in with Apple** (Apple's guideline 4.8). *Code done:* in the phone apps, sign-in now happens on the phone itself (Apple and Google), through `@capacitor-firebase/authentication`; Apple shows in the iPhone app; deleting an Apple account also cancels the Apple sign-in. Tested in `npm run test:signin`. *Left for you:* the Apple Developer Program ($99/yr) and the steps in `app/README.md` (Firebase: turn on Apple, download the two app files; Xcode: add the capability), then try it on a real iPhone. Before this, sign-in didn't work in the app at all (Google blocks its page inside apps).
+2. **Republish the Firestore rules** only if they change (they didn't in this check).
+3. **Content rights (Apple 5.2):** confirm the fonts' licences allow embedding (OT Vilna, OT Siddur, Shlomo, Taamey Frank, Heilig), and that Heilig bold may be loaded from dach.dev.
+
+**Before launch, decide:**
+4. ~~Parked readers~~ *Done:* taken out of the app (about 120 KB smaller) and kept, with notes on what they need, in `archive/likkutei-sichos/`.
+4b. **Android:** the project is in `app/android` (icon, splash, sign-in set up). Left for you: Android Studio, the Firebase file and the SHA-1 (`app/README.md`, Part 3), and the Google Play account ($25) to publish.
+5. **Content runway** (batch 2 written 6 Nov): written Tanya guides now run to **22 Nov 2026** (the end of Kuntres Acharon 4; after that the AI writes each day's guide, a few cents a day); Chumash guide lines through **Vayishlach (28 Nov)**; Rambam guide lines through **Borrowing and Deposit 5 (22 Nov)**. Without lines the readers still work, just without the one-line guides. Next batch due before 22 Nov.
+
+**Nice to have:**
+6. `index.html` is about 600 KB (most of it script). It's fine on a phone after the first visit (kept offline), but splitting the parked readers out (or removing them, item 4) is the cheapest win.
+7. The privacy page could name Google Fonts and dach.dev among the services that see a request.
+
+---
+
 # Chitas Daily — Full Audit (Oct 2026)
 
 Every file in the repo was read line by line: `index.html` (11,150 lines), all 6 files in `api/`, `sw.js`, `manifest.json`, `package.json`. Where something could be checked by running code, it was. (The parsha/aliyah tables were compared against the official Hebcal library, and the streak math was simulated.)

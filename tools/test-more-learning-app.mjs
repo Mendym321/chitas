@@ -120,33 +120,36 @@ await check('the box in a tile\'s corner marks it learned, without opening it, a
   await new Promise(r => setTimeout(r, 300));
   return r.concat(__ticked('kitzur'));
 }, [true, true, false, false]);
-await check('nothing carries over in the bottom bar: after a parked track hides Mark on its list, the next reader shows it again', async () => {
-  const shown = id => getComputedStyle(document.getElementById(id)).display !== 'none';
-  const r = [];
-  for (const x of ['likkuteiSichos', 'shaarHaBitachon']) {
-    await openExtraReader(x); await new Promise(z => setTimeout(z, 200));
-    if (x === 'likkuteiSichos') r.push(shown('chabad-mark-btn'));   // its list: no Mark
-    closeChabadPanel(); closeChabadPanel();
-    await openExtraReader('nachYomi'); await new Promise(z => setTimeout(z, 200));
-    r.push(shown('chabad-mark-btn'), shown('reader-actions'), shown('reader-next'));
-    closeChabadPanel();
-  }
-  return r;
-}, [false, true, true, false, true, true, false]);
-await check('the reader\'s menu: the day\'s More learning, the one you\'re in marked, its piece', async () => {
+await check('someone who had added a reader that was taken out (Likkutei Sichos, Sha\'ar HaBitachon, Mishnah Yomi): it isn\'t shown, and opening it does nothing', async () => {
+  const before = user.extraTracks.slice();
+  user.extraTracks = before.concat(['likkuteiSichos', 'shaarHaBitachon', 'mishnahYomi']);
+  _renderExtraTrackCards(_viewedISO(), true);
+  const tiles = [...document.querySelectorAll('#more-learning .ml-tile')].map(t => t.dataset.id);
+  await openExtraReader('likkuteiSichos');
+  const opened = document.getElementById('chabad-panel').style.display === 'flex';
+  user.extraTracks = before; _renderExtraTrackCards(_viewedISO(), true);
+  return [tiles.some(id => ['likkuteiSichos', 'shaarHaBitachon', 'mishnahYomi'].includes(id)), opened];
+}, [false, false]);
+await check('the reader\'s menu: Hayom Yom (it\'s on Today for everyone), then the day\'s More learning, the one you\'re in marked, its piece', async () => {
   await openExtraReader('nachYomi'); await new Promise(r => setTimeout(r, 200));
   document.getElementById('reader-menu-btn').click();
   await new Promise(r => setTimeout(r, 300));
   const m = document.getElementById('reader-menu');
   return [!!m, [...m.querySelectorAll('.rm-row')].map(r => r.querySelector('.rm-n').textContent + ' | ' + r.querySelector('.rm-p').textContent + (r.classList.contains('rm-cur') ? ' | now' : '')),
     m.querySelector('[role=dialog]').getAttribute('aria-modal')];
-}, [true, ['Daf Yomi | Bechoros 35', 'Nach Yomi | Yirmiyahu 41 | now', 'Halacha Yomis | Siman 10:20–26', 'Torah Ohr | Lech Lecha'], 'true']);
+}, [true, ['Hayom Yom | 12 Cheshvan', 'Daf Yomi | Bechoros 35', 'Nach Yomi | Yirmiyahu 41 | now', 'Halacha Yomis | Siman 10:20–26', 'Torah Ohr | Lech Lecha'], 'true']);
 
 await check('picking another in the menu opens it, and the menu closes', async () => {
-  document.querySelector('#reader-menu .rm-row').click();
+  document.querySelector('#reader-menu .rm-row[onclick*="dafYomi"]').click();
   await new Promise(r => setTimeout(r, 400));
   return [document.getElementById('chabad-panel-title').textContent, !document.getElementById('reader-menu'), _rv.sid];
 }, ['Daf Yomi', true, 'extra_dafYomi']);
+await check('the menus list Sotah during the Omer (as Today does), with its daf, and not outside it', () => {
+  const d = new Date(2027, 2, 1, 12);
+  while (!sotahDaf(omerDay(d))) d.setDate(d.getDate() + 1);
+  const out = new Date(2027, 7, 1, 12);
+  return [_menuExtras(d).slice(0, 2), _menuPiece('sotah', d), _menuExtras(out).includes('sotah')];
+}, [['hayomYom', 'sotah'], 'Daf 2', false]);
 
 await check('Home in the menu closes the reader, even from inside a maamar', async () => {
   await openExtraReader('likkuteiTorah'); await new Promise(r => setTimeout(r, 200)); await _ltOpen(1);

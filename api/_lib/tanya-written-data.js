@@ -1,5 +1,6 @@
 // The written Tanya guides (see tanya-written.js). Batch 1: Iggeret HaKodesh 29
-// to Kuntres Acharon 4 (30 Oct to 13 Nov 2026).
+// to Kuntres Acharon 4:13 (30 Oct to 13 Nov 2026). Batch 2: Kuntres Acharon 4:14
+// to the end of 4 (14 to 22 Nov 2026).
 //
 // Each segment: [its heading, [[Hebrew start, English start, heading], ...]],
 // the starts copied from the text (vowels and punctuation don't matter).
@@ -190,6 +191,116 @@ export const WRITTEN = {
     ['', [['על ידי המשכת', 'through drawing the Light'], ['הכלולין', 'as contained within'], ['ומקור המוחין', 'The source of (this)', 'Both are true'], ['הוא הענג', 'which is the supreme'], ['ומתחלקת ההמשכה', 'The Light drawn forth'], ['כגון בצדקה', 'For instance, through charity'], ['נמשך אור', 'the Light of the En'], ['לחיצוניות הכלי', 'into the external aspect of the vessel'], ['ובקיום הדינין', 'while through observing a'], ['וברחמים', 'and through mercy (into']]],
     ['The path: love and awe', [['שהן דחילו', 'which are love and'], ['שהן בחינות מוחין', 'meaning major or minor']]],
     ['Why Moshe longed for the Land', [['שהן תכלית', 'for these are the'], ['להמשיך אור', 'to call forth the'], ['לברר הכלים', 'to purify the vessels'], ['שבהן הן הרפח', 'These worlds are the'], ['על ידי תורה ומצות', '(The purification is effected)']]],
+  ],
+},
+
+// Batch 2: Kuntres Acharon 4, verse 14 to its end (14 to 22 Nov 2026).
+
+'Kuntres Acharon 4|14|17': {
+  recap: 'Prayer draws G-d\'s light into the world; Torah and mitzvos draw it into Atzilut. Now: why the mitzvos we do, and their study, stand higher than the love and awe of prayer.',
+  summary: "With love and awe we touch only that G-d exists, never what He is. Even the highest beings can't grasp His essence; Moshe was shown only His \"back.\"",
+  segs: [
+    ['A mitzvah comes before study', [['וכל שכן תפלה', 'and beyond question one'], ['והטעם כנזכר', 'The reason is as']]],
+    ['Higher than the love of prayer', [['כי הגם דכתיב', 'For though the verse'], ['מכל מקום איננו', 'still one does not', 'Only that He is, not what He is'], ['וכמו שכתוב ואנכי', 'in conformity with']]],
+    ['', [['דלית מחשבה', 'for no thought can'], ['כי אם במציאותו', 'One can grasp His'], ['אפילו לעליונים', 'This applies even to'], ['לבד עלולים', 'Only emanated effects']]],
+    ['Not even Moshe', []],
+  ],
+},
+
+'Kuntres Acharon 4|18|24': {
+  recap: 'With love and awe we grasp only that G-d exists, not what He is; even the highest souls can\'t. Today: the mitzvah itself holds His very essence.',
+  summary: "The etrog's life comes from the essence of Atzilut, so holding it as halacha says holds that G-dliness itself. Learning its laws grasps it too; our intentions alone grasp only that it exists.",
+  segs: [
+    ['The mitzvah holds the essence', [['הנה בדרך השתלשלות', 'In the process of'], ['כמו על דרך משל', 'as for example within', 'For example, the etrog'], ['הלביש בהן', 'the Holy One, blessed is'], ['והיינו מבחינת', 'meaning from their outward']]],
+    ['But a person in a body', [['לא יוכל למצוא', 'cannot detect and apprehend'], ['כי האצילות היא', 'For Atzilut is the'], ['כי אם מציאותן', 'Man’s capacity for apprehension']]],
+    ['', [['שהוא התפשטות', 'Prophecy entails divestment']]],
+    ['Why: no grasp, no true bond', [['ובלי השגה', 'Without comprehension there is']]],
+    ['Where the etrog comes from', [['חיותו נמשכה', 'its life is drawn'], ['דכלים דנוקבא', 'of the vessels of nukva'], ['כמו שכתוב בעץ', 'as stated in Etz'], ['כי למד כלים', 'For the thirty vessels'], ['והן יוד מאמרות', 'they are the Ten'], ['כי הכלים דאצילות נעשו', 'For the vessels of Atzilut became'], ['לפי שבאצילות', 'In Atzilut He and'], ['ועל ידי התלבשות', 'Through clothing, the essence']]],
+    ['Holding the etrog', [['הרי זה תופס', 'he is actually holding'], ['המיוחדת באור', 'which is united with']]],
+    ['Intention, and study', [['אינו משיג ותופס', 'Here he does not'], ['אלא מציאותה', 'Only the existence aspect'], ['אך בלימוד הלכות', 'However, by learning the', 'Learning its laws grasps it'], ['וכל שכן הלומד', 'Even more so he'], ['אבל דוקא סודות', 'Here we speak of'], ['דלא גרע', 'which is not inferior']]],
+  ],
+},
+
+'Kuntres Acharon 4|25|27': {
+  recap: 'Holding an etrog, or learning its laws, grasps the G-dliness within it; our intentions grasp only that it exists. Today: what about learning the order of the worlds?',
+  summary: 'Knowing G-d through the order of the worlds is a great mitzvah, even above the others, but it is one of 613. We need them all, in thought, speech and deed, to refine all three lower worlds.',
+  segs: [
+    ['Studying the order of the worlds', [['אף אם משיג', 'Even if he does'], ['לא עדיף', 'it is not intrinsically'], ['ומעלה עליו', 'This is considered (in', 'Like doing it in deed']]],
+    ['Yet knowing Him is a great mitzvah', [['ואדרבה עולה', 'On the contrary it'], ['ומביאה ללב', 'and it develops into'], ['והשגת המציאות', 'Comprehension of existence entails']]],
+    ['But it is one of 613', [['לפי שהן השתלשלות', 'for they descend from'], ['לכך צריך להרבות', 'Hence one must abundantly'], ['שהן בריאה', 'These are parallel to']]],
+  ],
+},
+
+'Kuntres Acharon 4|28|34': {
+  recap: 'Knowing G-d is a great mitzvah, but we must keep all 613, in thought, speech and deed. Today, more reasons the mitzvos reach higher than our minds.',
+  summary: 'The sparks we refine come from a higher root than our souls. And as a seed carries a person\'s own essence where words cannot, the mitzvos carry G-d\'s; the mind\'s love and awe are like angels born of a "kiss."',
+  segs: [
+    ['The sparks have a higher root', [['על ידי תורה ומצות', 'through Torah and mitzvot'], ['גבוהין בשרשן', 'are superior in their'], ['כי הן מסג', 'They are of'], ['ונפש רוח נשמה שכבר', 'while the nefesh-ruach-neshamah that'], ['וזהו שכתוב לפני', 'Hence the verse, Before'], ['והיינו טעמא', 'For this reason man', 'Why we live on food'], ['ומבררן', 'and purifies them by']]],
+    ['His face cannot be seen', [['שפנימית העליון', 'meaning that the inwardness']]],
+    ['Words, and a seed', [['והטפה שנמשכה', 'The drop drawn from'], ['וגם המשכת', 'Besides, something of'], ['והטעם מפני', 'The reason is that']]],
+    ['', [['הרי חכמה זו', 'the thought is a'], ['והארה זו היא', 'Then, too, this radiance'], ['והשכל הוא הארה', 'In turn, the intellect'], ['מה שאין כן הטפה', 'However, the drop has'], ['ולכן מולידה', 'Hence it gives birth']]],
+    ['Angels and souls', []],
+    ['', [['והלכך דחילו', 'and therefore intellectual love']]],
+    ['', [['אינו יכול להתגלות', 'cannot be revealed except'], ['וכמו שכתוב ופני', 'Thus the verse, My']]],
+  ],
+},
+
+'Kuntres Acharon 4|35|39': {
+  recap: 'The mitzvos carry G-d\'s essence, as a seed carries a person\'s, while the mind\'s love and awe are like angels. Today: which way the light moves.',
+  summary: 'Love and awe lift us up, and that lasts only a moment. The mitzvos we do draw G-d\'s light down, the purpose of all the worlds; so Moshe prayed 515 prayers to be able to do them.',
+  segs: [
+    ['Love and awe rise up', [['וכן בנפש רוח', 'and equally in the'], ['דחילו ורחימו שכליים שלהם', 'their intellectual love and'], ['וזהו בחינת הסתלקות', 'However, this is the']]],
+    ['Mitzvos draw the light down', [['שחיצוניות העליון', 'The external aspect of'], ['וזהו שכתוב בזהר', 'This is the intent']]],
+    ['', []],
+    ['The purpose: light below', [['שזה אינו', 'This elevation can only'], ['ואף גם זאת', 'Even so specifically the'], ['אבל לא עליות', 'but not the elevations']]],
+    ['Lights and vessels', [['וכן דחילו', 'So, too, are intellectual'], ['ולכן התפלל', 'Therefore Moses offered', 'Why Moshe prayed so much'], ['והוא הדין', 'So, too, for the']]],
+  ],
+},
+
+'Kuntres Acharon 4|40|43': {
+  recap: 'Love and awe lift us for a moment; the mitzvos we do bring G-d\'s light down, the purpose of everything. Today\'s question: how can a physical etrog do that?',
+  summary: 'As a seed wakes the earth\'s power to grow, the etrog and tefillin wake a source higher than the breaking of the vessels. Learning their laws does the same, at least for the positive commandments.',
+  segs: [
+    ['The question', [['ימשיך אור', 'can elicit Light into'], ['שכבר נבררו', 'that have already been']]],
+    ['Like a seed in the ground', [['שהגרעין מעורר', 'The seed stimulates the'], ['על ידי העלאת', 'through elevation of mayin'], ['ככה מעוררים', 'In this manner the'], ['שהוא שם סג', 'meaning the Name of'], ['שהוא מהות ועצמות', 'which is the very essence'], ['ולא הארה', 'and not merely a']]],
+    ['Learning their laws does too', [['ועד רום המעלות', 'and upward to the']]],
+    ['What about the prohibitions?', [['אבל לא בלימוד', 'but not the study'], ['ובפרט בדלא', 'particularly those that do']]],
+  ],
+},
+
+'Kuntres Acharon 4|44|49': {
+  recap: 'An etrog, like a seed, wakes the highest source, and learning its laws does too, at least for the positive commandments. Today: something true of all the laws.',
+  summary: 'In the world itself, G-d\'s wisdom is completely hidden. In a halacha it shines openly: the ruling is His will, not something physical, so it stands far above the love and awe of angels and souls.',
+  segs: [
+    ['True of all the laws', [['והן בחינות נפש', 'and are nefesh-ruach of']]],
+    ['The laws, and the world', [['והלבשה זו', 'This investment is not'], ['דהתם הלבוש', 'for there the garment', 'In the world, wisdom hides'], ['כהסתר והעלם', 'just as the gross'], ['והיינו חיצוניות', 'This supreme wisdom is'], ['וכן בבריאה', 'So, too, in Beriah'], ['שהם בחינות נבראים', 'they are creatures, and']]],
+    ['In the laws, it shines', [['ולבוש העשיה', 'The garment of Asiyah'], ['כמו ביום טוב', 'as on holy days', 'As on Yom Tov'], ['על ידי מעבר חסד', 'through passage by way'], ['הנקרא גם כן', 'This, too, is properly']]],
+    ['The ruling is His will', [['מכל מקום ההלכה', 'still the law proper'], ['שהיא בחינת רצון', 'it is the (Divine)'], ['רק שיורד', 'It does descend and'], ['והדבר הגשמי', 'The physical object itself'], ['כמו המחליף', 'as for example the']]],
+    ['', [['המחיה ומהוה', 'that vivifies and brings'], ['שהן דחילו', 'which are the awe']]],
+    ['Above the love of angels', [['וגם אחר שירדה', 'Even after descending into']]],
+  ],
+},
+
+'Kuntres Acharon 4|50|53': {
+  recap: 'In the world G-d\'s wisdom is hidden; in a halacha it shines openly, far above the love and awe of angels and souls. Today: why, and where the Mishnah and Gemara are rooted.',
+  summary: 'The wisdom of the laws comes from the vessels of Atzilut, where every mitzvah has its reason, so it stands above the minds of angels. Its essence spreads into the six Orders of Mishnah and the Gemara.',
+  segs: [
+    ['Why the laws stand higher', [['והתהוותן', 'and of their creation']]],
+    ['', [['ענין החכמה', 'The aim of the'], ['שבהן תלוין', 'upon whom are dependent'], ['ומשום הכי', 'Therefore, even when they', 'Rooted in Atzilut itself'], ['הן במלכות', 'they are in malchut']]],
+    ['A question', [['ואף על פי כן', 'still they are the'], ['לא קשה מידי', 'This is not a', 'The answer'], ['דבאמת המלאכים', 'The angels and souls'], ['ליסוד זעיר', 'to the attribute of'], ['כי אף אם תמצא', 'For even if it']]],
+    ['Mishnah and Gemara', []],
+  ],
+},
+
+'Kuntres Acharon 4|54|end': {
+  recap: 'The essence of the wisdom of the laws spreads into the six Orders of Mishnah and the Gemara. Today, the end of this long note: G-d Himself dwells in the Torah we learn.',
+  summary: 'The Mishnah and Talmud given at Sinai are G-d\'s messengers, carrying His Name inside them. Learning them draws His infinite light into this world, as Rabbi Shimon bar Yochai and all the Sages did, to make Him a home below.',
+  segs: [
+    ['Garments for the soul', [['ועל ידי התורה לבוש', 'and through Torah study'], ['יש לומר', 'This can be understood'], ['אבל התלמוד עצמו', 'But Talmud itself that', 'As given at Sinai'], ['ולכן הוא מברר', 'Therefore it refines ruach']]],
+    ['Messengers carry His Name', [['הרי נודע', 'it is known that'], ['מה שאין כן כשאינו', 'However, when he is'], ['ואזי קורא', 'Then he proclaims, Holy'], ['וכן הוא ממש', 'So it is actually', 'So with the Talmud'], ['הם שלוחי', 'they are messengers of'], ['החיצונים בתלמוד', 'the external state in']]],
+    ['Learning brings His light here', [['שבו מלובש', 'in which is clothed'], ['ונמצא שאור', 'The result is that'], ['שוכן ברוח', 'dwells in ruach of'], ['וכשהאדם לומד', 'When man studies he'], ['להיות נכלל', 'that it be included'], ['כי זה כל האדם', 'For this is all']]],
+    ['The work of the Sages', [['להמשיך אורו', 'to call forth His'], ['דשלטא אילנא', 'Exile is the time'], ['כי זהו תכלית', 'For this is the', 'A home for Him below'], ['כדי להעלותן', 'in order to elevate']]],
+    ['Angels only rise', [['ובזה יובן', 'Thus we may understand', 'Angels from learning without intention'], ['שהוא בחינת רוח', 'which is a state'], ['אלא לפי שאף', 'Still, nevertheless, the'], ['ודי למבין', 'This will suffice for']]],
   ],
 },
 

@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v66';
+const VERSION     = 'v70';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
@@ -24,6 +24,8 @@ const SHELL_URLS = [
   '/fonts/Shlomo.ttf',
   '/fonts/ShlomoBold.ttf',
   '/fonts/Heilig.otf',
+  '/fonts/OT Vilna Basic-VF.ttf',
+  '/fonts/OT Siddur - Classic.ttf',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon-32.png',
@@ -87,10 +89,11 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
   if (url.protocol === 'chrome-extension:') return;
 
-  // Firebase / Firestore — always network only (auth-sensitive)
+  // Firebase / Firestore — always network only (auth-sensitive).
+  // (fonts.googleapis.com is Google Fonts, handled further down.)
   if (url.hostname.includes('firebase') ||
       url.hostname.includes('firestore') ||
-      url.hostname.includes('googleapis.com')) {
+      (url.hostname.includes('googleapis.com') && url.hostname !== 'fonts.googleapis.com')) {
     return;
   }
 
@@ -146,12 +149,26 @@ async function cacheFirstWithRefresh(request) {
   const cached = await caches.match(request);
   const fetchPromise = fetch(request).then(response => {
     if (response.ok) {
-      caches.open(SHELL_CACHE).then(cache => cache.put(request, response.clone()));
+      const copy = response.clone();   // copy now, before the page reads the body
+      caches.open(SHELL_CACHE).then(cache => cache.put(request, copy)).catch(() => {});
     }
     return response;
   }).catch(() => null);
 
   return cached || fetchPromise;
+}
+
+// The saved texts are only for reading offline, so keep the newest few hundred
+// (a cache lists its entries oldest first) instead of growing for ever.
+const DATA_MAX = 400;
+let _trimming = false;
+async function trimCache(cache, max) {
+  if (_trimming) return;
+  _trimming = true;
+  try {
+    const keys = await cache.keys();
+    for (const k of keys.slice(0, Math.max(0, keys.length - max))) await cache.delete(k);
+  } catch {} finally { _trimming = false; }
 }
 
 // Network first, fall back to cache, store successful responses
@@ -160,7 +177,8 @@ async function networkFirstWithCache(request, cacheName, maxAgeSeconds) {
     const response = await fetch(request);
     if (response.ok) {
       const cache = await caches.open(cacheName);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
+      if (cacheName === DATA_CACHE) trimCache(cache, DATA_MAX);
     }
     return response;
   } catch {

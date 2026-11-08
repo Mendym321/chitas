@@ -1222,5 +1222,345 @@
    8,
    "Closing: the way of mercy"
   ]
+ ],
+ "Hiring 1": [
+  [
+   1,
+   "Four watchmen, three laws"
+  ],
+  [
+   3,
+   "When the owner works for him"
+  ],
+  [
+   4,
+   "Passing it to another watchman"
+  ]
+ ],
+ "Hiring 2": [
+  [
+   1,
+   "What the laws cover"
+  ],
+  [
+   6,
+   "Men, women and minors"
+  ],
+  [
+   8,
+   "When the watch begins"
+  ],
+  [
+   9,
+   "Taking on more, or less"
+  ],
+  [
+   10,
+   "Disputes"
+  ]
+ ],
+ "Hiring 3": [
+  [
+   1,
+   "Proving an accident"
+  ],
+  [
+   2,
+   "The porter's jug"
+  ],
+  [
+   4,
+   "The shepherd and the wolves"
+  ],
+  [
+   8,
+   "Leaving the herd"
+  ]
+ ],
+ "Hiring 4": [
+  [
+   1,
+   "Another route, another job"
+  ],
+  [
+   4,
+   "Another load"
+  ],
+  [
+   5,
+   "Who rides"
+  ],
+  [
+   6,
+   "Extra weight"
+  ],
+  [
+   8,
+   "What a rider may bring"
+  ]
+ ],
+ "Hiring 5": [
+  [
+   1,
+   "A rented animal falls sick or dies"
+  ],
+  [
+   3,
+   "A ship"
+  ],
+  [
+   5,
+   "Subletting"
+  ],
+  [
+   6,
+   "A house that falls"
+  ]
+ ],
+ "Hiring 6": [
+  [
+   1,
+   "What comes with it"
+  ],
+  [
+   3,
+   "What the owner must fix"
+  ],
+  [
+   6,
+   "Notice before it ends"
+  ],
+  [
+   9,
+   "When rents go up"
+  ],
+  [
+   11,
+   "A new owner"
+  ]
+ ],
+ "Hiring 7": [
+  [
+   1,
+   "Conditions"
+  ],
+  [
+   2,
+   "A leap year"
+  ],
+  [
+   3,
+   "Was the rent paid?"
+  ],
+  [
+   4,
+   "An undated contract"
+  ],
+  [
+   5,
+   "An orchard that dries up"
+  ],
+  [
+   7,
+   "Produce left on his land"
+  ]
+ ],
+ "Hiring 8": [
+  [
+   1,
+   "Rent or a share"
+  ],
+  [
+   3,
+   "What may be sown"
+  ],
+  [
+   5,
+   "Locusts and drought"
+  ],
+  [
+   8,
+   "Weeding"
+  ],
+  [
+   10,
+   "Trees and vines"
+  ]
+ ],
+ "Hiring 9": [
+  [
+   1,
+   "Local custom"
+  ],
+  [
+   3,
+   "Hired through an agent"
+  ],
+  [
+   5,
+   "When the work stops"
+  ],
+  [
+   7,
+   "Finishing early"
+  ],
+  [
+   11,
+   "What a worker finds"
+  ]
+ ],
+ "Hiring 10": [
+  [
+   1,
+   "A lender with security"
+  ],
+  [
+   3,
+   "Craftsmen"
+  ],
+  [
+   4,
+   "Ruined work"
+  ],
+  [
+   6,
+   "Planting trees"
+  ]
+ ],
+ "Hiring 11": [
+  [
+   1,
+   "Pay on time"
+  ],
+  [
+   3,
+   "When it doesn't apply"
+  ],
+  [
+   6,
+   "Disputes over wages"
+  ]
+ ],
+ "Hiring 12": [
+  [
+   1,
+   "Eating while working"
+  ],
+  [
+   4,
+   "Which work allows it"
+  ],
+  [
+   10,
+   "Only what he works with"
+  ],
+  [
+   11,
+   "How much"
+  ],
+  [
+   13,
+   "Not for his family"
+  ]
+ ],
+ "Hiring 13": [
+  [
+   1,
+   "Letting the animal eat"
+  ],
+  [
+   2,
+   "Do not muzzle"
+  ],
+  [
+   7,
+   "Closing: honest work"
+  ]
+ ],
+ "Borrowing and Deposit 1": [
+  [
+   1,
+   "A borrower pays even for accidents"
+  ],
+  [
+   2,
+   "It died while working"
+  ],
+  [
+   4,
+   "Feeding the animal"
+  ],
+  [
+   5,
+   "How long he may keep it"
+  ]
+ ],
+ "Borrowing and Deposit 2": [
+  [
+   1,
+   "When the owner works with him"
+  ],
+  [
+   3,
+   "Teachers and town workers"
+  ],
+  [
+   5,
+   "Who counts"
+  ],
+  [
+   7,
+   "Husbands, wives and partners"
+  ]
+ ],
+ "Borrowing and Deposit 3": [
+  [
+   1,
+   "When responsibility begins"
+  ],
+  [
+   3,
+   "How did it die?"
+  ],
+  [
+   4,
+   "Borrowed half, rented half"
+  ]
+ ],
+ "Borrowing and Deposit 4": [
+  [
+   1,
+   "The unpaid watchman's oath"
+  ],
+  [
+   3,
+   "Guarding properly"
+  ],
+  [
+   4,
+   "Guarding money"
+  ],
+  [
+   8,
+   "His wife and household"
+  ]
+ ],
+ "Borrowing and Deposit 5": [
+  [
+   1,
+   "Charity money"
+  ],
+  [
+   2,
+   "Robbers"
+  ],
+  [
+   4,
+   "Two depositors"
+  ],
+  [
+   5,
+   "Mixed produce"
+  ]
  ]
 }

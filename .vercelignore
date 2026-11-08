@@ -1,1 +1,8 @@
+# Not part of the website: the iPhone app shell, tests and tools, notes,
+# store screenshots and mockups. (package.json stays: the api/ functions need it.)
 app/
+tools/
+docs/
+*.md
+reminders.png
+archive/

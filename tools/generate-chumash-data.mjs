@@ -16,7 +16,7 @@ const FIRST_HEBREW_YEAR = 5786; // Sept 2025
 const LAST_HEBREW_YEAR  = 5806; // through Sept 2046
 
 // Hebcal spelling → the spelling the rest of the app already uses
-// (getParshaForDate's result is also used by Likkutei Sichos, subtitles, etc.)
+// (getParshaForDate's result is also used by the Chumash header, subtitles, etc.)
 const APP_NAME = {
   'Bereshit': 'Bereishit',
   'Lech-Lecha': 'Lech Lecha',
