@@ -2600,7 +2600,7 @@ function _drawReminders() {
         + '<input type="time" class="ps-time" value="' + t + '" aria-label="' + name + ' time" onchange="this.value && setReminderTime(\'' + sec + '\',this.value)"></div>' : '')
       + '</div>';
   };
-  const learning = ['chumash', 'tehillim', 'tanya', 'rambam'].concat((user.extraTracks || []).includes('hayomYom') ? ['hayomYom'] : []);
+  const learning = ['chumash', 'tehillim', 'tanya', 'rambam', 'hayomYom'];   // Hayom Yom is on Today for everyone
   body.innerHTML = '<p class="tpm-label">Your learning</p><div class="tpm-list">'
     + learning.map(sec => row(sec, sec === 'rambam' && user.rambamTrack === 'm' ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec], '', REMINDER_PICKS)).join('') + '</div>'
     + '<p class="tpm-label">In its season</p><div class="tpm-list">'

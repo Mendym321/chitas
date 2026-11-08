@@ -529,6 +529,12 @@ await page.evaluate(() => {
 await check('in the app, Profile shows Reminders (off) and touch feedback', () => { localStorage.removeItem('chitas_reminders'); localStorage.removeItem('chitas_reminder'); renderProfile(); return [document.getElementById('ps-phone').style.display, document.getElementById('ps-rem-sub').textContent, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, ['', 'Off', 'true']);
 await check('an old single reminder becomes all four at its time', () => { localStorage.setItem('chitas_reminder', JSON.stringify({ on: true, time: '20:00' })); const t = _reminderTimes(); localStorage.removeItem('chitas_reminder'); return t; }, { chumash: '20:00', tehillim: '20:00', tanya: '20:00', rambam: '20:00' });
 await page.evaluate(() => { window.__sched = () => window.__calls.filter(c => c[0] === 'schedule').at(-1)?.[1].notifications || []; });
+await check('the Reminders sheet offers all four and Hayom Yom (it\'s on Today for everyone, nothing to add)', () => {
+  user.extraTracks = []; openReminders();
+  const names = [...document.querySelectorAll('#rem-body .rem-row .tpm-who p:first-child')].map(p => p.textContent).slice(0, 5);
+  document.getElementById('reminders-modal')?.remove();
+  return names;
+}, ['Chumash', 'Tehillim', 'Tanya', 'Rambam', 'Hayom Yom']);
 await check('turning Tanya on asks first, then puts its reminders on the phone, none on Shabbos', async () => {
   user.done = {}; window.__calls = [];
   openReminders();
