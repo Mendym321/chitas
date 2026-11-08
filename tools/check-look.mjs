@@ -225,6 +225,8 @@ for (const scheme of ['light', 'dark']) {
     _closeReaderNow(); return out;
   });
   ok('the pane lists Hayom Yom, and a click opens it there', hy.row && hy.opened === 'extra_hayomYom' && hy.cur === 'Hayom Yom', hy);
+  const order = await desk.evaluate(() => [...document.querySelectorAll('#side-list > .lbl, #side-list > .side-r')].map(e => e.classList.contains('lbl') ? '[' + e.textContent.replace(/ ·.*/, '') + ']' : e.querySelector('b').textContent.trim()).slice(0, 6));
+  ok('in the pane, Hayom Yom comes right after the four (not under More learning)', JSON.stringify(order) === '["[Chitas]","Chumash","Tehillim","Tanya","Rambam","Hayom Yom"]', order);
   // Reading: the pane stays beside the text, which has a solid banner and no ☰ or day bar; [ folds the pane
   await desk.evaluate(() => switchTab('learn'));
   await desk.evaluate(() => openChabadPanel('rambam')); await desk.waitForTimeout(600);

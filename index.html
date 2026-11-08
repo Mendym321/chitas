@@ -2638,13 +2638,15 @@ function _showStreakPill() {
 // with ‹ › and another day; a bar of the four; the day's learning like the
 // reader's menu (names, a check in its colour when learned, the one open
 // highlighted, a click opens it). The same on Today and in the reader.
-// What the day pane and the reader's menu list under More learning: what
-// Today shows (Hayom Yom, and Sotah during the Omer), then your own tracks.
-// With each one's piece for that day where it's known on the phone.
-function _menuExtras(d) {
+// The day pane and the reader's menu: under the four, what Today shows by
+// itself (Hayom Yom, and Sotah during the Omer), with no heading of its own;
+// then, under More learning, the sefarim you added. With each one's piece for
+// that day where it's known on the phone.
+function _menuDaily(d) {
   const daf = typeof sotahDaf === 'function' ? sotahDaf(omerDay(d)) : null;
-  return ['hayomYom'].concat(daf ? ['sotah'] : [], _shelfTracks().filter(id => EXTRA_TRACK_DEFS[id] && id !== 'hayomYom'));
+  return ['hayomYom'].concat(daf ? ['sotah'] : []);
 }
+const _menuExtras = () => _shelfTracks().filter(id => EXTRA_TRACK_DEFS[id] && id !== 'hayomYom');
 function _menuPiece(id, d) {
   if (id === 'hayomYom') return hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
   if (id === 'sotah') { const daf = typeof sotahDaf === 'function' ? sotahDaf(omerDay(d)) : null; return daf ? 'Daf ' + daf : ''; }
@@ -2660,7 +2662,7 @@ function _renderSideList() {
   const chev = dir => '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="' + (dir < 0 ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6') + '"/></svg>';
   const row = (id, name, piece, colour, on, open) => '<button type="button" class="side-r' + (on ? ' done' : '') + (id === cur ? ' cur' : '') + '"' + (id === cur ? ' aria-current="true"' : '') + ' onclick="' + open + '"><span class="side-rt"><b id="side-n-' + id + '">' + escapeHtml(name) + '</b><small id="side-p-' + id + '">' + escapeHtml(piece || '') + '</small></span>' + (on ? '<span role="img" aria-label="Learned">' + tick(colour) + '</span>' : '') + '</button>';
   const chitas = schedule ? SECTION_IDS.filter(id => schedule[id]) : [];
-  const extras = _menuExtras(d);
+  const daily = _menuDaily(d), extras = _menuExtras();
   const heb = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
   const n = chitas.filter(id => done[id]).length;
   box.innerHTML = '<div class="side-day"><div class="side-day-h"><div><h3>' + escapeHtml(_dayName(dayOffset)) + '</h3><p>' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' · ' + escapeHtml(heb) + '</p></div>'
@@ -2670,6 +2672,7 @@ function _renderSideList() {
       + (dayOffset !== 0 ? '<button type="button" class="side-back" onclick="_paneDay(0)">Back to today</button>' : '') + '</div>'
     + (chitas.length ? '<p class="lbl side-l">Chitas · ' + n + ' of ' + chitas.length + '</p>'
       + chitas.map(id => row(id, schedule[id].label, id === 'chumash' ? _chumashLine(schedule[id].subtitle) : String(schedule[id].subtitle || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, ''), SECTION_COLORS[id], !!done[id], "_paneOpen('" + id + "')")).join('') : '')
+    + daily.map(id => row(id, EXTRA_TRACK_DEFS[id].label, _menuPiece(id, d), EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso), "_paneOpen('" + id + "')")).join('')
     + (extras.length ? '<p class="lbl side-l">More learning</p>'
       + extras.map(id => row(id, EXTRA_TRACK_DEFS[id].label, _menuPiece(id, d), EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso), "_paneOpen('" + id + "')")).join('') : '');
   // Each extra's piece (and Torah Ohr's name), from the schedules on the phone
@@ -6062,7 +6065,7 @@ function openReaderMenu(stay) {
     + '<span class="rm-txt"><span class="rm-n" id="rm-name-' + id + '">' + name + '</span><span class="rm-p" id="rm-sub-' + id + '">' + escapeHtml(piece || '') + '</span></span>'
     + (on ? '<span class="rm-end" role="img" aria-label="Learned">' + tick(colour) + '</span>' : '<span class="rm-end rm-go">' + chev(1) + '</span>') + '</button>';
   const chitas = schedule ? SECTION_IDS.filter(id => schedule[id]) : [];
-  const extras = _menuExtras(d);
+  const daily = _menuDaily(d), extras = _menuExtras();
   const n = chitas.filter(id => done[id]).length;
   const when = dayOffset === 0 ? 'Today' : dayOffset === -1 ? 'Yesterday' : dayOffset === 1 ? 'Tomorrow' : d.getDay() === 6 ? 'Shabbos' : d.toLocaleDateString('en-US', { weekday: 'long' });
   const step = off => _canReadDay(off) ? ' onclick="_menuDay(' + off + ')"' : ' disabled';
@@ -6081,6 +6084,7 @@ function openReaderMenu(stay) {
     +   '<div class="rm-list">'
     +     (chitas.length ? '<p class="rm-label">Chitas · ' + n + ' of ' + chitas.length + ' learned</p>'
           + chitas.map(id => row(id, schedule[id].label, id === 'chumash' ? _chumashLine(schedule[id].subtitle) : String(schedule[id].subtitle || ''), SECTION_COLORS[id], !!done[id])).join('') : '')
+    +     daily.map(id => row(id, EXTRA_TRACK_DEFS[id].label, _menuPiece(id, d), EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso))).join('')
     +     (extras.length ? '<p class="rm-label">More learning</p>'
           + extras.map(id => row(id, EXTRA_TRACK_DEFS[id].label, _menuPiece(id, d), EXTRA_TRACK_DEFS[id].color, !!_trackDoneOn(id, iso))).join('') : '')
     +   '</div>'
