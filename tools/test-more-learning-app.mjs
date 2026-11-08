@@ -139,6 +139,11 @@ await check('the reader\'s menu: Hayom Yom (it\'s on Today for everyone), then t
     m.querySelector('[role=dialog]').getAttribute('aria-modal')];
 }, [true, ['Hayom Yom | 12 Cheshvan', 'Daf Yomi | Bechoros 35', 'Nach Yomi | Yirmiyahu 41 | now', 'Halacha Yomis | Siman 10:20–26', 'Torah Ohr | Lech Lecha'], 'true']);
 
+await check('in the menu, Hayom Yom comes right after the four, before the More learning heading', () => {
+  const items = [...document.querySelectorAll('#reader-menu .rm-list > *')].map(e => e.classList.contains('rm-label') ? '[' + e.textContent.replace(/ ·.*/, '') + ']' : e.querySelector('.rm-n').textContent);
+  const hy = items.indexOf('Hayom Yom'), lastChitas = Math.max(-1, ...['Chumash', 'Tehillim', 'Tanya', 'Rambam'].map(n => items.indexOf(n)));
+  return [hy > lastChitas, items[hy + 1]];
+}, [true, '[More learning]']);
 await check('picking another in the menu opens it, and the menu closes', async () => {
   document.querySelector('#reader-menu .rm-row[onclick*="dafYomi"]').click();
   await new Promise(r => setTimeout(r, 400));
@@ -148,8 +153,8 @@ await check('the menus list Sotah during the Omer (as Today does), with its daf,
   const d = new Date(2027, 2, 1, 12);
   while (!sotahDaf(omerDay(d))) d.setDate(d.getDate() + 1);
   const out = new Date(2027, 7, 1, 12);
-  return [_menuExtras(d).slice(0, 2), _menuPiece('sotah', d), _menuExtras(out).includes('sotah')];
-}, [['hayomYom', 'sotah'], 'Daf 2', false]);
+  return [_menuDaily(d), _menuPiece('sotah', d), _menuDaily(out)];
+}, [['hayomYom', 'sotah'], 'Daf 2', ['hayomYom']]);
 
 await check('Home in the menu closes the reader, even from inside a maamar', async () => {
   await openExtraReader('likkuteiTorah'); await new Promise(r => setTimeout(r, 200)); await _ltOpen(1);
