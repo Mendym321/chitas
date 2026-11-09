@@ -456,6 +456,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .tpm-foot { display:flex; justify-content:space-between; margin-top:14px; }
 .tpm-foot .tpm-remove { color:var(--red); }
 .fb-note { margin-top:10px; font-size:var(--fs-1); color:var(--t3); line-height:1.5; }
+.signin-legal { margin:10px 0 0; font-size:var(--fs-1); color:var(--t3); text-align:center; line-height:1.5; }
+.signin-legal a { color:var(--t2); text-decoration:underline; }
 .fb-err { margin-top:10px; font-size:13px; color:var(--red); }
 .ml-foot { font-size:var(--fs-1); color:var(--t3); line-height:1.5; margin:12px 4px 0; }
 .reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
@@ -823,6 +825,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .sm-digest .sm-where { font-size:12px; color:var(--t3); margin-top:8px; }
 .sm-same, .sm-soon { font-size:13px; color:var(--t3); text-align:center; margin:10px 0; }
 .sm-soon button { border:none; background:none; padding:0; color:var(--rc); font:700 13px var(--ui-font); cursor:pointer; }
+.rd-fail { padding:48px 20px; text-align:center; }   /* a text that didn't load: why, and Try again */
+.rd-fail p { font-size:var(--fs-2); color:var(--t2); line-height:1.5; margin:0 0 16px; }
+.rd-fail button { padding:11px 22px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:700 var(--fs-2) var(--ui-font); cursor:pointer; }
 .rem-row + .rem-row { border-top:1px solid var(--border); }
 .rem-when { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:0 14px 12px; }
 .rem-when .tz-opts { margin:0; flex-wrap:wrap; gap:6px; }
@@ -1354,6 +1359,7 @@ window._fsGetDoc = getDoc;
       <button id="ob-google-btn" onclick="signInWith('google')" style="width:100%;padding:14px;border-radius:var(--r-m);background:#fff;border:1px solid #ddd;color:#1f1f1f;font-size:var(--fs-3);font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;"><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 019.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 000 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-4.2-13.6-10l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continue with Google</button>
       <p id="ob-signin-error" style="display:none;font-size:var(--fs-1);color:var(--red);text-align:center;margin-top:10px;"></p>
       <button onclick="closeSignIn()" style="width:100%;padding:12px;margin-top:8px;border-radius:var(--r-m);background:transparent;border:none;color:var(--t3);font-size:var(--fs-2);font-weight:600;cursor:pointer;font-family:inherit;">Not now</button>
+      <p class="signin-legal">By continuing, you agree to our <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>
     </div>
   </div>
 
@@ -1594,7 +1600,7 @@ window._fsGetDoc = getDoc;
     <div style="padding:20px 18px 40px;width:100%;">
       <div id="native-reader-loading" style="text-align:center;padding:60px 0;">
         <div class="spinner" style="margin:0 auto 16px;color:var(--gold);"></div>
-        <p style="font-size:var(--fs-2);color:var(--t3);">Loading…</p>
+        <p id="native-reader-loading-t" style="font-size:var(--fs-2);color:var(--t3);">Loading…</p>
       </div>
       <div id="native-reader-content" style="display:none;">
         <!-- content injected here -->
@@ -1896,7 +1902,9 @@ async function signInWith(provider) {
     if (e?.code !== 'auth/popup-closed-by-user' && e?.code !== 'auth/cancelled-popup-request') {
       err.textContent = e?.code === 'auth/operation-not-allowed'
         ? 'This sign-in option isn\'t set up yet. Please use another one.'
-        : 'Sign in didn\'t work. Please try again.';
+        : !navigator.onLine || e?.code === 'auth/network-request-failed'
+        ? 'You\'re offline. Connect to the internet to sign in; your learning on this phone is kept meanwhile.'
+        : 'Sign in didn\'t finish (' + (e?.code || 'no answer').replace(/^auth\//, '').replace(/-/g, ' ') + '). Please try again.';
       err.style.display = 'block';
     }
   } finally {
@@ -4375,7 +4383,18 @@ function _textLoading(sid, silent) {
   if (!silent && _readerShows(sid, iso)) { _readerLoading(true); _rv.drawn = false; }
   return iso;
 }
+// While a text loads, say which one; if it takes a while, say so
+let _slowTimer = null;
+function _loadingText() {
+  clearTimeout(_slowTimer);
+  const t = document.getElementById('native-reader-loading-t');
+  if (!t) return;
+  const name = (document.getElementById('chabad-panel-title')?.textContent || '').trim();
+  t.textContent = name ? 'Opening ' + name + '…' : 'Opening…';
+  _slowTimer = setTimeout(() => { t.textContent = navigator.onLine ? 'Still loading. The connection seems slow.' : 'You\'re offline. It opens once you\'re back online.'; }, 6000);
+}
 function _readerLoading(on) {
+  if (on) _loadingText(); else clearTimeout(_slowTimer);
   document.getElementById('native-reader-loading').style.display = on ? 'block' : 'none';
   document.getElementById('native-reader-content').style.display = on ? 'none' : 'block';
   if (on) _readerProgress(true);
@@ -7237,7 +7256,7 @@ async function openExtraReader(id) {
   // Load content
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
+  if (loadEl) { loadEl.style.display = 'block'; _loadingText(); }
   if (contEl) contEl.style.display = 'none';
 
   try {
@@ -7248,7 +7267,11 @@ async function openExtraReader(id) {
     else if (id === 'likkuteiTorah') await _loadLikkuteiTorah();
   } catch(e) {
     console.error('Extra reader error:', e);
-    if (contEl) { contEl.innerHTML = '<p style="padding:20px;color:var(--t3);text-align:center;">Could not load content. Please try again.</p>'; contEl.style.display = 'block'; }
+    // Say why, and give a way on: try again, or back
+    const why = !navigator.onLine ? 'You\'re offline. It opens once you\'re back online.'
+      : 'Sefaria, where this text comes from, didn\'t answer. It may be busy for a moment.';
+    if (contEl) { contEl.innerHTML = '<div class="rd-fail"><p>' + why + '</p>'
+      + '<button type="button" onclick="_readerCleanup();openExtraReader(\'' + id + '\')">Try again</button></div>'; contEl.style.display = 'block'; }
     if (loadEl) loadEl.style.display = 'none';
   }
 }
@@ -7573,7 +7596,7 @@ async function _loadHayomYomNative(silent) {
   if (!silent) {
     if (iframeEl) { iframeEl.style.display = 'none'; iframeEl.src = ''; }
     if (subEl)    subEl.textContent = 'Hayom Yom';
-    if (loadEl)   loadEl.style.display = 'block';
+    if (loadEl)   { loadEl.style.display = 'block'; _loadingText(); }
     if (contEl)   contEl.style.display = 'none';
     if (extEl) extEl.style.display = 'none';   // the text and our translation are here: no link away
     _hayomYomInjectLangToggle();
@@ -7826,7 +7849,7 @@ async function _ltOpen(i) {
   const iso = _rv.iso;
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
+  if (loadEl) { loadEl.style.display = 'block'; _loadingText(); }
   if (contEl) contEl.style.display = 'none';
   document.getElementById('chabad-panel-sub').textContent = 'Parshas ' + parshaSpelling(piece.parsha);
   const back = '<button type="button" class="lt-back" onclick="_ltBack()">‹ The week\'s maamarim</button>';
@@ -8038,7 +8061,7 @@ async function _loadSotah() {
   const def = EXTRA_TRACK_DEFS.sotah;
   const loadEl = document.getElementById('native-reader-loading');
   const contEl = document.getElementById('native-reader-content');
-  if (loadEl) loadEl.style.display = 'block';
+  if (loadEl) { loadEl.style.display = 'block'; _loadingText(); }
   if (contEl) contEl.style.display = 'none';
 
   try {
