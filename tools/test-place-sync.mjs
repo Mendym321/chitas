@@ -118,6 +118,42 @@ await openChumash(laptop);
 ok('the laptop opens it at the top', await laptop.evaluate(() => document.getElementById('native-reader').scrollTop), 0);
 await close(laptop);
 
+console.log('Live, without a reload: the phone open, the laptop reading on:');
+{
+  // The phone's Chumash is open at the top; the laptop reads far into it
+  await openChumash(phone);
+  await phone.evaluate(() => { document.getElementById('native-reader').scrollTop = 0; });
+  await openChumash(laptop);
+  await laptop.mouse.move(640, 500); await laptop.mouse.wheel(0, 3400); await laptop.waitForTimeout(900);
+  const far = await topWords(laptop);
+  await close(laptop); await laptop.waitForTimeout(300);
+  // The account tells the phone (as the live watch does): a quiet offer, no jump
+  await phone.evaluate(places => _cloudIn({ places }), cloud.places);
+  await phone.waitForTimeout(200);
+  const offer = await phone.evaluate(() => { const b = document.getElementById('other-place'); return [!b.hidden, b.textContent, document.getElementById('native-reader').scrollTop]; });
+  ok('the open phone offers the laptop\'s place, and stays where it is', offer, [true, 'Continue from your other device', 0]);
+  await phone.click('#other-place'); await phone.waitForTimeout(300);
+  ok('tapping it goes to the laptop\'s words, and the offer goes', [await topWords(phone), await phone.evaluate(() => document.getElementById('other-place').hidden)], [far, true]);
+  // Its own place coming back from the account: no offer
+  await phone.evaluate(places => _cloudIn({ places }), cloud.places); await phone.waitForTimeout(200);
+  ok('its own place coming back from the account offers nothing', await phone.evaluate(() => document.getElementById('other-place').hidden), true);
+  // Scrolling away the offer: the laptop goes further again, the phone scrolls
+  await openChumash(laptop);
+  await laptop.mouse.move(640, 500); await laptop.mouse.wheel(0, 1600); await laptop.waitForTimeout(900);
+  await close(laptop); await laptop.waitForTimeout(300);
+  await phone.evaluate(() => { document.getElementById('native-reader').scrollTop = 0; });
+  await phone.evaluate(places => _cloudIn({ places }), cloud.places); await phone.waitForTimeout(200);
+  const shown = await phone.evaluate(() => !document.getElementById('other-place').hidden);
+  await phone.mouse.move(195, 500); await phone.mouse.wheel(0, 200); await phone.waitForTimeout(200);
+  ok('scrolling puts the offer away', [shown, await phone.evaluate(() => document.getElementById('other-place').hidden)], [true, true]);
+  await close(phone);
+  // Closed and opened again on the phone, still without a reload: the newest place
+  const newest = cloud.places[KEY]?.a;
+  await openChumash(phone);
+  ok('opened again (no reload): it opens at the newest place from the laptop', [await topWords(phone), await phone.evaluate(() => document.getElementById('other-place').hidden)], [newest, true]);
+  await close(phone);
+}
+
 console.log('Old places go, once a session:');
 {
   cloud.places['scroll_tanya_2026-10-10'] = { y: 500, t: 1 };
