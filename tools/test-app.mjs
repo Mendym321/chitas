@@ -28,7 +28,12 @@ const url = `http://localhost:${server.address().port}/`;
 // Use the pre-installed Chromium in cloud sessions, Playwright's own elsewhere
 const executablePath = existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
 const browser = await chromium.launch({ executablePath });
+// Midday of today's date: these tests are about features, not the 4 am rule
+// (test-midnight.mjs has that); run between midnight and 4 am, "today" by the
+// plain clock and the app's learning day differ. Time still flows from there.
+const noonToday = () => { const d = new Date(); d.setHours(12, 0, 0, 0); return d; };
 const page = await browser.newPage();
+await page.clock.install({ time: noonToday() });
 const pageErrors = [];
 page.on('pageerror', e => pageErrors.push(e.message));
 await page.route(u => !u.href.startsWith(url), r => r.abort()); // block the internet
@@ -420,6 +425,7 @@ await page.emulateMedia({ colorScheme: 'light' });
 // ── A brand-new visitor, in a fresh page ───────────────────────────────────
 console.log('New visitor (signed out):');
 const page2 = await browser.newPage();
+await page2.clock.install({ time: noonToday() });
 page2.on('pageerror', e => pageErrors.push(e.message));
 await page2.route(u => !u.href.startsWith(url), r => r.abort());
 await page2.goto(url, { waitUntil: 'load' });
@@ -502,6 +508,7 @@ await check2('Delete everything (no account): the phone is cleared and the welco
 
 console.log('Firebase blocked:');
 const page3 = await browser.newPage();
+await page3.clock.install({ time: noonToday() });
 await page3.route(u => !u.href.startsWith(url), r => r.abort());
 await page3.addInitScript(() => localStorage.setItem('chitas_v78', JSON.stringify({ uid: 'u1', name: 'M', rambamTrack: '3', done: {}, pastDone: {} })));
 await page3.goto(url, { waitUntil: 'load' });
@@ -628,6 +635,7 @@ await check('a text fetched ahead of time still names itself in the header (Ramb
 
 // Signed in, but the cloud copy of progress never answers (e.g. a blocker on the database)
 const page4 = await browser.newPage();
+await page4.clock.install({ time: noonToday() });
 await page4.route(u => !u.href.startsWith(url), r => r.abort());
 await page4.addInitScript(() => {
   localStorage.setItem('chitas_v78', JSON.stringify({ uid: 'u1', name: 'M', rambamTrack: '3', done: {}, pastDone: {} }));

@@ -1788,8 +1788,7 @@ function _userPayload() {
     lastDate: user.lastDate || null,
     done: user.done || {},
     quizDone: user.quizDone || {},
-    pastDone: user.pastDone || {},
-    pastQuizDone: user.pastQuizDone || {},
+    ...filedForCloud(user),   // pastDone, pastQuizDone, with today's marks filed under their date (js/progress.js)
     weeklyQuizDone: user.weeklyQuizDone || {},
     tehillimPeople: user.tehillimPeople || [],
     tehillimFixedOpts: user.tehillimFixedOpts || {},
@@ -2528,9 +2527,15 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) _syn
 // Back after a while, it first gets what other devices saved meanwhile.
 var _appDay = null, _hiddenAt = 0;   // var: init() may run before this line
 const _busy = () => document.getElementById('chabad-panel')?.style.display === 'flex' || document.getElementById('quiz-panel')?.style.display === 'flex';
-function _checkNewDay() {
+let _rolling = false;
+async function _checkNewDay() {
   const t = dateISO(appNow());
-  if (!_appDay || t === _appDay || !user) return;
+  if (!_appDay || t === _appDay || !user || _rolling) return;
+  // A device left open all night: first take in what your other devices saved
+  // (marks made late on your phone), so the day it files away is complete
+  _rolling = true;
+  try { await _pullFromCloud(); } catch (e) {} finally { _rolling = false; }
+  if (t === _appDay) return;
   const moved = archiveOldToday(user, t);
   if (moved) { Object.assign(user, moved); recalcStreak(); saveUser(); }
   if (_busy()) return;          // the reader or a Review keeps its day; Today catches up after

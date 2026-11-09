@@ -162,6 +162,26 @@ console.log('Marked on the laptop at night, the phone left open:');
   await page.context().close();
 }
 
+console.log('The laptop left open (and on screen) all night, marked on the phone at 1:30 am:');
+{
+  const laptop = { ...base, uid: 'u1', lastDate: MON, done: { tehillim: true }, pastDone: { [SUN]: { ...ALL } } };
+  const page = await open(`${MON}T21:00:00-04:00`, laptop, { cloud: laptop });
+  await page.waitForTimeout(500);
+  await page.clock.runFor(4.5 * 3600e3);            // 1:30 am: the laptop still on screen
+  // The phone marks the other three and saves (the account files them under Monday)
+  await page.evaluate(([mon]) => { window.__cloud = { ...window.__cloud, done: { chumash: true, tehillim: true, tanya: true, rambam: true }, pastDone: { ...window.__cloud.pastDone, [mon]: { chumash: true, tehillim: true, tanya: true, rambam: true } } }; }, [MON]);
+  await page.clock.runFor(2.6 * 3600e3);            // past 4 am: the laptop rolls over by itself
+  await page.waitForTimeout(300);
+  const k = o => o && Object.fromEntries(Object.entries(o).sort());   // marks, in any order
+  const s = await state(page);
+  ok('the laptop took in the phone\'s marks before filing Monday away (before: only Tehillim)', k(s.past[MON]), k(ALL));
+  ok('and Tuesday starts empty', s.done, {});
+  const saved = await page.evaluate(() => { saveUser(); return window.__saved; });   // its next save, whenever that is
+  ok('its next save files Monday whole (Tuesday is filed once something is marked on it)', [k(saved?.pastDone?.[MON]), saved?.pastDone?.[TUE] ?? null], [k(ALL), null]);
+  ok('no errors', page.__errors, []);
+  await page.context().close();
+}
+
 await browser.close(); server.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll midnight tests passed');
 process.exit(failed ? 1 : 0);
