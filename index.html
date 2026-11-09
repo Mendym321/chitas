@@ -494,10 +494,12 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .hy-head-en b { font-size:17px; font-weight:800; }
 .hy-he { direction:rtl; text-align:justify; text-align-last:right; text-indent:1.4em; font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-synthesis:none; --rf-sz:21px; --rf-lh:1.6; color:var(--t1); margin:0 0 .55em; }
 .hy-en { --rf-sz:17px; --rf-lh:1.6; color:var(--t1); margin:0 0 .7em; }
-.hy-pair { margin-bottom:22px; }
-.hy-pair .hy-he { margin-bottom:.35em; }
-.hy-pair .hy-en { color:var(--t2); }
-@media (min-width:700px) { .hy-pair { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; } .hy-pair > .hy-he { order:2; } .hy-pair > :first-child:not(.hy-he) { order:2; } .hy-pair .hy-en { color:var(--t1); } }
+.hy-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; margin-bottom:18px; }   /* Both: side by side, English left, Hebrew right, as in every reader */
+.hy-pair > .hy-he, .hy-pair > :first-child:not(.hy-he) { order:2; }
+.hy-pair .hy-he { --rf-sz:18px; text-align:right; text-indent:0; margin:0; }   /* a narrow column: no stretched gaps */
+.hy-pair .hy-en { --rf-sz:14.5px; margin:0; }
+.hy-pair > div > .hy-he, .hy-pair > div > .hy-en { margin-bottom:.7em; }
+@media (min-width:700px) { .hy-pair { gap:28px; margin-bottom:22px; } .hy-pair .hy-he { --rf-sz:21px; text-align:justify; text-align-last:right; } .hy-pair .hy-en { --rf-sz:17px; } }
 .lt-pg { display:inline-block; font-family:var(--ui-font); font-size:10px; font-weight:700; color:var(--t3); border:1px solid var(--border); border-radius:999px; padding:0 6px; margin:0 3px; line-height:16px; vertical-align:middle; text-indent:0; }
 .ml-foot { margin:12px 4px 0; font-size:var(--fs-1); color:var(--t3); line-height:1.45; }
 /* ── Direction C: header and rings, chips, tiles ── */
@@ -7566,9 +7568,9 @@ async function _loadHayomYomNative(silent) {
   // (weekday, date, year), then the text as a page: Hebrew in the Heilig
   // face, justified, each paragraph's first line indented, no lines between
   // paragraphs. The bracketed expansions ("צ"צ [צמח צדק]") are left out, as
-  // in print. Both: each Hebrew paragraph with its English under it on a
-  // phone, side by side on a wide screen; when the paragraphs don't pair up
-  // (about one day in seven), the whole Hebrew, then the whole English.
+  // in print. Both: side by side like every reader, English on the left and
+  // Hebrew on the right, a paragraph against its paragraph; when they don't
+  // pair up (about one day in seven), the whole English beside the whole Hebrew.
   const paras = t => (t || '').trim().split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).map(x => escapeHtml(x).replace(/\n/g, '<br>'));
   const heClean = t => String(t || '').replace(/\s*\[[^\]\n]*\]/g, '').replace(/ +([,.:;?!])/g, '$1');
   const he = x => '<p class="rf-body hy-he" lang="he">' + x + '</p>';
