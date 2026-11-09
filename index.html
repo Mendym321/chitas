@@ -825,6 +825,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .sm-digest .sm-where { font-size:12px; color:var(--t3); margin-top:8px; }
 .sm-same, .sm-soon { font-size:13px; color:var(--t3); text-align:center; margin:10px 0; }
 .sm-soon button { border:none; background:none; padding:0; color:var(--rc); font:700 13px var(--ui-font); cursor:pointer; }
+/* Reading the same text further on another device: a quiet offer, never a jump */
+#other-place { position:absolute; left:50%; bottom:100%; transform:translate(-50%, -12px); padding:10px 18px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:700 var(--fs-2) var(--ui-font); white-space:nowrap; box-shadow:0 6px 20px rgba(0,0,0,.18); cursor:pointer; animation:fadeIn .2s ease; z-index:2; }
+#other-place[hidden] { display:none; }
 .rd-fail { padding:48px 20px; text-align:center; }   /* a text that didn't load: why, and Try again */
 .rd-fail p { font-size:var(--fs-2); color:var(--t2); line-height:1.5; margin:0 0 16px; }
 .rd-fail button { padding:11px 22px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:700 var(--fs-2) var(--ui-font); cursor:pointer; }
@@ -1617,7 +1620,8 @@ window._fsGetDoc = getDoc;
   <iframe id="chabad-iframe" src="" style="display:none;flex:1;border:none;width:100%;background:white;" allow="autoplay"></iframe>
 
   <!-- Bottom bar — always visible, compact -->
-  <div id="reader-bottom-bar" style="padding:8px 14px 12px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+  <div id="reader-bottom-bar" style="position:relative;padding:8px 14px 12px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+    <button type="button" id="other-place" onclick="_jumpToOtherPlace()" hidden>Continue from your other device</button>
     <!-- After Mark Done: what to learn next (filled by _showReaderNext) -->
     <div id="reader-next" style="display:none;"></div>
     <div id="reader-actions" style="display:flex;gap:8px;">
@@ -2579,6 +2583,10 @@ function _watchCloud() {
 function _stopCloud() { if (_stopWatch) { try { _stopWatch(); } catch (e) {} } _stopWatch = null; }
 function _cloudIn(data) {
   if (!data || !user?.uid) return;
+  // Reading places come along too: the next text you open opens where your
+  // other device left it; one already open offers it (_offerOtherPlace)
+  window._cloudPlacesIn?.(data.places);
+  _offerOtherPlace();
   const days = daysFrom(data), reviews = reviewsFrom(data);
   if (!_sentLocal) {
     _sentLocal = true;
@@ -4017,6 +4025,7 @@ function _readerShows(sid, iso) { return _rv.sid === sid && _rv.iso === iso; }
 // showing, then start at the top until this one's text is in and put back
 function _readerBegin(sid) {
   _flushReaderScroll();
+  _hideOtherPlace();
   Object.assign(_rv, { sid, iso: _viewedISO(), drawn: false, place: null, placing: true, touched: false, holdUntil: 0, gen: _rv.gen + 1 });
   const reader = document.getElementById('native-reader');
   if (reader) reader.scrollTop = 0;
@@ -4107,17 +4116,23 @@ function _savedPlace(sid, iso = _rv.iso || _viewedISO()) {
 // Signed in, every place is also kept in your account (users/{you}, in
 // places: one field per piece, each written on its own, never your progress),
 // and the newer of this device's and the account's is the one used. They come
-// with your account when the app opens or comes back (loadUser); they go when
-// you stop reading (close, switch, leave the app), and at most every 30
-// seconds while you scroll. Only the last week's are kept. See DESIGN.md.
+// with your account when the app opens, and live after that (_cloudIn); they
+// go when you stop reading (close, switch, leave the app), and at most every
+// 10 seconds while you scroll. Only the last week's are kept. See DESIGN.md.
 var _cloudPlaces = {}, _placesOut = {}, _placesTimer = null, _placesPruned = false;
-window._cloudPlacesIn = p => { _cloudPlaces = (p && typeof p === 'object') ? { ...p, ..._placesOut } : { ..._placesOut }; };
+// (A place of this device's still waiting to be sent counts too, unless the
+// account's is newer)
+window._cloudPlacesIn = p => {
+  const inc = (p && typeof p === 'object') ? { ...p } : {};
+  for (const k in _placesOut) if (!inc[k] || (inc[k].t || 0) <= (_placesOut[k].t || 0)) inc[k] = _placesOut[k];
+  _cloudPlaces = inc;
+};
 const _placesSynced = () => !!(user && user.uid && !isGuest() && window._fb?.savePlaces);
 function _syncPlace(key, place) {
   if (!_placesSynced()) return;
   _cloudPlaces[key] = place;
   _placesOut[key] = place;
-  if (!_placesTimer) _placesTimer = setTimeout(_sendPlaces, 30e3);
+  if (!_placesTimer) _placesTimer = setTimeout(_sendPlaces, 10e3);
 }
 function _sendPlaces() {
   clearTimeout(_placesTimer); _placesTimer = null;
@@ -4359,6 +4374,44 @@ if (window.ResizeObserver) {
   });
   ['native-reader', 'native-reader-content'].forEach(id => { const el = document.getElementById(id); if (el) hold.observe(el); });
 }
+
+// ── CONTINUE FROM YOUR OTHER DEVICE ──────────────────────────────────────────
+// The text you're reading is further on another device (its place came in
+// live, newer than this device's, more than about a screen away): offer it,
+// never jump. It goes when you tap it, scroll, or after a few seconds.
+let _otherPlaceTimer = null;
+function _otherPlace() {
+  if (!_rv.sid || !_rv.drawn || _rv.placing || !_placesSynced()) return null;
+  const key = _scrollKey(_rv.sid, _rv.iso), there = _cloudPlaces[key];
+  if (!there || typeof there !== 'object' || !there.t) return null;
+  let here = null; try { here = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+  if (here && (here.t || 0) >= there.t) return null;               // this device's own, or older
+  const reader = document.getElementById('native-reader');
+  if (!reader || Math.abs(_placeY(there) - reader.scrollTop) < reader.clientHeight * 0.8) return null;
+  return there;
+}
+function _offerOtherPlace() {
+  const there = _otherPlace(), btn = document.getElementById('other-place');
+  if (!btn || !there || _rv.offeredT === there.t) return;
+  _rv.offeredT = there.t;
+  btn.hidden = false;
+  clearTimeout(_otherPlaceTimer);
+  _otherPlaceTimer = setTimeout(_hideOtherPlace, 8000);
+}
+function _hideOtherPlace() {
+  clearTimeout(_otherPlaceTimer);
+  const btn = document.getElementById('other-place');
+  if (btn) btn.hidden = true;
+}
+function _jumpToOtherPlace() {
+  const there = _cloudPlaces[_scrollKey(_rv.sid, _rv.iso)];
+  _hideOtherPlace();
+  if (!there) return;
+  const reader = document.getElementById('native-reader');
+  reader.scrollTop = _placeY(there);
+  _storePlace(there);                                             // now this device's place too
+}
+['touchstart', 'wheel', 'keydown'].forEach(ev => document.getElementById('native-reader')?.addEventListener(ev, _hideOtherPlace, { passive: true }));
 
 // ── TEXTS BY SECTION AND DAY ─────────────────────────────────────────────────
 // Each loaded text is kept under its section and day ('tanya|2026-10-20'), so
@@ -6059,6 +6112,7 @@ function _closeReaderNow() {
 }
 // What one sefer leaves around the text (the gear, the progress bar's colour)
 function _readerCleanup() {
+  _hideOtherPlace();
   const _lspb = document.getElementById('reader-progress-bar');
   if (_lspb) _lspb.style.background = 'var(--gold)';
   closeReaderSettings();
