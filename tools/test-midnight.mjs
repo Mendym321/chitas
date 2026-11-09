@@ -52,7 +52,15 @@ async function open(at, saved, { cloud, zone = 'America/New_York' } = {}) {
     try { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('chitas_v78', JSON.stringify(u)); sessionStorage.setItem('seeded', '1'); } } catch {}   // (a blocked text's frame has no storage)
     if (c) {   // signed in, with a cloud copy another device saved
       window.__cloud = c;
-      setTimeout(() => { window._fb = { ...(window._fb || {}), loadUser: async () => window.__cloud, saveUser: async (uid, d) => { window.__saved = d; }, getIdToken: async () => 't', getCurrentUser: () => ({ uid: u.uid }) }; }, 0);
+      // The account as Firestore keeps it: saves merge field by field, and every
+      // device watching is told at once. __otherDevice marks as another device would.
+      const deep = (a, b) => { const o = { ...(a || {}) }; for (const k in b) o[k] = (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && o[k] && typeof o[k] === 'object') ? deep(o[k], b[k]) : b[k]; return o; };
+      const put = d => { window.__cloud = deep(window.__cloud, d); (window.__watchers || []).forEach(f => f(window.__cloud)); };
+      window.__otherDevice = (iso, id, v = true) => put({ days: { [iso]: { [id]: v } } });
+      setTimeout(() => { window._fb = { ...(window._fb || {}), loadUser: async () => window.__cloud, saveUser: async (uid, d) => { window.__saved = d; put(d); }, getIdToken: async () => 't', getCurrentUser: () => ({ uid: u.uid }),
+        setMark: async (uid, iso, id, v) => put({ days: { [iso]: { [id]: v } } }), setReview: async (uid, iso, id, lv, v) => put({ reviews: { [iso]: { [id]: { [lv]: v } } } }),
+        addRecords: async (uid, days, reviews) => put({ days, reviews }),
+        watchUser: (uid, f) => { (window.__watchers = window.__watchers || []).push(f); setTimeout(() => f(window.__cloud), 0); return () => { window.__watchers = window.__watchers.filter(x => x !== f); }; } }; }, 0);
     }
   }, [saved, cloud || null]);
   await page.goto(url, { waitUntil: 'load' });
@@ -144,19 +152,23 @@ console.log('A Review started before 4 am, finished after:');
   await page.context().close();
 }
 
+const k = o => o && Object.fromEntries(Object.entries(o).sort());   // marks, in any order
+
 console.log('Marked on the laptop at night, the phone left open:');
 {
   const phone = { ...base, uid: 'u1', lastDate: MON, done: { chumash: true }, pastDone: { [SUN]: { ...ALL } } };
   const page = await open(`${MON}T21:00:00-04:00`, phone, { cloud: phone });
   await page.waitForTimeout(500);
-  // Meanwhile the laptop saves Tehillim, Tanya and Rambam to the cloud
-  await page.evaluate(() => { window.__cloud = { ...window.__cloud, done: { chumash: true, tehillim: true, tanya: true, rambam: true } }; });
+  // Meanwhile the laptop marks Tehillim, Tanya and Rambam
+  await page.evaluate(([mon]) => ['tehillim', 'tanya', 'rambam'].forEach(id => window.__otherDevice(mon, id)), [MON]);
+  await page.waitForTimeout(100);
+  ok('the phone shows them at once, while still open', k((await state(page)).done), k(ALL));
   await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); document.dispatchEvent(new Event('visibilitychange')); });
   await page.clock.fastForward(11 * 3600e3);        // the phone sleeps until 8 am
   await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange')); });
   await page.waitForTimeout(300);
   const s = await state(page);
-  ok('in the morning the phone has Monday from both devices', s.past[MON], ALL);
+  ok('in the morning the phone has Monday from both devices', k(s.past[MON]), k(ALL));
   ok('and Tuesday starts empty', s.done, {});
   ok('no errors', page.__errors, []);
   await page.context().close();
@@ -168,16 +180,19 @@ console.log('The laptop left open (and on screen) all night, marked on the phone
   const page = await open(`${MON}T21:00:00-04:00`, laptop, { cloud: laptop });
   await page.waitForTimeout(500);
   await page.clock.runFor(4.5 * 3600e3);            // 1:30 am: the laptop still on screen
-  // The phone marks the other three and saves (the account files them under Monday)
-  await page.evaluate(([mon]) => { window.__cloud = { ...window.__cloud, done: { chumash: true, tehillim: true, tanya: true, rambam: true }, pastDone: { ...window.__cloud.pastDone, [mon]: { chumash: true, tehillim: true, tanya: true, rambam: true } } }; }, [MON]);
-  await page.clock.runFor(2.6 * 3600e3);            // past 4 am: the laptop rolls over by itself
+  // The phone marks the other three
+  await page.evaluate(([mon]) => ['chumash', 'tanya', 'rambam'].forEach(id => window.__otherDevice(mon, id)), [MON]);
+  await page.clock.runFor(2.6 * 3600e3);            // past 4 am: the laptop moves on to Tuesday by itself
   await page.waitForTimeout(300);
-  const k = o => o && Object.fromEntries(Object.entries(o).sort());   // marks, in any order
   const s = await state(page);
-  ok('the laptop took in the phone\'s marks before filing Monday away (before: only Tehillim)', k(s.past[MON]), k(ALL));
+  ok('the laptop has Monday whole (the old bug: only Tehillim)', k(s.past[MON]), k(ALL));
   ok('and Tuesday starts empty', s.done, {});
-  const saved = await page.evaluate(() => { saveUser(); return window.__saved; });   // its next save, whenever that is
-  ok('its next save files Monday whole (Tuesday is filed once something is marked on it)', [k(saved?.pastDone?.[MON]), saved?.pastDone?.[TUE] ?? null], [k(ALL), null]);
+  ok('the account has Monday whole too, and nothing was saved at 4 am', [k(await page.evaluate(([mon]) => daysFrom(window.__cloud)[mon], [MON])), await page.evaluate(([tue]) => daysFrom(window.__cloud)[tue] ?? null, [TUE])], [k(ALL), null]);
+  // Tuesday on the laptop: only that one mark goes up
+  await page.evaluate(() => { markDone('tehillim'); });
+  await page.waitForTimeout(100);
+  ok('a mark sends just that mark, under its date', await page.evaluate(([tue]) => window.__cloud.days?.[tue], [TUE]), { tehillim: true });
+  ok('a full save carries no marks at all (so it can\'t undo another device\'s)', await page.evaluate(() => { saveUser(); return ['done', 'pastDone', 'days', 'lastDate'].filter(f => f in (window.__saved || {})); }), []);
   ok('no errors', page.__errors, []);
   await page.context().close();
 }

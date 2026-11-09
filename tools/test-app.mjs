@@ -59,6 +59,13 @@ await check('when the schedule can\'t load, the error message shows', async () =
   return document.getElementById('api-error').style.display;
 }, 'flex');
 
+await check('the sign-in sheet says what continuing means, with the privacy policy', () => {
+  openSignIn('save');
+  const l = document.querySelector('#signin-sheet .signin-legal');
+  const r = [l?.textContent.trim(), l?.querySelector('a')?.getAttribute('href'), getComputedStyle(l).display !== 'none'];
+  closeSignIn();
+  return r;
+}, ['By continuing, you agree to our Privacy Policy.', '/privacy.html', true]);
 await check('sign out finishes and shows a message', async () => {
   await signOut();
   return document.getElementById('toast').textContent;

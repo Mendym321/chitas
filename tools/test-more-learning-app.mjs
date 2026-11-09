@@ -397,6 +397,25 @@ await check('Hayom Yom in Both: side by side on a phone too, English left and He
 }, ['grid', true, true, true]);
 await page.setViewportSize(wasSize || { width: 1280, height: 720 });
 
+await check('a text that doesn\'t load says why, and Try again opens it again', async () => {
+  const real = window._loadDailyText;
+  window._loadDailyText = async () => { throw new Error('no answer'); };
+  await openExtraReader('nachYomi'); await new Promise(r => setTimeout(r, 200));
+  const box = document.querySelector('#native-reader-content .rd-fail');
+  const r = [!!box, /Sefaria|offline/.test(box?.textContent || ''), box?.querySelector('button')?.textContent];
+  window._loadDailyText = real;
+  box?.querySelector('button')?.click(); await new Promise(r2 => setTimeout(r2, 600));
+  r.push(!document.querySelector('#native-reader-content .rd-fail'));
+  closeChabadPanel();
+  return r;
+}, [true, true, 'Try again', true]);
+await check('while a text loads, it says which one', async () => {
+  const p = openExtraReader('kitzur');
+  const t = document.getElementById('native-reader-loading-t').textContent;
+  await p; closeChabadPanel();
+  return t;
+}, 'Opening Halacha Yomis…');
+
 await check('Daf Yomi too: the day before is the daf before', async () => {
   closeChabadPanel();
   await openExtraReader('dafYomi');
@@ -432,7 +451,7 @@ await check('when Sefaria can\'t be reached, the reader says so', async () => {
   const t = document.getElementById('native-reader-content').textContent;
   closeChabadPanel();
   return t;
-}, 'Could not load content. Please try again.');
+}, 'Sefaria, where this text comes from, didn\'t answer. It may be busy for a moment.Try again');
 
 if (pageErrors.length) { failed++; console.log('  ✗ page errors:', pageErrors); }
 await browser.close();

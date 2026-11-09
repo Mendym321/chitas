@@ -70,33 +70,5 @@ check('away for weeks: welcome back; yesterday can still be caught up',
   P.welcomeBack({ done: {}, pastDone: { '2026-09-01': ALL } }, TODAY), { missedOff: -1 });
 check('yesterday half-done still counts as missed', P.welcomeBack({ done: {}, pastDone: { '2026-10-12': ALL, '2026-10-13': { chumash: true } } }, TODAY), { missedOff: -1 });
 
-console.log('Two devices overnight, with the account merging every save (as Firestore does):');
-{
-  const S = vm.runInContext('({ syncFromCloud, archiveOldToday, filedForCloud, datedToday })', ctx);
-  // Firestore setDoc(…, { merge: true }): maps merge, keys that aren't sent stay
-  const deep = (a, b) => { const o = { ...(a || {}) }; for (const k in b) o[k] = (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && o[k] && typeof o[k] === 'object') ? deep(o[k], b[k]) : b[k]; return o; };
-  const k = o => o && Object.fromEntries(Object.entries(o).sort());   // marks, in any order
-  let cloud = {};
-  const save = u => { cloud = deep(cloud, { lastDate: u.lastDate, done: u.done || {}, quizDone: u.quizDone || {}, ...S.filedForCloud(u) }); };
-  const N8 = '2026-11-08', N9 = '2026-11-09';
-  const laptop = { lastDate: N8, done: { tehillim: true }, pastDone: {} };             // open all evening
-  save(laptop);
-  const phone = S.syncFromCloud({}, cloud, day(N8));                                    // 1:30 am, still the 8th
-  Object.assign(phone.done, { chumash: true, tanya: true, rambam: true }); phone.lastDate = N8; save(phone);
-  Object.assign(laptop, S.archiveOldToday(laptop, N9)); save({ ...laptop, lastDate: N9 }); // 4 am: the laptop rolls over, never re-read
-  const fresh = S.syncFromCloud({}, cloud, day(N9));
-  check('a device reading the account in the morning sees the 8th complete (before: only Tehillim)', k(fresh.pastDone[N8]), k(ALL));
-  check('and today empty (before: last night\'s marks showed as today\'s)', fresh.done, {});
-  const back = S.syncFromCloud(phone, cloud, day(N9));
-  check('the phone too: the 8th complete, today empty', [k(back.pastDone[N8]), back.done], [k(ALL), {}]);
-  check('the laptop, taking in the account, gets the phone\'s marks for the 8th', k(S.syncFromCloud(laptop, cloud, day(N9)).pastDone[N8]), k(ALL));
-  check('an old copy of the account (nothing filed for its last day) reads as before', S.datedToday({ lastDate: N8, done: { tanya: true }, pastDone: {} }).done, { tanya: true });
-  check('an un-mark made on one device reaches the others', (() => {
-    const p2 = S.syncFromCloud({}, cloud, day(N9)); p2.done = { tanya: true }; p2.lastDate = N9; save(p2);
-    const p3 = S.syncFromCloud({}, cloud, day(N9)); p3.done.tanya = false; p3.lastDate = N9; save(p3);
-    return S.syncFromCloud({}, cloud, day(N9)).done;
-  })(), { tanya: false });
-}
-
 console.log(failed ? `\n${failed} FAILED` : '\nAll progress tests passed');
 process.exit(failed ? 1 : 0);
