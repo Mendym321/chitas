@@ -15,6 +15,7 @@ function daysOf(u) {
   const last = u.lastDate ? String(u.lastDate).slice(0, 10) : null;
   // Newer saves file the last day's marks under its date; then the loose list may be stale
   if (last && !(last in days) && u.done && Object.values(u.done).some(Boolean)) days[last] = { ...u.done };
+  for (const iso in (u.days || {})) days[iso] = { ...(days[iso] || {}), ...u.days[iso] };   // marks by date (the app's record now)
   return days;
 }
 
@@ -23,6 +24,7 @@ function reviewsOf(u) {
   const out = { ...(u.pastQuizDone || {}) };
   const last = u.lastDate ? String(u.lastDate).slice(0, 10) : null;
   if (last && !(last in out) && u.quizDone && Object.keys(u.quizDone).length) out[last] = { ...u.quizDone };
+  for (const iso in (u.reviews || {})) out[iso] = { ...(out[iso] || {}), ...u.reviews[iso] };
   return out;
 }
 

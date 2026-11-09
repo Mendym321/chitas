@@ -1046,7 +1046,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithRedirect, signInWithCredential, revokeAccessToken, getRedirectResult, onAuthStateChanged, signOut as fbSignOut }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteField, FieldPath, serverTimestamp }
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, onSnapshot, doc, setDoc, getDoc, updateDoc, deleteField, FieldPath, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -1060,7 +1060,12 @@ const firebaseConfig = {
 
 const fbApp  = initializeApp(firebaseConfig);
 const auth   = getAuth(fbApp);
-const db     = getFirestore(fbApp);
+// Firestore keeps its own copy on the device (IndexedDB): marks made offline
+// are kept, even across a reload, and sent when the phone is back online.
+// Where the browser won't allow it (some private modes), the plain version.
+let db;
+try { db = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch (e) { db = getFirestore(fbApp); }
 const gProvider = new GoogleAuthProvider();
 
 // In the phone app (iPhone, Android) sign-in happens on the phone itself:
@@ -1145,6 +1150,29 @@ window._fb = {
     if (!u || !N || !this.appleAvailable() || !u.providerData.some(p => p.providerId === 'apple.com')) return;
     const r = await N.signInWithApple({ skipNativeAuth: true }).catch(e => { throw nativeErr(e); });
     if (r?.credential?.authorizationCode) await revokeAccessToken(auth, r.credential.authorizationCode);
+  },
+
+  // One mark, as one field (days.<date>.<section>): two devices never
+  // overwrite each other's marks (js/progress.js: "Marks by date")
+  async setMark(uid, iso, id, value) {
+    try { await setDoc(doc(db, 'users', uid), { days: { [iso]: { [id]: value } }, updatedAt: serverTimestamp() }, { merge: true }); }
+    catch (e) { console.error('setMark:', e); }
+  },
+  // One Review result (reviews.<date>.<section>.<level>)
+  async setReview(uid, iso, id, level, value) {
+    try { await setDoc(doc(db, 'users', uid), { reviews: { [iso]: { [id]: { [level]: value } } }, updatedAt: serverTimestamp() }, { merge: true }); }
+    catch (e) { console.error('setReview:', e); }
+  },
+  // Several at once (marks this device had that the account didn't yet)
+  async addRecords(uid, days, reviews) {
+    try { await setDoc(doc(db, 'users', uid), { days, reviews, updatedAt: serverTimestamp() }, { merge: true }); }
+    catch (e) { console.error('addRecords:', e); }
+  },
+  // Watch the account: called now, and again whenever any device changes it
+  // (this one's own changes included, at once). Returns the way to stop.
+  watchUser(uid, onData) {
+    try { return onSnapshot(doc(db, 'users', uid), snap => onData(snap.exists() ? snap.data() : null), e => console.warn('watchUser:', e.message)); }
+    catch (e) { console.warn('watchUser:', e.message); return () => {}; }
   },
 
   // Save full user object to Firestore
@@ -1787,10 +1815,8 @@ function _userPayload() {
     total: user.total,
     quizTotal: user.quizTotal || 0,
     quizCorrect: user.quizCorrect || 0,
-    lastDate: user.lastDate || null,
-    done: user.done || {},
-    quizDone: user.quizDone || {},
-    ...filedForCloud(user),   // pastDone, pastQuizDone, with today's marks filed under their date (js/progress.js)
+    // (Marks and Review results aren't here: each is saved on its own, by date,
+    // with _fb.setMark / setReview, so a save from a device can't undo another's)
     weeklyQuizDone: user.weeklyQuizDone || {},
     tehillimPeople: user.tehillimPeople || [],
     tehillimFixedOpts: user.tehillimFixedOpts || {},
@@ -1807,12 +1833,6 @@ function _userPayload() {
 function saveUser() {
   try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
   if (user.uid && window._fb) window._fb.saveUser(user.uid, _userPayload());
-}
-
-// Awaitable save — used by markDone/unmarkDone so rapid taps don't race
-async function saveUserCritical() {
-  try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch{}
-  if (user.uid && window._fb) await window._fb.saveUser(user.uid, _userPayload());
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -2280,13 +2300,11 @@ async function fetchSefariaCalendar(date) {
 // ════════════════════════════════════════════════════════════════════
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // FIX 2: day-rollover runs AFTER we've confirmed we have the latest data
-  // (bootApp already loaded Firestore before calling init, so user is fresh)
-  // A new day since the last mark: yesterday's marks move into its history
-  // (js/progress.js: archiveOldToday, by the phone's own calendar date)
+  // Today's lists from the record of marks by date, and (signed in) the live
+  // watch on the account that keeps every device the same (_watchCloud)
   _appDay = dateISO(appNow());
-  const moved = archiveOldToday(user, _appDay);
-  if (moved) { Object.assign(user, moved); recalcStreak(); saveUser(); }
+  _applyDays();
+  _watchCloud();
 
   recalcStreak(); // always derive streak + totals from history (js/progress.js)
   updateHeader();
@@ -2527,41 +2545,52 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) _syn
 // start. Every minute, and whenever you come back to the app, it checks: past
 // midnight, last night's marks move into last night, and Today starts fresh.
 // Back after a while, it first gets what other devices saved meanwhile.
-var _appDay = null, _hiddenAt = 0;   // var: init() may run before this line
+var _appDay = null;   // var: init() may run before this line
 const _busy = () => document.getElementById('chabad-panel')?.style.display === 'flex' || document.getElementById('quiz-panel')?.style.display === 'flex';
-let _rolling = false;
-async function _checkNewDay() {
+// 4 am: "today" is now the next date; the lists are drawn from the record again
+function _checkNewDay() {
   const t = dateISO(appNow());
-  if (!_appDay || t === _appDay || !user || _rolling) return;
-  // A device left open all night: first take in what your other devices saved
-  // (marks made late on your phone), so the day it files away is complete
-  _rolling = true;
-  try { await _pullFromCloud(); } catch (e) {} finally { _rolling = false; }
-  if (t === _appDay) return;
-  const moved = archiveOldToday(user, t);
-  if (moved) { Object.assign(user, moved); recalcStreak(); saveUser(); }
+  if (!_appDay || t === _appDay || !user) return;
+  _applyDays(); recalcStreak();
   if (_busy()) return;          // the reader or a Review keeps its day; Today catches up after
   _appDay = t;
   dayOffset = 0;
   init();
 }
-async function _pullFromCloud() {
-  if (!user?.uid || isGuest() || !window._fb?.loadUser) return;
-  const remote = await window._fb.loadUser(user.uid).catch(() => null);
-  if (!remote) return;
-  const before = JSON.stringify(_userPayload());
-  user = { ...user, ...syncFromCloud(user, remote, appNow()) };
-  if (JSON.stringify(_userPayload()) === before) return;
-  recalcStreak();
+
+// Your marks on every device, live: each open device watches the account
+// (js/progress.js: "Marks by date") and redraws when any device marks or
+// un-marks something. The first time, it also sends up what this device has
+// that the account doesn't yet (marked signed out, or before this version).
+let _stopWatch = null, _sentLocal = false;
+function _watchCloud() {
+  if (_stopWatch || !user?.uid || isGuest() || !window._fb?.watchUser) return;
+  _sentLocal = false;
+  _stopWatch = window._fb.watchUser(user.uid, _cloudIn);
+}
+function _stopCloud() { if (_stopWatch) { try { _stopWatch(); } catch (e) {} } _stopWatch = null; }
+function _cloudIn(data) {
+  if (!data || !user?.uid) return;
+  const days = daysFrom(data), reviews = reviewsFrom(data);
+  if (!_sentLocal) {
+    _sentLocal = true;
+    const m = marksToSend(days, user.days || daysFrom(user)), r = reviewsToSend(reviews, user.reviews || reviewsFrom(user));
+    if (m.length || r.length) {
+      const d = {}, rv = {};
+      m.forEach(([iso, id, v]) => { (d[iso] = d[iso] || {})[id] = v; (days[iso] = days[iso] || {})[id] = v; });
+      r.forEach(([iso, id, lv, v]) => { const x = (rv[iso] = rv[iso] || {}); (x[id] = x[id] || {})[lv] = v; reviews[iso] = _mergeQuizDay(reviews[iso], { [id]: { [lv]: v } }); });
+      window._fb.addRecords?.(user.uid, d, rv);
+    }
+  }
+  if (JSON.stringify([days, reviews]) === JSON.stringify([user.days, user.reviews])) return;
+  user.days = days; user.reviews = reviews;
+  _applyDays(); recalcStreak();
   try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch {}
   _refreshUI();
   if (!_busy() && schedule) renderSectionsForOffset(_viewedISO());
+  try { _renderSideList(); } catch (e) {}
 }
-document.addEventListener('visibilitychange', async () => {
-  if (document.hidden) { _hiddenAt = Date.now(); return; }
-  if (_hiddenAt && Date.now() - _hiddenAt > 60e3) await _pullFromCloud();
-  _checkNewDay();
-});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) _checkNewDay(); });
 setInterval(_checkNewDay, 60e3);
 
 // A section's reminder: a time ('HH:MM') or null for off
@@ -3255,11 +3284,29 @@ function showConfirmPast(id, iso) {
 // EVERY mark / unmark (today, past days, extra learning) goes through
 // _changeDay. Points, streak and totals are then recomputed from the rules in
 // js/progress.js — so they can never drift out of sync. See DESIGN.md.
+// The usual lists (today's, the history) from the record of marks by date
+// (js/progress.js: daysFrom, dayView). At 4 am this is all that happens:
+// "today" is simply the next date.
+function _applyDays() {
+  if (!user.days) user.days = daysFrom(user);
+  if (!user.reviews) user.reviews = reviewsFrom(user);
+  Object.assign(user, dayView(user.days, user.reviews, dateISO(appNow())));
+}
+// A mark changed on this device: into the record, and to the account as that
+// one field (the account then tells every other open device)
+function _recordMarks(iso, before, after) {
+  if (!user.days) user.days = {};
+  for (const id of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (!!before[id] === !!after[id] && (id in before) === (id in after)) continue;
+    (user.days[iso] = user.days[iso] || {})[id] = !!after[id];
+    if (user.uid && window._fb?.setMark) window._fb.setMark(user.uid, iso, id, !!after[id]);
+  }
+}
+
 function _changeDay(iso, change) {
   const now = appNow();
   const isToday = iso === dateISO(now);
-  const moved = archiveOldToday(user, dateISO(now));   // past midnight: last night's marks are last night's
-  if (moved) Object.assign(user, moved);
+  if (user.lastDate !== dateISO(now)) _applyDays();   // past 4 am, before the minute's check: today is the new date
   if (!user.pastDone) user.pastDone = {};
   if (!isToday && !user.pastDone[iso]) user.pastDone[iso] = {};
   if (!user.done) user.done = {};
@@ -3271,6 +3318,7 @@ function _changeDay(iso, change) {
   const statsBefore = learningStats(user, now, user.rambamTrack);
 
   change(day);
+  _recordMarks(iso, before, day);
 
   // A learning milestone (a whole parsha, Sefer Tehillim, Rambam, Tanya),
   // for a section that was just marked; each one only once, ever
@@ -3286,9 +3334,8 @@ function _changeDay(iso, change) {
     }
   }
 
-  if (isToday) user.lastDate = iso;
   recalcStreak();
-  saveUserCritical();
+  saveUser();   // this phone's copy, and the rest (milestones, totals); the mark itself went above
   _refreshUI();
   return {
     completedNow: !isChitasDay(before) && isChitasDay(day),
@@ -3845,12 +3892,16 @@ function showQuizResults() {
   const missed = total - score;
 
   // Saved once per section, per level, per day (retries are for learning)
-  const moved = archiveOldToday(user, dateISO(appNow()));   // past midnight: last night's results stay last night's
-  if (moved) Object.assign(user, moved);
+  if (user.lastDate !== dateISO(appNow())) _applyDays();   // past 4 am: today is the new date
   if (!_quizLevelDone(sectionId, level)) {
     const day = _quizDay(quizState.iso);
     const prev = day[sectionId];
     day[sectionId] = { ...(prev && typeof prev === 'object' ? prev : {}), [level]: { r: score, n: total } };
+    // Into the record by date, and to the account as that one field
+    const qIso = quizState.iso || dateISO(appNow());
+    if (!user.reviews) user.reviews = {};
+    user.reviews[qIso] = _mergeQuizDay(user.reviews[qIso], { [sectionId]: { [level]: { r: score, n: total } } });
+    if (user.uid && window._fb?.setReview) window._fb.setReview(user.uid, qIso, sectionId, level, { r: score, n: total });
     user.quizTotal   = (user.quizTotal   || 0) + total;
     user.quizCorrect = (user.quizCorrect || 0) + score;
     saveUser();
@@ -6460,6 +6511,7 @@ function setTheme(mode, save=true) {
 // ════════════════════════════════════════════════════════════════════
 // ── SIGN OUT ───────────────────────────────────────────────────────────────────
 async function signOut() {
+  _stopCloud();
   if (window._fb) await window._fb.signOut().catch(()=>{});
   user = blankUser();
   try { localStorage.removeItem('chitas_v78'); } catch{}
@@ -6500,6 +6552,7 @@ async function deleteAccount() {
     }
     try {
       const token = await window._fb.getIdToken();
+      _stopCloud();   // stop watching the account before it's gone
       const r = await fetch('/api/delete-account', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
       if (!r.ok) throw new Error('HTTP ' + r.status);
     } catch (e) {
@@ -6574,7 +6627,8 @@ async function resetProgress() {
   const keep = { uid: user.uid, name: user.name, photoURL: user.photoURL, city: user.city,
     rambamTrack: user.rambamTrack, tehillimPeople: user.tehillimPeople, tehillimFixedOpts: user.tehillimFixedOpts,
     extraTracks: user.extraTracks, ...(user.isAdmin ? { isAdmin: user.isAdmin } : {}), ...(user.role ? { role: user.role } : {}) };
-  user = { ...blankUser(), ...keep, lastDate: dateISO(appNow()) };
+  user = { ...blankUser(), ...keep, days: {}, reviews: {} };
+  _applyDays();
   try { localStorage.setItem('chitas_v78', JSON.stringify(user)); } catch {}
   if (user.uid && window._fb?.replaceUser) {
     // Keep account fields the app doesn't normally save (e.g. the admin flag)
@@ -8460,12 +8514,17 @@ function bootApp() {
     if (remote) { // Firestore doc exists — restore regardless of rambamTrack
       // If rambamTrack is missing from the remote doc, keep whatever local has
       if (!remote.rambamTrack && user.rambamTrack) remote.rambamTrack = user.rambamTrack;
-      // This phone's copy and the cloud's, as one: both brought up to today,
-      // then every mark either has is kept (js/progress.js: syncFromCloud)
+      // The account's settings and marks; marks only this phone has are added
+      // here and sent up when the watch starts (_cloudIn)
       const local = user.uid === fbUser.uid ? user : blankUser();
+      const days = daysFrom(remote), reviews = reviewsFrom(remote);
+      marksToSend(days, daysFrom(local)).forEach(([iso, id, v]) => { (days[iso] = days[iso] || {})[id] = v; });
+      reviewsToSend(reviews, reviewsFrom(local)).forEach(([iso, id, lv, v]) => { reviews[iso] = _mergeQuizDay(reviews[iso], { [id]: { [lv]: v } }); });
       user = {
         ...blankUser(),
-        ...syncFromCloud(local, remote, appNow()),
+        ...local, ...remote,
+        days, reviews,
+        milestones: [...new Set([...(local.milestones || []), ...(remote.milestones || [])])],
         uid: fbUser.uid,
         photoURL: fbUser.photoURL || '',
         longestStreak: Math.max(remote.longestStreak || 0, local.longestStreak || 0),

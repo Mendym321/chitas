@@ -91,12 +91,18 @@ function welcomeBack(user, today) {
   return { missedOff: null };
 }
 
-// ── A new day, and more than one device ──────────────────────────────────────
-// Today's marks (user.done, user.quizDone) belong to user.lastDate. When the
-// phone's date has moved past it, they move into the history for that day.
-// Dates are compared as the phone's own calendar dates ("2026-10-26"), never
-// through UTC: new Date("2026-10-26") is midnight in London, which in New York
-// is the evening before, and that once filed (or dropped) the night's marks.
+// ── Marks by date: one record, on every device ───────────────────────────────
+// Every mark lives under its date: days = { "2026-11-08": { chumash: true, … } },
+// and Review results the same way in reviews. "Today" is just today's date in
+// it, so nothing moves at 4 am. The account keeps exactly this, one field per
+// mark (index.html: _fb.setMark), so two devices never overwrite each other's
+// marks, and every open device watches it and redraws when it changes.
+// The app reads it through the usual lists (dayView): today's in done and
+// quizDone, the others in pastDone and pastQuizDone.
+//
+// Older copies kept "today" separately (done + lastDate) next to the history
+// (pastDone); daysFrom reads those too. Dates are the phone's own calendar
+// dates ("2026-10-26"), never through UTC.
 
 function _lastISO(u) {
   if (!u || !u.lastDate) return null;
@@ -116,27 +122,9 @@ function _mergeQuizDay(a, b) {
   return out;
 }
 
-// What moves when the day has changed, or null when nothing needs to. The
-// marks are added to whatever that day already has; nothing is dropped.
-function archiveOldToday(u, todayISO) {
-  const last = _lastISO(u);
-  const done = u.done || {}, quizDone = u.quizDone || {};
-  if (!last || last >= todayISO) return null;   // still today (or the clock went back)
-  if (!Object.keys(done).length && !Object.keys(quizDone).length) return null;
-  const pastDone = { ...(u.pastDone || {}) }, pastQuizDone = { ...(u.pastQuizDone || {}) };
-  if (Object.keys(done).length) pastDone[last] = { ...(pastDone[last] || {}), ...done };
-  if (Object.keys(quizDone).length) pastQuizDone[last] = _mergeQuizDay(pastQuizDone[last], quizDone);
-  return { pastDone, pastQuizDone, done: {}, quizDone: {} };
-}
-
-// The account (Firestore) merges every save into what's there and never drops
-// a key, so its "today" list (done) can hold marks from an earlier day: a
-// device left open overnight rolls over at 4 am and saves the new date with
-// an empty list, and the night's marks stay in "today" under the new date.
-// So every save also files today's marks under their date in pastDone (see
-// _userPayload in index.html), and when a copy has its last day filed there,
-// that is the day's list and the loose one is ignored. Older copies (nothing
-// filed for their last day) keep reading done as before.
+// Older copies: a save could leave the loose "today" list stale under a newer
+// lastDate (the account merged saves); where the last day is also filed in the
+// history, that is the day's list
 function datedToday(u) {
   const last = _lastISO(u);
   const pd = (u && u.pastDone) || {}, pq = (u && u.pastQuizDone) || {};
@@ -147,37 +135,55 @@ function datedToday(u) {
   return out;
 }
 
-// What to save to the account for the day lists: the history with today's
-// marks filed under their date as well (always, even when empty, so the
-// account knows which day "today" was)
-function filedForCloud(u) {
-  const last = _lastISO(u);
-  const pastDone = { ...(u.pastDone || {}) }, pastQuizDone = { ...(u.pastQuizDone || {}) };
-  if (last) {
-    pastDone[last] = { ...(pastDone[last] || {}), ...(u.done || {}) };
-    pastQuizDone[last] = _mergeQuizDay(pastQuizDone[last], u.quizDone || {});
-  }
-  return { pastDone, pastQuizDone };
+// The record of marks, from a copy in any format (the new days win)
+function daysFrom(u) {
+  const out = {};
+  if (!u) return out;
+  const add = (iso, day) => { if (iso && day && typeof day === 'object') out[iso] = { ...(out[iso] || {}), ...day }; };
+  const v = datedToday(u);
+  for (const iso in (v.pastDone || {})) add(iso, v.pastDone[iso]);
+  const last = _lastISO(v);
+  if (last && v.done && Object.keys(v.done).length) add(last, v.done);
+  for (const iso in (u.days || {})) add(iso, u.days[iso]);
+  return out;
+}
+// The record of Review results, the same way
+function reviewsFrom(u) {
+  const out = {};
+  if (!u) return out;
+  const add = (iso, day) => { if (iso && day && typeof day === 'object') out[iso] = _mergeQuizDay(out[iso], day); };
+  const v = datedToday(u);
+  for (const iso in (v.pastQuizDone || {})) add(iso, v.pastQuizDone[iso]);
+  const last = _lastISO(v);
+  if (last && v.quizDone && Object.keys(v.quizDone).length) add(last, v.quizDone);
+  for (const iso in (u.reviews || {})) add(iso, u.reviews[iso]);
+  return out;
 }
 
-// This phone's copy and the cloud's copy (saved by another device), as one.
-// Both are first brought up to today, then every day is combined mark by
-// mark: a mark either one has is kept; where both have one, the cloud's wins
-// (it is the later save). Settings come from the cloud.
-function syncFromCloud(local, remote, today) {
-  const t = progressISO(today);
-  const upToToday = u => { const v = datedToday(u || {}); return { ...v, ...(archiveOldToday(v, t) || {}) }; };
-  const a = upToToday(local || {}), b = upToToday(remote || {});
-  const days = (x = {}, y = {}) => { const o = { ...x }; for (const d in y) o[d] = { ...(x[d] || {}), ...y[d] }; return o; };
-  const quizDays = (x = {}, y = {}) => { const o = { ...x }; for (const d in y) o[d] = _mergeQuizDay(x[d], y[d]); return o; };
-  const lasts = [_lastISO(a), _lastISO(b)].filter(Boolean).sort();
-  return {
-    ...a, ...b,
-    pastDone: days(a.pastDone, b.pastDone),
-    pastQuizDone: quizDays(a.pastQuizDone, b.pastQuizDone),
-    done: { ...(a.done || {}), ...(b.done || {}) },
-    quizDone: _mergeQuizDay(a.quizDone, b.quizDone),
-    lastDate: lasts.length ? lasts[lasts.length - 1] : null,
-    milestones: [...new Set([...(a.milestones || []), ...(b.milestones || [])])],
-  };
+// The usual lists for one day, from the records
+function dayView(days, reviews, todayISO) {
+  const pastDone = { ...(days || {}) }, pastQuizDone = { ...(reviews || {}) };
+  const done = { ...(pastDone[todayISO] || {}) }, quizDone = { ...(pastQuizDone[todayISO] || {}) };
+  delete pastDone[todayISO]; delete pastQuizDone[todayISO];
+  return { done, pastDone, quizDone, pastQuizDone, lastDate: todayISO };
+}
+
+// What this device has that the account doesn't yet (marked signed out, or
+// before this version): each as [date, section, value], to send up once. A
+// mark the account already has, either way, is left as the account says.
+function marksToSend(cloudDays, localDays) {
+  const out = [];
+  for (const iso in (localDays || {})) for (const id in localDays[iso]) {
+    if (!(cloudDays[iso] && id in cloudDays[iso]) && localDays[iso][id] === true) out.push([iso, id, true]);
+  }
+  return out;
+}
+function reviewsToSend(cloudReviews, localReviews) {
+  const out = [];
+  for (const iso in (localReviews || {})) for (const id in localReviews[iso]) {
+    const l = localReviews[iso][id], c = (cloudReviews[iso] || {})[id];
+    if (!l || typeof l !== 'object') continue;
+    for (const level in l) if (!(c && typeof c === 'object' && level in c)) out.push([iso, id, level, l[level]]);
+  }
+  return out;
 }

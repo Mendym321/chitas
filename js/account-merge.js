@@ -1,33 +1,17 @@
 // Combine progress made while signed out ("guest") with the account someone
 // signs in to. Nothing is lost.
-// Needs js/progress.js (progressISO). Tested by tools/test-account-merge.mjs.
-
-// Put a user's "today" list into history if their last active day isn't today
-function _archiveOldToday(u, todayISO) {
-  const pastDone = { ...(u.pastDone || {}) };
-  let done = { ...(u.done || {}) };
-  const last = u.lastDate ? String(u.lastDate).slice(0, 10) : null;
-  if (last && last !== todayISO) {
-    if (Object.values(done).some(Boolean)) pastDone[last] = { ...(pastDone[last] || {}), ...done };
-    done = {};
-  }
-  return { pastDone, done };
-}
+// Needs js/progress.js (progressISO, daysFrom, dayView). Tested by tools/test-account-merge.mjs.
 
 function mergeGuestIntoAccount(guest, remote, today) {
   const todayISO = progressISO(today);
-  if (!remote) return { ...guest }; // brand-new account: the guest's progress becomes it
-  remote = datedToday(remote);      // the account's day lists, read right (js/progress.js)
-
-  const g = _archiveOldToday(guest, todayISO);
-  const r = _archiveOldToday(remote, todayISO);
-
-  // Days: a section counts if it was marked on either
-  const pastDone = { ...r.pastDone };
-  for (const iso in g.pastDone) {
-    pastDone[iso] = { ...(r.pastDone[iso] || {}), ...g.pastDone[iso] };
-  }
-  const done = { ...r.done, ...g.done };
+  // Marks by date (js/progress.js: daysFrom): the account's, and every mark
+  // made on this phone added to it
+  const days = daysFrom(remote || {}), reviews = reviewsFrom(remote || {});
+  const gDays = daysFrom(guest || {}), gReviews = reviewsFrom(guest || {});
+  for (const iso in gDays) for (const id in gDays[iso]) if (gDays[iso][id]) (days[iso] = days[iso] || {})[id] = true;
+  for (const iso in gReviews) reviews[iso] = _mergeQuizDay(reviews[iso], gReviews[iso]);
+  const view = dayView(days, reviews, todayISO);
+  if (!remote) return { ...guest, days, reviews, ...view }; // brand-new account: the guest's progress becomes it
 
   // Personal Tehillim names: keep everyone (by name + birthday)
   const people = [...(remote.tehillimPeople || [])];
@@ -38,9 +22,7 @@ function mergeGuestIntoAccount(guest, remote, today) {
   return {
     ...guest,
     ...remote,                       // account settings win (track, city, name…)
-    pastDone,
-    done,
-    lastDate: todayISO,
+    days, reviews, ...view,
     longestStreak: Math.max(remote.longestStreak || 0, guest.longestStreak || 0),
     tehillimPeople: people,
     extraTracks: [...new Set([...(remote.extraTracks || []), ...(guest.extraTracks || [])])],
