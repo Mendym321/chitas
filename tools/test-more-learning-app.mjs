@@ -386,6 +386,17 @@ await check('Hayom Yom reads like the printed page: the day\'s line (the book\'s
   return r;
 }, [true, true, true, true, true, true]);
 
+const wasSize = page.viewportSize(); await page.setViewportSize({ width: 390, height: 844 });   // a phone
+await check('Hayom Yom in Both: side by side on a phone too, English left and Hebrew right, as in every reader', async () => {
+  window._hayomYomLang = 'both'; await openExtraReader('hayomYom'); await new Promise(r => setTimeout(r, 800));
+  const pair = document.querySelector('#native-reader-content .hy-pair');
+  const he = pair?.querySelector('.hy-he'), en = pair?.querySelector('.hy-en');
+  const r = pair ? [getComputedStyle(pair).display, window.innerWidth < 700, Math.round(en.getBoundingClientRect().left) < Math.round(he.getBoundingClientRect().left), Math.abs(en.getBoundingClientRect().top - he.getBoundingClientRect().top) < 4] : null;
+  window._hayomYomLang = null; closeChabadPanel();
+  return r;
+}, ['grid', true, true, true]);
+await page.setViewportSize(wasSize || { width: 1280, height: 720 });
+
 await check('Daf Yomi too: the day before is the daf before', async () => {
   closeChabadPanel();
   await openExtraReader('dafYomi');
