@@ -13,7 +13,8 @@ const isChitas = day => SECTIONS.every(id => day && day[id]);
 function daysOf(u) {
   const days = { ...(u.pastDone || {}) };
   const last = u.lastDate ? String(u.lastDate).slice(0, 10) : null;
-  if (last && u.done && Object.values(u.done).some(Boolean)) days[last] = { ...(days[last] || {}), ...u.done };
+  // Newer saves file the last day's marks under its date; then the loose list may be stale
+  if (last && !(last in days) && u.done && Object.values(u.done).some(Boolean)) days[last] = { ...u.done };
   return days;
 }
 
@@ -21,7 +22,7 @@ function daysOf(u) {
 function reviewsOf(u) {
   const out = { ...(u.pastQuizDone || {}) };
   const last = u.lastDate ? String(u.lastDate).slice(0, 10) : null;
-  if (last && u.quizDone && Object.keys(u.quizDone).length) out[last] = { ...(out[last] || {}), ...u.quizDone };
+  if (last && !(last in out) && u.quizDone && Object.keys(u.quizDone).length) out[last] = { ...u.quizDone };
   return out;
 }
 

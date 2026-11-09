@@ -136,6 +136,7 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
 - The app notices a new day even when it stays open (a check every minute, and on coming back to it).
 - A mark or a Review result goes to the day it was for: from the reader, the day the reader shows, even when finished after midnight.
 - Back in the app after a while, it first takes in what other devices saved (`syncFromCloud`): every mark either copy has is kept; where both have one, the cloud's later save wins.
+- **Every save files today's marks under their date too** (`filedForCloud`). The account merges saves and never drops a key, so its loose "today" list can hold an earlier day's marks (a device left open overnight rolls over at 4 am and saves the new date with an empty list). Where the account has its last day filed, that is the day's list (`datedToday`); older copies read as before. And a device rolling over to a new day first takes in what the others saved, so the day it files away is complete (marks made late on the phone while the laptop sat open).
 - Tested on New York time in `tools/test-new-day.mjs` and `tools/test-midnight.mjs` (`npm run test:midnight`).
 
 ## Accountability

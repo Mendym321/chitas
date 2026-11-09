@@ -69,7 +69,12 @@ function fake(u) {
 const executablePath = existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
 const browser = await chromium.launch({ executablePath });
 const context = await browser.newContext({ viewport: { width: 400, height: 800 }, serviceWorkers: 'block' });
+// Midday of today's date: these tests are about features, not the 4 am rule
+// (test-midnight.mjs has that); run between midnight and 4 am, "today" by the
+// plain clock and the app's learning day differ. Time still flows from there.
+const noonToday = () => { const d = new Date(); d.setHours(12, 0, 0, 0); return d; };
 const page = await context.newPage();
+await page.clock.install({ time: noonToday() });
 const pageErrors = [];
 page.on('pageerror', e => pageErrors.push(e.message));
 await page.route(u => !u.href.startsWith(url) || u.pathname.startsWith('/api/'), async route => {

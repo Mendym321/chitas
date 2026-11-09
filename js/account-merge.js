@@ -17,6 +17,7 @@ function _archiveOldToday(u, todayISO) {
 function mergeGuestIntoAccount(guest, remote, today) {
   const todayISO = progressISO(today);
   if (!remote) return { ...guest }; // brand-new account: the guest's progress becomes it
+  remote = datedToday(remote);      // the account's day lists, read right (js/progress.js)
 
   const g = _archiveOldToday(guest, todayISO);
   const r = _archiveOldToday(remote, todayISO);

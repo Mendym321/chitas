@@ -129,13 +129,44 @@ function archiveOldToday(u, todayISO) {
   return { pastDone, pastQuizDone, done: {}, quizDone: {} };
 }
 
+// The account (Firestore) merges every save into what's there and never drops
+// a key, so its "today" list (done) can hold marks from an earlier day: a
+// device left open overnight rolls over at 4 am and saves the new date with
+// an empty list, and the night's marks stay in "today" under the new date.
+// So every save also files today's marks under their date in pastDone (see
+// _userPayload in index.html), and when a copy has its last day filed there,
+// that is the day's list and the loose one is ignored. Older copies (nothing
+// filed for their last day) keep reading done as before.
+function datedToday(u) {
+  const last = _lastISO(u);
+  const pd = (u && u.pastDone) || {}, pq = (u && u.pastQuizDone) || {};
+  if (!last || (!(last in pd) && !(last in pq))) return u;
+  const out = { ...u, pastDone: { ...pd }, pastQuizDone: { ...pq } };
+  if (last in pd) { out.done = { ...(pd[last] || {}) }; delete out.pastDone[last]; }
+  if (last in pq) { out.quizDone = { ...(pq[last] || {}) }; delete out.pastQuizDone[last]; }
+  return out;
+}
+
+// What to save to the account for the day lists: the history with today's
+// marks filed under their date as well (always, even when empty, so the
+// account knows which day "today" was)
+function filedForCloud(u) {
+  const last = _lastISO(u);
+  const pastDone = { ...(u.pastDone || {}) }, pastQuizDone = { ...(u.pastQuizDone || {}) };
+  if (last) {
+    pastDone[last] = { ...(pastDone[last] || {}), ...(u.done || {}) };
+    pastQuizDone[last] = _mergeQuizDay(pastQuizDone[last], u.quizDone || {});
+  }
+  return { pastDone, pastQuizDone };
+}
+
 // This phone's copy and the cloud's copy (saved by another device), as one.
 // Both are first brought up to today, then every day is combined mark by
 // mark: a mark either one has is kept; where both have one, the cloud's wins
 // (it is the later save). Settings come from the cloud.
 function syncFromCloud(local, remote, today) {
   const t = progressISO(today);
-  const upToToday = u => ({ ...u, ...(archiveOldToday(u, t) || {}) });
+  const upToToday = u => { const v = datedToday(u || {}); return { ...v, ...(archiveOldToday(v, t) || {}) }; };
   const a = upToToday(local || {}), b = upToToday(remote || {});
   const days = (x = {}, y = {}) => { const o = { ...x }; for (const d in y) o[d] = { ...(x[d] || {}), ...y[d] }; return o; };
   const quizDays = (x = {}, y = {}) => { const o = { ...x }; for (const d in y) o[d] = _mergeQuizDay(x[d], y[d]); return o; };
