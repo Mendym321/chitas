@@ -461,17 +461,17 @@ await test('a phone turned sideways: one row, the day bar in it, folds away to t
   const a = await where();
   await page.setViewportSize({ width: 800, height: 400 }); await settle(700);
   const b = await where();
-  const row = await page.evaluate(() => [document.getElementById('reader-daybar').parentElement.id, Math.round(document.getElementById('reader-top').getBoundingClientRect().height)]);
+  const row = await page.evaluate(() => [Math.round(document.getElementById('reader-daybar').getBoundingClientRect().top) < 30 ? 'one row' : 'two rows', Math.round(document.getElementById('reader-top').getBoundingClientRect().height)]);
   await scrollWheel(400);
   const tucked = await page.evaluate(() => { const t = document.getElementById('reader-top').getBoundingClientRect(); return [document.getElementById('chabad-panel').classList.contains('rt-folded'), Math.round(t.bottom)]; });
   const b2 = await where();                                       // read on a little, sideways
   await page.setViewportSize({ width: 400, height: 800 }); await settle(700);
   const c = await where();
-  const back = await page.evaluate(() => document.getElementById('reader-daybar').parentElement.id);
+  const back = await page.evaluate(() => { const h = document.getElementById('reader-head').getBoundingClientRect(), d = document.getElementById('reader-daybar').getBoundingClientRect(); return d.top >= h.bottom - 1 && h.height > 60 ? 'under the header' : JSON.stringify([h.top, h.height, d.top]); });
   expect(a.text === b.text && b2.text === c.text, 'the same passage after turning, and turning back', { a, b, b2, c });
-  expect(row[0] === 'reader-head' && row[1] < 70, 'one row sideways', row);
+  expect(row[0] === 'one row' && row[1] < 80, 'one row sideways', row);
   expect(tucked[0] && tucked[1] <= 10, 'folded to just the progress line', tucked);
-  expect(back === 'reader-top', 'upright again: the day bar under the header', back);
+  expect(back === 'under the header', 'upright again: the full header, the day bar under it', back);
 });
 
 await test('on a computer the bar never folds', async () => {
