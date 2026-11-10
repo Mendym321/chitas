@@ -608,24 +608,18 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rv-quote { margin-top:6px; padding-left:9px; border-left:3px solid var(--rc); font:italic 15px/1.35 var(--read-font); color:var(--t2); }
 .rv-again { margin-top:7px; padding:0; border:none; background:none; font:800 13px var(--ui-font); color:var(--t1); text-decoration:underline; cursor:pointer; }
 .found { background:color-mix(in srgb, var(--rc) 24%, transparent); border-radius:8px; transition:background 1.2s ease; }
-/* Progress: what stays with you */
-.rv-card { margin:4px 0 12px; padding:18px; border-radius:var(--r-l); background:var(--ink); color:var(--on-ink); }
-.rv-card .rv-k { color:color-mix(in srgb, var(--on-ink) 70%, transparent); }
-.rv-big { display:flex; align-items:baseline; gap:10px; margin-top:6px; }
-.rv-big b { font:800 46px/1 var(--ui-font); letter-spacing:-1px; }
-.rv-big span { font-size:13px; line-height:1.35; color:color-mix(in srgb, var(--on-ink) 72%, transparent); }
-.rv-weeks { display:flex; gap:6px; margin-top:14px; }
-.rv-weeks div { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px; }
-.rv-weeks i { display:block; width:100%; border-radius:7px; background:color-mix(in srgb, var(--on-ink) 20%, transparent); }
+/* Progress: the Reviews sheet */
+.rv-weeks { display:flex; gap:6px; margin-top:12px; }
+.rv-weeks div { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:4px; }
+.rv-weeks i { display:block; width:100%; border-radius:7px; background:color-mix(in srgb, var(--t3) 30%, transparent); }
 .rv-weeks div:last-child i { background:var(--c-chumash); }
-.rv-weeks div { justify-content:flex-end; }
-.rv-weeks em { font:700 10px/1.15 var(--ui-font); font-style:normal; color:color-mix(in srgb, var(--on-ink) 55%, transparent); text-align:center; height:23px; overflow:hidden; }
-.rv-secs { padding:14px 16px 16px; }
-.rv-sec { display:flex; align-items:center; gap:10px; margin-top:10px; }
+.rv-weeks b { font:700 11px var(--ui-font); color:var(--t2); min-height:13px; }
+.rv-weeks em { font:600 10px/1.15 var(--ui-font); font-style:normal; color:var(--t3); text-align:center; height:23px; overflow:hidden; }
+.rv-sec { display:flex; align-items:center; gap:10px; margin-top:12px; }
 .rv-sec .n { width:92px; } .rv-sec .n p:first-child { font:700 13px var(--ui-font); color:var(--t1); } .rv-sec .n p:last-child { font-size:11px; color:var(--t3); }
 .rv-sec .bar { flex:1; margin-top:0; } .rv-sec b { width:40px; text-align:right; font:800 13px var(--ui-font); color:var(--t1); }
-.rv-3 { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin:10px 0 4px; }
-.rv-3 div { border-radius:18px; background:var(--card2); padding:12px; } .rv-3 b { display:block; font:800 22px/1.1 var(--ui-font); color:var(--t1); } .rv-3 span { font:600 11px var(--ui-font); color:var(--t3); }
+.rv-3 { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.rv-3 div { border-radius:18px; background:var(--card); padding:12px; } .rv-3 b { display:block; font:800 22px/1.1 var(--ui-font); color:var(--t1); } .rv-3 span { font:600 11px var(--ui-font); color:var(--t3); }
 
 #day-readonly { margin:10px 0 4px; padding:10px 14px; border-radius:16px; background:var(--card); font-size:13px; line-height:1.4; color:var(--t2); }
 #day-readonly b { color:var(--t1); }
@@ -657,12 +651,6 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .cr-row p:last-child { font-size:14px; line-height:1.45; color:var(--t2); margin-top:2px; }
 .dp-go { margin-top:12px; width:100%; height:52px; border-radius:999px; border:none; background:var(--ink); color:var(--on-ink); font:800 16px var(--ui-font); cursor:pointer; }
 /* Learning */
-.stat2 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin:6px 0 12px; }
-.stat2 > * { border-radius:var(--r-m); padding:14px 16px; text-align:left; border:none; font:inherit; }
-.stat-dark { background:var(--ink); color:var(--on-ink); }
-.stat-soft { background:var(--card2); color:var(--t1); }
-.stat-n { font:800 34px/1 var(--ui-font); letter-spacing:-.6px; }
-.stat-l { font:500 13px var(--ui-font); margin-top:5px; opacity:.75; }
 .lcard { background:var(--card); border-radius:var(--r-l); padding:14px 12px 12px; }
 #learned-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
 .ttile { position:relative; overflow:hidden; border-radius:var(--r-m); background:var(--c); color:var(--on); padding:14px 14px 14px; min-height:150px; }
@@ -672,7 +660,25 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .ttile-d { font:500 12px/1.35 var(--ui-font); opacity:.88; position:relative; }
 .ttile-bar { height:6px; border-radius:3px; background:color-mix(in srgb, var(--on) 28%, transparent); margin:10px 0 4px; overflow:hidden; position:relative; }
 .ttile-bar i { display:block; height:100%; border-radius:3px; background:var(--on); }
-.cbars.lcard { padding:16px; }
+/* Progress: keeping it up (a sentence and the month), the tiles, milestones, Reviews */
+.pg-top { padding:18px 14px 12px; }
+.pg-lead { font:800 22px/1.25 var(--ui-font); letter-spacing:-.2px; color:var(--t1); padding:0 4px; }
+.pg-lead em { font-style:normal; color:var(--c-chumash); }
+.pg-sub { font-size:14px; line-height:1.4; color:var(--t2); margin:5px 0 14px; padding:0 4px; }
+.pg-top #learning-cal { border-top:1px solid var(--border); padding-top:12px; margin:0; }
+#learning-cal .cal-d.fut { height:26px; }
+.ttile-r { font:600 12px/1.35 var(--ui-font); margin-top:10px; padding-top:9px; border-top:1px solid color-mix(in srgb, var(--on) 25%, transparent); position:relative; }
+.pg-ms { padding:4px 16px; }
+.ms { display:flex; gap:12px; align-items:center; padding:13px 0; }
+.ms + .ms { border-top:1px solid var(--border); }
+.ms-dot { width:34px; height:34px; border-radius:50%; flex-shrink:0; display:grid; place-items:center; font:800 14px var(--ui-font); }
+.ms p:first-child { font:600 15px/1.3 var(--ui-font); color:var(--t1); }
+.ms p + p { font-size:13px; line-height:1.35; color:var(--t3); margin-top:2px; }
+.pg-rv { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px; border:none; text-align:left; color:var(--t3); font:inherit; cursor:pointer; }
+.pg-rv b { display:block; font:600 15px/1.3 var(--ui-font); color:var(--t1); }
+.pg-rv span span { display:block; font-size:13px; line-height:1.35; color:var(--t3); margin-top:3px; }
+#review-sheet { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
+#review-sheet .lcard { background:var(--card); margin-top:10px; padding:14px 16px 16px; }
 /* The reader, in its section's colour */
 #reader-head, #quiz-head { background:var(--rc, var(--surface)); color:var(--rc-on, var(--t1)); border-radius:0 0 26px 26px; }
 #quiz-head #quiz-title { color:inherit !important; font-size:26px !important; letter-spacing:-.4px; }
@@ -1021,12 +1027,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #tab-stats, #tab-profile { padding-left:0 !important; padding-right:0 !important; }
   #stats-content { display:grid; grid-template-columns:1fr 1fr; column-gap:24px; grid-auto-flow:row dense; }
   #stats-content > * { grid-column:1 / -1; }
-  #stats-content > .sec-30, #stats-content > .cbars { grid-column:1; }
-  #stats-content > .cbars, #stats-content > #learning-cal { align-self:start; }
-  #stats-content > .sec-month, #stats-content > #learning-cal { grid-column:2; }
   #learned-grid { grid-template-columns:repeat(4, minmax(0,1fr)); }
-  #stats-content > .rv-card { grid-column:1; margin-bottom:12px; }
-  #stats-content > .rv-secs { grid-column:2; margin:4px 0 12px; align-self:stretch; }
   /* Profile: its sections in two columns, the whole width */
   #tab-profile { columns:2; column-gap:24px; }
   #tab-profile > .card, #tab-profile > #ps-guest-row { column-span:all; }
@@ -1045,7 +1046,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #quiz-body { max-width:640px !important; }
   /* Pop-ups: centred boxes, not sheets from the bottom */
   /* (the browser writes a style set from code as "align-items: flex-end", with a space) */
-  #day-picker, #del-sheet, #credits-sheet, #signin-sheet, body > div[style*="align-items:flex-end"], body > div[style*="align-items: flex-end"] { align-items:center !important; }
+  #day-picker, #review-sheet, #del-sheet, #credits-sheet, #signin-sheet, body > div[style*="align-items:flex-end"], body > div[style*="align-items: flex-end"] { align-items:center !important; }
   #signin-sheet > div, body > div[style*="align-items: flex-end"] > div { border-radius:28px !important; border-bottom:1px solid var(--border) !important; }
   .dp-sheet, .ps-modal-sheet { max-width:480px !important; border-radius:28px !important; }
   #moment-modal.m-full #moment-card { max-width:none !important; }
@@ -6275,12 +6276,12 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || e.defaultPrevented || !window.matchMedia?.('(min-width:1000px)').matches) return;
   if (document.getElementById('chabad-panel')?.style.display === 'none' || document.getElementById('reader-menu')) return;
   if (_settingsOpen) { closeReaderSettings(); return; }
-  if ([...document.querySelectorAll('#day-picker, [id$="-modal"], .rn-popup, #quiz-panel')].some(el => el.getClientRects().length)) return;   // a pop-up on screen
+  if ([...document.querySelectorAll('#day-picker, #review-sheet, [id$="-modal"], .rn-popup, #quiz-panel')].some(el => el.getClientRects().length)) return;   // a pop-up on screen
   closeChabadPanel();
 });
 
 // ════════════════════════════════════════════════════════════════════
-// ZONE 24 · STATS TAB  (streak hero, activity grid, section breakdown)
+// ZONE 24 · PROGRESS TAB  (keeping it up + the month, what you learned, milestones, Reviews)
 // ════════════════════════════════════════════════════════════════════
 // ── STATS ─────────────────────────────────────────────────────────────────────
 // The Learning page's calendar: one month with its dates. A full Chitas day is
@@ -6329,28 +6330,44 @@ function _calTap(iso) {
     + (_canReadDay(off) ? '<button class="btn-quiet" style="margin-top:10px;width:100%;" onclick="switchTab(\'learn\');goToDay(' + off + ')">Open this day</button>' : '');
 }
 
-// Progress: what stays with you, from your Review results (reviewStats in
-// js/learning-stats.js). Nothing before your first review.
-function _reviewCardHTML(today) {
+// Progress: your Reviews, as one quiet row; the details in a sheet
+// (reviewStats in js/learning-stats.js). Nothing before your first review.
+function _reviewRowHTML(today) {
   const R = reviewStats(user, today);
   if (!R) return '';
+  const NAMES = { chumash: 'Chumash', tanya: 'Tanya', rambam: 'Rambam' };
+  const most = Object.entries(R.bySection).sort((a, b) => b[1].n - a[1].n).map(([id]) => NAMES[id]).slice(0, 2);
+  return '<p class="t-sec">Reviews</p>'
+    + '<button type="button" class="pg-rv lcard" onclick="openReviewSheet()">'
+    + '<span><b>' + R.count + (R.count === 1 ? ' review' : ' reviews') + ' · ' + R.right.toLocaleString('en-US') + ' answers right</b>'
+    + '<span>' + (most.length ? most.join(' and ') + (most.length > 1 ? ', mostly' : '') + '. ' : '') + 'Tap to see more.</span></span>'
+    + '<svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5l6 6-6 6"/></svg></button>';
+}
+function openReviewSheet() {
+  const today = appNow(), R = reviewStats(user, today);
+  if (!R) return;
   // Each week by its parsha (a Yom Tov week, which has none of its own: its date)
   const names = R.weeks.map(w => { const d = new Date(w.shabbos + 'T12:00:00'), p = getParshaForDate(d); return p ? parshaSpelling(p) : ''; });
   const weekName = (w, i) => names[i] && names[i] !== names[i - 1] && names[i] !== names[i + 1] ? names[i]
     : new Date(w.shabbos + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  // Heights from 40% up, so the change shows
-  const h = pct => 6 + Math.round(Math.max(0, pct - 40) / 60 * 58);
-  const bars = R.weeks.map((w, i) => '<div><i style="height:' + (w.pct == null ? 4 : h(w.pct)) + 'px;' + (w.pct == null ? 'opacity:.4;' : '') + '" title="' + (w.pct == null ? 'No reviews' : w.pct + '%') + '"></i><em>' + escapeHtml(weekName(w, i)) + '</em></div>').join('');
-  const sub = R.then != null && R.then !== R.now ? 'right this week · ' + (R.now > R.then ? 'up' : 'down') + ' from ' + R.then + '%' : 'of your answers right';
+  const h = pct => 6 + Math.round(Math.max(0, pct - 40) / 60 * 58);   // from 40% up, so a change shows
+  const bars = R.weeks.map((w, i) => '<div><i style="height:' + (w.pct == null ? 4 : h(w.pct)) + 'px;' + (w.pct == null ? 'opacity:.4;' : '') + '"></i><b>' + (w.pct == null ? '' : w.pct + '%') + '</b><em>' + escapeHtml(weekName(w, i)) + '</em></div>').join('');
   const NAMES = { chumash: 'Chumash', tanya: 'Tanya', rambam: 'Rambam' };
   const secs = Object.entries(R.bySection).map(([id, v]) =>
     '<div class="rv-sec"><div class="n"><p>' + NAMES[id] + '</p><p>' + v.n + (v.n === 1 ? ' review' : ' reviews') + '</p></div>'
     + '<div class="bar"><i style="width:' + v.pct + '%;background:' + SECTION_COLORS[id] + ';"></i></div><b>' + v.pct + '%</b></div>').join('');
-  return '<div class="rv-card"><p class="rv-k">What stays with you</p>'
-    + '<div class="rv-big"><b>' + R.now + '%</b><span>' + sub + '</span></div>'
-    + '<div class="rv-weeks" role="img" aria-label="Answers right, week by week">' + bars + '</div></div>'
-    + (secs ? '<div class="lcard rv-secs"><p class="rv-k">By section, last 30 days</p>' + secs + '</div>' : '')
-    + '<div class="rv-3"><div><b>' + R.right.toLocaleString('en-US') + '</b><span>answers right</span></div><div><b>' + R.deepDives + '</b><span>deep dives</span></div><div><b>' + R.perfect + '</b><span>all right</span></div></div>';
+  document.getElementById('review-sheet')?.remove();
+  const m = document.createElement('div');
+  m.id = 'review-sheet';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = '<div class="dp-sheet" role="dialog" aria-modal="true" aria-labelledby="rs-title">'
+    + '<div class="dp-head"><div><p class="ps-modal-title" id="rs-title">Your reviews</p><p class="ps-modal-sub">What stays with you from your learning</p></div>'
+    + '<button type="button" class="ps-modal-close" aria-label="Close" onclick="document.getElementById(\'review-sheet\').remove()">×</button></div>'
+    + '<div class="rv-3"><div><b>' + R.count + '</b><span>' + (R.count === 1 ? 'review' : 'reviews') + '</span></div><div><b>' + R.right.toLocaleString('en-US') + '</b><span>answers right</span></div><div><b>' + R.deepDives + '</b><span>' + (R.deepDives === 1 ? 'deep dive' : 'deep dives') + '</span></div></div>'
+    + (secs ? '<div class="lcard rv-secs"><p class="lbl">By section, last 30 days</p>' + secs + '</div>' : '')
+    + '<div class="lcard rv-wk"><p class="lbl">Answers right, week by week</p><div class="rv-weeks" role="img" aria-label="Answers right, week by week">' + bars + '</div></div>'
+    + '</div>';
+  document.body.appendChild(m);
 }
 
 function renderStats() {
@@ -6358,76 +6375,78 @@ function renderStats() {
   const today = appNow();
   // Everything here is derived from the days you marked + the real calendar
   // (js/learning-stats.js, js/learning-data.js), so it's always consistent.
+  // It counts what you learned, never what you missed.
   const ov = learningOverview(user, today, user.rambamTrack);
   const T = ov.totals, C = ov.consistency;
   const fmt = n => Number(n || 0).toLocaleString('en-US');
   const plural = (n, one, many) => fmt(n) + ' ' + (n === 1 ? one : many);
   const firstISO = Object.keys(user.pastDone || {}).sort()[0];
   const since = firstISO ? new Date(firstISO + 'T12:00:00') : today;
-  const sinceLabel = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).format(since));
+  const sinceLabel = hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(since));
 
-  // ── The month, with dates: tap a day to see what you learned ─────────────
-  const calHTML = _learningMonthHTML();
+  // ── Keeping it up: one sentence, then the month ──────────────────────────
+  // Full days in each Hebrew month; this month's, and whether it's your best
+  const monthKey = d => _hebMonthName(d), thisKey = monthKey(today);
+  const byMonth = {};
+  for (const d of _historyDays(user, today)) if (isChitasDay(dayDone(user, d, today))) byMonth[monthKey(d)] = (byMonth[monthKey(d)] || 0) + 1;
+  const fullThis = byMonth[thisKey] || 0, month = thisKey.replace(/\s*\d+$/, '');
+  const others = Object.entries(byMonth).filter(([k]) => k !== thisKey).map(([, n]) => n);
+  const bestMonth = others.length && fullThis >= 5 && fullThis > Math.max(...others);
+  const fullDays = n => plural(n, 'full day', 'full days');
+  let lead, sub;
+  if (C.streak >= 2) {
+    lead = 'Full Chitas <em>' + C.streak + ' days</em> in a row';
+    sub = fullDays(fullThis) + ' this ' + month + (bestMonth ? ', your best month yet' : '');
+  } else if (fullThis) {
+    lead = '<em>' + fullDays(fullThis) + '</em> this ' + month;
+    sub = isChitasDay(user.done || {}) ? 'And today is one of them.' : 'Today is a fresh one.';
+  } else {
+    lead = 'Every day you learn shows here';
+    sub = 'A full day is all four: Chumash, Tehillim, Tanya and Rambam.';
+  }
 
-  // ── All of it, added up ─────────────────────────────────────────────────
+  // ── What you've learned: a tile for each section ─────────────────────────
   const isMitzvos = user.rambamTrack === 'm';
   const GLYPH = { chumash: 'torah', tehillim: 'kinor', tanya: 'flame', rambam: 'books' };
-  // Each section's tile: the big number, what it counts, two lines more, and
-  // where useful a bar for how far through the whole thing you are
-  const tile = (id, n, label, lines, pct, pctLabel) =>
+  // The big number, what it counts, how far through the whole (a bar where it
+  // means something), and under a line, how it's going lately
+  const lately = id => { const p = C.per[id]; return p.current >= 7 ? p.current + ' days in a row' : p.last30 + ' of the last 30 days'; };
+  const tile = (id, n, label, pct, line) =>
     '<div class="ttile" style="--c:var(--c-' + id + ');--on:var(--on-' + id + ');">'
     + '<span class="ttile-art">' + icon(GLYPH[id], 96) + '</span>'
     + '<p class="ttile-n"><b class="stats-num" data-target="' + n + '">' + fmt(n) + '</b></p><p class="ttile-l">' + label + '</p>'
-    + lines.filter(Boolean).map(l => '<p class="ttile-d">' + l + '</p>').join('')
-    + (pct != null ? '<div class="ttile-bar" role="img" aria-label="' + pctLabel + '"><i style="width:' + Math.max(2, Math.min(100, pct)) + '%"></i></div><p class="ttile-d">' + pctLabel + '</p>' : '')
+    + (pct != null ? '<div class="ttile-bar" role="img" aria-label="' + line + '"><i style="width:' + Math.max(2, Math.min(100, pct)) + '%"></i></div>' : '')
+    + '<p class="ttile-d">' + line + '</p>'
+    + '<p class="ttile-r">' + lately(id) + '</p>'
     + '</div>';
-  const D = T.daysBy || {};
-  const days = id => D[id] ? 'On ' + plural(D[id], 'day', 'days') : '';
   const torahPct = Math.round(T.pesukim / 5845 * 100);
   const tehCycle = T.tehillimChapters % 150;
+  const timeThrough = n => n < 2 ? '' : ', ' + (['second', 'third', 'fourth', 'fifth'][n - 2] || _nth(n)) + ' time';
+  const rambamPct = Math.min(100, Math.round(T.rambamChapters / RAMBAM_TOTAL_CHAPTERS * 100));
   const tiles =
-      tile('chumash', T.pesukim, T.pesukim === 1 ? 'passuk of Chumash' : 'pesukim of Chumash',
-        [plural(T.parshiyos, 'full parsha', 'full parshiyos'), days('chumash')], torahPct, torahPct + '% of the Torah')
-    + tile('tehillim', T.tehillimChapters, T.tehillimChapters === 1 ? 'chapter of Tehillim' : 'chapters of Tehillim',
-        [T.tehillimBooks ? 'All of Tehillim ' + plural(T.tehillimBooks, 'time', 'times') : 'With the monthly cycle', days('tehillim')], Math.round(tehCycle / 150 * 100), tehCycle + ' of 150 this time through')
-    + tile('tanya', T.tanyaDays, T.tanyaDays === 1 ? 'day of Tanya' : 'days of Tanya',
-        [T.tanyaLatest ? 'Up to chapter ' + T.tanyaLatest : 'The yearly cycle', C.per.tanya.current > 1 ? C.per.tanya.current + ' days in a row' : ''])
+      tile('chumash', T.pesukim, T.pesukim === 1 ? 'passuk of Chumash' : 'pesukim of Chumash', torahPct, torahPct + '% of the Torah')
+    + tile('tehillim', T.tehillimChapters, T.tehillimChapters === 1 ? 'chapter of Tehillim' : 'chapters of Tehillim', Math.round(tehCycle / 150 * 100),
+        tehCycle + ' of 150' + timeThrough(Math.floor(T.tehillimChapters / 150) + 1))
+    + tile('tanya', T.tanyaDays, T.tanyaDays === 1 ? 'day of Tanya' : 'days of Tanya', null, T.tanyaLatest ? 'Up to chapter ' + T.tanyaLatest : 'The yearly cycle')
     + (isMitzvos
-      ? tile('rambam', T.seferHamitzvosDays, T.seferHamitzvosDays === 1 ? 'day of Sefer HaMitzvos' : 'days of Sefer HaMitzvos', ['The daily mitzvos', C.per.rambam.current > 1 ? C.per.rambam.current + ' days in a row' : ''])
-      : tile('rambam', T.rambamHalachos, T.rambamHalachos === 1 ? 'halacha of Rambam' : 'halachos of Rambam',
-        [plural(T.rambamChapters, 'chapter', 'chapters'), days('rambam')], Math.round(T.rambamChapters / RAMBAM_TOTAL_CHAPTERS * 100), Math.min(100, Math.round(T.rambamChapters / RAMBAM_TOTAL_CHAPTERS * 100)) + '% of Mishneh Torah'));
+      ? tile('rambam', T.seferHamitzvosDays, T.seferHamitzvosDays === 1 ? 'day of Sefer HaMitzvos' : 'days of Sefer HaMitzvos', null, 'The daily mitzvos')
+      : tile('rambam', T.rambamHalachos, T.rambamHalachos === 1 ? 'halacha of Rambam' : 'halachos of Rambam', rambamPct, rambamPct + '% of Mishneh Torah'));
 
-  // ── Consistency ──────────────────────────────────────────────────────────
-  const NAMES2 = { chumash: 'Chumash', tehillim: 'Tehillim', tanya: 'Tanya', rambam: isMitzvos ? 'Sefer HaMitzvos' : 'Rambam' };
-  const bestWhen = C.bestEnd ? ' · ' + _hebMonthName(C.bestEnd) : '';
-  const bars = ids.map(id => {
-    const p = C.per[id];
-    return '<div class="cbar"><p><span>' + NAMES2[id] + '</span><span>' + p.last30 + ' of 30' + (p.current > 1 ? ' · ' + p.current + ' in a row' : '') + '</span></p>'
-      + '<div class="bar"><i style="width:' + Math.round(p.last30 / 30 * 100) + '%;background:' + SECTION_COLORS[id] + ';"></i></div></div>';
-  }).join('');
-
-  // ── Highlights ───────────────────────────────────────────────────────────
-  const highlights = ov.highlights.length
-    ? '<p class="t-sec">Highlights</p><div class="group">' + ov.highlights.map(h =>
-        '<div class="lrow" style="cursor:default;"><div class="lrow-t"><p style="white-space:normal;">' + escapeHtml(h.title) + '</p><p style="white-space:normal;">' + escapeHtml(h.sub) + '</p></div></div>').join('') + '</div>'
+  // ── Milestones: only what you did, with when ───────────────────────────────
+  const msDot = h => h.n ? '<span class="ms-dot" style="background:var(--c-' + h.id + ');color:var(--on-' + h.id + ');">' + h.n + '</span>'
+    : '<span class="ms-dot" style="background:' + (h.id === 'all' ? 'var(--ink);color:var(--on-ink)' : 'var(--c-' + h.id + ');color:var(--on-' + h.id + ')') + ';"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
+  const milestones = ov.highlights.length
+    ? '<p class="t-sec">Milestones</p><div class="lcard pg-ms">' + ov.highlights.map(h =>
+        '<div class="ms">' + msDot(h) + '<div><p>' + escapeHtml(h.title) + '</p><p>' + escapeHtml(h.sub) + '</p></div></div>').join('') + '</div>'
     : '';
 
   document.getElementById('stats-content').innerHTML =
-    '<div class="stat2">'
-    +   '<div class="stat-dark"><p class="stat-n">' + C.streak + '</p><p class="stat-l">days in a row · best ' + C.best + '</p></div>'
-    +   '<div class="stat-soft"><p class="stat-n">' + C.pct30 + '%</p><p class="stat-l">full days, last 30</p></div>'
-    + '</div>'
-    + _reviewCardHTML(today)
-    + '<p class="t-sec">All of it, added up <span>since ' + sinceLabel + '</span></p>'
+    '<div class="lcard pg-top"><p class="pg-lead">' + lead + '</p><p class="pg-sub">' + sub + '</p>'
+    +   '<div id="learning-cal">' + _learningMonthHTML() + '</div></div>'
+    + '<p class="t-sec">What you\'ve learned' + (firstISO ? ' <span>since ' + sinceLabel + '</span>' : '') + '</p>'
     + '<div id="learned-grid">' + tiles + '</div>'
-
-    + '<p class="t-sec sec-30">The last 30 days</p>'
-    + '<div class="cbars lcard">' + bars + '</div>'
-
-    + '<p class="t-sec sec-month">Month by month</p>'
-    + '<div id="learning-cal" class="lcard">' + calHTML + '</div>'
-
-    + highlights
+    + milestones
+    + _reviewRowHTML(today)
     + '<div style="height:24px;"></div>';
 
   // Count the big numbers up once

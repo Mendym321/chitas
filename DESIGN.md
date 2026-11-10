@@ -37,7 +37,7 @@ Review is the step after learning, shown where you are, never pushed:
 - **Right after you learn** (marking a section in the reader, today): "While it's fresh: 4 questions on what you just learned", with Deep dive and Home beside it.
 - **On Today:** a learned section's tile says "Review · 4", then "Reviewed 3/4". A card under the tiles lists what's ready.
 - **Results:** the score as a ring, then "What you learned today": each answer with the line it's from. A missed one has "Read it again", which opens the text at that line.
-- **Progress, "What stays with you":** % right week by week (each week named by its parsha), by section for the last 30 days, and all-time totals (`reviewStats` in `js/learning-stats.js`). It shows nothing until your first review.
+- **Progress, Reviews:** one quiet row at the foot of Progress ("20 reviews · 75 answers right"), only once you have taken a review. Tapping it opens "Your reviews": reviews, answers right and deep dives; by section for the last 30 days; and % right week by week, each week named by its parsha (`reviewStats` in `js/learning-stats.js`, `openReviewSheet`). No "up / down from" verdicts.
 - Results are saved as `{ r, n }` (right, out of how many), per section, level and day, in `quizDone` and `pastQuizDone`.
 
 ## Footnotes
@@ -143,7 +143,7 @@ Cream card with ink text, never a black pill. `fire(msg, 'done')` adds a small g
 - **Catch up** any of the last 7 days; that keeps the streak.
 - **Any day can be read** (about a year back, two months ahead) from the calendar on Today's date chip, or by swiping the tiles. Only today and the last 7 days can be marked; other days say "Read only" or "Ahead of today".
 - **Totals** grow forever (pesukim, chapters, halachos), shown beside the streak.
-- **Progress tab** (chart icon): two stat tiles (streak, 30-day %), a month calendar where each date is the four-part ring (a small sefer under Shabbos / Yom Tov; tap a day to see it), and a colour tile per section with its total, what it means, and how far through the whole (the Torah, Tehillim, Mishneh Torah).
+- **Progress tab** (chart icon). It answers, in order, what a learner asks: am I keeping it up, what have I learned, what have I finished. It counts what you did, never what you missed, and says each fact once. (1) One sentence and the month: "Full Chitas 4 days in a row" with "18 full days this Cheshvan" under it; with no run going it leads with the month's full days instead, and it never shows a 0. Under it the month calendar, each date the four-part ring (a small sefer under Shabbos / Yom Tov; days ahead in short rows; tap a day to see it). (2) "What you've learned": a colour tile per section with its total, how far through the whole (the Torah, Tehillim, Mishneh Torah), and under a line how it's going lately ("39 days in a row" from a week up, else "27 of the last 30 days"). (3) Milestones, only good news, each with when: your run going now, the latest full parsha, all of Tehillim, your best month. (4) Reviews, one row (below). No percentages as grades, no nudges.
 - **Motivation model.** Reward finishing (the four rings, the day complete), showing up (the streak; Shabbos and Yom Tov never break it, quietly), learning adding up (Progress totals), and real milestones. No points, levels, leaderboards, pep talk or suggested order.
 - **Milestones**, each celebrated once (`user.milestones` keeps the keys), and they **follow the cycles**, so they come back every year:
   - Streak: 3, 7, 18, 30, 50, 100, 180, 365, 500, 1000 days (`js/progress.js`).

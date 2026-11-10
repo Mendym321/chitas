@@ -66,12 +66,12 @@ function learningStats(user, today, rambamTrack) {
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
   const thisMonth = _hebrewMonthKey(today);
   const thisMonthOver = _hebrewMonthKey(tomorrow) !== thisMonth; // today is the last day
-  let tehillimBooks = 0;
+  let tehillimBooks = 0, tehillimLastMonth = null;
   for (const key in months) {
     const m = months[key];
     const monthOver = key !== thisMonth || thisMonthOver;
     // Complete = you were tracking from the 1st, the month is over, every day done
-    if (monthOver && m.firstDay === 1 && m.done === m.count) tehillimBooks++;
+    if (monthOver && m.firstDay === 1 && m.done === m.count) { tehillimBooks++; tehillimLastMonth = key; }
   }
 
   // Chapters of Tehillim said (from each day's portion you marked, with Elul's)
@@ -87,7 +87,7 @@ function learningStats(user, today, rambamTrack) {
   const weakest = ranked[0], strongest = ranked[ranked.length - 1];
   const needsAttention = sections[strongest].last30 - sections[weakest].last30 >= 3 ? weakest : null;
 
-  return { sections, parshiyos, parshaWeeks, tehillimBooks, tehillimChapters, rambamChapters, rambamPerDay: perDay, needsAttention };
+  return { sections, parshiyos, parshaWeeks, tehillimBooks, tehillimLastMonth, tehillimChapters, rambamChapters, rambamPerDay: perDay, needsAttention };
 }
 
 // ── "Your learning": totals, consistency, highlights ──────────────────────────
@@ -178,43 +178,39 @@ function learningOverview(user, today, rambamTrack) {
 }
 
 const _SECTION_NAME = { chumash: 'Chumash', tehillim: 'Tehillim', tanya: 'Tanya', rambam: 'Rambam' };
-const _WEEKDAYS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Shabbos'];
 
+// Milestones on Progress: only what you did, each with when (no nudges here:
+// this page counts what you learned, not what you missed)
+const _nth = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+const _hebDayMonth = d => hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(d));
 function _highlights(user, today, days, base, per, overall, rambamTrack) {
   const out = [];
-  const did = (d, id) => !!dayDone(user, d, today)[id];
 
   // 1. Your longest run going right now (a week or more)
   const top = SECTION_IDS.map(id => [id, per[id].current]).sort((a, b) => b[1] - a[1])[0];
   if (top && top[1] >= 7) {
     const isBest = top[1] >= per[top[0]].best;
-    out.push({ title: _SECTION_NAME[top[0]] + ' every day for ' + top[1] + ' days', sub: isBest ? 'Your longest run yet' : 'Your best is ' + per[top[0]].best + ' days' });
+    out.push({ id: top[0], n: top[1], title: _SECTION_NAME[top[0]] + ' every day for ' + top[1] + ' days', sub: isBest ? 'Your longest run yet · going now' : 'Your best is ' + per[top[0]].best + ' days · going now' });
   }
 
-  // 2. The most recent full parsha
-  if (base.parshiyos.length) {
-    const name = base.parshiyos[base.parshiyos.length - 1];
-    out.push({ title: 'Learned all of Parshas ' + name, sub: base.parshiyos.length === 1 ? 'Your first full parsha' : base.parshiyos.length + ' full parshiyos so far' });
+  // 2. The most recent full parsha, with the day it was finished
+  if (base.parshaWeeks.length) {
+    const w = base.parshaWeeks[base.parshaWeeks.length - 1], n = base.parshaWeeks.length;
+    const name = typeof parshaSpelling === 'function' ? parshaSpelling(w.name) : w.name;   // one spelling everywhere
+    out.push({ id: 'chumash', title: 'Learned all of Parshas ' + name, sub: (n === 1 ? 'Your first full parsha' : 'Your ' + _nth(n) + ' full parsha') + ' · ' + _hebDayMonth(new Date(w.iso + 'T12:00:00')) });
   }
 
-  // 3. Best month (most full Chitas days)
+  // 3. All of Tehillim in a month
+  if (base.tehillimBooks) {
+    const month = hebMonthSpelling(base.tehillimLastMonth || '').replace(/\s*\d+$/, '');
+    out.push({ id: 'tehillim', title: 'All of Sefer Tehillim', sub: (base.tehillimBooks === 1 ? 'The whole month' : 'Your ' + _nth(base.tehillimBooks) + ' time through') + (month ? ' · ' + month : '') });
+  }
+
+  // 4. Best month (most full Chitas days)
   const months = {};
   for (const d of days) if (isChitasDay(dayDone(user, d, today))) { const k = _hebMonthName(d); months[k] = (months[k] || 0) + 1; }
   const bestMonth = Object.entries(months).sort((a, b) => b[1] - a[1])[0];
-  if (bestMonth && bestMonth[1] >= 5) out.push({ title: 'Best month: ' + bestMonth[0], sub: bestMonth[1] + ' full Chitas days' });
-
-  // 4. One gentle nudge: a weekday the weakest section keeps slipping on
-  const weakest = base.needsAttention;
-  if (weakest) {
-    const misses = [0, 0, 0, 0, 0, 0, 0], seen = [0, 0, 0, 0, 0, 0, 0];
-    for (const d of days) {
-      if ((today - d) / 86400000 >= 56 || isRestDay(d) || progressISO(d) === progressISO(today)) continue;
-      seen[d.getDay()]++; if (!did(d, weakest)) misses[d.getDay()]++;
-    }
-    const w = misses.indexOf(Math.max(...misses));
-    if (misses[w] >= 3) out.push({ title: _SECTION_NAME[weakest] + ' slips on ' + _WEEKDAYS[w], sub: 'Missed ' + misses[w] + ' of the last ' + seen[w] + '. Try it earlier in the day.', nudge: true });
-    else out.push({ title: _SECTION_NAME[weakest] + ' is the one you miss most', sub: per[weakest].last30 + ' of the last 30 days', nudge: true });
-  }
+  if (bestMonth && bestMonth[1] >= 5) out.push({ id: 'all', title: 'Best month: ' + bestMonth[0], sub: bestMonth[1] + ' full Chitas days' });
   return out.slice(0, 4);
 }
 
@@ -309,7 +305,7 @@ function _reviewEntries(user, today) {
 //  weeks: the last 6 weeks (Sunday to Shabbos), oldest first: { shabbos, pct } (pct null if none)
 //  now / then: % right in the latest week with reviews, and the earliest of those 6 that has any
 //  bySection: { id: { pct, n } } for the last 30 days (n = reviews)
-//  right, deepDives, perfect: all-time answers right, deep dives, reviews with every answer right
+//  count, right, deepDives, perfect: all-time reviews, answers right, deep dives, reviews with every answer right
 function reviewStats(user, today) {
   const all = _reviewEntries(user, today);
   if (!all.length) return null;
@@ -335,6 +331,7 @@ function reviewStats(user, today) {
     now: had.length ? had[had.length - 1].pct : pct(recent),
     then: had.length > 1 ? had[0].pct : null,
     bySection,
+    count: all.length,
     right: all.reduce((s, e) => s + e.r, 0),
     deepDives: all.filter(e => e.level === 'deep').length,
     perfect: all.filter(e => e.r === e.n).length,

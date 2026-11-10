@@ -94,6 +94,7 @@ console.log('Highlights:');
 const h = learningOverview(userWith(Object.fromEntries(twoWeeks.map(d => [d, ['chumash', 'tehillim', 'tanya', 'rambam']]))), TODAY, '3').highlights.map(x => x.title);
 check('a run of a week or more is highlighted', h.some(t => /every day for 15 days/.test(t)), true);
 check('the latest full parsha is highlighted', h.some(t => /^Learned all of Parshas /.test(t)), true);
+check('milestones are only good news (no nudge about a section you miss)', learningOverview(userWith(Object.fromEntries(twoWeeks.map(d => [d, ['chumash', 'tehillim', 'tanya']]))), TODAY, '3').highlights.some(x => x.nudge || /miss|slips/i.test(x.title)), false);
 
 console.log('Learning milestones (they follow the cycles):');
 {

@@ -175,15 +175,39 @@ await check('Personal Tehillim: who is said, with their chapters, worked out off
   return _personalPsalms(new Date('2026-10-28T12:00:00')).map(p => p.label + ' ' + p.chapter);
 }, ['Rebbe 125', 'Savta 87']);
 
-await check('Your learning: totals (halachos of Rambam), consistency bars and a nudge for the section you miss', () => {
+await check('Progress: what you learned, how each section is going lately, and no nudges about what you missed', () => {
   const pastDone = {};
   for (let i = 1; i <= 10; i++) { const d = new Date(); d.setDate(d.getDate() - i); pastDone[dateISO(d)] = { chumash: true, tehillim: true, tanya: true, rambam: i <= 2 }; }
-  user = { ...user, rambamTrack: '3', done: {}, pastDone };
+  user = { ...user, rambamTrack: '3', done: {}, pastDone, quizDone: {}, pastQuizDone: {} };
   renderStats();
   const c = document.getElementById('stats-content').textContent;
   return [document.getElementById('learned-grid').textContent.includes('halachos of Rambam'),
-          document.querySelectorAll('#stats-content .cbar').length, /Rambam (slips|is the one you miss most)/.test(c)];
-}, [true, 4, true]);
+          [...document.querySelectorAll('#learned-grid .ttile-r')].map(e => e.textContent),
+          /slips|miss/i.test(c), !!document.querySelector('#stats-content .pg-top #learning-cal'), !!document.querySelector('.pg-rv')];
+}, [true, ['10 days in a row', '10 days in a row', '10 days in a row', '2 of the last 30 days'], false, true, false]);
+
+await check('Progress: the top line never says 0; after a break it counts this month\'s full days', () => {
+  const pastDone = {}, d = n => { const x = new Date(); x.setDate(x.getDate() - n); return dateISO(x); };
+  pastDone[d(5)] = { chumash: true, tehillim: true, tanya: true, rambam: true };
+  user = { ...user, done: {}, pastDone };
+  renderStats();
+  const lead = document.querySelector('.pg-lead').textContent;
+  user = { ...user, done: {}, pastDone: {} };
+  renderStats();
+  return [/^\d+ full days? this /.test(lead) || /in a row/.test(lead), /\b0\b/.test(lead), document.querySelector('.pg-lead').textContent];
+}, [true, false, 'Every day you learn shows here']);
+
+await check('Progress: Reviews are one row; tapping it opens the details', () => {
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  user = { ...user, pastQuizDone: { [dateISO(y)]: { tanya: { quick: { r: 3, n: 4 }, deep: { r: 5, n: 6 } } } } };
+  renderStats();
+  const row = document.querySelector('.pg-rv b')?.textContent;
+  document.querySelector('.pg-rv').click();
+  const sheet = document.getElementById('review-sheet');
+  const r = [row, !!sheet, sheet && [...sheet.querySelectorAll('.rv-3 b')].map(b => b.textContent)];
+  sheet?.remove(); user = { ...user, pastQuizDone: {} };
+  return r;
+}, ['2 reviews · 8 answers right', true, ['2', '8', '1']]);
 
 await check('Rambam translator\'s notes become tappable numbers that open in place', () => {
   // The shape Sefaria sends: a marker <sup> followed by the note in <i class="footnote"> (which can nest <i>)
