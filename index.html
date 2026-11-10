@@ -660,6 +660,18 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .ttile-d { font:500 12px/1.35 var(--ui-font); opacity:.88; position:relative; }
 .ttile-bar { height:6px; border-radius:3px; background:color-mix(in srgb, var(--on) 28%, transparent); margin:10px 0 4px; overflow:hidden; position:relative; }
 .ttile-bar i { display:block; height:100%; border-radius:3px; background:var(--on); }
+/* Text arrives, it doesn't pop: while a text loads, soft lines hold its place in
+   the shape of a paragraph; then the words fade in. (The content's animation
+   runs each time it is shown, so a text that was ready opens the same way.) */
+.rd-sk { display:grid; gap:13px; }
+.rd-sk u { display:block; height:11px; border-radius:6px; background:var(--card2); text-decoration:none; animation:skBreathe 1.5s ease-in-out infinite; }
+.rd-sk u:nth-child(4n+2) { width:95%; } .rd-sk u:nth-child(4n+3) { width:89%; }
+.rd-sk u:nth-child(4n) { width:58%; margin-bottom:14px; }   /* a paragraph's short last line, then a gap */
+.rd-sk u:last-child { margin-bottom:0; }
+@keyframes skBreathe { 50% { opacity:.5; } }
+#native-reader-content { animation:rdArrive .32s ease; }
+@keyframes rdArrive { from { opacity:0; } }
+@media (prefers-reduced-motion: reduce) { .rd-sk u, #native-reader-content { animation:none; } }
 /* Progress: keeping it up (a sentence and the month), the tiles, milestones, Reviews */
 .pg-top { padding:18px 14px 12px; }
 .pg-lead { font:800 22px/1.25 var(--ui-font); letter-spacing:-.2px; color:var(--t1); padding:0 4px; }
@@ -1604,9 +1616,10 @@ window._fsGetDoc = getDoc;
   <!-- Native reader (Chumash / Tanya / Rambam) -->
   <div id="native-reader" style="display:none;flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;" onscroll="onReaderScroll()">
     <div style="padding:20px 18px 40px;width:100%;">
-      <div id="native-reader-loading" style="text-align:center;padding:60px 0;">
-        <div class="spinner" style="margin:0 auto 16px;color:var(--gold);"></div>
-        <p id="native-reader-loading-t" style="font-size:var(--fs-2);color:var(--t3);">Loading…</p>
+      <div id="native-reader-loading" style="padding:6px 0 40px;" role="status">
+        <!-- soft lines in the shape of the text, while it loads -->
+        <div class="rd-sk" aria-hidden="true"><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u></div>
+        <p id="native-reader-loading-t" style="font-size:var(--fs-2);color:var(--t3);text-align:center;margin-top:22px;">Loading…</p>
       </div>
       <div id="native-reader-content" style="display:none;">
         <!-- content injected here -->
@@ -1990,7 +2003,7 @@ function _personalPsalmsHTML(lang) {
     h += '<div class="th-chapter' + (lang !== 'en' ? ' he' : '') + '"><p class="th-ch-num">' + (lang !== 'en' ? _toHebrewNumeral(p.chapter) + '.' : 'Psalm ' + p.chapter) + '</p><p class="th-day th-who">' + who + '</p>'
       + (t === 'failed'
         ? '<p class="th-wait">Couldn\'t load this chapter. <button type="button" onclick="_loadPsalm(' + p.chapter + ', true);_renderPersonalPsalms()">Try again</button></p>'
-        : '<p class="th-wait">Loading…</p>')
+        : '<div class="rd-sk" role="status" aria-label="Loading"><u></u><u></u><u></u></div>')
       + '</div>';
   });
   return h + '</div>';
@@ -6279,6 +6292,63 @@ document.addEventListener('keydown', e => {
   if ([...document.querySelectorAll('#day-picker, #review-sheet, [id$="-modal"], .rn-popup, #quiz-panel')].some(el => el.getClientRects().length)) return;   // a pop-up on screen
   closeChabadPanel();
 });
+
+// ── Pop-ups follow your finger ───────────────────────────────────────────────
+// On a phone, every pop-up that sits at the bottom of the screen can be pulled
+// down: it moves with your finger, closes if you pull far (or flick), and comes
+// back if you let go early. One rule for all of them: a pop-up is a box at the
+// foot of a full-screen shade (align-items:flex-end), and closing is the same
+// as tapping the shade, so each pop-up keeps its own way of closing. Not while
+// its own content is scrolled down, nor from a text field or a drag handle.
+const _sd = { sheet: null, over: null, x: 0, y: 0, dy: 0, on: false, t: 0 };
+function _sheetDragStart(target, x, y) {
+  _sd.sheet = null;
+  if (window.matchMedia?.('(min-width:1000px)').matches) return;   // on a computer pop-ups are centred boxes
+  const over = target?.closest?.('body > div');
+  if (!over || over === target) return;
+  const cs = getComputedStyle(over);
+  if (cs.position !== 'fixed' || cs.display !== 'flex' || cs.alignItems !== 'flex-end') return;
+  const sheet = [...over.children].find(c => c.contains(target));
+  if (!sheet || target.closest('input, textarea, select, .tpm-grip')) return;
+  for (let el = target; el && el !== over; el = el.parentElement) if (el.scrollTop > 0) return;   // scrolling its content comes first
+  Object.assign(_sd, { sheet, over, x, y, dy: 0, on: false, t: performance.now() });
+}
+// true while the pop-up is being pulled (the page then doesn't scroll)
+function _sheetDragMove(x, y) {
+  if (!_sd.sheet) return false;
+  const dy = y - _sd.y, dx = x - _sd.x;
+  if (!_sd.on) {
+    if (Math.abs(dy) < 8 && Math.abs(dx) < 8) return false;
+    if (dy <= 0 || Math.abs(dx) > dy) { _sd.sheet = null; return false; }   // up or sideways: not a pull
+    _sd.on = true;
+    _sd.sheet.style.animation = 'none';   // its opening animation would hold it in place
+    _sd.sheet.style.transition = 'none';
+  }
+  _sd.dy = Math.max(0, dy);
+  _sd.sheet.style.transform = 'translateY(' + _sd.dy + 'px)';
+  return true;
+}
+function _sheetDragEnd() {
+  const { sheet, over, dy, on, t } = _sd;
+  _sd.sheet = null;
+  if (!sheet || !on) return;
+  const flick = dy > 40 && dy / Math.max(1, performance.now() - t) > 0.5;
+  sheet.style.transition = 'transform .2s cubic-bezier(.2,.8,.2,1)';
+  if (dy > 110 || flick) {
+    sheet.style.transform = 'translateY(100%)';
+    setTimeout(() => {
+      over.dispatchEvent(new MouseEvent('click', { bubbles: true }));   // the same as tapping the shade
+      setTimeout(() => { sheet.style.transition = sheet.style.transform = sheet.style.animation = ''; }, 60);   // (one that is kept, like sign-in, opens clean next time)
+    }, 190);
+  } else {
+    sheet.style.transform = '';
+    setTimeout(() => { sheet.style.transition = ''; }, 220);
+  }
+}
+document.addEventListener('touchstart', e => { if (e.touches.length === 1) _sheetDragStart(e.target, e.touches[0].clientX, e.touches[0].clientY); else _sd.sheet = null; }, { passive: true });
+document.addEventListener('touchmove', e => { if (_sd.sheet && _sheetDragMove(e.touches[0].clientX, e.touches[0].clientY) && e.cancelable) e.preventDefault(); }, { passive: false });
+document.addEventListener('touchend', _sheetDragEnd);
+document.addEventListener('touchcancel', _sheetDragEnd);
 
 // ════════════════════════════════════════════════════════════════════
 // ZONE 24 · PROGRESS TAB  (keeping it up + the month, what you learned, milestones, Reviews)
