@@ -463,16 +463,16 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .reader-note { padding:40px 20px; text-align:center; color:var(--t3); font-size:var(--fs-3); line-height:1.5; }
 .seg-n { font-family:var(--ui-font); font-size:11px; font-weight:700; color:var(--t3); }
 /* Likkutei Torah: the week's maamarim, and a maamar (in Heilig, the look from May: dibbur hamaschil as a drop word) */
-.lt-intro { font-size:var(--fs-2); color:var(--t2); line-height:1.5; margin:4px 2px 14px; }
-.lt-list { background:var(--card); border-radius:var(--r-m); overflow:hidden; }
-.lt-m { display:flex; align-items:center; gap:14px; width:100%; background:none; border:none; padding:13px 16px; cursor:pointer; color:var(--t1); font-family:inherit; text-align:left; }
-.lt-m + .lt-m { border-top:1px solid var(--border); }
-.lt-ring { flex-shrink:0; }
-.lt-m-x { flex:1; min-width:0; text-align:right; direction:rtl; }
-.lt-m-t { display:block; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-size:20px; line-height:1.4; }
-.lt-m-d { display:block; direction:ltr; text-align:right; font-size:var(--fs-1); color:var(--t3); margin-top:2px; }
-.lt-head { display:flex; justify-content:space-between; align-items:baseline; margin:20px 4px 8px; font-size:13px; color:var(--t3); }
-#native-reader-content .lt-m-d b { font-weight:700; color:color-mix(in srgb, #4F5FA8 75%, var(--t1)); }
+/* Likkutei Torah's week, like the sefer's contents page (_ltShowList) */
+.lt-list { border-top:1px solid var(--border); }
+.lt-m { display:flex; align-items:baseline; gap:12px; width:100%; direction:rtl; background:none; border:none; border-bottom:1px solid var(--border); padding:14px 6px; cursor:pointer; color:var(--t1); font-family:inherit; text-align:right; }
+.lt-m.last { background:color-mix(in srgb, var(--rc, #4F5FA8) 12%, var(--card)); border-radius:var(--r-s); }   /* as the menu's row you're in */
+.lt-n { flex-shrink:0; width:1.4em; font:700 17px 'Vilna','Frank Ruhl Libre',serif; color:var(--rc, #4F5FA8); }
+.lt-m-t { flex:1; min-width:0; font-family:'DachHeilig','Frank Ruhl Libre',serif; font-size:20px; line-height:1.35; }
+.lt-m-d { flex-shrink:0; direction:ltr; display:flex; align-items:center; gap:4px; font-size:var(--fs-1); color:var(--t3); white-space:nowrap; }
+.lt-m.going .lt-m-d { color:var(--rc, #4F5FA8); font-weight:700; }
+.lt-m.done .lt-m-t { color:var(--t3); }
+.lt-m.done .lt-m-d { color:var(--rc, #4F5FA8); }
 .lt-back { background:var(--card2); border:none; border-radius:999px; padding:8px 14px; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--t1); cursor:pointer; margin-bottom:16px; }
 
 .lt-sefer { font-family:'DachHeilig','Frank Ruhl Libre','Noto Serif Hebrew',serif; color:var(--t1); }
@@ -7842,12 +7842,6 @@ function _ltRead(m, iso) {
   const f = Math.min(1, (p.y + view) / p.h);
   return { f: f > 0.97 ? 1 : f, t: p.t || 0 };
 }
-function _ltRing(f) {
-  if (f >= 1) return '<svg class="lt-ring" width="26" height="26" viewBox="0 0 26 26" role="img" aria-label="Learned"><circle cx="13" cy="13" r="12" fill="#4F5FA8"/><path d="M8 13.4l3.2 3.2 6.6-7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const c = 2 * Math.PI * 10.5;
-  return '<svg class="lt-ring" width="26" height="26" viewBox="0 0 26 26" ' + (f ? 'role="img" aria-label="' + Math.round(f * 100) + '% read"' : 'aria-hidden="true"') + '><circle cx="13" cy="13" r="10.5" fill="none" stroke="var(--hi)" stroke-width="' + (f ? 3 : 1.6) + '"/>'
-    + (f ? '<circle cx="13" cy="13" r="10.5" fill="none" stroke="#4F5FA8" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + (c * f).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 13 13)"/>' : '') + '</svg>';
-}
 
 function _ltShowList() {
   const piece = window._ltWeek;
@@ -7862,14 +7856,23 @@ function _ltShowList() {
   let last = -1;
   read.forEach((r, i) => { if (r.f > 0 && r.f < 1 && (last < 0 || r.t > read[last].t)) last = i; });
   const learned = read.filter(r => r.f >= 1).length;
-  contEl.innerHTML = '<p class="lt-intro">The maamarim of ' + piece.books + ' on Parshas ' + parshaSpelling(piece.parsha) + '. Learn one or more this week; each one keeps your place.</p>'
-    + '<div class="lt-head"><span>This week\'s maamarim</span><span>' + learned + ' of ' + piece.list.length + ' learned</span></div>'
+  // Like the sefer's own contents page: the printed head (as Chumash and
+  // Tanya), then each maamar numbered, its opening words in the sefer's font,
+  // and how far you got on the other side. The one you were in last is lit,
+  // as in the reader's menu. No boxes to tick: a learned one quiets, with a check.
+  const key = _PARSHA_KEY[piece.parsha], heParsha = (Array.isArray(key) ? key : [key]).map(k => _PARSHA_HE[k]).filter(Boolean).join('–');
+  const heBooks = piece.books === 'Torah Ohr' ? 'תורה אור' : 'לקוטי תורה';
+  const tick = '<svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  contEl.innerHTML = '<div class="tz-head"><p class="tz-part" lang="he">' + heBooks + '</p>'
+    + (heParsha ? '<p class="tz-ch" lang="he">פרשת ' + heParsha + '</p>' : '')
+    + '<p class="tz-en-label lt-head">' + piece.list.length + ' maamarim · ' + (learned ? learned + ' of ' + piece.list.length + ' learned' : 'learn one or more this week') + '</p></div>'
     + '<div class="lt-list">' + piece.list.map((m, i) => {
       const f = read[i].f;
-      const d = f >= 1 ? 'Learned' : f ? Math.round(f * 100) + '% read · about ' + Math.max(1, Math.round(m.mins * (1 - f))) + ' min left' : 'about ' + m.mins + ' min';
-      return '<button type="button" class="lt-m" onclick="_ltOpen(' + i + ')">' + _ltRing(f)
-        + '<span class="lt-m-x"><span class="lt-m-t">' + escapeHtml(m.title) + '</span>'
-        + '<span class="lt-m-d">' + (i === last ? '<b>Last read</b> · ' : '') + d + '</span></span></button>';
+      const d = f >= 1 ? tick + 'Learned' : f ? Math.round(f * 100) + '% · ' + Math.max(1, Math.round(m.mins * (1 - f))) + ' min left' : m.mins + ' min';
+      return '<button type="button" class="lt-m' + (f >= 1 ? ' done' : f ? ' going' : '') + (i === last ? ' last' : '') + '" onclick="_ltOpen(' + i + ')"' + (i === last ? ' aria-current="true"' : '') + '>'
+        + '<span class="lt-n" lang="he">' + _toHebrewNumeral(i + 1) + '</span>'
+        + '<span class="lt-m-t" lang="he">' + escapeHtml(m.title) + '</span>'
+        + '<span class="lt-m-d">' + (i === last ? '<span class="sr-only">Last read: </span>' : '') + d + '</span></button>';
     }).join('') + '</div>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
   contEl.style.display = 'block';

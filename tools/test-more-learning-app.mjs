@@ -280,8 +280,8 @@ asked.length = 0;
 await check('Likkutei Torah opens the week\'s maamarim: Torah Ohr on Lech Lecha', async () => {
   await openExtraReader('likkuteiTorah');
   return [document.getElementById('chabad-panel-sub').textContent, document.querySelectorAll('.lt-m').length,
-          document.querySelectorAll('.lt-m-t')[1].textContent, document.querySelector('.lt-m-d').textContent.startsWith('about ')];
-}, ['Parshas Lech Lecha', 6, 'אנכי מגן לך', true]);
+          document.querySelectorAll('.lt-m-t')[1].textContent, document.querySelector('.lt-m-d').textContent, document.querySelector('.tz-ch')?.textContent, document.querySelectorAll('.lt-ring').length];
+}, ['Parshas Lech Lecha', 6, 'אנכי מגן לך', '15 min', 'פרשת לך לך', 0]);
 if (asked.length) { failed++; console.log('  ✗ the list should need no network:', asked); }
 
 await check('tapping a maamar opens it like the printed sefer (title, bold opening, Heilig), with a way back', async () => {
@@ -299,13 +299,15 @@ await check('the list shows how far you got in every maamar, says which one you 
   localStorage.setItem(key(4), JSON.stringify({ y: view, h: view * 4, t: 1 }));        // 50%, earlier
   localStorage.setItem(key(2), JSON.stringify({ y: view * 2, h: view * 3, t: 3 }));    // to the end
   _ltShowList();
-  const r = [document.querySelector('.lt-head').textContent, [...document.querySelectorAll('.lt-m .lt-m-d')].map(e => e.textContent)];
+  const r = [document.querySelector('.lt-head').textContent, [...document.querySelectorAll('.lt-m .lt-m-d')].map(e => e.textContent),
+    [...document.querySelectorAll('.lt-m')].map(b => b.className.replace('lt-m', '').trim())];
   [1, 2, 4].forEach(n => localStorage.removeItem(key(n)));
   _ltShowList();
-  r.push(document.querySelectorAll('.lt-m-d b').length);
+  r.push(document.querySelectorAll('.lt-m.last').length, document.querySelector('.lt-head').textContent);
   return r;
-}, ["This week's maamarim1 of 6 learned",
-    ['Last read · 40% read · about 9 min left', 'Learned', 'about 10 min', '50% read · about 8 min left', 'about 5 min', 'about 5 min'], 0]);
+}, ['6 maamarim · 1 of 6 learned',
+    ['Last read: 40% · 9 min left', 'Learned', '10 min', '50% · 8 min left', '5 min', '5 min'],
+    ['going last', 'done', '', 'going', '', ''], 0, '6 maamarim · learn one or more this week']);
 
 await check('the header names the sefer: Torah Ohr on Bereishis and Shemos', () => document.getElementById('chabad-panel-title').textContent, 'Torah Ohr');
 
