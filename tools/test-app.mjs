@@ -209,6 +209,33 @@ await check('Progress: Reviews are one row; tapping it opens the details', () =>
   return r;
 }, ['2 reviews · 8 answers right', true, ['2', '8', '1']]);
 
+const wide = page.viewportSize();
+await page.setViewportSize({ width: 390, height: 844 });   // pop-ups are pulled on a phone only
+await check('Pop-ups follow your finger: a short pull comes back, a long pull closes, scrolled content and text fields don\'t pull', async () => {
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  if (window.matchMedia('(min-width:1000px)').matches) return 'needs a phone-width page';
+  openDayPicker();
+  const sheet = document.querySelector('#day-picker .dp-sheet'), title = document.getElementById('dp-title');
+  _sheetDragStart(title, 100, 400); _sheetDragMove(100, 440);
+  const moved = sheet.style.transform;
+  _sheetDragEnd(); await wait(300);
+  const back = [sheet.style.transform, !!document.getElementById('day-picker')];
+  _sheetDragStart(title, 100, 400); _sheetDragMove(100, 380);            // upward: not a pull
+  const up = sheet.style.transform; _sheetDragEnd();
+  sheet.insertAdjacentHTML('beforeend', '<input id="sd-in">');
+  _sheetDragStart(document.getElementById('sd-in'), 100, 400);
+  const field = _sheetDragMove(100, 460); _sheetDragEnd();
+  _sheetDragStart(title, 100, 400); _sheetDragMove(100, 420); _sheetDragMove(100, 600);
+  _sheetDragEnd(); await wait(400);
+  return [moved, back, up, field, !!document.getElementById('day-picker')];
+}, ['translateY(40px)', ['', true], '', false, false]);
+await page.setViewportSize(wide);
+
+await check('While a text loads: soft lines in its place (no spinner), and the words fade in', () => {
+  const l = document.getElementById('native-reader-loading');
+  return [l.querySelectorAll('.rd-sk u').length > 5, !!l.querySelector('.spinner'), getComputedStyle(document.getElementById('native-reader-content')).animationName];
+}, [true, false, 'rdArrive']);
+
 await check('Rambam translator\'s notes become tappable numbers that open in place', () => {
   // The shape Sefaria sends: a marker <sup> followed by the note in <i class="footnote"> (which can nest <i>)
   const notes = [];
