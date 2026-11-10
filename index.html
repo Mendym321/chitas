@@ -743,9 +743,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .th-chapter.he .th-ch-num { font-family:'OTSiddur','Shlomo',serif; font-size:calc(25px * var(--rf-scale, 1)); }
 .th-day { font-size:calc(13px * var(--rf-scale, 1)); color:var(--t1); margin-bottom:6px; }
 .th-chapter.he .th-day { font-family:'OTSiddur','Shlomo',serif; font-size:calc(16px * var(--rf-scale, 1)); text-align:right; }
-.th-day.th-who { font-size:calc(12px * var(--rf-scale, 1)); color:var(--t2); }   /* a personal chapter's names: quieter than the day's line */
-.th-chapter.he .th-day.th-who { font-size:calc(14px * var(--rf-scale, 1)); }
-.th-text { text-align:justify; text-indent:1.6em; color:var(--t1); --rf-sz:16px; --rf-lh:1.65; font-size:var(--rf-sz); line-height:var(--rf-lh); }
+.th-day.th-who { font-size:calc(11px * var(--rf-scale, 1)); color:var(--t2); }   /* a personal chapter's names: quieter than the day's line */
+.th-chapter.he .th-day.th-who { font-size:calc(12px * var(--rf-scale, 1)); }
+.th-text { text-align:justify; text-indent:1.1em; color:var(--t1); --rf-sz:16px; --rf-lh:1.65; font-size:var(--rf-sz); line-height:var(--rf-lh); }
 .th-chapter.he .th-text { font-family:'OTSiddur','Shlomo','Noto Serif Hebrew',serif; --rf-sz:21px; --rf-lh:1.62; text-align-last:right; }
 .th-v { font-size:.6em; color:var(--t1); margin-inline-end:.3em; vertical-align:.25em; text-indent:0; }
 .th-chapter.he .th-text .th-v { vertical-align:baseline; }   /* on the line, as a printed Tehillim */
@@ -1985,7 +1985,7 @@ function _personalPsalmsHTML(lang) {
   people.forEach(p => {
     _loadPsalm(p.chapter);
     const t = _psalmText[p.chapter], who = lang === 'en' ? 'For ' + escapeHtml(p.label) : escapeHtml(p.label);
-    if (t && typeof t === 'object') { h += _thChapterHTML({ psalmNum: p.chapter, startVerse: 1, he: t.he, en: t.en }, lang, who); return; }
+    if (t && typeof t === 'object') { h += _thChapterHTML({ psalmNum: p.chapter, startVerse: 1, he: t.he, en: t.en }, lang, who, true); return; }
     h += '<div class="th-chapter' + (lang !== 'en' ? ' he' : '') + '"><p class="th-ch-num">' + (lang !== 'en' ? _toHebrewNumeral(p.chapter) + '.' : 'Psalm ' + p.chapter) + '</p><p class="th-day th-who">' + who + '</p>'
       + (t === 'failed'
         ? '<p class="th-wait">Couldn\'t load this chapter. <button type="button" onclick="_loadPsalm(' + p.chapter + ', true);_renderPersonalPsalms()">Try again</button></p>'
@@ -5361,13 +5361,13 @@ function _thNotes(en) {
 }
 
 // One chapter of Tehillim laid out like a printed Tehillim; under its number a
-// small line (the day of the month, or whose personal chapter it is)
-function _thChapterHTML(ch, lang, line) {
+// small line (the day of the month, or, smaller, whose personal chapter it is)
+function _thChapterHTML(ch, lang, line, isWho) {
   const isHe = lang !== 'en', isBoth = lang === 'both';
   const verses = isHe ? ch.he : ch.en;
   let v = '<div class="th-chapter' + (isHe ? ' he' : '') + '">'
     + '<p class="th-ch-num">' + (isHe ? _toHebrewNumeral(ch.psalmNum) + '.' : 'Psalm ' + ch.psalmNum) + '</p>';
-  if (line) v += '<p class="th-day">' + line + '</p>';
+  if (line) v += '<p class="th-day' + (isWho ? ' th-who' : '') + '">' + line + '</p>';
   if (isBoth) {
     // Each passuk side by side, English left and Hebrew right, lined up verse
     // by verse with no rules between them, so it still reads as one text
