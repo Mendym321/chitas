@@ -672,6 +672,56 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #native-reader-content { animation:rdArrive .32s ease; }
 @keyframes rdArrive { from { opacity:0; } }
 @media (prefers-reduced-motion: reduce) { .rd-sk u, #native-reader-content { animation:none; } }
+/* ── The reader's top bar folds while you read (phones; _foldSet) ──────────────
+   It sits OVER the text, and the text always starts below the open bar
+   (--rt-h), so folding never moves or resizes the text. Upright it folds to
+   one slim row (every button stays); on a short screen (a phone sideways) it
+   is one row from the start, and folds away to just the progress line. */
+#reader-top { display:contents; }
+#rt-tap { display:none; }
+@media (max-width:999px) {
+  #reader-top { display:block; position:absolute; left:0; right:0; top:0; z-index:3; background:var(--bg); padding-bottom:6px; transition:transform .22s cubic-bezier(.2,.8,.2,1); }   /* a little room under the progress line */
+  #native-reader { padding-top:var(--rt-h, 0px); scroll-padding-top:var(--rt-h, 0px); }
+  #chabad-iframe { margin-top:var(--rt-h, 0px); }
+  #reader-head { transition:padding .22s cubic-bezier(.2,.8,.2,1), border-radius .22s; }
+  #reader-head #chabad-panel-title { transition:font-size .22s cubic-bezier(.2,.8,.2,1); }
+  #reader-head #chabad-panel-sub { max-height:40px; overflow:hidden; transition:max-height .22s, opacity .16s; }
+  #reader-head > button, #reader-head > a { transition:width .22s, height .22s; }
+  #reader-daybar { max-height:60px; overflow:hidden; transition:max-height .22s cubic-bezier(.2,.8,.2,1), padding .22s, opacity .16s; }
+  #rt-tap { position:absolute; left:0; right:0; top:0; height:30px; z-index:2; background:linear-gradient(var(--bg) 35%, transparent); cursor:pointer; }
+  #reader-head { cursor:default; }
+  #chabad-panel.rt-folded #reader-head { cursor:pointer; }
+}
+@media (max-width:999px) and (min-height:501px) {
+  #chabad-panel.rt-folded #reader-head { padding:8px 14px !important; border-radius:0 0 18px 18px; }
+  #chabad-panel.rt-folded #reader-head #chabad-panel-title { font-size:18px !important; }
+  #chabad-panel.rt-folded #reader-head #chabad-panel-sub { max-height:0; opacity:0; }
+  #chabad-panel.rt-folded #reader-head > button, #chabad-panel.rt-folded #reader-head > a { width:34px !important; height:34px !important; }
+  #chabad-panel.rt-folded #reader-daybar { max-height:0; padding-top:0; padding-bottom:0; border-bottom-width:0; opacity:0; }
+}
+@media (max-width:999px) and (max-height:500px) {
+  #reader-head { padding:7px 14px !important; border-radius:0 0 18px 18px; gap:10px !important; }
+  #reader-head > button, #reader-head > a { width:34px !important; height:34px !important; }
+  #reader-head #chabad-panel-title { font-size:20px !important; flex-shrink:0; max-width:55%; }
+  #reader-titles { display:flex; align-items:baseline; gap:10px; }
+  #reader-head #chabad-panel-sub { white-space:nowrap; text-overflow:ellipsis; min-width:0; }
+  /* the day bar joins the header row (moved there by _rtPlaceDayBar) */
+  #reader-head #reader-daybar { background:none; border:none; padding:0; gap:0; flex-shrink:0; max-height:none; }
+  #reader-head #reader-daybar button { min-width:0; color:inherit; padding:6px; }
+  #reader-head #reader-daybar #rd-label { color:inherit; }
+  #reader-head #rd-prev-label, #reader-head #rd-next-label { display:none; }
+  #reader-progress-wrap { max-width:680px; margin:6px auto 0 !important; width:calc(100% - 40px); }
+  #native-reader > div { max-width:716px; margin:0 auto; }   /* a comfortable line length: 680 of text inside its 18px sides */
+  #reader-bottom-bar { padding:6px 14px 8px !important; }
+  #reader-actions { max-width:520px; margin:0 auto; }
+  #chabad-mark-btn, #chabad-quiz-btn { padding:9px !important; }
+  #reader-settings-popover { top:54px !important; }
+  #chabad-panel.rt-folded #reader-top { transform:translateY(calc(-100% + 9px)); }   /* only the progress line (and the room under it) stays */
+  #chabad-panel.rt-folded #rt-tap { display:block; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #reader-top, #reader-head, #reader-head #chabad-panel-title, #reader-head #chabad-panel-sub, #reader-head > button, #reader-head > a, #reader-daybar { transition:none !important; }
+}
 /* Progress: keeping it up (a sentence and the month), the tiles, milestones, Reviews */
 .pg-top { padding:18px 14px 12px; }
 .pg-lead { font:800 22px/1.25 var(--ui-font); letter-spacing:-.2px; color:var(--t1); padding:0 4px; }
@@ -1559,12 +1609,16 @@ window._fsGetDoc = getDoc;
 <!-- Reader panel — native text for Chumash/Tanya/Rambam, iframe for Tehillim -->
 <div id="chabad-panel" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;" onclick="_closeSettingsOnOutsideClick(event)">
 
+  <!-- The top bar: header, day bar and progress line. On a phone it sits over
+       the text and folds while you read (_foldSet); on a computer it is laid
+       out as before (display:contents) -->
+  <div id="reader-top">
   <!-- Sticky header, in the colour of what you're reading (--rc) -->
   <div id="reader-head" style="padding:14px 18px 16px;display:flex;gap:12px;align-items:center;flex-shrink:0;position:sticky;top:0;z-index:2;">
     <button id="reader-menu-btn" onclick="openReaderMenu()" aria-label="Today's learning" aria-haspopup="dialog" style="width:38px;height:38px;border-radius:var(--r-s);background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);">
       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
-    <div style="flex:1;min-width:0;">
+    <div id="reader-titles" style="flex:1;min-width:0;">
       <p id="chabad-panel-title" style="font-family:var(--title-font);font-weight:800;font-size:var(--fs-5);line-height:1.1;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
       <p id="chabad-panel-sub" style="font-size:var(--fs-1);color:var(--t3);"></p>
     </div>
@@ -1587,6 +1641,14 @@ window._fsGetDoc = getDoc;
     <button id="rd-next" onclick="_readerGoDay(1)" aria-label="Next day"><span id="rd-next-label"></span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
   </div>
 
+  <!-- Scroll progress bar (native reader only) -->
+  <div id="reader-progress-wrap" style="display:none;height:3px;background:var(--border);flex-shrink:0;">
+    <div id="reader-progress-bar" style="height:100%;width:0%;background:var(--rc, var(--gold));transition:width .15s linear;"></div>
+  </div>
+  </div>
+  <!-- Folded on a short screen: a tap at the very top brings the bar back -->
+  <div id="rt-tap" aria-hidden="true" onclick="_foldSet(false)"></div>
+
   <!-- Reader settings popover — slides down from header, z-index above content but below header -->
   <div id="reader-settings-popover" style="display:none;position:absolute;top:67px;right:12px;z-index:10;width:260px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-m);box-shadow:0 8px 32px rgba(0,0,0,.35);padding:14px 16px;flex-direction:column;gap:16px;animation:up .18s ease both;">
     <!-- Font size row -->
@@ -1606,11 +1668,6 @@ window._fsGetDoc = getDoc;
       <div class="tz-seg th-seg" role="group" aria-label="Appearance"><button type="button" data-th="auto" onclick="setThemePref('auto')">Automatic</button><button type="button" data-th="light" onclick="setThemePref('light')">Light</button><button type="button" data-th="dark" onclick="setThemePref('dark')">Dark</button></div>
     </div>
     <button type="button" class="rs-report" onclick="closeReaderSettings();openFeedback('mistake')">Report a mistake in this text</button>
-  </div>
-
-  <!-- Scroll progress bar (native reader only) -->
-  <div id="reader-progress-wrap" style="display:none;height:3px;background:var(--border);flex-shrink:0;">
-    <div id="reader-progress-bar" style="height:100%;width:0%;background:var(--rc, var(--gold));transition:width .15s linear;"></div>
   </div>
 
   <!-- Native reader (Chumash / Tanya / Rambam) -->
@@ -3993,7 +4050,7 @@ function _findInReader(sid, quote) {
     if (!el) return;
     const reader = document.getElementById('native-reader');
     _rv.touched = true; _rv.place = null;                        // from here on it's your place
-    reader.scrollTo({ top: Math.max(0, reader.scrollTop + el.getBoundingClientRect().top - reader.getBoundingClientRect().top - 80), behavior: 'smooth' });
+    reader.scrollTo({ top: Math.max(0, reader.scrollTop + el.getBoundingClientRect().top - reader.getBoundingClientRect().top - _rtInset() - 80), behavior: 'smooth' });
     el.classList.add('found');
     setTimeout(() => el.classList.remove('found'), 2600);
   };
@@ -4045,6 +4102,8 @@ function _readerBegin(sid) {
   Object.assign(_rv, { sid, iso: _viewedISO(), drawn: false, place: null, placing: true, touched: false, holdUntil: 0, gen: _rv.gen + 1 });
   const reader = document.getElementById('native-reader');
   if (reader) reader.scrollTop = 0;
+  _rt.anchor = null;
+  _foldReset();
   _readerProgress(true);
   document.documentElement.classList.add('reader-open');   // the page behind stays where it is
   try { _renderSideList(); } catch (e) {}   // the pane highlights it
@@ -4058,6 +4117,7 @@ function _readerBegin(sid) {
 }
 function _readerEnd() {
   _flushReaderScroll();
+  _foldReset();
   Object.assign(_rv, { sid: null, iso: null, drawn: false, place: null, placing: false, touched: false, holdUntil: 0, gen: _rv.gen + 1 });
   document.documentElement.classList.remove('reader-open');
   try { _renderSideList(); } catch (e) {}
@@ -4073,6 +4133,124 @@ function _readerEnd() {
     if (document.getElementById('chabad-panel')?.style.display !== 'none' && /^(Arrow(Up|Down)|Page(Up|Down)|Home|End| )$/.test(e.key)) mine();
   });
 })();
+
+// ── THE TOP BAR FOLDS WHILE YOU READ (phones) ─────────────────────────────────
+// The bar (#reader-top: header, day bar, progress line) sits over the text, and
+// the text always starts below the open bar (--rt-h). So folding never moves or
+// resizes the text: nothing jumps, the place you're at stays put, and folding
+// can't flicker at its own edge. The rules, as in the iPhone's and Android's
+// own bars:
+//  - it folds only after you scroll down past the top (120px), by a real
+//    movement (24px), and opens again on a real scroll up (a third of a
+//    screen), at the top or the end, or with a tap on it; a line or two back
+//    to re-read changes nothing
+//  - only your finger, the wheel or the keys count: the app moving the text
+//    (your place, a jump, "Continue from your other device") never does
+//  - the bounce past either end is ignored; a text too short to scroll, the
+//    gear, the menu or a text loading keep it open; every reader opens with it open
+// On a short screen (a phone sideways) the header and the day bar are one row,
+// and folded only the progress line stays. Computers: no folding.
+const _rt = { folded: false, last: 0, down: 0, up: 0, ticking: false, user: false, touching: false, userTimer: null, h: 0, settle: 0, anchor: null };
+const _rtPhone = () => !window.matchMedia?.('(min-width:1000px)').matches;
+// The open bar's height, which the text starts below. Measured while the bar
+// is open and still (not while it folds), so it never follows the folding.
+function _rtInset() {
+  if (!_rtPhone()) return 0;
+  const top = document.getElementById('reader-top');
+  if (!top || _rt.folded || performance.now() < _rt.settle) return _rt.h;
+  const h = Math.round(top.getBoundingClientRect().height);
+  if (h && h !== _rt.h) {
+    const reader = document.getElementById('native-reader'), was = _rt.h;
+    _rt.h = h;
+    document.getElementById('chabad-panel')?.style.setProperty('--rt-h', h + 'px');
+    if (was && reader && reader.scrollTop > 0) reader.scrollTop += h - was;   // the bar changed (a longer name, the day bar): the text stays where it was
+  }
+  return _rt.h;
+}
+function _foldSet(f) {
+  const panel = document.getElementById('chabad-panel');
+  if (!panel || f === _rt.folded || (f && !_rtPhone())) return;
+  if (!f) _rtInset();
+  _rt.folded = f;
+  _rt.settle = performance.now() + 320;
+  _rt.down = _rt.up = 0;
+  panel.classList.toggle('rt-folded', f);
+  setTimeout(_rtInset, 340);
+}
+// A fresh start (a reader opening, a new text): open, and nothing carried over
+function _foldReset() {
+  _foldSet(false);
+  const reader = document.getElementById('native-reader');
+  _rt.last = reader ? reader.scrollTop : 0;
+  _rt.down = _rt.up = 0;
+}
+function _foldOnScroll() {
+  if (_rt.ticking) return;
+  _rt.ticking = true;
+  requestAnimationFrame(() => {
+    _rt.ticking = false;
+    const reader = document.getElementById('native-reader');
+    if (!reader) return;
+    const max = reader.scrollHeight - reader.clientHeight;
+    const y = Math.max(0, Math.min(max, reader.scrollTop));   // the bounce past either end doesn't count
+    const dy = y - _rt.last;
+    _rt.last = y;
+    if (!_rtPhone()) return;
+    if (!_rt.user) { _rt.down = _rt.up = 0; return; }        // the app moved the text, not you
+    const content = document.getElementById('native-reader-content');
+    const open = _settingsOpen || document.getElementById('reader-menu') || !_rv.drawn || content?.style.display === 'none'
+      || max < reader.clientHeight * 0.6                     // too short to need it
+      || y < 8 || y > max - 4;                               // at the top, or the end
+    if (open) { _rt.down = _rt.up = 0; _foldSet(false); return; }
+    if (dy > 0) { _rt.down += dy; _rt.up = 0; if (_rt.down > 24 && y > 120) _foldSet(true); }
+    else if (dy < 0) { _rt.up -= dy; _rt.down = 0; if (_rt.up > reader.clientHeight * 0.33) _foldSet(false); }
+  });
+}
+(() => {
+  const reader = document.getElementById('native-reader');
+  if (!reader) return;
+  // Your finger, the wheel or the keys: what follows is you scrolling, until it comes to rest
+  const rest = ms => { clearTimeout(_rt.userTimer); _rt.userTimer = setTimeout(() => { if (!_rt.touching) _rt.user = false; }, ms); };
+  reader.addEventListener('touchstart', () => { _rt.user = _rt.touching = true; clearTimeout(_rt.userTimer); }, { passive: true });
+  ['touchend', 'touchcancel'].forEach(t => reader.addEventListener(t, () => { _rt.touching = false; rest(250); }, { passive: true }));
+  reader.addEventListener('wheel', () => { _rt.user = true; rest(250); }, { passive: true });
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('chabad-panel')?.style.display !== 'none' && /^(Arrow(Up|Down)|Page(Up|Down)|Home|End| )$/.test(e.key)) { _rt.user = true; rest(400); }
+  });
+  reader.addEventListener('scroll', () => { if (_rt.user && !_rt.touching) rest(180); }, { passive: true });   // momentum after the finger lifts is still you
+  // A tap on the folded bar opens it (its buttons just work); so does reaching a button from the keyboard
+  document.getElementById('reader-head')?.addEventListener('click', e => { if (_rt.folded && !e.target.closest('button, a')) _foldSet(false); });
+  document.getElementById('reader-top')?.addEventListener('focusin', e => { if (e.target.matches?.(':focus-visible')) _foldSet(false); });
+  // The bar's height changing while it's open (the day bar showing, a long name, turning the phone)
+  if (window.ResizeObserver) new ResizeObserver(() => {
+    if (_rt.folded || performance.now() < _rt.settle) return;   // its own folding: not a new height
+    _rtInset();
+  }).observe(document.getElementById('reader-top'));
+})();
+// On a short screen the day bar joins the header row; back under it otherwise
+const _rtShortMQ = window.matchMedia?.('(max-width:999px) and (max-height:500px)');
+function _rtPlaceDayBar() {
+  const bar = document.getElementById('reader-daybar'), head = document.getElementById('reader-head'), top = document.getElementById('reader-top');
+  if (!bar || !head || !top) return;
+  if (_rtShortMQ?.matches) { if (bar.parentElement !== head) head.insertBefore(bar, document.getElementById('reader-font-controls')); }
+  else if (bar.parentElement !== top) top.insertBefore(bar, document.getElementById('reader-progress-wrap'));
+}
+_rtPlaceDayBar();
+// Turning the phone: every line re-wraps, so the same words land somewhere
+// else. The bar opens, and you're put back at the words you were reading.
+let _rtWidth = innerWidth;
+addEventListener('resize', () => {
+  if (innerWidth === _rtWidth) return;                      // only the height changed (the browser's own bars): nothing to do
+  _rtWidth = innerWidth;
+  _rtPlaceDayBar();
+  const reader = document.getElementById('native-reader'), place = _rt.anchor;
+  _foldSet(false);
+  if (!reader || !reader.getClientRects().length || !_rv.drawn) return;
+  requestAnimationFrame(() => {
+    _rtInset();
+    if (place) { reader.scrollTop = _placeY(place); _rt.last = reader.scrollTop; }
+  });
+});
 
 // The bar on top: how far through the text you are. Drawn whenever the reader
 // changes (opening, loading, putting you back), not only when it scrolls: a
@@ -4093,6 +4271,7 @@ function _readerProgress(jump) {
 let _scrollSaveTimer = null;
 function onReaderScroll() {
   _readerProgress();
+  _foldOnScroll();
   const reader = document.getElementById('native-reader');
   const sentinel = document.getElementById('reader-bottom-sentinel');
   if (!reader || !sentinel) return;
@@ -4102,7 +4281,7 @@ function onReaderScroll() {
 
   // Saved a moment after you stop
   if (_scrollSaveTimer) clearTimeout(_scrollSaveTimer);
-  _scrollSaveTimer = setTimeout(() => { _scrollSaveTimer = null; _savePlace(); }, 300);
+  _scrollSaveTimer = setTimeout(() => { _scrollSaveTimer = null; _rt.anchor = _readerPlace(); _savePlace(); }, 300);
 }
 
 // Keys are per section and day: yesterday's Chumash is different text
@@ -4299,7 +4478,7 @@ function _readerPlace() {
   if (!reader || reader.style.display === 'none' || !content || content.style.display === 'none') return null;
   const y = reader.scrollTop;
   if (y < 40) return { y: 0 };
-  const top = reader.getBoundingClientRect().top;
+  const top = reader.getBoundingClientRect().top + _rtInset();   // the text's top is below the bar (phones)
   const els = _placeEls();
   for (let i = 0; i < els.length; i++) {
     const r = els[i].getBoundingClientRect();
@@ -4319,7 +4498,7 @@ function _placeY(place) {
   const reader = document.getElementById('native-reader');
   if (!reader) return place.y || 0;
   if (place.a) {
-    const top = reader.getBoundingClientRect().top;
+    const top = reader.getBoundingClientRect().top + _rtInset();
     let best = null, bestGap = Infinity;
     _placeEls().forEach((el, i) => {
       const t = _placeText(el.textContent);
@@ -4504,6 +4683,7 @@ function _drawText(sid, data, place) {
   window[_TEXT_SLOT[sid]] = data;          // what the section's drawing (and its notes) read
   _rv.drawn = true;
   _readerLoading(false);
+  _foldReset();
   _TEXT_DRAW[sid]();
   document.getElementById('native-reader-content').dataset.sectionId = sid;
   _putReaderAt(sid, place);
@@ -6061,6 +6241,7 @@ function openReaderSettings() {
 
   if (_settingsOpen) { closeReaderSettings(); return; }
   _settingsOpen = true;
+  _foldSet(false);
 
   // Populate slider
   const sid = document.getElementById('chabad-mark-btn')?.dataset?.sectionId;
@@ -6202,6 +6383,7 @@ async function _sendFeedback(kind) {
 // a swipe right in the reader is the day before, and Safari owns the left edge).
 function openReaderMenu(stay) {
   closeReaderSettings();
+  _foldSet(false);
   document.getElementById('reader-menu')?.remove();
   const d = appNow(); d.setDate(d.getDate() + (dayOffset || 0));
   const iso = dateISO(d), done = dayDone(user, d, appNow());

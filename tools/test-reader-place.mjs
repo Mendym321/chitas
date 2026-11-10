@@ -118,7 +118,7 @@ const where = () => page.evaluate(() => {
   const reader = document.getElementById('native-reader');
   const c = document.getElementById('native-reader-content');
   if (!reader || reader.style.display === 'none' || c.style.display === 'none') return null;
-  const top = reader.getBoundingClientRect().top;
+  const top = reader.getBoundingClientRect().top + _rtInset();   // on a phone the bar sits over the text: what you see starts below it
   for (const el of c.querySelectorAll('p, .tz-p')) {
     const r = el.getBoundingClientRect();
     if (r.height < 4 || r.bottom <= top + 8) continue;
@@ -395,6 +395,91 @@ await test('"Read it again" after a review: today\'s text, at the line the answe
 await test('the page behind the reader doesn\'t scroll with it', async () => {
   const v = await page.evaluate(() => getComputedStyle(document.getElementById('native-reader')).overscrollBehaviorY);
   expect(v === 'contain' || v === 'none', 'reader keeps its scrolling to itself', v);
+});
+
+// ── The top bar folds while you read (phones) ────────────────────────────────
+const folded = () => page.evaluate(() => document.getElementById('chabad-panel').classList.contains('rt-folded'));
+const scrollWheel = async dy => { const v = page.viewportSize(); await page.mouse.move(v.width / 2, v.height / 2); for (let left = dy; left !== 0;) { const s = Math.sign(left) * Math.min(Math.abs(left), 60); await page.mouse.wheel(0, s); left -= s; await sleep(16); } await sleep(300); };
+
+await test('the bar folds as you read down; a line back changes nothing; a real scroll up or the top opens it', async () => {
+  await open('chumash'); await page.evaluate(() => { document.getElementById('native-reader').scrollTop = 0; }); await settle(200);
+  const atStart = await folded();
+  await scrollWheel(60); const near = await folded();            // still near the top
+  await scrollWheel(500); const down = await folded();
+  await scrollWheel(-60); const reread = await folded();         // a line or two back
+  await scrollWheel(-400); const up = await folded();            // a real scroll up
+  await scrollWheel(600); const again = await folded();
+  await page.evaluate(() => { document.getElementById('reader-head').click(); }); await settle(400);
+  const tapped = await folded();
+  await scrollWheel(400); await scrollWheel(-3000); const top = await folded();
+  expect(JSON.stringify([atStart, near, down, reread, up, again, tapped, top]) === JSON.stringify([false, false, true, true, false, true, false, false]), 'folds and opens by the rules', [atStart, near, down, reread, up, again, tapped, top]);
+});
+
+await test('folding or opening the bar never moves the text', async () => {
+  await open('chumash'); await scrollWheel(900);
+  expect(await folded(), 'folded after reading down');
+  const at = () => page.evaluate(() => { const r = document.getElementById('native-reader'); const p = [...document.querySelectorAll('#native-reader-content p')].find(e => e.getBoundingClientRect().top > 200); return [r.scrollTop, r.clientHeight, Math.round(p.getBoundingClientRect().top)]; });
+  const a = await at();
+  await page.evaluate(() => _foldSet(false)); await settle(450);
+  const b = await at();
+  await page.evaluate(() => _foldSet(true)); await settle(450);
+  const c = await at();
+  expect(JSON.stringify(a) === JSON.stringify(b) && JSON.stringify(b) === JSON.stringify(c), 'the text stays exactly where it was', { a, b, c });
+});
+
+await test('the app moving the text (your place, a jump) never folds or opens the bar', async () => {
+  await open('chumash'); await scrollWheel(900);
+  const r = [await folded()];
+  await page.evaluate(() => { const rd = document.getElementById('native-reader'); rd.scrollTop -= 700; }); await settle(300);
+  r.push(await folded());                                         // a big jump up, by the app: still folded
+  await page.evaluate(() => _foldSet(false)); await settle(400);
+  await page.evaluate(() => { const rd = document.getElementById('native-reader'); rd.scrollTo({ top: rd.scrollTop + 900, behavior: 'smooth' }); }); await settle(900);
+  r.push(await folded());                                         // a smooth jump down, by the app: still open
+  expect(JSON.stringify(r) === '[true,true,false]', 'only you move the bar', r);
+});
+
+await test('every reader opens with the bar open; the gear and the menu open it', async () => {
+  await open('chumash'); await scrollWheel(900);
+  const a = await folded();
+  await open('tanya'); const b = await folded();
+  await scrollWheel(900); const c = await folded();
+  await page.evaluate(() => openReaderSettings()); await settle(300); const d = await folded();
+  await page.evaluate(() => closeReaderSettings());
+  expect(JSON.stringify([a, b, c, d]) === '[true,false,true,false]', 'opens fresh, and for the gear', [a, b, c, d]);
+});
+
+await test('your place is the passage just below the open bar, and comes back there', async () => {
+  await open('chumash'); await scrollWheel(1500); await settle(300);
+  const a = await where();
+  await open('tanya'); await open('chumash');
+  const b = await where();
+  expect(same(a, b), 'same passage, same spot', { a, b });
+});
+
+await test('a phone turned sideways: one row, the day bar in it, folds away to the progress line; turning keeps your passage', async () => {
+  await open('chumash'); await scrollWheel(1800); await settle(300);
+  const a = await where();
+  await page.setViewportSize({ width: 800, height: 400 }); await settle(700);
+  const b = await where();
+  const row = await page.evaluate(() => [document.getElementById('reader-daybar').parentElement.id, Math.round(document.getElementById('reader-top').getBoundingClientRect().height)]);
+  await scrollWheel(400);
+  const tucked = await page.evaluate(() => { const t = document.getElementById('reader-top').getBoundingClientRect(); return [document.getElementById('chabad-panel').classList.contains('rt-folded'), Math.round(t.bottom)]; });
+  const b2 = await where();                                       // read on a little, sideways
+  await page.setViewportSize({ width: 400, height: 800 }); await settle(700);
+  const c = await where();
+  const back = await page.evaluate(() => document.getElementById('reader-daybar').parentElement.id);
+  expect(a.text === b.text && b2.text === c.text, 'the same passage after turning, and turning back', { a, b, b2, c });
+  expect(row[0] === 'reader-head' && row[1] < 70, 'one row sideways', row);
+  expect(tucked[0] && tucked[1] <= 10, 'folded to just the progress line', tucked);
+  expect(back === 'reader-top', 'upright again: the day bar under the header', back);
+});
+
+await test('on a computer the bar never folds', async () => {
+  await page.setViewportSize({ width: 1280, height: 800 }); await settle(300);
+  await open('chumash'); await scrollWheel(1200);
+  const r = await page.evaluate(() => [document.getElementById('chabad-panel').classList.contains('rt-folded'), _rtInset(), getComputedStyle(document.getElementById('reader-top')).display]);
+  await page.setViewportSize({ width: 400, height: 800 }); await settle(300);
+  expect(JSON.stringify(r) === '[false,0,"contents"]', 'laid out as before', r);
 });
 
 const errs = pageErrors.filter(m => !/Failed to fetch|NetworkError|Load failed/.test(m));
