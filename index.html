@@ -6463,13 +6463,17 @@ function renderStats() {
   const others = Object.entries(byMonth).filter(([k]) => k !== thisKey).map(([, n]) => n);
   const bestMonth = others.length && fullThis >= 5 && fullThis > Math.max(...others);
   const fullDays = n => plural(n, 'full day', 'full days');
+  // Early in a month with none yet (e.g. Rosh Chodesh): last month's, never "0 full days"
+  const last = new Date(today); while (monthKey(last) === thisKey) last.setDate(last.getDate() - 1);
+  const lastKey = monthKey(last), fullLast = byMonth[lastKey] || 0, lastMonth = lastKey.replace(/\s*\d+$/, '');
   let lead, sub;
   if (C.streak >= 2) {
     lead = 'Full Chitas <em>' + C.streak + ' days</em> in a row';
-    sub = fullDays(fullThis) + ' this ' + month + (bestMonth ? ', your best month yet' : '');
-  } else if (fullThis) {
-    lead = '<em>' + fullDays(fullThis) + '</em> this ' + month;
-    sub = isChitasDay(user.done || {}) ? 'And today is one of them.' : 'Today is a fresh one.';
+    sub = fullThis ? fullDays(fullThis) + ' this ' + month + (bestMonth ? ', your best month yet' : '')
+      : fullLast ? fullDays(fullLast) + ' in ' + lastMonth + '. A new month begins.' : 'A new month begins.';
+  } else if (fullThis || fullLast) {
+    lead = fullThis ? '<em>' + fullDays(fullThis) + '</em> this ' + month : '<em>' + fullDays(fullLast) + '</em> in ' + lastMonth;
+    sub = isChitasDay(user.done || {}) ? 'And today is a full one too.' : 'Today is a fresh one.';
   } else {
     lead = 'Every day you learn shows here';
     sub = 'A full day is all four: Chumash, Tehillim, Tanya and Rambam.';

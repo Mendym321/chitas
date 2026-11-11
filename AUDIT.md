@@ -33,6 +33,7 @@ The second deep check, before launch: every part of the app, the server, offline
 
 **Before launch, decide:**
 4. ~~Parked readers~~ *Done:* taken out of the app (about 120 KB smaller) and kept, with notes on what they need, in `archive/likkutei-sichos/`.
+4a. **App Store, ready for the developer account** (11 Nov): new screenshots from the real app (8 each for iPhone 6.9", iPad 13" and Google Play, plus the feature graphic, in `docs/store/`; remade any time with `tools/store/`), the listing rewritten for what the app does now (`docs/store-listing.md`), Apple's privacy file (`app/ios-extras/PrivacyInfo.xcprivacy`), and every Xcode and App Store Connect step written out (`app/README.md`, Parts 2 and 4: icon, privacy file, encryption answer, version, archive, upload, TestFlight, submit). Left for you: the $99 Apple Developer account, then those steps.
 4b. **Android:** the project is in `app/android` (icon, splash, sign-in set up). Left for you: Android Studio, the Firebase file and the SHA-1 (`app/README.md`, Part 3), and the Google Play account ($25) to publish.
 5. **Content runway** (batch 2 written 6 Nov): written Tanya guides now run to **22 Nov 2026** (the end of Kuntres Acharon 4; after that the AI writes each day's guide, a few cents a day); Chumash guide lines through **Vayishlach (28 Nov)**; Rambam guide lines through **Borrowing and Deposit 5 (22 Nov)**. Without lines the readers still work, just without the one-line guides. Next batch due before 22 Nov.
 

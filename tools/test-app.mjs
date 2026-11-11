@@ -194,8 +194,18 @@ await check('Progress: the top line never says 0; after a break it counts this m
   const lead = document.querySelector('.pg-lead').textContent;
   user = { ...user, done: {}, pastDone: {} };
   renderStats();
-  return [/^\d+ full days? this /.test(lead) || /in a row/.test(lead), /\b0\b/.test(lead), document.querySelector('.pg-lead').textContent];
+  return [/^\d+ full days? (this|in) /.test(lead) || /in a row/.test(lead), /\b0\b/.test(lead), document.querySelector('.pg-lead').textContent];
 }, [true, false, 'Every day you learn shows here']);
+
+await check('Progress: a run going never shows "0 full days" under it (Rosh Chodesh, the first days of a month)', () => {
+  const pastDone = {};
+  for (let i = 1; i <= 12; i++) { const x = new Date(); x.setDate(x.getDate() - i); pastDone[dateISO(x)] = { chumash: true, tehillim: true, tanya: true, rambam: true }; }
+  user = { ...user, done: {}, pastDone };
+  renderStats();
+  const r = [document.querySelector('.pg-lead').textContent.includes('in a row'), /\b0 full/.test(document.querySelector('.pg-sub').textContent)];
+  user = { ...user, pastDone: {} };
+  return r;
+}, [true, false]);
 
 await check('Progress: Reviews are one row; tapping it opens the details', () => {
   const y = new Date(); y.setDate(y.getDate() - 1);
