@@ -1,0 +1,17 @@
+{
+  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One scene per bar of music: 68.57 beats a minute, 4 beats a bar, so each scene is 3.5 s (105 frames at 30 fps). Each scene is filmed 12 frames longer, for the dissolve into the next.",
+  "fps": 30,
+  "bpm": 68.5714,
+  "bar_frames": 105,
+  "overlap": 12,
+  "scenes": [
+    { "id": "today",    "color": "cream",  "head": "Chitas and Rambam,\nready every day" },
+    { "id": "chumash",  "color": "gold",   "head": "Chumash with Rashi,\nside by side" },
+    { "id": "place",    "color": "blue",   "head": "Stop anywhere.\nPick up right there." },
+    { "id": "tanya",    "color": "purple", "head": "A guide to\nunderstand the Tanya" },
+    { "id": "review",   "color": "ink",    "head": "Check what\nstayed with you" },
+    { "id": "family",   "color": "green",  "head": "Your family's\nTehillim chapters" },
+    { "id": "progress", "color": "gold",   "head": "Watch your learning\nadd up" },
+    { "id": "end",      "color": "ink",    "head": "" }
+  ]
+}

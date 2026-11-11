@@ -1,0 +1,162 @@
+// The app preview video, part 1: the real app, filmed frame by frame.
+// Each scene is set up in the real app with real texts, then stepped one frame
+// (1/30 s) at a time: the page's clock moves exactly one frame, and every CSS
+// animation and transition is set to exactly that moment, then the frame is
+// taken. So the motion is perfectly smooth, whatever this computer's speed.
+// Frames go to tools/store/video/frames/<scene>/ (not kept in git).
+// Usage (from tools/):  node store/video/capture.mjs [scene ...]
+import { chromium } from 'playwright';
+import { createServer } from 'node:http';
+import { readFile, mkdir, rm } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { extname } from 'node:path';
+import { SCENES as TIMING, FPS } from './timing.mjs';
+
+const ROOT = new URL('../../..', import.meta.url).pathname.replace(/\/$/, '');
+const OUT = new URL('./frames/', import.meta.url).pathname;
+const only = process.argv.slice(2);
+
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.otf': 'font/otf', '.woff2': 'font/woff2' };
+const srv = createServer(async (q, r) => {
+  const u = decodeURIComponent(q.url.split('?')[0]);
+  let body;
+  try { body = await readFile(ROOT + (u === '/' ? '/index.html' : u)); } catch { return r.writeHead(404).end(); }
+  r.writeHead(200, { 'Content-Type': TYPES[extname(u)] || 'text/html' }).end(body);
+}).listen(8860);
+const BASE = 'http://localhost:8860';
+
+// 443 × 960 at 2× is exactly Apple's 886 × 1920 for the 6.9-inch iPhone
+const br = await chromium.launch({ executablePath: existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined });
+const ctx = await br.newContext({ serviceWorkers: 'block', viewport: { width: 443, height: 960 }, deviceScaleFactor: 2, colorScheme: 'light', isMobile: true, hasTouch: true });
+
+// The same Review questions as the screenshots (store/shoot.mjs), from the day's real Chumash
+const { REVIEW } = await import('../review.mjs');
+const cache = new Map();
+await ctx.route('**/*', async r => {
+  const req = r.request(), u = req.url();
+  if (u === BASE + '/api/quiz') return r.fulfill({ json: REVIEW });
+  if (u.startsWith(BASE) && !u.startsWith(BASE + '/api/')) return r.continue();
+  if (/gstatic\.com\/firebasejs/.test(u)) return r.abort();
+  const target = u.startsWith(BASE + '/api/') ? 'https://chitas.vercel.app' + u.slice(BASE.length) : u;
+  try {
+    const key = req.method() + ' ' + target + ' ' + (req.postData() || '');
+    let got = cache.get(key);
+    if (!got) {
+      const res = await fetch(target, { method: req.method(), headers: { 'content-type': req.headers()['content-type'] || 'application/json' }, body: req.method() === 'GET' ? undefined : req.postData() });
+      got = { status: res.status, type: res.headers.get('content-type') || 'application/octet-stream', body: Buffer.from(await res.arrayBuffer()) };
+      cache.set(key, got);
+    }
+    return r.fulfill({ status: got.status, contentType: got.type, body: got.body, headers: { 'Access-Control-Allow-Origin': '*' } });
+  } catch { return r.abort(); }
+});
+
+const seed = () => {
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const ALL = { chumash: true, tehillim: true, tanya: true, rambam: true }, pastDone = {}, pastQuizDone = {};
+  for (let i = 1; i <= 46; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    if (d.getDay() === 6 || i === 23 || i === 31) continue;
+    pastDone[iso(d)] = i === 12 || i === 27 ? { chumash: true, tehillim: true, tanya: true } : { ...ALL };
+    if (i % 4 === 1) pastQuizDone[iso(d)] = { chumash: { quick: { r: i % 3 ? 4 : 3, n: 4 } } };
+  }
+  localStorage.setItem('chitas_v78', JSON.stringify({ uid: 'demo', name: 'Mendy Cohen', rambamTrack: '3', started: true, rambamTrackAsked: true,
+    done: { chumash: true, tehillim: true }, pastDone, pastQuizDone, lastDate: iso(new Date()), extraTracks: ['hayomYom'],
+    tehillimFixedOpts: { rebbe: true, rebbetzin: false },
+    tehillimPeople: [{ label: 'Me', heDay: 14, heMonth: 'Adar', heYear: 5752 }, { label: 'Chana', heDay: 3, heMonth: 'Tammuz', heYear: 5779 }, { label: 'Levi', heDay: 22, heMonth: 'Shevat', heYear: 5784 }] }));
+  localStorage.setItem('chitas_lang_chumash', 'both'); localStorage.setItem('chitas_chumash_rashi', '1');
+  localStorage.setItem('chitas_lang_tanya', 'both'); localStorage.setItem('chitas_tanya_guide', '1');
+  localStorage.setItem('chitas_lang_tehillim', 'both');
+};
+
+async function open() {
+  const p = await ctx.newPage();
+  p.on('pageerror', e => console.log('  page error:', e.message.split('\n')[0]));
+  await p.clock.install({ time: (() => { const d = new Date(); d.setHours(8, 40, 0, 0); return d; })() });
+  await p.addInitScript(seed);
+  await p.goto(BASE + '/');
+  await p.waitForFunction(() => typeof init === 'function' && typeof dayNote === 'function', null, { timeout: 20000 });
+  await p.evaluate(async () => { await init(); document.getElementById('main-app').classList.add('ready'); try { hideLoader(); } catch (e) {} document.getElementById('app-loader')?.remove(); });
+  await p.waitForTimeout(2500);
+  return p;
+}
+const wait = (p, ms) => p.waitForTimeout(ms);
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;   // in and out, like a hand scrolling
+const scrollTo = (p, y) => p.evaluate(y => { const r = document.getElementById('native-reader'); r.scrollTop = y; }, y);
+const readerY = (p, sel, off) => p.evaluate(([sel, off]) => { const r = document.getElementById('native-reader'), el = document.querySelector(sel); return el ? Math.max(0, r.scrollTop + el.getBoundingClientRect().top - r.getBoundingClientRect().top - off) : 0; }, [sel, off]);
+
+// Each scene: set up (time flows), then act(frame) once per frame while filmed
+const SCENES = {
+  today: {
+    setup: async p => { await wait(p, 4000); },                    // the tiles name the day's pieces once their texts are in
+    act: async (p, f) => {                                          // marking, then the list drawn again, as the tick's own flow does
+      if (f === 14) await p.evaluate(() => { markDone('tanya'); renderSectionsForOffset(_viewedISO()); });
+      if (f === 44) await p.evaluate(() => { markDone('rambam'); renderSectionsForOffset(_viewedISO()); });
+    },
+  },
+  chumash: {
+    setup: async p => { await p.evaluate(() => { user.done = { tehillim: true }; openChabadPanel('chumash'); }); await wait(p, 6000); p._to = await readerY(p, '.rd-comm', 380); await scrollTo(p, 0); },
+    act: async (p, f, n) => scrollTo(p, Math.round(p._to * ease(Math.min(1, Math.max(0, (f - 8) / (n - 22)))))),
+  },
+  place: {
+    setup: async p => { await p.evaluate(() => { user.done = { chumash: true }; openChabadPanel('tehillim'); }); await wait(p, 6000);
+      p._at = await p.evaluate(() => { const r = document.getElementById('native-reader'); return Math.round((r.scrollHeight - r.clientHeight) * .18); });
+      p._there = await p.evaluate(() => { const r = document.getElementById('native-reader'); return Math.round((r.scrollHeight - r.clientHeight) * .55); });
+      await scrollTo(p, p._at); },
+    act: async (p, f) => {
+      if (f === 16) await p.evaluate(() => { document.getElementById('other-place').hidden = false; });
+      if (f === 56) await p.evaluate(y => { _hideOtherPlace(); document.getElementById('native-reader').scrollTop = y; }, p._there);   // what "Continue" does: straight there
+    },
+  },
+  tanya: {
+    setup: async p => { await p.evaluate(() => { user.done = { chumash: true, tehillim: true }; openChabadPanel('tanya'); }); await wait(p, 8000); await scrollTo(p, 0); },
+    act: async (p, f, n) => scrollTo(p, Math.round(760 * ease(Math.min(1, Math.max(0, (f - 10) / (n - 26)))))),
+  },
+  review: {
+    setup: async p => { await p.evaluate(async () => { window._fb = { ...(window._fb || {}), getIdToken: async () => 't', saveUser: async () => {} }; openQuiz('chumash'); });
+      await wait(p, 600); await p.evaluate(() => _startQuiz('quick')); await wait(p, 1500); },
+    act: async (p, f) => { if (f === 26) await p.evaluate(() => selectAnswer(1)); },
+  },
+  family: {
+    setup: async p => { await p.evaluate(() => openChabadPanel('tehillim')); await wait(p, 6000);
+      await p.evaluate(() => { const r = document.getElementById('native-reader'), el = document.querySelector('.th-personal'); if (el) r.scrollTop += el.getBoundingClientRect().top - r.getBoundingClientRect().top - 10; }); },
+    act: async (p, f) => { if (f === 12) await p.evaluate(() => _openTehillimPeopleManager()); },
+  },
+  progress: {
+    setup: async p => { await p.evaluate(() => switchTab('stats')); await wait(p, 800); },
+    act: async (p, f, n) => {
+      if (f === 0) await p.evaluate(() => renderStats());          // the numbers count up from here
+      await p.evaluate(y => window.scrollTo(0, y), Math.round(520 * ease(Math.min(1, Math.max(0, (f - 30) / (n - 40))))));
+    },
+  },
+};
+
+// One frame of time: the page's clock, then every animation to the same moment
+const step = (p, t) => p.evaluate(t => {
+  document.body.offsetWidth;                                     // let new transitions start
+  for (const a of document.getAnimations()) {
+    if (a.__t0 == null) a.__t0 = t;
+    a.pause();
+    const total = a.effect?.getComputedTiming?.().endTime;
+    a.currentTime = Math.min(t - a.__t0, Number.isFinite(total) ? total : t - a.__t0);
+  }
+}, t);
+
+for (const [name, scene] of Object.entries(SCENES)) {
+  if (only.length && !only.includes(name)) continue;
+  const n = TIMING[name].frames;
+  const dir = OUT + name + '/';
+  await rm(dir, { recursive: true, force: true }); await mkdir(dir, { recursive: true });
+  const p = await open();
+  await scene.setup(p);
+  const now = await p.evaluate(() => Date.now());
+  await p.clock.pauseAt(now + 1000);
+  for (let f = 0; f < n; f++) {
+    await scene.act(p, f, n);
+    await p.clock.runFor(1000 / FPS);
+    await step(p, f * 1000 / FPS);
+    await p.screenshot({ path: dir + String(f).padStart(4, '0') + '.jpg', type: 'jpeg', quality: 94 });
+  }
+  console.log('scene', name, n, 'frames');
+  await p.close();
+}
+await br.close(); srv.close();

@@ -94,7 +94,22 @@ That copies the settings in and opens Xcode.
    `REVERSED_CLIENT_ID` from `GoogleService-Info.plist` (open it in Xcode; it
    starts with `com.googleusercontent.apps.`). This lets Google's sign-in
    come back to the app.
-6. Plug in the iPhone, pick it at the top of the window (next to ▶), and
+6. **The app icon:** in the left column open **App → Assets → AppIcon** and
+   drag `icons/icon-1024.png` (from the repo) onto the empty square. One
+   1024 × 1024 picture is all Xcode needs; it makes every size from it.
+   (Without this the app has Capacitor's blue placeholder icon.)
+7. **Apple's privacy file:** drag `app/ios-extras/PrivacyInfo.xcprivacy` onto
+   the yellow **App** folder, as in step 2 (Copy items if needed: **on**, App
+   target: on). It tells Apple the same as the privacy answers in
+   `docs/store-listing.md`; uploads without one get a warning e-mail.
+8. **The encryption question, answered once:** **Info** tab → hover over any
+   row → **+** → type `App Uses Non-Exempt Encryption` → set it to **NO**.
+   (The app only uses the phone's own HTTPS, so Apple stops asking on every
+   upload.)
+9. **General** tab: **Display Name** `Chitas`, **Version** `1.0`, **Build**
+   `1`. Under Supported Destinations leave **iPhone** and **iPad** (the iPad
+   screenshots are ready in `docs/store/ipad/`).
+10. Plug in the iPhone, pick it at the top of the window (next to ▶), and
    press **▶**.
 
 The first time, the phone may refuse to open it: Settings → General → VPN &
@@ -167,6 +182,36 @@ App signing), and download `google-services.json` once more.
 Android shows only Google sign-in (Apple's is for iPhones).
 
 ---
+
+## Part 4: Sending it to the App Store (on your Mac)
+
+Do Part 1 and Part 2 first, and try it on your phone.
+
+1. **Make the app's page in App Store Connect:** https://appstoreconnect.apple.com
+   → Apps → **+** → New App. Platform **iOS**, Name `Chitas: Daily Learning`,
+   Primary language **English (U.S.)**, Bundle ID **app.chitas.daily** (it's
+   in the list once Part 2 ran), SKU `chitas-daily` (any word only you see),
+   User access **Full access**.
+2. **Fill it in** from `docs/store-listing.md`: every box is answered there, in
+   order (texts, links, category, age rating, App Privacy, review notes). Drag
+   the screenshots in from `docs/store/apple/` (iPhone 6.9-inch) and
+   `docs/store/ipad/` (iPad 13-inch), in number order (1 to 10).
+3. **Upload the app from Xcode:** at the top of the window pick **Any iOS
+   Device (arm64)** instead of your phone, then **Product → Archive**. When the
+   Organizer window opens: **Distribute App → App Store Connect → Upload**, and
+   accept the defaults.
+4. **Try the real build with TestFlight** (optional but worth it): after
+   10–30 minutes the build shows under the **TestFlight** tab. Add yourself
+   under Internal Testing, install the **TestFlight** app on your iPhone, and
+   open Chitas from there.
+5. **Submit:** App Store tab → version 1.0 → **Build** → pick the one you
+   uploaded → **Add for Review** → **Submit**. Apple usually answers in a day
+   or two. If they ask something, the answer is usually in the review notes
+   (`docs/store-listing.md`, section 6).
+
+Each later version: raise **Build** (2, 3, …) in Xcode's General tab, archive,
+upload, and submit again. Most changes never need this: the app shows the
+live website, so a "push live" reaches everyone straight away.
 
 ## When this folder changes
 
