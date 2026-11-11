@@ -216,7 +216,24 @@ These must match the privacy page. If the app changes what it saves, update both
 
 ---
 
-## 8. Making the screenshots again
+## 8. The videos
+
+Two 28-second videos, made from the real app, with original music composed for them (it's ours, so there's no licence to worry about), in `docs/store/video/`:
+
+| File | For | Size |
+|---|---|---|
+| `chitas-app-preview.mp4` | App Store, "App Preview" in the iPhone 6.9-inch slot | 886 × 1920, 30 fps |
+| `chitas-promo.mp4` | Google Play's promo video (a YouTube link), and anywhere you share the app | 1920 × 1080, 30 fps |
+
+**What it shows**, one feature per bar of music: today's four (and closing the rings), Chumash with Rashi, picking up where you stopped, the Tanya guide, a Review question, your family's Tehillim, Progress, and the name. On the App Store the preview **plays silently** on its own, so every scene carries a headline; the music is for people who tap the sound on.
+
+**App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:01**, the Today screen under its headline, so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
+
+**Google Play:** upload `chitas-promo.mp4` to YouTube (Visibility: **Unlisted**; and in YouTube Studio → Monetization, ads **off**, as Google requires), then paste its link into Play Console → Store listing → Video.
+
+**Why it's made this way:** Apple rejects previews that show a phone frame, so the App Store version shows the app's own screen. Each scene opens on the app doing something, with no logo intro, because the first seconds decide whether people keep watching.
+
+## 9. Making the screenshots again
 
 When the app changes, the screenshots can be remade with real texts for any day, from `tools/` (it needs the internet, to fetch the texts):
 
@@ -225,6 +242,13 @@ cd tools
 node store/shoot.mjs phone light && node store/shoot.mjs phone dark rambam
 node store/shoot.mjs ipad light && node store/shoot.mjs ipad dark rambam
 node store/compose.mjs apple && node store/compose.mjs ipad && node store/compose.mjs google && node store/compose.mjs feature
+```
+
+The videos, from `tools/` (`timing.json` holds the scenes and headlines):
+
+```
+node store/video/capture.mjs && python3 store/video/music.py && python3 store/video/compose.py
+cp store/video/out/*.mp4 ../docs/store/video/
 ```
 
 `shoot.mjs` takes the plain screens (a learner six weeks in, with a few people in Personal Tehillim); `compose.mjs` adds the headlines and writes into `docs/store/`. The headlines are at the top of `compose.mjs`. Hayom Yom is taken on a day whose entry fills the page (`SHIFT` in `shoot.mjs`): look at it and pick another day if needed. The Review questions in the picture are written in `shoot.mjs` (`REVIEW`), from that day's real Chumash, because the live Review needs an account: rewrite them for the day you shoot.
