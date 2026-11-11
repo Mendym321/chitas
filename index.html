@@ -3554,7 +3554,7 @@ function openQuiz(sectionId) {
   const iso = document.getElementById('chabad-panel')?.style.display === 'flex' && _rv.iso ? _rv.iso : _viewedISO();
   quizState = { sectionId, iso, level: null, questions: [], current: 0, score: 0, answered: false, missed: [], answers: [] };
   document.getElementById('quiz-title').textContent = s.label + ' review';
-  document.getElementById('quiz-subtitle').textContent = s.subtitle;
+  document.getElementById('quiz-subtitle').textContent = sectionId === 'chumash' ? _chumashLine(s.subtitle) : s.subtitle;   // one spelling everywhere (Toldos)
   const qp = document.getElementById('quiz-panel');
   qp.style.setProperty('--rc', 'var(--c-' + sectionId + ')');
   qp.style.setProperty('--rc-on', 'var(--on-' + sectionId + ')');

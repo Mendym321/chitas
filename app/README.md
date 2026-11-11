@@ -195,7 +195,7 @@ Do Part 1 and Part 2 first, and try it on your phone.
 2. **Fill it in** from `docs/store-listing.md`: every box is answered there, in
    order (texts, links, category, age rating, App Privacy, review notes). Drag
    the screenshots in from `docs/store/apple/` (iPhone 6.9-inch) and
-   `docs/store/ipad/` (iPad 13-inch), in number order.
+   `docs/store/ipad/` (iPad 13-inch), in number order (1 to 10).
 3. **Upload the app from Xcode:** at the top of the window pick **Any iOS
    Device (arm64)** instead of your phone, then **Product → Archive**. When the
    Organizer window opens: **Distribute App → App Store Connect → Upload**, and

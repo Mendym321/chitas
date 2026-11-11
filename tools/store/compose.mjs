@@ -10,15 +10,17 @@ const target = process.argv[2] || 'apple';
 
 const C = { cream: ['#F3EBDB', '#1F1B16', '#6B6152'], gold: ['#E0A030', '#2E1E00', '#5A3E06'], purple: ['#8B54B0', '#FFFFFF', '#EBDDF5'],
   blue: ['#3F6FC0', '#FFFFFF', '#DCE6F7'], ink: ['#1F1B16', '#FBF7EF', '#BFB5A4'], green: ['#5E8A3C', '#FFFFFF', '#E1EED6'] };
-export const SET = [
-  { n: 1, raw: 'today-light',     bg: 'cream',  head: 'Chitas and Rambam,<br>ready every day',      sub: 'Today’s portions, worked out for you' },
-  { n: 2, raw: 'chumash-light',   bg: 'gold',   head: 'Chumash with Rashi',                         sub: 'Hebrew and English, side by side' },
-  { n: 3, raw: 'tanya-light',     bg: 'purple', head: 'Understand<br>the Tanya',                     sub: 'A plain-English guide walks you through' },
-  { n: 4, raw: 'tehillim-light',  bg: 'blue',   head: 'Your Tehillim,<br>and your family’s',         sub: 'Each person’s chapter, from their Hebrew birthday' },
-  { n: 5, raw: 'hayomyom-light',  bg: 'ink',    head: 'Hayom Yom,<br>every day',                     sub: 'The original, with a clear English translation' },
-  { n: 6, raw: 'progress-light',  bg: 'cream',  head: 'Watch your learning<br>add up',               sub: 'Every passuk, chapter and halacha you’ve learned' },
-  { n: 7, raw: 'reminders-light', bg: 'gold',   head: 'Reminders,<br>at your times',                 sub: 'One for each part, when you learn it' },
-  { n: 8, raw: 'rambam-dark',     bg: 'green',  head: 'Rambam your way',                             sub: 'Three chapters, one, or Sefer HaMitzvos. Light or dark.' },
+export const SET = [   // Apple shows up to 10; Google 8 (the ones without google: false)
+  { n: 1,  raw: 'today-light',     bg: 'cream',  head: 'Chitas and Rambam,<br>ready every day',      sub: 'Today’s portions, worked out for you' },
+  { n: 2,  raw: 'chumash-light',   bg: 'gold',   head: 'Chumash with Rashi',                         sub: 'Hebrew and English, side by side' },
+  { n: 3,  raw: 'place-light',     bg: 'blue',   head: 'Stop anywhere.<br>Pick up right there.',     sub: 'Your place is kept, even on your other devices' },
+  { n: 4,  raw: 'tanya-light',     bg: 'purple', head: 'Understand<br>the Tanya',                     sub: 'A plain-English guide walks you through' },
+  { n: 5,  raw: 'review-light',    bg: 'ink',    head: 'Check what<br>stayed with you',               sub: 'A few questions, written from today’s text' },
+  { n: 6,  raw: 'tehillim-light',  bg: 'green',  head: 'Your Tehillim,<br>and your family’s',         sub: 'Each person’s chapter, from their Hebrew birthday' },
+  { n: 7,  raw: 'hayomyom-light',  bg: 'cream',  head: 'Hayom Yom,<br>every day',                     sub: 'The original, with a clear English translation' },
+  { n: 8,  raw: 'progress-light',  bg: 'gold',   head: 'Watch your learning<br>add up',               sub: 'Every passuk, chapter and halacha you’ve learned' },
+  { n: 9,  raw: 'reminders-light', bg: 'blue',   head: 'Reminders,<br>at your times',                 sub: 'One for each part, when you learn it', google: false },
+  { n: 10, raw: 'rambam-dark',     bg: 'green',  head: 'Rambam your way',                             sub: 'Three chapters, one, or Sefer HaMitzvos. Light or dark.', google: false },
 ];
 const SIZES = {
   apple:  { w: 1290, h: 2796, dev: 'phone', screenW: 980,  top: 560, head: 92,  sub: 44, radius: 92, bezel: 22 },
@@ -53,6 +55,7 @@ h1{margin:0;font-size:92px;font-weight:800;letter-spacing:-3px;line-height:1}p{m
   await mkdir(OUTROOT + target, { recursive: true });
   const p = await ctx.newPage(); await p.setViewportSize({ width: S.w, height: S.h });
   for (const it of SET) {
+    if (target === 'google' && it.google === false) continue;
     const [bg, fg, sub] = C[it.bg];
     const img = 'data:image/png;base64,' + (await readFile(`${RAW}${S.dev}-${it.raw}.png`)).toString('base64');
     const ratio = S.dev === 'ipad' ? 1376 / 1032 : 932 / 430, sh = Math.round(S.screenW * ratio);

@@ -6,9 +6,9 @@ Screenshots and graphics are in `docs/store/` (made from the real app with real 
 
 | Files | For | Size |
 |---|---|---|
-| `apple/1-…8-*.png` | App Store, "iPhone 6.9-inch" slot (Apple scales them for smaller iPhones) | 1290 × 2796 |
-| `ipad/1-…8-*.png` | App Store, "iPad 13-inch" slot (needed because the app also runs on iPad) | 2064 × 2752 |
-| `google/1-…8-*.png` | Google Play, phone screenshots | 1080 × 2160 |
+| `apple/1-…10-*.png` | App Store, "iPhone 6.9-inch" slot (Apple scales them for smaller iPhones) | 1290 × 2796 |
+| `ipad/1-…10-*.png` | App Store, "iPad 13-inch" slot (needed because the app also runs on iPad) | 2064 × 2752 |
+| `google/1-…8-*.png` | Google Play, phone screenshots (Google takes 8: the same set without Reminders and Rambam) | 1080 × 2160 |
 | `feature-graphic.png` | Google Play, feature graphic | 1024 × 500 |
 | `icons/icon-1024.png` (repo root) | App Store icon | 1024 × 1024 |
 | `icons/icon-512.png` (repo root) | Google Play icon | 512 × 512 |
@@ -17,6 +17,20 @@ Upload them in number order. The first three are the ones people see in search r
 
 | # | Headline | Line under it | Screen |
 |---|---|---|---|
+| 1 | Chitas and Rambam, ready every day | Today's portions, worked out for you | Today |
+| 2 | Chumash with Rashi | Hebrew and English, side by side | Chumash |
+| 3 | Stop anywhere. Pick up right there. | Your place is kept, even on your other devices | Tehillim halfway, "Continue from your other device" |
+| 4 | Understand the Tanya | A plain-English guide walks you through | Tanya with its guide |
+| 5 | Check what stayed with you | A few questions, written from today's text | A Review question, answered |
+| 6 | Your Tehillim, and your family's | Each person's chapter, from their Hebrew birthday | Personal Tehillim |
+| 7 | Hayom Yom, every day | The original, with a clear English translation | Hayom Yom |
+| 8 | Watch your learning add up | Every passuk, chapter and halacha you've learned | Progress |
+| 9 | Reminders, at your times | One for each part, when you learn it | Reminders (Apple only) |
+| 10 | Rambam your way | Three chapters, one, or Sefer HaMitzvos. Light or dark. | Rambam, dark mode (Apple only) |
+
+**Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); and does it fit my day, so I can stop and pick up again, here or on another device (3). Keeping your place, on every device, is something similar apps don't seem to do, so it comes early. Then: will I understand it (4), and did it stay with me (5), the Review shown as what it is, a few good questions with the answer explained and the line it comes from. After that, what no other app does for them: their own family's Tehillim (6), Hayom Yom in a clear English (7), a quiet record of what they've learned (8), and a nudge at their own times (9).
+
+---|---|---|---|
 | 1 | Chitas and Rambam, ready every day | Today's portions, worked out for you | Today |
 | 2 | Chumash with Rashi | Hebrew and English, side by side | Chumash |
 | 3 | Understand the Tanya | A plain-English guide walks you through | Tanya with its guide |
@@ -44,7 +58,7 @@ Use the same name in both stores, because people search for it. On the phone, un
 > Daily Chumash with Rashi, Tehillim, Tanya and Rambam, in Hebrew and English.
 
 **Promotional text** (Apple only, 170; can be changed any time without a new review)
-> Today's Chumash, Tehillim, Tanya and Rambam, ready when you open it. Hebrew and English side by side, a guide to the Tanya, and your family's Tehillim chapters.
+> Today's Chumash, Tehillim, Tanya and Rambam, ready when you open it, in Hebrew and English. Stop anywhere, and pick up right there, even on your other devices.
 
 **Keywords** (Apple only, 100; commas, no spaces after them; words already in the name and subtitle don't need repeating)
 > chabad,lubavitch,torah,rashi,hayom yom,rebbe,jewish,parsha,psalms,sefer hamitzvos,limud,yomi
@@ -56,6 +70,12 @@ Use the same name in both stores, because people search for it. On the phone, un
 > Chitas is the daily Chumash, Tehillim, Tanya and Rambam, ready the moment you open it.
 >
 > No working out where today's portion starts and ends, no switching between books and websites. Today's four are waiting, each opened to the right place for the day, in Hebrew and English side by side. Learn them in any order, mark each part as you finish it, and watch the day's four rings close.
+>
+> PICK UP RIGHT WHERE YOU STOPPED
+> Stop in the middle of a chapter, and next time it opens at the same line. Sign in, and your place follows you: say Tehillim on your phone in the morning and finish on your tablet at night, or start the Rambam on the computer and finish it on the bus.
+>
+> CHECK WHAT STAYED WITH YOU
+> When you've learned, take a quick Review: a few questions written from today's Chumash, Tanya or Rambam, each with the answer explained and the line it comes from. Or a deep dive, when you have more time.
 >
 > WHAT'S INSIDE
 > • Chumash: the day's aliyah, with Rashi
@@ -72,14 +92,11 @@ Use the same name in both stores, because people search for it. On the phone, un
 > SEE YOUR LEARNING ADD UP
 > Your days in a row, the month on a calendar, and everything you've learned: pesukim of Chumash, chapters of Tehillim, days of Tanya and halachos of Rambam. Milestones mark a finished parsha, all of Tehillim, your best month. It counts what you did, never what you missed, and Shabbos and Yom Tov never break your run.
 >
-> REVIEW, IF YOU WANT IT
-> A few questions on today's Chumash, Tanya or Rambam, written from the day's text, to see what stayed with you.
->
 > REMINDERS
 > A gentle reminder for each part, at the time you usually learn it. Never on Shabbos or Yom Tov.
 >
 > ANY DAY, ANY DEVICE
-> Read ahead or go back to any day. Missed one? Mark it within a week. Sign in with Apple or Google, and your learning, and the place where you stopped reading, follow you to your phone, tablet and computer.
+> Read ahead or go back to any day. Missed one? Mark it within a week. Sign in with Apple or Google, and everything you've learned is on your phone, tablet and computer.
 >
 > MADE TO BE QUIET
 > No ads. No tracking. No leaderboards. Use it without an account if you prefer. Light and dark, with comfortable reading fonts.
@@ -210,4 +227,4 @@ node store/shoot.mjs ipad light && node store/shoot.mjs ipad dark rambam
 node store/compose.mjs apple && node store/compose.mjs ipad && node store/compose.mjs google && node store/compose.mjs feature
 ```
 
-`shoot.mjs` takes the plain screens (a learner six weeks in, with a few people in Personal Tehillim); `compose.mjs` adds the headlines and writes into `docs/store/`. The headlines are at the top of `compose.mjs`. Hayom Yom is taken on a day whose entry fills the page (`SHIFT` in `shoot.mjs`): look at it and pick another day if needed.
+`shoot.mjs` takes the plain screens (a learner six weeks in, with a few people in Personal Tehillim); `compose.mjs` adds the headlines and writes into `docs/store/`. The headlines are at the top of `compose.mjs`. Hayom Yom is taken on a day whose entry fills the page (`SHIFT` in `shoot.mjs`): look at it and pick another day if needed. The Review questions in the picture are written in `shoot.mjs` (`REVIEW`), from that day's real Chumash, because the live Review needs an account: rewrite them for the day you shoot.
