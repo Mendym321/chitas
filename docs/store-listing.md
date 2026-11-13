@@ -218,16 +218,32 @@ These must match the privacy page. If the app changes what it saves, update both
 
 ## 8. The videos
 
-Two 28-second videos, made from the real app, with original music composed for them (it's ours, so there's no licence to worry about), in `docs/store/video/`:
+Four 28-second videos, made from the real app, with original music composed for them (it's ours, so there's no licence to worry about), in `docs/store/video/`:
 
 | File | For | Size |
 |---|---|---|
 | `chitas-app-preview.mp4` | App Store, "App Preview" in the iPhone 6.9-inch slot | 886 × 1920, 30 fps |
-| `chitas-promo.mp4` | Google Play's promo video (a YouTube link), and anywhere you share the app | 1920 × 1080, 30 fps |
+| `chitas-promo.mp4` | Google Play's promo video (a YouTube link) | 1920 × 1080, 30 fps |
+| `chitas-coming-soon-vertical.mp4` | Sharing now, before the App Store: WhatsApp status, Instagram stories, phones. Ends on "Coming soon to the App Store" and chitas.vercel.app | 886 × 1920 |
+| `chitas-coming-soon-wide.mp4` | The same, for YouTube, email and websites | 1920 × 1080 |
 
-**What it shows**, one feature per bar of music: today's four (and closing the rings), Chumash with Rashi, picking up where you stopped, the Tanya guide, a Review question, your family's Tehillim, Progress, and the name. On the App Store the preview **plays silently** on its own, so every scene carries a headline; the music is for people who tap the sound on.
+The store versions end on the name only: Apple and Google don't allow a web address or "coming soon" in a store video.
 
-**App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:01**, the Today screen under its headline, so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
+**What it shows**, one idea per bar of music (3.5 s). The first scene is what every daily-study app gives you; every scene after it is a reason to choose Chitas:
+
+| Seconds | Scene | Headline |
+|---|---|---|
+| 0–3.5 | Today: Tanya and Rambam ticked, "All four done" | All of Chitas and Rambam, every day |
+| 3.5–10.5 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; the app closes into its icon, "Later that day"; tapped, it opens on that line, "Right where you stopped" | Close it. It opens right where you stopped. |
+| 10.5–14 | Tanya: the Guide tapped on, and its explanation | Tanya, explained as you go |
+| 14–17.5 | A Review question on the day's Chumash, with Rashi's reason | Then see what stayed with you |
+| 17.5–21 | Personal Tehillim and the people sheet | Each person's own Tehillim chapter |
+| 21–24.5 | Progress: totals, milestones | Watch your learning add up |
+| 24.5–28 | The four rings draw in, then the name | Chitas · Chumash · Tehillim · Tanya · Rambam |
+
+Keeping your place gets two bars, so it can be told clearly. On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
+
+**App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:00**, the Today screen under its headline (there from the first frame), so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
 
 **Google Play:** upload `chitas-promo.mp4` to YouTube (Visibility: **Unlisted**; and in YouTube Studio → Monetization, ads **off**, as Google requires), then paste its link into Play Console → Store listing → Video.
 

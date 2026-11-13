@@ -1,17 +1,72 @@
 {
-  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One scene per bar of music: 68.57 beats a minute, 4 beats a bar, so each scene is 3.5 s (105 frames at 30 fps). Each scene is filmed 12 frames longer, for the dissolve into the next.",
+  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One bar of music is 3.5 s (68.57 beats a minute, 4 beats a bar: 105 frames at 30 fps); a scene is 'bars' long (1 if not given), 8 bars in all (28 s). Each scene is filmed 12 frames longer, for the dissolve into the next. mark: a soft highlight over one line of the screen, [from s, to s, y in the app's points (443 x 960), label]. away: [shrinks s, is an icon s, tapped s, open again s]: the app closes into its icon on a home screen and opens again, with away_label under it. tap: [s, name], a touch where capture found it (frames/<scene>/where.json).",
   "fps": 30,
   "bpm": 68.5714,
   "bar_frames": 105,
   "overlap": 12,
   "scenes": [
-    { "id": "today",    "color": "cream",  "head": "Chitas and Rambam,\nready every day" },
-    { "id": "chumash",  "color": "gold",   "head": "Chumash with Rashi,\nside by side" },
-    { "id": "place",    "color": "blue",   "head": "Stop anywhere.\nPick up right there." },
-    { "id": "tanya",    "color": "purple", "head": "A guide to\nunderstand the Tanya" },
-    { "id": "review",   "color": "ink",    "head": "Check what\nstayed with you" },
-    { "id": "family",   "color": "green",  "head": "Your family's\nTehillim chapters" },
-    { "id": "progress", "color": "gold",   "head": "Watch your learning\nadd up" },
-    { "id": "end",      "color": "ink",    "head": "" }
+    {
+      "id": "today",
+      "color": "cream",
+      "head": "All of Chitas and Rambam,\nevery day"
+    },
+    {
+      "id": "place",
+      "bars": 2,
+      "color": "gold",
+      "head": "Close it. It opens\nright where you stopped.",
+      "mark": [
+        [
+          0.55,
+          1.9,
+          310,
+          "You stopped here"
+        ],
+        [
+          4.35,
+          7.0,
+          310,
+          "Right where you stopped"
+        ]
+      ],
+      "away": [
+        1.9,
+        2.35,
+        3.9,
+        4.35
+      ],
+      "away_label": "Later that day"
+    },
+    {
+      "id": "tanya",
+      "color": "purple",
+      "head": "Tanya, explained\nas you go",
+      "tap": [
+        [
+          0.5,
+          "guide"
+        ]
+      ]
+    },
+    {
+      "id": "review",
+      "color": "ink",
+      "head": "Then see what\nstayed with you"
+    },
+    {
+      "id": "family",
+      "color": "green",
+      "head": "Each person's own\nTehillim chapter"
+    },
+    {
+      "id": "progress",
+      "color": "gold",
+      "head": "Watch your learning\nadd up"
+    },
+    {
+      "id": "end",
+      "color": "ink",
+      "head": ""
+    }
   ]
 }

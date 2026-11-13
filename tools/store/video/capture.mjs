@@ -7,7 +7,7 @@
 // Usage (from tools/):  node store/video/capture.mjs [scene ...]
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
-import { readFile, mkdir, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { extname } from 'node:path';
 import { SCENES as TIMING, FPS } from './timing.mjs';
@@ -50,7 +50,7 @@ await ctx.route('**/*', async r => {
   } catch { return r.abort(); }
 });
 
-const seed = () => {
+const seed = (today) => {                                          // today: what's learned so far today
   const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   const ALL = { chumash: true, tehillim: true, tanya: true, rambam: true }, pastDone = {}, pastQuizDone = {};
   for (let i = 1; i <= 46; i++) {
@@ -60,7 +60,7 @@ const seed = () => {
     if (i % 4 === 1) pastQuizDone[iso(d)] = { chumash: { quick: { r: i % 3 ? 4 : 3, n: 4 } } };
   }
   localStorage.setItem('chitas_v78', JSON.stringify({ uid: 'demo', name: 'Mendy Cohen', rambamTrack: '3', started: true, rambamTrackAsked: true,
-    done: { chumash: true, tehillim: true }, pastDone, pastQuizDone, lastDate: iso(new Date()), extraTracks: ['hayomYom'],
+    done: today, pastDone, pastQuizDone, lastDate: iso(new Date()), extraTracks: ['hayomYom'],
     tehillimFixedOpts: { rebbe: true, rebbetzin: false },
     tehillimPeople: [{ label: 'Me', heDay: 14, heMonth: 'Adar', heYear: 5752 }, { label: 'Chana', heDay: 3, heMonth: 'Tammuz', heYear: 5779 }, { label: 'Levi', heDay: 22, heMonth: 'Shevat', heYear: 5784 }] }));
   localStorage.setItem('chitas_lang_chumash', 'both'); localStorage.setItem('chitas_chumash_rashi', '1');
@@ -68,11 +68,11 @@ const seed = () => {
   localStorage.setItem('chitas_lang_tehillim', 'both');
 };
 
-async function open() {
+async function open(today = { chumash: true, tehillim: true }) {
   const p = await ctx.newPage();
   p.on('pageerror', e => console.log('  page error:', e.message.split('\n')[0]));
   await p.clock.install({ time: (() => { const d = new Date(); d.setHours(8, 40, 0, 0); return d; })() });
-  await p.addInitScript(seed);
+  await p.addInitScript(seed, today);
   await p.goto(BASE + '/');
   await p.waitForFunction(() => typeof init === 'function' && typeof dayNote === 'function', null, { timeout: 20000 });
   await p.evaluate(async () => { await init(); document.getElementById('main-app').classList.add('ready'); try { hideLoader(); } catch (e) {} document.getElementById('app-loader')?.remove(); });
@@ -93,23 +93,30 @@ const SCENES = {
       if (f === 44) await p.evaluate(() => { markDone('rambam'); renderSectionsForOffset(_viewedISO()); });
     },
   },
-  chumash: {
-    setup: async p => { await p.evaluate(() => { user.done = { tehillim: true }; openChabadPanel('chumash'); }); await wait(p, 6000); p._to = await readerY(p, '.rd-comm', 380); await scrollTo(p, 0); },
-    act: async (p, f, n) => scrollTo(p, Math.round(p._to * ease(Math.min(1, Math.max(0, (f - 8) / (n - 22)))))),
-  },
+  // Keeping your place: reading Chumash with Rashi, the app closed (the video shows it going to its
+  // icon), opened again later: the same line. The real app, closed and opened in the middle.
   place: {
-    setup: async p => { await p.evaluate(() => { user.done = { chumash: true }; openChabadPanel('tehillim'); }); await wait(p, 6000);
-      p._at = await p.evaluate(() => { const r = document.getElementById('native-reader'); return Math.round((r.scrollHeight - r.clientHeight) * .18); });
-      p._there = await p.evaluate(() => { const r = document.getElementById('native-reader'); return Math.round((r.scrollHeight - r.clientHeight) * .55); });
-      await scrollTo(p, p._at); },
+    today: { tehillim: true },
+    setup: async p => { await p.evaluate(() => openChabadPanel('chumash')); await wait(p, 6000);
+      p._at = await p.evaluate(() => { const r = document.getElementById('native-reader'); return Math.round((r.scrollHeight - r.clientHeight) * .22); });
+      await scrollTo(p, p._at - 120); },
     act: async (p, f) => {
-      if (f === 16) await p.evaluate(() => { document.getElementById('other-place').hidden = false; });
-      if (f === 56) await p.evaluate(y => { _hideOtherPlace(); document.getElementById('native-reader').scrollTop = y; }, p._there);   // what "Continue" does: straight there
+      if (f < 15) await scrollTo(p, Math.round(p._at - 120 + 120 * ease(f / 14)));                           // reading on a little, then resting on a line
+      if (f === 75) await p.evaluate(() => { _rv.touched = true; closeChabadPanel(); });                    // closed: the place is kept
+      if (f === 88) await p.evaluate(() => openChabadPanel('chumash'));                                     // opened again: straight back there
     },
   },
+  // Tanya: the guide switched on (a tap), and what it explains
   tanya: {
-    setup: async p => { await p.evaluate(() => { user.done = { chumash: true, tehillim: true }; openChabadPanel('tanya'); }); await wait(p, 8000); await scrollTo(p, 0); },
-    act: async (p, f, n) => scrollTo(p, Math.round(760 * ease(Math.min(1, Math.max(0, (f - 10) / (n - 26)))))),
+    today: { chumash: true, tehillim: true },
+    where: { guide: '.tz-opt' },
+    setup: async p => { await p.evaluate(() => openChabadPanel('tanya')); await wait(p, 8000);
+      await p.evaluate(() => { localStorage.setItem('chitas_tanya_guide', 'off'); _renderTanyaContent(); });   // off at the start (saved settings put it on)
+      await wait(p, 500); await scrollTo(p, 0); },
+    act: async (p, f, n) => {
+      if (f === 18) await p.evaluate(() => _toggleTanyaOpt('guide'));
+      if (f > 50) await scrollTo(p, Math.round(200 * ease(Math.min(1, (f - 50) / (n - 62)))));
+    },
   },
   review: {
     setup: async p => { await p.evaluate(async () => { window._fb = { ...(window._fb || {}), getIdToken: async () => 't', saveUser: async () => {} }; openQuiz('chumash'); });
@@ -146,8 +153,11 @@ for (const [name, scene] of Object.entries(SCENES)) {
   const n = TIMING[name].frames;
   const dir = OUT + name + '/';
   await rm(dir, { recursive: true, force: true }); await mkdir(dir, { recursive: true });
-  const p = await open();
+  const p = await open(scene.today);
   await scene.setup(p);
+  if (scene.where) await writeFile(dir + 'where.json', JSON.stringify(await p.evaluate(sels => Object.fromEntries(Object.entries(sels).map(([k, sel]) => {
+    const r = document.querySelector(sel)?.getBoundingClientRect(); return [k, r ? [Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)] : null];
+  })), scene.where)));
   const now = await p.evaluate(() => Date.now());
   await p.clock.pauseAt(now + 1000);
   for (let f = 0; f < n; f++) {
