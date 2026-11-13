@@ -81,8 +81,23 @@ async function open(today = { chumash: true, tehillim: true }) {
 }
 const wait = (p, ms) => p.waitForTimeout(ms);
 const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;   // in and out, like a hand scrolling
-const scrollTo = (p, y) => p.evaluate(y => { const r = document.getElementById('native-reader'); r.scrollTop = y; }, y);
+const scrollTo = (p, y) => p.evaluate(y => { const r = document.getElementById('native-reader'); r.scrollTop = y; if (window._rv) _rv.touched = true; }, y);   // as a finger does: yours now, so the app doesn't put its place back
 const readerY = (p, sel, off) => p.evaluate(([sel, off]) => { const r = document.getElementById('native-reader'), el = document.querySelector(sel); return el ? Math.max(0, r.scrollTop + el.getBoundingClientRect().top - r.getBoundingClientRect().top - off) : 0; }, [sel, off]);
+
+// A text opened with its guide on, the guide's box brought to about a quarter of the way down
+const guideScene = (sid, on) => ({
+  today: { tehillim: true },
+  lead: 20,
+  setup: async p => {
+    await p.evaluate(on); await p.evaluate(sid => openChabadPanel(sid), sid);
+    await wait(p, 15000);                                           // everything in, and the app done putting back your place (no jump mid-scene)
+    const y = await readerY(p, '#native-reader-content .tz-guide', 150); await scrollTo(p, y);
+    await wait(p, 2500); await scrollTo(p, await readerY(p, '#native-reader-content .tz-guide', 150));
+  },
+  act: async (p, f) => {                                            // measured on the first frame filmed, once the page has settled
+    if (f === 0) p._where = await p.evaluate(() => { const r = document.querySelector('#native-reader-content .tz-guide')?.getBoundingClientRect(); return { guide: r ? [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)] : null }; });
+  },
+});
 
 // Each scene: set up (time flows), then act(frame) once per frame while filmed
 const SCENES = {
@@ -111,18 +126,11 @@ const SCENES = {
       if (f === 120) await p.evaluate(() => openChabadPanel('chumash'));                                    // opened again: straight back there
     },
   },
-  // Tanya: the guide switched on (a tap), and what it explains
-  tanya: {
-    today: { chumash: true, tehillim: true },
-    where: { guide: '.tz-opt' },
-    setup: async p => { await p.evaluate(() => openChabadPanel('tanya')); await wait(p, 8000);
-      await p.evaluate(() => { localStorage.setItem('chitas_tanya_guide', 'off'); _renderTanyaContent(); });   // off at the start (saved settings put it on)
-      await wait(p, 500); await scrollTo(p, 0); },
-    act: async (p, f, n) => {
-      if (f === 18) await p.evaluate(() => _toggleTanyaOpt('guide'));
-      if (f > 50) await scrollTo(p, Math.round(200 * ease(Math.min(1, (f - 50) / (n - 62)))));
-    },
-  },
+  // The guides: each text opened with its guide on, the guide's box in view (its place goes
+  // next to the frames, for the outline the video draws around it)
+  guide_chumash: guideScene('chumash', () => localStorage.setItem('chitas_chumash_guide', 'on')),
+  guide_tanya:   guideScene('tanya',   () => localStorage.setItem('chitas_tanya_guide', '1')),
+  guide_rambam:  guideScene('rambam',  () => localStorage.setItem('chitas_rambam_guide', 'on')),
   review: {
     setup: async p => { await p.evaluate(async () => { window._fb = { ...(window._fb || {}), getIdToken: async () => 't', saveUser: async () => {} }; openQuiz('chumash'); });
       await wait(p, 600); await p.evaluate(() => _startQuiz('quick')); await wait(p, 1500); },
@@ -165,11 +173,12 @@ for (const [name, scene] of Object.entries(SCENES)) {
   })), scene.where)));
   const now = await p.evaluate(() => Date.now());
   await p.clock.pauseAt(now + 1000);
-  for (let f = 0; f < n; f++) {
-    await scene.act(p, f, n);
+  const lead = scene.lead || 0;                                     // frames run before recording (last settling happens off camera)
+  for (let f = -lead; f < n; f++) {
+    if (f >= 0) await scene.act(p, f, n);
     await p.clock.runFor(1000 / FPS);
-    await step(p, f * 1000 / FPS);
-    await p.screenshot({ path: dir + String(f).padStart(4, '0') + '.jpg', type: 'jpeg', quality: 94 });
+    await step(p, (f + lead) * 1000 / FPS);
+    if (f >= 0) await p.screenshot({ path: dir + String(f).padStart(4, '0') + '.jpg', type: 'jpeg', quality: 94 });
   }
   if (p._where) await writeFile(dir + 'where.json', JSON.stringify(p._where));
   console.log('scene', name, n, 'frames');

@@ -229,19 +229,19 @@ Four 28-second videos, made from the real app, with original music composed for 
 
 The store versions end on the name only: Apple and Google don't allow a web address or "coming soon" in a store video.
 
-**What it shows**, one idea per bar of music (3.5 s). The first scene is what every daily-study app gives you; every scene after it is a reason to choose Chitas:
+**What it shows**; every cut lands on a beat of the music. The first scene is what every daily-study app gives you; every scene after it is a reason to choose Chitas:
 
 | Seconds | Scene | Headline |
 |---|---|---|
 | 0–3.5 | Today: Tanya and Rambam ticked, "All four done" | All of Chitas and Rambam, every day |
-| 3.5–10.5 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; closed, back to Today ("Good morning"); "Later that day", the greeting turns to "Good afternoon"; Chumash tapped, and it opens on that same line, "Right where you stopped". All real app footage | Close it. It opens right where you stopped. |
-| 10.5–14 | Tanya: the Guide tapped on, and its explanation | Tanya, explained as you go |
-| 14–17.5 | A Review question on the day's Chumash, with Rashi's reason | Then see what stayed with you |
-| 17.5–21 | Personal Tehillim and the people sheet | Each person's own Tehillim chapter |
-| 21–24.5 | Progress: totals, milestones | Watch your learning add up |
+| 3.5–9.6 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; closed, back to Today ("Good morning"); "Later that day", the greeting turns to "Good afternoon"; Chumash tapped, and it opens on that same line, "Right where you stopped". All real app footage | Close it. It opens right where you stopped. |
+| 9.6–14.9 | The guides, one after another (1.75 s each), each box softly outlined: Chumash ("Today in the parsha"), Tanya ("So far in this chapter"), Rambam ("This chapter") | A guide in Chumash, Tanya and Rambam |
+| 14.9–18.4 | A Review question on the day's Chumash, with Rashi's reason | Then see what stayed with you |
+| 18.4–21.9 | Personal Tehillim and the people sheet | Each person's own Tehillim chapter |
+| 21.9–24.5 | Progress: totals, milestones | Watch your learning add up |
 | 24.5–28 | The four rings draw in, then the name | Chitas · Chumash · Tehillim · Tanya · Rambam |
 
-Keeping your place gets two bars, so it can be told clearly. On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
+Keeping your place gets the most time, so it can be told clearly; the three guides go by quickly under one headline. On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
 
 **App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:00**, the Today screen under its headline (there from the first frame), so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
 

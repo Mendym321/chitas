@@ -22,9 +22,10 @@ HERE = Path(__file__).parent
 T = json.loads((HERE / 'timing.json').read_text())
 FPS, BAR, OVER = T['fps'], T['bar_frames'], T['overlap']
 SCENES = T['scenes']
-LEN = [s.get('bars', 1) * BAR for s in SCENES]             # each scene's length in frames
-STARTS = [sum(LEN[:i]) for i in range(len(SCENES))]
-TOTAL = sum(LEN)
+_beats = [sum(s['beats'] for s in SCENES[:i]) for i in range(len(SCENES) + 1)]
+STARTS = [round(b * BAR / 4) for b in _beats[:-1]]           # every cut on a beat (a beat is BAR/4 frames)
+TOTAL = round(_beats[-1] * BAR / 4)
+LEN = [b - a for a, b in zip(STARTS, STARTS[1:] + [TOTAL])]  # each scene's length in frames
 SITE = 'chitas.vercel.app'
 ENDING = 'store'                                    # 'store', or 'soon': coming soon, with the address
 DISSOLVE = 10                                     # frames
@@ -86,6 +87,17 @@ def screen(sc, f, w, h):
         x, y = _where[sc['id']][name]; e = math.sin(math.pi * u); r = 24 * s * (1 - 0.18 * e)
         over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(over)
         d.ellipse((x * s - r, y * s - r, x * s + r, y * s + r), fill=(70, 70, 70, round(95 * e)), outline=(255, 255, 255, round(170 * e)), width=max(1, round(r * 0.08)))
+    if sc.get('outline'):                            # the eye goes to the box: a soft outline in the text's colour
+        if sc['id'] not in _where: _where[sc['id']] = json.loads((HERE / 'frames' / sc['id'] / 'where.json').read_text())
+        box = _where[sc['id']].get(sc['outline'])
+        k = ease_out((sec - 0.12) / 0.35)
+        if box and k > 0:
+            x, y, bw, bh = box; pad = 4 * s
+            over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0))
+            glow = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+            ImageDraw.Draw(glow).rounded_rectangle((x * s - pad, y * s - pad, (x + bw) * s + pad, (y + bh) * s + pad), 18 * s, outline=bg + (round(120 * k),), width=round(7 * s))
+            over = Image.alpha_composite(over, glow.filter(ImageFilter.GaussianBlur(5 * s)))
+            ImageDraw.Draw(over).rounded_rectangle((x * s - pad, y * s - pad, (x + bw) * s + pad, (y + bh) * s + pad), 18 * s, outline=bg + (round(255 * k),), width=max(2, round(2.5 * s)))
     if over: img = Image.alpha_composite(img.convert('RGBA'), over).convert('RGB')
     return img
 
@@ -181,7 +193,7 @@ def portrait(frame):
     else:
         img = layer
     # The headline: rises and fades in at the cut
-    d = ImageDraw.Draw(img); a = 1.0 if i == 0 else ease_out((f - 2) / 14)   # the first frame already has its headline (the still Apple shows)
+    d = ImageDraw.Draw(img); a = 1.0 if i == 0 or SCENES[i - 1]['head'] == sc['head'] else ease_out((f - 2) / 14)   # the first frame already has its headline (the still Apple shows)
     lines = sc['head'].split('\n'); fnt = fit(d, lines, 66, PW - 90)
     text_block(d, lines, fnt, fg, PW / 2, SY / 2 + (1 - a) * 26, alpha=a, base=bg)
     return img
@@ -230,7 +242,7 @@ def landscape(frame):
         return img
     layer = layer_landscape(sc, f, bg)
     img = Image.blend(layer_landscape(prev, LEN[i - 1] + f, bg), layer, k) if prev else layer
-    d = ImageDraw.Draw(img); a = 1.0 if i == 0 else ease_out((f - 2) / 14)
+    d = ImageDraw.Draw(img); a = 1.0 if i == 0 or SCENES[i - 1]['head'] == sc['head'] else ease_out((f - 2) / 14)
     # The name, small, with its rings, and the headline beside the phone
     cx0, cy0 = 160, 150
     img.paste(BRAND, (cx0 - 26, cy0 - 26), BRAND)

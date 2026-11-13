@@ -1,5 +1,5 @@
 {
-  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One bar of music is 3.5 s (68.57 beats a minute, 4 beats a bar: 105 frames at 30 fps); a scene is 'bars' long (1 if not given), 8 bars in all (28 s). Each scene is filmed 12 frames longer, for the dissolve into the next. mark: a soft highlight over one line of the screen, [from s, to s, y in the app's points (443 x 960), label]. soft: [s, ...] moments the screen changes at once (closing, opening), eased over 1/5 s. chip: [from s, to s, label], a small dark label on the screen. tap: [s, name], a touch where capture found it (frames/<scene>/where.json).",
+  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One bar of music is 3.5 s (68.57 beats a minute, 4 beats a bar: 105 frames at 30 fps); a scene is 'beats' long (a beat is 26.25 frames), 32 beats in all (28 s); cuts land on beats. Each scene is filmed 12 frames longer, for the dissolve into the next. mark: a soft highlight over one line of the screen, [from s, to s, y in the app's points (443 x 960), label]. soft: [s, ...] moments the screen changes at once (closing, opening), eased over 1/5 s. chip: [from s, to s, label], a small dark label on the screen. tap: [s, name], a touch where capture found it (frames/<scene>/where.json). outline: the name of a box (from where.json) softly outlined, so the eye goes to it.",
   "fps": 30,
   "bpm": 68.5714,
   "bar_frames": 105,
@@ -8,11 +8,11 @@
     {
       "id": "today",
       "color": "cream",
-      "head": "All of Chitas and Rambam,\nevery day"
+      "head": "All of Chitas and Rambam,\nevery day",
+      "beats": 4
     },
     {
       "id": "place",
-      "bars": 2,
       "color": "gold",
       "head": "Close it. It opens\nright where you stopped.",
       "mark": [
@@ -24,7 +24,7 @@
         ],
         [
           4.5,
-          7.0,
+          6.125,
           310,
           "Right where you stopped"
         ]
@@ -44,38 +44,53 @@
           3.55,
           "chumash"
         ]
-      ]
+      ],
+      "beats": 7
     },
     {
-      "id": "tanya",
+      "id": "guide_chumash",
+      "beats": 2,
+      "color": "gold",
+      "head": "A guide in Chumash,\nTanya and Rambam",
+      "outline": "guide"
+    },
+    {
+      "id": "guide_tanya",
+      "beats": 2,
       "color": "purple",
-      "head": "Tanya, explained\nas you go",
-      "tap": [
-        [
-          0.5,
-          "guide"
-        ]
-      ]
+      "head": "A guide in Chumash,\nTanya and Rambam",
+      "outline": "guide"
+    },
+    {
+      "id": "guide_rambam",
+      "beats": 2,
+      "color": "green",
+      "head": "A guide in Chumash,\nTanya and Rambam",
+      "outline": "guide"
     },
     {
       "id": "review",
       "color": "ink",
-      "head": "Then see what\nstayed with you"
+      "head": "Then see what\nstayed with you",
+      "beats": 4
     },
     {
       "id": "family",
       "color": "green",
-      "head": "Each person's own\nTehillim chapter"
+      "head": "Each person's own\nTehillim chapter",
+      "beats": 4
     },
     {
       "id": "progress",
       "color": "gold",
-      "head": "Watch your learning\nadd up"
+      "head": "Watch your learning\nadd up",
+      "beats": 3
     },
     {
       "id": "end",
       "color": "ink",
-      "head": ""
+      "head": "",
+      "beats": 4
     }
   ]
 }
