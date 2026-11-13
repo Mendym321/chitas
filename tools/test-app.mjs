@@ -587,6 +587,7 @@ else { failed++; console.log('  ✗ app stuck on Loading when Firebase can\'t lo
 
 console.log('In the app (a pretend phone):');
 await check('in a browser, Profile has no "On this phone"', () => { switchTab('profile'); return document.getElementById('ps-phone').style.display; }, 'none');
+await check('in a browser, Profile offers "Sponsor a day of learning" (paying is on the website)', () => { renderProfile(); const r = document.getElementById('ps-sponsor-row'); return [getComputedStyle(r).display !== 'none', r.getAttribute('href')]; }, [true, '/sponsor/']);
 await page.evaluate(() => {
   window.__calls = [];
   const log = (name, ret) => a => { window.__calls.push([name, a]); return Promise.resolve(ret); };
@@ -602,6 +603,7 @@ await page.evaluate(() => {
     } } };
 });
 await check('in the app, Profile shows Reminders (off) and touch feedback', () => { localStorage.removeItem('chitas_reminders'); localStorage.removeItem('chitas_reminder'); renderProfile(); return [document.getElementById('ps-phone').style.display, document.getElementById('ps-rem-sub').textContent, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, ['', 'Off', 'true']);
+await check('in the app, no Sponsor row (Apple\'s and Google\'s payment rules)', () => { renderProfile(); return getComputedStyle(document.getElementById('ps-sponsor-row')).display; }, 'none');
 await check('an old single reminder becomes all four at its time', () => { localStorage.setItem('chitas_reminder', JSON.stringify({ on: true, time: '20:00' })); const t = _reminderTimes(); localStorage.removeItem('chitas_reminder'); return t; }, { chumash: '20:00', tehillim: '20:00', tanya: '20:00', rambam: '20:00' });
 await page.evaluate(() => { window.__sched = () => window.__calls.filter(c => c[0] === 'schedule').at(-1)?.[1].notifications || []; });
 await check('turning Tanya on asks first, then puts its reminders on the phone, none on Shabbos', async () => {
@@ -649,6 +651,29 @@ await check('a reminder that hasn\'t matched a week: one kind question on Today'
 await check('touch feedback uses the phone: a light tap, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
 await check('touch feedback off: nothing', () => { setHaptics(false); window.__calls = []; haptic('tap'); const n = window.__calls.length; setHaptics(true); return [n, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, [0, 'true']);
 await page.evaluate(() => { delete window.Capacitor; user.done = {}; });
+await check('A sponsored day: a plaque under the four on Today, the line above the text; nothing on other days', async () => {
+  const iso = dateISO(appNow());
+  const text = "Today's learning is l'iluy nishmas Chaya bas Moshe. Dedicated by the Cohen family.";
+  _ded[iso] = { text, line: "l'iluy nishmas Chaya bas Moshe", by: 'the Cohen family' }; _dedAsked.add(iso);
+  renderSectionsForOffset(iso);
+  const el = document.getElementById('dedication');
+  const onToday = [el.hidden, [...el.children].map(c => c.textContent), el.previousElementSibling?.id];
+  const keep = schedule.rambam;
+  schedule.rambam = { id: 'rambam', label: 'Rambam', subtitle: 'Gifts 7', chabadUrl: 'about:blank', sefariaRef: null };
+  _keepText('rambam', _viewedISO(), { chapters: [{ title: 'Gifts 7', chapter: 7, en: ['If Reuven died'], he: ['מת ראובן'] }] });
+  openChabadPanel('rambam'); await new Promise(z => setTimeout(z, 500));
+  const inReader = document.querySelector('#native-reader-content > .rd-ded')?.textContent;
+  closeChabadPanel(); _dropTexts('rambam'); schedule.rambam = keep;
+  _ded[iso] = { text: "Today's learning is for a refuah shleimah for Levi ben Sarah.", line: 'for a refuah shleimah for Levi ben Sarah', by: null };
+  renderSectionsForOffset(iso);
+  const noBy = [...el.children].map(c => c.textContent);
+  _ded[iso] = null;
+  renderSectionsForOffset(iso);
+  return [onToday, inReader, noBy, el.hidden, getComputedStyle(el).display];
+}, [[false, ["Today's learning is dedicated", "l'iluy nishmas Chaya bas Moshe", 'by the Cohen family'], 'tiles-wrap'],
+    "Today's learning is l'iluy nishmas Chaya bas Moshe. Dedicated by the Cohen family.",
+    ["Today's learning is dedicated", 'for a refuah shleimah for Levi ben Sarah'], true, 'none']);
+
 await check('another day: its own Tehillim and Rambam from the week\'s calendar (not Sunday\'s), on your Rambam track', () => {
   const week = { items: [1, 2, 3, 4, 5].flatMap(n => [
     { category: 'dailyLearning', date: '2026-11-0' + n, title: 'Psalms ' + n },
