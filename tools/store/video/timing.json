@@ -1,5 +1,5 @@
 {
-  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One bar of music is 3.5 s (68.57 beats a minute, 4 beats a bar: 105 frames at 30 fps); a scene is 'bars' long (1 if not given), 8 bars in all (28 s). Each scene is filmed 12 frames longer, for the dissolve into the next. mark: a soft highlight over one line of the screen, [from s, to s, y in the app's points (443 x 960), label]. away: [shrinks s, is an icon s, tapped s, open again s]: the app closes into its icon on a home screen and opens again, with away_label under it. tap: [s, name], a touch where capture found it (frames/<scene>/where.json).",
+  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One bar of music is 3.5 s (68.57 beats a minute, 4 beats a bar: 105 frames at 30 fps); a scene is 'bars' long (1 if not given), 8 bars in all (28 s). Each scene is filmed 12 frames longer, for the dissolve into the next. mark: a soft highlight over one line of the screen, [from s, to s, y in the app's points (443 x 960), label]. soft: [s, ...] moments the screen changes at once (closing, opening), eased over 1/5 s. chip: [from s, to s, label], a small dark label on the screen. tap: [s, name], a touch where capture found it (frames/<scene>/where.json).",
   "fps": 30,
   "bpm": 68.5714,
   "bar_frames": 105,
@@ -18,24 +18,33 @@
       "mark": [
         [
           0.55,
-          1.9,
+          1.75,
           310,
           "You stopped here"
         ],
         [
-          4.35,
+          4.5,
           7.0,
           310,
           "Right where you stopped"
         ]
       ],
-      "away": [
+      "soft": [
         1.9,
-        2.35,
-        3.9,
-        4.35
+        3.0,
+        4.0
       ],
-      "away_label": "Later that day"
+      "chip": [
+        2.5,
+        3.85,
+        "Later that day"
+      ],
+      "tap": [
+        [
+          3.55,
+          "chumash"
+        ]
+      ]
     },
     {
       "id": "tanya",

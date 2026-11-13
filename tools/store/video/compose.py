@@ -50,13 +50,14 @@ def filmed(scene, f, w, h):
         _cache[key] = Image.open(HERE / 'frames' / scene / f'{f:04d}.jpg').convert('RGB').resize((w, h), Image.LANCZOS)
     return _cache[key]
 
-ICON = Image.open(HERE.parents[2] / 'icons' / 'icon-1024.png').convert('RGB')
-
 def screen(sc, f, w, h):
-    """What the screen shows: the filmed frame, with the place marked, a touch where
-    something is tapped, or the app closing into its icon and opening again."""
+    """What the screen shows: the filmed frame (eased where the app changes at once),
+    with the place marked, a small label, and a touch where something is tapped."""
     sec = f / FPS; s = w / 443                       # pixels per point of the app
     img = filmed(sc['id'], f, w, h)
+    for c in sc.get('soft', []):                     # closing or opening: eased over 6 frames, not a jump
+        fc = round(c * FPS)
+        if fc <= f < fc + 6: img = Image.blend(filmed(sc['id'], fc - 1, w, h), img, ease_io((f - fc + 1) / 7))
     bg, fg = COLORS[sc['color']]
     over = None
     for a, b, y, label in sc.get('mark', []):        # the line you stopped on
@@ -69,6 +70,15 @@ def screen(sc, f, w, h):
         fl = font(800, round(12.5 * s)); tw = d.textlength(label, font=fl); px, py = 6 * s, yy - hh / 2 - 27 * s
         d.rounded_rectangle((px, py, px + tw + 20 * s, py + 23 * s), 11.5 * s, fill=bg + (round(255 * k),))
         d.text((px + 10 * s, py + 4 * s), label, font=fl, fill=fg + (round(255 * k),))
+    if sc.get('chip'):                               # time passing, said once and small
+        a, b, label = sc['chip']
+        k = min(ease_out((sec - a) / 0.3), 1 - ease_io((sec - (b - 0.25)) / 0.25)) if a <= sec <= b else 0
+        if k > 0:
+            over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(over)
+            fl = font(800, round(17 * s)); tw = d.textlength(label, font=fl)
+            cy = h * 0.55 + (1 - k) * 8 * s; ph, pw = 40 * s, tw + 40 * s
+            d.rounded_rectangle((w / 2 - pw / 2, cy - ph / 2, w / 2 + pw / 2, cy + ph / 2), ph / 2, fill=(31, 27, 22, round(232 * k)))
+            d.text((w / 2 - tw / 2, cy - fl.size * 0.62), label, font=fl, fill=(251, 247, 239, round(255 * k)))
     for t0, name in sc.get('tap', []):                # a touch: a soft circle that presses in and lifts
         u = (sec - t0) / 0.45
         if not 0 <= u <= 1: continue
@@ -77,46 +87,7 @@ def screen(sc, f, w, h):
         over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(over)
         d.ellipse((x * s - r, y * s - r, x * s + r, y * s + r), fill=(70, 70, 70, round(95 * e)), outline=(255, 255, 255, round(170 * e)), width=max(1, round(r * 0.08)))
     if over: img = Image.alpha_composite(img.convert('RGBA'), over).convert('RGB')
-    if 'away' in sc: img = away(sc, sec, img, w, h)
     return img
-
-HOME = ((232, 226, 240), (205, 214, 236))           # a soft phone home screen, top to bottom
-def away(sc, sec, app, w, h):
-    """The app closing into its icon on the home screen, a while passing, and a tap opening it."""
-    a0, a1, a2, a3 = sc['away']
-    if sec < a0 or sec >= a3: return app
-    p = ease_io((sec - a0) / (a1 - a0)) if sec < a1 else 1.0 if sec < a2 else 1 - ease_io((sec - a2) / (a3 - a2))
-    home = Image.new('RGB', (w, h)); hd = ImageDraw.Draw(home)
-    for y in range(h): hd.line((0, y, w, y), fill=mix(HOME[0], HOME[1], y / h))
-    I = w * 0.24; icx, icy = w / 2, h * 0.40
-    press = 1 - 0.08 * math.sin(math.pi * (sec - (a2 - 0.3)) / 0.3) if a2 - 0.3 <= sec < a2 else 1
-    rw, rh = (w + (I - w) * p) * press, (h + (I - h) * p) * press
-    cx, cy = w / 2 + (icx - w / 2) * p, h / 2 + (icy - h / 2) * p
-    x0, y0, iw, ih = round(cx - rw / 2), round(cy - rh / 2), max(1, round(rw)), max(1, round(rh))
-    rad = round(44 * (1 - p) + I * 0.225 * p)
-    card = app.resize((iw, max(1, round(h * iw / w))), Image.LANCZOS).crop((0, 0, iw, ih))
-    ia = ease_io((p - 0.35) / 0.65)                       # the icon shows through as it gets small
-    if ia > 0: card = Image.blend(card, ICON.resize((iw, ih), Image.LANCZOS), ia)
-    if p > 0.3:
-        sh = shadow(iw, ih, rad, 16, round(60 * p), 36); home.paste((60, 50, 80), (x0 - 36, y0 - 28), sh)
-    home.paste(card, (x0, y0), rounded_mask(iw, ih, max(1, rad)))
-    hd = ImageDraw.Draw(home)
-    if p > 0.9:                                           # the icon's name, as on a phone
-        fl = font(600, round(w * 0.034)); tw = hd.textlength('Chitas', font=fl)
-        hd.text((w / 2 - tw / 2, icy + I / 2 + w * 0.02), 'Chitas', font=fl, fill=mix(HOME[0], (40, 36, 50), ease_io((p - 0.9) / 0.1)))
-    la = min(ease_out((sec - a1) / 0.3), 1 - ease_io((sec - (a2 - 0.4)) / 0.25)) if a1 <= sec < a2 else 0
-    if la > 0:                                            # a while passes
-        fl = font(800, round(w * 0.05)); label = sc.get('away_label', ''); tw = hd.textlength(label, font=fl)
-        px, py = w / 2 - tw / 2 - w * 0.05, icy + I / 2 + w * 0.13 + (1 - la) * 10
-        pill = Image.new('RGBA', (w, h), (0, 0, 0, 0)); pd = ImageDraw.Draw(pill)
-        pd.rounded_rectangle((px, py, px + tw + w * 0.1, py + fl.size * 1.7), fl.size, fill=(31, 27, 22, round(235 * la)))
-        pd.text((w / 2 - tw / 2, py + fl.size * 0.3), label, font=fl, fill=(251, 247, 239, round(255 * la)))
-        home = Image.alpha_composite(home.convert('RGBA'), pill).convert('RGB')
-    if a2 - 0.35 <= sec < a2 + 0.1:                        # the tap that opens it
-        u = (sec - (a2 - 0.35)) / 0.45; e = math.sin(math.pi * min(1, u)); r = I * 0.3 * (1 - 0.18 * e)
-        t = Image.new('RGBA', (w, h), (0, 0, 0, 0)); ImageDraw.Draw(t).ellipse((icx - r, icy - r, icx + r, icy + r), fill=(70, 70, 70, round(95 * e)), outline=(255, 255, 255, round(170 * e)), width=2)
-        home = Image.alpha_composite(home.convert('RGBA'), t).convert('RGB')
-    return home
 
 def rounded_mask(w, h, r, top_only=False):
     m = Image.new('L', (w, h), 0); d = ImageDraw.Draw(m)

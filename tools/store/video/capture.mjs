@@ -93,8 +93,9 @@ const SCENES = {
       if (f === 44) await p.evaluate(() => { markDone('rambam'); renderSectionsForOffset(_viewedISO()); });
     },
   },
-  // Keeping your place: reading Chumash with Rashi, the app closed (the video shows it going to its
-  // icon), opened again later: the same line. The real app, closed and opened in the middle.
+  // Keeping your place, all real: reading Chumash with Rashi; the text closed (back to Today, in
+  // the morning); later that day (the greeting turns to afternoon); Chumash tapped open again:
+  // the same line. Where the Chumash tile is goes next to the frames, for the tap mark.
   place: {
     today: { tehillim: true },
     setup: async p => { await p.evaluate(() => openChabadPanel('chumash')); await wait(p, 6000);
@@ -102,8 +103,12 @@ const SCENES = {
       await scrollTo(p, p._at - 120); },
     act: async (p, f) => {
       if (f < 15) await scrollTo(p, Math.round(p._at - 120 + 120 * ease(f / 14)));                           // reading on a little, then resting on a line
-      if (f === 75) await p.evaluate(() => { _rv.touched = true; closeChabadPanel(); });                    // closed: the place is kept
-      if (f === 88) await p.evaluate(() => openChabadPanel('chumash'));                                     // opened again: straight back there
+      if (f === 57) {                                                                                       // closed: back to Today; the place is kept
+        await p.evaluate(() => { _rv.touched = true; closeChabadPanel(); });
+        p._where = await p.evaluate(() => { const r = document.getElementById('card-chumash').getBoundingClientRect(); return { chumash: [Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)] }; });
+      }
+      if (f === 90) { const d = new Date(await p.evaluate(() => Date.now())); d.setHours(14, 10); await p.clock.setSystemTime(d); await p.evaluate(() => setGreeting()); }   // later that day
+      if (f === 120) await p.evaluate(() => openChabadPanel('chumash'));                                    // opened again: straight back there
     },
   },
   // Tanya: the guide switched on (a tap), and what it explains
@@ -166,6 +171,7 @@ for (const [name, scene] of Object.entries(SCENES)) {
     await step(p, f * 1000 / FPS);
     await p.screenshot({ path: dir + String(f).padStart(4, '0') + '.jpg', type: 'jpeg', quality: 94 });
   }
+  if (p._where) await writeFile(dir + 'where.json', JSON.stringify(p._where));
   console.log('scene', name, n, 'frames');
   await p.close();
 }

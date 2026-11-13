@@ -234,7 +234,7 @@ The store versions end on the name only: Apple and Google don't allow a web addr
 | Seconds | Scene | Headline |
 |---|---|---|
 | 0–3.5 | Today: Tanya and Rambam ticked, "All four done" | All of Chitas and Rambam, every day |
-| 3.5–10.5 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; the app closes into its icon, "Later that day"; tapped, it opens on that line, "Right where you stopped" | Close it. It opens right where you stopped. |
+| 3.5–10.5 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; closed, back to Today ("Good morning"); "Later that day", the greeting turns to "Good afternoon"; Chumash tapped, and it opens on that same line, "Right where you stopped". All real app footage | Close it. It opens right where you stopped. |
 | 10.5–14 | Tanya: the Guide tapped on, and its explanation | Tanya, explained as you go |
 | 14–17.5 | A Review question on the day's Chumash, with Rashi's reason | Then see what stayed with you |
 | 17.5–21 | Personal Tehillim and the people sheet | Each person's own Tehillim chapter |
