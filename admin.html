@@ -57,6 +57,18 @@
   .fb-ctx { margin-top: 8px; font-size: 13px; color: var(--t2); }
   .fb-foot { margin-top: 8px; font-size: 13px; color: var(--t3); }
   .fb-foot a { color: var(--t1); font-weight: 700; }
+  .sp { background: var(--card); border-radius: 22px; padding: 14px 16px; }
+  .sp + .sp { margin-top: 8px; }
+  .sp-top { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--t3); }
+  .sp-top b { color: var(--t1); font-weight: 800; }
+  .sp-st { font-weight: 800; letter-spacing: .4px; text-transform: uppercase; font-size: 12px; }
+  .sp-st.paid { color: var(--c-chumash); } .sp-st.approved { color: var(--c-rambam); } .sp-st.declined { color: var(--t3); }
+  .sp-line { margin-top: 8px; font-size: 15px; line-height: 1.5; }
+  .sp-edit { display: grid; grid-template-columns: 150px 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .sp-edit select, .sp-edit input { width: 100%; padding: 9px 11px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--t1); font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 14px; }
+  .sp-acts { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+  .sp-acts .btn { padding: 9px 15px; }
+  @media (max-width: 560px) { .sp-edit { grid-template-columns: 1fr; } }
   .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
 </style>
 </head>
@@ -105,6 +117,7 @@ async function load(fresh) {
     if (!r.ok) throw new Error(body.error || 'HTTP ' + r.status);
     render(body);
     loadFeedback(u);
+    loadSponsors(u);
   } catch (e) { show('<div class="center"><p class="err">Couldn\'t load: ' + esc(e.message) + '</p><button class="btn" onclick="load(true)">Try again</button></div>'); }
 }
 
@@ -123,6 +136,42 @@ async function loadFeedback(u) {
       + '<p class="fb-foot">' + (f.email ? '<a href="mailto:' + esc(f.email) + '">Reply to ' + esc(f.email) + '</a>' : 'No email left') + ' · ' + esc(f.app || '') + (f.emailed === 'failed' ? ' · email to you failed' : '') + '</p></div>').join('')
       : '<p class="sub">Nothing yet.</p>';
   } catch (e) { box.innerHTML = '<p class="err">Couldn\'t load feedback: ' + esc(e.message) + '</p>'; }
+}
+
+// Sponsored days (/sponsor/): read the wording, fix it, approve it (only then
+// does anyone see it), or decline it (then refund it in Stripe)
+const SP_KINDS = { memory: "L'iluy nishmas", refuah: 'Refuah shleimah', honor: 'In honor of', success: 'For the success of' };
+async function loadSponsors(u) {
+  const box = document.getElementById('sponsors');
+  if (!box) return;
+  try {
+    const r = await fetch('/api/admin-sponsors', { headers: { authorization: 'Bearer ' + await u.getIdToken() } });
+    const { items = [], error } = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(error || 'HTTP ' + r.status);
+    box.innerHTML = items.length ? items.map(i => '<div class="sp" data-date="' + esc(i.date) + '">'
+      + '<div class="sp-top"><span><b>' + esc(new Date(i.date + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })) + '</b> · $' + esc(i.amount) + (i.email ? ' · <a href="mailto:' + esc(i.email) + '">' + esc(i.email) + '</a>' : '') + '</span>'
+      + '<span class="sp-st ' + esc(i.status) + '">' + ({ paid: 'Waiting for you', approved: 'Approved', declined: 'Declined' }[i.status] || esc(i.status)) + '</span></div>'
+      + '<p class="sp-line">' + esc(i.preview) + '</p>'
+      + (i.status === 'declined' ? '' : '<div class="sp-edit"><select aria-label="What it\'s for">' + Object.entries(SP_KINDS).map(([k, l]) => '<option value="' + k + '"' + (k === i.kind ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>'
+        + '<input aria-label="Name" value="' + esc(i.names) + '"/><input aria-label="From" placeholder="From (optional)" value="' + esc(i.by) + '"/></div>'
+        + '<div class="sp-acts">' + (i.status === 'paid' ? '<button class="btn" onclick="spAct(this,\'approve\')">Approve</button>' : '<button class="btn quiet" onclick="spAct(this,\'edit\')">Save wording</button>')
+        + '<button class="btn quiet" onclick="spAct(this,\'decline\')">Decline</button><span class="sub"></span></div>')
+      + '</div>').join('')
+      : '<p class="sub">No sponsored days yet.</p>';
+  } catch (e) { box.innerHTML = '<p class="err">Couldn\'t load sponsored days: ' + esc(e.message) + '</p>'; }
+}
+window.spAct = spAct;                                  // the buttons call it (this is a module)
+async function spAct(btn, action) {
+  const card = btn.closest('.sp'), [kind, names, by] = [...card.querySelectorAll('select, input')].map(e => e.value);
+  if (action === 'decline' && !confirm('Decline this dedication? It won\'t show, and the day opens again. Then refund the payment in Stripe.')) return;
+  const note = card.querySelector('.sp-acts .sub'); note.textContent = 'Saving…';
+  try {
+    const r = await fetch('/api/admin-sponsors', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + await auth.currentUser.getIdToken() },
+      body: JSON.stringify({ date: card.dataset.date, action, kind, names, by }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
+    loadSponsors(auth.currentUser);
+  } catch (e) { note.textContent = 'Couldn\'t save: ' + e.message; }
 }
 
 // Columns for 30 days (or 12 weeks): one or two series, the second drawn inside the first
@@ -180,6 +229,7 @@ function render(s) {
 
     + '<h2>New sign-ins, by week</h2><div class="card">' + columns(s.accounts.signedUpByWeek, 'n', null, 'New sign-ins each week') + '</div>'
 
+    + '<h2>Sponsored days</h2><div id="sponsors"><p class="sub">Loading…</p></div>'
     + '<h2>Feedback and mistake reports</h2><div id="feedback"><p class="sub">Loading…</p></div>'
     + '<p class="note">Counts only people with an account: someone using the app without signing in keeps their progress on their own phone, so it isn\'t here. '
     + 'The numbers name no one, and the server never even reads names, cities or Tehillim names to make them. Feedback shows only what people chose to write (and an email if they left one).</p>'

@@ -727,6 +727,12 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .check { position:relative; }
 .tick-ring { position:absolute; inset:-2px; border-radius:50%; border:2px solid var(--c, var(--gold)); pointer-events:none; animation:tickRing .7s ease-out forwards; }
 @keyframes tickRing { from{transform:scale(1);opacity:.8} to{transform:scale(2.1);opacity:0} }
+#dedication { margin:12px 0 0; padding:16px 18px 15px; border-radius:var(--r-m); background:var(--card); border:1px solid var(--border); text-align:center; }
+#dedication[hidden] { display:none; }
+.ded-k { margin:0 0 6px; font:700 11.5px var(--ui-font); letter-spacing:.09em; text-transform:uppercase; color:var(--t3); }
+.ded-n { margin:0; font:italic 500 21px/1.3 var(--read-font); color:var(--t1); }
+.ded-by { margin:6px 0 0; font:500 13px var(--ui-font); color:var(--t3); }
+.rd-ded { margin:0 0 18px; padding:0 2px 12px; border-bottom:1px solid var(--border); font:italic 500 16px/1.45 var(--read-font); color:var(--t2); text-align:center; }
 #thought { display:block; width:100%; text-align:left; margin:16px 0 0; padding:16px 18px; border:none; border-radius:var(--r-m); background:var(--card2); color:inherit; cursor:pointer; font:inherit; }
 .thought-k { font:800 16px var(--ui-font); color:var(--t1); margin-bottom:4px; }
 .thought-t { font-family:var(--read-font); font-size:17px; line-height:1.45; color:var(--t2); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -1461,6 +1467,8 @@ window._fsGetDoc = getDoc;
 
       <!-- Actual sections -->
       <div id="tiles-wrap"><div id="sections-list" class="tiles4" style="display:none;"></div></div>
+      <!-- The day's dedication, when someone sponsored it (/sponsor/, api/dedication.js): a plaque under the four -->
+      <div id="dedication" hidden></div>
       <p id="day-readonly" style="display:none;"></p>
       <div id="omer" style="display:none;"></div>
       <div id="review-ready" style="display:none;"></div>
@@ -1520,6 +1528,7 @@ window._fsGetDoc = getDoc;
       <p class="ps-label">About</p>
       <div class="ps-card">
         <button type="button" onclick="openFeedback('feedback')" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="ps-row-label">Send feedback</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        <a id="ps-sponsor-row" href="/sponsor/" target="_blank" rel="noopener" class="ps-row" style="text-decoration:none;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2 2.6 3.5 4.6 3.5 6.5a3.5 3.5 0 0 1-7 0C8.5 7.6 10 5.6 12 3z"/><rect x="8" y="13" width="8" height="8" rx="2"/></svg></span><span class="ps-row-label">Sponsor a day of learning</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
         <a href="/privacy.html" target="_blank" rel="noopener" class="ps-row" style="text-decoration:none;"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg></span><span class="ps-row-label">Privacy</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
         <button onclick="openCredits()" class="ps-row"><span class="ps-icon" style="color:var(--t2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><span class="ps-row-label">Texts and credits</span><svg class="ps-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
       </div>
@@ -2970,7 +2979,59 @@ async function fetchHebDateFor(d) {
   return r.json();
 }
 
+// ── THE DAY'S DEDICATION ─────────────────────────────────────────────────────
+// Someone who sponsored the day (the website's /sponsor/ page, approved by the
+// admin): a plaque under the four on Today, and a line above each of the four
+// texts. Kept as { text, line, by }: text is the whole sentence, line and by
+// its parts for the plaque. Asked for once a day (api/dedication.js, kept at
+// Vercel's edge) and remembered on the phone, so it shows offline too. Nothing
+// shows on a day nobody sponsored.
+const _ded = (() => { try { return JSON.parse(localStorage.getItem('chitas_ded') || '{}'); } catch (e) { return {}; } })();
+const _dedAsked = new Set();
+function _dedication(iso, then) {
+  if (!_dedAsked.has(iso)) {
+    _dedAsked.add(iso);
+    fetch('/api/dedication?date=' + iso).then(r => r.ok ? r.json() : null).then(j => {
+      if (!j) return;
+      const was = JSON.stringify(_ded[iso] ?? null);
+      _ded[iso] = j.text ? { text: j.text, line: j.line || null, by: j.by || null } : null;
+      try {
+        const keep = Object.keys(_ded).sort().slice(-14);   // the last two weeks are plenty
+        localStorage.setItem('chitas_ded', JSON.stringify(Object.fromEntries(keep.map(k => [k, _ded[k]]))));
+      } catch (e) {}
+      if (was !== JSON.stringify(_ded[iso])) then?.();
+    }).catch(() => {});
+  }
+  const d = _ded[iso] ?? null;
+  return typeof d === 'string' ? { text: d } : d;
+}
+function _showDedication(iso) {
+  const el = document.getElementById('dedication');
+  if (!el) return;
+  const d = _dedication(iso, () => { if (_viewedISO() === iso) _showDedication(iso); _readerDedication(); });
+  el.hidden = !d;
+  if (!d) { el.replaceChildren(); return; }
+  const p = (cls, t) => { const e = document.createElement('p'); e.className = cls; e.textContent = t; return e; };
+  el.replaceChildren(p('ded-k', "Today's learning is dedicated"), p('ded-n', d.line || d.text), ...(d.by ? [p('ded-by', 'by ' + d.by)] : []));
+}
+// Above the text in the reader (the four of Chitas). A reader that draws its
+// text again later (a guide arriving, a language switch) gets it back too.
+function _readerDedication() {
+  const c = document.getElementById('native-reader-content');
+  if (!c || !SECTION_IDS.includes(_rv.sid) || !_rv.drawn) return;
+  const t = _dedication(_rv.iso || _viewedISO(), _readerDedication)?.text;
+  let el = c.querySelector(':scope > .rd-ded');
+  if (!t) { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.className = 'rd-ded'; c.prepend(el); }
+  el.textContent = t;
+}
+if (window.MutationObserver) {
+  const c = document.getElementById('native-reader-content');
+  if (c) new MutationObserver(() => { if (_rv.drawn && SECTION_IDS.includes(_rv.sid) && !c.querySelector(':scope > .rd-ded')) _readerDedication(); }).observe(c, { childList: true });
+}
+
 function renderSectionsForOffset(iso) {
+  _showDedication(iso);
   document.getElementById('skeletons').style.display = 'none';
   const list = document.getElementById('sections-list');
   list.style.display = 'grid';
@@ -4505,6 +4566,7 @@ function _drawText(sid, data, place) {
   _rv.drawn = true;
   _readerLoading(false);
   _TEXT_DRAW[sid]();
+  _readerDedication();
   document.getElementById('native-reader-content').dataset.sectionId = sid;
   _putReaderAt(sid, place);
 }
@@ -6549,6 +6611,9 @@ function renderProfile() {
   document.getElementById('ps-track').textContent = { '3': '3 chapters a day', '1': '1 chapter a day', 'm': 'Sefer HaMitzvos' }[user.rambamTrack] || '';
   const transEl = document.getElementById('ps-chumash-trans');
   if (transEl) transEl.textContent = typeof _getChumashTransLabel === 'function' ? _getChumashTransLabel() : 'Metsudah';
+  // Sponsoring is paid on the website, so the phone apps don't offer it (Apple's and Google's payment rules)
+  const sp = document.getElementById('ps-sponsor-row');
+  if (sp) sp.style.display = window.Capacitor?.isNativePlatform?.() ? 'none' : '';
   _updateProfileExtras();
   _showThemePref();
   _showPhonePrefs();
