@@ -304,4 +304,97 @@ export const WRITTEN = {
   ],
 },
 
+
+'Kuntres Acharon 5|1|end': {
+  intro: "The last note showed G-d Himself dwelling in the Torah we learn. Today he asks why we learn laws that never happen, like the details of pigul.",
+  summary: "Even laws that never happen are rooted in G-d's wisdom, and learning them refines the world. So all of Torah, every detail, is eternal.",
+  segs: [
+    ['The question', [['כמו פרטי דיני פיגול', 'for example, the detailed']]],
+    ['Every prohibition has a root', [['שאם לא כן', 'Otherwise, it could not'], ['ואפילו המסלסל', 'Even one who dandifies'], ['והלכך גם פרטי', 'Therefore even the particular']]],
+    ['Errors, which no one chooses', [['דלא שייך במזיד', 'eventualities that cannot be'], ['ויוכל להיות דכהאי', 'Possibly in these circumstances'], ['הגהה מאדמור בעל', 'Gloss by the Tzemach', 'A note from the Tzemach Tzedek'], ['אם כן יש לומר', 'Therefore it may be'], ['מכל מקום על כל פנים', 'In any event, it does', 'Still, it is in G-d’s wisdom'], ['כמאמר מה שכל', 'as the expression'], ['וכל פרטי האבעיות', 'and all the detailed queries']]],
+    ['Each law is a strand of wisdom', [['וכל פרט הלכה', 'Every particular of the law']]],
+    ['Where the kelipot draw from', [['ובפרט מלבושים', 'and more precisely from the garments']]],
+    ['Learning separates them', [['כמו שכתוב בתיקונים', 'It is so stated in'], ['והיינו כנודע', 'This accords with what'], ['שהוא על ידי המשכת', 'This (separation) is effected'], ['ובחכמה אתברירו', 'Through chochmah']]],
+    ['Our likeness above learns too', [['העוסק גם כן', 'who is also occupied']]],
+    ['Why every soul needs all 613', [['וצריכות לבא בגלגול', 'They must again descend'], ['כדי לברר כל', 'in order to refine all'], ['שהיא קומת אדם', 'This constitutes the complete']]],
+    ['In the Time to Come', [['להעלות הנפש', '(Its purpose will be)'], ['וגם בשסה לא', 'and also in the 365'], ['ולהמתיקן בחסדים', 'and to “sweeten” them']]],
+    ['So the whole Torah is eternal', [['שגם פרטי ההלכות', 'Even the individual laws'], ['ויש לכולם שרש', 'All of them have a'], ['כמו השסה לא', 'just as the 365']]],
+  ],
+},
+
+'Kuntres Acharon 6|1|7': {
+  intro: "The last note showed that every detail of Torah is eternal. Today: King David called the laws \"songs.\" What praise of G-d is there in \"forbidden\" or \"permitted\"?",
+  summary: "All the worlds hang on one fine detail of a mitzvah, so each law shows how deep G-d's thought is. That depth was David's joy in hard times.",
+  segs: [
+    ['David’s songs', [['הנה בזהר', 'In Zohar we find'], ['ולהבין מהו השבח', 'We must understand what']]],
+    ['A verse that explains it', []],
+    ['One detail moves all worlds', [['דרך משל אם הקרבן', 'For example, if the']]],
+    ['', [['שקיבל הדם', 'if the celebrant received'], ['אזי נתבטלה', 'then all the elevations']]],
+    ['Tefillin too', [['ובדקדוק אחד', 'Through the omission of'], ['וכהאי גונא בדקדוקי', 'This applies as well']]],
+    ['The meditation', [['המתבונן מה גדלו', 'Consider How great are'], ['ואיך כולם בטלים', 'All of these are literally'], ['שהוא עומק מחשבה', 'for Torah requirements are'], ['אשר בדקדוק קל', 'Through one minor specification'], ['ומזה נתבונן', 'From this we may ponder', 'How deep His thought is'], ['ומעלתה לאין קץ', 'and infinitely transcends'], ['שכל חיותם שופע', 'The vivifying power of'], ['שהוא נמשך ממקורו', 'for each specification is drawn'], ['כמו שער האדם', 'Analogously, man’s hair']]],
+    ['David’s joy', [['שהיה מזמר', 'as he sang to']]],
+  ],
+},
+
+'Kuntres Acharon 6|8|end': {
+  recap: "Every fine detail of a mitzvah sustains all the worlds, and that was David's joy. Today: why David was still punished for calling the laws \"songs.\"",
+  summary: "That praise belongs to Torah's outer side; its inner side is G-d's own hidden delight. Holding only the outer side, David was punished with forgetting.",
+  segs: [
+    ['Why David was punished', [['ואמר לו הקדוש', 'G–d reproved him saying'], ['משום שבאמת', 'For indeed, this quality'], ['כמו שכתוב במקום אחר', 'This is explained elsewhere']]],
+    ['Torah’s inner side', [['בתכלית היחוד', 'The unity is a perfect'], ['ולגבי אין סוף', 'In terms of the En'], ['כי אתה הוא', 'For, “You are the']]],
+    ['', []],
+    ['G-d’s own delight', [['אלא כביכול', 'but rather, in a manner'], ['כי אלקים הבין', 'For “G–d understands its']]],
+    ['', []],
+    ['Before Him, specifically', [['משחקת לפניו', 'Playing before Him'], ['ועל זה אמר', 'I was reared with']]],
+    ['The outer side', [['כי התורה ניתנה', 'For the Torah is']]],
+    ['Forgetting came from there', [['ונעלם ממנו', 'Momentarily he was oblivious'], ['לחבר וליחד', 'The purpose is to'], ['שמשם נמשכו', 'This state is the'], ['וכמו שכתוב בירושלמי', 'The Jerusalem Talmud, Shekalim']]],
+  ],
+},
+
+'Kuntres Acharon 7|1|end': {
+  intro: "The last note explained why David was punished for calling the laws \"songs.\" Today he explains a verse about charity: \"like a mighty river.\"",
+  summary: "Charity, mercy shown below, wakes great mercy above, which frees the G-dly spark in our heart from its exile. So a person gives all he has for his soul.",
+  segs: [
+    ['Charity like a mighty river', [['פירוש כמו שנחל', 'The meaning is that'], ['הנמשכת מבחינת', 'issuing from the state'], ['ואותיות איתן', 'The letters of the word'], ['כמו שכתוב הנה ישכיל', 'as written, “See, my'], ['והיינו שיתגלה', 'This means that at'], ['על ידי המשכת נחל', 'by calling forth the'], ['ליבטל ביחודו', 'Then he will be'], ['אחרי הסרת', 'after removing the orlah']]],
+    ['A way, even now', [['כעין לעתיד', 'in the fashion of the'], ['והיינו על ידי שמעורר', 'This is through arousing']]],
+    ['The spark in exile', [['ליבטל ביחודו יתברך מעומקא', 'to become nullified in'], ['אזי באמת', 'then it is indeed'], ['כי הניצוץ נמשך', 'For that spark is'], ['וכשאינו יכול', 'and when it cannot'], ['ששם מקום גילוי', 'which is the proper place'], ['הרי זה בבחינת', 'then it is actually']]],
+    ['Mercy above frees it', [['ומאיר לתוך', 'and illuminates the core'], ['כנודע ממה', 'as known from the']]],
+    ['Mercy below wakes mercy above', [['דהיינו על ידי התעוררות', 'meaning that through arousing'], ['ולכן פעולת', 'Therefore the work of']]],
+    ['All he has, for his soul', []],
+  ],
+},
+
+'Kuntres Acharon 8|1|end': {
+  intro: "The last note showed how charity frees the G-dly spark in us. Here the Alter Rebbe writes to a shul that stopped a man who prays slowly from leading the service.",
+  summary: "Before Moshiach, prayer is the main service: in it we wake the hidden love and refine the animal soul. So never push aside one who prays at length.",
+  segs: [
+    ['A painful report', [['אשר עם ה', 'that G–d’s people are'], ['כמאמר רבותינו', 'Our Sages, of blessed']]],
+    ['Better to miss Kedushah', [['הלא טוב טוב לו', 'far better is it'], ['ואונס רחמנא', 'Torah does exonerate the'], ['והשליח צבור מוציאו', 'The chazzan discharges his'], ['וכדאיתא בגמרא', 'The Gemara notes this'], ['ויוצאים ידי חובת', 'They fulfill their obligation'], ['וגם קדושה וברכו', 'Kedushah and Barchu are']]],
+    ['Prayer is the main service now', [['ומכל שכן עתה', 'It is even more'], ['ועיקר העבודה', 'The primary service in'], ['כמו שכתב הרב', 'as Rabbi Chaim Vital']]],
+    ['Give ourselves to it', [['והיא חובה של תורה', 'It is literally a'], ['בסדור שבחו', 'in the presentation of'], ['לעורר בהן', 'Through them he can']]],
+    ['The first of the 613', [['כמו שכתב הרמבם', 'Maimonides, of blessed memory'], ['כי על אהבה', 'Regarding the love latent']]],
+    ['From hidden to revealed', [['כי כשהאהבה', 'While the love is'], ['וכשבאה לבחינת', 'Only when it attains']]],
+    ['Refining the sparks', [['שלכן היא עיקר', 'and for this reason'], ['שהוא בחינת אתהפכא', 'This may be either'], ['כי הדם הוא', 'For the blood is'], ['והדם מתחדש', 'and the blood is']]],
+    ['Earlier generations', [['היה הבירור', 'the refinement was instantaneous'], ['ודי למבין', 'And this will suffice']]],
+  ],
+},
+
+'Kuntres Acharon 9|1|end': {
+  intro: "The last letter defended one who prays at length. In this, the Tanya's last letter, he pleads for careful prayer together and sets rules to last.",
+  summary: "Pray together, word by word, with steady leaders; finish the Talmud each year; know the laws of Shabbat. And keep Shabbat inside too: prayer, Torah, no idle talk.",
+  segs: [
+    ['Reprove, even a hundred times', []],
+    ['A plea for prayer', [['במטותא מינייכו', 'I plead with you'], ['והשמרו והזהרו', 'Take care, be painstaking'], ['להתחיל כולם יחד', 'All should begin in'], ['ולא זה בכה', 'not one here and']]],
+    ['Who leads the service', [['שהוא הפקר', 'That office is abandoned']]],
+    ['A lasting rule', [['דהיינו לבחור', 'That is, select specified'], ['דהיינו שמתפללים', 'These shall be men']]],
+    ['', [['ולאסוף אליו', 'He shall assemble close'], ['וכמבואר בתקנות', 'This is amplified in']]],
+    ['', [['עד מתי יהיה', 'How long will this'], ['ה ישמרנו', 'may G–d protect and'], ['חזקו ואמצו', 'Strengthen and fortify your']]],
+    ['Finish the Talmud every year', [['ועיר שיש בה', 'In a city with'], ['ואם איזה מנין', 'If a congregation is'], ['וכל אחד ואחד מהלומדים', 'Each of the participants']]],
+    ['Keep Shabbat by its law', [['לזאת עצה', 'the counsel offered is'], ['כהלכתו דייקא', 'Note, according to its'], ['לכן מוטל', 'Therefore it is incumbent']]],
+    ['No idle talk', []],
+    ['Shabbat outside and inside', [['וחיצונית מהשבת', 'The externality of Shabbat']]],
+    ['', [['וזו היא בחינת', 'This is the state']]],
+    ['', [['כמו ששבת ה מיוד', 'as G–d ceased from']]],
+  ],
+},
 };
