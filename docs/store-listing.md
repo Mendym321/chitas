@@ -201,14 +201,14 @@ These must match the privacy page. If the app changes what it saves, update both
 
 **Google: Target audience and content.** 13+ (see section 4).
 
-**Copyright.** © 2026 *your name*. Apple shows this line on the listing, so use the name of the person or company the developer account is under.
+**Copyright.** © 2026 Mendel Marcus. (Apple shows this line on the listing; it's the name the developer account is under.)
 
 ---
 
 ## 7. Before we submit (things only you can answer)
 
 1. ~~**Final name**~~ Decided: "Chitas: Daily Learning" in the stores, "Chitas" on the phone.
-2. **Developer name** shown on the store: your own name, or a business name. A business name on Apple needs a D-U-N-S number (free, but it takes a week or two).
+2. ~~**Developer name**~~ Decided: **Mendel Marcus** (individual accounts on Apple and Google). The app can move to a business account later if needed.
 3. ~~**Hayom Yom English**~~ Done: the app ships its own English translation.
 4. **Fonts**: confirm the OT Vilna, OT Siddur, Shlomo, Taamey Frank and Heilig fonts can be shipped inside an app (web licences sometimes don't cover apps).
 5. **Free forever?** If you might charge later, it's easier to decide now: a paid app can't become free and back without hassle, but adding optional in-app purchases later is fine.
@@ -218,32 +218,16 @@ These must match the privacy page. If the app changes what it saves, update both
 
 ## 8. The videos
 
-Four 28-second videos, made from the real app, with original music composed for them (it's ours, so there's no licence to worry about), in `docs/store/video/`:
+Two 28-second videos, made from the real app, with original music composed for them (it's ours, so there's no licence to worry about), in `docs/store/video/`:
 
 | File | For | Size |
 |---|---|---|
 | `chitas-app-preview.mp4` | App Store, "App Preview" in the iPhone 6.9-inch slot | 886 × 1920, 30 fps |
-| `chitas-promo.mp4` | Google Play's promo video (a YouTube link) | 1920 × 1080, 30 fps |
-| `chitas-coming-soon-vertical.mp4` | Sharing now, before the App Store: WhatsApp status, Instagram stories, phones. Ends on "Coming soon to the App Store" and chitas.vercel.app | 886 × 1920 |
-| `chitas-coming-soon-wide.mp4` | The same, for YouTube, email and websites | 1920 × 1080 |
+| `chitas-promo.mp4` | Google Play's promo video (a YouTube link), and anywhere you share the app | 1920 × 1080, 30 fps |
 
-The store versions end on the name only: Apple and Google don't allow a web address or "coming soon" in a store video.
+**What it shows**, one feature per bar of music: today's four (and closing the rings), Chumash with Rashi, picking up where you stopped, the Tanya guide, a Review question, your family's Tehillim, Progress, and the name. On the App Store the preview **plays silently** on its own, so every scene carries a headline; the music is for people who tap the sound on.
 
-**What it shows**; every cut lands on a beat of the music. The first scene is what every daily-study app gives you; every scene after it is a reason to choose Chitas:
-
-| Seconds | Scene | Headline |
-|---|---|---|
-| 0–3.5 | Today: Tanya and Rambam ticked, "All four done" | All of Chitas and Rambam, every day |
-| 3.5–9.6 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; closed, back to Today ("Good morning"); "Later that day", the greeting turns to "Good afternoon"; Chumash tapped, and it opens on that same line, "Right where you stopped". All real app footage | Close it. It opens right where you stopped. |
-| 9.6–14.9 | The guides, one after another (1.75 s each), each box softly outlined: Chumash ("Today in the parsha"), Tanya ("So far in this chapter"), Rambam ("This chapter") | A guide in Chumash, Tanya and Rambam |
-| 14.9–18.4 | A Review question on the day's Chumash, with Rashi's reason | Then see what stayed with you |
-| 18.4–21.9 | Personal Tehillim and the people sheet | Each person's own Tehillim chapter |
-| 21.9–24.5 | Progress: totals, milestones | Watch your learning add up |
-| 24.5–28 | The four rings draw in, then the name | Chitas · Chumash · Tehillim · Tanya · Rambam |
-
-Keeping your place gets the most time, so it can be told clearly; the three guides go by quickly under one headline. On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
-
-**App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:00**, the Today screen under its headline (there from the first frame), so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
+**App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:01**, the Today screen under its headline, so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
 
 **Google Play:** upload `chitas-promo.mp4` to YouTube (Visibility: **Unlisted**; and in YouTube Studio → Monetization, ads **off**, as Google requires), then paste its link into Play Console → Store listing → Video.
 
