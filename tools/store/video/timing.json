@@ -1,96 +1,17 @@
 {
-  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One bar of music is 3.5 s (68.57 beats a minute, 4 beats a bar: 105 frames at 30 fps); a scene is 'beats' long (a beat is 26.25 frames), 32 beats in all (28 s); cuts land on beats. Each scene is filmed 12 frames longer, for the dissolve into the next. mark: a soft highlight over one line of the screen, [from s, to s, y in the app's points (443 x 960), label]. soft: [s, ...] moments the screen changes at once (closing, opening), eased over 1/5 s. chip: [from s, to s, label], a small dark label on the screen. tap: [s, name], a touch where capture found it (frames/<scene>/where.json). outline: the name of a box (from where.json) softly outlined, so the eye goes to it.",
+  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One scene per bar of music: 68.57 beats a minute, 4 beats a bar, so each scene is 3.5 s (105 frames at 30 fps). Each scene is filmed 12 frames longer, for the dissolve into the next.",
   "fps": 30,
   "bpm": 68.5714,
   "bar_frames": 105,
   "overlap": 12,
   "scenes": [
-    {
-      "id": "today",
-      "color": "cream",
-      "head": "All of Chitas and Rambam,\nevery day",
-      "beats": 4
-    },
-    {
-      "id": "place",
-      "color": "gold",
-      "head": "Close it. It opens\nright where you stopped.",
-      "mark": [
-        [
-          0.55,
-          1.75,
-          310,
-          "You stopped here"
-        ],
-        [
-          4.5,
-          6.125,
-          310,
-          "Right where you stopped"
-        ]
-      ],
-      "soft": [
-        1.9,
-        3.0,
-        4.0
-      ],
-      "chip": [
-        2.5,
-        3.85,
-        "Later that day"
-      ],
-      "tap": [
-        [
-          3.55,
-          "chumash"
-        ]
-      ],
-      "beats": 7
-    },
-    {
-      "id": "guide_chumash",
-      "beats": 2,
-      "color": "gold",
-      "head": "A guide in Chumash,\nTanya and Rambam",
-      "outline": "guide"
-    },
-    {
-      "id": "guide_tanya",
-      "beats": 2,
-      "color": "purple",
-      "head": "A guide in Chumash,\nTanya and Rambam",
-      "outline": "guide"
-    },
-    {
-      "id": "guide_rambam",
-      "beats": 2,
-      "color": "green",
-      "head": "A guide in Chumash,\nTanya and Rambam",
-      "outline": "guide"
-    },
-    {
-      "id": "review",
-      "color": "ink",
-      "head": "Then see what\nstayed with you",
-      "beats": 4
-    },
-    {
-      "id": "family",
-      "color": "green",
-      "head": "Each person's own\nTehillim chapter",
-      "beats": 4
-    },
-    {
-      "id": "progress",
-      "color": "gold",
-      "head": "Watch your learning\nadd up",
-      "beats": 3
-    },
-    {
-      "id": "end",
-      "color": "ink",
-      "head": "",
-      "beats": 4
-    }
+    { "id": "today",    "color": "cream",  "head": "Chitas and Rambam,\nready every day" },
+    { "id": "chumash",  "color": "gold",   "head": "Chumash with Rashi,\nside by side" },
+    { "id": "place",    "color": "blue",   "head": "Stop anywhere.\nPick up right there." },
+    { "id": "tanya",    "color": "purple", "head": "A guide to\nunderstand the Tanya" },
+    { "id": "review",   "color": "ink",    "head": "Check what\nstayed with you" },
+    { "id": "family",   "color": "green",  "head": "Your family's\nTehillim chapters" },
+    { "id": "progress", "color": "gold",   "head": "Watch your learning\nadd up" },
+    { "id": "end",      "color": "ink",    "head": "" }
   ]
 }
