@@ -223,15 +223,16 @@ The store versions end on the name only: Apple and Google don't allow a web addr
 
 | Seconds | Scene | Headline |
 |---|---|---|
-| 0–3.5 | Today: Tanya and Rambam ticked, "All four done" | All of Chitas and Rambam, every day |
-| 3.5–9.6 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; closed, back to Today ("Good morning"); "Later that day", the greeting turns to "Good afternoon"; Chumash tapped, and it opens on that same line, "Right where you stopped". All real app footage | Close it. It opens right where you stopped. |
-| 9.6–14.9 | The guides, one after another (1.75 s each), each box softly outlined: Chumash ("Today in the parsha"), Tanya ("So far in this chapter"), Rambam ("This chapter") | A guide in Chumash, Tanya and Rambam |
-| 14.9–18.4 | A Review question on the day's Chumash, with Rashi's reason | Then see what stayed with you |
-| 18.4–21.9 | Personal Tehillim and the people sheet | Each person's own Tehillim chapter |
+| 0–2.6 | Today: Tanya and Rambam ticked, "All four done" | All of Chitas and Rambam, every day |
+| 2.6–8.75 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; closed, back to Today ("Good morning"); "Later that day", the greeting turns to "Good afternoon"; Chumash tapped, and it opens on that same line, "Right where you stopped". All real app footage | Close it. It opens right where you stopped. |
+| 8.75–11.4 | The Reminders sheet: Tehillim switched on, then set to "After Shacharis" (8:30), two real taps | A reminder for each, at your time |
+| 11.4–16.6 | The guides, one after another, each box softly outlined: Chumash ("Today in the parsha"), Tanya ("So far in this chapter"), Rambam ("This chapter") | A guide in Chumash, Tanya and Rambam |
+| 16.6–19.25 | A Review question on the day's Chumash, with Rashi's reason | Then see what stayed with you |
+| 19.25–21.9 | Personal Tehillim and the people sheet | Each person's own Tehillim chapter |
 | 21.9–24.5 | Progress: totals, milestones | Watch your learning add up |
 | 24.5–28 | The four rings draw in, then the name | Chitas · Chumash · Tehillim · Tanya · Rambam |
 
-Keeping your place gets the most time, so it can be told clearly; the three guides go by quickly under one headline. On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
+Keeping your place gets the most time, so it can be told clearly, and reminders follow it: both are reasons to have the app rather than a website. The three guides go by quickly under one headline. Everything shows one day, 11 November 2026, fixed in `tools/store/video/capture.mjs` (`DAY`), as in the screenshots. The video shows the app's own Reminders screen rather than the phone's notifications, because Apple's previews may only show the app; the notifications themselves are in screenshot 4. On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
 
 **App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:00**, the Today screen under its headline (there from the first frame), so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
 

@@ -68,10 +68,14 @@ const seed = (today) => {                                          // today: wha
   localStorage.setItem('chitas_lang_tehillim', 'both');
 };
 
+// The day the video shows: the same as the screenshots (store/shoot.mjs), so the Review
+// questions (review.mjs, from this day's Chumash) match, and every scene is one day.
+const DAY = '2026-11-11';
+
 async function open(today = { chumash: true, tehillim: true }) {
   const p = await ctx.newPage();
   p.on('pageerror', e => console.log('  page error:', e.message.split('\n')[0]));
-  await p.clock.install({ time: (() => { const d = new Date(); d.setHours(8, 40, 0, 0); return d; })() });
+  await p.clock.install({ time: new Date(DAY + 'T08:40:00') });
   await p.addInitScript(seed, today);
   await p.goto(BASE + '/');
   await p.waitForFunction(() => typeof init === 'function' && typeof dayNote === 'function', null, { timeout: 20000 });
@@ -124,6 +128,25 @@ const SCENES = {
       }
       if (f === 90) { const d = new Date(await p.evaluate(() => Date.now())); d.setHours(14, 10); await p.clock.setSystemTime(d); await p.evaluate(() => setGreeting()); }   // later that day
       if (f === 120) await p.evaluate(() => openChabadPanel('chumash'));                                    // opened again: straight back there
+    },
+  },
+  // Reminders: the real sheet; Tehillim switched on, then moved to "After Shacharis" (8:30).
+  // Where the switch and the button are goes next to the frames, for the tap marks.
+  reminders: {
+    lead: 20,                                                        // the sheet has finished sliding up before recording
+    setup: async p => {
+      await p.evaluate(() => { localStorage.setItem('chitas_reminders', JSON.stringify({ chumash: '07:30', tanya: '21:00', rambam: '21:30' })); switchTab('profile'); openReminders(); });
+      await wait(p, 1500);
+    },
+    act: async (p, f) => {
+      if (f === 0) p._where = await p.evaluate(() => { const r = document.querySelector('[aria-label="Tehillim reminder"]').getBoundingClientRect(); return { sw: [Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)] }; });
+      if (f === 18) await p.evaluate(() => setReminderTime('tehillim', '07:00'));
+      if (f === 22) p._where.pick = await p.evaluate(() => {
+        const row = document.querySelector('[aria-label="Tehillim reminder"]').closest('.rem-row');
+        const b = [...row.querySelectorAll('.tz-opt')].find(x => x.textContent === 'After Shacharis').getBoundingClientRect();
+        return [Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2)];
+      });
+      if (f === 44) await p.evaluate(() => setReminderTime('tehillim', '08:30'));
     },
   },
   // The guides: each text opened with its guide on, the guide's box in view (its place goes
