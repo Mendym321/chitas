@@ -8,7 +8,7 @@ Screenshots and graphics are in `docs/store/` (made from the real app with real 
 |---|---|---|
 | `apple/1-…10-*.png` | App Store, "iPhone 6.9-inch" slot (Apple scales them for smaller iPhones) | 1290 × 2796 |
 | `ipad/1-…10-*.png` | App Store, "iPad 13-inch" slot (needed because the app also runs on iPad) | 2064 × 2752 |
-| `google/1-…8-*.png` | Google Play, phone screenshots (Google takes 8: the same set without Reminders and Rambam) | 1080 × 2160 |
+| `google/1-…8-*.png` | Google Play, phone screenshots (Google takes 8: the same set without Hayom Yom and Rambam) | 1080 × 2160 |
 | `feature-graphic.png` | Google Play, feature graphic | 1024 × 500 |
 | `icons/icon-1024.png` (repo root) | App Store icon | 1024 × 1024 |
 | `icons/icon-512.png` (repo root) | Google Play icon | 512 × 512 |
@@ -20,27 +20,17 @@ Upload them in number order. The first three are the ones people see in search r
 | 1 | Chitas and Rambam, ready every day | Today's portions, worked out for you | Today |
 | 2 | Chumash with Rashi | Hebrew and English, side by side | Chumash |
 | 3 | Stop anywhere. Pick up right there. | Your place is kept, even on your other devices | Tehillim halfway, "Continue from your other device" |
-| 4 | Understand the Tanya | A plain-English guide walks you through | Tanya with its guide |
-| 5 | Check what stayed with you | A few questions, written from today's text | A Review question, answered |
-| 6 | Your Tehillim, and your family's | Each person's chapter, from their Hebrew birthday | Personal Tehillim |
-| 7 | Hayom Yom, every day | The original, with a clear English translation | Hayom Yom |
+| 4 | A reminder for each, at your time | Says what's waiting, and never on Shabbos | Two of the app's real reminders (Tanya at night, Tehillim in the morning) over the Reminders settings |
+| 5 | Understand the Tanya | A plain-English guide walks you through | Tanya with its guide |
+| 6 | Check what stayed with you | A few questions, written from today's text | A Review question, answered |
+| 7 | Your Tehillim, and your family's | Each person's chapter, from their Hebrew birthday | Personal Tehillim |
 | 8 | Watch your learning add up | Every passuk, chapter and halacha you've learned | Progress |
-| 9 | Reminders, at your times | One for each part, when you learn it | Reminders (Apple only) |
+| 9 | Hayom Yom, every day | The original, with a clear English translation | Hayom Yom (Apple only) |
 | 10 | Rambam your way | Three chapters, one, or Sefer HaMitzvos. Light or dark. | Rambam, dark mode (Apple only) |
 
-**Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); and does it fit my day, so I can stop and pick up again, here or on another device (3). Keeping your place, on every device, is something similar apps don't seem to do, so it comes early. Then: will I understand it (4), and did it stay with me (5), the Review shown as what it is, a few good questions with the answer explained and the line it comes from. After that, what no other app does for them: their own family's Tehillim (6), Hayom Yom in a clear English (7), a quiet record of what they've learned (8), and a nudge at their own times (9).
+Google takes 8: numbers 1 to 8. The screens show 11 November 2026 (1 Kislev, Toldos), fixed in `tools/store/shoot.mjs` (`DAY`) so the Review questions match the day's Chumash.
 
----|---|---|---|
-| 1 | Chitas and Rambam, ready every day | Today's portions, worked out for you | Today |
-| 2 | Chumash with Rashi | Hebrew and English, side by side | Chumash |
-| 3 | Understand the Tanya | A plain-English guide walks you through | Tanya with its guide |
-| 4 | Your Tehillim, and your family's | Each person's chapter, from their Hebrew birthday | Personal Tehillim |
-| 5 | Hayom Yom, every day | The original, with a clear English translation | Hayom Yom |
-| 6 | Watch your learning add up | Every passuk, chapter and halacha you've learned | Progress |
-| 7 | Reminders, at your times | One for each part, when you learn it | Reminders |
-| 8 | Rambam your way | Three chapters, one, or Sefer HaMitzvos. Light or dark. | Rambam, dark mode |
-
-**Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); will I understand it (3). Then what no other app does for them: their own family's Tehillim (4), Hayom Yom in a clear English (5), a quiet record of what they've learned (6), and a nudge at their own times (7). The Review questions are in the description, not the pictures: they're optional, and leading with them made the app look like a test.
+**Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); and does it fit my day (3 and 4). Two things answer that, and both are reasons to have the app rather than a website: it keeps your place when you stop, and it reminds you at your own time for each part, saying what's waiting and opening right to it, never on Shabbos. So they come early. Then: will I understand it (5), and did it stay with me (6). After that, what no other app does for them: their own family's Tehillim (7) and a quiet record of what they've learned (8), with Hayom Yom (9) and the Rambam tracks (10) on Apple.
 
 ---
 
