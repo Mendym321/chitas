@@ -201,14 +201,14 @@ These must match the privacy page. If the app changes what it saves, update both
 
 **Google: Target audience and content.** 13+ (see section 4).
 
-**Copyright.** © 2026 Mendel Marcus. (Apple shows this line on the listing; it's the name the developer account is under.)
+**Copyright.** © 2026 Menachem Marcus. (Apple shows this line on the listing; it's the name the developer account is under.)
 
 ---
 
 ## 7. Before we submit (things only you can answer)
 
 1. ~~**Final name**~~ Decided: "Chitas: Daily Learning" in the stores, "Chitas" on the phone.
-2. ~~**Developer name**~~ Decided: **Mendel Marcus** (individual accounts on Apple and Google). The app can move to a business account later if needed.
+2. ~~**Developer name**~~ Decided: **Menachem Marcus** (individual accounts on Apple and Google). The app can move to a business account later if needed.
 3. ~~**Hayom Yom English**~~ Done: the app ships its own English translation.
 4. **Fonts**: confirm the OT Vilna, OT Siddur, Shlomo, Taamey Frank and Heilig fonts can be shipped inside an app (web licences sometimes don't cover apps).
 5. **Free forever?** If you might charge later, it's easier to decide now: a paid app can't become free and back without hassle, but adding optional in-app purchases later is fine.
