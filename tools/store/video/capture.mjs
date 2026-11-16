@@ -7,7 +7,7 @@
 // Usage (from tools/):  node store/video/capture.mjs [scene ...]
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
-import { readFile, mkdir, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { extname } from 'node:path';
 import { SCENES as TIMING, FPS } from './timing.mjs';
@@ -50,7 +50,7 @@ await ctx.route('**/*', async r => {
   } catch { return r.abort(); }
 });
 
-const seed = () => {
+const seed = (today) => {                                          // today: what's learned so far today
   const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   const ALL = { chumash: true, tehillim: true, tanya: true, rambam: true }, pastDone = {}, pastQuizDone = {};
   for (let i = 1; i <= 46; i++) {
@@ -60,7 +60,7 @@ const seed = () => {
     if (i % 4 === 1) pastQuizDone[iso(d)] = { chumash: { quick: { r: i % 3 ? 4 : 3, n: 4 } } };
   }
   localStorage.setItem('chitas_v78', JSON.stringify({ uid: 'demo', name: 'Mendy Cohen', rambamTrack: '3', started: true, rambamTrackAsked: true,
-    done: { chumash: true, tehillim: true }, pastDone, pastQuizDone, lastDate: iso(new Date()), extraTracks: ['hayomYom'],
+    done: today, pastDone, pastQuizDone, lastDate: iso(new Date()), extraTracks: ['hayomYom'],
     tehillimFixedOpts: { rebbe: true, rebbetzin: false },
     tehillimPeople: [{ label: 'Me', heDay: 14, heMonth: 'Adar', heYear: 5752 }, { label: 'Chana', heDay: 3, heMonth: 'Tammuz', heYear: 5779 }, { label: 'Levi', heDay: 22, heMonth: 'Shevat', heYear: 5784 }] }));
   localStorage.setItem('chitas_lang_chumash', 'both'); localStorage.setItem('chitas_chumash_rashi', '1');
@@ -68,11 +68,15 @@ const seed = () => {
   localStorage.setItem('chitas_lang_tehillim', 'both');
 };
 
-async function open() {
+// The day the video shows: the same as the screenshots (store/shoot.mjs), so the Review
+// questions (review.mjs, from this day's Chumash) match, and every scene is one day.
+const DAY = '2026-11-11';
+
+async function open(today = { chumash: true, tehillim: true }) {
   const p = await ctx.newPage();
   p.on('pageerror', e => console.log('  page error:', e.message.split('\n')[0]));
-  await p.clock.install({ time: (() => { const d = new Date(); d.setHours(8, 40, 0, 0); return d; })() });
-  await p.addInitScript(seed);
+  await p.clock.install({ time: new Date(DAY + 'T08:40:00') });
+  await p.addInitScript(seed, today);
   await p.goto(BASE + '/');
   await p.waitForFunction(() => typeof init === 'function' && typeof dayNote === 'function', null, { timeout: 20000 });
   await p.evaluate(async () => { await init(); document.getElementById('main-app').classList.add('ready'); try { hideLoader(); } catch (e) {} document.getElementById('app-loader')?.remove(); });
@@ -81,8 +85,23 @@ async function open() {
 }
 const wait = (p, ms) => p.waitForTimeout(ms);
 const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;   // in and out, like a hand scrolling
-const scrollTo = (p, y) => p.evaluate(y => { const r = document.getElementById('native-reader'); r.scrollTop = y; }, y);
+const scrollTo = (p, y) => p.evaluate(y => { const r = document.getElementById('native-reader'); r.scrollTop = y; if (window._rv) _rv.touched = true; }, y);   // as a finger does: yours now, so the app doesn't put its place back
 const readerY = (p, sel, off) => p.evaluate(([sel, off]) => { const r = document.getElementById('native-reader'), el = document.querySelector(sel); return el ? Math.max(0, r.scrollTop + el.getBoundingClientRect().top - r.getBoundingClientRect().top - off) : 0; }, [sel, off]);
+
+// A text opened with its guide on, the guide's box brought to about a quarter of the way down
+const guideScene = (sid, on) => ({
+  today: { tehillim: true },
+  lead: 20,
+  setup: async p => {
+    await p.evaluate(on); await p.evaluate(sid => openChabadPanel(sid), sid);
+    await wait(p, 15000);                                           // everything in, and the app done putting back your place (no jump mid-scene)
+    const y = await readerY(p, '#native-reader-content .tz-guide', 150); await scrollTo(p, y);
+    await wait(p, 2500); await scrollTo(p, await readerY(p, '#native-reader-content .tz-guide', 150));
+  },
+  act: async (p, f) => {                                            // measured on the first frame filmed, once the page has settled
+    if (f === 0) p._where = await p.evaluate(() => { const r = document.querySelector('#native-reader-content .tz-guide')?.getBoundingClientRect(); return { guide: r ? [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)] : null }; });
+  },
+});
 
 // Each scene: set up (time flows), then act(frame) once per frame while filmed
 const SCENES = {
@@ -93,24 +112,36 @@ const SCENES = {
       if (f === 44) await p.evaluate(() => { markDone('rambam'); renderSectionsForOffset(_viewedISO()); });
     },
   },
-  chumash: {
-    setup: async p => { await p.evaluate(() => { user.done = { tehillim: true }; openChabadPanel('chumash'); }); await wait(p, 6000); p._to = await readerY(p, '.rd-comm', 380); await scrollTo(p, 0); },
-    act: async (p, f, n) => scrollTo(p, Math.round(p._to * ease(Math.min(1, Math.max(0, (f - 8) / (n - 22)))))),
-  },
+  // Keeping your place, all real: reading Chumash with Rashi; the text closed (back to Today, in
+  // the morning); later that day (the greeting turns to afternoon); Chumash tapped open again:
+  // the same line. Where the Chumash tile is goes next to the frames, for the tap mark.
   place: {
-    setup: async p => { await p.evaluate(() => { user.done = { chumash: true }; openChabadPanel('tehillim'); }); await wait(p, 6000);
-      p._at = await p.evaluate(() => { const r = document.getElementById('native-reader'); return Math.round((r.scrollHeight - r.clientHeight) * .18); });
-      p._there = await p.evaluate(() => { const r = document.getElementById('native-reader'); return Math.round((r.scrollHeight - r.clientHeight) * .55); });
-      await scrollTo(p, p._at); },
+    today: { tehillim: true },
+    setup: async p => { await p.evaluate(() => openChabadPanel('chumash')); await wait(p, 6000);
+      p._at = await p.evaluate(() => { const r = document.getElementById('native-reader'); return Math.round((r.scrollHeight - r.clientHeight) * .22); });
+      await scrollTo(p, p._at - 120); },
     act: async (p, f) => {
-      if (f === 16) await p.evaluate(() => { document.getElementById('other-place').hidden = false; });
-      if (f === 56) await p.evaluate(y => { _hideOtherPlace(); document.getElementById('native-reader').scrollTop = y; }, p._there);   // what "Continue" does: straight there
+      if (f < 15) await scrollTo(p, Math.round(p._at - 120 + 120 * ease(f / 14)));                           // reading on a little, then resting on a line
+      if (f === 57) {                                                                                       // closed: back to Today; the place is kept
+        await p.evaluate(() => { _rv.touched = true; closeChabadPanel(); });
+        p._where = await p.evaluate(() => { const r = document.getElementById('card-chumash').getBoundingClientRect(); return { chumash: [Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)] }; });
+      }
+      if (f === 90) { const d = new Date(await p.evaluate(() => Date.now())); d.setHours(14, 10); await p.clock.setSystemTime(d); await p.evaluate(() => setGreeting()); }   // later that day
+      if (f === 120) await p.evaluate(() => openChabadPanel('chumash'));                                    // opened again: straight back there
     },
   },
-  tanya: {
-    setup: async p => { await p.evaluate(() => { user.done = { chumash: true, tehillim: true }; openChabadPanel('tanya'); }); await wait(p, 8000); await scrollTo(p, 0); },
-    act: async (p, f, n) => scrollTo(p, Math.round(760 * ease(Math.min(1, Math.max(0, (f - 10) / (n - 26)))))),
+  // A reminder arrives: the video shows the phone's lock screen over this (compose.py); a tap opens
+  // Tehillim, as tapping the app's reminder does. The first frame, Today, is the lock screen's wallpaper.
+  reminders: {
+    today: { chumash: true },
+    setup: async p => { await wait(p, 4000); },
+    act: async (p, f) => { if (f === 30) await p.evaluate(() => openChabadPanel('tehillim')); },   // open under the lock screen, ready when it slides away
   },
+  // The guides: each text opened with its guide on, the guide's box in view (its place goes
+  // next to the frames, for the outline the video draws around it)
+  guide_chumash: guideScene('chumash', () => localStorage.setItem('chitas_chumash_guide', 'on')),
+  guide_tanya:   guideScene('tanya',   () => localStorage.setItem('chitas_tanya_guide', '1')),
+  guide_rambam:  guideScene('rambam',  () => localStorage.setItem('chitas_rambam_guide', 'on')),
   review: {
     setup: async p => { await p.evaluate(async () => { window._fb = { ...(window._fb || {}), getIdToken: async () => 't', saveUser: async () => {} }; openQuiz('chumash'); });
       await wait(p, 600); await p.evaluate(() => _startQuiz('quick')); await wait(p, 1500); },
@@ -146,16 +177,21 @@ for (const [name, scene] of Object.entries(SCENES)) {
   const n = TIMING[name].frames;
   const dir = OUT + name + '/';
   await rm(dir, { recursive: true, force: true }); await mkdir(dir, { recursive: true });
-  const p = await open();
+  const p = await open(scene.today);
   await scene.setup(p);
+  if (scene.where) await writeFile(dir + 'where.json', JSON.stringify(await p.evaluate(sels => Object.fromEntries(Object.entries(sels).map(([k, sel]) => {
+    const r = document.querySelector(sel)?.getBoundingClientRect(); return [k, r ? [Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)] : null];
+  })), scene.where)));
   const now = await p.evaluate(() => Date.now());
   await p.clock.pauseAt(now + 1000);
-  for (let f = 0; f < n; f++) {
-    await scene.act(p, f, n);
+  const lead = scene.lead || 0;                                     // frames run before recording (last settling happens off camera)
+  for (let f = -lead; f < n; f++) {
+    if (f >= 0) await scene.act(p, f, n);
     await p.clock.runFor(1000 / FPS);
-    await step(p, f * 1000 / FPS);
-    await p.screenshot({ path: dir + String(f).padStart(4, '0') + '.jpg', type: 'jpeg', quality: 94 });
+    await step(p, (f + lead) * 1000 / FPS);
+    if (f >= 0) await p.screenshot({ path: dir + String(f).padStart(4, '0') + '.jpg', type: 'jpeg', quality: 94 });
   }
+  if (p._where) await writeFile(dir + 'where.json', JSON.stringify(p._where));
   console.log('scene', name, n, 'frames');
   await p.close();
 }

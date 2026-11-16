@@ -69,10 +69,14 @@ const seed = () => {
   localStorage.setItem('chitas_reminders', JSON.stringify({ chumash: '07:30', tehillim: '07:45', tanya: '21:00', rambam: '21:30' }));
 };
 
+// The day the screenshots show. Fixed, so they can be made again and look the same, and
+// so the Review questions (review.mjs, written from this day's Chumash) match the screen.
+const DAY = '2026-11-11';
+
 async function open(dayShift = 0) {
   const p = await ctx.newPage();
   p.on('pageerror', e => console.log('  page error:', e.message.split('\n')[0]));
-  await p.clock.install({ time: (() => { const d = new Date(); d.setDate(d.getDate() + dayShift); d.setHours(8, 40, 0, 0); return d; })() });
+  await p.clock.install({ time: (() => { const d = new Date(DAY + 'T08:40:00'); d.setDate(d.getDate() + dayShift); return d; })() });
   await p.addInitScript(seed);
   await p.goto(BASE + '/');
   await p.waitForFunction(() => typeof init === 'function' && typeof dayNote === 'function', null, { timeout: 20000 });

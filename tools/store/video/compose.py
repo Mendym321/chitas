@@ -1,14 +1,16 @@
 """The app preview video, part 3: edited together.
 
 Takes the filmed scenes (capture.mjs) and the music (music.py), and makes:
-  out/chitas-app-preview.mp4   886 x 1920, for the App Store (the app's screen
-                               with a headline above it; no phone frame, which
-                               Apple rejects in previews)
-  out/chitas-promo.mp4         1920 x 1080, for Google Play (a YouTube link) and
-                               anywhere else: the screen in a phone, the words beside it
-Each cut is on a downbeat: one scene per bar (timing.json).
+  out/chitas-app-preview.mp4         886 x 1920, for the App Store (the app's screen
+                                     with a headline above it; no phone frame, which
+                                     Apple rejects in previews)
+  out/chitas-promo.mp4               1920 x 1080, for Google Play (a YouTube link):
+                                     the screen in a phone, the words beside it
+  out/chitas-coming-soon-vertical.mp4  the same two, ending on "Coming soon to the
+  out/chitas-coming-soon-wide.mp4      App Store" and the website's address, to share
+Each cut is on a downbeat: a scene is one bar or more (timing.json).
 
-Usage (from tools/):  python3 store/video/compose.py [portrait|landscape]
+Usage (from tools/):  python3 store/video/compose.py [preview|promo|soon-vertical|soon-wide ...]
 Needs numpy, Pillow and ffmpeg.
 """
 import json, math, subprocess, sys
@@ -20,7 +22,12 @@ HERE = Path(__file__).parent
 T = json.loads((HERE / 'timing.json').read_text())
 FPS, BAR, OVER = T['fps'], T['bar_frames'], T['overlap']
 SCENES = T['scenes']
-TOTAL = BAR * len(SCENES)
+_beats = [sum(s['beats'] for s in SCENES[:i]) for i in range(len(SCENES) + 1)]
+STARTS = [round(b * BAR / 4) for b in _beats[:-1]]           # every cut on a beat (a beat is BAR/4 frames)
+TOTAL = round(_beats[-1] * BAR / 4)
+LEN = [b - a for a, b in zip(STARTS, STARTS[1:] + [TOTAL])]  # each scene's length in frames
+SITE = 'chitas.vercel.app'
+ENDING = 'store'                                    # 'store', or 'soon': coming soon, with the address
 DISSOLVE = 10                                     # frames
 OUT = HERE / 'out'; OUT.mkdir(exist_ok=True)
 
@@ -33,15 +40,122 @@ def ease_out(t): t = min(1, max(0, t)); return 1 - (1 - t) ** 3
 def ease_io(t): t = min(1, max(0, t)); return 3 * t * t - 2 * t * t * t
 def mix(a, b, t): return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
-_cache = {}
-def screen(scene, f, w, h):
+_cache, _count, _where = {}, {}, {}
+def filmed(scene, f, w, h):
     """A filmed frame of a scene, sized (cached per size)."""
-    f = max(0, min(BAR + OVER - 1, f))
+    if scene not in _count: _count[scene] = len(list((HERE / 'frames' / scene).glob('*.jpg')))
+    f = max(0, min(_count[scene] - 1, f))
     key = (scene, f, w, h)
     if key not in _cache:
         if len(_cache) > 64: _cache.clear()
         _cache[key] = Image.open(HERE / 'frames' / scene / f'{f:04d}.jpg').convert('RGB').resize((w, h), Image.LANCZOS)
     return _cache[key]
+
+ICON = Image.open(HERE.parents[2] / 'icons' / 'icon-1024.png').convert('RGB')
+
+def screen(sc, f, w, h):
+    """What the screen shows: the filmed frame (eased where the app changes at once),
+    with the place marked, a small label, and a touch where something is tapped."""
+    sec = f / FPS; s = w / 443                       # pixels per point of the app
+    img = filmed(sc['id'], f, w, h)
+    for c in sc.get('soft', []):                     # closing or opening: eased over 6 frames, not a jump
+        fc = round(c * FPS)
+        if fc <= f < fc + 6: img = Image.blend(filmed(sc['id'], fc - 1, w, h), img, ease_io((f - fc + 1) / 7))
+    bg, fg = COLORS[sc['color']]
+    over = None
+    for a, b, y, label in sc.get('mark', []):        # the line you stopped on
+        k = min(ease_out((sec - a) / 0.25), 1 - ease_io((sec - (b - 0.15)) / 0.15)) if a <= sec <= b else 0
+        if k <= 0: continue
+        over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(over)
+        yy, hh = y * s, 30 * s
+        d.rounded_rectangle((6 * s, yy - hh / 2, w - 6 * s, yy + hh / 2), 6 * s, fill=bg + (round(70 * k),))
+        d.rounded_rectangle((6 * s, yy - hh / 2, 9 * s, yy + hh / 2), 1.5 * s, fill=bg + (round(255 * k),))
+        fl = font(800, round(12.5 * s)); tw = d.textlength(label, font=fl); px, py = 6 * s, yy - hh / 2 - 27 * s
+        d.rounded_rectangle((px, py, px + tw + 20 * s, py + 23 * s), 11.5 * s, fill=bg + (round(255 * k),))
+        d.text((px + 10 * s, py + 4 * s), label, font=fl, fill=fg + (round(255 * k),))
+    if sc.get('chip'):                               # time passing, said once and small
+        a, b, label = sc['chip']
+        k = min(ease_out((sec - a) / 0.3), 1 - ease_io((sec - (b - 0.25)) / 0.25)) if a <= sec <= b else 0
+        if k > 0:
+            over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(over)
+            fl = font(800, round(17 * s)); tw = d.textlength(label, font=fl)
+            cy = h * 0.55 + (1 - k) * 8 * s; ph, pw = 40 * s, tw + 40 * s
+            d.rounded_rectangle((w / 2 - pw / 2, cy - ph / 2, w / 2 + pw / 2, cy + ph / 2), ph / 2, fill=(31, 27, 22, round(232 * k)))
+            d.text((w / 2 - tw / 2, cy - fl.size * 0.62), label, font=fl, fill=(251, 247, 239, round(255 * k)))
+    if sc.get('lock'):                                # the phone's lock screen: a reminder arrives, a tap opens the app
+        img = lock_screen(sc, sec, img, w, h, s)
+    if sc.get('notify') and not sc.get('lock'):       # a reminder slides down from the top, as the phone shows it
+        a0, a1, title, body = sc['notify']
+        k = ease_out((sec - a0) / 0.3) if sec < a1 else 1 - ease_io((sec - a1) / 0.22)
+        if k > 0 and sec >= a0:
+            over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0))
+            bw, bh = w - 16 * s, 82 * s; x0 = 8 * s; y0 = -bh + (bh + 14 * s) * k
+            sh = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+            ImageDraw.Draw(sh).rounded_rectangle((x0, y0 + 6 * s, x0 + bw, y0 + bh + 6 * s), 24 * s, fill=(0, 0, 0, 70))
+            over = Image.alpha_composite(over, sh.filter(ImageFilter.GaussianBlur(10 * s)))
+            d = ImageDraw.Draw(over)
+            d.rounded_rectangle((x0, y0, x0 + bw, y0 + bh), 24 * s, fill=(250, 248, 244, 255))
+            ic = round(46 * s); icon = ICON.resize((ic, ic), Image.LANCZOS)
+            m = Image.new('L', (ic, ic), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, ic - 1, ic - 1), round(10 * s), fill=255)
+            over.paste(icon, (round(x0 + 14 * s), round(y0 + (bh - ic) / 2)), m)
+            tx = x0 + 14 * s + ic + 12 * s
+            d.text((tx, y0 + 15 * s), title, font=font(800, round(17.5 * s)), fill=(31, 27, 22, 255))
+            d.text((tx, y0 + 42 * s), body, font=font(600, round(17 * s)), fill=(58, 54, 49, 255))
+            fr = font(600, round(14.5 * s)); d.text((x0 + bw - 16 * s - d.textlength('now', font=fr), y0 + 17 * s), 'now', font=fr, fill=(110, 106, 100, 255))
+    for t0, name in sc.get('tap', []):                # a touch: a soft circle that presses in and lifts
+        u = (sec - t0) / 0.45
+        if not 0 <= u <= 1: continue
+        if not isinstance(name, list) and sc['id'] not in _where: _where[sc['id']] = json.loads((HERE / 'frames' / sc['id'] / 'where.json').read_text())
+        x, y = name if isinstance(name, list) else _where[sc['id']][name]; e = math.sin(math.pi * u); r = 24 * s * (1 - 0.18 * e)
+        over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(over)
+        d.ellipse((x * s - r, y * s - r, x * s + r, y * s + r), fill=(70, 70, 70, round(95 * e)), outline=(255, 255, 255, round(170 * e)), width=max(1, round(r * 0.08)))
+    if sc.get('outline'):                            # the eye goes to the box: a soft outline in the text's colour
+        if sc['id'] not in _where: _where[sc['id']] = json.loads((HERE / 'frames' / sc['id'] / 'where.json').read_text())
+        box = _where[sc['id']].get(sc['outline'])
+        k = ease_out((sec - 0.12) / 0.35)
+        if box and k > 0:
+            x, y, bw, bh = box; pad = 4 * s
+            over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0))
+            glow = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+            ImageDraw.Draw(glow).rounded_rectangle((x * s - pad, y * s - pad, (x + bw) * s + pad, (y + bh) * s + pad), 18 * s, outline=bg + (round(120 * k),), width=round(7 * s))
+            over = Image.alpha_composite(over, glow.filter(ImageFilter.GaussianBlur(5 * s)))
+            ImageDraw.Draw(over).rounded_rectangle((x * s - pad, y * s - pad, (x + bw) * s + pad, (y + bh) * s + pad), 18 * s, outline=bg + (round(255 * k),), width=max(2, round(2.5 * s)))
+    if over: img = Image.alpha_composite(img.convert('RGBA'), over).convert('RGB')
+    return img
+
+_wall = {}
+def lock_screen(sc, sec, app, w, h, s):
+    """The lock screen over the app: its time and date, the day's Today blurred behind, the reminder
+    rising into place, then (once tapped) the whole lock screen sliding up to show the app."""
+    L = sc['lock']; a0, a1, title, body = sc['notify']; r0 = L['open']
+    if sec >= r0 + 0.4: return app
+    key = (sc['id'], w, h)
+    if key not in _wall:
+        base = filmed(sc['id'], 0, w, h).filter(ImageFilter.GaussianBlur(26 * s))
+        base = Image.blend(Image.new('RGB', (w, h), (30, 26, 22)), base, 0.62)
+        d = ImageDraw.Draw(base)
+        fd, ft = font(600, round(19 * s)), font(800, round(90 * s))
+        d.text(((w - d.textlength(L['date'], font=fd)) / 2, 78 * s), L['date'], font=fd, fill=(255, 255, 255))
+        d.text(((w - d.textlength(L['time'], font=ft)) / 2, 96 * s), L['time'], font=ft, fill=(255, 255, 255))
+        _wall[key] = base
+    lock = _wall[key].copy()
+    k = ease_out((sec - a0) / 0.35)
+    if k > 0:                                          # the reminder: fades in, rising a little into place
+        over = Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(over)
+        bw, bh = w - 24 * s, 74 * s; x0 = 12 * s; y0 = 330 * s + (1 - k) * 24 * s; al = round(255 * k)
+        d.rounded_rectangle((x0, y0, x0 + bw, y0 + bh), 22 * s, fill=(250, 248, 244, round(238 * k)))
+        ic = round(42 * s); icon = ICON.resize((ic, ic), Image.LANCZOS).convert('RGBA')
+        m = Image.new('L', (ic, ic), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, ic - 1, ic - 1), round(10 * s), fill=al)
+        over.paste(icon, (round(x0 + 14 * s), round(y0 + (bh - ic) / 2)), m)
+        tx = x0 + 14 * s + ic + 12 * s
+        d.text((tx, y0 + 13 * s), title, font=font(800, round(17 * s)), fill=(31, 27, 22, al))
+        d.text((tx, y0 + 39 * s), body, font=font(600, round(16.5 * s)), fill=(58, 54, 49, al))
+        fr = font(600, round(14 * s)); d.text((x0 + bw - 16 * s - d.textlength('now', font=fr), y0 + 15 * s), 'now', font=fr, fill=(110, 106, 100, al))
+        lock = Image.alpha_composite(lock.convert('RGBA'), over).convert('RGB')
+    if sec < r0: return lock
+    u = ease_io((sec - r0) / 0.4)                      # opened: the lock screen slides up, the app is under it
+    out = app.copy(); out.paste(lock.crop((0, round(u * h), w, h)), (0, 0))
+    return out
 
 def rounded_mask(w, h, r, top_only=False):
     m = Image.new('L', (w, h), 0); d = ImageDraw.Draw(m)
@@ -64,6 +178,11 @@ def text_block(draw, lines, fnt, color, cx, cy, align='center', lh=1.08, alpha=1
         draw.text((x, y), line, font=fnt, fill=c)
         y += size * lh
 
+def fit(d, lines, size, width):
+    """The headline's font: as large as the design asks, but never wider than the room it has."""
+    while size > 30 and max(d.textlength(l, font=font(800, size)) for l in lines) > width: size -= 2
+    return font(800, size)
+
 def end_card(img, t, layout, s=1):
     """The last scene: the four rings draw in, then the name and the line (s: drawing scale)."""
     W, H = img.size; d = ImageDraw.Draw(img)
@@ -85,11 +204,18 @@ def end_card(img, t, layout, s=1):
         line = 'Chumash · Tehillim · Tanya · Rambam'
         tw = d.textlength(line, font=f2); d.text((cx - tw / 2, y0 + f1.size * 0.7), line, font=f2, fill=mix(ink, (216, 206, 188), a))
     b = ease_out((t - 1.35) / 0.5)
-    if b > 0:
-        f3 = font(600, (34 if layout == 'portrait' else 30) * s)
-        line = 'Free, with no ads'
-        y = cy + R + ((110 if layout == 'portrait' else 80) + 120 * 0.7 + (90 if layout == 'portrait' else 76)) * s
-        tw = d.textlength(line, font=f3); d.text((cx - tw / 2, y), line, font=f3, fill=mix(COLORS['ink'][0], (224, 160, 48), b))
+    if b > 0 and ENDING == 'soon':                    # coming soon, and where to use it now
+        ink = COLORS['ink'][0]
+        y = cy + R + ((110 if layout == 'portrait' else 80) + 120 * 0.7 + (92 if layout == 'portrait' else 76)) * s
+        f3 = font(800, (40 if layout == 'portrait' else 34) * s); line = 'Coming soon to the App Store'
+        tw = d.textlength(line, font=f3); d.text((cx - tw / 2, y + (1 - b) * 12 * s), line, font=f3, fill=mix(ink, (224, 160, 48), b))
+        c = ease_out((t - 1.75) / 0.5)
+        if c > 0:
+            f4 = font(600, (36 if layout == 'portrait' else 30) * s); tw = d.textlength(SITE, font=f4)
+            py = y + f3.size * 1.55; padx, pady = 26 * s, 14 * s
+            d.rounded_rectangle((cx - tw / 2 - padx, py, cx + tw / 2 + padx, py + f4.size + 2 * pady), (f4.size + 2 * pady) / 2,
+                                fill=mix(ink, (251, 247, 239), c))
+            d.text((cx - tw / 2, py + pady - 2 * s), SITE, font=f4, fill=ink)
 
 def end_frame(t, layout, size, bg):
     """The end card drawn at twice the size and shrunk: smooth curves and letters."""
@@ -98,7 +224,7 @@ def end_frame(t, layout, size, bg):
     return big.resize(size, Image.LANCZOS)
 
 def scene_at(frame):
-    i = min(len(SCENES) - 1, frame // BAR); return i, frame - i * BAR
+    i = max(j for j in range(len(SCENES)) if STARTS[j] <= frame); return i, frame - STARTS[i]
 
 # ── Portrait: 886 x 1920 for the App Store ────────────────────────────────────
 PW, PH = 886, 1920
@@ -114,24 +240,24 @@ def portrait(frame):
     if prev: bg = mix(COLORS[prev['color']][0], bg, k)
     if sc['id'] == 'end':
         img = end_frame(f / FPS, 'portrait', (PW, PH), bg)
-        if prev: img = Image.blend(layer_portrait(prev, BAR + f, COLORS[prev['color']][0]), img, k)   # the last screen fades out
+        if prev: img = Image.blend(layer_portrait(prev, LEN[i - 1] + f, COLORS[prev['color']][0]), img, k)   # the last screen fades out
         return img
     layer = layer_portrait(sc, f, bg)
     if prev:
-        old = layer_portrait(prev, BAR + f, bg)
+        old = layer_portrait(prev, LEN[i - 1] + f, bg)
         img = Image.blend(old, layer, k)
     else:
         img = layer
     # The headline: rises and fades in at the cut
-    d = ImageDraw.Draw(img); a = ease_out((f - 2) / 14)
-    lines = sc['head'].split('\n'); fnt = font(800, 66)
+    d = ImageDraw.Draw(img); a = 1.0 if i == 0 or SCENES[i - 1]['head'] == sc['head'] else ease_out((f - 2) / 14)   # the first frame already has its headline (the still Apple shows)
+    lines = sc['head'].split('\n'); fnt = fit(d, lines, 66, PW - 90)
     text_block(d, lines, fnt, fg, PW / 2, SY / 2 + (1 - a) * 26, alpha=a, base=bg)
     return img
 
 def layer_portrait(sc, f, bg):
     img = Image.new('RGB', (PW, PH), bg)
     img.paste((0, 0, 0), (SX - 60, SY - 60), Image.composite(P_SHADOW, Image.new('L', P_SHADOW.size, 0), P_SHADOW).point(lambda v: v * 0.6))
-    img.paste(screen(sc['id'], f, SW, SH), (SX, SY), P_MASK)
+    img.paste(screen(sc, f, SW, SH), (SX, SY), P_MASK)
     return img
 
 # ── Landscape: 1920 x 1080 for Google Play / YouTube ─────────────────────────
@@ -157,7 +283,7 @@ def layer_landscape(sc, f, bg):
     img.paste((0, 0, 0), (LX - 70, LY - 50), L_SHADOW.point(lambda v: v * 0.6))
     img.paste((58, 56, 54), (LX - 2, LY - 2), L_RIM)                    # a faint rim, so the phone shows on dark colours too
     img.paste((17, 17, 17), (LX, LY), L_BODY)
-    img.paste(screen(sc['id'], f, LSW, LSH), (LX + BEZ, LY + BEZ), L_MASK)
+    img.paste(screen(sc, f, LSW, LSH), (LX + BEZ, LY + BEZ), L_MASK)
     return img
 
 def landscape(frame):
@@ -168,20 +294,24 @@ def landscape(frame):
     if prev: bg = mix(COLORS[prev['color']][0], bg, k)
     if sc['id'] == 'end':
         img = end_frame(f / FPS, 'landscape', (LW, LH), bg)
-        if prev: img = Image.blend(layer_landscape(prev, BAR + f, COLORS[prev['color']][0]), img, k)
+        if prev: img = Image.blend(layer_landscape(prev, LEN[i - 1] + f, COLORS[prev['color']][0]), img, k)
         return img
     layer = layer_landscape(sc, f, bg)
-    img = Image.blend(layer_landscape(prev, BAR + f, bg), layer, k) if prev else layer
-    d = ImageDraw.Draw(img); a = ease_out((f - 2) / 14)
+    img = Image.blend(layer_landscape(prev, LEN[i - 1] + f, bg), layer, k) if prev else layer
+    d = ImageDraw.Draw(img); a = 1.0 if i == 0 or SCENES[i - 1]['head'] == sc['head'] else ease_out((f - 2) / 14)
     # The name, small, with its rings, and the headline beside the phone
     cx0, cy0 = 160, 150
     img.paste(BRAND, (cx0 - 26, cy0 - 26), BRAND)
     d.text((cx0 + 40, cy0 - 24), 'Chitas', font=font(800, 40), fill=fg)
-    text_block(d, sc['head'].split('\n'), font(800, 86), fg, 150, LH / 2 + (1 - a) * 26, align='left', alpha=a, base=bg)
+    text_block(d, sc['head'].split('\n'), fit(d, sc['head'].split('\n'), 86, LX - 150 - 70), fg, 150, LH / 2 + (1 - a) * 26, align='left', alpha=a, base=bg)
     return img
 
+KINDS = {'preview': (PW, PH, 'portrait', 'store', 'chitas-app-preview.mp4'), 'promo': (LW, LH, 'landscape', 'store', 'chitas-promo.mp4'),
+         'soon-vertical': (PW, PH, 'portrait', 'soon', 'chitas-coming-soon-vertical.mp4'), 'soon-wide': (LW, LH, 'landscape', 'soon', 'chitas-coming-soon-wide.mp4')}
 def render(kind):
-    W, H, fn, name = (PW, PH, portrait, 'chitas-app-preview.mp4') if kind == 'portrait' else (LW, LH, landscape, 'chitas-promo.mp4')
+    global ENDING
+    W, H, layout, ENDING, name = KINDS[kind]
+    fn = portrait if layout == 'portrait' else landscape
     out = OUT / name
     ff = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
                            '-i', str(HERE / 'music.wav'),
@@ -195,5 +325,9 @@ def render(kind):
     print('wrote', out.name)
 
 if __name__ == '__main__':
-    for kind in (sys.argv[1:] or ['portrait', 'landscape']):
-        render(kind)
+    if sys.argv[1:2] == ['still']:                  # single frames to look at: compose.py still preview 0 120 ...
+        global_kind = sys.argv[2]; ENDING = KINDS[global_kind][3]
+        fn = portrait if KINDS[global_kind][2] == 'portrait' else landscape
+        for n in sys.argv[3:]: fn(int(n)).save(OUT / f'still-{global_kind}-{n}.png')
+    else:
+        for kind in (sys.argv[1:] or list(KINDS)): render(kind)

@@ -8,7 +8,7 @@ Screenshots and graphics are in `docs/store/` (made from the real app with real 
 |---|---|---|
 | `apple/1-…10-*.png` | App Store, "iPhone 6.9-inch" slot (Apple scales them for smaller iPhones) | 1290 × 2796 |
 | `ipad/1-…10-*.png` | App Store, "iPad 13-inch" slot (needed because the app also runs on iPad) | 2064 × 2752 |
-| `google/1-…8-*.png` | Google Play, phone screenshots (Google takes 8: the same set without Reminders and Rambam) | 1080 × 2160 |
+| `google/1-…8-*.png` | Google Play, phone screenshots (Google takes 8: the same set without Hayom Yom and Rambam) | 1080 × 2160 |
 | `feature-graphic.png` | Google Play, feature graphic | 1024 × 500 |
 | `icons/icon-1024.png` (repo root) | App Store icon | 1024 × 1024 |
 | `icons/icon-512.png` (repo root) | Google Play icon | 512 × 512 |
@@ -20,27 +20,17 @@ Upload them in number order. The first three are the ones people see in search r
 | 1 | Chitas and Rambam, ready every day | Today's portions, worked out for you | Today |
 | 2 | Chumash with Rashi | Hebrew and English, side by side | Chumash |
 | 3 | Stop anywhere. Pick up right there. | Your place is kept, even on your other devices | Tehillim halfway, "Continue from your other device" |
-| 4 | Understand the Tanya | A plain-English guide walks you through | Tanya with its guide |
-| 5 | Check what stayed with you | A few questions, written from today's text | A Review question, answered |
-| 6 | Your Tehillim, and your family's | Each person's chapter, from their Hebrew birthday | Personal Tehillim |
-| 7 | Hayom Yom, every day | The original, with a clear English translation | Hayom Yom |
+| 4 | A reminder for each, at your time | Says what's waiting, and opens right to it | The phone's lock screen that morning (7:45) with two of the app's real reminders: Tehillim, Psalms 1–9, and Chumash, Toldos · Aliya 4 |
+| 5 | Understand the Tanya | A plain-English guide walks you through | Tanya with its guide |
+| 6 | Check what stayed with you | A few questions, written from today's text | A Review question, answered |
+| 7 | Your Tehillim, and your family's | Each person's chapter, from their Hebrew birthday | Personal Tehillim |
 | 8 | Watch your learning add up | Every passuk, chapter and halacha you've learned | Progress |
-| 9 | Reminders, at your times | One for each part, when you learn it | Reminders (Apple only) |
+| 9 | Hayom Yom, every day | The original, with a clear English translation | Hayom Yom (Apple only) |
 | 10 | Rambam your way | Three chapters, one, or Sefer HaMitzvos. Light or dark. | Rambam, dark mode (Apple only) |
 
-**Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); and does it fit my day, so I can stop and pick up again, here or on another device (3). Keeping your place, on every device, is something similar apps don't seem to do, so it comes early. Then: will I understand it (4), and did it stay with me (5), the Review shown as what it is, a few good questions with the answer explained and the line it comes from. After that, what no other app does for them: their own family's Tehillim (6), Hayom Yom in a clear English (7), a quiet record of what they've learned (8), and a nudge at their own times (9).
+Google takes 8: numbers 1 to 8. The screens show 11 November 2026 (1 Kislev, Toldos), fixed in `tools/store/shoot.mjs` (`DAY`) so the Review questions match the day's Chumash.
 
----|---|---|---|
-| 1 | Chitas and Rambam, ready every day | Today's portions, worked out for you | Today |
-| 2 | Chumash with Rashi | Hebrew and English, side by side | Chumash |
-| 3 | Understand the Tanya | A plain-English guide walks you through | Tanya with its guide |
-| 4 | Your Tehillim, and your family's | Each person's chapter, from their Hebrew birthday | Personal Tehillim |
-| 5 | Hayom Yom, every day | The original, with a clear English translation | Hayom Yom |
-| 6 | Watch your learning add up | Every passuk, chapter and halacha you've learned | Progress |
-| 7 | Reminders, at your times | One for each part, when you learn it | Reminders |
-| 8 | Rambam your way | Three chapters, one, or Sefer HaMitzvos. Light or dark. | Rambam, dark mode |
-
-**Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); will I understand it (3). Then what no other app does for them: their own family's Tehillim (4), Hayom Yom in a clear English (5), a quiet record of what they've learned (6), and a nudge at their own times (7). The Review questions are in the description, not the pictures: they're optional, and leading with them made the app look like a test.
+**Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); and does it fit my day (3 and 4). Two things answer that, and both are reasons to have the app rather than a website: it keeps your place when you stop, and it reminds you at your own time for each part, saying what's waiting and opening right to it. So they come early. Then: will I understand it (5), and did it stay with me (6). After that, what no other app does for them: their own family's Tehillim (7) and a quiet record of what they've learned (8), with Hayom Yom (9) and the Rambam tracks (10) on Apple.
 
 ---
 
@@ -93,7 +83,7 @@ Use the same name in both stores, because people search for it. On the phone, un
 > Your days in a row, the month on a calendar, and everything you've learned: pesukim of Chumash, chapters of Tehillim, days of Tanya and halachos of Rambam. Milestones mark a finished parsha, all of Tehillim, your best month. It counts what you did, never what you missed, and Shabbos and Yom Tov never break your run.
 >
 > REMINDERS
-> A gentle reminder for each part, at the time you usually learn it. Never on Shabbos or Yom Tov.
+> A gentle reminder for each part, at the time you usually learn it. It says what's waiting, and a tap opens it.
 >
 > ANY DAY, ANY DEVICE
 > Read ahead or go back to any day. Missed one? Mark it within a week. Sign in with Apple or Google, and everything you've learned is on your phone, tablet and computer.
@@ -201,14 +191,14 @@ These must match the privacy page. If the app changes what it saves, update both
 
 **Google: Target audience and content.** 13+ (see section 4).
 
-**Copyright.** © 2026 Mendel Marcus. (Apple shows this line on the listing; it's the name the developer account is under.)
+**Copyright.** © 2026 Menachem Marcus. (Apple shows this line on the listing; it's the name the developer account is under.)
 
 ---
 
 ## 7. Before we submit (things only you can answer)
 
 1. ~~**Final name**~~ Decided: "Chitas: Daily Learning" in the stores, "Chitas" on the phone.
-2. ~~**Developer name**~~ Decided: **Mendel Marcus** (individual accounts on Apple and Google). The app can move to a business account later if needed.
+2. ~~**Developer name**~~ Decided: **Menachem Marcus** (individual accounts on Apple and Google). The app can move to a business account later if needed.
 3. ~~**Hayom Yom English**~~ Done: the app ships its own English translation.
 4. **Fonts**: confirm the OT Vilna, OT Siddur, Shlomo, Taamey Frank and Heilig fonts can be shipped inside an app (web licences sometimes don't cover apps).
 5. **Free forever?** If you might charge later, it's easier to decide now: a paid app can't become free and back without hassle, but adding optional in-app purchases later is fine.
@@ -218,16 +208,33 @@ These must match the privacy page. If the app changes what it saves, update both
 
 ## 8. The videos
 
-Two 28-second videos, made from the real app, with original music composed for them (it's ours, so there's no licence to worry about), in `docs/store/video/`:
+Four 28-second videos, made from the real app, with original music composed for them (it's ours, so there's no licence to worry about), in `docs/store/video/`:
 
 | File | For | Size |
 |---|---|---|
 | `chitas-app-preview.mp4` | App Store, "App Preview" in the iPhone 6.9-inch slot | 886 × 1920, 30 fps |
-| `chitas-promo.mp4` | Google Play's promo video (a YouTube link), and anywhere you share the app | 1920 × 1080, 30 fps |
+| `chitas-promo.mp4` | Google Play's promo video (a YouTube link) | 1920 × 1080, 30 fps |
+| `chitas-coming-soon-vertical.mp4` | Sharing now, before the App Store: WhatsApp status, Instagram stories, phones. Ends on "Coming soon to the App Store" and chitas.vercel.app | 886 × 1920 |
+| `chitas-coming-soon-wide.mp4` | The same, for YouTube, email and websites | 1920 × 1080 |
 
-**What it shows**, one feature per bar of music: today's four (and closing the rings), Chumash with Rashi, picking up where you stopped, the Tanya guide, a Review question, your family's Tehillim, Progress, and the name. On the App Store the preview **plays silently** on its own, so every scene carries a headline; the music is for people who tap the sound on.
+The store versions end on the name only: Apple and Google don't allow a web address or "coming soon" in a store video.
 
-**App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:01**, the Today screen under its headline, so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
+**What it shows**; every cut lands on a beat of the music. The first scene is what every daily-study app gives you; every scene after it is a reason to choose Chitas:
+
+| Seconds | Scene | Headline |
+|---|---|---|
+| 0–2.6 | Today: Tanya and Rambam ticked, "All four done" | All of Chitas and Rambam, every day |
+| 2.6–8.75 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; closed, back to Today ("Good morning"); "Later that day", the greeting turns to "Good afternoon"; Chumash tapped, and it opens on that same line, "Right where you stopped". All real app footage | Close it. It opens right where you stopped. |
+| 8.75–11.4 | The phone's lock screen at 7:45: with a soft chime, the reminder "Tehillim · Psalms 1–9" rises into place; tapped, the lock screen slides away to Tehillim, as the app's reminder does | A reminder for each, at your time |
+| 11.4–16.6 | The guides, one after another, each box softly outlined: Chumash ("Today in the parsha"), Tanya ("So far in this chapter"), Rambam ("This chapter") | A guide in Chumash, Tanya and Rambam |
+| 16.6–19.25 | A Review question on the day's Chumash, with Rashi's reason | Then see what stayed with you |
+| 19.25–21.9 | Personal Tehillim and the people sheet | Each person's own Tehillim chapter |
+| 21.9–24.5 | Progress: totals, milestones | Watch your learning add up |
+| 24.5–28 | The four rings draw in, then the name | Chitas · Chumash · Tehillim · Tanya · Rambam |
+
+Keeping your place gets the most time, so it can be told clearly, and reminders follow it: both are reasons to have the app rather than a website. The three guides go by quickly under one headline. Everything shows one day, 11 November 2026, fixed in `tools/store/video/capture.mjs` (`DAY`), as in the screenshots. The reminder is shown on the phone's lock screen. Apple's previews must show the app itself, so a reviewer could object to the lock screen in the App Store preview; if that happens, that one scene can show the notification over the app instead, or the app's Reminders screen (Google, YouTube and the coming-soon videos have no such rule). On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
+
+**App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:00**, the Today screen under its headline (there from the first frame), so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
 
 **Google Play:** upload `chitas-promo.mp4` to YouTube (Visibility: **Unlisted**; and in YouTube Studio → Monetization, ads **off**, as Google requires), then paste its link into Play Console → Store listing → Video.
 

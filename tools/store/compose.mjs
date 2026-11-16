@@ -14,12 +14,15 @@ export const SET = [   // Apple shows up to 10; Google 8 (the ones without googl
   { n: 1,  raw: 'today-light',     bg: 'cream',  head: 'Chitas and Rambam,<br>ready every day',      sub: 'Today’s portions, worked out for you' },
   { n: 2,  raw: 'chumash-light',   bg: 'gold',   head: 'Chumash with Rashi',                         sub: 'Hebrew and English, side by side' },
   { n: 3,  raw: 'place-light',     bg: 'blue',   head: 'Stop anywhere.<br>Pick up right there.',     sub: 'Your place is kept, even on your other devices' },
-  { n: 4,  raw: 'tanya-light',     bg: 'purple', head: 'Understand<br>the Tanya',                     sub: 'A plain-English guide walks you through' },
-  { n: 5,  raw: 'review-light',    bg: 'ink',    head: 'Check what<br>stayed with you',               sub: 'A few questions, written from today’s text' },
-  { n: 6,  raw: 'tehillim-light',  bg: 'green',  head: 'Your Tehillim,<br>and your family’s',         sub: 'Each person’s chapter, from their Hebrew birthday' },
-  { n: 7,  raw: 'hayomyom-light',  bg: 'cream',  head: 'Hayom Yom,<br>every day',                     sub: 'The original, with a clear English translation' },
+  // The phone's lock screen that morning, with the app's reminders exactly as it sends them that day
+  // (_reminderText in index.html): the part, and what's waiting. The wallpaper is Today, blurred.
+  { n: 4,  raw: 'today-light',     name: 'reminders', bg: 'ink',    head: 'A reminder for each,<br>at your time',       sub: 'Says what’s waiting, and opens right to it',
+    lock: { time: '7:45', date: 'Wednesday, November 11', notes: [['now', 'Tehillim', 'Psalms 1–9'], ['15m ago', 'Chumash', 'Toldos · Aliya 4']] } },
+  { n: 5,  raw: 'tanya-light',     bg: 'purple', head: 'Understand<br>the Tanya',                     sub: 'A plain-English guide walks you through' },
+  { n: 6,  raw: 'review-light',    bg: 'ink',    head: 'Check what<br>stayed with you',               sub: 'A few questions, written from today’s text' },
+  { n: 7,  raw: 'tehillim-light',  bg: 'green',  head: 'Your Tehillim,<br>and your family’s',         sub: 'Each person’s chapter, from their Hebrew birthday' },
   { n: 8,  raw: 'progress-light',  bg: 'gold',   head: 'Watch your learning<br>add up',               sub: 'Every passuk, chapter and halacha you’ve learned' },
-  { n: 9,  raw: 'reminders-light', bg: 'blue',   head: 'Reminders,<br>at your times',                 sub: 'One for each part, when you learn it', google: false },
+  { n: 9,  raw: 'hayomyom-light',  bg: 'cream',  head: 'Hayom Yom,<br>every day',                     sub: 'The original, with a clear English translation', google: false },
   { n: 10, raw: 'rambam-dark',     bg: 'green',  head: 'Rambam your way',                             sub: 'Three chapters, one, or Sefer HaMitzvos. Light or dark.', google: false },
 ];
 const SIZES = {
@@ -35,6 +38,7 @@ await ctx.route(/fonts\.(googleapis|gstatic)\.com/, async r => {
   const res = await fetch(r.request().url());
   r.fulfill({ status: res.status, contentType: res.headers.get('content-type') || 'text/css', body: Buffer.from(await res.arrayBuffer()), headers: { 'Access-Control-Allow-Origin': '*' } });
 });
+const ICON = 'data:image/png;base64,' + (await readFile(new URL('../../icons/icon-180.png', import.meta.url))).toString('base64');
 const FONTS = '<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Frank+Ruhl+Libre:wght@700&display=block" rel="stylesheet">';
 
 if (target === 'feature') {
@@ -59,16 +63,36 @@ h1{margin:0;font-size:92px;font-weight:800;letter-spacing:-3px;line-height:1}p{m
     const [bg, fg, sub] = C[it.bg];
     const img = 'data:image/png;base64,' + (await readFile(`${RAW}${S.dev}-${it.raw}.png`)).toString('base64');
     const ratio = S.dev === 'ipad' ? 1376 / 1032 : 932 / 430, sh = Math.round(S.screenW * ratio);
+    const u = Math.min(S.screenW, 1180) / 980, nw = Math.round(Math.min(S.screenW, 1180) * 0.96);
+    const L = it.lock, lu = S.screenW / 430;     // the lock screen, in the phone's own points
+    const lockScreen = L ? `<div class="lock" style="position:relative;width:${S.screenW}px;height:${sh}px;border-radius:${S.radius}px;overflow:hidden;background:#3a3226">
+      <img src="${img}" style="position:absolute;inset:-6%;width:112%;height:112%;border-radius:0;filter:blur(${Math.round(26 * lu)}px) brightness(.62) saturate(1.25)">
+      <div style="position:absolute;top:${Math.round(78 * lu)}px;width:100%;text-align:center;color:#fff">
+        <div style="font-size:${Math.round(19 * lu)}px;font-weight:600;opacity:.92">${L.date}</div>
+        <div style="font-size:${Math.round(92 * lu)}px;font-weight:700;letter-spacing:-.02em;line-height:1;margin-top:${Math.round(4 * lu)}px">${L.time}</div></div>
+      <div style="position:absolute;top:${Math.round(330 * lu)}px;left:${Math.round(12 * lu)}px;right:${Math.round(12 * lu)}px;display:flex;flex-direction:column;gap:${Math.round(8 * lu)}px">
+        ${L.notes.map(([when, title, body]) => `<div style="display:flex;gap:${Math.round(11 * lu)}px;align-items:center;padding:${Math.round(12 * lu)}px ${Math.round(14 * lu)}px;border-radius:${Math.round(22 * lu)}px;background:rgba(250,248,244,.86);backdrop-filter:blur(20px)">
+          <img src="${ICON}" style="width:${Math.round(38 * lu)}px;height:${Math.round(38 * lu)}px;border-radius:${Math.round(9 * lu)}px;flex:none">
+          <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:${Math.round(15 * lu)}px;color:#1F1B16;font-weight:800">${title}</b><span style="font-size:${Math.round(13 * lu)}px;color:#6E6A64;font-weight:600">${when}</span></div>
+          <div style="font-size:${Math.round(15 * lu)}px;color:#3A3631;font-weight:500;margin-top:${Math.round(1 * lu)}px">${body}</div></div></div>`).join('')}</div></div>` : '';
+    const notes = it.notes ? '<div class="notes">' + it.notes.map(([time, title, body]) => `<div class="note"><img src="${ICON}"><div class="t"><div class="r"><span style="color:inherit;font-size:inherit;font-weight:inherit">Chitas</span><span style="color:inherit;font-size:inherit;font-weight:inherit">${time}</span></div><b>${title}</b><span>${body}</span></div></div>`).join('') + '</div>' : '';
     await p.setContent(`<html><head>${FONTS}<style>
       body{margin:0;width:${S.w}px;height:${S.h}px;overflow:hidden;background:${bg};font-family:'Bricolage Grotesque';display:flex;flex-direction:column;align-items:center}
-      .cap{height:${S.top}px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 60px;box-sizing:border-box}
+      .cap,.notes,.dev{flex:none}   /* never squeezed: a tall picture runs off the bottom instead */
+      .cap{height:${it.notes ? Math.round(S.top * 0.8) : S.top}px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 60px;box-sizing:border-box}
       h1{margin:0;color:${fg};font-size:${S.head}px;font-weight:800;letter-spacing:-.02em;line-height:1.04}
       p{margin:${Math.round(S.sub * .55)}px 0 0;color:${sub};font-size:${S.sub}px;font-weight:600;line-height:1.25}
       .dev{position:relative;width:${S.screenW}px;height:${sh}px;padding:${S.bezel}px;border-radius:${S.radius + S.bezel}px;background:#111;box-shadow:0 40px 90px rgba(0,0,0,.28),0 0 0 2px rgba(255,255,255,.06) inset}
       .dev img{display:block;width:${S.screenW}px;height:${sh}px;border-radius:${S.radius}px}
-    </style></head><body><div class="cap"><h1>${it.head}</h1><p>${it.sub}</p></div><div class="dev"><img src="${img}"></div></body></html>`);
+      .notes{position:relative;z-index:2;width:${nw}px;margin:0 0 ${-Math.round(26 * u)}px;display:flex;flex-direction:column;gap:${Math.round(14 * u)}px}
+      .note{display:flex;gap:${Math.round(22 * u)}px;align-items:center;padding:${Math.round(24 * u)}px ${Math.round(28 * u)}px;border-radius:${Math.round(44 * u)}px;background:rgba(247,245,241,.93);backdrop-filter:blur(30px);box-shadow:0 ${Math.round(18 * u)}px ${Math.round(50 * u)}px rgba(0,0,0,.28)}
+      .note img{width:${Math.round(84 * u)}px;height:${Math.round(84 * u)}px;border-radius:${Math.round(19 * u)}px;flex:none}
+      .note .t{flex:1;min-width:0}.note .r{display:flex;justify-content:space-between;color:#6E6A64;font-size:${Math.round(27 * u)}px;font-weight:600}
+      .note b{display:block;color:#1F1B16;font-size:${Math.round(33 * u)}px;font-weight:800;margin-top:${Math.round(2 * u)}px}
+      .note span{display:block;color:#3A3631;font-size:${Math.round(31 * u)}px;font-weight:500}
+    </style></head><body><div class="cap"><h1>${it.head}</h1><p>${it.sub}</p></div>${notes}<div class="dev">${it.lock ? lockScreen : `<img src="${img}">`}</div></body></html>`);
     await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(300);
-    const file = `${OUTROOT}${target}/${it.n}-${it.raw.replace(/-(light|dark)$/, '')}.png`;
+    const file = `${OUTROOT}${target}/${it.n}-${it.name || it.raw.replace(/-(light|dark)$/, '')}.png`;
     await p.screenshot({ path: file });
     console.log(file.split('/').slice(-2).join('/'));
   }

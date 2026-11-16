@@ -15,7 +15,7 @@ Tick the boxes as you go (on GitHub you can edit this file and change `[ ]` to `
 - [x] **0.2 Next batch of written guides (before 22 November).** Done 15 November: Tanya through 28 Nov (the end of the Tanya), Rambam through 5 Dec, Chumash through 12 Dec. *Next batch:* before 28 November.
   *Each time:* tell Claude "write the next batch of guides" about a week before they run out. The readers still work without them (the AI writes the Tanya guide each day, a few cents), but the hand-written ones are better.
 
-- [x] **0.3 Developer name: Mendel Marcus.** Decided: individual accounts on both stores, under your own legal name (it must match your ID and payment details). The app can move to a business account later; both stores allow a transfer.
+- [x] **0.3 Developer name: Menachem Marcus.** Decided: individual accounts on both stores, under your own legal name (it must match your ID and payment details). The app can move to a business account later; both stores allow a transfer.
 
 - [ ] **0.4 Check the contact email works:** send a test to **chitas.daily@gmail.com** and make sure you can read it. *Why:* it's on the store pages, the privacy page and the support page, and Apple may write to it.
 
@@ -25,11 +25,11 @@ Tick the boxes as you go (on GitHub you can edit this file and change `[ ]` to `
 
 - [ ] **1.1 Apple Developer Program** ($99 a year). https://developer.apple.com/programs/enroll/
   - Sign in with your Apple ID (it must have two-factor authentication on: iPhone Settings → your name → Sign-In & Security).
-  - Choose **Individual**, enter your legal name (Mendel Marcus), pay, and wait for the "Welcome" email (usually 1 to 2 days).
+  - Choose **Individual**, enter your legal name (Menachem Marcus), pay, and wait for the "Welcome" email (usually 1 to 2 days).
   - *Why:* it's the only way into the App Store, and Sign in with Apple only works with a paid account.
 
 - [ ] **1.2 Google Play developer account** ($25 once). https://play.google.com/console/signup
-  - Choose **Yourself** (individual), developer name **Mendel Marcus**, pay, and verify your identity (a photo of your ID). Google may also ask you to confirm you have an Android phone, using its Play Console app.
+  - Choose **Yourself** (individual), developer name **Menachem Marcus**, pay, and verify your identity (a photo of your ID). Google may also ask you to confirm you have an Android phone, using its Play Console app.
   - Verification takes from a few hours to a few days.
 
 - [ ] **1.3 Optional now, needed for sponsoring: Stripe.** Only if you want "Sponsor a day" switched on at launch. About 15 minutes, all in `docs/sponsor.md`. It can wait until after launch; until then the page says "Sponsoring opens soon".
@@ -87,7 +87,7 @@ Android doesn't need a Mac: any Windows or Linux computer works.
 Follow `app/README.md`, **Part 4**, with `docs/store-listing.md` open beside it.
 
 - [ ] **5.1 Create the app** in App Store Connect (https://appstoreconnect.apple.com): New App, name **Chitas: Daily Learning**, bundle ID `app.chitas.daily`, SKU `chitas-daily`.
-- [ ] **5.2 Fill in the page** from `docs/store-listing.md`, section by section: subtitle, description, keywords, links, category (Education), price (Free), age rating (4+), **App Privacy** (section 5), copyright (© 2026 Mendel Marcus).
+- [ ] **5.2 Fill in the page** from `docs/store-listing.md`, section by section: subtitle, description, keywords, links, category (Education), price (Free), age rating (4+), **App Privacy** (section 5), copyright (© 2026 Menachem Marcus).
 - [ ] **5.3 Screenshots and video:** drag in `docs/store/apple/` (iPhone 6.9-inch) and `docs/store/ipad/` (iPad 13-inch), in number order; then the preview video `docs/store/video/chitas-app-preview.mp4`, with the poster frame at 00:00.
 - [ ] **5.4 Upload the build** from Xcode (Any iOS Device → Product → Archive → Distribute → App Store Connect → Upload). After 10 to 30 minutes it appears under **TestFlight**: install it with the TestFlight app and try it once more as it will really be.
 - [ ] **5.5 Review notes:** paste the notes from `docs/store-listing.md` section 6. **Add one sentence** for guideline 4.2 (apps that mostly show a website): *"Beyond the daily texts, the app uses native Sign in with Apple and Google, local notification reminders for each section, and haptics."* This tells the reviewer it's a real app, not just a website in a frame.
