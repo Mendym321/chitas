@@ -160,11 +160,17 @@ for b, (root, chord, arp) in enumerate(CHORDS):
         add(impact(), t0, 0.22)
         add(bell('D6', 3.0), t0, 0.12, pan=0.2); add(bell('A5', 3.0), t0 + BEAT / 2, 0.08, pan=-0.2)
 
+# A gentle tone: a pure sound with a soft start and a quick fade (no bright overtones)
+def soft(note, dur):
+    n = int(dur * SR); t = np.arange(n) / SR; f = hz(note)
+    x = np.sin(2 * np.pi * f * t) + 0.12 * np.sin(4 * np.pi * f * t) * np.exp(-t / 0.15)
+    return x * np.minimum(1, t / 0.012) * np.exp(-t / 0.42)
+
 # ── A reminder arrives: a soft two-note chime (our own), when the notification slides down ──
 for i, sc in enumerate(T['scenes']):
     if sc.get('notify'):
         t = sum(x['beats'] for x in T['scenes'][:i]) * BEAT + sc['notify'][0]
-        add(bell('E6', 1.2), t, 0.30, pan=0.1); add(bell('B6', 1.4), t + 0.11, 0.26, pan=0.1)
+        add(soft('D5', 1.0), t, 0.16, pan=0.1); add(soft('A5', 1.2), t + 0.13, 0.13, pan=0.1)
 
 # ── Room: a soft hall (a decaying noise tail, convolved) ─────────────────────
 def reverb(x, seconds=2.4, seed=1):

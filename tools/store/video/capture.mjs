@@ -130,12 +130,12 @@ const SCENES = {
       if (f === 120) await p.evaluate(() => openChabadPanel('chumash'));                                    // opened again: straight back there
     },
   },
-  // A reminder arrives: on Today, the video slides the notification down (compose.py); a tap opens
-  // Tehillim, as tapping the app's reminder does.
+  // A reminder arrives: the video shows the phone's lock screen over this (compose.py); a tap opens
+  // Tehillim, as tapping the app's reminder does. The first frame, Today, is the lock screen's wallpaper.
   reminders: {
     today: { chumash: true },
     setup: async p => { await wait(p, 4000); },
-    act: async (p, f) => { if (f === 46) await p.evaluate(() => openChabadPanel('tehillim')); },
+    act: async (p, f) => { if (f === 30) await p.evaluate(() => openChabadPanel('tehillim')); },   // open under the lock screen, ready when it slides away
   },
   // The guides: each text opened with its guide on, the guide's box in view (its place goes
   // next to the frames, for the outline the video draws around it)

@@ -54,19 +54,24 @@
       "head": "A reminder for each,\nat your time",
       "notify": [
         0.35,
-        1.45,
+        1.4,
         "Tehillim",
         "Psalms 1–9"
       ],
       "tap": [
         [
-          1.1,
+          1.05,
           [
             221,
-            56
+            367
           ]
         ]
-      ]
+      ],
+      "lock": {
+        "time": "7:45",
+        "date": "Wednesday, November 11",
+        "open": 1.4
+      }
     },
     {
       "id": "guide_chumash",

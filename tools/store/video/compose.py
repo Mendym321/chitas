@@ -82,7 +82,9 @@ def screen(sc, f, w, h):
             cy = h * 0.55 + (1 - k) * 8 * s; ph, pw = 40 * s, tw + 40 * s
             d.rounded_rectangle((w / 2 - pw / 2, cy - ph / 2, w / 2 + pw / 2, cy + ph / 2), ph / 2, fill=(31, 27, 22, round(232 * k)))
             d.text((w / 2 - tw / 2, cy - fl.size * 0.62), label, font=fl, fill=(251, 247, 239, round(255 * k)))
-    if sc.get('notify'):                              # a reminder slides down from the top, as the phone shows it
+    if sc.get('lock'):                                # the phone's lock screen: a reminder arrives, a tap opens the app
+        img = lock_screen(sc, sec, img, w, h, s)
+    if sc.get('notify') and not sc.get('lock'):       # a reminder slides down from the top, as the phone shows it
         a0, a1, title, body = sc['notify']
         k = ease_out((sec - a0) / 0.3) if sec < a1 else 1 - ease_io((sec - a1) / 0.22)
         if k > 0 and sec >= a0:
@@ -120,6 +122,40 @@ def screen(sc, f, w, h):
             ImageDraw.Draw(over).rounded_rectangle((x * s - pad, y * s - pad, (x + bw) * s + pad, (y + bh) * s + pad), 18 * s, outline=bg + (round(255 * k),), width=max(2, round(2.5 * s)))
     if over: img = Image.alpha_composite(img.convert('RGBA'), over).convert('RGB')
     return img
+
+_wall = {}
+def lock_screen(sc, sec, app, w, h, s):
+    """The lock screen over the app: its time and date, the day's Today blurred behind, the reminder
+    rising into place, then (once tapped) the whole lock screen sliding up to show the app."""
+    L = sc['lock']; a0, a1, title, body = sc['notify']; r0 = L['open']
+    if sec >= r0 + 0.4: return app
+    key = (sc['id'], w, h)
+    if key not in _wall:
+        base = filmed(sc['id'], 0, w, h).filter(ImageFilter.GaussianBlur(26 * s))
+        base = Image.blend(Image.new('RGB', (w, h), (30, 26, 22)), base, 0.62)
+        d = ImageDraw.Draw(base)
+        fd, ft = font(600, round(19 * s)), font(800, round(90 * s))
+        d.text(((w - d.textlength(L['date'], font=fd)) / 2, 78 * s), L['date'], font=fd, fill=(255, 255, 255))
+        d.text(((w - d.textlength(L['time'], font=ft)) / 2, 96 * s), L['time'], font=ft, fill=(255, 255, 255))
+        _wall[key] = base
+    lock = _wall[key].copy()
+    k = ease_out((sec - a0) / 0.35)
+    if k > 0:                                          # the reminder: fades in, rising a little into place
+        over = Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(over)
+        bw, bh = w - 24 * s, 74 * s; x0 = 12 * s; y0 = 330 * s + (1 - k) * 24 * s; al = round(255 * k)
+        d.rounded_rectangle((x0, y0, x0 + bw, y0 + bh), 22 * s, fill=(250, 248, 244, round(238 * k)))
+        ic = round(42 * s); icon = ICON.resize((ic, ic), Image.LANCZOS).convert('RGBA')
+        m = Image.new('L', (ic, ic), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, ic - 1, ic - 1), round(10 * s), fill=al)
+        over.paste(icon, (round(x0 + 14 * s), round(y0 + (bh - ic) / 2)), m)
+        tx = x0 + 14 * s + ic + 12 * s
+        d.text((tx, y0 + 13 * s), title, font=font(800, round(17 * s)), fill=(31, 27, 22, al))
+        d.text((tx, y0 + 39 * s), body, font=font(600, round(16.5 * s)), fill=(58, 54, 49, al))
+        fr = font(600, round(14 * s)); d.text((x0 + bw - 16 * s - d.textlength('now', font=fr), y0 + 15 * s), 'now', font=fr, fill=(110, 106, 100, al))
+        lock = Image.alpha_composite(lock.convert('RGBA'), over).convert('RGB')
+    if sec < r0: return lock
+    u = ease_io((sec - r0) / 0.4)                      # opened: the lock screen slides up, the app is under it
+    out = app.copy(); out.paste(lock.crop((0, round(u * h), w, h)), (0, 0))
+    return out
 
 def rounded_mask(w, h, r, top_only=False):
     m = Image.new('L', (w, h), 0); d = ImageDraw.Draw(m)
