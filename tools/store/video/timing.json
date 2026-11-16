@@ -1,5 +1,5 @@
 {
-  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One bar of music is 3.5 s (68.57 beats a minute, 4 beats a bar: 105 frames at 30 fps); a scene is 'beats' long (a beat is 26.25 frames), 32 beats in all (28 s); cuts land on beats. Each scene is filmed 12 frames longer, for the dissolve into the next. mark: a soft highlight over one line of the screen, [from s, to s, y in the app's points (443 x 960), label]. soft: [s, ...] moments the screen changes at once (closing, opening), eased over 1/5 s. chip: [from s, to s, label], a small dark label on the screen. tap: [s, name], a touch where capture found it (frames/<scene>/where.json). outline: the name of a box (from where.json) softly outlined, so the eye goes to it.",
+  "_about": "The app preview video's timeline, shared by capture.mjs, music.py and compose.py. One bar of music is 3.5 s (68.57 beats a minute, 4 beats a bar: 105 frames at 30 fps); a scene is 'beats' long (a beat is 26.25 frames), 32 beats in all (28 s); cuts land on beats. Each scene is filmed 12 frames longer, for the dissolve into the next. mark: a soft highlight over one line of the screen, [from s, to s, y in the app's points (443 x 960), label]. soft: [s, ...] moments the screen changes at once (closing, opening), eased over 1/5 s. chip: [from s, to s, label], a small dark label on the screen. tap: [s, name], a touch where capture found it (frames/<scene>/where.json). outline: the name of a box (from where.json) softly outlined, so the eye goes to it. notify: [in s, out s, title, body], a notification sliding down over the screen (with a chime in the music), the way the phone shows the app's reminder.",
   "fps": 30,
   "bpm": 68.5714,
   "bar_frames": 105,
@@ -52,14 +52,19 @@
       "beats": 3,
       "color": "blue",
       "head": "A reminder for each,\nat your time",
+      "notify": [
+        0.35,
+        1.45,
+        "Tehillim",
+        "Psalms 1–9"
+      ],
       "tap": [
         [
-          0.45,
-          "sw"
-        ],
-        [
-          1.3,
-          "pick"
+          1.1,
+          [
+            221,
+            56
+          ]
         ]
       ]
     },

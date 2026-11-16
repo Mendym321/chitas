@@ -51,6 +51,8 @@ def filmed(scene, f, w, h):
         _cache[key] = Image.open(HERE / 'frames' / scene / f'{f:04d}.jpg').convert('RGB').resize((w, h), Image.LANCZOS)
     return _cache[key]
 
+ICON = Image.open(HERE.parents[2] / 'icons' / 'icon-1024.png').convert('RGB')
+
 def screen(sc, f, w, h):
     """What the screen shows: the filmed frame (eased where the app changes at once),
     with the place marked, a small label, and a touch where something is tapped."""
@@ -80,11 +82,29 @@ def screen(sc, f, w, h):
             cy = h * 0.55 + (1 - k) * 8 * s; ph, pw = 40 * s, tw + 40 * s
             d.rounded_rectangle((w / 2 - pw / 2, cy - ph / 2, w / 2 + pw / 2, cy + ph / 2), ph / 2, fill=(31, 27, 22, round(232 * k)))
             d.text((w / 2 - tw / 2, cy - fl.size * 0.62), label, font=fl, fill=(251, 247, 239, round(255 * k)))
+    if sc.get('notify'):                              # a reminder slides down from the top, as the phone shows it
+        a0, a1, title, body = sc['notify']
+        k = ease_out((sec - a0) / 0.3) if sec < a1 else 1 - ease_io((sec - a1) / 0.22)
+        if k > 0 and sec >= a0:
+            over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0))
+            bw, bh = w - 16 * s, 82 * s; x0 = 8 * s; y0 = -bh + (bh + 14 * s) * k
+            sh = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+            ImageDraw.Draw(sh).rounded_rectangle((x0, y0 + 6 * s, x0 + bw, y0 + bh + 6 * s), 24 * s, fill=(0, 0, 0, 70))
+            over = Image.alpha_composite(over, sh.filter(ImageFilter.GaussianBlur(10 * s)))
+            d = ImageDraw.Draw(over)
+            d.rounded_rectangle((x0, y0, x0 + bw, y0 + bh), 24 * s, fill=(250, 248, 244, 255))
+            ic = round(46 * s); icon = ICON.resize((ic, ic), Image.LANCZOS)
+            m = Image.new('L', (ic, ic), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, ic - 1, ic - 1), round(10 * s), fill=255)
+            over.paste(icon, (round(x0 + 14 * s), round(y0 + (bh - ic) / 2)), m)
+            tx = x0 + 14 * s + ic + 12 * s
+            d.text((tx, y0 + 15 * s), title, font=font(800, round(17.5 * s)), fill=(31, 27, 22, 255))
+            d.text((tx, y0 + 42 * s), body, font=font(600, round(17 * s)), fill=(58, 54, 49, 255))
+            fr = font(600, round(14.5 * s)); d.text((x0 + bw - 16 * s - d.textlength('now', font=fr), y0 + 17 * s), 'now', font=fr, fill=(110, 106, 100, 255))
     for t0, name in sc.get('tap', []):                # a touch: a soft circle that presses in and lifts
         u = (sec - t0) / 0.45
         if not 0 <= u <= 1: continue
-        if sc['id'] not in _where: _where[sc['id']] = json.loads((HERE / 'frames' / sc['id'] / 'where.json').read_text())
-        x, y = _where[sc['id']][name]; e = math.sin(math.pi * u); r = 24 * s * (1 - 0.18 * e)
+        if not isinstance(name, list) and sc['id'] not in _where: _where[sc['id']] = json.loads((HERE / 'frames' / sc['id'] / 'where.json').read_text())
+        x, y = name if isinstance(name, list) else _where[sc['id']][name]; e = math.sin(math.pi * u); r = 24 * s * (1 - 0.18 * e)
         over = over or Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(over)
         d.ellipse((x * s - r, y * s - r, x * s + r, y * s + r), fill=(70, 70, 70, round(95 * e)), outline=(255, 255, 255, round(170 * e)), width=max(1, round(r * 0.08)))
     if sc.get('outline'):                            # the eye goes to the box: a soft outline in the text's colour

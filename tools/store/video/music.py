@@ -160,6 +160,12 @@ for b, (root, chord, arp) in enumerate(CHORDS):
         add(impact(), t0, 0.22)
         add(bell('D6', 3.0), t0, 0.12, pan=0.2); add(bell('A5', 3.0), t0 + BEAT / 2, 0.08, pan=-0.2)
 
+# ── A reminder arrives: a soft two-note chime (our own), when the notification slides down ──
+for i, sc in enumerate(T['scenes']):
+    if sc.get('notify'):
+        t = sum(x['beats'] for x in T['scenes'][:i]) * BEAT + sc['notify'][0]
+        add(bell('E6', 1.2), t, 0.30, pan=0.1); add(bell('B6', 1.4), t + 0.11, 0.26, pan=0.1)
+
 # ── Room: a soft hall (a decaying noise tail, convolved) ─────────────────────
 def reverb(x, seconds=2.4, seed=1):
     g = np.random.default_rng(seed); n = int(seconds * SR); t = np.arange(n) / SR

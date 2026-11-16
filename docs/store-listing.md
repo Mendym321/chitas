@@ -20,7 +20,7 @@ Upload them in number order. The first three are the ones people see in search r
 | 1 | Chitas and Rambam, ready every day | Today's portions, worked out for you | Today |
 | 2 | Chumash with Rashi | Hebrew and English, side by side | Chumash |
 | 3 | Stop anywhere. Pick up right there. | Your place is kept, even on your other devices | Tehillim halfway, "Continue from your other device" |
-| 4 | A reminder for each, at your time | Says what's waiting, and never on Shabbos | Two of the app's real reminders (Tanya at night, Tehillim in the morning) over the Reminders settings |
+| 4 | A reminder for each, at your time | Says what's waiting, and opens right to it | The phone's lock screen that morning (7:45) with two of the app's real reminders: Tehillim, Psalms 1–9, and Chumash, Toldos · Aliya 4 |
 | 5 | Understand the Tanya | A plain-English guide walks you through | Tanya with its guide |
 | 6 | Check what stayed with you | A few questions, written from today's text | A Review question, answered |
 | 7 | Your Tehillim, and your family's | Each person's chapter, from their Hebrew birthday | Personal Tehillim |
@@ -30,7 +30,7 @@ Upload them in number order. The first three are the ones people see in search r
 
 Google takes 8: numbers 1 to 8. The screens show 11 November 2026 (1 Kislev, Toldos), fixed in `tools/store/shoot.mjs` (`DAY`) so the Review questions match the day's Chumash.
 
-**Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); and does it fit my day (3 and 4). Two things answer that, and both are reasons to have the app rather than a website: it keeps your place when you stop, and it reminds you at your own time for each part, saying what's waiting and opening right to it, never on Shabbos. So they come early. Then: will I understand it (5), and did it stay with me (6). After that, what no other app does for them: their own family's Tehillim (7) and a quiet record of what they've learned (8), with Hayom Yom (9) and the Rambam tracks (10) on Apple.
+**Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); and does it fit my day (3 and 4). Two things answer that, and both are reasons to have the app rather than a website: it keeps your place when you stop, and it reminds you at your own time for each part, saying what's waiting and opening right to it. So they come early. Then: will I understand it (5), and did it stay with me (6). After that, what no other app does for them: their own family's Tehillim (7) and a quiet record of what they've learned (8), with Hayom Yom (9) and the Rambam tracks (10) on Apple.
 
 ---
 
@@ -83,7 +83,7 @@ Use the same name in both stores, because people search for it. On the phone, un
 > Your days in a row, the month on a calendar, and everything you've learned: pesukim of Chumash, chapters of Tehillim, days of Tanya and halachos of Rambam. Milestones mark a finished parsha, all of Tehillim, your best month. It counts what you did, never what you missed, and Shabbos and Yom Tov never break your run.
 >
 > REMINDERS
-> A gentle reminder for each part, at the time you usually learn it. Never on Shabbos or Yom Tov.
+> A gentle reminder for each part, at the time you usually learn it. It says what's waiting, and a tap opens it.
 >
 > ANY DAY, ANY DEVICE
 > Read ahead or go back to any day. Missed one? Mark it within a week. Sign in with Apple or Google, and everything you've learned is on your phone, tablet and computer.
@@ -225,14 +225,14 @@ The store versions end on the name only: Apple and Google don't allow a web addr
 |---|---|---|
 | 0–2.6 | Today: Tanya and Rambam ticked, "All four done" | All of Chitas and Rambam, every day |
 | 2.6–8.75 | Chumash with Rashi, Hebrew and English: the line marked "You stopped here"; closed, back to Today ("Good morning"); "Later that day", the greeting turns to "Good afternoon"; Chumash tapped, and it opens on that same line, "Right where you stopped". All real app footage | Close it. It opens right where you stopped. |
-| 8.75–11.4 | The Reminders sheet: Tehillim switched on, then set to "After Shacharis" (8:30), two real taps | A reminder for each, at your time |
+| 8.75–11.4 | On Today, a soft chime and the reminder slides down: "Tehillim · Psalms 1–9"; tapped, it opens Tehillim, as the app's reminder does | A reminder for each, at your time |
 | 11.4–16.6 | The guides, one after another, each box softly outlined: Chumash ("Today in the parsha"), Tanya ("So far in this chapter"), Rambam ("This chapter") | A guide in Chumash, Tanya and Rambam |
 | 16.6–19.25 | A Review question on the day's Chumash, with Rashi's reason | Then see what stayed with you |
 | 19.25–21.9 | Personal Tehillim and the people sheet | Each person's own Tehillim chapter |
 | 21.9–24.5 | Progress: totals, milestones | Watch your learning add up |
 | 24.5–28 | The four rings draw in, then the name | Chitas · Chumash · Tehillim · Tanya · Rambam |
 
-Keeping your place gets the most time, so it can be told clearly, and reminders follow it: both are reasons to have the app rather than a website. The three guides go by quickly under one headline. Everything shows one day, 11 November 2026, fixed in `tools/store/video/capture.mjs` (`DAY`), as in the screenshots. The video shows the app's own Reminders screen rather than the phone's notifications, because Apple's previews may only show the app; the notifications themselves are in screenshot 4. On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
+Keeping your place gets the most time, so it can be told clearly, and reminders follow it: both are reasons to have the app rather than a website. The three guides go by quickly under one headline. Everything shows one day, 11 November 2026, fixed in `tools/store/video/capture.mjs` (`DAY`), as in the screenshots. The reminder is shown arriving while the app is open, as a screen recording of the phone would show it. (Apple's previews must show the app; if a reviewer ever objects to the notification, that scene can be swapped for the app's Reminders screen.) On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
 
 **App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:00**, the Today screen under its headline (there from the first frame), so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
 
