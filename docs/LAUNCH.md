@@ -12,7 +12,8 @@ Tick the boxes as you go (on GitHub you can edit this file and change `[ ]` to `
 
 - [ ] **0.1 Push everything live.** Tell Claude "push live". This puts the sponsor page, the plaque on Today and the new videos on the website. *Why:* the phone apps show the live website, so whatever is live is what Apple and Google will review.
 
-- [ ] **0.2 Next batch of written guides (before 22 November).** Tell Claude: "write the next batch of guides". *Why:* the written Tanya guides and the Rambam guide lines end on 22 November, the Chumash lines on 28 November. After that the readers still work (the AI writes the Tanya guide each day, a few cents), but the hand-written lines are better, and reviewers will be reading during that time.
+- [x] **0.2 Next batch of written guides (before 22 November).** Done 15 November: Tanya through 28 Nov (the end of the Tanya), Rambam through 5 Dec, Chumash through 12 Dec. *Next batch:* before 28 November.
+  *Each time:* tell Claude "write the next batch of guides" about a week before they run out. The readers still work without them (the AI writes the Tanya guide each day, a few cents), but the hand-written ones are better.
 
 - [x] **0.3 Developer name: Mendel Marcus.** Decided: individual accounts on both stores, under your own legal name (it must match your ID and payment details). The app can move to a business account later; both stores allow a transfer.
 

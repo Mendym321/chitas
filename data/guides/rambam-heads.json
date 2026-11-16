@@ -1562,5 +1562,1091 @@
    5,
    "Mixed produce"
   ]
+ ],
+ "Borrowing and Deposit 6": [
+  [
+   1,
+   "Paying instead of swearing"
+  ],
+  [
+   2,
+   "Conditions"
+  ],
+  [
+   3,
+   "Proof instead of an oath"
+  ],
+  [
+   4,
+   "Deposits before witnesses"
+  ],
+  [
+   5,
+   "Asked to return it"
+  ]
+ ],
+ "Borrowing and Deposit 7": [
+  [
+   1,
+   "Entrusted produce"
+  ],
+  [
+   3,
+   "Chametz on Pesach"
+  ],
+  [
+   4,
+   "A Torah scroll"
+  ],
+  [
+   6,
+   "Money left with a storekeeper"
+  ],
+  [
+   8,
+   "Money left with a householder"
+  ],
+  [
+   10,
+   "From whom not to accept"
+  ],
+  [
+   11,
+   "Where it is returned"
+  ],
+  [
+   12,
+   "When both go away"
+  ]
+ ],
+ "Borrowing and Deposit 8": [
+  [
+   1,
+   "Lost or stolen"
+  ],
+  [
+   2,
+   "The double payment"
+  ],
+  [
+   5,
+   "Questions left open"
+  ],
+  [
+   6,
+   "The thief is found"
+  ]
+ ],
+ "Creditor and Debtor 1": [
+  [
+   1,
+   "Lending to the poor"
+  ],
+  [
+   2,
+   "Don't press the poor"
+  ],
+  [
+   4,
+   "Collecting a debt"
+  ],
+  [
+   5,
+   "What can't be taken"
+  ],
+  [
+   7,
+   "Leaving him what he needs"
+  ],
+  [
+   8,
+   "When the borrower is away"
+  ]
+ ],
+ "Creditor and Debtor 2": [
+  [
+   1,
+   "What the debtor keeps"
+  ],
+  [
+   2,
+   "Hidden property"
+  ],
+  [
+   3,
+   "The debtor's oath"
+  ],
+  [
+   6,
+   "From one who owes him"
+  ],
+  [
+   7,
+   "Lend before witnesses"
+  ],
+  [
+   8,
+   "A master and his servant"
+  ]
+ ],
+ "Creditor and Debtor 3": [
+  [
+   1,
+   "Never from a widow"
+  ],
+  [
+   3,
+   "Tools for making food"
+  ],
+  [
+   4,
+   "Not entering his home"
+  ],
+  [
+   6,
+   "What the court may take"
+  ],
+  [
+   7,
+   "From a guarantor"
+  ],
+  [
+   8,
+   "Returning a poor man's pledge"
+  ]
+ ],
+ "Creditor and Debtor 4": [
+  [
+   1,
+   "Interest is forbidden"
+  ],
+  [
+   2,
+   "Borrower and lender alike"
+  ],
+  [
+   4,
+   "Returning interest"
+  ],
+  [
+   6,
+   "A note with interest"
+  ],
+  [
+   8,
+   "Within the family"
+  ],
+  [
+   11,
+   "A change of coinage"
+  ],
+  [
+   14,
+   "Orphans' money"
+  ]
+ ],
+ "Creditor and Debtor 5": [
+  [
+   1,
+   "With a gentile"
+  ],
+  [
+   7,
+   "Lend to a Jew first"
+  ],
+  [
+   8,
+   "Partnerships"
+  ],
+  [
+   11,
+   "Before and after the loan"
+  ],
+  [
+   12,
+   "Even a greeting"
+  ],
+  [
+   14,
+   "Permitted look-alikes"
+  ],
+  [
+   15,
+   "Getting around the ban"
+  ],
+  [
+   17,
+   "The king's tax"
+  ]
+ ],
+ "Creditor and Debtor 6": [
+  [
+   1,
+   "Repaying in kind"
+  ],
+  [
+   2,
+   "The borrower's servant"
+  ],
+  [
+   4,
+   "A field as security"
+  ],
+  [
+   5,
+   "Selling with buyback"
+  ],
+  [
+   7,
+   "Security without a deduction"
+  ]
+ ],
+ "Creditor and Debtor 7": [
+  [
+   1,
+   "A field as security"
+  ],
+  [
+   2,
+   "Local custom"
+  ],
+  [
+   6,
+   "A gentile's courtyard"
+  ],
+  [
+   7,
+   "A house as security"
+  ],
+  [
+   8,
+   "More rent for paying later"
+  ],
+  [
+   10,
+   "No extra for waiting on wages"
+  ],
+  [
+   11,
+   "Trading work"
+  ]
+ ],
+ "Creditor and Debtor 8": [
+  [
+   1,
+   "More for paying later"
+  ],
+  [
+   3,
+   "A jug of wine"
+  ],
+  [
+   5,
+   "Unripe fruit"
+  ],
+  [
+   8,
+   "Sharecroppers"
+  ],
+  [
+   11,
+   "Renting out ships"
+  ],
+  [
+   12,
+   "Investing with no risk"
+  ],
+  [
+   14,
+   "A hen on eggs"
+  ],
+  [
+   15,
+   "Interest paid in goods"
+  ]
+ ],
+ "Creditor and Debtor 9": [
+  [
+   1,
+   "Once a price is set"
+  ],
+  [
+   2,
+   "Nearly ready"
+  ],
+  [
+   4,
+   "Which market price"
+  ],
+  [
+   6,
+   "When prices change"
+  ],
+  [
+   8,
+   "Donkey drivers"
+  ],
+  [
+   10,
+   "Specific cucumbers"
+  ]
+ ],
+ "Creditor and Debtor 10": [
+  [
+   1,
+   "Lending produce"
+  ],
+  [
+   2,
+   "If the borrower has some"
+  ],
+  [
+   3,
+   "A kor for a kor"
+  ],
+  [
+   4,
+   "When prices change"
+  ],
+  [
+   5,
+   "Seed for sharecroppers"
+  ],
+  [
+   6,
+   "A debt turned into produce"
+  ]
+ ],
+ "Creditor and Debtor 11": [
+  [
+   1,
+   "An oral loan"
+  ],
+  [
+   2,
+   "A note in his own hand"
+  ],
+  [
+   4,
+   "A written note"
+  ],
+  [
+   6,
+   "An oral loan and heirs"
+  ],
+  [
+   8,
+   "Paying a father's debts"
+  ],
+  [
+   11,
+   "Movable property, by decree"
+  ]
+ ],
+ "Creditor and Debtor 12": [
+  [
+   1,
+   "Heirs below majority"
+  ],
+  [
+   3,
+   "Exceptions"
+  ],
+  [
+   6,
+   "A claim on their land"
+  ],
+  [
+   8,
+   "How the court sells"
+  ],
+  [
+   10,
+   "A sale not announced"
+  ]
+ ],
+ "Creditor and Debtor 13": [
+  [
+   1,
+   "The borrower away"
+  ],
+  [
+   3,
+   "A pledge in hand"
+  ],
+  [
+   5,
+   "The due date"
+  ],
+  [
+   8,
+   "Where to pay"
+  ]
+ ],
+ "Creditor and Debtor 14": [
+  [
+   1,
+   "Swearing despite a note"
+  ],
+  [
+   3,
+   "A note not yet verified"
+  ],
+  [
+   7,
+   "A note already paid"
+  ],
+  [
+   9,
+   "A disqualified note"
+  ],
+  [
+   10,
+   "One witness"
+  ],
+  [
+   12,
+   "\"Let him swear\""
+  ],
+  [
+   14,
+   "Both holding the note"
+  ]
+ ],
+ "Creditor and Debtor 15": [
+  [
+   1,
+   "Repay only before witnesses"
+  ],
+  [
+   3,
+   "The lender's word"
+  ],
+  [
+   5,
+   "Paid twice"
+  ],
+  [
+   6,
+   "The borrower's word"
+  ],
+  [
+   7,
+   "Without an oath"
+  ]
+ ],
+ "Creditor and Debtor 16": [
+  [
+   1,
+   "Paid to the lender"
+  ],
+  [
+   2,
+   "Through someone else"
+  ],
+  [
+   5,
+   "A storekeeper's credit"
+  ],
+  [
+   7,
+   "A note in other hands"
+  ],
+  [
+   9,
+   "A receipt found"
+  ],
+  [
+   11,
+   "A note of unknown status"
+  ]
+ ],
+ "Creditor and Debtor 17": [
+  [
+   1,
+   "The lender's heir"
+  ],
+  [
+   3,
+   "The borrower died first"
+  ],
+  [
+   6,
+   "Heirs who say it was paid"
+  ],
+  [
+   8,
+   "An heir who is a minor"
+  ],
+  [
+   9,
+   "A note from Babylonia"
+  ]
+ ],
+ "Creditor and Debtor 18": [
+  [
+   1,
+   "The borrower's land is bound"
+  ],
+  [
+   2,
+   "Movables sold"
+  ],
+  [
+   3,
+   "A field set aside"
+  ],
+  [
+   5,
+   "A servant set aside"
+  ],
+  [
+   7,
+   "Consecrated property"
+  ],
+  [
+   8,
+   "When the buyer wins"
+  ],
+  [
+   10,
+   "When the creditor wins"
+  ]
+ ],
+ "Creditor and Debtor 19": [
+  [
+   1,
+   "Middle-quality land"
+  ],
+  [
+   2,
+   "Sold land last"
+  ],
+  [
+   4,
+   "Best, middle, poorest"
+  ],
+  [
+   5,
+   "Several buyers"
+  ],
+  [
+   8,
+   "Giving up a right"
+  ]
+ ],
+ "Creditor and Debtor 20": [
+  [
+   1,
+   "The earliest debt first"
+  ],
+  [
+   2,
+   "Property bought later"
+  ],
+  [
+   3,
+   "The same date"
+  ],
+  [
+   5,
+   "A wrong date"
+  ]
+ ],
+ "Creditor and Debtor 21": [
+  [
+   1,
+   "The buyer's improvements"
+  ],
+  [
+   2,
+   "Produce eaten"
+  ],
+  [
+   3,
+   "A gift"
+  ],
+  [
+   4,
+   "Orphans who improved it"
+  ],
+  [
+   5,
+   "Paying for the improvements"
+  ],
+  [
+   6,
+   "A field set aside"
+  ],
+  [
+   7,
+   "Heirs who say they improved it"
+  ]
+ ],
+ "Creditor and Debtor 22": [
+  [
+   1,
+   "The order of collection"
+  ],
+  [
+   2,
+   "Time to bring proof"
+  ],
+  [
+   6,
+   "The adrachta"
+  ],
+  [
+   8,
+   "The tirpa"
+  ],
+  [
+   9,
+   "Valuing the land"
+  ],
+  [
+   10,
+   "The borrower's oath"
+  ],
+  [
+   12,
+   "From when the produce is his"
+  ],
+  [
+   14,
+   "When experts disagree"
+  ],
+  [
+   15,
+   "A mistake in the value"
+  ]
+ ],
+ "Creditor and Debtor 23": [
+  [
+   1,
+   "Dated early or late"
+  ],
+  [
+   3,
+   "Written by day, signed at night"
+  ],
+  [
+   5,
+   "Written for the borrower alone"
+  ],
+  [
+   7,
+   "Deeds of sale"
+  ],
+  [
+   9,
+   "Collecting on testimony"
+  ],
+  [
+   12,
+   "A worn note"
+  ],
+  [
+   14,
+   "A torn note"
+  ],
+  [
+   15,
+   "Part paid"
+  ],
+  [
+   16,
+   "A lost note"
+  ],
+  [
+   17,
+   "Splitting a note"
+  ]
+ ],
+ "Creditor and Debtor 24": [
+  [
+   1,
+   "Writing for one party"
+  ],
+  [
+   2,
+   "The scribe's fee"
+  ],
+  [
+   4,
+   "A known name"
+  ],
+  [
+   5,
+   "A disputed note"
+  ],
+  [
+   6,
+   "Witnesses who can't sign"
+  ],
+  [
+   8,
+   "Two with the same name"
+  ],
+  [
+   10,
+   "Notes against each other"
+  ],
+  [
+   11,
+   "A note against a deed"
+  ]
+ ],
+ "Creditor and Debtor 25": [
+  [
+   1,
+   "When a guarantor is bound"
+  ],
+  [
+   3,
+   "Ask the borrower first"
+  ],
+  [
+   5,
+   "Guarantor or kablan"
+  ],
+  [
+   6,
+   "A ketubah"
+  ],
+  [
+   7,
+   "A seller's guarantee"
+  ],
+  [
+   9,
+   "Two borrowers"
+  ],
+  [
+   10,
+   "Two guarantors"
+  ],
+  [
+   14,
+   "Guaranteeing the person"
+  ]
+ ],
+ "Creditor and Debtor 26": [
+  [
+   1,
+   "From the borrower first"
+  ],
+  [
+   5,
+   "An oral guarantee"
+  ],
+  [
+   6,
+   "A guarantor who paid"
+  ],
+  [
+   8,
+   "Weaker claims"
+  ],
+  [
+   9,
+   "A servant or married woman"
+  ],
+  [
+   10,
+   "A minor"
+  ]
+ ],
+ "Creditor and Debtor 27": [
+  [
+   1,
+   "Any language"
+  ],
+  [
+   2,
+   "Gentile witnesses"
+  ],
+  [
+   3,
+   "Where witnesses sign"
+  ],
+  [
+   6,
+   "The court's validation"
+  ],
+  [
+   8,
+   "Erasures"
+  ],
+  [
+   13,
+   "Numbers at a line's end"
+  ],
+  [
+   14,
+   "Conflicting amounts"
+  ]
+ ],
+ "Plaintiff and Defendant 1": [
+  [
+   1,
+   "Admitting part of a claim"
+  ],
+  [
+   2,
+   "The Torah's three oaths"
+  ],
+  [
+   4,
+   "Paying instead of swearing"
+  ],
+  [
+   5,
+   "The Sages' oaths"
+  ],
+  [
+   6,
+   "The sh'vuat heset"
+  ],
+  [
+   11,
+   "Before an oath"
+  ],
+  [
+   12,
+   "Adding other claims"
+  ],
+  [
+   14,
+   "Many claims"
+  ],
+  [
+   15,
+   "A fine"
+  ]
+ ],
+ "Plaintiff and Defendant 2": [
+  [
+   1,
+   "Suspected of a false oath"
+  ],
+  [
+   3,
+   "Who counts as suspect"
+  ],
+  [
+   4,
+   "The plaintiff swears instead"
+  ],
+  [
+   8,
+   "When the plaintiff is suspect"
+  ],
+  [
+   10,
+   "Until lashes"
+  ],
+  [
+   11,
+   "A denial with proof"
+  ]
+ ],
+ "Plaintiff and Defendant 3": [
+  [
+   1,
+   "The smallest amounts"
+  ],
+  [
+   3,
+   "Claim and admission compared"
+  ],
+  [
+   5,
+   "Utensils"
+  ],
+  [
+   6,
+   "One witness"
+  ],
+  [
+   8,
+   "The same kind"
+  ],
+  [
+   11,
+   "Two kinds"
+  ],
+  [
+   12,
+   "Claims made separately"
+  ],
+  [
+   15,
+   "Money and a utensil"
+  ]
+ ],
+ "Plaintiff and Defendant 4": [
+  [
+   1,
+   "A measured claim"
+  ],
+  [
+   5,
+   "A disputed note"
+  ],
+  [
+   6,
+   "A pledge"
+  ],
+  [
+   7,
+   "\"I don't know\""
+  ],
+  [
+   8,
+   "One witness"
+  ],
+  [
+   10,
+   "Witnesses against a denial"
+  ]
+ ],
+ "Plaintiff and Defendant 5": [
+  [
+   1,
+   "Land, servants and notes"
+  ],
+  [
+   3,
+   "Utensils and land together"
+  ],
+  [
+   4,
+   "Crops ready to harvest"
+  ],
+  [
+   5,
+   "Rent for a courtyard"
+  ],
+  [
+   6,
+   "Claims about a note"
+  ],
+  [
+   9,
+   "Deaf-mutes and minors"
+  ],
+  [
+   11,
+   "A claim against a minor"
+  ]
+ ],
+ "Plaintiff and Defendant 6": [
+  [
+   1,
+   "Precise statements"
+  ],
+  [
+   2,
+   "Money counted out"
+  ],
+  [
+   3,
+   "Contradicted by witnesses"
+  ],
+  [
+   4,
+   "Not always lying"
+  ],
+  [
+   5,
+   "Paying without witnesses"
+  ],
+  [
+   6,
+   "Admitting outside court"
+  ],
+  [
+   7,
+   "Hidden witnesses"
+  ]
+ ],
+ "Plaintiff and Defendant 7": [
+  [
+   1,
+   "Admitting before witnesses"
+  ],
+  [
+   2,
+   "\"I was joking\""
+  ],
+  [
+   3,
+   "Before a court"
+  ],
+  [
+   6,
+   "\"Go and pay\""
+  ],
+  [
+   7,
+   "\"I remember paying\""
+  ],
+  [
+   8,
+   "Changing a claim"
+  ]
+ ],
+ "Plaintiff and Defendant 8": [
+  [
+   1,
+   "Possession of movables"
+  ],
+  [
+   2,
+   "Held as security"
+  ],
+  [
+   3,
+   "Things not made to lend"
+  ],
+  [
+   6,
+   "A report of theft"
+  ],
+  [
+   7,
+   "Things made to lend or rent"
+  ],
+  [
+   9,
+   "What \"made to lend\" means"
+  ]
+ ],
+ "Plaintiff and Defendant 9": [
+  [
+   1,
+   "A craftsman's tools"
+  ],
+  [
+   3,
+   "A former craftsman"
+  ],
+  [
+   4,
+   "Carried out hidden"
+  ],
+  [
+   6,
+   "An ax and a palm tree"
+  ],
+  [
+   7,
+   "Two holding one thing"
+  ],
+  [
+   12,
+   "Pulled away in court"
+  ]
  ]
 }
