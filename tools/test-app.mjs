@@ -685,6 +685,18 @@ await check('Tanya on 19 to 23 Kislev: the title page, approbations and foreword
   [4, [], "Likkutei Amarim · Compiler's foreword", 'הקדמת המלקט', true, null],
   [3, [], "Likkutei Amarim · Compiler's foreword", 'הקדמת המלקט', true, null],
 ], [true, 3, false, true, true, false]]);
+await check('the Rambam\'s opening pieces: a day\'s range read as one piece (not hundreds of "chapters"), no Review', () => {
+  const parts = ['Mishneh Torah, Positive Mitzvot 84-166', 'Mishneh Torah, Transmission of the Oral Law 1-45', 'Mishneh Torah, Overview of Mishneh Torah Contents 1:1-4:8', 'Mishneh Torah, Sabbath 4']
+    .map(r => { const o = _rambamOpening(r); return o && [o.en, o.from, o.to, o.sections]; });
+  const keep = schedule.rambam; schedule.rambam = { ...(keep || {}), sefariaRef: 'Mishneh Torah, Positive Mitzvot 84-166' };
+  const quiz = [_quizzable('rambam')];
+  schedule.rambam = { ...(keep || {}), sefariaRef: 'Mishneh Torah, Sabbath 4-6' }; quiz.push(_quizzable('rambam'));
+  schedule.rambam = keep;
+  return [parts, _expandRambamRefs(['Mishneh Torah, Negative Mitzvot 1-365', 'Mishneh Torah, Sabbath 4-6']),
+    _rambamSubtitle([{ title: 'Positive Mitzvot 84-166', opening: { en: 'Positive mitzvos', from: 84, to: 166 } }]), quiz];
+}, [[['Positive mitzvos', 84, 166, false], ['Introduction', 1, 45, false], ['Overview of the contents', 1, 4, true], null],
+  ['Mishneh Torah, Negative Mitzvot 1-365', 'Mishneh Torah, Sabbath 4', 'Mishneh Torah, Sabbath 5', 'Mishneh Torah, Sabbath 6'],
+  'Positive mitzvos 84–166', [false, true]]);
 await check('the reader\'s day bar names a far day once ("Tue, Nov 24", not "Tue, Nov 24, Nov 24")', () => {
   const keep = dayOffset; dayOffset = 8; _updateReaderDayBar('chumash');
   const far = document.getElementById('rd-label').textContent;

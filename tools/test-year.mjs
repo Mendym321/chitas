@@ -165,6 +165,8 @@ function readDay(iso) {
       const ok = await _loadRambamNative('rambam', true);
       const d = _dayTexts.get('rambam|' + iso);
       out[key] = { ok: ok && !!d, sub: sub('rambam'), titles: (d?.chapters || []).map(c => c.title || c.ref || '?'),
+        parts: (d?.chapters || []).map(c => ({ title: c.title, chapter: c.chapter, opening: c.opening ? { from: c.opening.from, to: c.opening.to, sections: c.opening.sections, sectionCount: c.opening.sectionCount } : null,
+          en: c.en.filter(Boolean).length, he: c.he.filter(Boolean).length, heads: (c.opening?.heads || []).filter(Boolean).length })),
         emptyChapters: (d?.chapters || []).filter(c => !c.en.length || !c.he.length).map(c => c.title || c.ref || '?'), ...(d ? drawn('rambam') : {}) };
     }
     user.rambamTrack = keepTrack;
@@ -232,10 +234,42 @@ for (const d of days) {
   check(new Set(dates2).size === dates2.length, `${d.iso} day bar: "${d.dayBar}"`);
 }
 
-// Rambam: how many chapters each day (any day that isn't 3 or 1 is listed)
-for (const d of days) {
-  if (d.rambam3?.ok) check(d.rambam3.titles.length === 3, `${d.iso} rambam3: ${d.rambam3.titles.length} chapters (${d.rambam3.titles.join(', ')})`);
-  if (d.rambam1?.ok) check(d.rambam1.titles.length === 1, `${d.iso} rambam1: ${d.rambam1.titles.length} chapters (${d.rambam1.titles.join(', ')})`);
+// Rambam: each day is exactly the calendar's portion, split the way the
+// calendar splits it, and starts right where the day before stopped
+const OPENING_BOOKS = ['Transmission of the Oral Law', 'Positive Mitzvot', 'Negative Mitzvot', 'Overview of Mishneh Torah Contents'];
+const hebcalDay = async iso => JSON.parse((await saved('https://www.hebcal.com/hebcal?v=1&cfg=json&dps=on&dr3=on&dr1=on&d=on&start=' + iso + '&end=' + iso + '&lg=s')).body);
+// "Foundations of the Torah 10, Human Dispositions 1-2" → [{ book, from, to, sections }]
+// (book names can have commas, "Tefillin, Mezuzah and the Torah Scroll", so it splits only after a number)
+const calendarParts = title => title.split(/(?<=\d), /).map(p => {
+  const m = p.match(/^(.+?) (\d+)(:\d+)?(?:-(\d+)(?::\d+)?)?$/);
+  return m && { book: m[1], from: +m[2], to: +(m[4] || m[2]), sections: !!m[3], text: p };
+});
+for (const [key, cat] of [['rambam3', 'dailyRambam3'], ['rambam1', 'dailyRambam1']]) {
+  let before = null;   // where the day before ended: { book, n }
+  for (const d of days) {
+    const r = d[key];
+    if (!r?.ok) { before = null; continue; }
+    const item = (await hebcalDay(d.iso)).items?.find(i => i.category === cat);
+    const want = item ? calendarParts(item.title) : null;
+    if (!want || want.some(w => !w)) { check(false, `${d.iso} ${key}: can't read the calendar's "${item?.title}"`); before = null; continue; }
+    // What the app should show: an opening piece whole, as one; a book's chapters one by one
+    const expected = want.flatMap(w => OPENING_BOOKS.includes(w.book) ? [w.text]
+      : Array.from({ length: w.to - w.from + 1 }, (_, i) => w.book + ' ' + (w.from + i)));
+    const got = r.parts.map(p => p.title);
+    check(JSON.stringify(got) === JSON.stringify(expected), `${d.iso} ${key}: shows [${got.join(' | ')}], the calendar says [${expected.join(' | ')}]`);
+    for (const p of r.parts) {
+      check(p.en && p.he, `${d.iso} ${key}: ${p.title} has ${p.en} English and ${p.he} Hebrew paragraphs`);
+      if (p.opening && !p.opening.sections) check(p.en === p.opening.to - p.opening.from + 1 && p.he === p.en, `${d.iso} ${key}: ${p.title} should have ${p.opening.to - p.opening.from + 1} paragraphs, has ${p.en} English and ${p.he} Hebrew`);
+      if (p.opening?.sections) check(p.opening.sectionCount === p.opening.to - p.opening.from + 1 && p.heads >= p.opening.sectionCount - 1, `${d.iso} ${key}: ${p.title} should have ${p.opening.to - p.opening.from + 1} sections, has ${p.opening.sectionCount} (${p.heads} with a title)`);
+    }
+    // Continues from the day before: the next paragraph or chapter of the same book, or a new book from its start
+    const first = want[0], last = want.at(-1);
+    if (before) {
+      const follows = first.book === before.book ? first.from === before.n + 1 : first.from === 1;
+      check(follows, `${d.iso} ${key}: starts at ${first.book} ${first.from}, but the day before ended at ${before.book} ${before.n}`);
+    }
+    before = { book: last.book, n: last.to };
+  }
 }
 
 // Tehillim: each Hebrew month (day 1 to its last day) says all 150

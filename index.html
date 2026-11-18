@@ -3590,7 +3590,9 @@ let quizState = { sectionId: null, level: null, questions: [], current: 0, score
 function _quizzable(sectionId) {
   return QUIZZES_ENABLED && ['chumash', 'tanya', 'rambam'].includes(sectionId)
     && !(sectionId === 'rambam' && user.rambamTrack === 'm')
-    && !(sectionId === 'tanya' && /Likkutei Amarim, (Title Page|Approbation|Compiler's Foreword)/.test(schedule?.tanya?.sefariaRef || ''));   // the opening pages: no Review
+    && !(sectionId === 'tanya' && /Likkutei Amarim, (Title Page|Approbation|Compiler's Foreword)/.test(schedule?.tanya?.sefariaRef || ''))   // the opening pages: no Review
+    && !(sectionId === 'rambam' && (RAMBAM_OPENING_RE.test(schedule?.rambam?.sefariaRef || '')     // nor on the Rambam's (the introduction, the mitzvos, the contents)
+      || (_textFor('rambam', dateISO(appNow()))?.chapters || []).some(c => c.opening)));
 }
 
 // Points are given once per section, per level, per day
@@ -5003,12 +5005,12 @@ async function _loadRambamNative(sectionId, silent) {
 
     // Parse a Sefaria URL to a ref string
     // "https://www.sefaria.org/Mishneh_Torah%2C_Fasts.2-4?..." → "Mishneh Torah, Fasts 2-4"
+    // "…Overview_of_Mishneh_Torah_Contents.1.1-14.10" → "… Contents 1:1-14:10" (sections and paragraphs)
     function sefariaUrlToRef(url) {
       try {
-        const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
-        const clean = path.replace(/_/g, ' ');
-        const dot = clean.lastIndexOf('.');
-        return dot === -1 ? clean : clean.slice(0, dot) + ' ' + clean.slice(dot + 1);
+        const clean = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]).replace(/_/g, ' ');
+        const m = clean.match(/^(.*?)\.(\d[\d.\-]*)$/);
+        return m ? m[1] + ' ' + m[2].replace(/\./g, ':') : clean;
       } catch(e) { return null; }
     }
 
@@ -5053,20 +5055,43 @@ async function _loadRambamNative(sectionId, silent) {
 function _rambamSubtitle(chapters) {
   const books = [];
   chapters.forEach(ch => {
+    if (ch.opening) { books.push({ label: ch.opening.en + ' ' + _rambamOpeningRange(ch.opening) }); return; }
     const book = ch.title.replace(/\s+\d+$/, '');
     const last = books[books.length - 1];
     if (last && last.book === book) last.to = ch.chapter; else books.push({ book, from: ch.chapter, to: ch.chapter });
   });
-  return books.map(b => b.book + ' ' + b.from + (b.to !== b.from ? '–' + b.to : '')).join(' · ');
+  return books.map(b => b.label || b.book + ' ' + b.from + (b.to !== b.from ? '–' + b.to : '')).join(' · ');
 }
 
 // Expand range refs like "Mishneh Torah, Eruvin 3-5" into individual chapter refs
 // ["Mishneh Torah, Eruvin 3", "Mishneh Torah, Eruvin 4", "Mishneh Torah, Eruvin 5"]
 // Single-chapter refs pass through unchanged.
+// ── The opening pieces (when the cycle starts again) ─────────────────────────
+// The Mishneh Torah opens with the Rambam's introduction, the list of the 613
+// mitzvos and the list of its contents. They aren't chapters: a day reads a
+// range of their paragraphs ("Positive Mitzvot 84-166" is mitzvos 84 to 166;
+// the contents go by sections, "1:1-4:8"). So that range is fetched in one go
+// and shown as one piece, numbered as the Rambam numbers it.
+const RAMBAM_OPENING = {
+  'Transmission of the Oral Law': 'Introduction',
+  'Positive Mitzvot': 'Positive mitzvos',
+  'Negative Mitzvot': 'Negative mitzvos',
+  'Overview of Mishneh Torah Contents': 'Overview of the contents',
+};
+const RAMBAM_OPENING_RE = /Mishneh Torah, (Transmission of the Oral Law|Positive Mitzvot|Negative Mitzvot|Overview of Mishneh Torah Contents)\b/;
+// "Mishneh Torah, Positive Mitzvot 84-166" → { book, en, from: 84, to: 166 }; a chapter → null
+function _rambamOpening(ref) {
+  const m = String(ref || '').match(/^(?:Mishneh Torah,\s*)?(.+?)\s+(\d+)(:\d+)?(?:-(\d+)(?::\d+)?)?$/);
+  if (!m || !RAMBAM_OPENING[m[1]]) return null;
+  return { book: m[1], en: RAMBAM_OPENING[m[1]], from: +m[2], to: +(m[4] || m[2]), sections: !!m[3] };
+}
+const _rambamOpeningRange = op => op.from + (op.to !== op.from ? '–' + op.to : '');
+
 function _expandRambamRefs(refs) {
   const out = [];
   refs.forEach(ref => {
     if (!ref) return;
+    if (_rambamOpening(ref)) { out.push(ref); return; }   // one piece, not chapters
     // Range ref: "Mishneh Torah, Laws of Sabbath 4-6" → 3 individual chapter refs
     // Also handles refs without "Mishneh Torah" prefix (just in case)
     const rangeMatch = ref.match(/^(.+?)\s+(\d+)-(\d+)$/);
@@ -5098,6 +5123,10 @@ async function _fetchRambamChapter(ref) {
   // The translator's footnotes are kept (one list per chapter) and shown as
   // tappable numbers in the text
   const notes = [];
+  // An opening piece (the introduction, the mitzvos, the contents): the day's
+  // range of it, every paragraph (the contents' sections one after another)
+  const op = _rambamOpening(ref);
+  const deep = x => typeof x === 'string' ? [x] : Array.isArray(x) ? x.flatMap(deep) : [];
 
   // v3 API for English — ask for the Touger translation by name (it carries the
   // translator's footnotes and, in many books, [brackets] around his added words);
@@ -5117,6 +5146,7 @@ async function _fetchRambamChapter(ref) {
   // text should always be flat. But guard against nesting just in case.
   function flatV3(x) {
     if (!x) return [];
+    if (op) x = deep(x);
     // Nested: first element is itself an array → this is a multi-chapter response
     if (Array.isArray(x) && x.length && Array.isArray(x[0])) x = x[0];
     if (typeof x === 'string') { const s = _cleanHtml(x, notes); return s ? [s] : [null]; }
@@ -5139,6 +5169,7 @@ async function _fetchRambamChapter(ref) {
   // Hebrew from standard API — same nesting guard as flatV3
   function flatHe(x) {
     if (!x) return [];
+    if (op) x = deep(x);
     if (Array.isArray(x) && x.length && Array.isArray(x[0])) x = x[0];
     if (typeof x === 'string') { const s = x.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); return [s||null]; }
     if (Array.isArray(x)) return x.map(item => {
@@ -5160,6 +5191,16 @@ async function _fetchRambamChapter(ref) {
   // "משנה תורה, הלכות מכירה" → "הלכות מכירה", for the printed-page heading
   const heBook = String(heRes?.heTitle || '').replace(/^משנה תורה,?\s*/, '');
 
+  if (op) {
+    // The contents' section titles ("BOOK OF HOLINESS") are all in bold: shown as headings
+    const bold = t => /^\s*<b>[^]*<\/b>\s*$/.test(t || '');
+    const enRaw = deep(engVersion?.text || []), heRaw = deep(heRes?.he || []);
+    const heads = Array.from({ length: Math.max(enSegs.length, heSegs.length) }, (_, i) => bold(enRaw[i]) || bold(heRaw[i]));
+    return { ref, title: ref.replace(/^Mishneh Torah,\s*/, ''), heBook, chapter: null, en: enSegs, he: heSegs, notes,
+      opening: { en: op.en, from: op.from, to: op.to, sections: op.sections, heads,
+        // how many sections came (the contents), to check it's the whole day's range
+        sectionCount: op.sections ? (Array.isArray(heRes?.he?.[0]) ? heRes.he.length : 1) : null } };
+  }
   return { ref, title, heBook, chapter, en: enSegs, he: heSegs, notes };
 }
 
@@ -5202,10 +5243,14 @@ function _renderRambamContent() {
 
   chapters.forEach((chapter, chIdx) => {
     // Each chapter opens like a printed page: the book, then the chapter
+    // (an opening piece: its name, and the range of it read today)
+    const op = chapter.opening;
+    const heRange = op && _toHebrewNumeral(op.from) + (op.to !== op.from ? '–' + _toHebrewNumeral(op.to) : '');
     v += '<div class="tz-head"' + (chIdx > 0 ? ' style="margin-top:34px"' : '') + '>'
       + '<p class="tz-part" lang="he">משנה תורה' + (chapter.heBook ? ' · ' + escapeHtml(chapter.heBook) : '') + '</p>'
-      + '<p class="tz-ch" lang="he">פרק ' + _toHebrewNumeral(chapter.chapter) + '</p>'
-      + '<p class="tz-en-label">' + escapeHtml(chapter.title.replace(/\s+\d+$/, '') + ' · Chapter ' + chapter.chapter + (chapters.length > 1 ? ' · ' + (chIdx + 1) + ' of ' + chapters.length + ' today' : '')) + '</p></div>';
+      + '<p class="tz-ch" lang="he">' + (op ? (op.sections ? 'חלקים ' : '') + heRange : 'פרק ' + _toHebrewNumeral(chapter.chapter)) + '</p>'
+      + '<p class="tz-en-label">' + escapeHtml(op ? op.en + ' · ' + (op.sections ? 'Sections ' : '') + _rambamOpeningRange(op)
+        : chapter.title.replace(/\s+\d+$/, '') + ' · Chapter ' + chapter.chapter + (chapters.length > 1 ? ' · ' + (chIdx + 1) + ' of ' + chapters.length + ' today' : '')) + '</p></div>';
     if (guideOn && guideOf(chapter)) v += '<div class="tz-guide"><p class="tz-gl">This chapter</p><p class="tz-gt">' + escapeHtml(guideOf(chapter)) + '</p></div>';
     const hs = guideOn ? headsOf(chapter) : {};
 
@@ -5214,15 +5259,24 @@ function _renderRambamContent() {
       const enRaw = chapter.en[i] || '';
       const he    = chapter.he[i] || '';
       if (!enRaw && !he) continue;
+      // A section title in the contents: a heading, not a numbered paragraph
+      if (op?.heads?.[i]) {
+        v += '<div class="rb-sec"' + (lang === 'both' ? ' style="display:grid;grid-template-columns:1fr 1fr;gap:20px;"' : '') + '>'
+          + (lang !== 'he' && enRaw ? '<p class="tz-h rb-h">' + escapeHtml(enRaw.replace(/<[^>]+>/g, '')) + '</p>' : '')
+          + (lang !== 'en' && he ? '<p class="tz-h rb-h" lang="he" style="direction:rtl;text-align:right;">' + escapeHtml(he.replace(/<[^>]+>/g, '')) + '</p>' : '') + '</div>';
+        continue;
+      }
       const en = _rambamNoteMarkers(styleBrackets(enRaw), chIdx);
-      const num    = i + 1;
-      const heNum  = _toHebrewNumeral(num);   // the shared helper: 15 טו, 16 טז, and every number
+      // The introduction and the mitzvos keep the Rambam's own numbers (mitzvah 84, 85…);
+      // the contents' lines have none
+      const num    = op ? (op.sections ? null : op.from + i) : i + 1;
+      const heNum  = num && _toHebrewNumeral(num);   // the shared helper: 15 טו, 16 טז, and every number
 
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
       // Rendered as a span before the text — stays inline with the paragraph
       if (hs[num]) v += '<p class="tz-h rb-h">' + escapeHtml(hs[num]) + '</p>';
-      const enMark = '<span class="rd-vn">' + num + '</span>';
-      const heMark = '<span class="rd-vn">' + heNum + '</span>';
+      const enMark = num ? '<span class="rd-vn">' + num + '</span>' : '';
+      const heMark = num ? '<span class="rd-vn">' + heNum + '</span>' : '';
 
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
