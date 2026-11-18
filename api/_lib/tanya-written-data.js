@@ -454,4 +454,66 @@ export const WRITTEN = {
     ['', [['הנה לפעמים', 'it sometimes happens'], ['כמו שכתב הארי', 'All this has been explained']]],
   ],
 },
+'Likkutei Amarim 3|1|7': {
+  flow: 'notes',
+  intro: "Chapter 2 described where the divine soul comes from. Today: what it's made of. Like every soul, it has ten powers: three of the mind and seven of the heart.",
+  summary: 'Chochmah is the first spark of an idea; binah thinks it through. Together they give birth to love and fear of G-d.',
+  segs: [
+    ['', [['כלולה מעשר בחינות', 'consists of ten faculties'], ['כנגד עשר ספירות', 'corresponding to the supernal'], ['הנחלקות לשתים', 'which are subdivided into two'], ['פירוש חכמה בינה', 'namely, chochmah'], ['ושבעת ימי הבנין', 'and the “seven days']]],
+    ['Why the sefirot? Because the soul is built the same way.', []],
+    ['', [['והמדות הן', 'while the middot are']]],
+    ['', []],
+    ['', [['נקרא בשם חכמה', 'is given the appellation']]],
+    ['', [['שמתבונן בשכלו', 'that is, when [a person] cogitates'], ['מתוך איזה דבר', 'as it evolves from the concept'], ['נקרא בינה', 'this is called binah']]],
+    ['', []],
+  ],
+},
+
+'Likkutei Amarim 3|8|end': {
+  flow: 'notes',
+  recap: "Chochmah and binah, the mind, give birth to the heart's love and fear of G-d. Today: how that happens, and the mind's third power, daat.",
+  summary: "Thinking deeply about G-d's greatness brings awe, then love. But only daat, keeping your mind on it, makes those feelings real rather than imagined.",
+  segs: [
+    ['"Fills all worlds" and "encompasses all worlds": G-d is inside everything, and also beyond it.', [['איך הוא ממלא', 'how He fills all worlds'], ['וכולא קמיה', 'and in the presence of Whom'], ['נולדה ונתעוררה', 'there will be born and aroused'], ['לירא ולהתבושש', 'to fear and be humble'], ['ופחד ה בלבו', 'and to have the dread']]],
+    ['', [['בחשיקה וחפיצה', 'with a passion, desire']]],
+    ['', [['כדכתיב נכספה', 'of which Scripture speaks']]],
+    ['', [['וכמו שכתבו הטבעיים', 'As students of natural science'], ['ומקור המים', 'while the source of'], ['וכמו שכתוב בעץ חיים שער נ', 'which is explained in Etz Chaim']]],
+    ['', []],
+    ['', [['והוא לשון התקשרות', 'implies attachment and union'], ['שמקשר דעתו', 'That is, one binds his mind'], ['ואינו מסיח', 'without diverting']]],
+    ['', [['הנה אם לא יקשר', 'will not—unless he binds'], ['לא יוליד בנפשו', 'produce in his soul']]],
+    ['', [['והוא כולל חסד', 'it contains chesed']]],
+  ],
+},
+
+'Likkutei Amarim 4|1|1': {
+  flow: 'notes',
+  intro: "The divine soul has ten powers. It also has three \"garments,\" the ways it expresses itself: thought, speech and action. Today: how they're clothed in the mitzvos.",
+  summary: 'When a person learns all he can, speaks words of Torah, and does the mitzvos, his whole soul is clothed in the 613 mitzvos.',
+  segs: [
+    ['', [['שהם מחשבה דבור ומעשה', 'viz., thought, speech, and action'], ['שכשהאדם מקיים', 'For, when a person actively'], ['ובדבור הוא עוסק', 'and with his power of speech'], ['ובמחשבה הוא משיג', 'and with his power of thought', 'Pardes: the four levels of Torah, from the plain meaning to the hidden secrets.'], ['הרי כללות', 'then the totality', 'The soul is pictured with 613 parts, one for each mitzvah.']]],
+  ],
+},
+
+'Likkutei Amarim 4|2|4': {
+  flow: 'notes',
+  recap: "The soul's three garments, thought, speech and action, are clothed in the mitzvos. Today: which powers go into which, and why love and fear are the roots of all the mitzvos.",
+  summary: "The mind is clothed in learning Torah; love and fear in doing the mitzvos. Love is the root of the 248 do's, fear the root of the 365 don'ts.",
+  segs: [
+    ['', [['מלובשות בהשגת', 'are clothed in the comprehension'], ['כפי יכולת', 'to the extent of his mental'], ['והמדות שהן', 'And the middot, namely fear'], ['מלובשות בקיום', 'are clothed in the fulfillment'], ['שהוא תלמוד תורה', 'namely, in the study of Torah']]],
+    ["Love and fear are the heart's powers from chapter 3. Here's how they drive the mitzvos.", [['וממנה הן נמשכות', 'all originating in it'], ['כי המקימן באמת', 'inasmuch as he who fulfills'], ['ואי אפשר לדבקה', 'for one cannot truly cleave'], ['שהם רמח אברין', 'which are the 248'], ['והיראה היא שרש', 'while fear is the root'], ['כי ירא למרוד', 'fearing to rebel']]],
+    ['', [['שמתבושש מגדולתו', 'when he feels ashamed'], ['כל תועבת', 'namely, any of the abominable'], ['הם הקליפות', 'which are the kelipot'], ['אשר יניקתם', 'which draw their nurture']]],
+  ],
+},
+
+'Likkutei Amarim 4|5|8': {
+  flow: 'notes',
+  recap: "The mind is clothed in Torah study, the heart's love and fear in the mitzvos. Today: why these \"garments\" are higher than the soul they clothe.",
+  summary: 'The Torah is G-d\'s own wisdom and will, one with Him. He compressed it into the mitzvos so a person can grasp it, and be clothed in it.',
+  segs: [
+    ['', [['אף שנקראים', 'although they are called'], ['גבהה וגדלה', 'their quality, nevertheless'], ['כמו שכתוב בזהר', 'as explained in the Zohar'], ['פירוש דאורייתא', 'The meaning of this is'], ['בכבודו ובעצמו', 'and His glorious Essence'], ['כי הוא היודע', 'since He is both']]],
+    ['A question: if G-d is beyond all understanding, how can His wisdom be in the Torah we learn?', [['ולגדולתו אין חקר', 'and “His greatness'], ['וכן ברצונו', 'and so are also His will'], ['כדכתיב אין חקר', 'as it is written, “There is no searching']]],
+    ['', [['במקום שאתה מוצא', '“Where you find the greatness'], ['וצמצם', 'For the Holy One, blessed is He, has compressed'], ['ובצרופי אותיות', 'as well as within the combination'], ['ודרשותיהן', 'and in the exposition']]],
+    ['', [['תוכל להשיגן', 'should be able to comprehend'], ['ולקיימן', 'and to fulfill them'], ['ועל ידי זה תתלבש', 'thereby clothing itself']]],
+  ],
+},
 };
