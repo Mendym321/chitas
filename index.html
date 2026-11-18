@@ -3285,7 +3285,8 @@ function _updateReaderDayBar(sectionId) {
   bar.style.display = 'flex';
   const d = appNow(); d.setDate(d.getDate() + dayOffset);
   const label = document.getElementById('rd-label');
-  label.textContent = dayOffset === 0 ? 'Today' : _dayName(dayOffset) + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  // More than a week away, the day's name already has the date in it ("Tue, Nov 24")
+  label.textContent = dayOffset === 0 ? 'Today' : Math.abs(dayOffset) > 6 ? _dayName(dayOffset) : _dayName(dayOffset) + ', ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   label.className = dayOffset === 0 ? '' : 'past';
   const prev = document.getElementById('rd-prev'), next = document.getElementById('rd-next');
   prev.disabled = !_canReadDay(dayOffset - 1);
@@ -3588,7 +3589,8 @@ let quizState = { sectionId: null, level: null, questions: [], current: 0, score
 // Which section can be quizzed (Sefer HaMitzvos has no chapter text to quiz on)
 function _quizzable(sectionId) {
   return QUIZZES_ENABLED && ['chumash', 'tanya', 'rambam'].includes(sectionId)
-    && !(sectionId === 'rambam' && user.rambamTrack === 'm');
+    && !(sectionId === 'rambam' && user.rambamTrack === 'm')
+    && !(sectionId === 'tanya' && /Likkutei Amarim, (Title Page|Approbation|Compiler's Foreword)/.test(schedule?.tanya?.sefariaRef || ''));   // the opening pages: no Review
 }
 
 // Points are given once per section, per level, per day
@@ -5494,6 +5496,68 @@ function _setTehillimLang(lang) {
 // ── Tanya paragraph splitter ──────────────────────────────────────────────────
 // Splits a long Sefaria segment into smaller readable chunks.
 
+// ── The opening pages (19 to 23 Kislev) ───────────────────────────────────────
+// When the cycle starts again, the Tanya's title page, its approbations and the
+// compiler's foreword come first. They have no chapters, so the chapter-and-verse
+// reader below can't place them: they're read here in their order, each day from
+// its start to just before the next day's (a day can span several of them), with
+// a heading for each and a few written words for the day. No AI guide or Review.
+const TANYA_OPENING_BASE = 'Tanya,_Part_I;_Likkutei_Amarim,_';
+const TANYA_OPENING = [
+  ['Title_Page', 'Title page'],
+  ['Approbation.1', 'Approbation of Rabbi Meshulam Zusil of Anipoli'],
+  ['Approbation.2', 'Approbation of Rabbi Yehudah Leib HaCohen'],
+  ['Approbation.3', 'Approbation of the author\'s sons'],
+  ['Compiler\'s_Foreword', 'Compiler\'s foreword'],
+];
+// Each day's words, by where it starts (piece.segment)
+const TANYA_OPENING_GUIDE = {
+  '0.1': { intro: 'On 19 Kislev the Tanya begins again: first its title page, then the approbations of two great tzaddikim of the Alter Rebbe\'s time.' },
+  '3.1': { intro: 'The last approbation, written by the Alter Rebbe\'s sons for a printing after his passing.' },
+  '4.1': { intro: 'The Alter Rebbe\'s foreword, a letter to all his chassidim. Today: why a book of advice, when no book can speak to each person the way a teacher does.' },
+  '4.9': { recap: 'No book can advise each person as a teacher can. Today he says who this book is for, and how to use it when something isn\'t clear.' },
+  '4.13': { recap: 'He wrote down his answers so no one would need a private meeting to ask. Today: copies full of errors spread, so he prints a corrected one.' },
+};
+// A Sefaria address in the opening pages → [piece, segment]; chapter 1 → just past the last piece
+function _tanyaOpeningAt(url) {
+  if (!url) return null;
+  if (/^Tanya,_Part_I;_Likkutei_Amarim\.\d+\.\d+$/.test(url)) return [TANYA_OPENING.length, 1];
+  if (!url.startsWith(TANYA_OPENING_BASE)) return null;
+  const m = url.slice(TANYA_OPENING_BASE.length).match(/^(.*)\.(\d+)$/);
+  const i = m ? TANYA_OPENING.findIndex(([k]) => k === m[1]) : -1;
+  return i < 0 ? null : [i, +m[2]];
+}
+async function _loadTanyaOpening(iso, boundary, silent) {
+  const a = _tanyaOpeningAt(boundary.todayUrl);
+  const b = _tanyaOpeningAt(boundary.tomorrowUrl) || [TANYA_OPENING.length, 1];
+  if (!a || a[0] >= TANYA_OPENING.length) return false;
+  const flat = x => !x ? [] : typeof x === 'string' ? [x] : Array.isArray(x) ? x.flatMap(flat) : [];
+  const pieces = [];
+  for (let i = a[0]; i < TANYA_OPENING.length && (i < b[0] || (i === b[0] && b[1] > 1)); i++) {
+    const d = await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(TANYA_OPENING_BASE + TANYA_OPENING[i][0]) + '?lang=bi&context=0&commentary=0')
+      .then(r => r.json()).catch(() => null);
+    const he = flat(d?.he), en = flat(d?.text);
+    const from = i === a[0] ? a[1] : 1, to = i === b[0] ? b[1] - 1 : Math.max(he.length, en.length);
+    pieces.push({ i, he: he.slice(from - 1, to), en: en.slice(from - 1, to), first: from === 1 });
+  }
+  if (!pieces.some(p => p.he.length || p.en.length)) return false;
+  const notes = [], blocks = [];
+  for (const p of pieces) {
+    for (let k = 0; k < Math.max(p.he.length, p.en.length); k++) {
+      blocks.push({ he: _cleanHtml(p.he[k] || ''), en: _cleanHtml(p.en[k] || '', notes), isHagahah: false,
+        ...(k === 0 && p.first ? { heading: TANYA_OPENING[p.i][1], always: true } : {}) });
+    }
+  }
+  const first = pieces[0].i;
+  const chapterLabel = 'Likkutei Amarim \u00b7 ' + (first === 0 ? 'Title page and approbations' : first <= 3 ? 'Approbations' : 'Compiler\'s foreword');
+  const heHead = first === 0 ? 'שער הספר והסכמות' : first <= 3 ? 'הסכמות' : 'הקדמת המלקט';
+  if (!silent && _readerShows('tanya', iso)) document.getElementById('chabad-panel-sub').textContent = chapterLabel;
+  _textArrived('tanya', iso, { blocks, notes, guide: TANYA_OPENING_GUIDE[a.join('.')] || null, guidePending: false,
+    chapterSlug: TANYA_OPENING_BASE + TANYA_OPENING[first][0], chapterLabel, heHead, chapterNum: null,
+    isFirstSegment: a[1] === 1, isApproximate: !!boundary.isApproximate, quizRef: null }, silent);
+  return true;
+}
+
 async function _loadTanyaNative(sectionId, silent) {
   const iso = _textLoading('tanya', silent);
   try {
@@ -5511,6 +5575,8 @@ async function _loadTanyaNative(sectionId, silent) {
     // server reads them; falls back to the Sefaria calendar for today)
     const boundary = await fetch('/api/tanya-boundary?date=' + dateStr)
       .then(r => r.json()).catch(() => null);
+    // 19 to 23 Kislev the cycle starts again with the book's opening pages, which have no chapters
+    if ((_tanyaOpeningAt(boundary?.todayUrl)?.[0] ?? TANYA_OPENING.length) < TANYA_OPENING.length) return await _loadTanyaOpening(iso, boundary, silent);   // (chapter 1 on is the reader below)
     const todayRef = boundary?.today || (isToday ? schedule?.tanya?.sefariaRef : null) || null;
     const tomorrowRef = boundary?.tomorrow || null;
     const isApproximate = boundary?.isApproximate ?? true;
@@ -5691,7 +5757,8 @@ function _renderTanyaContent() {
   const part = TANYA_PARTS.find(([re]) => re.test(d.chapterSlug || ''));
   const num = +d.chapterNum;
   t += '<div class="tz-head">'
-    + (part && num ? '<p class="tz-part" lang="he">' + part[1] + '</p><p class="tz-ch" lang="he">' + part[2] + ' ' + _toHebrewNumeral(num) + '</p>' : '')
+    + (part && num ? '<p class="tz-part" lang="he">' + part[1] + '</p><p class="tz-ch" lang="he">' + part[2] + ' ' + _toHebrewNumeral(num) + '</p>'
+      : d.heHead ? '<p class="tz-part" lang="he">ליקוטי אמרים</p><p class="tz-ch" lang="he">' + d.heHead + '</p>' : '')   // the opening pages
     + '<p class="tz-en-label">' + escapeHtml(chapterLabel || '') + '</p></div>';
 
   // The guide card (or a note while it's being prepared)
@@ -5702,8 +5769,8 @@ function _renderTanyaContent() {
   // it's about; other days: what it has said so far)
   if (guideOn && g && (g.intro || g.recap)) {
     t += '<div class="tz-guide">'
-      + (g.intro ? '<p class="tz-gl">About this chapter</p><p class="tz-gt">' + escapeHtml(g.intro) + '</p>' : '')
-      + (g.recap ? '<p class="tz-gl">So far in this chapter</p><p class="tz-gt">' + escapeHtml(g.recap) + '</p>' : '')
+      + (g.intro ? '<p class="tz-gl">' + (d.heHead ? 'About today' : 'About this chapter') + '</p><p class="tz-gt">' + escapeHtml(g.intro) + '</p>' : '')
+      + (g.recap ? '<p class="tz-gl">' + (d.heHead ? 'So far' : 'So far in this chapter') + '</p><p class="tz-gt">' + escapeHtml(g.recap) + '</p>' : '')
       + '</div>';
   }
 
@@ -5723,7 +5790,7 @@ function _renderTanyaContent() {
     if (!b.he && !b.en) return;
     if (b.isHagahah && !inHag) { v += '<div class="tz-hag"><p class="tz-hl" lang="he">הגהה</p>'; inHag = true; }
     if (!b.isHagahah && inHag) { v += '</div>'; inHag = false; }
-    if (guideOn && b.heading && !b.isHagahah) v += '<p class="tz-h">' + escapeHtml(b.heading) + '</p>';
+    if ((guideOn || b.always) && b.heading && !b.isHagahah) v += '<p class="tz-h">' + escapeHtml(b.heading) + '</p>';
     const opening = d.isFirstSegment && !opened && !b.isHagahah;
     if (!b.isHagahah) opened = true;
     v += piece(b, opening);
