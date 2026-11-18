@@ -236,7 +236,10 @@ for (const d of days) {
 
 // Rambam: each day is exactly the calendar's portion, split the way the
 // calendar splits it, and starts right where the day before stopped
-const OPENING_BOOKS = ['Transmission of the Oral Law', 'Positive Mitzvot', 'Negative Mitzvot', 'Overview of Mishneh Torah Contents'];
+// The opening pieces' parts, as the 1-chapter track reads them (checked against the calendar's days below)
+const OPENING_PARTS = { 'Transmission of the Oral Law': [[1, 21], [22, 33], [34, 45]], 'Positive Mitzvot': [[1, 83], [84, 166], [167, 248]],
+  'Negative Mitzvot': [[1, 122], [123, 245], [246, 365]], 'Overview of Mishneh Torah Contents': [[1, 4], [5, 9], [10, 14]] };
+const OPENING_BOOKS = Object.keys(OPENING_PARTS);
 const hebcalDay = async iso => JSON.parse((await saved('https://www.hebcal.com/hebcal?v=1&cfg=json&dps=on&dr3=on&dr1=on&d=on&start=' + iso + '&end=' + iso + '&lg=s')).body);
 // "Foundations of the Torah 10, Human Dispositions 1-2" → [{ book, from, to, sections }]
 // (book names can have commas, "Tefillin, Mezuzah and the Torah Scroll", so it splits only after a number)
@@ -252,9 +255,14 @@ for (const [key, cat] of [['rambam3', 'dailyRambam3'], ['rambam1', 'dailyRambam1
     const item = (await hebcalDay(d.iso)).items?.find(i => i.category === cat);
     const want = item ? calendarParts(item.title) : null;
     if (!want || want.some(w => !w)) { check(false, `${d.iso} ${key}: can't read the calendar's "${item?.title}"`); before = null; continue; }
-    // What the app should show: an opening piece whole, as one; a book's chapters one by one
-    const expected = want.flatMap(w => OPENING_BOOKS.includes(w.book) ? [w.text]
+    // What the app should show: a book's chapters one by one; an opening piece
+    // in its three parts (as the 1-chapter track reads them, a day each)
+    const expected = want.flatMap(w => OPENING_BOOKS.includes(w.book)
+      ? OPENING_PARTS[w.book].map(([x, y]) => [Math.max(x, w.from), Math.min(y, w.to)]).filter(([x, y]) => x <= y).map(([x, y]) => w.book + ' ' + x + (y > x ? '-' + y : ''))
       : Array.from({ length: w.to - w.from + 1 }, (_, i) => w.book + ' ' + (w.from + i)));
+    // A day of the 1-chapter track is exactly one part (so the parts above are the calendar's)
+    if (key === 'rambam1') want.filter(w => OPENING_BOOKS.includes(w.book)).forEach(w =>
+      check(OPENING_PARTS[w.book].some(([x, y]) => x === w.from && y === w.to), `${d.iso} ${key}: the calendar's ${w.text} isn't one of the parts the app knows`));
     const got = r.parts.map(p => p.title);
     check(JSON.stringify(got) === JSON.stringify(expected), `${d.iso} ${key}: shows [${got.join(' | ')}], the calendar says [${expected.join(' | ')}]`);
     for (const p of r.parts) {

@@ -5055,12 +5055,17 @@ async function _loadRambamNative(sectionId, silent) {
 function _rambamSubtitle(chapters) {
   const books = [];
   chapters.forEach(ch => {
-    if (ch.opening) { books.push({ label: ch.opening.en + ' ' + _rambamOpeningRange(ch.opening) }); return; }
+    if (ch.opening) {   // a piece's parts read together: one range ("Positive mitzvos 1–248")
+      const last = books[books.length - 1];
+      if (last?.op?.en === ch.opening.en && last.op.to + 1 === ch.opening.from) last.op = { ...last.op, to: ch.opening.to };
+      else books.push({ op: { ...ch.opening } });
+      return;
+    }
     const book = ch.title.replace(/\s+\d+$/, '');
     const last = books[books.length - 1];
     if (last && last.book === book) last.to = ch.chapter; else books.push({ book, from: ch.chapter, to: ch.chapter });
   });
-  return books.map(b => b.label || b.book + ' ' + b.from + (b.to !== b.from ? '–' + b.to : '')).join(' · ');
+  return books.map(b => b.op ? b.op.en + ' ' + _rambamOpeningRange(b.op) : b.book + ' ' + b.from + (b.to !== b.from ? '–' + b.to : '')).join(' · ');
 }
 
 // Expand range refs like "Mishneh Torah, Eruvin 3-5" into individual chapter refs
@@ -5068,30 +5073,43 @@ function _rambamSubtitle(chapters) {
 // Single-chapter refs pass through unchanged.
 // ── The opening pieces (when the cycle starts again) ─────────────────────────
 // The Mishneh Torah opens with the Rambam's introduction, the list of the 613
-// mitzvos and the list of its contents. They aren't chapters: a day reads a
-// range of their paragraphs ("Positive Mitzvot 84-166" is mitzvos 84 to 166;
-// the contents go by sections, "1:1-4:8"). So that range is fetched in one go
-// and shown as one piece, numbered as the Rambam numbers it.
+// mitzvos and the list of its contents. They aren't chapters: each is read in
+// three parts (the 1-chapter track reads a part a day; 3 chapters a day reads
+// all three, each part in place of a chapter, as Chabad.org shows them). A
+// part is a range of paragraphs ("Positive Mitzvot 84-166" is mitzvos 84 to
+// 166; the contents go by sections, "5-9"), fetched in one go and numbered as
+// the Rambam numbers it.
 const RAMBAM_OPENING = {
-  'Transmission of the Oral Law': 'Introduction',
-  'Positive Mitzvot': 'Positive mitzvos',
-  'Negative Mitzvot': 'Negative mitzvos',
-  'Overview of Mishneh Torah Contents': 'Overview of the contents',
+  'Transmission of the Oral Law':       { en: 'Introduction',             parts: [[1, 21], [22, 33], [34, 45]] },
+  'Positive Mitzvot':                   { en: 'Positive mitzvos',         parts: [[1, 83], [84, 166], [167, 248]] },
+  'Negative Mitzvot':                   { en: 'Negative mitzvos',         parts: [[1, 122], [123, 245], [246, 365]] },
+  'Overview of Mishneh Torah Contents': { en: 'Overview of the contents', parts: [[1, 4], [5, 9], [10, 14]], sections: true },
 };
 const RAMBAM_OPENING_RE = /Mishneh Torah, (Transmission of the Oral Law|Positive Mitzvot|Negative Mitzvot|Overview of Mishneh Torah Contents)\b/;
-// "Mishneh Torah, Positive Mitzvot 84-166" → { book, en, from: 84, to: 166 }; a chapter → null
+// "Mishneh Torah, Positive Mitzvot 84-166" → { book, en, from: 84, to: 166, sections, part: 2 }; a chapter → null
+// (the contents' "1:1-4:8", sections and paragraphs, is sections 1 to 4)
 function _rambamOpening(ref) {
-  const m = String(ref || '').match(/^(?:Mishneh Torah,\s*)?(.+?)\s+(\d+)(:\d+)?(?:-(\d+)(?::\d+)?)?$/);
-  if (!m || !RAMBAM_OPENING[m[1]]) return null;
-  return { book: m[1], en: RAMBAM_OPENING[m[1]], from: +m[2], to: +(m[4] || m[2]), sections: !!m[3] };
+  const m = String(ref || '').match(/^(?:Mishneh Torah,\s*)?(.+?)\s+(\d+)(?::\d+)?(?:-(\d+)(?::\d+)?)?$/);
+  const b = m && RAMBAM_OPENING[m[1]];
+  if (!b) return null;
+  const from = +m[2], to = +(m[3] || m[2]);
+  const part = b.parts.findIndex(([x, y]) => from >= x && to <= y) + 1;   // 0: more than one part
+  return { book: m[1], en: b.en, from, to, sections: !!b.sections, part };
 }
-const _rambamOpeningRange = op => op.from + (op.to !== op.from ? '–' + op.to : '');
+const _rambamOpeningRange = op => op.from + (op.to !== op.from ? '\u2013' + op.to : '');
+// A day's range of an opening piece → its parts (or the bits of them it has), one ref each
+function _rambamOpeningParts(ref) {
+  const op = _rambamOpening(ref);
+  return RAMBAM_OPENING[op.book].parts
+    .map(([x, y]) => [Math.max(x, op.from), Math.min(y, op.to)]).filter(([x, y]) => x <= y)
+    .map(([x, y]) => 'Mishneh Torah, ' + op.book + ' ' + x + (y !== x ? '-' + y : ''));
+}
 
 function _expandRambamRefs(refs) {
   const out = [];
   refs.forEach(ref => {
     if (!ref) return;
-    if (_rambamOpening(ref)) { out.push(ref); return; }   // one piece, not chapters
+    if (_rambamOpening(ref)) { out.push(..._rambamOpeningParts(ref)); return; }   // its parts, not hundreds of "chapters"
     // Range ref: "Mishneh Torah, Laws of Sabbath 4-6" → 3 individual chapter refs
     // Also handles refs without "Mishneh Torah" prefix (just in case)
     const rangeMatch = ref.match(/^(.+?)\s+(\d+)-(\d+)$/);
@@ -5197,7 +5215,7 @@ async function _fetchRambamChapter(ref) {
     const enRaw = deep(engVersion?.text || []), heRaw = deep(heRes?.he || []);
     const heads = Array.from({ length: Math.max(enSegs.length, heSegs.length) }, (_, i) => bold(enRaw[i]) || bold(heRaw[i]));
     return { ref, title: ref.replace(/^Mishneh Torah,\s*/, ''), heBook, chapter: null, en: enSegs, he: heSegs, notes,
-      opening: { en: op.en, from: op.from, to: op.to, sections: op.sections, heads,
+      opening: { en: op.en, from: op.from, to: op.to, sections: op.sections, part: op.part, heads,
         // how many sections came (the contents), to check it's the whole day's range
         sectionCount: op.sections ? (Array.isArray(heRes?.he?.[0]) ? heRes.he.length : 1) : null } };
   }
@@ -5248,9 +5266,9 @@ function _renderRambamContent() {
     const heRange = op && _toHebrewNumeral(op.from) + (op.to !== op.from ? '–' + _toHebrewNumeral(op.to) : '');
     v += '<div class="tz-head"' + (chIdx > 0 ? ' style="margin-top:34px"' : '') + '>'
       + '<p class="tz-part" lang="he">משנה תורה' + (chapter.heBook ? ' · ' + escapeHtml(chapter.heBook) : '') + '</p>'
-      + '<p class="tz-ch" lang="he">' + (op ? (op.sections ? 'חלקים ' : '') + heRange : 'פרק ' + _toHebrewNumeral(chapter.chapter)) + '</p>'
-      + '<p class="tz-en-label">' + escapeHtml(op ? op.en + ' · ' + (op.sections ? 'Sections ' : '') + _rambamOpeningRange(op)
-        : chapter.title.replace(/\s+\d+$/, '') + ' · Chapter ' + chapter.chapter + (chapters.length > 1 ? ' · ' + (chIdx + 1) + ' of ' + chapters.length + ' today' : '')) + '</p></div>';
+      + '<p class="tz-ch" lang="he">' + (op ? (op.part ? 'חלק ' + _toHebrewNumeral(op.part) : heRange) : 'פרק ' + _toHebrewNumeral(chapter.chapter)) + '</p>'
+      + '<p class="tz-en-label">' + escapeHtml((op ? op.en + (op.part ? ' · Part ' + op.part : '') + ' · ' + (op.sections ? 'sections ' : '') + _rambamOpeningRange(op)
+        : chapter.title.replace(/\s+\d+$/, '') + ' · Chapter ' + chapter.chapter) + (chapters.length > 1 ? ' · ' + (chIdx + 1) + ' of ' + chapters.length + ' today' : '')) + '</p></div>';
     if (guideOn && guideOf(chapter)) v += '<div class="tz-guide"><p class="tz-gl">This chapter</p><p class="tz-gt">' + escapeHtml(guideOf(chapter)) + '</p></div>';
     const hs = guideOn ? headsOf(chapter) : {};
 
