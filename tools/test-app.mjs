@@ -323,6 +323,24 @@ await check('Rambam (real Sefaria text): a book with no brackets is shown in reg
   return [root.classList.contains('rb-plain'), +getComputedStyle(root).fontWeight < 600];
 }, [true, true], { robbery: RAMBAM.robbery_13_1 });
 
+await check('Rambam: in a chapter that marks its additions, a paragraph with none is all bold (not plain among bold ones); the introduction\'s paragraphs have no numbers', () => {
+  localStorage.setItem('chitas_lang_rambam', 'en');
+  const intro = { title: 'Transmission of the Oral Law 1-21', chapter: null, he: ['א', 'ב'], notes: [],
+    en: ['Moses [our teacher] wrote', 'Achiah of Shiloh received the tradition'],
+    opening: { en: 'Introduction', from: 1, to: 21, part: 1, sections: false, numbered: false, heads: [] } };
+  window._rambamData = { chapters: [intro] };
+  (_rv.sid = 'rambam', _renderRambamContent());
+  const paras = [...document.querySelectorAll('#native-reader-content .rb-en')];
+  const second = paras[1];
+  const r = [second.classList.contains('rb-plain'), +getComputedStyle(second.querySelector('b')).fontWeight >= 700,
+    document.querySelectorAll('#native-reader-content .rd-vn').length];
+  // The mitzvos keep their numbers
+  window._rambamData = { chapters: [{ ...intro, title: 'Positive Mitzvot 84-166', opening: { ...intro.opening, en: 'Positive mitzvos', from: 84, to: 166, numbered: true } }] };
+  _renderRambamContent();
+  r.push([...document.querySelectorAll('#native-reader-content .rd-vn')].map(e => e.textContent).join());
+  return r;
+}, [false, true, 0, '84,85']);
+
 await check('Tehillim "Both": each passuk side by side, English and Hebrew, no rules between', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
   localStorage.setItem('chitas_lang_tehillim', 'both');

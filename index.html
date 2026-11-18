@@ -5222,6 +5222,7 @@ async function _fetchRambamChapter(ref) {
     const heads = Array.from({ length: Math.max(enSegs.length, heSegs.length) }, (_, i) => bold(enRaw[i]) || bold(heRaw[i]));
     return { ref, title: ref.replace(/^Mishneh Torah,\s*/, ''), heBook, chapter: null, en: enSegs, he: heSegs, notes,
       opening: { en: op.en, from: op.from, to: op.to, sections: op.sections, part: op.part, heads,
+        numbered: /Mitzvot$/.test(op.book),
         // how many sections came (the contents), to check it's the whole day's range
         sectionCount: op.sections ? (Array.isArray(heRes?.he?.[0]) ? heRes.he.length : 1) : null } };
   }
@@ -5245,9 +5246,12 @@ function _renderRambamContent() {
   // lighter, without the brackets, and the Rambam's words bold — like Chabad.org.
   // Some books (e.g. Robbery and Lost Property) have no brackets on Sefaria, so
   // there's nothing to tell the two apart: that text is shown in regular weight.
-  function styleBrackets(text) {
+  // Decided per chapter: where the chapter marks its additions, a paragraph with
+  // none is all the Rambam's words (bold), not plain in the middle of bold ones.
+  const BRACKETS = /\[[^\]]+\]/;
+  function styleBrackets(text, marked) {
     if (!text) return '';
-    if (!/\[[^\]]+\]/.test(text)) return '<span class="rb-en rb-plain">' + text + '</span>';
+    if (!BRACKETS.test(text)) return marked ? '<span class="rb-en"><b>' + text + '</b></span>' : '<span class="rb-en rb-plain">' + text + '</span>';
     return '<span class="rb-en">' + text.split(/\[([^\]]+)\]/).map((part, i) =>
       !part ? '' : i % 2 === 0 ? '<b>' + part + '</b>' : '<span class="rb-add">' + part + '</span>').join('') + '</span>';
   }
@@ -5281,6 +5285,7 @@ function _renderRambamContent() {
     // A few chapters have no English on Sefaria (The Order of Prayer 3 to 5, the
     // prayers themselves): their Hebrew is shown whatever the language, with a word why
     const noEn = !chapter.en.some(Boolean) && chapter.he.some(Boolean);
+    const marked = chapter.en.some(t => BRACKETS.test(t || ''));   // (see styleBrackets)
     const lang = noEn ? 'he' : readLang;
     if (noEn && readLang !== 'he') v += '<p class="tz-ai rb-noen">This chapter has no English translation on Sefaria, so here is the Hebrew.</p>';
     const maxLen = Math.max(chapter.en.length, chapter.he.length);
@@ -5295,10 +5300,10 @@ function _renderRambamContent() {
           + (lang !== 'en' && he ? '<p class="tz-h rb-h" lang="he" style="direction:rtl;text-align:right;">' + escapeHtml(he.replace(/<[^>]+>/g, '')) + '</p>' : '') + '</div>';
         continue;
       }
-      const en = _rambamNoteMarkers(styleBrackets(enRaw), chIdx);
-      // The introduction and the mitzvos keep the Rambam's own numbers (mitzvah 84, 85…);
-      // the contents' lines have none
-      const num    = op ? (op.sections ? null : op.from + i) : i + 1;
+      const en = _rambamNoteMarkers(styleBrackets(enRaw, marked), chIdx);
+      // The mitzvos keep the Rambam's own numbers (mitzvah 84, 85…); the
+      // introduction's paragraphs and the contents' lines aren't halachos: no numbers
+      const num    = op ? (op.numbered ? op.from + i : null) : i + 1;
       const heNum  = num && _toHebrewNumeral(num);   // the shared helper: 15 טו, 16 טז, and every number
 
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
