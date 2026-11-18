@@ -397,4 +397,26 @@ export const WRITTEN = {
     ['', [['כמו ששבת ה מיוד', 'as G–d ceased from']]],
   ],
 },
+// ── Batch 4 (from 4 Dec 2026): the new way. A few guiding notes, only where the
+// thread could be lost (flow 'notes'; see tanya-guide.js, NOTES), in place of headings.
+
+'Likkutei Amarim 1|1|12': {
+  flow: 'notes',
+  intro: 'The first chapter of the Tanya. It opens with an oath every soul takes before birth, and asks who the beinoni really is: the "intermediate" person this book is about.',
+  summary: "The beinoni can't be someone whose deeds are half good and half sins. Even one small sin makes a person \"wicked,\" so the beinoni must have none at all.",
+  segs: [
+    ['', [['ואפילו כל העולם', 'and even if the whole world']]],
+    ['', []],
+    ['', [['ואם לא ירע לבבו', 'while if he is not perturbed']]],
+    ['Before answering, he sets out five kinds of people from the Gemara.', [['כי הנה מצינו', 'We find in the Gemara']]],
+    ['', [['וברעיא מהימנא', 'In Raaya Mehemna'], ['ובגמרא סוף פרק ט', 'In the Gemara, end of ch. 9'], ['אמר רבה', 'Rabbah declared']]],
+    ['', [['וגם להבין מה שאמר איוב', 'as also to understand what Job said']]],
+    ['From here to the end of today, one question: who is the beinoni?', [['שבודאי אינו מחצה', 'Surely that cannot mean'], ['ונודע דלא פסיק', 'For it is known that he never']]],
+    ['', [['ואפילו העובר על איסור קל', 'Even he who violates']]],
+    ['', []],
+    ['', [['כמו כל שאפשר לו', 'for instance, whoever is able'], ['ופשיטא דמקרי רשע', 'It is thus plain']]],
+    ['', [['ומשום הכי טעה רבה', 'Hence Rabbah could']]],
+    ['', []],
+  ],
+},
 };

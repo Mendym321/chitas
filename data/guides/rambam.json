@@ -118,5 +118,69 @@
  "Plaintiff and Defendant 6": "Precise statements in court, a claim the witnesses contradict, and when an admission outside court, or before hidden witnesses, doesn't bind.",
  "Plaintiff and Defendant 7": "An admission before two witnesses or in court binds; saying it was a joke; and changing one's claim.",
  "Plaintiff and Defendant 8": "Whoever holds movable property is presumed its owner, except for things made to be lent or rented, and items reported stolen.",
- "Plaintiff and Defendant 9": "A craftsman's possession, someone seen carrying things out, an ax and a palm tree, and two people holding one garment."
+ "Plaintiff and Defendant 9": "A craftsman's possession, someone seen carrying things out, an ax and a palm tree, and two people holding one garment.",
+ "Plaintiff and Defendant 10": {
+  "about": "Holding something usually counts as proof that it's yours. Not with animals and servants who move on their own: they may simply have come to you, so a known earlier owner wins unless the holder proves otherwise.",
+  "parts": [
+   "Animals that roam, and animals kept enclosed",
+   "Servants, and three years of open service",
+   "A claim explained afterwards, and a disputed boat"
+  ],
+  "rules": [
+   1,
+   2
+  ],
+  "why": {
+   "2": "Halacha 1 gives a roaming animal back to its known owner; here the holder keeps it. An animal kept enclosed or with a shepherd can't have wandered in by itself, so holding it means something."
+  },
+  "takeaways": [
+   "Holding something usually proves it's yours, but not an animal that roams or a servant who walks: they may have come on their own.",
+   "Animals kept enclosed or with a shepherd, and a child servant too young to walk, count like any other possession.",
+   "A servant held and used openly for three years, with no protest, stays with the one who holds him."
+  ]
+ },
+ "Plaintiff and Defendant 11": {
+  "about": "Land can't wander, so it stays with the person known to own it. The exception: someone used it openly for three years, and the owner said nothing.",
+  "parts": [
+   "Land stays with its known owner",
+   "Unless it was used for three years without protest",
+   "Why three years, and what counts as a protest",
+   "When the owner himself helped with the harvest"
+  ],
+  "rules": [
+   1,
+   2
+  ],
+  "why": {
+   "2": "Halacha 1 gives the land back to Shimon; here Reuven keeps it. An owner who stays silent while someone uses his land openly for three years would have protested if it were still his.",
+   "6": "If the owner asks for silence altogether, he never meant it as a protest. If only Reuven isn't to be told, others will hear, and word will reach him."
+  },
+  "takeaways": [
+   "Land stays with the person known to own it, unless someone else used it openly for three full years without protest.",
+   "Three years is as long as a buyer is expected to keep his deed; after that, the owner's silence counts against him.",
+   "A protest is made before two witnesses, saying he'll take the user to court, and renewed within every three years."
+  ]
+ },
+ "Plaintiff and Defendant 12": {
+  "about": "What counts as the three years of use that keep land with the one using it: how continuous, what kind of use, and whose years can be added together.",
+  "parts": [
+   "Three full years, or three harvests",
+   "Day and night: a home, and a store",
+   "Years that join together: partners, buyers, father and son",
+   "Use that counts, and use that doesn't"
+  ],
+  "rules": [
+   1,
+   9
+  ],
+  "why": {
+   "5": "A father's years join his son's (halacha 7), but partners' turns don't. The owner saw no one person using the field year after year, so he had no reason to protest; a written agreement makes it known.",
+   "12": "A harvest with no profit doesn't count (halacha 10), but a forbidden one does. What matters is that he benefited, even wrongly."
+  },
+  "takeaways": [
+   "Three full years of continuous use, or three harvests from an orchard or a rain-watered field.",
+   "The use must be the normal, full use of that place: lived in day and night, or harvested at a profit.",
+   "Years held by different people join only when the owner would know: a father and his son, or buyers with a deed or a written agreement."
+  ]
+ }
 }

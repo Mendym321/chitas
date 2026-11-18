@@ -4,7 +4,7 @@
 // Tested by tools/test-tanya-split.mjs.
 //
 // Matching ignores what the AI might copy slightly differently: Hebrew vowels
-// and cantillation, punctuation and quote styles, upper/lower case, and the
+// and cantillation (and letters written as one combined character), punctuation and quote styles, upper/lower case, and the
 // footnote markers (FN_OPEN n FN_CLOSE) we keep in the English.
 
 import { FN_OPEN, FN_CLOSE } from './tanya-text.js';
@@ -18,7 +18,10 @@ const DROP = /[^\p{L}\p{N}]/u;                          // anything else that is
 function skeleton(text) {
   let s = '', map = [];
   for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
+    let ch = text[i];
+    // A Hebrew letter written as one "presentation form" character (Sefaria has
+    // וֹ as U+FB4B in places) counts as the plain letter
+    if (ch >= '\uFB1D' && ch <= '\uFB4F') ch = ch.normalize('NFKD')[0];
     if (ch === FN_OPEN) { const j = text.indexOf(FN_CLOSE, i); if (j !== -1) { i = j; continue; } }
     if (MARK.test(ch)) continue;
     if (SPACE.test(ch)) { if (s && s[s.length - 1] !== ' ') { s += ' '; map.push(i); } continue; }
