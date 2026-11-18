@@ -341,7 +341,7 @@ await check('Rambam: in a chapter that marks its additions, a paragraph with non
   return r;
 }, [false, true, 0, '84,85']);
 
-await check('the new guides: Tanya\'s guiding notes (older guides keep headings); the Rambam\'s parts, rule, "why different?" and takeaways', () => {
+await check('the new guides: Tanya\'s guiding notes (older guides keep headings); the Rambam\'s parts, a word on the difference, and takeaways', () => {
   const keep = [_rv.sid, window._tanyaData, window._rambamData, _guides.rambam];
   localStorage.setItem('chitas_lang_tanya', 'en'); localStorage.removeItem('chitas_tanya_guide');
   const tanya = flow => { window._tanyaData = { blocks: [{ he: 'א', en: 'One' }, { he: 'ב', en: 'Two', heading: 'Before answering, some background.' }], notes: [],
@@ -349,15 +349,15 @@ await check('the new guides: Tanya\'s guiding notes (older guides keep headings)
     _rv.sid = 'tanya'; _renderTanyaContent(); const el = document.getElementById('native-reader-content');
     return [el.querySelectorAll('.tz-note').length, el.querySelectorAll('.tz-h').length]; };
   const r = [tanya('notes'), tanya('headings')];
-  _guides.rambam = { 'Sales 9': { about: 'What it decides.', parts: ['First', 'Second'], rules: [1], why: { 2: 'Because.' }, takeaways: ['One', 'Two'] } };
+  _guides.rambam = { 'Sales 9': { about: 'What it decides.', parts: ['First', 'Second'], why: { 2: 'Because.' }, takeaways: ['One', 'Two'] } };
   window._rambamData = { chapters: [{ title: 'Sales 9', chapter: 9, en: ['a', 'b'], he: ['א', 'ב'], notes: [] }] };
   _rv.sid = 'rambam'; _renderRambamContent();
   const el = document.getElementById('native-reader-content');
-  r.push([...el.querySelectorAll('.tz-gl')].map(e => e.textContent), el.querySelectorAll('.rb-map li').length, el.querySelectorAll('.rb-rule').length,
+  r.push([...el.querySelectorAll('.tz-gl')].map(e => e.textContent), el.querySelectorAll('.rb-map li').length,
     el.querySelector('.rb-why')?.textContent, el.querySelectorAll('.rb-take li').length);
   [_rv.sid, window._tanyaData, window._rambamData, _guides.rambam] = keep; el.innerHTML = '';
   return r;
-}, [[1, 0], [0, 1], ['This chapter', 'In two parts', "Today's takeaways"], 2, 1, 'Why different? Because.', 2]);
+}, [[1, 0], [0, 1], ['This chapter', 'In two parts', "Today's takeaways"], 2, 'Because.', 2]);
 
 await check('Tehillim "Both": each passuk side by side, English and Hebrew, no rules between', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };

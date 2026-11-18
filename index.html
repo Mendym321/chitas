@@ -866,9 +866,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .rb-map, .rb-take { margin:4px 0 0; padding-left:20px; } .rb-map li, .rb-take li { margin:3px 0; } .rb-take li { margin:5px 0; }
-.rb-rule { background:color-mix(in srgb, var(--rc) 9%, transparent); border-radius:10px; padding-left:12px !important; padding-right:12px !important; margin:0 -12px; border-bottom-color:transparent !important; }
 .rb-why { font-family:var(--read-font); font-style:italic; font-size:15px; line-height:1.45; color:var(--t2); border-left:2px solid color-mix(in srgb, var(--rc) 30%, transparent); padding:2px 0 2px 10px; margin:8px 0 12px; }
-.rb-why b { font:600 11px var(--ui-font); font-style:normal; color:var(--t3); margin-right:3px; }
 .tz-note { font-family:var(--read-font); font-style:italic; font-size:16px; line-height:1.45; color:var(--purple); border-left:2px solid color-mix(in srgb, var(--purple) 30%, transparent); padding:1px 0 1px 11px; margin:22px 0 12px; }   /* Tanya's guide: a word from a chavrusa where the thread could be lost */
 .tz-p { margin-bottom:16px; }
 .tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
@@ -5285,8 +5283,8 @@ function _renderRambamContent() {
       + '<p class="tz-en-label">' + escapeHtml((op ? op.en + (op.part ? ' · Part ' + op.part : '') + ' · ' + (op.sections ? 'sections ' : '') + _rambamOpeningRange(op)
         : chapter.title.replace(/\s+\d+$/, '') + ' · Chapter ' + chapter.chapter) + (chapters.length > 1 ? ' · ' + (chIdx + 1) + ' of ' + chapters.length + ' today' : '')) + '</p></div>';
     // The chapter's guide: a line on what it decides, and (written since Dec 2026)
-    // its parts, the halachos that state its rules, "why different?" notes where
-    // neighbouring halachos seem to clash, and the takeaways at the end
+    // its parts, a word on the difference where neighbouring halachos seem to
+    // clash, and the takeaways at the end
     const g = guideOn ? _rambamGuide(guideOf(chapter)) : {};
     if (g.about || g.parts?.length) v += '<div class="tz-guide">'
       + (g.about ? '<p class="tz-gl">This chapter</p><p class="tz-gt">' + escapeHtml(g.about) + '</p>' : '')
@@ -5321,25 +5319,25 @@ function _renderRambamContent() {
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
       // Rendered as a span before the text — stays inline with the paragraph
       if (hs[num]) v += '<p class="tz-h rb-h">' + escapeHtml(hs[num]) + '</p>';
-      const row = g.rules?.includes(num) ? ' class="rb-rule"' : '';   // a halacha that states the rule
       const enMark = num ? '<span class="rd-vn">' + num + '</span>' : '';
       const heMark = num ? '<span class="rd-vn">' + heNum + '</span>' : '';
 
       if (lang === 'both') {
-        v += '<div' + row + ' style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
+        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + enMark + en + '</p>';
         v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
-        v += '<div' + row + ' style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
+        v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
         v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else {
-        v += '<div' + row + ' style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
+        v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
         v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + enMark + en + '</p>';
         v += '</div>';
       }
-      if (g.why?.[num]) v += '<p class="rb-why"><b>Why different?</b> ' + escapeHtml(g.why[num]) + '</p>';
+      // Where neighbouring halachos seem to clash: a word on the difference, in the guide's voice
+      if (g.why?.[num]) v += '<p class="rb-why">' + escapeHtml(g.why[num]) + '</p>';
     }
     if (g.takeaways?.length) v += '<div class="tz-guide" style="margin-top:18px"><p class="tz-gl">Today\'s takeaways</p><ul class="tz-gt rb-take">'
       + g.takeaways.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul></div>';
@@ -5352,7 +5350,7 @@ function _renderRambamContent() {
 
 // Translator's notes: a small tappable number in the text → the note opens
 // right there in a bubble (tap again or anywhere else to close)
-// A chapter's written guide: a line (older entries), or { about, parts, rules, why, takeaways }
+// A chapter's written guide: a line (older entries), or { about, parts, why, takeaways }
 function _rambamGuide(x) {
   if (!x) return {};
   return typeof x === 'string' ? { about: x } : x;
