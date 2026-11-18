@@ -25,24 +25,34 @@ const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDa
 
 // The portion from a date's calendar item and the next day's:
 // { chapterSlug, startVerse, endVerse (null = to the end of the chapter) } or null
-async function portionFrom(today, tomorrow, chapterLength) {
+// A paragraph that's only a letter's heading (Iggeret HaKodesh 27:1): small
+// print in the Hebrew; the number in bold, then the heading in italics, in the
+// English. The same test is in index.html (_tanyaHeadingOnly).
+export const headingOnly = (he, en) => /^\s*<small>/i.test(he || '') && /^\s*<b>[^<]*<\/b>\s*<i>/i.test(en || '');
+
+async function portionFrom(today, tomorrow, chapterOf) {
   const t = parseTanyaUrl(today?.url);
   if (!t) return null;
   const n = today.url === tomorrow?.url ? null : parseTanyaUrl(tomorrow?.url);
   let endVerse = n && n.chapterSlug === t.chapterSlug && n.verse > t.verse ? n.verse - 1 : null;
+  const needChapter = endVerse !== null || t.verse === 2;
+  const ch = needChapter ? await chapterOf(t.chapterSlug) : null;
   // The app leaves endVerse off when the portion runs to the chapter's end
-  if (endVerse !== null && endVerse === await chapterLength(t.chapterSlug)) endVerse = null;
-  return { chapterSlug: t.chapterSlug, startVerse: t.verse, endVerse };
+  if (endVerse !== null && endVerse === ch.allHe.length) endVerse = null;
+  // Sefaria's calendar leaves a letter's heading out of every day: the day that
+  // starts just after it reads it too (as the app does)
+  const startVerse = t.verse === 2 && headingOnly(ch.allHe[0], ch.allEn[0]) ? 1 : t.verse;
+  return { chapterSlug: t.chapterSlug, startVerse, endVerse };
 }
 
 export const nextDay = iso => addDays(iso, 1);
 
-const lengthOf = () => { const seen = {}; return slug => seen[slug] ??= fetchChapter(slug).then(c => c.allHe.length); };
+const chapters = () => { const seen = {}; return slug => seen[slug] ??= fetchChapter(slug); };
 
 // The portion on one date
 export async function tanyaPortion(iso) {
   const [today, tomorrow] = await Promise.all([tanyaYomiItem(iso), tanyaYomiItem(nextDay(iso))]);
-  return portionFrom(today, tomorrow, lengthOf());
+  return portionFrom(today, tomorrow, chapters());
 }
 
 // Every portion on the schedule from `back` days ago through `ahead` days from
@@ -50,7 +60,7 @@ export async function tanyaPortion(iso) {
 export async function scheduledPortions(iso, back = 7, ahead = 1) {
   const dates = []; for (let i = -back; i <= ahead + 1; i++) dates.push(addDays(iso, i));
   const items = await Promise.all(dates.map(tanyaYomiItem));
-  const len = lengthOf();
+  const len = chapters();
   return (await Promise.all(items.slice(0, -1).map((it, i) => portionFrom(it, items[i + 1], len)))).filter(Boolean);
 }
 

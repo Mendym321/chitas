@@ -3590,7 +3590,9 @@ let quizState = { sectionId: null, level: null, questions: [], current: 0, score
 function _quizzable(sectionId) {
   return QUIZZES_ENABLED && ['chumash', 'tanya', 'rambam'].includes(sectionId)
     && !(sectionId === 'rambam' && user.rambamTrack === 'm')
-    && !(sectionId === 'tanya' && /Likkutei Amarim, (Title Page|Approbation|Compiler's Foreword)/.test(schedule?.tanya?.sefariaRef || ''));   // the opening pages: no Review
+    && !(sectionId === 'tanya' && TANYA_OPENING_RE.test(schedule?.tanya?.sefariaRef || ''))   // the pieces without chapters: no Review
+    && !(sectionId === 'rambam' && (RAMBAM_OPENING_RE.test(schedule?.rambam?.sefariaRef || '')     // nor on the Rambam's (the introduction, the mitzvos, the contents)
+      || (_textFor('rambam', dateISO(appNow()))?.chapters || []).some(c => c.opening)));
 }
 
 // Points are given once per section, per level, per day
@@ -4665,7 +4667,9 @@ function _flatHtml(x){
 }
 
 // Fetch a single non-spanning ref with preferred translation keyword
-async function _fetchSingleRef(ref, keyword){
+// emptyOk: an answer with no text isn't a failure (Rashi has no comment on
+// some stretches of verses, e.g. Numbers 7:42-71, the princes' offerings)
+async function _fetchSingleRef(ref, keyword, { emptyOk = false } = {}){
   const enc=encodeURIComponent(ref);
   // Step 1: get available versions
   const versions=await fetch(`${SEFARIA}/api/texts/versions/${enc}`).then(r=>r.json()).catch(()=>[]);
@@ -4680,7 +4684,8 @@ async function _fetchSingleRef(ref, keyword){
     :`${SEFARIA}/api/texts/${enc}?context=0&commentary=0`;
   const d=await fetch(url).then(r=>r.json()).catch(()=>null);
   // Refused or not reached: say so, so the reader can show something is missing
-  if(!d||d.error||(!(d.text||[]).length&&!(d.he||[]).length))return{en:[],he:[],versionTitle:'',failed:true};
+  if(!d||d.error)return{en:[],he:[],versionTitle:'',failed:true};
+  if(!(d.text||[]).length&&!(d.he||[]).length)return{en:[],he:[],versionTitle:'',failed:!emptyOk};
   // _perVerse: preserve one entry per verse (null = no content for that verse).
   // This is critical for Rashi — Sefaria returns sparse arrays where missing
   // verses are empty strings or empty arrays, and we must NOT collapse them
@@ -4719,9 +4724,9 @@ async function _fetchRashi(ref) {
   const chunks = await Promise.all(Array.from({ length: ch2 - ch1 + 1 }, (_, k) => ch1 + k).map(async ch => {
     const from = ch === ch1 ? v1 : 1, to = ch === ch2 ? v2 : 150;
     const r = 'Rashi on ' + book + ' ' + ch + ':' + from + '-' + to;
-    const t = await _fetchSingleRef(r, 'metsudah').catch(() => ({ en: [], he: [] }));
-    const shows = (t.en || []).some(Boolean) || (t.he || []).some(Boolean);
-    return { ref: r, chapter: ch, startVerse: from, en: t.en || [], he: t.he || [], versionTitle: t.versionTitle, failed: !shows };
+    // Missing only if Sefaria didn't answer: verses Rashi says nothing on are just that
+    const t = await _fetchSingleRef(r, 'metsudah', { emptyOk: true }).catch(() => ({ en: [], he: [], failed: true }));
+    return { ref: r, chapter: ch, startVerse: from, en: t.en || [], he: t.he || [], versionTitle: t.versionTitle, failed: !!t.failed };
   }));
   return { chunks, versionTitle: chunks.find(c => c.versionTitle)?.versionTitle || '' };
 }
@@ -5003,12 +5008,12 @@ async function _loadRambamNative(sectionId, silent) {
 
     // Parse a Sefaria URL to a ref string
     // "https://www.sefaria.org/Mishneh_Torah%2C_Fasts.2-4?..." → "Mishneh Torah, Fasts 2-4"
+    // "…Overview_of_Mishneh_Torah_Contents.1.1-14.10" → "… Contents 1:1-14:10" (sections and paragraphs)
     function sefariaUrlToRef(url) {
       try {
-        const path = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]);
-        const clean = path.replace(/_/g, ' ');
-        const dot = clean.lastIndexOf('.');
-        return dot === -1 ? clean : clean.slice(0, dot) + ' ' + clean.slice(dot + 1);
+        const clean = decodeURIComponent(url.split('sefaria.org/').pop().split('?')[0]).replace(/_/g, ' ');
+        const m = clean.match(/^(.*?)\.(\d[\d.\-]*)$/);
+        return m ? m[1] + ' ' + m[2].replace(/\./g, ':') : clean;
       } catch(e) { return null; }
     }
 
@@ -5053,20 +5058,61 @@ async function _loadRambamNative(sectionId, silent) {
 function _rambamSubtitle(chapters) {
   const books = [];
   chapters.forEach(ch => {
+    if (ch.opening) {   // a piece's parts read together: one range ("Positive mitzvos 1–248")
+      const last = books[books.length - 1];
+      if (last?.op?.en === ch.opening.en && last.op.to + 1 === ch.opening.from) last.op = { ...last.op, to: ch.opening.to };
+      else books.push({ op: { ...ch.opening } });
+      return;
+    }
     const book = ch.title.replace(/\s+\d+$/, '');
     const last = books[books.length - 1];
     if (last && last.book === book) last.to = ch.chapter; else books.push({ book, from: ch.chapter, to: ch.chapter });
   });
-  return books.map(b => b.book + ' ' + b.from + (b.to !== b.from ? '–' + b.to : '')).join(' · ');
+  return books.map(b => b.op ? b.op.en + ' ' + _rambamOpeningRange(b.op) : b.book + ' ' + b.from + (b.to !== b.from ? '–' + b.to : '')).join(' · ');
 }
 
 // Expand range refs like "Mishneh Torah, Eruvin 3-5" into individual chapter refs
 // ["Mishneh Torah, Eruvin 3", "Mishneh Torah, Eruvin 4", "Mishneh Torah, Eruvin 5"]
 // Single-chapter refs pass through unchanged.
+// ── The opening pieces (when the cycle starts again) ─────────────────────────
+// The Mishneh Torah opens with the Rambam's introduction, the list of the 613
+// mitzvos and the list of its contents. They aren't chapters: each is read in
+// three parts (the 1-chapter track reads a part a day; 3 chapters a day reads
+// all three, each part in place of a chapter, as Chabad.org shows them). A
+// part is a range of paragraphs ("Positive Mitzvot 84-166" is mitzvos 84 to
+// 166; the contents go by sections, "5-9"), fetched in one go and numbered as
+// the Rambam numbers it.
+const RAMBAM_OPENING = {
+  'Transmission of the Oral Law':       { en: 'Introduction',             parts: [[1, 21], [22, 33], [34, 45]] },
+  'Positive Mitzvot':                   { en: 'Positive mitzvos',         parts: [[1, 83], [84, 166], [167, 248]] },
+  'Negative Mitzvot':                   { en: 'Negative mitzvos',         parts: [[1, 122], [123, 245], [246, 365]] },
+  'Overview of Mishneh Torah Contents': { en: 'Overview of the contents', parts: [[1, 4], [5, 9], [10, 14]], sections: true },
+};
+const RAMBAM_OPENING_RE = /Mishneh Torah, (Transmission of the Oral Law|Positive Mitzvot|Negative Mitzvot|Overview of Mishneh Torah Contents)\b/;
+// "Mishneh Torah, Positive Mitzvot 84-166" → { book, en, from: 84, to: 166, sections, part: 2 }; a chapter → null
+// (the contents' "1:1-4:8", sections and paragraphs, is sections 1 to 4)
+function _rambamOpening(ref) {
+  const m = String(ref || '').match(/^(?:Mishneh Torah,\s*)?(.+?)\s+(\d+)(?::\d+)?(?:-(\d+)(?::\d+)?)?$/);
+  const b = m && RAMBAM_OPENING[m[1]];
+  if (!b) return null;
+  const from = +m[2], to = +(m[3] || m[2]);
+  const part = b.parts.findIndex(([x, y]) => from >= x && to <= y) + 1;   // 0: more than one part
+  return { book: m[1], en: b.en, from, to, sections: !!b.sections, part };
+}
+const _rambamOpeningRange = op => op.from + (op.to !== op.from ? '\u2013' + op.to : '');
+// A day's range of an opening piece → its parts (or the bits of them it has), one ref each
+function _rambamOpeningParts(ref) {
+  const op = _rambamOpening(ref);
+  return RAMBAM_OPENING[op.book].parts
+    .map(([x, y]) => [Math.max(x, op.from), Math.min(y, op.to)]).filter(([x, y]) => x <= y)
+    .map(([x, y]) => 'Mishneh Torah, ' + op.book + ' ' + x + (y !== x ? '-' + y : ''));
+}
+
 function _expandRambamRefs(refs) {
   const out = [];
   refs.forEach(ref => {
     if (!ref) return;
+    if (_rambamOpening(ref)) { out.push(..._rambamOpeningParts(ref)); return; }   // its parts, not hundreds of "chapters"
     // Range ref: "Mishneh Torah, Laws of Sabbath 4-6" → 3 individual chapter refs
     // Also handles refs without "Mishneh Torah" prefix (just in case)
     const rangeMatch = ref.match(/^(.+?)\s+(\d+)-(\d+)$/);
@@ -5098,6 +5144,10 @@ async function _fetchRambamChapter(ref) {
   // The translator's footnotes are kept (one list per chapter) and shown as
   // tappable numbers in the text
   const notes = [];
+  // An opening piece (the introduction, the mitzvos, the contents): the day's
+  // range of it, every paragraph (the contents' sections one after another)
+  const op = _rambamOpening(ref);
+  const deep = x => typeof x === 'string' ? [x] : Array.isArray(x) ? x.flatMap(deep) : [];
 
   // v3 API for English — ask for the Touger translation by name (it carries the
   // translator's footnotes and, in many books, [brackets] around his added words);
@@ -5117,6 +5167,7 @@ async function _fetchRambamChapter(ref) {
   // text should always be flat. But guard against nesting just in case.
   function flatV3(x) {
     if (!x) return [];
+    if (op) x = deep(x);
     // Nested: first element is itself an array → this is a multi-chapter response
     if (Array.isArray(x) && x.length && Array.isArray(x[0])) x = x[0];
     if (typeof x === 'string') { const s = _cleanHtml(x, notes); return s ? [s] : [null]; }
@@ -5139,6 +5190,7 @@ async function _fetchRambamChapter(ref) {
   // Hebrew from standard API — same nesting guard as flatV3
   function flatHe(x) {
     if (!x) return [];
+    if (op) x = deep(x);
     if (Array.isArray(x) && x.length && Array.isArray(x[0])) x = x[0];
     if (typeof x === 'string') { const s = x.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); return [s||null]; }
     if (Array.isArray(x)) return x.map(item => {
@@ -5160,6 +5212,19 @@ async function _fetchRambamChapter(ref) {
   // "משנה תורה, הלכות מכירה" → "הלכות מכירה", for the printed-page heading
   const heBook = String(heRes?.heTitle || '').replace(/^משנה תורה,?\s*/, '');
 
+  if (op) {
+    // The introduction opens with a verse, which Sefaria's Hebrew leaves out (its English has it)
+    if (op.book === 'Transmission of the Oral Law' && op.from === 1 && heSegs[0] && !heSegs[0].replace(/[\u0591-\u05C7]/g, '').startsWith('בשם'))
+      heSegs[0] = 'בְּשֵׁם יְיָ אֵל עוֹלָם (בראשית כא, לג)<br>' + heSegs[0];
+    // The contents' section titles ("BOOK OF HOLINESS") are all in bold: shown as headings
+    const bold = t => /^\s*<b>[^]*<\/b>\s*$/.test(t || '');
+    const enRaw = deep(engVersion?.text || []), heRaw = deep(heRes?.he || []);
+    const heads = Array.from({ length: Math.max(enSegs.length, heSegs.length) }, (_, i) => bold(enRaw[i]) || bold(heRaw[i]));
+    return { ref, title: ref.replace(/^Mishneh Torah,\s*/, ''), heBook, chapter: null, en: enSegs, he: heSegs, notes,
+      opening: { en: op.en, from: op.from, to: op.to, sections: op.sections, part: op.part, heads,
+        // how many sections came (the contents), to check it's the whole day's range
+        sectionCount: op.sections ? (Array.isArray(heRes?.he?.[0]) ? heRes.he.length : 1) : null } };
+  }
   return { ref, title, heBook, chapter, en: enSegs, he: heSegs, notes };
 }
 
@@ -5167,7 +5232,7 @@ function _renderRambamContent() {
   if (_rv.sid !== 'rambam') return;   // another section is on screen
   const { chapters } = window._rambamData || {};
   if (!chapters || !chapters.length) return;
-  const lang = localStorage.getItem('chitas_lang_rambam') || 'both';
+  const readLang = localStorage.getItem('chitas_lang_rambam') || 'both';
   const el = document.getElementById('native-reader-content');
   if (!el) return;
 
@@ -5195,34 +5260,52 @@ function _renderRambamContent() {
   const guideOn = _readerOpt('rambam', 'guide');
 
   // Language, then the options
-  let t = _langSeg(lang, "_setRambamLang('LANG')")
+  let t = _langSeg(readLang, "_setRambamLang('LANG')")
     + (chapters.some(ch => guideOf(ch) || Object.keys(headsOf(ch)).length) ? '<div class="tz-opts">' + _optChip('rambam', 'guide', 'Guide') + '</div>' : '');
 
   let v = '';
 
   chapters.forEach((chapter, chIdx) => {
     // Each chapter opens like a printed page: the book, then the chapter
+    // (an opening piece: its name, and the range of it read today)
+    const op = chapter.opening;
+    const heRange = op && _toHebrewNumeral(op.from) + (op.to !== op.from ? '–' + _toHebrewNumeral(op.to) : '');
     v += '<div class="tz-head"' + (chIdx > 0 ? ' style="margin-top:34px"' : '') + '>'
       + '<p class="tz-part" lang="he">משנה תורה' + (chapter.heBook ? ' · ' + escapeHtml(chapter.heBook) : '') + '</p>'
-      + '<p class="tz-ch" lang="he">פרק ' + _toHebrewNumeral(chapter.chapter) + '</p>'
-      + '<p class="tz-en-label">' + escapeHtml(chapter.title.replace(/\s+\d+$/, '') + ' · Chapter ' + chapter.chapter + (chapters.length > 1 ? ' · ' + (chIdx + 1) + ' of ' + chapters.length + ' today' : '')) + '</p></div>';
+      + '<p class="tz-ch" lang="he">' + (op ? (op.part ? 'חלק ' + _toHebrewNumeral(op.part) : heRange) : 'פרק ' + _toHebrewNumeral(chapter.chapter)) + '</p>'
+      + '<p class="tz-en-label">' + escapeHtml((op ? op.en + (op.part ? ' · Part ' + op.part : '') + ' · ' + (op.sections ? 'sections ' : '') + _rambamOpeningRange(op)
+        : chapter.title.replace(/\s+\d+$/, '') + ' · Chapter ' + chapter.chapter) + (chapters.length > 1 ? ' · ' + (chIdx + 1) + ' of ' + chapters.length + ' today' : '')) + '</p></div>';
     if (guideOn && guideOf(chapter)) v += '<div class="tz-guide"><p class="tz-gl">This chapter</p><p class="tz-gt">' + escapeHtml(guideOf(chapter)) + '</p></div>';
     const hs = guideOn ? headsOf(chapter) : {};
 
+    // A few chapters have no English on Sefaria (The Order of Prayer 3 to 5, the
+    // prayers themselves): their Hebrew is shown whatever the language, with a word why
+    const noEn = !chapter.en.some(Boolean) && chapter.he.some(Boolean);
+    const lang = noEn ? 'he' : readLang;
+    if (noEn && readLang !== 'he') v += '<p class="tz-ai rb-noen">This chapter has no English translation on Sefaria, so here is the Hebrew.</p>';
     const maxLen = Math.max(chapter.en.length, chapter.he.length);
     for (let i = 0; i < maxLen; i++) {
       const enRaw = chapter.en[i] || '';
       const he    = chapter.he[i] || '';
       if (!enRaw && !he) continue;
+      // A section title in the contents: a heading, not a numbered paragraph
+      if (op?.heads?.[i]) {
+        v += '<div class="rb-sec"' + (lang === 'both' ? ' style="display:grid;grid-template-columns:1fr 1fr;gap:20px;"' : '') + '>'
+          + (lang !== 'he' && enRaw ? '<p class="tz-h rb-h">' + escapeHtml(enRaw.replace(/<[^>]+>/g, '')) + '</p>' : '')
+          + (lang !== 'en' && he ? '<p class="tz-h rb-h" lang="he" style="direction:rtl;text-align:right;">' + escapeHtml(he.replace(/<[^>]+>/g, '')) + '</p>' : '') + '</div>';
+        continue;
+      }
       const en = _rambamNoteMarkers(styleBrackets(enRaw), chIdx);
-      const num    = i + 1;
-      const heNum  = _toHebrewNumeral(num);   // the shared helper: 15 טו, 16 טז, and every number
+      // The introduction and the mitzvos keep the Rambam's own numbers (mitzvah 84, 85…);
+      // the contents' lines have none
+      const num    = op ? (op.sections ? null : op.from + i) : i + 1;
+      const heNum  = num && _toHebrewNumeral(num);   // the shared helper: 15 טו, 16 טז, and every number
 
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
       // Rendered as a span before the text — stays inline with the paragraph
       if (hs[num]) v += '<p class="tz-h rb-h">' + escapeHtml(hs[num]) + '</p>';
-      const enMark = '<span class="rd-vn">' + num + '</span>';
-      const heMark = '<span class="rd-vn">' + heNum + '</span>';
+      const enMark = num ? '<span class="rd-vn">' + num + '</span>' : '';
+      const heMark = num ? '<span class="rd-vn">' + heNum + '</span>' : '';
 
       if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
@@ -5496,20 +5579,31 @@ function _setTehillimLang(lang) {
 // ── Tanya paragraph splitter ──────────────────────────────────────────────────
 // Splits a long Sefaria segment into smaller readable chunks.
 
-// ── The opening pages (19 to 23 Kislev) ───────────────────────────────────────
-// When the cycle starts again, the Tanya's title page, its approbations and the
-// compiler's foreword come first. They have no chapters, so the chapter-and-verse
-// reader below can't place them: they're read here in their order, each day from
-// its start to just before the next day's (a day can span several of them), with
-// a heading for each and a few written words for the day. No AI guide or Review.
-const TANYA_OPENING_BASE = 'Tanya,_Part_I;_Likkutei_Amarim,_';
+// ── The pieces without chapters ──────────────────────────────────────────────
+// Two parts of the Tanya open with pieces that have no chapters, so the
+// chapter-and-verse reader below can't place them:
+//  - 19 to 23 Kislev, when the cycle starts again: Likkutei Amarim's title
+//    page, its approbations and the compiler's foreword
+//  - Chinuch Katan, the Alter Rebbe's foreword to Shaar HaYichud VehaEmunah
+//    (one day, in Sivan)
+// They're read here in their order, each day from its start to just before the
+// next day's (a day can span several pieces of one part), with a heading for
+// each and a few written words for the day. No AI guide or Review.
 const TANYA_OPENING = [
-  ['Title_Page', 'Title page'],
-  ['Approbation.1', 'Approbation of Rabbi Meshulam Zusil of Anipoli'],
-  ['Approbation.2', 'Approbation of Rabbi Yehudah Leib HaCohen'],
-  ['Approbation.3', 'Approbation of the author\'s sons'],
-  ['Compiler\'s_Foreword', 'Compiler\'s foreword'],
+  { slug: 'Tanya,_Part_I;_Likkutei_Amarim,_Title_Page', heading: 'Title page', part: 'la',
+    label: 'Likkutei Amarim \u00b7 Title page and approbations', heHead: 'שער הספר והסכמות' },
+  { slug: 'Tanya,_Part_I;_Likkutei_Amarim,_Approbation.1', heading: 'Approbation of Rabbi Meshulam Zusil of Anipoli', part: 'la',
+    label: 'Likkutei Amarim \u00b7 Approbations', heHead: 'הסכמות' },
+  { slug: 'Tanya,_Part_I;_Likkutei_Amarim,_Approbation.2', heading: 'Approbation of Rabbi Yehudah Leib HaCohen', part: 'la',
+    label: 'Likkutei Amarim \u00b7 Approbations', heHead: 'הסכמות' },
+  { slug: 'Tanya,_Part_I;_Likkutei_Amarim,_Approbation.3', heading: 'Approbation of the author\'s sons', part: 'la',
+    label: 'Likkutei Amarim \u00b7 Approbations', heHead: 'הסכמות' },
+  { slug: 'Tanya,_Part_I;_Likkutei_Amarim,_Compiler\'s_Foreword', heading: 'Compiler\'s foreword', part: 'la',
+    label: 'Likkutei Amarim \u00b7 Compiler\'s foreword', heHead: 'הקדמת המלקט' },
+  { slug: 'Tanya,_Part_II;_Shaar_HaYichud_VehaEmunah,_Chinukh_Katan', heading: 'Chinuch Katan', part: 'shy',
+    label: 'Shaar HaYichud VehaEmunah \u00b7 Chinuch Katan', heHead: 'חינוך קטן', hePart: 'שער היחוד והאמונה' },
 ];
+const TANYA_OPENING_RE = /Likkutei Amarim, (Title Page|Approbation|Compiler's Foreword)|Shaar HaYichud VehaEmunah, Chinukh Katan/;
 // Each day's words, by where it starts (piece.segment)
 const TANYA_OPENING_GUIDE = {
   '0.1': { intro: 'On 19 Kislev the Tanya begins again: first its title page, then the approbations of two great tzaddikim of the Alter Rebbe\'s time.' },
@@ -5517,15 +5611,15 @@ const TANYA_OPENING_GUIDE = {
   '4.1': { intro: 'The Alter Rebbe\'s foreword, a letter to all his chassidim. Today: why a book of advice, when no book can speak to each person the way a teacher does.' },
   '4.9': { recap: 'No book can advise each person as a teacher can. Today he says who this book is for, and how to use it when something isn\'t clear.' },
   '4.13': { recap: 'He wrote down his answers so no one would need a private meeting to ask. Today: copies full of errors spread, so he prints a corrected one.' },
+  '5.1': { intro: 'Likkutei Amarim is finished. Today, Chinuch Katan: the Alter Rebbe\'s foreword to the second part, Shaar HaYichud VehaEmunah ("the gate of unity and faith"), based on the first section of the Shema. Fear and love are the roots of serving G-d; how can love, a feeling in the heart, be commanded as something we do?' },
 };
-// A Sefaria address in the opening pages → [piece, segment]; chapter 1 → just past the last piece
+// A Sefaria address → [piece, segment] if it's in one of these pieces; any
+// chapter → just past the last piece (the end of the stretch); else null
 function _tanyaOpeningAt(url) {
   if (!url) return null;
-  if (/^Tanya,_Part_I;_Likkutei_Amarim\.\d+\.\d+$/.test(url)) return [TANYA_OPENING.length, 1];
-  if (!url.startsWith(TANYA_OPENING_BASE)) return null;
-  const m = url.slice(TANYA_OPENING_BASE.length).match(/^(.*)\.(\d+)$/);
-  const i = m ? TANYA_OPENING.findIndex(([k]) => k === m[1]) : -1;
-  return i < 0 ? null : [i, +m[2]];
+  const i = TANYA_OPENING.findIndex(p => url.startsWith(p.slug + '.') && /^\d+$/.test(url.slice(p.slug.length + 1)));
+  if (i >= 0) return [i, +url.slice(TANYA_OPENING[i].slug.length + 1)];
+  return /^Tanya,_Part_[IV]+;_[^.]+\.\d+\.\d+$/.test(url) ? [TANYA_OPENING.length, 1] : null;
 }
 async function _loadTanyaOpening(iso, boundary, silent) {
   const a = _tanyaOpeningAt(boundary.todayUrl);
@@ -5533,8 +5627,9 @@ async function _loadTanyaOpening(iso, boundary, silent) {
   if (!a || a[0] >= TANYA_OPENING.length) return false;
   const flat = x => !x ? [] : typeof x === 'string' ? [x] : Array.isArray(x) ? x.flatMap(flat) : [];
   const pieces = [];
-  for (let i = a[0]; i < TANYA_OPENING.length && (i < b[0] || (i === b[0] && b[1] > 1)); i++) {
-    const d = await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(TANYA_OPENING_BASE + TANYA_OPENING[i][0]) + '?lang=bi&context=0&commentary=0')
+  // (a day stays within one part: the foreword's last day doesn't run on into Chinuch Katan)
+  for (let i = a[0]; i < TANYA_OPENING.length && TANYA_OPENING[i].part === TANYA_OPENING[a[0]].part && (i < b[0] || (i === b[0] && b[1] > 1)); i++) {
+    const d = await fetch('https://www.sefaria.org/api/texts/' + encodeURIComponent(TANYA_OPENING[i].slug) + '?lang=bi&context=0&commentary=0')
       .then(r => r.json()).catch(() => null);
     const he = flat(d?.he), en = flat(d?.text);
     const from = i === a[0] ? a[1] : 1, to = i === b[0] ? b[1] - 1 : Math.max(he.length, en.length);
@@ -5545,17 +5640,22 @@ async function _loadTanyaOpening(iso, boundary, silent) {
   for (const p of pieces) {
     for (let k = 0; k < Math.max(p.he.length, p.en.length); k++) {
       blocks.push({ he: _cleanHtml(p.he[k] || ''), en: _cleanHtml(p.en[k] || '', notes), isHagahah: false,
-        ...(k === 0 && p.first ? { heading: TANYA_OPENING[p.i][1], always: true } : {}) });
+        ...(k === 0 && p.first ? { heading: TANYA_OPENING[p.i].heading, always: true } : {}) });
     }
   }
-  const first = pieces[0].i;
-  const chapterLabel = 'Likkutei Amarim \u00b7 ' + (first === 0 ? 'Title page and approbations' : first <= 3 ? 'Approbations' : 'Compiler\'s foreword');
-  const heHead = first === 0 ? 'שער הספר והסכמות' : first <= 3 ? 'הסכמות' : 'הקדמת המלקט';
-  if (!silent && _readerShows('tanya', iso)) document.getElementById('chabad-panel-sub').textContent = chapterLabel;
+  const first = TANYA_OPENING[pieces[0].i];
+  if (!silent && _readerShows('tanya', iso)) document.getElementById('chabad-panel-sub').textContent = first.label;
   _textArrived('tanya', iso, { blocks, notes, guide: TANYA_OPENING_GUIDE[a.join('.')] || null, guidePending: false,
-    chapterSlug: TANYA_OPENING_BASE + TANYA_OPENING[first][0], chapterLabel, heHead, chapterNum: null,
+    chapterSlug: first.slug, chapterLabel: first.label, heHead: first.heHead, hePart: first.hePart || null, chapterNum: null,
     isFirstSegment: a[1] === 1, isApproximate: !!boundary.isApproximate, quizRef: null }, silent);
   return true;
+}
+
+// A paragraph that's only a letter's heading: in small print in the Hebrew, and in
+// the English its number in bold ("TWENTY-SEVEN.") then the heading in italics
+// (Iggeret HaKodesh 27:1). The same test is in api/_lib/tanya-portion.js.
+function _tanyaHeadingOnly(he, en) {
+  return /^\s*<small>/i.test(he || '') && /^\s*<b>[^<]*<\/b>\s*<i>/i.test(en || '');
 }
 
 async function _loadTanyaNative(sectionId, silent) {
@@ -5652,7 +5752,12 @@ async function _loadTanyaNative(sectionId, silent) {
     const allEn = flatRaw(chData?.text || []);
 
     // Exact slice using tomorrow-slice method
-    const startV = t ? t.verse : tp.seg;
+    let startV = t ? t.verse : tp.seg;
+    // A day that starts at a letter's second paragraph, when the first is only its
+    // heading ("Twenty-seven. What he wrote to…"): Sefaria's calendar leaves the
+    // heading out of every day, so it's read with this one (the server does the same)
+    const tookHeading = startV === 2 && _tanyaHeadingOnly(allHe[0], allEn[0]);
+    if (tookHeading) startV = 1;
     let endV;
     const sameSection = n && t && t.chapterSlug === n.chapterSlug;
     if (sameSection && n.verse > startV) {
@@ -5673,7 +5778,7 @@ async function _loadTanyaNative(sectionId, silent) {
     for (let i = 0; i < maxLen; i++) {
       // A hagahah (the Alter Rebbe's own note) is in <small> in Sefaria's HTML;
       // its "הגהה" / "NOTE:" label is dropped because we label it ourselves
-      const isHagahah = /^\s*<small>/i.test(hePortion[i] || '') || /^\s*<small>/i.test(enPortion[i] || '') || /^הגהה/.test(_cleanHtml(hePortion[i] || ''));
+      const isHagahah = !(tookHeading && i === 0) && /^\s*<small>/i.test(hePortion[i] || '') || /^\s*<small>/i.test(enPortion[i] || '') || /^הגהה/.test(_cleanHtml(hePortion[i] || ''));
       const he = _cleanHtml(hePortion[i] || '').replace(/^הגהה\s*/, '');
       const en = _cleanHtml(enPortion[i] || '', notes).replace(/^NOTE:\s*/i, '');
       blocks.push({ he, en, isHagahah });
@@ -5758,7 +5863,7 @@ function _renderTanyaContent() {
   const num = +d.chapterNum;
   t += '<div class="tz-head">'
     + (part && num ? '<p class="tz-part" lang="he">' + part[1] + '</p><p class="tz-ch" lang="he">' + part[2] + ' ' + _toHebrewNumeral(num) + '</p>'
-      : d.heHead ? '<p class="tz-part" lang="he">ליקוטי אמרים</p><p class="tz-ch" lang="he">' + d.heHead + '</p>' : '')   // the opening pages
+      : d.heHead ? '<p class="tz-part" lang="he">' + (d.hePart || 'ליקוטי אמרים') + '</p><p class="tz-ch" lang="he">' + d.heHead + '</p>' : '')   // the pieces without chapters
     + '<p class="tz-en-label">' + escapeHtml(chapterLabel || '') + '</p></div>';
 
   // The guide card (or a note while it's being prepared)

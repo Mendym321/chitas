@@ -24,7 +24,8 @@
     "test:rescue": "node test-rescue.mjs",
     "test:offline": "node test-offline.mjs",
     "test:signin": "node test-native-signin.mjs",
-    "test:sponsor": "node --experimental-test-module-mocks --no-warnings test-sponsor.mjs"
+    "test:sponsor": "node --experimental-test-module-mocks --no-warnings test-sponsor.mjs",
+    "test:year": "node test-year.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
