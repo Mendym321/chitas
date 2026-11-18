@@ -114,7 +114,7 @@ function readDay(iso) {
     // In the text: code leaking onto the page. In headings and labels (where the
     // app writes the words, not Sefaria) also "undefined" and "null"; the text
     // itself can say "undefined" (the Rambam does, Kings 12)
-    const BAD = /\bNaN\b|\[object |<\/?(?:span|b|i|br|sup|small|big)\b/;
+    const BAD = /\bNaN\b|\[object (?:Object|Array|Promise|HTML)|<\/?(?:span|b|i|br|sup|small|big)\b/;   // ("an [object of] stupefaction" is the text)
     const BAD_LABEL = /\bundefined\b|\bnull\b|\bNaN\b/;
     const LABELS = '.tz-part, .tz-ch, .tz-en-label, .tz-h, .tz-gl, h1, h2, h3, h4';
     const drawn = sid => {
@@ -167,7 +167,8 @@ function readDay(iso) {
       out[key] = { ok: ok && !!d, sub: sub('rambam'), titles: (d?.chapters || []).map(c => c.title || c.ref || '?'),
         parts: (d?.chapters || []).map(c => ({ title: c.title, chapter: c.chapter, opening: c.opening ? { from: c.opening.from, to: c.opening.to, sections: c.opening.sections, sectionCount: c.opening.sectionCount } : null,
           en: c.en.filter(Boolean).length, he: c.he.filter(Boolean).length, heads: (c.opening?.heads || []).filter(Boolean).length })),
-        emptyChapters: (d?.chapters || []).filter(c => !c.en.length || !c.he.length).map(c => c.title || c.ref || '?'), ...(d ? drawn('rambam') : {}) };
+        emptyChapters: (d?.chapters || []).filter(c => !c.he.length || (!c.en.length && !c.he.some(Boolean))).map(c => c.title || c.ref || '?'), ...(d ? drawn('rambam') : {}),
+        noEnNote: !!document.querySelector('#native-reader-content .rb-noen') };
     }
     user.rambamTrack = keepTrack;
 
@@ -266,7 +267,8 @@ for (const [key, cat] of [['rambam3', 'dailyRambam3'], ['rambam1', 'dailyRambam1
     const got = r.parts.map(p => p.title);
     check(JSON.stringify(got) === JSON.stringify(expected), `${d.iso} ${key}: shows [${got.join(' | ')}], the calendar says [${expected.join(' | ')}]`);
     for (const p of r.parts) {
-      check(p.en && p.he, `${d.iso} ${key}: ${p.title} has ${p.en} English and ${p.he} Hebrew paragraphs`);
+      // (no English on Sefaria, as in The Order of Prayer 3 to 5: the Hebrew, saying so)
+      check(p.he && (p.en || r.noEnNote), `${d.iso} ${key}: ${p.title} has ${p.en} English and ${p.he} Hebrew paragraphs`);
       if (p.opening && !p.opening.sections) check(p.en === p.opening.to - p.opening.from + 1 && p.he === p.en, `${d.iso} ${key}: ${p.title} should have ${p.opening.to - p.opening.from + 1} paragraphs, has ${p.en} English and ${p.he} Hebrew`);
       if (p.opening?.sections) check(p.opening.sectionCount === p.opening.to - p.opening.from + 1 && p.heads >= p.opening.sectionCount - 1, `${d.iso} ${key}: ${p.title} should have ${p.opening.to - p.opening.from + 1} sections, has ${p.opening.sectionCount} (${p.heads} with a title)`);
     }
