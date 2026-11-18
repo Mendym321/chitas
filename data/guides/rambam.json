@@ -343,5 +343,90 @@
    "A person can give his property as a gift, even unevenly; the word \"give\" makes it work.",
    "The Sages didn't approve of taking an estate from the heirs, and warned against favoring one child."
   ]
+ },
+ "Inheritances 7": {
+  "about": "When heirs may take an estate: only with clear proof of death. Until then, the court looks after the property of someone captured or who fled.",
+  "parts": [
+   "Proof of death",
+   "Captives, and those who fled for their lives",
+   "Someone who left of his own will"
+  ],
+  "why": {
+   "3": "Here the heirs inherit even though the wife can't remarry. The Sages were stricter about marriage, where the sin is so severe.",
+   "8": "The court looks after a captive's property, but not that of someone who left of his own will: he chose to leave it."
+  },
+  "takeaways": [
+   "Heirs need clear proof of death; a report that's enough for a widow to remarry isn't enough for them.",
+   "The court looks after the property of someone taken captive or who fled for his life.",
+   "Someone who left of his own will has his property left as he left it."
+  ]
+ },
+ "Inheritances 8": {
+  "about": "Safeguards for property while its owner is away: who may be given a captive's fields to work, and why a minor's property never goes to a relative.",
+  "parts": [
+   "Not to a minor",
+   "Never a relative over a minor's property",
+   "A case the Sages decided"
+  ],
+  "why": {},
+  "takeaways": [
+   "A captive's fields are worked by a relative, but never by a minor, who might ruin them.",
+   "A minor's property is never given to a relative to work, in case he later claims he inherited it.",
+   "When a minor might have a share, the court appoints a guardian for the whole estate."
+  ]
+ },
+ "Inheritances 9": {
+  "about": "Brothers who haven't divided the estate are partners. Who gets the profit when one of them works it, and what counts as his own.",
+  "parts": [
+   "Partners in an undivided estate",
+   "Improvements, and their profits",
+   "Money one brother says is his",
+   "Shared expenses, and weddings"
+  ],
+  "why": {
+   "2": "Growth from their own work and money goes to them, if they said so first. Growth that came on its own is shared.",
+   "10": "A brother holding a note must prove it was given to him; anyone else is believed. Brothers tend to take from each other."
+  },
+  "takeaways": [
+   "Until the estate is divided, the heirs are partners and share the profits equally.",
+   "One who improves the estate with his own money, after saying so, keeps the gain.",
+   "A brother who says money in his hands is his own must prove it."
+  ]
+ },
+ "Inheritances 10": {
+  "about": "Dividing an estate: when a division is undone, how minors are protected, and choosing a guardian for orphans.",
+  "parts": [
+   "When a division is undone",
+   "Dividing with minors",
+   "Appointing a guardian",
+   "Removing one"
+  ],
+  "why": {
+   "6": "A father may choose anyone as guardian, even a minor. The court must choose someone trustworthy and capable.",
+   "7": "A court's guardian is removed on suspicion; a father's, only when witnesses show he's ruining the estate."
+  },
+  "takeaways": [
+   "A division is undone if another heir or a creditor turns up.",
+   "When some heirs are minors, the court chooses their portion and appoints a guardian.",
+   "The court acts as the orphans' parent: it picks their guardian carefully, and removes him if he's suspect."
+  ]
+ },
+ "Inheritances 11": {
+  "about": "The guardian's job: investing the orphans' money safely, what he may and may not sell, and keeping honest accounts.",
+  "parts": [
+   "Investing orphans' money",
+   "The guardian's powers, and their limits",
+   "Mitzvos and charity",
+   "An honest account"
+  ],
+  "why": {
+   "6": "He may sell fields to buy oxen, since oxen serve the fields. Not fields to buy servants: a new kind of purchase might not work out.",
+   "10": "Mitzvos with a set measure, like tefillin, are bought for them. Charity isn't taken from their property, since it has no limit."
+  },
+  "takeaways": [
+   "Orphans' money is invested with someone trustworthy, on security, where profit is likely and loss unlikely.",
+   "A guardian runs the estate for the orphans' good, but stays away from risky trades and lawsuits.",
+   "He needn't show accounts, but must keep precise ones for himself, before the Father of orphans."
+  ]
  }
 }

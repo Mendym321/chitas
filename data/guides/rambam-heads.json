@@ -3250,5 +3250,203 @@
    13,
    "Don't favor one child"
   ]
+ ],
+ "Inheritances 7": [
+  [
+   1,
+   "Clear proof of death"
+  ],
+  [
+   2,
+   "The widow's word isn't enough for the heirs"
+  ],
+  [
+   3,
+   "Signs of certain death are enough for money"
+  ],
+  [
+   4,
+   "Divided on a rumor"
+  ],
+  [
+   5,
+   "The court looks after a captive's property"
+  ],
+  [
+   6,
+   "Crops and rents held by the court"
+  ],
+  [
+   7,
+   "A relative works only fields"
+  ],
+  [
+   8,
+   "Someone who left of his own will"
+  ],
+  [
+   9,
+   "His land stays as he left it"
+  ],
+  [
+   10,
+   "A report that he died"
+  ]
+ ],
+ "Inheritances 8": [
+  [
+   1,
+   "Not to a minor, and not a minor's field to a relative"
+  ],
+  [
+   2,
+   "No relative, even with a document"
+  ]
+ ],
+ "Inheritances 9": [
+  [
+   1,
+   "Undivided heirs are partners"
+  ],
+  [
+   2,
+   "Improving it for themselves"
+  ],
+  [
+   3,
+   "A widow who is also an heir"
+  ],
+  [
+   4,
+   "Brothers he didn't know of"
+  ],
+  [
+   5,
+   "A great Torah scholar's profits"
+  ],
+  [
+   6,
+   "An appointment for his father's sake"
+  ],
+  [
+   7,
+   "\"The money was mine\" needs proof"
+  ],
+  [
+   8,
+   "If they eat separately"
+  ],
+  [
+   9,
+   "A father's note in a brother's hands"
+  ],
+  [
+   10,
+   "Brothers, but not others, must prove it"
+  ],
+  [
+   11,
+   "Living apart costs more"
+  ],
+  [
+   12,
+   "Weddings from the estate"
+  ],
+  [
+   13,
+   "A wedding gift to be repaid"
+  ],
+  [
+   14,
+   "A gift sent in the sons' names"
+  ],
+  [
+   15,
+   "Fine clothes for the eldest"
+  ]
+ ],
+ "Inheritances 10": [
+  [
+   1,
+   "Another brother or a creditor undoes the division"
+  ],
+  [
+   2,
+   "A bequest left out"
+  ],
+  [
+   3,
+   "The clothes they're wearing"
+  ],
+  [
+   4,
+   "Dividing with minors"
+  ],
+  [
+   5,
+   "A guardian for the minors"
+  ],
+  [
+   6,
+   "Who may be a guardian"
+  ],
+  [
+   7,
+   "Removing a guardian"
+  ],
+  [
+   8,
+   "Once of age, his property is his"
+  ]
+ ],
+ "Inheritances 11": [
+  [
+   1,
+   "Investing orphans' money safely"
+  ],
+  [
+   2,
+   "Selling their movables in court"
+  ],
+  [
+   3,
+   "As he would with his own"
+  ],
+  [
+   4,
+   "The guardian runs the estate"
+  ],
+  [
+   5,
+   "No accounting, but an oath"
+  ],
+  [
+   6,
+   "Selling for their food, not to hoard"
+  ],
+  [
+   7,
+   "No risky trades or lawsuits"
+  ],
+  [
+   8,
+   "Not freeing servants"
+  ],
+  [
+   9,
+   "Tithing their food"
+  ],
+  [
+   10,
+   "Mitzvos for them, not charity from them"
+  ],
+  [
+   11,
+   "Charity from one who can't decide"
+  ],
+  [
+   12,
+   "Precise accounts, before the Father of orphans"
+  ]
  ]
 }
