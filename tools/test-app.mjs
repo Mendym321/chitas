@@ -651,6 +651,50 @@ await check('a reminder that hasn\'t matched a week: one kind question on Today'
 await check('touch feedback uses the phone: a light tap, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
 await check('touch feedback off: nothing', () => { setHaptics(false); window.__calls = []; haptic('tap'); const n = window.__calls.length; setHaptics(true); return [n, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, [0, 'true']);
 await page.evaluate(() => { delete window.Capacitor; user.done = {}; });
+// The Tanya's opening pages (19 to 23 Kislev): no chapters, so they're read in their own order.
+// The text is Sefaria's own (the app's service worker fetches it; the test can't stand in for it).
+await check('Tanya on 19 to 23 Kislev: the title page, approbations and foreword, each day just its part, with headings', async () => {
+  const B = 'Tanya,_Part_I;_Likkutei_Amarim,_';
+  const day = async (iso, todayUrl, tomorrowUrl) => {
+    await _loadTanyaOpening(iso, { todayUrl, tomorrowUrl, isApproximate: false }, true);
+    const d = _textFor('tanya', iso);
+    return [d.blocks.length, d.blocks.filter(b => b.heading).map(b => b.heading), d.chapterLabel, d.heHead, !!(d.guide?.intro || d.guide?.recap), d.quizRef];
+  };
+  const r = [
+    await day('2026-11-29', B + 'Title_Page.1', B + 'Approbation.3.1'),
+    await day('2026-11-30', B + 'Approbation.3.1', B + "Compiler's_Foreword.1"),
+    await day('2026-12-02', B + "Compiler's_Foreword.9", B + "Compiler's_Foreword.13"),
+    await day('2026-12-03', B + "Compiler's_Foreword.13", 'Tanya,_Part_I;_Likkutei_Amarim.1.1'),
+  ];
+  // Drawn: the Hebrew page heading, and the headings even with the guide off
+  const keep = [_rv.sid, window._tanyaData, localStorage.getItem('chitas_tanya_guide')];
+  _rv.sid = 'tanya'; window._tanyaData = _textFor('tanya', '2026-11-29'); localStorage.setItem('chitas_tanya_guide', 'off');
+  _renderTanyaContent();
+  const html = document.getElementById('native-reader-content').innerHTML;
+  const drawn = [html.includes('שער הספר והסכמות'), (html.match(/class="tz-h"/g) || []).length];
+  const keepRef = schedule.tanya.sefariaRef; schedule.tanya.sefariaRef = 'Tanya, Part I; Likkutei Amarim, Title Page 1';
+  drawn.push(_quizzable('tanya')); schedule.tanya.sefariaRef = keepRef; drawn.push(_quizzable('tanya'));
+  // Chapter 1 on is the ordinary reader, not the opening pages (it once caught every Likkutei Amarim day)
+  drawn.push(_tanyaOpeningAt('Tanya,_Part_I;_Likkutei_Amarim.1.1')[0] === TANYA_OPENING.length, await _loadTanyaOpening('2026-12-04', { todayUrl: 'Tanya,_Part_I;_Likkutei_Amarim.1.1', tomorrowUrl: 'Tanya,_Part_I;_Likkutei_Amarim.1.13' }, true));
+  [_rv.sid, window._tanyaData] = keep; keep[2] == null ? localStorage.removeItem('chitas_tanya_guide') : localStorage.setItem('chitas_tanya_guide', keep[2]);
+  document.getElementById('native-reader-content').innerHTML = '';
+  return [r, drawn];
+}, [[
+  [20, ['Title page', 'Approbation of Rabbi Meshulam Zusil of Anipoli', 'Approbation of Rabbi Yehudah Leib HaCohen'], 'Likkutei Amarim · Title page and approbations', 'שער הספר והסכמות', true, null],
+  [10, ["Approbation of the author's sons"], 'Likkutei Amarim · Approbations', 'הסכמות', true, null],
+  [4, [], "Likkutei Amarim · Compiler's foreword", 'הקדמת המלקט', true, null],
+  [3, [], "Likkutei Amarim · Compiler's foreword", 'הקדמת המלקט', true, null],
+], [true, 3, false, true, true, false]]);
+await check('the reader\'s day bar names a far day once ("Tue, Nov 24", not "Tue, Nov 24, Nov 24")', () => {
+  const keep = dayOffset; dayOffset = 8; _updateReaderDayBar('chumash');
+  const far = document.getElementById('rd-label').textContent;
+  dayOffset = 3; _updateReaderDayBar('chumash');
+  const near = document.getElementById('rd-label').textContent;
+  dayOffset = keep; _updateReaderDayBar('chumash'); document.getElementById('reader-daybar').style.display = 'none';
+  const d = n => { const x = appNow(); x.setDate(x.getDate() + n); return x; };
+  return [far === d(8).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }), near.split(',').length, near.endsWith(d(3).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))];
+}, [true, 2, true]);
+
 await check('A sponsored day: a plaque under the four on Today, the line above the text; nothing on other days', async () => {
   const iso = dateISO(appNow());
   const text = "Today's learning is l'iluy nishmas Chaya bas Moshe. Dedicated by the Cohen family.";
