@@ -111,7 +111,12 @@ function readDay(iso) {
     const out = { iso };
     dayOffset = Math.round((Date.parse(iso + 'T12:00:00') - Date.parse(dateISO(appNow()) + 'T12:00:00')) / 864e5);
     if (_viewedISO() !== iso) return { iso, error: 'could not move to the day' };
-    const BAD = /\bundefined\b|\bNaN\b|\[object |<\/?(?:span|b|i|br|sup|small|big)\b/;
+    // In the text: code leaking onto the page. In headings and labels (where the
+    // app writes the words, not Sefaria) also "undefined" and "null"; the text
+    // itself can say "undefined" (the Rambam does, Kings 12)
+    const BAD = /\bNaN\b|\[object |<\/?(?:span|b|i|br|sup|small|big)\b/;
+    const BAD_LABEL = /\bundefined\b|\bnull\b|\bNaN\b/;
+    const LABELS = '.tz-part, .tz-ch, .tz-en-label, .tz-h, .tz-gl, h1, h2, h3, h4';
     const drawn = sid => {
       const el = document.getElementById('native-reader-content');
       try {
@@ -119,7 +124,10 @@ function readDay(iso) {
         window[_TEXT_SLOT[sid]] = _dayTexts.get(sid + '|' + iso);
         _TEXT_DRAW[sid]();
         const text = el.textContent.replace(/\s+/g, ' ');
-        return { textLen: text.length, bad: (text.match(BAD) || [])[0] || null };
+        const label = [...el.querySelectorAll(LABELS)].map(x => x.textContent.trim()).find(t => BAD_LABEL.test(t));
+        if (label) return { textLen: text.length, bad: 'a heading reads "' + label + '"' };
+        const m = text.match(BAD);   // what's wrong, and a few words around it
+        return { textLen: text.length, bad: m ? m[0] + '" in "…' + text.slice(Math.max(0, m.index - 60), m.index + 40) + '…' : null };
       } catch (e) { return { textLen: 0, bad: 'drawing failed: ' + e.message }; }
     };
     const sub = sid => _textSubtitle(sid, _dayTexts.get(sid + '|' + iso)) || '';
