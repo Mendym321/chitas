@@ -242,5 +242,106 @@
    "Produce eaten from someone else's land is paid back when witnesses, or his own words, show it.",
    "Even someone who is owed money may not make a false claim to get it."
   ]
+ },
+ "Inheritances 1": {
+  "about": "Who inherits, in order: children first, sons before daughters; then the father and his descendants, and on up the generations. Every Jew has an heir.",
+  "parts": [
+   "The order of inheritance",
+   "Grandchildren take their parent's share",
+   "The father's family only",
+   "Husband and wife"
+  ],
+  "why": {
+   "4": "A son's daughter comes before a daughter: she stands in her father's place, and a son comes before a daughter.",
+   "8": "A wife doesn't inherit her husband, but a husband inherits his wife; the Sages gave him that right."
+  },
+  "takeaways": [
+   "Children inherit first, sons before daughters; each child's descendants stand in his place.",
+   "With no descendants, the estate goes up to the father, then to his descendants, and so on: every Jew has an heir.",
+   "Inheritance follows the father's family. A husband inherits his wife; a wife doesn't inherit her husband."
+  ]
+ },
+ "Inheritances 2": {
+  "about": "The firstborn's double portion: who counts as the firstborn, and whose word decides it.",
+  "parts": [
+   "The double portion",
+   "Who counts as the firstborn",
+   "Whose word is accepted"
+  ],
+  "why": {
+   "10": "A stillborn baby doesn't take away the next son's status as firstborn; a baby born alive does, even if he died right away."
+  },
+  "takeaways": [
+   "The firstborn gets two shares of his father's estate, not of his mother's.",
+   "He must be his father's first child born alive; his mother's earlier children don't matter.",
+   "The father's word on who is his firstborn is always accepted."
+  ]
+ },
+ "Inheritances 3": {
+  "about": "What the firstborn's double portion includes: only what his father owned when he died. Then the brother who marries his brother's childless widow.",
+  "parts": [
+   "Only what the father already owned",
+   "Growth after the father's death",
+   "Giving up the extra share",
+   "The yavam's inheritance"
+  ],
+  "why": {
+   "4": "Growth that changes the crop, like buds becoming grain, isn't counted double. Growth that just comes on its own, like a tree getting taller, is."
+  },
+  "takeaways": [
+   "The double portion covers only what the father owned at his death, not debts owed to him or later inheritances.",
+   "Dividing part of the estate equally, without protest, gives up the extra share in all of it.",
+   "The brother who marries his brother's childless widow inherits his brother's estate, but only what it held at the death."
+  ]
+ },
+ "Inheritances 4": {
+  "about": "Who is believed about who is an heir: a person's word about his own relatives, and its limits.",
+  "parts": [
+   "A person's word about his heirs",
+   "Taking it back: son or servant",
+   "Common knowledge as proof",
+   "When brothers disagree about another brother"
+  ],
+  "why": {
+   "3": "\"Son\" then \"servant\" can't be taken back. \"Servant\" then \"son\" can: a son can be relied on like a servant.",
+   "4": "At customs it's the other way round: he may have called him his son to avoid paying duty on a servant."
+  },
+  "takeaways": [
+   "A person is believed about who his heirs are, even without other proof.",
+   "He can deny a known son the inheritance, but not a known brother.",
+   "When heirs disagree about another heir, each one's word affects only his own share."
+  ]
+ },
+ "Inheritances 5": {
+  "about": "When it isn't clear who the heir is: a doubtful heir against a certain one, two doubtful heirs, and people who died together.",
+  "parts": [
+   "A doubtful heir, and two doubtful heirs",
+   "A son whose father is unclear",
+   "People who died together"
+  ],
+  "why": {},
+  "takeaways": [
+   "A doubtful heir gets nothing when there's a certain heir; two doubtful heirs share equally.",
+   "When it's unknown who died first, the estate stays with whoever is surely an heir, or is shared.",
+   "Creditors must prove who died first to collect from an inheritance."
+  ]
+ },
+ "Inheritances 6": {
+  "about": "No one can change the Torah's order of inheritance. But a person can give gifts, and can choose among heirs of the same rank.",
+  "parts": [
+   "The order can't be changed",
+   "Choosing among equal heirs",
+   "\"Inherit\" or \"give\": the wording decides",
+   "Converts, and good counsel"
+  ],
+  "why": {
+   "2": "He can't pass over a son for a daughter, but among several sons he can choose one: they're all rightful heirs.",
+   "5": "\"Let him inherit\" can't change the order. \"Give it to him\" is a gift, and a gift is his to give."
+  },
+  "takeaways": [
+   "No one can change who inherits, or the firstborn's share.",
+   "A person can give his property as a gift, even unevenly; the word \"give\" makes it work.",
+   "The Sages didn't approve of taking an estate from the heirs, and warned against favoring one child."
+  ]
  }
 }
