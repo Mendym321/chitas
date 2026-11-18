@@ -170,5 +170,77 @@
    "The use must be the normal, full use of that place: lived in day and night, or harvested at a profit.",
    "Years held by different people join only when the owner would know: a father and his son, or buyers with a deed or a written agreement."
   ]
+ },
+ "Plaintiff and Defendant 13": {
+  "about": "Some people can use land for three years and still not gain ownership: anyone the owner wouldn't object to, or couldn't stand up to.",
+  "parts": [
+   "Who can't gain ownership by use, and why",
+   "Craftsmen, sharecroppers and guardians",
+   "Partners, husband and wife, father and son",
+   "Exilarchs and robbers"
+  ],
+  "why": {
+   "3": "Usually the owner's witnesses decide it. Here the user said it himself, and since he could have denied being a partner, he's believed when he says he bought it.",
+   "5": "A family's longtime sharecropper doesn't gain ownership, but a new one does. The owner wouldn't mind the first; the second, he would have protested."
+  },
+  "takeaways": [
+   "Three years of use doesn't count when the owner had no reason to object: a sharecropper, partner, guardian or family member.",
+   "It doesn't count for people too powerful to protest against, like a robber.",
+   "Once that relationship ends, three more years of use count like anyone else's."
+  ]
+ },
+ "Plaintiff and Defendant 14": {
+  "about": "When those who can't gain ownership by use bring other proof, and more cases where use alone doesn't count: a minor's land, someone who fled, and use without any claim.",
+  "parts": [
+   "Proof that helps, and a robber's, which doesn't",
+   "Their sons and grandsons",
+   "A gentile, and land bought from one",
+   "A minor's land, someone who fled, a widow's land",
+   "Use with no claim of purchase or inheritance"
+  ],
+  "why": {
+   "2": "Halacha 1 accepts witnesses to a sale, but not a robber's: the owner can say he only agreed out of fear.",
+   "10": "Fleeing for his life, his silence proves nothing. Fleeing over money, he could have protested, so his silence counts."
+  },
+  "takeaways": [
+   "Those who can't gain ownership by use can still prove a purchase with witnesses, except a robber.",
+   "Use of a minor's land, or of someone who fled for his life, doesn't count.",
+   "Three years of use count only with a claim: \"I bought it,\" \"it was given to me,\" or \"I inherited it.\""
+  ]
+ },
+ "Plaintiff and Defendant 15": {
+  "about": "Weighing the evidence when two people claim the same field: deeds and witnesses, testimony that clashes, and claims that change.",
+  "parts": [
+   "Deeds, and witnesses to the years of use",
+   "When both sides have proof",
+   "A claim explained afterwards, and a forged deed",
+   "A seller who wasn't there, and a lost path"
+  ],
+  "why": {
+   "6": "\"It was my ancestors'\" can later be explained as \"it's mine for sure.\" But \"my ancestors', not yours\" can't be taken back."
+  },
+  "takeaways": [
+   "A deed of sale is checked first; three years of use is the fallback.",
+   "When neither side can prove it, the court leaves it to whoever takes hold of it.",
+   "A claim can be explained afterwards, but not contradicted."
+  ]
+ },
+ "Plaintiff and Defendant 16": {
+  "about": "The book's last chapter: when a person gives up his right to protest, paying back the produce, and a warning against false claims.",
+  "parts": [
+   "A witness who signed can't protest later",
+   "Advice and an offer to buy prove nothing",
+   "Paying back the produce",
+   "No false claims, even to get what's yours"
+  ],
+  "why": {
+   "2": "A witness reads what he signs, so he knew what the deed said. A judge who only checks the signatures may not have read it.",
+   "6": "One witness to three years (halacha 5) helps the user. One witness to less than three obliges him to an oath he can't take, so he pays."
+  },
+  "takeaways": [
+   "Signing as a witness to a sale gives up any claim to that field.",
+   "Produce eaten from someone else's land is paid back when witnesses, or his own words, show it.",
+   "Even someone who is owed money may not make a false claim to get it."
+  ]
  }
 }
