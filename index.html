@@ -867,6 +867,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .rb-map, .rb-take { margin:4px 0 0; padding-left:20px; } .rb-map li, .rb-take li { margin:3px 0; } .rb-take li { margin:5px 0; }
 .rb-why { font-family:var(--read-font); font-style:italic; font-size:15px; line-height:1.45; color:var(--t2); border-left:2px solid color-mix(in srgb, var(--rc) 30%, transparent); padding:2px 0 2px 10px; margin:8px 0 12px; }
+.rb-why b { font:600 11px var(--ui-font); font-style:normal; color:var(--t3); margin-right:3px; }
 .tz-note { font-family:var(--read-font); font-style:italic; font-size:16px; line-height:1.45; color:var(--purple); border-left:2px solid color-mix(in srgb, var(--purple) 30%, transparent); padding:1px 0 1px 11px; margin:22px 0 12px; }   /* Tanya's guide: a word from a chavrusa where the thread could be lost */
 .tz-p { margin-bottom:16px; }
 .tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
@@ -5337,7 +5338,7 @@ function _renderRambamContent() {
         v += '</div>';
       }
       // Where neighbouring halachos seem to clash: a word on the difference, in the guide's voice
-      if (g.why?.[num]) v += '<p class="rb-why">' + escapeHtml(g.why[num]) + '</p>';
+      if (g.why?.[num]) v += '<p class="rb-why"><b>The difference</b> ' + escapeHtml(g.why[num]) + '</p>';
     }
     if (g.takeaways?.length) v += '<div class="tz-guide" style="margin-top:18px"><p class="tz-gl">Today\'s takeaways</p><ul class="tz-gt rb-take">'
       + g.takeaways.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul></div>';

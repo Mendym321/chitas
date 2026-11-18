@@ -357,7 +357,7 @@ await check('the new guides: Tanya\'s guiding notes (older guides keep headings)
     el.querySelector('.rb-why')?.textContent, el.querySelectorAll('.rb-take li').length);
   [_rv.sid, window._tanyaData, window._rambamData, _guides.rambam] = keep; el.innerHTML = '';
   return r;
-}, [[1, 0], [0, 1], ['This chapter', 'In two parts', "Today's takeaways"], 2, 'Because.', 2]);
+}, [[1, 0], [0, 1], ['This chapter', 'In two parts', "Today's takeaways"], 2, 'The difference Because.', 2]);
 
 await check('Tehillim "Both": each passuk side by side, English and Hebrew, no rules between', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };

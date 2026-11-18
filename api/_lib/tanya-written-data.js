@@ -409,7 +409,7 @@ export const WRITTEN = {
     ['', []],
     ['', [['ואם לא ירע לבבו', 'while if he is not perturbed']]],
     ['Before answering, he sets out five kinds of people from the Gemara.', [['כי הנה מצינו', 'We find in the Gemara']]],
-    ['', [['וברעיא מהימנא', 'In Raaya Mehemna'], ['ובגמרא סוף פרק ט', 'In the Gemara, end of ch. 9'], ['אמר רבה', 'Rabbah declared', 'Rabbah calling himself a beinoni matters: the rest of today turns on it.']]],
+    ['', [['וברעיא מהימנא', 'In Raaya Mehemna'], ['ובגמרא סוף פרק ט', 'In the Gemara, end of ch. 9'], ['אמר רבה', 'Rabbah declared', "Rabbah's words here come up again below."]]],
     ['', [['וגם להבין מה שאמר איוב', 'as also to understand what Job said']]],
     ['From here to the end of today, one question: who is the beinoni?', [['שבודאי אינו מחצה', 'Surely that cannot mean'], ['ונודע דלא פסיק', 'For it is known that he never']]],
     ['', [['ואפילו העובר על איסור קל', 'Even he who violates']]],
