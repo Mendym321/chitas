@@ -269,15 +269,38 @@ export const WRITTEN = {
 },
 
 'Kuntres Acharon 4|44|49': {
+  flow: 'bridges',
   recap: 'An etrog, like a seed, wakes the highest source, and learning its laws does too, at least for the positive commandments. Today: something true of all the laws.',
   summary: 'In the world itself, G-d\'s wisdom is completely hidden. In a halacha it shines openly: the ruling is His will, not something physical, so it stands far above the love and awe of angels and souls.',
   segs: [
-    ['True of all the laws', [['והן בחינות נפש', 'and are nefesh-ruach of']]],
-    ['The laws, and the world', [['והלבשה זו', 'This investment is not'], ['דהתם הלבוש', 'for there the garment', 'In the world, wisdom hides'], ['כהסתר והעלם', 'just as the gross'], ['והיינו חיצוניות', 'This supreme wisdom is'], ['וכן בבריאה', 'So, too, in Beriah'], ['שהם בחינות נבראים', 'they are creatures, and']]],
-    ['In the laws, it shines', [['ולבוש העשיה', 'The garment of Asiyah'], ['כמו ביום טוב', 'as on holy days', 'As on Yom Tov'], ['על ידי מעבר חסד', 'through passage by way'], ['הנקרא גם כן', 'This, too, is properly']]],
-    ['The ruling is His will', [['מכל מקום ההלכה', 'still the law proper'], ['שהיא בחינת רצון', 'it is the (Divine)'], ['רק שיורד', 'It does descend and'], ['והדבר הגשמי', 'The physical object itself'], ['כמו המחליף', 'as for example the']]],
-    ['', [['המחיה ומהוה', 'that vivifies and brings'], ['שהן דחילו', 'which are the awe']]],
-    ['Above the love of angels', [['וגם אחר שירדה', 'Even after descending into']]],
+    ['', [['והן בחינות נפש', 'and are nefesh-ruach of']]],
+    ["So everything the angels feel, however lofty, is still something created. Against that, he now sets the halachos.", [['והלבשה זו', 'This investment is not'], ['דהתם הלבוש', 'for there the garment'], ['כהסתר והעלם', 'just as the gross'], ['והיינו חיצוניות', 'This supreme wisdom is'], ['וכן בבריאה', 'So, too, in Beriah'], ['שהם בחינות נבראים', 'they are creatures, and']]],
+    ["In the world, G-d's wisdom is there, but completely hidden inside it. In the halachos, he says, it isn't.", [['ולבוש העשיה', 'The garment of Asiyah'], ['כמו ביום טוב', 'as on holy days'], ['על ידי מעבר חסד', 'through passage by way'], ['הנקרא גם כן', 'This, too, is properly']]],
+    ["So in a halacha, G-d's wisdom passes through the physical world without being covered by it, the way a Yom Tov light shines down into ours.", [['מכל מקום ההלכה', 'still the law proper'], ['שהיא בחינת רצון', 'it is the (Divine)'], ['רק שיורד', 'It does descend and'], ['והדבר הגשמי', 'The physical object itself'], ['כמו המחליף', 'as for example the']]],
+    ["The things a law talks about, like a cow or an offering, do hide G-dliness. But the ruling itself, what's allowed and what isn't, is G-d's will.", [['המחיה ומהוה', 'that vivifies and brings'], ['שהן דחילו', 'which are the awe']]],
+    ['', [['וגם אחר שירדה', 'Even after descending into']]],
+  ],
+},
+
+// ── From Dec 2026: bridges (flow 'bridges'; see tanya-guide.js, BRIDGES) ──────
+
+'Likkutei Amarim 1|1|12': {
+  flow: 'bridges',
+  intro: 'The first chapter of the Tanya. It opens with an oath every soul takes before birth, and asks who the beinoni really is: the "intermediate" person this book is about.',
+  summary: "The beinoni can't be someone whose deeds are half good and half sins. Even one small sin makes a person \"wicked,\" so the beinoni must have none at all.",
+  segs: [
+    ['', [['ואפילו כל העולם', 'and even if the whole world'], ['היה בעיניך', 'in your own eyes regard']]],
+    ['', []],
+    ['', [['ולא יוכל לעבוד', 'and he will not be able'], ['ואם לא ירע לבבו', 'while if he is not perturbed']]],
+    ['Two problems with the oath, then. It seems to contradict the Mishnah. And seeing yourself as wicked should lead either to sadness or to not caring at all.', [['כי הנה מצינו', 'We find in the Gemara', 'Before he can answer, he needs to say what "tzaddik," "rasha" and "beinoni" actually mean. He starts with how the Gemara divides people.'], ['צדיק וטוב לו', 'a righteous man who prospers']]],
+    ['', [['צדיק ורע לו צדיק שאינו', 'the “righteous man who suffers” is the imperfect'], ['וברעיא מהימנא', 'In Raaya Mehemna'], ['שהרע שבו', 'is one whose evil nature'], ['ובגמרא סוף פרק ט', 'In the Gemara, end of ch. 9'], ['רשעים יצר הרע', 'the wicked by their evil nature'], ['אמר רבה', 'Rabbah declared'], ['אמר ליה אביי', 'Said Abbaye to him']]],
+    ['Rabbah was one of the great sages of the Talmud. If even he could think of himself as a beinoni, a beinoni must be someone on a very high level.', [['וגם להבין מה שאמר איוב', 'as also to understand what Job said'], ['והא צדיק ורשע', 'for it is not preordained']]],
+    ['', [['שבודאי אינו מחצה', 'Surely that cannot mean'], ['שאם כן איך טעה', 'for if this were so'], ['ונודע דלא פסיק', 'For it is known that he never'], ['ואיך היה יכול', 'how, then, could he err']]],
+    ['So "beinoni" can\'t mean half good and half bad: Rabbah, who never stopped learning, could never have mistaken himself for that. And there\'s a second problem with that idea.', [['ואם אחר כך', '[but when he repents'], ['ואפילו העובר על איסור קל', 'Even he who violates'], ['כדאיתא בפרק ב', 'as it is stated in Yevamot']]],
+    ['', []],
+    ['', [['כמו כל שאפשר לו', 'for instance, whoever is able'], ['שעליו דרשו', 'regarding whom our Sages'], ['ופשיטא דמקרי רשע', 'It is thus plain']]],
+    ["Any sin, even a small one, makes a person \"wicked\" while he's in it. So there's no room in between for someone who has some sins.", [['ומשום הכי טעה רבה', 'Hence Rabbah could']]],
+    ['', [['היא שאלת רב המנונא', 'this is the query'], ['אבל לפי תשובת', 'But according to Elijah’s answer'], ['ושבעים פנים', 'And the Torah has seventy']]],
   ],
 },
 
