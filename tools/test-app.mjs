@@ -359,6 +359,17 @@ await check('the new guides: Tanya\'s guiding notes (older guides keep headings)
   return r;
 }, [[1, 0], [0, 1], ['This chapter', 'In two parts', "Today's takeaways"], 2, 'The difference Because.', 2]);
 
+await check('Rambam: the translation\'s own paragraph breaks (<br> on Sefaria) show as paragraphs, not run together', () => {
+  localStorage.setItem('chitas_lang_rambam', 'en');
+  const en = _cleanHtml(_keepParas('A rule.<br>What is implied? A case.<br><br>Different rules apply.<br>'), []);
+  window._rambamData = { chapters: [{ title: 'Sales 9', chapter: 9, en: [en], he: ['א'], notes: [] }] };
+  _rv.sid = 'rambam'; _renderRambamContent();
+  const el = document.getElementById('native-reader-content');
+  const r = [el.querySelectorAll('.rb-para').length, el.innerHTML.includes('rule.<span class="rb-para"></span>What')];
+  el.innerHTML = '';
+  return r;
+}, [2, true]);
+
 await check('Tehillim "Both": each passuk side by side, English and Hebrew, no rules between', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
   localStorage.setItem('chitas_lang_tehillim', 'both');

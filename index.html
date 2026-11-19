@@ -865,6 +865,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #rem-nudge { position:relative; margin:16px 0 0; padding:14px 16px; border-radius:var(--r-m); background:var(--card); }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
+.rb-para { display:block; height:0.7em; }   /* the translation's own paragraph break, inside a halacha */
 .rb-map, .rb-take { margin:4px 0 0; padding-left:20px; } .rb-map li, .rb-take li { margin:3px 0; } .rb-take li { margin:5px 0; }
 .rb-why { font-family:var(--read-font); font-style:italic; font-size:15px; line-height:1.45; color:var(--t2); border-left:2px solid color-mix(in srgb, var(--rc) 30%, transparent); padding:2px 0 2px 10px; margin:8px 0 12px; }
 .rb-why b { font:600 11px var(--ui-font); font-style:normal; color:var(--t3); margin-right:3px; }
@@ -5143,6 +5144,12 @@ function _rambamChapterTitle(ref) {
 
 const RAMBAM_EN_VERSION = 'Mishneh Torah, trans. by Eliyahu Touger. Jerusalem, Moznaim Pub. c1986-c2007';
 
+// The translation's own paragraphs: Touger's English breaks a long halacha into
+// paragraphs (<br> in Sefaria's text, e.g. "...proof of an obligation.<br>With
+// regard to all of these..."). They're kept through the cleaning as a marker and
+// drawn as a small gap (the Hebrew on Sefaria has no breaks)
+const RB_PARA = '\uE00A';
+const _keepParas = s => String(s).replace(/(?:\s*<br\s*\/?>\s*)+/gi, RB_PARA);
 async function _fetchRambamChapter(ref) {
   const enc = encodeURIComponent(ref);
   // The translator's footnotes are kept (one list per chapter) and shown as
@@ -5174,9 +5181,9 @@ async function _fetchRambamChapter(ref) {
     if (op) x = deep(x);
     // Nested: first element is itself an array → this is a multi-chapter response
     if (Array.isArray(x) && x.length && Array.isArray(x[0])) x = x[0];
-    if (typeof x === 'string') { const s = _cleanHtml(x, notes); return s ? [s] : [null]; }
+    if (typeof x === 'string') { const s = _cleanHtml(_keepParas(x), notes); return s ? [s] : [null]; }
     if (Array.isArray(x)) return x.map(item => {
-      if (typeof item === 'string') { const s = _cleanHtml(item, notes); return s || null; }
+      if (typeof item === 'string') { const s = _cleanHtml(_keepParas(item), notes); return s || null; }
       if (Array.isArray(item)) {
         // Nested segment — flatten and join
         const joined = item.map(s => typeof s === 'string' ? _cleanHtml(s, notes) : '').filter(Boolean).join(' ');
@@ -5190,6 +5197,7 @@ async function _fetchRambamChapter(ref) {
   const engVersion = enRes?.versions?.find(v => v.language === 'en') || enRes?.versions?.[0];
   notes.length = 0; // the version check above may have collected some
   const enSegs = flatV3(engVersion?.text || []);
+  notes.forEach((n, i) => { notes[i] = n.split(RB_PARA).join(' '); });   // (a break inside a footnote is just a space)
 
   // Hebrew from standard API — same nesting guard as flatV3
   function flatHe(x) {
@@ -5311,7 +5319,7 @@ function _renderRambamContent() {
           + (lang !== 'en' && he ? '<p class="tz-h rb-h" lang="he" style="direction:rtl;text-align:right;">' + escapeHtml(he.replace(/<[^>]+>/g, '')) + '</p>' : '') + '</div>';
         continue;
       }
-      const en = _rambamNoteMarkers(styleBrackets(enRaw, marked), chIdx);
+      const en = _rambamNoteMarkers(styleBrackets(enRaw.replace(/^\uE00A+|\uE00A+$/g, ''), marked), chIdx).split(RB_PARA).join('<span class="rb-para"></span>');
       // The mitzvos keep the Rambam's own numbers (mitzvah 84, 85…); the
       // introduction's paragraphs and the contents' lines aren't halachos: no numbers
       const num    = op ? (op.numbered ? op.from + i : null) : i + 1;
