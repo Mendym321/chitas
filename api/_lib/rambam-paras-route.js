@@ -1,6 +1,9 @@
 /**
  * GET /api/rambam-paras?ref=Mishneh Torah, Sales 4
  *
+ * (Served by api/tanya-enhance.js, through the rewrite in vercel.json: Vercel's
+ * plan allows 12 functions, and both prepare a reading aid once and save it.)
+ *
  * The chapter's Hebrew split to match the paragraphs of its English
  * translation (see api/_lib/rambam-paras.js), so the reader can show them side
  * by side. Worked out once per chapter (one AI call, about 2 cents) and saved
@@ -11,11 +14,9 @@
  *   429  today's limit of new chapters is reached (the text shows without splits)
  *   400/404/502 with { error }
  */
-import { getDb } from './_lib/firebase.js';
-import { prepareParas, parasDocId } from './_lib/rambam-paras.js';
-import { takeDailyQuota } from './_lib/quota.js';
-
-export const config = { maxDuration: 60 };
+import { getDb } from './firebase.js';
+import { prepareParas, parasDocId } from './rambam-paras.js';
+import { takeDailyQuota } from './quota.js';
 
 const REF = /^Mishneh Torah, [A-Za-z' ,\-]{2,60} \d{1,3}$/;   // one chapter
 const NEW_PER_DAY = 120;              // new chapters a day, for everyone (a few dollars at most)
@@ -24,7 +25,7 @@ const LOCK_FOR = 90 * 1000;           // longer than one preparation takes
 const send = (res, status, body) => res.status(status).json(body);
 const reply = d => ({ ref: d.ref, halachot: d.halachot || {} });
 
-export default async function handler(req, res) {
+export async function rambamParasHandler(req, res) {
   if (req.method !== 'GET') return send(res, 405, { error: 'GET only' });
   const ref = String(req.query.ref || '');
   if (!REF.test(ref)) return send(res, 400, { error: 'one Mishneh Torah chapter needed, e.g. "Mishneh Torah, Sales 4"' });

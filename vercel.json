@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/api/rambam-paras", "destination": "/api/tanya-enhance?kind=rambam-paras" }
+  ]
+}

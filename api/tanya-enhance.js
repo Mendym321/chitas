@@ -23,6 +23,7 @@ import { waitUntil } from '@vercel/functions';
 import { getDb, verifyUserToken, isAdmin } from './_lib/firebase.js';
 import { readGuide, startPreparing } from './_lib/tanya-guide.js';
 import { tanyaPortion } from './_lib/tanya-portion.js';
+import { rambamParasHandler } from './_lib/rambam-paras-route.js';
 
 export const config = { maxDuration: 300 };
 
@@ -33,6 +34,8 @@ const daysBetween = (a, b) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.pa
 const send = (res, status, body) => res.status(status).json(body);
 
 export default async function handler(req, res) {
+  // /api/rambam-paras comes here too (vercel.json): the Rambam's Hebrew split to match its English
+  if (req.query?.kind === 'rambam-paras') return rambamParasHandler(req, res);
   if (req.method !== 'GET') return send(res, 405, { error: 'GET only' });
   const date = String(req.query.date || '');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(Date.parse(date))) return send(res, 400, { error: 'date needed (YYYY-MM-DD)' });
