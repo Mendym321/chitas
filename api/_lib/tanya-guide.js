@@ -19,7 +19,7 @@ import { writtenGuide } from './tanya-written.js';
 
 export const MODEL = 'claude-opus-5-5';
 const SEFARIA = 'https://www.sefaria.org';
-const CACHE_VERSION = 'v8';          // v8 = smaller pieces, short lead-in and synopsis, safer numbering
+const CACHE_VERSION = 'v9';          // v9 = guiding notes in place of headings (Nov 2026); v8 = smaller pieces, short lead-in and synopsis, safer numbering
 
 export function guideDocId(slug, startVerse, endVerse) {
   return Buffer.from(`slug:${slug}|${startVerse}|${endVerse ?? 'end'}|${CACHE_VERSION}`).toString('base64url');

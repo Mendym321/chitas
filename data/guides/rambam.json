@@ -71,9 +71,59 @@
  "Hiring 7": "Conditions in a rental, a leap year in a year's lease, \"I paid\" against \"you didn't,\" an undated contract, an orchard that dries up, and produce left on someone's land.",
  "Hiring 8": "Renting a field for a fixed rent or for a share of the crop: what may be sown, a spring that fails, locusts and drought, weeding, and switching crops.",
  "Hiring 9": "Hiring workers: local custom on hours and pay, hiring through an agent, work that stops (the king's service, a river that dries up), finishing early, and what a worker finds.",
- "Hiring 10": "Who is a paid watchman: a lender holding security, two people who watch for each other, and every craftsman; a craftsman who ruins what he was given.",
- "Hiring 11": "The mitzvah to pay a worker on time, for his life depends on it; when it applies, hiring through an agent, and settling disputes over wages.",
- "Hiring 12": "A worker's right to eat from the produce he works with: which work, which produce, how much, and not taking it home to his family.",
+ "Hiring 10": {
+  "about": "Who counts as a paid watchman, responsible if something is lost or stolen: a lender holding security, people who watch for each other, and every craftsman. And a craftsman who ruins the work.",
+  "parts": [
+   "A lender with security, and watching for each other",
+   "Craftsmen",
+   "Ruined work, and who pays",
+   "Workers appointed by a town"
+  ],
+  "why": {
+   "5": "An expert who works for free doesn't pay for his mistake. A non-expert does, even for free, and so does anyone who charged."
+  },
+  "takeaways": [
+   "Anyone who holds an item for his own benefit, like a lender with security or a craftsman, is a paid watchman: he pays if it's lost or stolen.",
+   "A craftsman who ruins what he was given pays for it; he gets no share in the increase in its value.",
+   "Someone appointed by the town who makes a mistake that can't be fixed may be removed without warning."
+  ]
+ },
+ "Hiring 11": {
+  "about": "The mitzvah to pay a worker on time, \"for his life depends on it\": when the wage is due, and how disputes over wages are settled.",
+  "parts": [
+   "Paying on time",
+   "When the wage is due",
+   "When it doesn't apply",
+   "Disputes over wages"
+  ],
+  "why": {
+   "6": "Hired before witnesses, the worker swears and collects: the employer is busy, and the worker is counting on it. Hired without witnesses, the employer is believed.",
+   "8": "A tailor still holding the garment can swear and collect. Once it's back with its owner, he must prove his claim."
+  },
+  "takeaways": [
+   "A worker is paid the night after a day's work, or the day after a night's; holding back his wage breaks several mitzvos.",
+   "It's no sin if the worker didn't ask, or the employer had no money, but once late he must pay right away.",
+   "On the day the wage is due, a worker hired before witnesses can swear and collect; the Sages go easy on his oath."
+  ]
+ },
+ "Hiring 12": {
+  "about": "A worker's right to eat from the produce he works with: which work, which produce, how much, and only for himself.",
+  "parts": [
+   "The right, from the Torah",
+   "Which work, and when",
+   "Only what he works with, and how much",
+   "Only for himself"
+  ],
+  "why": {
+   "2": "With harvested produce, he eats until the work is done. Working on the plant, he eats only once a task is done; the Sages let him eat as he walks, so he won't stop work.",
+   "9": "A watchman eats only by local custom. A worker using his hands, feet or shoulders eats by Torah right."
+  },
+  "takeaways": [
+   "A worker may eat from the produce he's working with, while it still needs work.",
+   "Only what he works with, not too much, and never while neglecting the work.",
+   "The right is his alone: not for his family, and not to take home."
+  ]
+ },
  "Hiring 13": "Do not muzzle an ox while it threshes. And the book's closing: the employer may not cheat the worker, and the worker must work honestly with all his strength, as Yaakov did.",
  "Borrowing and Deposit 1": "A borrower pays even for accidents. An animal that dies while working, feeding it, how long he may keep what he borrowed, and what he may use it for.",
  "Borrowing and Deposit 2": "\"If its owner was with it\": when the owner is working for the borrower, he doesn't pay. Who counts as working with him, and husbands, wives and partners.",

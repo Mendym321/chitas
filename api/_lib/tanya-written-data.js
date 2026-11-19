@@ -269,15 +269,16 @@ export const WRITTEN = {
 },
 
 'Kuntres Acharon 4|44|49': {
+  flow: 'notes',
   recap: 'An etrog, like a seed, wakes the highest source, and learning its laws does too, at least for the positive commandments. Today: something true of all the laws.',
   summary: 'In the world itself, G-d\'s wisdom is completely hidden. In a halacha it shines openly: the ruling is His will, not something physical, so it stands far above the love and awe of angels and souls.',
   segs: [
-    ['True of all the laws', [['והן בחינות נפש', 'and are nefesh-ruach of']]],
-    ['The laws, and the world', [['והלבשה זו', 'This investment is not'], ['דהתם הלבוש', 'for there the garment', 'In the world, wisdom hides'], ['כהסתר והעלם', 'just as the gross'], ['והיינו חיצוניות', 'This supreme wisdom is'], ['וכן בבריאה', 'So, too, in Beriah'], ['שהם בחינות נבראים', 'they are creatures, and']]],
-    ['In the laws, it shines', [['ולבוש העשיה', 'The garment of Asiyah'], ['כמו ביום טוב', 'as on holy days', 'As on Yom Tov'], ['על ידי מעבר חסד', 'through passage by way'], ['הנקרא גם כן', 'This, too, is properly']]],
-    ['The ruling is His will', [['מכל מקום ההלכה', 'still the law proper'], ['שהיא בחינת רצון', 'it is the (Divine)'], ['רק שיורד', 'It does descend and'], ['והדבר הגשמי', 'The physical object itself'], ['כמו המחליף', 'as for example the']]],
+    ['', [['והן בחינות נפש', 'and are nefesh-ruach of', 'Beriah, Yetzirah and Asiyah: the three spiritual worlds below Atzilut, the highest.']]],
+    ['', [['והלבשה זו', 'This investment is not'], ['דהתם הלבוש', 'for there the garment'], ['כהסתר והעלם', 'just as the gross'], ['והיינו חיצוניות', 'This supreme wisdom is'], ['וכן בבריאה', 'So, too, in Beriah'], ['שהם בחינות נבראים', 'they are creatures, and']]],
+    ['', [['ולבוש העשיה', 'The garment of Asiyah'], ['כמו ביום טוב', 'as on holy days', 'On Yom Tov, a light from the highest world shines down into ours. He uses it as a comparison.'], ['על ידי מעבר חסד', 'through passage by way'], ['הנקרא גם כן', 'This, too, is properly']]],
+    ['', [['מכל מקום ההלכה', 'still the law proper'], ['שהיא בחינת רצון', 'it is the (Divine)'], ['רק שיורד', 'It does descend and'], ['והדבר הגשמי', 'The physical object itself'], ['כמו המחליף', 'as for example the', 'Pigul: an offering made unfit by a wrong intention while it was brought.']]],
     ['', [['המחיה ומהוה', 'that vivifies and brings'], ['שהן דחילו', 'which are the awe']]],
-    ['Above the love of angels', [['וגם אחר שירדה', 'Even after descending into']]],
+    ['', [['וגם אחר שירדה', 'Even after descending into']]],
   ],
 },
 

@@ -1412,43 +1412,103 @@
  "Hiring 10": [
   [
    1,
-   "A lender with security"
+   "A lender with security is a paid watchman"
+  ],
+  [
+   2,
+   "Watching for each other"
   ],
   [
    3,
-   "Craftsmen"
+   "A craftsman, until he says \"I'm done\""
   ],
   [
    4,
-   "Ruined work"
+   "A craftsman who ruins the work pays"
+  ],
+  [
+   5,
+   "Experts who work for free"
   ],
   [
    6,
-   "Planting trees"
+   "A planter who caused a loss"
+  ],
+  [
+   7,
+   "Town workers who err can be removed"
   ]
  ],
  "Hiring 11": [
   [
    1,
-   "Pay on time"
+   "Pay a worker on time"
+  ],
+  [
+   2,
+   "His life depends on it; when the wage is due"
   ],
   [
    3,
-   "When it doesn't apply"
+   "A tailor holding the garment"
+  ],
+  [
+   4,
+   "Hired through an agent, or not asked"
+  ],
+  [
+   5,
+   "Once late, he must pay at once"
   ],
   [
    6,
-   "Disputes over wages"
+   "\"I paid you\": the worker swears and collects"
+  ],
+  [
+   7,
+   "A dispute over the amount"
+  ],
+  [
+   8,
+   "A tailor, while he holds the garment"
+  ],
+  [
+   9,
+   "Going easy on a worker's oath"
   ]
  ],
  "Hiring 12": [
   [
    1,
-   "Eating while working"
+   "A worker may eat from the produce"
+  ],
+  [
+   2,
+   "Harvested produce, and growing produce"
+  ],
+  [
+   3,
+   "Not stopping work to eat, or taking it home"
   ],
   [
    4,
-   "Which work allows it"
+   "Not milk or cheese; not watchmen"
+  ],
+  [
+   5,
+   "Only before tithing or challah is due"
+  ],
+  [
+   6,
+   "Produce already finished"
+  ],
+  [
+   8,
+   "Who eats by Torah right"
+  ],
+  [
+   9,
+   "Watchmen, by custom"
   ],
   [
    10,
@@ -1456,11 +1516,19 @@
   ],
   [
    11,
-   "How much"
+   "As much as he wants, not gluttony"
+  ],
+  [
+   12,
+   "Grapes, then juice"
   ],
   [
    13,
    "Not for his family"
+  ],
+  [
+   14,
+   "Giving up the right"
   ]
  ],
  "Hiring 13": [
