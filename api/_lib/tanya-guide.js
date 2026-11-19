@@ -19,7 +19,7 @@ import { writtenGuide } from './tanya-written.js';
 
 export const MODEL = 'claude-opus-5-5';
 const SEFARIA = 'https://www.sefaria.org';
-const CACHE_VERSION = 'v10';         // v10 = back to headings after trying guiding notes (Nov 2026); v8 = smaller pieces, short lead-in and synopsis, safer numbering
+const CACHE_VERSION = 'v8';          // v8 = smaller pieces, short lead-in and synopsis, safer numbering. Guides are saved by text, so a portion that comes round next year is read, not prepared again: change this only when the guide's format changes (v9, guiding notes, was tried in Nov 2026 and dropped)
 
 export function guideDocId(slug, startVerse, endVerse) {
   return Buffer.from(`slug:${slug}|${startVerse}|${endVerse ?? 'end'}|${CACHE_VERSION}`).toString('base64url');
