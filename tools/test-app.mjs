@@ -365,10 +365,25 @@ await check('Rambam: the translation\'s own paragraph breaks (<br> on Sefaria) s
   window._rambamData = { chapters: [{ title: 'Sales 9', chapter: 9, en: [en], he: ['א'], notes: [] }] };
   _rv.sid = 'rambam'; _renderRambamContent();
   const el = document.getElementById('native-reader-content');
-  const r = [el.querySelectorAll('.rb-para').length, el.innerHTML.includes('rule.<span class="rb-para"></span>What')];
+  const r = [el.querySelectorAll('.rb-para').length, [...el.querySelectorAll('.rb-en')].map(e => e.textContent)];
   el.innerHTML = '';
   return r;
-}, [2, true]);
+}, [2, ['A rule.', 'What is implied? A case.', 'Different rules apply.']]);
+
+await check('Rambam "Both": the Hebrew split to match the English paragraphs, each pair in its own row; a split that doesn\'t fit this text is ignored', async () => {
+  localStorage.setItem('chitas_lang_rambam', 'both');
+  const en = [_cleanHtml(_keepParas('A rule.<br>What is implied? A case.<br>And more.'), []), _cleanHtml(_keepParas('One.<br>Two.'), [])];
+  const he = ['כְּלָל. כֵּיצַד? מַעֲשֶׂה. וְעוֹד.', 'אחת. שתים.'];
+  const answer = { halachot: { 1: { he: ['כְּלָל.', 'כֵּיצַד? מַעֲשֶׂה. וְעוֹד.'], en: [1, 2] }, 2: { he: ['אחת.', 'לא זה הטקסט'], en: [1, 1] } } };
+  const paras = await _rambamParas(Promise.resolve(answer), en, he);
+  window._rambamData = { chapters: [{ title: 'Sales 9', chapter: 9, en, he, notes: [], paras }] };
+  _rv.sid = 'rambam'; _renderRambamContent();
+  const el = document.getElementById('native-reader-content');
+  const rows = [...el.querySelectorAll('.rf-body.rd-he')].map(p => { const c = p.cloneNode(true); c.querySelectorAll('.rd-vn').forEach(n => n.remove()); return c.textContent.trim(); });
+  const r = [Object.keys(paras), rows, el.querySelectorAll('.rf-body:not(.rd-he) .rb-para').length];
+  el.innerHTML = '';
+  return r;
+}, [['0'], ['כְּלָל.', 'כֵּיצַד? מַעֲשֶׂה. וְעוֹד.', 'אחת. שתים.'], 2]);
 
 await check('Tehillim "Both": each passuk side by side, English and Hebrew, no rules between', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };

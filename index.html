@@ -5150,6 +5150,26 @@ const RAMBAM_EN_VERSION = 'Mishneh Torah, trans. by Eliyahu Touger. Jerusalem, M
 // drawn as a small gap (the Hebrew on Sefaria has no breaks)
 const RB_PARA = '\uE00A';
 const _keepParas = s => String(s).replace(/(?:\s*<br\s*\/?>\s*)+/gi, RB_PARA);
+// A halacha's English paragraphs (a "paragraph" that's only a footnote marker isn't one)
+const _rbEnParas = s => String(s || '').split(RB_PARA).filter(p => p.replace(new RegExp(FN_OPEN + '\\d+' + FN_CLOSE, 'g'), '').trim());
+// The Hebrew split to match the English paragraphs, from /api/rambam-paras (worked
+// out once per chapter on the server). Used only where it fits this text exactly:
+// the pieces make up the halacha's Hebrew, and the English has the paragraphs
+// they're for. Not ready within a moment (the first time anyone opens a
+// chapter): the chapter shows without it, and it's there next time.
+const _askRambamParas = ref => fetch('/api/rambam-paras?ref=' + encodeURIComponent(ref)).then(r => r.ok ? r.json() : null).catch(() => null);
+async function _rambamParas(asked, enSegs, heSegs) {
+  if (!asked) return {};
+  const got = await Promise.race([asked, new Promise(r => setTimeout(() => r(null), 2500))]);
+  const squash = t => String(t || '').replace(/\s+/g, '');
+  const out = {};
+  Object.entries(got?.halachot || {}).forEach(([n, h]) => {
+    const i = +n - 1;
+    if (Array.isArray(h?.he) && Array.isArray(h?.en) && h.he.length === h.en.length && h.he.length > 1
+      && squash(h.he.join('')) === squash(heSegs[i]) && _rbEnParas(enSegs[i]).length === h.en.reduce((a, b) => a + b, 0)) out[i] = { he: h.he, en: h.en };
+  });
+  return out;
+}
 async function _fetchRambamChapter(ref) {
   const enc = encodeURIComponent(ref);
   // The translator's footnotes are kept (one list per chapter) and shown as
@@ -5158,6 +5178,7 @@ async function _fetchRambamChapter(ref) {
   // An opening piece (the introduction, the mitzvos, the contents): the day's
   // range of it, every paragraph (the contents' sections one after another)
   const op = _rambamOpening(ref);
+  const parasAsked = op ? null : _askRambamParas(ref);   // asked now, alongside the text
   const deep = x => typeof x === 'string' ? [x] : Array.isArray(x) ? x.flatMap(deep) : [];
 
   // v3 API for English — ask for the Touger translation by name (it carries the
@@ -5238,7 +5259,7 @@ async function _fetchRambamChapter(ref) {
         // how many sections came (the contents), to check it's the whole day's range
         sectionCount: op.sections ? (Array.isArray(heRes?.he?.[0]) ? heRes.he.length : 1) : null } };
   }
-  return { ref, title, heBook, chapter, en: enSegs, he: heSegs, notes };
+  return { ref, title, heBook, chapter, en: enSegs, he: heSegs, notes, paras: await _rambamParas(parasAsked, enSegs, heSegs) };
 }
 
 function _renderRambamContent() {
@@ -5319,7 +5340,13 @@ function _renderRambamContent() {
           + (lang !== 'en' && he ? '<p class="tz-h rb-h" lang="he" style="direction:rtl;text-align:right;">' + escapeHtml(he.replace(/<[^>]+>/g, '')) + '</p>' : '') + '</div>';
         continue;
       }
-      const en = _rambamNoteMarkers(styleBrackets(enRaw.replace(/^\uE00A+|\uE00A+$/g, ''), marked), chIdx).split(RB_PARA).join('<span class="rb-para"></span>');
+      // The translation's paragraphs, each styled on its own (so a paragraph break
+      // never cuts through the styling), and joined by a small gap
+      const styled = _rbEnParas(enRaw).map(p => _rambamNoteMarkers(styleBrackets(p, marked), chIdx));
+      const PARA = '<span class="rb-para"></span>';
+      const en = styled.join(PARA);
+      // The Hebrew split to match (see _rambamParas): pieces, and how many English paragraphs go with each
+      const pg = chapter.paras?.[i];
       // The mitzvos keep the Rambam's own numbers (mitzvah 84, 85…); the
       // introduction's paragraphs and the contents' lines aren't halachos: no numbers
       const num    = op ? (op.numbered ? op.from + i : null) : i + 1;
@@ -5331,14 +5358,25 @@ function _renderRambamContent() {
       const enMark = num ? '<span class="rd-vn">' + num + '</span>' : '';
       const heMark = num ? '<span class="rd-vn">' + heNum + '</span>' : '';
 
-      if (lang === 'both') {
+      if (lang === 'both' && pg) {
+        // Each paragraph beside its Hebrew, in rows that line up
+        let k = 0;
+        pg.he.forEach((piece, j) => {
+          const enPart = styled.slice(k, k + pg.en[j]).join(PARA); k += pg.en[j];
+          const last = j === pg.he.length - 1;
+          v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:' + (j ? '4px' : '14px') + ' 0 ' + (last ? '13px' : '6px') + ';' + (last ? 'border-bottom:1px solid var(--border);' : '') + 'align-items:start;">';
+          v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + (j ? '' : enMark) + enPart + '</p>';
+          v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + (j ? '' : heMark) + piece + '</p>';
+          v += '</div>';
+        });
+      } else if (lang === 'both') {
         v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + enMark + en + '</p>';
         v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
-        v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
+        v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + (pg ? pg.he.join(PARA) : he) + '</p>';
         v += '</div>';
       } else {
         v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';

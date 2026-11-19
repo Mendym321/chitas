@@ -70,7 +70,8 @@ const claude = createServer((req, res) => {
   let body = ''; req.on('data', c => body += c); req.on('end', () => {
     claudeCalls++;
     claude.lastRequest = JSON.parse(body);
-    const answer = JSON.stringify(claude.lastRequest.system.includes('PIECES') ? (tanyaAnswers.shift() || fakeSplits) : fakeQuiz);
+    const sys = claude.lastRequest.system;
+    const answer = JSON.stringify(sys.includes('PIECES') ? (tanyaAnswers.shift() || fakeSplits) : sys.includes('You line up') ? fakeParas : fakeQuiz);
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
       id: 'msg_test', type: 'message', role: 'assistant', model: 'claude-opus-5-5',
       content: [{ type: 'text', text: answer }],
@@ -82,6 +83,8 @@ process.env.ANTHROPIC_BASE_URL = 'http://localhost:' + claude.address().port;
 process.env.ANTHROPIC_API_KEY = 'test-key';
 
 const tanyaAnswers = [];   // queued answers for particular tests (then fakeSplits)
+// Pretend Claude for the Rambam's paragraphs: one start that's in the Hebrew, one that isn't
+const fakeParas = { halachot: [{ index: 1, starts: ['כיצד', 'מילים שאינן כאן'] }] };
 // Pretend Claude for Tanya: a good split (typed without vowels, with a heading),
 // a made-up start, a recap and a summary
 const fakeSplits = { chapterIntro: 'should be dropped mid-chapter', recap: 'So far: every Jew has two souls.', summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
@@ -105,6 +108,9 @@ globalThis.fetch = async (url, opts) => {
     const url = iso === now ? 'Tanya,_Part_I;_Likkutei_Amarim.1.2' : iso === tmrw.toISOString().slice(0, 10) ? 'Tanya,_Part_I;_Likkutei_Amarim.2.1' : day % 3 === 0 ? 'Tanya,_Part_I;_Likkutei_Amarim.2.1' : 'Tanya,_Part_I;_Likkutei_Amarim.1.' + (day % 3 === 1 ? 2 : 3);
     return new Response(JSON.stringify({ calendar_items: [{ title: { en: 'Tanya Yomi' }, url }] }), { headers: { 'content-type': 'application/json' } });
   }
+  if (u.includes('Mishneh%20Torah%2C%20Test')) return new Response(JSON.stringify(u.includes('/api/v3/') ? { versions: [{ language: 'en', text: [
+    'A rule about oaths.<br>What is implied? A case.<br>And a last word.<sup class="footnote-marker">1</sup><i class="footnote">a <i>translator\'s</i> note</i>',
+    'A short halacha.'] }] } : { he: ['כְּלָל בִּשְׁבוּעוֹת. כֵּיצַד? מַעֲשֶׂה. סוֹף דָּבָר.', 'הֲלָכָה קְצָרָה.'] }), { headers: { 'content-type': 'application/json' } });
   if (u.includes('/api/texts/Tanya')) return new Response(JSON.stringify({
     he: ['ראשון', 'וְהִנֵּה בְּכָל נֶפֶשׁ יִשְׂרָאֵל יֵשׁ שְׁתֵּי נְפָשׁוֹת. נֶפֶשׁ אַחַת הִיא מִצַּד הַקְּלִיפָּה. ונפש השנית היא חלק אלוק ממעל ממש.', '<small>הגהה<br>הערה</small>'],
     text: ['First', 'Every Jew has two souls.<sup class="footnote-marker">1</sup><i class="footnote"> See ch. <i>2</i>.</i> One soul comes from the kelipah. The second soul is truly a part of G-d above.', '<small>NOTE: a gloss</small>'],
@@ -234,6 +240,27 @@ written[writtenKey(P.chapterSlug, P.startVerse, P.endVerse)].segments[0].splits[
 await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
 const w2 = await tanya(T, null);
 check('a written guide with a cut that isn\'t in the text → the AI prepares it instead', [claudeCalls - callsW, w2.json.recap], [1, 'So far: every Jew has two souls.']);
+
+// ── The Rambam's Hebrew split to match the English paragraphs ────────────────
+{
+  console.log('\nRambam paragraphs (api/rambam-paras.js):');
+  const { default: paras } = await import('../api/rambam-paras.js');
+  const run = async ref => { const res = fakeRes(); await paras({ method: 'GET', query: { ref } }, res); return { status: res.code, json: res.body }; };
+  const c0 = claudeCalls;
+  check('not one Mishneh Torah chapter → 400, no AI call', [(await run('Mishneh Torah, Test Laws 1-3')).status, (await run('hello')).status, claudeCalls - c0], [400, 400, 0]);
+  const p1 = await run('Mishneh Torah, Test Laws 1');
+  check('first time: one AI call; the Hebrew cut at the start that was found, the unfound paragraph kept with the one before',
+    [p1.status, claudeCalls - c0, p1.json.halachot], [200, 1, { 1: { he: ['כְּלָל בִּשְׁבוּעוֹת.', 'כֵּיצַד? מַעֲשֶׂה. סוֹף דָּבָר.'], en: [1, 2] } }]);
+  const asked = claude.lastRequest.messages[0].content;
+  check('the AI saw only the halacha with paragraphs, without the footnote', [asked.includes('[halacha 1]'), asked.includes('[halacha 2]'), asked.includes('translator'), asked.includes('EN 3: And a last word.')], [true, false, false, true]);
+  const p2 = await run('Mishneh Torah, Test Laws 1');
+  check('asked again → saved, no AI call', [p2.status, claudeCalls - c0, JSON.stringify(p2.json.halachot) === JSON.stringify(p1.json.halachot)], [200, 1, true]);
+  store.set('rambam_paras_usage/all', { date: new Date().toISOString().slice(0, 10), count: 120 });
+  check("today's limit of new chapters reached → 429, no AI call", [(await run('Mishneh Torah, Test Laws 2')).status, claudeCalls - c0, (await run('Mishneh Torah, Test Laws 1')).status], [429, 1, 200]);
+  store.delete('rambam_paras_usage/all');
+  const { cutHalacha } = await import('../api/_lib/rambam-paras.js');
+  check('no start found → no cut at all', cutHalacha('אבג דהו', 3, ['', 'לא כאן']), null);
+}
 
 claude.close();
 console.log('Delete account API:');

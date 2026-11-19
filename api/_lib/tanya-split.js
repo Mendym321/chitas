@@ -66,3 +66,18 @@ export function applySplits(he, en, splits) {
     return piece;
   });
 }
+
+// Where each phrase starts in a Hebrew text, in order (vowels, punctuation and
+// combined letters ignored, as above): positions, -1 for a phrase not found
+// after the one before. Used to line up the Rambam's Hebrew with the
+// paragraphs of its English translation (rambam-paras.js).
+export function hebrewStarts(text, phrases) {
+  text = String(text || '');
+  const sk = skeleton(text);
+  let last = 0;
+  return (phrases || []).map(p => {
+    const at = findStart(text, sk, p, last);
+    if (at > 0) last = at;
+    return at > 0 ? at : -1;
+  });
+}
