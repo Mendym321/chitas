@@ -1,6 +1,6 @@
 // The Tanya guide for one daily portion: the text cut into small Hebrew/English
 // pairs, with a chapter intro (first day of a chapter), a "so far" recap
-// (other days), a summary of today, short headings that show the flow, and
+// (other days), a summary of today, a few plain-words bridges that help follow the argument (older guides: headings), and
 // the translator's footnotes.
 //
 // The text itself is NEVER rewritten: the AI only says where each piece starts
@@ -19,7 +19,7 @@ import { writtenGuide } from './tanya-written.js';
 
 export const MODEL = 'claude-opus-5-5';
 const SEFARIA = 'https://www.sefaria.org';
-const CACHE_VERSION = 'v8';          // v8 = smaller pieces, short lead-in and synopsis, safer numbering. Guides are saved by text, so a portion that comes round next year is read, not prepared again: change this only when the guide's format changes (v9, guiding notes, was tried in Nov 2026 and dropped)
+const CACHE_VERSION = 'v11';         // v11 = bridges in place of headings (Dec 2026); v8 = headings. Guides are saved by text, so a portion that comes round next year is read, not prepared again: change this only when the guide's format changes (v9, guiding notes, was tried and dropped)
 
 export function guideDocId(slug, startVerse, endVerse) {
   return Buffer.from(`slug:${slug}|${startVerse}|${endVerse ?? 'end'}|${CACHE_VERSION}`).toString('base64url');
@@ -48,8 +48,8 @@ const GuideSchema = z.object({
   summary: z.string(),
   segments: z.array(z.object({
     index: z.number().int(),
-    heading: z.string(),
-    splits: z.array(z.object({ he: z.string(), en: z.string(), heading: z.string() })),
+    bridge: z.string(),
+    splits: z.array(z.object({ he: z.string(), en: z.string(), bridge: z.string() })),
   })),
 });
 
@@ -57,7 +57,7 @@ const SYSTEM = `You prepare the daily Tanya portion for people who learn it ever
 
 1. PIECES ("segments"). Today's portion comes in segments labelled [segment 1 of N], [segment 2 of N], and so on; "index" is that number (1 to N), whatever the chapter's own numbering. List EVERY segment, in order. Cut each one into small pieces so a beginner can take it in one breath: a piece is one step of the argument, usually one clause, about 5 to 15 English words (two lines on a phone). Cut at sentence ends, semicolons, colons and dashes, and before a new step such as "therefore", "for", "however", "that is", "this means", "as is written", "but", "rather", a quoted verse or a new example, wherever BOTH languages have a matching break. Never leave a piece longer than about 20 English words if there is any matching break inside it; never cut a piece shorter than about 4 words, and never cut inside a quotation. For each cut give the first 3 to 6 words of the new piece, copied exactly from the text, in Hebrew ("he") and in the English that translates it ("en"). The text before the first cut is the segment's first piece.
 
-2. HEADINGS. To show the flow, give a short heading (2 to 6 plain English words, sentence case, no final period) where a new step of the argument begins: for example "The question", "Love is not enough on its own", "A proof from the verse", "Back to the main point". Put it on the segment ("heading", for a step that starts with the segment) or on a cut ("heading" in that split). Use one roughly every 3 to 6 pieces; use "" everywhere else.
+2. BRIDGES. Between the pieces, add a few short bridges: plain-English explanation, shown in a shaded box, that helps a beginner follow the argument, the way the explanatory notes in a good translation do. A bridge either sums up in plain words what the last few pieces established ("Two problems with the oath, then: it seems to contradict the Mishnah, and seeing yourself as wicked should lead either to sadness or to not caring at all."), or says what the next pieces set out to do or ask, when the text doesn't make that obvious ("Before he can answer, he needs to say what 'tzaddik,' 'rasha' and 'beinoni' actually mean."). Give context a beginner lacks only when the argument depends on it ("Rabbah was one of the great sages of the Talmud. If even he could think of himself as a beinoni, a beinoni must be someone on a very high level."). Stay strictly inside the text: explain what it says; never add ideas, sources, opinions or lessons it doesn't contain. One or two plain sentences, under 40 words, warm and direct. Don't overdo it: one bridge per real step of the argument, usually 3 to 6 in a portion, none where the text is already clear, and never just the next piece in other words. Put a bridge on the segment ("bridge", when it comes just before the segment's start) or on a cut ("bridge" in that split), so it stands just before the piece it leads into; use "" everywhere else.
 
 3. "chapterIntro": only when the portion starts at the beginning of the chapter. At most 2 short sentences, under 35 words in all: where the previous chapter left off and what this chapter takes up, leading into today (e.g. "Today he begins by..."). Otherwise "".
 
@@ -65,7 +65,7 @@ const SYSTEM = `You prepare the daily Tanya portion for people who learn it ever
 
 5. "summary": the synopsis, read after the text. At most 2 short sentences, under 30 words in all: where today's portion landed.
 
-HOW TO WRITE THE GUIDE. Its only job is to help the reader follow the flow of today's Tanya. Write the way a good teacher speaks to a student: plain, warm, everyday English, short sentences (under 20 words). Use the text's own key terms only when needed, and then say what they mean in a few plain words in passing. Headings are plain English, with no untranslated Hebrew words. Stay precise and faithful to the text: no forward references to later portions, no invented sources, no sermonizing.`;
+HOW TO WRITE THE GUIDE. Its only job is to help the reader follow the flow of today's Tanya. Write the way a good teacher speaks to a student: plain, warm, everyday English, short sentences (under 20 words). Use the text's own key terms only when needed, and then say what they mean in a few plain words in passing. Bridges are plain English, with no untranslated Hebrew words. Stay precise and faithful to the text: no forward references to later portions, no invented sources, no sermonizing.`;
 
 async function askAI({ book, chapterNum, startVerse, heSegs, enSegs, before, previous, feedback }) {
   const parts = [`${book}, chapter ${chapterNum}. ${startVerse > 1 ? "Today's portion starts in the middle of the chapter." : "Today's portion starts at the beginning of the chapter."}`];
@@ -144,9 +144,11 @@ export function assemble(ai, heSegs, enSegs, hagahah, startVerse) {
   const blocks = [];
   heSegs.forEach((he, i) => {
     const seg = segs[i] || {};
-    applySplits(he, enSegs[i], seg.splits || []).forEach((p, k) => {
+    // A bridge (or, in written guides from before Dec 2026, a heading) goes before the piece it leads into
+    const splits = (seg.splits || []).map(x => ({ ...x, heading: x.bridge ?? x.heading }));
+    applySplits(he, enSegs[i], splits).forEach((p, k) => {
       if (!p.he && !p.en) return;
-      const heading = k === 0 ? String(seg.heading || '').trim() : p.heading;
+      const heading = k === 0 ? String(seg.bridge ?? seg.heading ?? '').trim() : p.heading;
       blocks.push({ he: p.he, en: p.en, isHagahah: hagahah[i], ...(heading && !hagahah[i] ? { heading } : {}) });
     });
   });
@@ -206,7 +208,7 @@ async function generate(db, cacheDoc, chapterSlug, startVerse, endVerse) {
       intro: startVerse === 1 ? String(w.chapterIntro || '').trim() : '',
       recap: startVerse > 1 ? String(w.recap || '').trim() : '',
       summary: String(w.summary || '').trim(),
-      notes, blocks: wBlocks, model: 'written', generatedAt: new Date().toISOString(),
+      notes, blocks: wBlocks, flow: w.flow || 'headings', model: 'written', generatedAt: new Date().toISOString(),
       usage: { inputTokens: 0, outputTokens: 0, costUSD: 0 },
     };
     await cacheDoc.set(guide);
@@ -219,7 +221,7 @@ async function generate(db, cacheDoc, chapterSlug, startVerse, endVerse) {
   let blocks = assemble(ai, heSegs, enSegs, hagahah, startVerse);
   // Quality check: pieces still long, or no headings → ask once more, keep the better one
   if (!looksGood(blocks)) {
-    const again = await ask('A first try came back with pieces that were too long or without headings. Please list every segment with its cuts (pieces of about 5 to 15 English words) and headings.').catch(() => null);
+    const again = await ask('A first try came back with pieces that were too long or without bridges. Please list every segment with its cuts (pieces of about 5 to 15 English words) and a few bridges.').catch(() => null);
     if (again) {
       const b2 = assemble(again, heSegs, enSegs, hagahah, startVerse);
       ai = { ...(score(b2) > score(blocks) ? again : ai), usage: addUsage(ai.usage, again.usage) };
@@ -232,7 +234,7 @@ async function generate(db, cacheDoc, chapterSlug, startVerse, endVerse) {
     intro: startVerse === 1 ? String(ai.chapterIntro || '').trim() : '',
     recap: startVerse > 1 ? String(ai.recap || '').trim() : '',
     summary: String(ai.summary || '').trim(),
-    notes, blocks, model: MODEL, generatedAt: new Date().toISOString(),
+    notes, blocks, flow: 'bridges', model: MODEL, generatedAt: new Date().toISOString(),
     // Kept so the real cost can be checked in Firebase (collection tanya_enhanced)
     usage: { inputTokens: ai.usage?.input_tokens ?? null, outputTokens: ai.usage?.output_tokens ?? null, costUSD: costOf(ai.usage) },
   };

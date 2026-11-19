@@ -11,10 +11,10 @@ import { WRITTEN } from './tanya-written-data.js';
 export const writtenKey = (slug, startVerse, endVerse) =>
   String(slug).replace(/^.*;_?/, '').replace(/_/g, ' ').replace(/\.(\d+)$/, ' $1') + '|' + startVerse + '|' + (endVerse ?? 'end');
 
-// Written compactly, as { intro, recap, summary, flow, segs: [[note, [[he, en, note?], ...]], ...] }
+// Written compactly, as { intro, recap, summary, flow, segs: [[bridge, [[he, en, bridge?], ...]], ...] }
 // (one entry per segment: its note, then its cuts); returned in the AI's shape.
-// flow 'notes' (since Dec 2026): a few guiding notes, only where the thread could
-// be lost; older entries have headings instead.
+// flow 'bridges' (since Dec 2026): a few plain-words bridges between the pieces,
+// each before the piece it leads into; older entries have headings instead.
 export function writtenGuide(slug, startVerse, endVerse) {
   const w = WRITTEN[writtenKey(slug, startVerse, endVerse)];
   if (!w) return null;

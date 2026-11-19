@@ -349,6 +349,8 @@ await check('the new guides: Tanya\'s guiding notes (older guides keep headings)
     _rv.sid = 'tanya'; _renderTanyaContent(); const el = document.getElementById('native-reader-content');
     return [el.querySelectorAll('.tz-note').length, el.querySelectorAll('.tz-h').length]; };
   const r = [tanya('notes'), tanya('headings')];
+  window._tanyaData.guide.flow = 'bridges'; _renderTanyaContent();
+  r.push(document.querySelectorAll('#native-reader-content .tz-bridge').length);
   _guides.rambam = { 'Sales 9': { about: 'What it decides.', parts: ['First', 'Second'], why: { 2: 'Because.' }, takeaways: ['One', 'Two'] } };
   window._rambamData = { chapters: [{ title: 'Sales 9', chapter: 9, en: ['a', 'b'], he: ['א', 'ב'], notes: [] }] };
   _rv.sid = 'rambam'; _renderRambamContent();
@@ -357,7 +359,7 @@ await check('the new guides: Tanya\'s guiding notes (older guides keep headings)
     el.querySelector('.rb-why')?.textContent, el.querySelectorAll('.rb-take li').length);
   [_rv.sid, window._tanyaData, window._rambamData, _guides.rambam] = keep; el.innerHTML = '';
   return r;
-}, [[1, 0], [0, 1], ['This chapter', 'In two parts', "Today's takeaways"], 2, 'The difference Because.', 2]);
+}, [[1, 0], [0, 1], 1, ['This chapter', 'In two parts', "Today's takeaways"], 2, 'The difference Because.', 2]);
 
 await check('Rambam: the translation\'s own paragraph breaks (<br> on Sefaria) show as paragraphs, not run together', () => {
   localStorage.setItem('chitas_lang_rambam', 'en');

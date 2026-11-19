@@ -869,6 +869,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rb-map, .rb-take { margin:4px 0 0; padding-left:20px; } .rb-map li, .rb-take li { margin:3px 0; } .rb-take li { margin:5px 0; }
 .rb-why { font-family:var(--read-font); font-style:italic; font-size:15px; line-height:1.45; color:var(--t2); border-left:2px solid color-mix(in srgb, var(--rc) 30%, transparent); padding:2px 0 2px 10px; margin:8px 0 12px; }
 .rb-why b { font:600 11px var(--ui-font); font-style:normal; color:var(--t3); margin-right:3px; }
+.tz-bridge { font-family:var(--read-font); font-size:16px; line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--purple) 7%, var(--bg)); border-radius:10px; padding:10px 13px; margin:8px 0 16px; }   /* Tanya's guide: plain words that help follow the argument */
 .tz-note { font-family:var(--read-font); font-style:italic; font-size:16px; line-height:1.45; color:var(--purple); border-left:2px solid color-mix(in srgb, var(--purple) 30%, transparent); padding:1px 0 1px 11px; margin:22px 0 12px; }   /* Tanya's guide: a word from a chavrusa where the thread could be lost */
 .tz-p { margin-bottom:16px; }
 .tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
@@ -5966,10 +5967,10 @@ function _renderTanyaContent() {
     if (!b.he && !b.en) return;
     if (b.isHagahah && !inHag) { v += '<div class="tz-hag"><p class="tz-hl" lang="he">הגהה</p>'; inHag = true; }
     if (!b.isHagahah && inHag) { v += '</div>'; inHag = false; }
-    // The guide in between: a word from a chavrusa where the thread could be lost
-    // (guides written since Dec 2026, flow 'notes'), or, in older ones, headings
+    // The guide in between: a bridge in plain words that helps follow the argument
+    // (guides since Dec 2026, flow 'bridges'), or, in older ones, a heading
     if ((guideOn || b.always) && b.heading && !b.isHagahah)
-      v += (g?.flow === 'notes' && !b.always ? '<p class="tz-note">' : '<p class="tz-h">') + escapeHtml(b.heading) + '</p>';
+      v += (g?.flow === 'bridges' && !b.always ? '<p class="tz-bridge">' : g?.flow === 'notes' && !b.always ? '<p class="tz-note">' : '<p class="tz-h">') + escapeHtml(b.heading) + '</p>';
     const opening = d.isFirstSegment && !opened && !b.isHagahah;
     if (!b.isHagahah) opened = true;
     v += piece(b, opening);

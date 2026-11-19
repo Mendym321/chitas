@@ -89,8 +89,8 @@ const fakeParas = { halachot: [{ index: 1, starts: ['כיצד', 'מילים שא
 // Pretend Claude for Tanya: a good split (typed without vowels, with a heading),
 // a made-up start, a recap and a summary
 const fakeSplits = { chapterIntro: 'should be dropped mid-chapter', recap: 'So far: every Jew has two souls.', summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
-  { index: 1, heading: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', heading: 'The first soul' }, { he: 'מילים שלא קיימות', en: 'The second soul', heading: 'never shown' }] },
-  { index: 2, heading: '', splits: [] },
+  { index: 1, bridge: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', bridge: 'The first soul' }, { he: 'מילים שלא קיימות', en: 'The second soul', bridge: 'never shown' }] },
+  { index: 2, bridge: '', splits: [] },
 ]};
 
 // ── Pretend Sefaria ──────────────────────────────────────────────────────────
@@ -195,7 +195,7 @@ check('split at the real start only (vowels ignored); the made-up one is ignored
 check('Hebrew is the exact original text', t1.json.blocks.slice(0, 2).map(b => b.he).join(' '),
   'וְהִנֵּה בְּכָל נֶפֶשׁ יִשְׂרָאֵל יֵשׁ שְׁתֵּי נְפָשׁוֹת. נֶפֶשׁ אַחַת הִיא מִצַּד הַקְּלִיפָּה. ונפש השנית היא חלק אלוק ממעל ממש.');
 check('the Alter Rebbe\'s gloss (hagahah) is marked, without its label', [t1.json.blocks.map(b => b.isHagahah), t1.json.blocks[2].he], [[false, false, true], 'הערה']);
-check('headings: on the segment and on the cut that was found', t1.json.blocks.map(b => b.heading || ''), ['Two souls', 'The first soul', '']);
+check('bridges: on the segment and on the cut that was found; the guide says it has bridges', [t1.json.blocks.map(b => b.heading || ''), t1.json.flow], [['Two souls', 'The first soul', ''], 'bridges']);
 check('translator\'s footnote kept as a note', t1.json.notes, ['See ch. 2.']);
 check('mid-chapter: recap and summary, no chapter intro', [t1.json.recap, t1.json.summary, t1.json.intro], ['So far: every Jew has two souls.', 'The Alter Rebbe continues explaining the two souls.', '']);
 check('the real cost of each guide is kept with it', t1.json.source === 'cache' && typeof store.get('tanya_enhanced/' + guideDocId(P.chapterSlug, P.startVerse, P.endVerse)).usage?.costUSD, 'number');

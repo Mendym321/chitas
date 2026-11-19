@@ -68,5 +68,5 @@ const reply = (p, g, source) => ({
   ...p, source,
   intro: g.intro || '', recap: g.recap || '', summary: g.summary || '',
   notes: g.notes || [], blocks: g.blocks,
-  flow: g.flow || 'headings',   // the guide in between: guiding notes, or (older guides) headings
+  flow: g.flow || 'headings',   // the guide in between: bridges, or (older guides) headings
 });
