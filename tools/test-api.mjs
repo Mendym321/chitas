@@ -1,3 +1,4 @@
+import { readFileSync, readdirSync } from 'node:fs';
 /**
  * End-to-end tests of api/quiz.js, api/tanya-enhance.js and api/delete-account.js with pretend
  * Sefaria, Claude and Firebase (no internet or API keys needed). Checks
@@ -244,8 +245,10 @@ check('a written guide with a cut that isn\'t in the text → the AI prepares it
 // ── The Rambam's Hebrew split to match the English paragraphs ────────────────
 {
   console.log('\nRambam paragraphs (api/rambam-paras.js):');
-  const { default: paras } = await import('../api/rambam-paras.js');
-  const run = async ref => { const res = fakeRes(); await paras({ method: 'GET', query: { ref } }, res); return { status: res.code, json: res.body }; };
+  // (served by the tanya-enhance function, through the rewrite in vercel.json)
+  const run = async ref => { const res = fakeRes(); await tanyaHandler({ method: 'GET', query: { kind: 'rambam-paras', ref }, headers: {} }, res); return { status: res.code, json: res.body }; };
+  const vj = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+  check('/api/rambam-paras is rewritten to the tanya-enhance function (12 functions at most)', [vj.rewrites.some(r => r.source === '/api/rambam-paras' && r.destination === '/api/tanya-enhance?kind=rambam-paras'), readdirSync(new URL('../api', import.meta.url)).filter(f => f.endsWith('.js')).length <= 12], [true, true]);
   const c0 = claudeCalls;
   check('not one Mishneh Torah chapter → 400, no AI call', [(await run('Mishneh Torah, Test Laws 1-3')).status, (await run('hello')).status, claudeCalls - c0], [400, 400, 0]);
   const p1 = await run('Mishneh Torah, Test Laws 1');
