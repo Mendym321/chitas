@@ -3,7 +3,7 @@
  *
  * The Tanya guide for that day's Tanya Yomi (see api/_lib/tanya-guide.js): the
  * text in small Hebrew/English pieces, a chapter intro or "so far" recap, a
- * summary, flow headings and the translator's footnotes. The text is never
+ * summary, guiding notes (older guides: headings) and the translator's footnotes. The text is never
  * rewritten.
  *
  * The server works out the day's portion itself (from Sefaria's calendar), so
@@ -65,4 +65,5 @@ const reply = (p, g, source) => ({
   ...p, source,
   intro: g.intro || '', recap: g.recap || '', summary: g.summary || '',
   notes: g.notes || [], blocks: g.blocks,
+  flow: g.flow || 'headings',   // the guide in between: guiding notes, or (older guides) headings
 });

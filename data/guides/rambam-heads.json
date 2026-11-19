@@ -1412,43 +1412,103 @@
  "Hiring 10": [
   [
    1,
-   "A lender with security"
+   "A lender with security is a paid watchman"
+  ],
+  [
+   2,
+   "Watching for each other"
   ],
   [
    3,
-   "Craftsmen"
+   "A craftsman, until he says \"I'm done\""
   ],
   [
    4,
-   "Ruined work"
+   "A craftsman who ruins the work pays"
+  ],
+  [
+   5,
+   "Experts who work for free"
   ],
   [
    6,
-   "Planting trees"
+   "A planter who caused a loss"
+  ],
+  [
+   7,
+   "Town workers who err can be removed"
   ]
  ],
  "Hiring 11": [
   [
    1,
-   "Pay on time"
+   "Pay a worker on time"
+  ],
+  [
+   2,
+   "His life depends on it; when the wage is due"
   ],
   [
    3,
-   "When it doesn't apply"
+   "A tailor holding the garment"
+  ],
+  [
+   4,
+   "Hired through an agent, or not asked"
+  ],
+  [
+   5,
+   "Once late, he must pay at once"
   ],
   [
    6,
-   "Disputes over wages"
+   "\"I paid you\": the worker swears and collects"
+  ],
+  [
+   7,
+   "A dispute over the amount"
+  ],
+  [
+   8,
+   "A tailor, while he holds the garment"
+  ],
+  [
+   9,
+   "Going easy on a worker's oath"
   ]
  ],
  "Hiring 12": [
   [
    1,
-   "Eating while working"
+   "A worker may eat from the produce"
+  ],
+  [
+   2,
+   "Harvested produce, and growing produce"
+  ],
+  [
+   3,
+   "Not stopping work to eat, or taking it home"
   ],
   [
    4,
-   "Which work allows it"
+   "Not milk or cheese; not watchmen"
+  ],
+  [
+   5,
+   "Only before tithing or challah is due"
+  ],
+  [
+   6,
+   "Produce already finished"
+  ],
+  [
+   8,
+   "Who eats by Torah right"
+  ],
+  [
+   9,
+   "Watchmen, by custom"
   ],
   [
    10,
@@ -1456,11 +1516,19 @@
   ],
   [
    11,
-   "How much"
+   "As much as he wants, not gluttony"
+  ],
+  [
+   12,
+   "Grapes, then juice"
   ],
   [
    13,
    "Not for his family"
+  ],
+  [
+   14,
+   "Giving up the right"
   ]
  ],
  "Hiring 13": [
@@ -2647,6 +2715,1122 @@
   [
    12,
    "Pulled away in court"
+  ]
+ ],
+ "Plaintiff and Defendant 10": [
+  [
+   1,
+   "A roaming animal known to be his goes back to its owner"
+  ],
+  [
+   2,
+   "An animal kept enclosed belongs to the one who holds it"
+  ],
+  [
+   3,
+   "Holding it, he may claim a debt up to its value"
+  ],
+  [
+   4,
+   "Servants walk off too; three years of service settles it"
+  ],
+  [
+   5,
+   "He said \"I inherited it\" and may explain what he meant"
+  ],
+  [
+   6,
+   "A disputed boat stays with the court until there's proof"
+  ]
+ ],
+ "Plaintiff and Defendant 11": [
+  [
+   1,
+   "Land known to be Shimon's stays Shimon's"
+  ],
+  [
+   2,
+   "Three years of open use, unprotested, keep it with Reuven"
+  ],
+  [
+   3,
+   "A visit of more than 30 days without protest loses the claim"
+  ],
+  [
+   4,
+   "Why Reuven needn't keep his deed past three years"
+  ],
+  [
+   5,
+   "A protest made far away still reaches him"
+  ],
+  [
+   6,
+   "A protest kept secret is no protest"
+  ],
+  [
+   7,
+   "What a protest must say"
+  ],
+  [
+   8,
+   "A protest lasts three years"
+  ],
+  [
+   9,
+   "The owner who gathered the produce for him"
+  ],
+  [
+   10,
+   "Unless he sold only the produce"
+  ]
+ ],
+ "Plaintiff and Defendant 12": [
+  [
+   1,
+   "Three years to the day, or three harvests for an orchard"
+  ],
+  [
+   2,
+   "A home must be lived in day and night"
+  ],
+  [
+   3,
+   "Travelers must prove it; a store needs only the days"
+  ],
+  [
+   4,
+   "The years must follow one another"
+  ],
+  [
+   5,
+   "Partners taking turns: only with a written agreement"
+  ],
+  [
+   6,
+   "Buyers add up their years, with deeds of sale"
+  ],
+  [
+   7,
+   "Father and son add up their years"
+  ],
+  [
+   8,
+   "Years in the time of the owner and of his son"
+  ],
+  [
+   9,
+   "Use that brings no benefit doesn't count"
+  ],
+  [
+   12,
+   "Benefit through a transgression still counts"
+  ],
+  [
+   13,
+   "Rocky land: used the way such land is used"
+  ],
+  [
+   14,
+   "A spot in someone else's courtyard"
+  ],
+  [
+   15,
+   "Crops left unprotected don't count"
+  ],
+  [
+   16,
+   "Everything he used, except what he didn't"
+  ],
+  [
+   17,
+   "The trees to one, the land to the other"
+  ],
+  [
+   19,
+   "Ten trees a year can win a whole grove"
+  ]
+ ],
+ "Plaintiff and Defendant 13": [
+  [
+   1,
+   "Using it means nothing when the owner wouldn't mind"
+  ],
+  [
+   2,
+   "Nor for men of force, or those who can't make a claim"
+  ],
+  [
+   3,
+   "When the user admits it himself, he's believed"
+  ],
+  [
+   4,
+   "A craftsman, while he works there"
+  ],
+  [
+   5,
+   "A family's sharecropper"
+  ],
+  [
+   6,
+   "Bringing in other sharecroppers is different"
+  ],
+  [
+   7,
+   "A guardian, who was allowed to use it"
+  ],
+  [
+   8,
+   "Partners, spouses, and a son at home"
+  ],
+  [
+   9,
+   "Once they leave the household, the usual law"
+  ],
+  [
+   10,
+   "The exilarchs, who ruled by force"
+  ],
+  [
+   11,
+   "A known robber"
+  ]
+ ],
+ "Plaintiff and Defendant 14": [
+  [
+   1,
+   "Witnesses to a sale help, except for a robber or a husband"
+  ],
+  [
+   2,
+   "A robber's proof of sale doesn't help"
+  ],
+  [
+   3,
+   "A craftsman's son: by purchase, not by inheritance"
+  ],
+  [
+   4,
+   "A robber's son, and his grandson"
+  ],
+  [
+   5,
+   "A gentile can't gain ownership by use"
+  ],
+  [
+   6,
+   "Bought from a gentile who bought it in his presence"
+  ],
+  [
+   7,
+   "No ownership by use of a minor's land"
+  ],
+  [
+   8,
+   "Holding a minor's land as security"
+  ],
+  [
+   9,
+   "If he held it in the father's lifetime"
+  ],
+  [
+   10,
+   "One who fled for his life"
+  ],
+  [
+   11,
+   "A widow's land"
+  ],
+  [
+   12,
+   "Use counts only with a claim"
+  ],
+  [
+   13,
+   "Claiming an inheritance: the father must have lived there"
+  ],
+  [
+   14,
+   "\"I bought it from someone who bought it from you\""
+  ]
+ ],
+ "Plaintiff and Defendant 15": [
+  [
+   1,
+   "A deed first; if it fails, the three years"
+  ],
+  [
+   2,
+   "Witnesses may differ on the crop, not the years"
+  ],
+  [
+   3,
+   "A closer heir turns up"
+  ],
+  [
+   4,
+   "No proof either way: whoever is stronger keeps it"
+  ],
+  [
+   5,
+   "Ancestors' land outweighs years of use"
+  ],
+  [
+   6,
+   "A claim explained, and one changed"
+  ],
+  [
+   7,
+   "\"Three years\" can mean many years"
+  ],
+  [
+   8,
+   "What he admits eating, he pays for"
+  ],
+  [
+   9,
+   "\"The deed is forged, but I really bought it\""
+  ],
+  [
+   10,
+   "\"I wasn't even in the country\""
+  ],
+  [
+   11,
+   "The path to a field was lost"
+  ]
+ ],
+ "Plaintiff and Defendant 16": [
+  [
+   1,
+   "He signed as a witness, so he can't protest"
+  ],
+  [
+   2,
+   "Unless he excluded one row; a judge is different"
+  ],
+  [
+   3,
+   "Advising someone to buy isn't giving up a claim"
+  ],
+  [
+   4,
+   "Offering to buy it, to avoid a dispute"
+  ],
+  [
+   5,
+   "Produce eaten without witnesses: an oath, not payment"
+  ],
+  [
+   6,
+   "One witness to less than three years: he pays"
+  ],
+  [
+   7,
+   "When nobody knows how much he ate"
+  ],
+  [
+   8,
+   "Rent he collected goes to the owner"
+  ],
+  [
+   9,
+   "No false claims to force an oath"
+  ],
+  [
+   10,
+   "\"Keep a distance from words of falsehood\""
+  ]
+ ],
+ "Inheritances 1": [
+  [
+   1,
+   "Children first, sons before daughters"
+  ],
+  [
+   2,
+   "With no children, the father; not the mother"
+  ],
+  [
+   3,
+   "Descendants stand in their parent's place"
+  ],
+  [
+   4,
+   "A son's daughter before a daughter"
+  ],
+  [
+   5,
+   "Each grandchild takes his parent's share"
+  ],
+  [
+   6,
+   "Only the father's family inherits"
+  ],
+  [
+   7,
+   "A mamzer inherits like any son"
+  ],
+  [
+   8,
+   "A husband inherits his wife, not the reverse"
+  ],
+  [
+   9,
+   "Only once she has entered his home"
+  ],
+  [
+   10,
+   "No marriage, no inheritance"
+  ],
+  [
+   11,
+   "Not what she would have inherited later"
+  ],
+  [
+   12,
+   "A husband who died first doesn't inherit her"
+  ],
+  [
+   13,
+   "Nor a son who died before his mother"
+  ]
+ ],
+ "Inheritances 2": [
+  [
+   1,
+   "Two shares for the firstborn"
+  ],
+  [
+   2,
+   "Born after his father died: no double portion"
+  ],
+  [
+   3,
+   "Only a son who was a son from birth"
+  ],
+  [
+   5,
+   "Who reduces the firstborn's share"
+  ],
+  [
+   6,
+   "When it isn't known who was born first"
+  ],
+  [
+   7,
+   "A firstborn's daughter takes his double share"
+  ],
+  [
+   8,
+   "Not from the mother's estate"
+  ],
+  [
+   9,
+   "The father's first child"
+  ],
+  [
+   10,
+   "After a stillbirth"
+  ],
+  [
+   11,
+   "Born by Cesarean"
+  ],
+  [
+   12,
+   "Sons born before converting"
+  ],
+  [
+   13,
+   "Even a mamzer"
+  ],
+  [
+   14,
+   "Midwife, mother and father"
+  ],
+  [
+   15,
+   "A father who can't speak"
+  ],
+  [
+   16,
+   "Clear words are enough"
+  ],
+  [
+   17,
+   "\"A firstborn\" alone isn't"
+  ]
+ ],
+ "Inheritances 3": [
+  [
+   1,
+   "Only what the father owned at his death"
+  ],
+  [
+   2,
+   "A cow's calves count"
+  ],
+  [
+   4,
+   "Growth after the death"
+  ],
+  [
+   5,
+   "Debts owed to the father"
+  ],
+  [
+   6,
+   "Dividing equally gives up the extra share"
+  ],
+  [
+   7,
+   "The yavam inherits his brother"
+  ],
+  [
+   8,
+   "His portions by lot"
+  ],
+  [
+   9,
+   "A widow who died waiting for yibbum"
+  ]
+ ],
+ "Inheritances 4": [
+  [
+   1,
+   "His word about his heirs is accepted"
+  ],
+  [
+   2,
+   "Denying a known brother, or a son"
+  ],
+  [
+   3,
+   "\"My son,\" then \"my servant\""
+  ],
+  [
+   4,
+   "At customs"
+  ],
+  [
+   5,
+   "Not calling a servant \"Papa\""
+  ],
+  [
+   6,
+   "A son by a maidservant"
+  ],
+  [
+   7,
+   "Common knowledge is enough"
+  ],
+  [
+   8,
+   "One brother's word affects only his share"
+  ]
+ ],
+ "Inheritances 5": [
+  [
+   1,
+   "A certain heir before a doubtful one; two doubtful ones share"
+  ],
+  [
+   2,
+   "A tumtum among sons and daughters"
+  ],
+  [
+   3,
+   "A son whose father is unclear"
+  ],
+  [
+   4,
+   "Unclear between the husband and his brother"
+  ],
+  [
+   5,
+   "The grandfather's estate"
+  ],
+  [
+   6,
+   "A house fell on husband and wife"
+  ],
+  [
+   7,
+   "On a man and his grandson"
+  ],
+  [
+   8,
+   "Creditors must prove who died first"
+  ],
+  [
+   9,
+   "Any case where the order is unknown"
+  ]
+ ],
+ "Inheritances 6": [
+  [
+   1,
+   "The order of inheritance can't be changed"
+  ],
+  [
+   2,
+   "Choosing among heirs of equal rank"
+  ],
+  [
+   3,
+   "Not the firstborn's share"
+  ],
+  [
+   5,
+   "\"Give\" works where \"inherit\" doesn't"
+  ],
+  [
+   6,
+   "Any mention of a gift"
+  ],
+  [
+   7,
+   "How to word it"
+  ],
+  [
+   8,
+   "A husband's inheritance, as Torah law"
+  ],
+  [
+   9,
+   "Gentiles"
+  ],
+  [
+   10,
+   "A convert and his father"
+  ],
+  [
+   11,
+   "Not taking from the heirs"
+  ],
+  [
+   12,
+   "A Jew who leaves the faith"
+  ],
+  [
+   13,
+   "Don't favor one child"
+  ]
+ ],
+ "Inheritances 7": [
+  [
+   1,
+   "Clear proof of death"
+  ],
+  [
+   2,
+   "The widow's word isn't enough for the heirs"
+  ],
+  [
+   3,
+   "Signs of certain death are enough for money"
+  ],
+  [
+   4,
+   "Divided on a rumor"
+  ],
+  [
+   5,
+   "The court looks after a captive's property"
+  ],
+  [
+   6,
+   "Crops and rents held by the court"
+  ],
+  [
+   7,
+   "A relative works only fields"
+  ],
+  [
+   8,
+   "Someone who left of his own will"
+  ],
+  [
+   9,
+   "His land stays as he left it"
+  ],
+  [
+   10,
+   "A report that he died"
+  ]
+ ],
+ "Inheritances 8": [
+  [
+   1,
+   "Not to a minor, and not a minor's field to a relative"
+  ],
+  [
+   2,
+   "No relative, even with a document"
+  ]
+ ],
+ "Inheritances 9": [
+  [
+   1,
+   "Undivided heirs are partners"
+  ],
+  [
+   2,
+   "Improving it for themselves"
+  ],
+  [
+   3,
+   "A widow who is also an heir"
+  ],
+  [
+   4,
+   "Brothers he didn't know of"
+  ],
+  [
+   5,
+   "A great Torah scholar's profits"
+  ],
+  [
+   6,
+   "An appointment for his father's sake"
+  ],
+  [
+   7,
+   "\"The money was mine\" needs proof"
+  ],
+  [
+   8,
+   "If they eat separately"
+  ],
+  [
+   9,
+   "A father's note in a brother's hands"
+  ],
+  [
+   10,
+   "Brothers, but not others, must prove it"
+  ],
+  [
+   11,
+   "Living apart costs more"
+  ],
+  [
+   12,
+   "Weddings from the estate"
+  ],
+  [
+   13,
+   "A wedding gift to be repaid"
+  ],
+  [
+   14,
+   "A gift sent in the sons' names"
+  ],
+  [
+   15,
+   "Fine clothes for the eldest"
+  ]
+ ],
+ "Inheritances 10": [
+  [
+   1,
+   "Another brother or a creditor undoes the division"
+  ],
+  [
+   2,
+   "A bequest left out"
+  ],
+  [
+   3,
+   "The clothes they're wearing"
+  ],
+  [
+   4,
+   "Dividing with minors"
+  ],
+  [
+   5,
+   "A guardian for the minors"
+  ],
+  [
+   6,
+   "Who may be a guardian"
+  ],
+  [
+   7,
+   "Removing a guardian"
+  ],
+  [
+   8,
+   "Once of age, his property is his"
+  ]
+ ],
+ "Inheritances 11": [
+  [
+   1,
+   "Investing orphans' money safely"
+  ],
+  [
+   2,
+   "Selling their movables in court"
+  ],
+  [
+   3,
+   "As he would with his own"
+  ],
+  [
+   4,
+   "The guardian runs the estate"
+  ],
+  [
+   5,
+   "No accounting, but an oath"
+  ],
+  [
+   6,
+   "Selling for their food, not to hoard"
+  ],
+  [
+   7,
+   "No risky trades or lawsuits"
+  ],
+  [
+   8,
+   "Not freeing servants"
+  ],
+  [
+   9,
+   "Tithing their food"
+  ],
+  [
+   10,
+   "Mitzvos for them, not charity from them"
+  ],
+  [
+   11,
+   "Charity from one who can't decide"
+  ],
+  [
+   12,
+   "Precise accounts, before the Father of orphans"
+  ]
+ ],
+ "The Sanhedrin and the Penalties within Their Jurisdiction 1": [
+  [
+   1,
+   "Judges, and officers who enforce"
+  ],
+  [
+   2,
+   "In every city, in Eretz Yisrael"
+  ],
+  [
+   3,
+   "The Great Sanhedrin, and courts of 23"
+  ],
+  [
+   4,
+   "A court of three"
+  ],
+  [
+   5,
+   "No court without real scholars"
+  ],
+  [
+   6,
+   "Valid, middling, and wise courts"
+  ],
+  [
+   7,
+   "Three rows of scholars before the court"
+  ],
+  [
+   8,
+   "Moving up to fill a seat"
+  ],
+  [
+   9,
+   "Two scribes, one for each side"
+  ],
+  [
+   10,
+   "Why 120 people"
+  ]
+ ],
+ "The Sanhedrin and the Penalties within Their Jurisdiction 2": [
+  [
+   1,
+   "Who sits on a Sanhedrin"
+  ],
+  [
+   2,
+   "Kohanim and Leviim"
+  ],
+  [
+   3,
+   "Not the very old, or the childless"
+  ],
+  [
+   4,
+   "Not the king; the High Priest may"
+  ],
+  [
+   5,
+   "Kings of David's line, and of Israel"
+  ],
+  [
+   6,
+   "Without blemish, and knowing languages"
+  ],
+  [
+   7,
+   "Seven traits of every judge"
+  ],
+  [
+   8,
+   "Promoted from court to court"
+  ],
+  [
+   9,
+   "Who can't sit on a court of three"
+  ],
+  [
+   10,
+   "One judge by Torah law, three by the Sages"
+  ],
+  [
+   11,
+   "An expert alone, but better with others"
+  ],
+  [
+   12,
+   "Taking the law into one's own hands"
+  ],
+  [
+   13,
+   "More judges are better"
+  ],
+  [
+   14,
+   "Know who you're sitting with"
+  ]
+ ],
+ "The Sanhedrin and the Penalties within Their Jurisdiction 3": [
+  [
+   1,
+   "When the courts sit"
+  ],
+  [
+   2,
+   "At least 23 always present"
+  ],
+  [
+   3,
+   "No judging at night"
+  ],
+  [
+   4,
+   "No testimony at night, but a case may end"
+  ],
+  [
+   5,
+   "No dividing an estate at night"
+  ],
+  [
+   6,
+   "A dying man's wishes"
+  ],
+  [
+   7,
+   "The Divine Presence rests on the court"
+  ],
+  [
+   8,
+   "Appointing an unfit judge"
+  ],
+  [
+   9,
+   "A judge who paid for his post"
+  ],
+  [
+   10,
+   "The sages ran from judging"
+  ]
+ ],
+ "The Sanhedrin and the Penalties within Their Jurisdiction 4": [
+  [
+   1,
+   "From Moshe, teacher to student"
+  ],
+  [
+   2,
+   "Given by title, not by hands"
+  ],
+  [
+   3,
+   "By three judges"
+  ],
+  [
+   4,
+   "Only courts of Eretz Yisrael are \"Elohim\""
+  ],
+  [
+   5,
+   "With the nasi's permission"
+  ],
+  [
+   6,
+   "Only in Eretz Yisrael"
+  ],
+  [
+   7,
+   "Many at once"
+  ],
+  [
+   8,
+   "Authority for some matters"
+  ],
+  [
+   9,
+   "Or for a time"
+  ],
+  [
+   10,
+   "Blind in one eye"
+  ],
+  [
+   11,
+   "Could semichah start again?"
+  ],
+  [
+   12,
+   "Ordained judges abroad"
+  ],
+  [
+   13,
+   "The exilarchs"
+  ],
+  [
+   14,
+   "Whose license reaches where"
+  ],
+  [
+   15,
+   "An unfit appointment means nothing"
+  ]
+ ],
+ "The Sanhedrin and the Penalties within Their Jurisdiction 5": [
+  [
+   1,
+   "Matters only the 71 decide"
+  ],
+  [
+   2,
+   "Capital cases need 23"
+  ],
+  [
+   3,
+   "Why 23"
+  ],
+  [
+   4,
+   "Lashes: three"
+  ],
+  [
+   5,
+   "The calf: five"
+  ],
+  [
+   6,
+   "The month: three"
+  ],
+  [
+   7,
+   "The year: seven"
+  ],
+  [
+   8,
+   "Fines need ordained judges"
+  ],
+  [
+   9,
+   "What courts abroad judge"
+  ],
+  [
+   10,
+   "Injuries abroad"
+  ],
+  [
+   11,
+   "An animal's damage abroad"
+  ],
+  [
+   12,
+   "No warned owner abroad"
+  ],
+  [
+   13,
+   "Theft abroad: the principal only"
+  ],
+  [
+   14,
+   "Payments by one's own admission"
+  ],
+  [
+   15,
+   "Indirect damage"
+  ],
+  [
+   16,
+   "Handing a Jew's money to gentiles"
+  ],
+  [
+   17,
+   "A ban until he pays"
+  ],
+  [
+   18,
+   "An admission before three"
+  ]
+ ],
+ "The Sanhedrin and the Penalties within Their Jurisdiction 6": [
+  [
+   1,
+   "A mistake in explicit law is reversed"
+  ],
+  [
+   2,
+   "A licensed expert's mistake in judgment"
+  ],
+  [
+   3,
+   "Without license or consent, he pays"
+  ],
+  [
+   4,
+   "An unfit judge's ruling means nothing"
+  ],
+  [
+   5,
+   "A settlement made because of a mistake"
+  ],
+  [
+   6,
+   "Judged here, with reasons in writing"
+  ],
+  [
+   7,
+   "The lender can insist on the higher court"
+  ],
+  [
+   8,
+   "Only with proof"
+  ],
+  [
+   9,
+   "Today: a great sage elsewhere"
   ]
  ]
 }

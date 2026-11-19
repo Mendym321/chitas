@@ -269,15 +269,16 @@ export const WRITTEN = {
 },
 
 'Kuntres Acharon 4|44|49': {
+  flow: 'notes',
   recap: 'An etrog, like a seed, wakes the highest source, and learning its laws does too, at least for the positive commandments. Today: something true of all the laws.',
   summary: 'In the world itself, G-d\'s wisdom is completely hidden. In a halacha it shines openly: the ruling is His will, not something physical, so it stands far above the love and awe of angels and souls.',
   segs: [
-    ['True of all the laws', [['והן בחינות נפש', 'and are nefesh-ruach of']]],
-    ['The laws, and the world', [['והלבשה זו', 'This investment is not'], ['דהתם הלבוש', 'for there the garment', 'In the world, wisdom hides'], ['כהסתר והעלם', 'just as the gross'], ['והיינו חיצוניות', 'This supreme wisdom is'], ['וכן בבריאה', 'So, too, in Beriah'], ['שהם בחינות נבראים', 'they are creatures, and']]],
-    ['In the laws, it shines', [['ולבוש העשיה', 'The garment of Asiyah'], ['כמו ביום טוב', 'as on holy days', 'As on Yom Tov'], ['על ידי מעבר חסד', 'through passage by way'], ['הנקרא גם כן', 'This, too, is properly']]],
-    ['The ruling is His will', [['מכל מקום ההלכה', 'still the law proper'], ['שהיא בחינת רצון', 'it is the (Divine)'], ['רק שיורד', 'It does descend and'], ['והדבר הגשמי', 'The physical object itself'], ['כמו המחליף', 'as for example the']]],
+    ['', [['והן בחינות נפש', 'and are nefesh-ruach of', 'Beriah, Yetzirah and Asiyah: the three spiritual worlds below Atzilut, the highest.']]],
+    ['', [['והלבשה זו', 'This investment is not'], ['דהתם הלבוש', 'for there the garment'], ['כהסתר והעלם', 'just as the gross'], ['והיינו חיצוניות', 'This supreme wisdom is'], ['וכן בבריאה', 'So, too, in Beriah'], ['שהם בחינות נבראים', 'they are creatures, and']]],
+    ['', [['ולבוש העשיה', 'The garment of Asiyah'], ['כמו ביום טוב', 'as on holy days', 'On Yom Tov, a light from the highest world shines down into ours. He uses it as a comparison.'], ['על ידי מעבר חסד', 'through passage by way'], ['הנקרא גם כן', 'This, too, is properly']]],
+    ['', [['מכל מקום ההלכה', 'still the law proper'], ['שהיא בחינת רצון', 'it is the (Divine)'], ['רק שיורד', 'It does descend and'], ['והדבר הגשמי', 'The physical object itself'], ['כמו המחליף', 'as for example the', 'Pigul: an offering made unfit by a wrong intention while it was brought.']]],
     ['', [['המחיה ומהוה', 'that vivifies and brings'], ['שהן דחילו', 'which are the awe']]],
-    ['Above the love of angels', [['וגם אחר שירדה', 'Even after descending into']]],
+    ['', [['וגם אחר שירדה', 'Even after descending into']]],
   ],
 },
 
@@ -395,6 +396,125 @@ export const WRITTEN = {
     ['Shabbat outside and inside', [['וחיצונית מהשבת', 'The externality of Shabbat']]],
     ['', [['וזו היא בחינת', 'This is the state']]],
     ['', [['כמו ששבת ה מיוד', 'as G–d ceased from']]],
+  ],
+},
+// ── Batch 4 (from 4 Dec 2026): the new way. A few guiding notes, only where the
+// thread could be lost (flow 'notes'; see tanya-guide.js, NOTES), in place of headings.
+
+'Likkutei Amarim 1|1|12': {
+  flow: 'notes',
+  intro: 'The first chapter of the Tanya. It opens with an oath every soul takes before birth, and asks who the beinoni really is: the "intermediate" person this book is about.',
+  summary: "The beinoni can't be someone whose deeds are half good and half sins. Even one small sin makes a person \"wicked,\" so the beinoni must have none at all.",
+  segs: [
+    ['', [['ואפילו כל העולם', 'and even if the whole world'], ['היה בעיניך', 'in your own eyes regard']]],
+    ['', []],
+    ['', [['ולא יוכל לעבוד', 'and he will not be able'], ['ואם לא ירע לבבו', 'while if he is not perturbed']]],
+    ['First, some background from the Gemara: five kinds of people.', [['כי הנה מצינו', 'We find in the Gemara'], ['צדיק וטוב לו', 'a righteous man who prospers']]],
+    ['', [['צדיק ורע לו צדיק שאינו', 'the “righteous man who suffers” is the imperfect'], ['וברעיא מהימנא', 'In Raaya Mehemna'], ['שהרע שבו', 'is one whose evil nature'], ['ובגמרא סוף פרק ט', 'In the Gemara, end of ch. 9'], ['רשעים יצר הרע', 'the wicked by their evil nature'], ['אמר רבה', 'Rabbah declared', 'Rabbah was one of the great sages of the Talmud. And he called himself a beinoni.'], ['אמר ליה אביי', 'Said Abbaye to him']]],
+    ['', [['וגם להבין מה שאמר איוב', 'as also to understand what Job said'], ['והא צדיק ורשע', 'for it is not preordained']]],
+    ['Beinoni means "in between." So what makes someone a beinoni?', [['שבודאי אינו מחצה', 'Surely that cannot mean'], ['שאם כן איך טעה', 'for if this were so'], ['ונודע דלא פסיק', 'For it is known that he never'], ['ואיך היה יכול', 'how, then, could he err']]],
+    ['', [['ואם אחר כך', '[but when he repents'], ['ואפילו העובר על איסור קל', 'Even he who violates'], ['כדאיתא בפרק ב', 'as it is stated in Yevamot']]],
+    ['', []],
+    ['', [['כמו כל שאפשר לו', 'for instance, whoever is able'], ['שעליו דרשו', 'regarding whom our Sages'], ['ופשיטא דמקרי רשע', 'It is thus plain']]],
+    ['', [['ומשום הכי טעה רבה', 'Hence Rabbah could']]],
+    ['', [['היא שאלת רב המנונא', 'this is the query'], ['אבל לפי תשובת', 'But according to Elijah’s answer'], ['ושבעים פנים', 'And the Torah has seventy']]],
+  ],
+},
+'Likkutei Amarim 1|13|end': {
+  flow: 'notes',
+  recap: "The beinoni has no sins at all, so the name can't mean half good, half bad. Today he says what tzaddik really means, and begins to explain with two souls.",
+  summary: "A true tzaddik has no evil inclination left. And every Jew has two souls; the first comes from kelipat nogah, which has some good in it too.",
+  segs: [
+    ['', [['ורוב זכיות', 'while he whose virtues'], ['הוא שם המושאל', 'this is only the figurative use'], ['לפי שנדון אחר רובו', 'because he is judged'], ['אבל לענין אמיתת', 'But concerning the true definition'], ['אמרו רבותינו', 'our Sages have remarked'], ['שנאמר ולבי חלל', 'as it is written, “And my heart'], ['שאין לו יצר הרע', 'that is, void of an evil nature'], ['אבל כל מי שלא הגיע', 'But whoever has not attained'], ['אף שזכיותיו', 'even though his virtues exceed']]],
+    ['', [['עמד ושתלן', 'so He planted them'], ['וכמו שכתוב וצדיק', '[for,] as it is written']]],
+    ['', [['על פי מה שכתב', 'in the light of what Rabbi Chaim Vital'], ['דלכל איש ישראל', 'that in every Jew, whether righteous'], ['דכתיב ונשמות', 'as it is written, “The neshamot'], ['נפש אחת מצד הקליפה', 'There is one soul which originates', 'Kelipah means "shell": whatever hides G-dliness. Sitra achara, "the other side," means the same.'], ['והיא המתלבשת', '[and] which is clothed'], ['וכדכתיב כי נפש הבשר', 'as is written, “For the life'], ['וממנה באות כל המדות', 'From it stem all the evil'], ['דהיינו כעס וגאוה', 'These are: anger and pride', 'The old idea that everything is made of four elements: fire, water, air and earth.'], ['ותאות התענוגים', 'the appetite for pleasures'], ['והוללות וליצנות', 'frivolity and scoffing'], ['ועצלות ועצבות', 'and sloth and melancholy']]],
+    ['', [['שבטבע כל ישראל', 'which are to be found']]],
+    ['', [['היא מקליפת נוגה', 'is derived from kelipat nogah'], ['והיא מסוד', 'as it originates in']]],
+    ['', [['הן משאר קליפות', 'emanate from the other'], ['כמו שכתוב בעץ חיים', 'as is written in Etz Chaim'], ['וכל טיבו דעבדין', 'that all the good that the nations do'], ['וכדאיתא בגמרא', 'So the Gemara comments'], ['שכל צדקה וחסד', 'that all the charity and kindness']]],
+  ],
+},
+
+'Likkutei Amarim 2|1|end': {
+  flow: 'notes',
+  intro: 'Chapter 1 described the first soul. Today: the second soul, "truly a part of G-d above," and how every Jewish soul stays bound to its source.',
+  summary: "Every Jewish soul, great or simple, comes from G-d's wisdom and stays bound to it, like a child to his father. Simpler souls draw their life through the generation's sages.",
+  segs: [
+    ['', [['היא חלק אלוה', 'is truly a part of G–d above'], ['כמו שכתוב ויפח', 'as it is written, “He breathed'], ['ואתה נפחת בי', 'and “You have breathed'], ['וכמו שכתוב בזהר', 'And it is written in the Zohar'], ['פירוש מתוכיותו', 'that is to say, from his inwardness'], ['שתוכיות ופנימיות', 'for it is something of his internal']]],
+    ['', [['כדכתיב בני בכורי', 'as it is written, “My firstborn'], ['פירוש כמו שהבן', 'That is to say, just as a child'], ['כך כביכול', 'so—to use an anthropomorphism'], ['דאיהו חכים', 'For He is wise'], ['וכמו שכתב הרמבם', 'and as Maimonides says']]],
+    ['', [['וגם לפי קבלת', 'Also according to the Kabbalah'], ['בסוד התלבשות', 'in the mystic principle'], ['בכלים דחכמה', 'within the vessels of chabad'], ['וכמו שכתוב במקום אחר', 'For, as is explained elsewhere'], ['עד שמהות', 'which in relation to Him']]],
+    ['', [['ודבר זה אין ביכולת', 'this is not within the power'], ['כדכתיב החקר', 'as it is written, “Can you find']]],
+    ['', [['כמו גודל מעלת', 'as with the superiority'], ['על נשמות דורותינו', 'above the souls of our own generations'], ['שהם בחינת עקביים', 'which are as the very soles'], ['וכן בכל דור ודור', 'so in every generation'], ['שנשמותיהם', 'whose souls are in the category'], ['וכן נפשות לגבי נפשות', 'Likewise [are there distinctions', "Nefesh, ruach and neshamah: three levels within every soul, from lower to higher."], ['כי כל נפש כלולה', 'for every soul consists']]],
+    ['', [['מראש כל המדריגות', 'from the highest of all ranks'], ['נמשך ממוח העליון', 'all derive, as it were']]],
+    ['', [['שאפילו צפרני רגליו', 'in that [even] the nails'], ['על ידי שהייתה', 'by being in the mother’s womb'], ['וירדה ממדרגה', 'descending degree by degree']]],
+    ['', [['במהותה ועצמותה', 'with its original essence'], ['וגם עכשיו בבן', 'And even now, in the son'], ['כדאיתא בגמרא', 'As is written in the Gemara'], ['וכמו שכתוב בעץ חיים', '[And in Etz Chaim'], ['שהיו צפרנים', 'that they [the garments] were']]],
+    ['', [['בירידתו ממדרגה', 'in descending degree by degree'], ['כדכתיב כולם בחכמה', 'as it is written, “You have made'], ['נתהוו ממנו', 'the nefesh, ruach, and neshamah of the ignorant']]],
+    ['', [['שהיא המשכת', 'namely, the extension'], ['כי יניקת וחיות', 'inasmuch as the nurture'], ['הוא מנפש רוח', 'are drawn from the nefesh']]],
+    ['', [['שכל הדבק', '“He who cleaves'], ['מעלה עליו הכתוב', 'is deemed by the Torah'], ['כי על ידי דביקה', 'For, through attachment'], ['שהוא יתברך וחכמתו', 'He and His wisdom being one']]],
+    ['', [['יניקת נפש רוח', 'the nurture of their nefesh']]],
+    ["A question: if every soul stays bound to its root, why does the Zohar stress the parents' holiness?", [['שהעיקר תלוי', 'to the effect that the essential factor'], ['מה שאין כן', 'which is not the case'], ['היינו משום שאין לך', 'it is to be understood'], ['שאין לה לבוש', 'which has not a garment'], ['וכל המצות שעושה', 'and all the commandments that it fulfills'], ['ואפילו השפע', 'and even the benevolence'], ['ואם יקדש את עצמו', 'hence, through self-sanctification'], ['ואפילו היא נשמה גדולה', 'and however great a soul']]],
+    ['', [['הנה לפעמים', 'it sometimes happens'], ['כמו שכתב הארי', 'All this has been explained']]],
+  ],
+},
+'Likkutei Amarim 3|1|7': {
+  flow: 'notes',
+  intro: "Chapter 2 described where the divine soul comes from. Today: what it's made of. Like every soul, it has ten powers: three of the mind and seven of the heart.",
+  summary: 'Chochmah is the first spark of an idea; binah thinks it through. Together they give birth to love and fear of G-d.',
+  segs: [
+    ['', [['כלולה מעשר בחינות', 'consists of ten faculties'], ['כנגד עשר ספירות', 'corresponding to the supernal'], ['הנחלקות לשתים', 'which are subdivided into two'], ['פירוש חכמה בינה', 'namely, chochmah'], ['ושבעת ימי הבנין', 'and the “seven days']]],
+    ['Why the sefirot? Because the soul is built the same way.', []],
+    ['', [['והמדות הן', 'while the middot are']]],
+    ['', []],
+    ['', [['נקרא בשם חכמה', 'is given the appellation']]],
+    ['', [['שמתבונן בשכלו', 'that is, when [a person] cogitates'], ['מתוך איזה דבר', 'as it evolves from the concept'], ['נקרא בינה', 'this is called binah']]],
+    ['', []],
+  ],
+},
+
+'Likkutei Amarim 3|8|end': {
+  flow: 'notes',
+  recap: "Chochmah and binah, the mind, give birth to the heart's love and fear of G-d. Today: how that happens, and the mind's third power, daat.",
+  summary: "Thinking deeply about G-d's greatness brings awe, then love. But only daat, keeping your mind on it, makes those feelings real rather than imagined.",
+  segs: [
+    ['"Fills all worlds" and "encompasses all worlds": G-d is inside everything, and also beyond it.', [['איך הוא ממלא', 'how He fills all worlds'], ['וכולא קמיה', 'and in the presence of Whom'], ['נולדה ונתעוררה', 'there will be born and aroused'], ['לירא ולהתבושש', 'to fear and be humble'], ['ופחד ה בלבו', 'and to have the dread']]],
+    ['', [['בחשיקה וחפיצה', 'with a passion, desire']]],
+    ['', [['כדכתיב נכספה', 'of which Scripture speaks']]],
+    ['', [['וכמו שכתבו הטבעיים', 'As students of natural science'], ['ומקור המים', 'while the source of'], ['וכמו שכתוב בעץ חיים שער נ', 'which is explained in Etz Chaim']]],
+    ['', []],
+    ['', [['והוא לשון התקשרות', 'implies attachment and union'], ['שמקשר דעתו', 'That is, one binds his mind'], ['ואינו מסיח', 'without diverting']]],
+    ['', [['הנה אם לא יקשר', 'will not—unless he binds'], ['לא יוליד בנפשו', 'produce in his soul']]],
+    ['', [['והוא כולל חסד', 'it contains chesed']]],
+  ],
+},
+
+'Likkutei Amarim 4|1|1': {
+  flow: 'notes',
+  intro: "The divine soul has ten powers. It also has three \"garments,\" the ways it expresses itself: thought, speech and action. Today: how they're clothed in the mitzvos.",
+  summary: 'When a person learns all he can, speaks words of Torah, and does the mitzvos, his whole soul is clothed in the 613 mitzvos.',
+  segs: [
+    ['', [['שהם מחשבה דבור ומעשה', 'viz., thought, speech, and action'], ['שכשהאדם מקיים', 'For, when a person actively'], ['ובדבור הוא עוסק', 'and with his power of speech'], ['ובמחשבה הוא משיג', 'and with his power of thought', 'Pardes: the four levels of Torah, from the plain meaning to the hidden secrets.'], ['הרי כללות', 'then the totality', 'The soul is pictured with 613 parts, one for each mitzvah.']]],
+  ],
+},
+
+'Likkutei Amarim 4|2|4': {
+  flow: 'notes',
+  recap: "The soul's three garments, thought, speech and action, are clothed in the mitzvos. Today: which powers go into which, and why love and fear are the roots of all the mitzvos.",
+  summary: "The mind is clothed in learning Torah; love and fear in doing the mitzvos. Love is the root of the 248 do's, fear the root of the 365 don'ts.",
+  segs: [
+    ['', [['מלובשות בהשגת', 'are clothed in the comprehension'], ['כפי יכולת', 'to the extent of his mental'], ['והמדות שהן', 'And the middot, namely fear'], ['מלובשות בקיום', 'are clothed in the fulfillment'], ['שהוא תלמוד תורה', 'namely, in the study of Torah']]],
+    ["Love and fear are the heart's powers from chapter 3. Here's how they drive the mitzvos.", [['וממנה הן נמשכות', 'all originating in it'], ['כי המקימן באמת', 'inasmuch as he who fulfills'], ['ואי אפשר לדבקה', 'for one cannot truly cleave'], ['שהם רמח אברין', 'which are the 248'], ['והיראה היא שרש', 'while fear is the root'], ['כי ירא למרוד', 'fearing to rebel']]],
+    ['', [['שמתבושש מגדולתו', 'when he feels ashamed'], ['כל תועבת', 'namely, any of the abominable'], ['הם הקליפות', 'which are the kelipot'], ['אשר יניקתם', 'which draw their nurture']]],
+  ],
+},
+
+'Likkutei Amarim 4|5|8': {
+  flow: 'notes',
+  recap: "The mind is clothed in Torah study, the heart's love and fear in the mitzvos. Today: why these \"garments\" are higher than the soul they clothe.",
+  summary: 'The Torah is G-d\'s own wisdom and will, one with Him. He compressed it into the mitzvos so a person can grasp it, and be clothed in it.',
+  segs: [
+    ['', [['אף שנקראים', 'although they are called'], ['גבהה וגדלה', 'their quality, nevertheless'], ['כמו שכתוב בזהר', 'as explained in the Zohar'], ['פירוש דאורייתא', 'The meaning of this is'], ['בכבודו ובעצמו', 'and His glorious Essence'], ['כי הוא היודע', 'since He is both']]],
+    ['A question: if G-d is beyond all understanding, how can His wisdom be in the Torah we learn?', [['ולגדולתו אין חקר', 'and “His greatness'], ['וכן ברצונו', 'and so are also His will'], ['כדכתיב אין חקר', 'as it is written, “There is no searching']]],
+    ['', [['במקום שאתה מוצא', '“Where you find the greatness'], ['וצמצם', 'For the Holy One, blessed is He, has compressed'], ['ובצרופי אותיות', 'as well as within the combination'], ['ודרשותיהן', 'and in the exposition']]],
+    ['', [['תוכל להשיגן', 'should be able to comprehend'], ['ולקיימן', 'and to fulfill them'], ['ועל ידי זה תתלבש', 'thereby clothing itself']]],
   ],
 },
 };

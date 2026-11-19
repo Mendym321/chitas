@@ -71,9 +71,59 @@
  "Hiring 7": "Conditions in a rental, a leap year in a year's lease, \"I paid\" against \"you didn't,\" an undated contract, an orchard that dries up, and produce left on someone's land.",
  "Hiring 8": "Renting a field for a fixed rent or for a share of the crop: what may be sown, a spring that fails, locusts and drought, weeding, and switching crops.",
  "Hiring 9": "Hiring workers: local custom on hours and pay, hiring through an agent, work that stops (the king's service, a river that dries up), finishing early, and what a worker finds.",
- "Hiring 10": "Who is a paid watchman: a lender holding security, two people who watch for each other, and every craftsman; a craftsman who ruins what he was given.",
- "Hiring 11": "The mitzvah to pay a worker on time, for his life depends on it; when it applies, hiring through an agent, and settling disputes over wages.",
- "Hiring 12": "A worker's right to eat from the produce he works with: which work, which produce, how much, and not taking it home to his family.",
+ "Hiring 10": {
+  "about": "Who counts as a paid watchman, responsible if something is lost or stolen: a lender holding security, people who watch for each other, and every craftsman. And a craftsman who ruins the work.",
+  "parts": [
+   "A lender with security, and watching for each other",
+   "Craftsmen",
+   "Ruined work, and who pays",
+   "Workers appointed by a town"
+  ],
+  "why": {
+   "5": "An expert who works for free doesn't pay for his mistake. A non-expert does, even for free, and so does anyone who charged."
+  },
+  "takeaways": [
+   "Anyone who holds an item for his own benefit, like a lender with security or a craftsman, is a paid watchman: he pays if it's lost or stolen.",
+   "A craftsman who ruins what he was given pays for it; he gets no share in the increase in its value.",
+   "Someone appointed by the town who makes a mistake that can't be fixed may be removed without warning."
+  ]
+ },
+ "Hiring 11": {
+  "about": "The mitzvah to pay a worker on time, \"for his life depends on it\": when the wage is due, and how disputes over wages are settled.",
+  "parts": [
+   "Paying on time",
+   "When the wage is due",
+   "When it doesn't apply",
+   "Disputes over wages"
+  ],
+  "why": {
+   "6": "Hired before witnesses, the worker swears and collects: the employer is busy, and the worker is counting on it. Hired without witnesses, the employer is believed.",
+   "8": "A tailor still holding the garment can swear and collect. Once it's back with its owner, he must prove his claim."
+  },
+  "takeaways": [
+   "A worker is paid the night after a day's work, or the day after a night's; holding back his wage breaks several mitzvos.",
+   "It's no sin if the worker didn't ask, or the employer had no money, but once late he must pay right away.",
+   "On the day the wage is due, a worker hired before witnesses can swear and collect; the Sages go easy on his oath."
+  ]
+ },
+ "Hiring 12": {
+  "about": "A worker's right to eat from the produce he works with: which work, which produce, how much, and only for himself.",
+  "parts": [
+   "The right, from the Torah",
+   "Which work, and when",
+   "Only what he works with, and how much",
+   "Only for himself"
+  ],
+  "why": {
+   "2": "With harvested produce, he eats until the work is done. Working on the plant, he eats only once a task is done; the Sages let him eat as he walks, so he won't stop work.",
+   "9": "A watchman eats only by local custom. A worker using his hands, feet or shoulders eats by Torah right."
+  },
+  "takeaways": [
+   "A worker may eat from the produce he's working with, while it still needs work.",
+   "Only what he works with, not too much, and never while neglecting the work.",
+   "The right is his alone: not for his family, and not to take home."
+  ]
+ },
  "Hiring 13": "Do not muzzle an ox while it threshes. And the book's closing: the employer may not cheat the worker, and the worker must work honestly with all his strength, as Yaakov did.",
  "Borrowing and Deposit 1": "A borrower pays even for accidents. An animal that dies while working, feeding it, how long he may keep what he borrowed, and what he may use it for.",
  "Borrowing and Deposit 2": "\"If its owner was with it\": when the owner is working for the borrower, he doesn't pay. Who counts as working with him, and husbands, wives and partners.",
@@ -118,5 +168,420 @@
  "Plaintiff and Defendant 6": "Precise statements in court, a claim the witnesses contradict, and when an admission outside court, or before hidden witnesses, doesn't bind.",
  "Plaintiff and Defendant 7": "An admission before two witnesses or in court binds; saying it was a joke; and changing one's claim.",
  "Plaintiff and Defendant 8": "Whoever holds movable property is presumed its owner, except for things made to be lent or rented, and items reported stolen.",
- "Plaintiff and Defendant 9": "A craftsman's possession, someone seen carrying things out, an ax and a palm tree, and two people holding one garment."
+ "Plaintiff and Defendant 9": "A craftsman's possession, someone seen carrying things out, an ax and a palm tree, and two people holding one garment.",
+ "Plaintiff and Defendant 10": {
+  "about": "Holding something usually counts as proof that it's yours. Not with animals and servants who move on their own: they may simply have come to you, so a known earlier owner wins unless the holder proves otherwise.",
+  "parts": [
+   "Animals that roam, and animals kept enclosed",
+   "Servants, and three years of open service",
+   "A claim explained afterwards, and a disputed boat"
+  ],
+  "why": {
+   "2": "Halacha 1 gives a roaming animal back to its known owner; here the holder keeps it. An animal kept enclosed or with a shepherd can't have wandered in by itself, so holding it means something."
+  },
+  "takeaways": [
+   "Holding something usually proves it's yours, but not an animal that roams or a servant who walks: they may have come on their own.",
+   "Animals kept enclosed or with a shepherd, and a child servant too young to walk, count like any other possession.",
+   "A servant held and used openly for three years, with no protest, stays with the one who holds him."
+  ]
+ },
+ "Plaintiff and Defendant 11": {
+  "about": "Land can't wander, so it stays with the person known to own it. The exception: someone used it openly for three years, and the owner said nothing.",
+  "parts": [
+   "Land stays with its known owner",
+   "Unless it was used for three years without protest",
+   "Why three years, and what counts as a protest",
+   "When the owner himself helped with the harvest"
+  ],
+  "why": {
+   "2": "Halacha 1 gives the land back to Shimon; here Reuven keeps it. An owner who stays silent while someone uses his land openly for three years would have protested if it were still his.",
+   "6": "If the owner asks for silence altogether, he never meant it as a protest. If only Reuven isn't to be told, others will hear, and word will reach him."
+  },
+  "takeaways": [
+   "Land stays with the person known to own it, unless someone else used it openly for three full years without protest.",
+   "Three years is as long as a buyer is expected to keep his deed; after that, the owner's silence counts against him.",
+   "A protest is made before two witnesses, saying he'll take the user to court, and renewed within every three years."
+  ]
+ },
+ "Plaintiff and Defendant 12": {
+  "about": "What counts as the three years of use that keep land with the one using it: how continuous, what kind of use, and whose years can be added together.",
+  "parts": [
+   "Three full years, or three harvests",
+   "Day and night: a home, and a store",
+   "Years that join together: partners, buyers, father and son",
+   "Use that counts, and use that doesn't"
+  ],
+  "why": {
+   "5": "A father's years join his son's (halacha 7), but partners' turns don't. The owner saw no one person using the field year after year, so he had no reason to protest; a written agreement makes it known.",
+   "12": "A harvest with no profit doesn't count (halacha 10), but a forbidden one does. What matters is that he benefited, even wrongly."
+  },
+  "takeaways": [
+   "Three full years of continuous use, or three harvests from an orchard or a rain-watered field.",
+   "The use must be the normal, full use of that place: lived in day and night, or harvested at a profit.",
+   "Years held by different people join only when the owner would know: a father and his son, or buyers with a deed or a written agreement."
+  ]
+ },
+ "Plaintiff and Defendant 13": {
+  "about": "Some people can use land for three years and still not gain ownership: anyone the owner wouldn't object to, or couldn't stand up to.",
+  "parts": [
+   "Who can't gain ownership by use, and why",
+   "Craftsmen, sharecroppers and guardians",
+   "Partners, husband and wife, father and son",
+   "Exilarchs and robbers"
+  ],
+  "why": {
+   "3": "Usually the owner's witnesses decide it. Here the user said it himself, and since he could have denied being a partner, he's believed when he says he bought it.",
+   "5": "A family's longtime sharecropper doesn't gain ownership, but a new one does. The owner wouldn't mind the first; the second, he would have protested."
+  },
+  "takeaways": [
+   "Three years of use doesn't count when the owner had no reason to object: a sharecropper, partner, guardian or family member.",
+   "It doesn't count for people too powerful to protest against, like a robber.",
+   "Once that relationship ends, three more years of use count like anyone else's."
+  ]
+ },
+ "Plaintiff and Defendant 14": {
+  "about": "When those who can't gain ownership by use bring other proof, and more cases where use alone doesn't count: a minor's land, someone who fled, and use without any claim.",
+  "parts": [
+   "Proof that helps, and a robber's, which doesn't",
+   "Their sons and grandsons",
+   "A gentile, and land bought from one",
+   "A minor's land, someone who fled, a widow's land",
+   "Use with no claim of purchase or inheritance"
+  ],
+  "why": {
+   "2": "Halacha 1 accepts witnesses to a sale, but not a robber's: the owner can say he only agreed out of fear.",
+   "10": "Fleeing for his life, his silence proves nothing. Fleeing over money, he could have protested, so his silence counts."
+  },
+  "takeaways": [
+   "Those who can't gain ownership by use can still prove a purchase with witnesses, except a robber.",
+   "Use of a minor's land, or of someone who fled for his life, doesn't count.",
+   "Three years of use count only with a claim: \"I bought it,\" \"it was given to me,\" or \"I inherited it.\""
+  ]
+ },
+ "Plaintiff and Defendant 15": {
+  "about": "Weighing the evidence when two people claim the same field: deeds and witnesses, testimony that clashes, and claims that change.",
+  "parts": [
+   "Deeds, and witnesses to the years of use",
+   "When both sides have proof",
+   "A claim explained afterwards, and a forged deed",
+   "A seller who wasn't there, and a lost path"
+  ],
+  "why": {
+   "6": "\"It was my ancestors'\" can later be explained as \"it's mine for sure.\" But \"my ancestors', not yours\" can't be taken back."
+  },
+  "takeaways": [
+   "A deed of sale is checked first; three years of use is the fallback.",
+   "When neither side can prove it, the court leaves it to whoever takes hold of it.",
+   "A claim can be explained afterwards, but not contradicted."
+  ]
+ },
+ "Plaintiff and Defendant 16": {
+  "about": "The book's last chapter: when a person gives up his right to protest, paying back the produce, and a warning against false claims.",
+  "parts": [
+   "A witness who signed can't protest later",
+   "Advice and an offer to buy prove nothing",
+   "Paying back the produce",
+   "No false claims, even to get what's yours"
+  ],
+  "why": {
+   "2": "A witness reads what he signs, so he knew what the deed said. A judge who only checks the signatures may not have read it.",
+   "6": "One witness to three years (halacha 5) helps the user. One witness to less than three obliges him to an oath he can't take, so he pays."
+  },
+  "takeaways": [
+   "Signing as a witness to a sale gives up any claim to that field.",
+   "Produce eaten from someone else's land is paid back when witnesses, or his own words, show it.",
+   "Even someone who is owed money may not make a false claim to get it."
+  ]
+ },
+ "Inheritances 1": {
+  "about": "Who inherits, in order: children first, sons before daughters; then the father and his descendants, and on up the generations. Every Jew has an heir.",
+  "parts": [
+   "The order of inheritance",
+   "Grandchildren take their parent's share",
+   "The father's family only",
+   "Husband and wife"
+  ],
+  "why": {
+   "4": "A son's daughter comes before a daughter: she stands in her father's place, and a son comes before a daughter.",
+   "8": "A wife doesn't inherit her husband, but a husband inherits his wife; the Sages gave him that right."
+  },
+  "takeaways": [
+   "Children inherit first, sons before daughters; each child's descendants stand in his place.",
+   "With no descendants, the estate goes up to the father, then to his descendants, and so on: every Jew has an heir.",
+   "Inheritance follows the father's family. A husband inherits his wife; a wife doesn't inherit her husband."
+  ]
+ },
+ "Inheritances 2": {
+  "about": "The firstborn's double portion: who counts as the firstborn, and whose word decides it.",
+  "parts": [
+   "The double portion",
+   "Who counts as the firstborn",
+   "Whose word is accepted"
+  ],
+  "why": {
+   "10": "A stillborn baby doesn't take away the next son's status as firstborn; a baby born alive does, even if he died right away."
+  },
+  "takeaways": [
+   "The firstborn gets two shares of his father's estate, not of his mother's.",
+   "He must be his father's first child born alive; his mother's earlier children don't matter.",
+   "The father's word on who is his firstborn is always accepted."
+  ]
+ },
+ "Inheritances 3": {
+  "about": "What the firstborn's double portion includes: only what his father owned when he died. Then the brother who marries his brother's childless widow.",
+  "parts": [
+   "Only what the father already owned",
+   "Growth after the father's death",
+   "Giving up the extra share",
+   "The yavam's inheritance"
+  ],
+  "why": {
+   "4": "Growth that changes the crop, like buds becoming grain, isn't counted double. Growth that just comes on its own, like a tree getting taller, is."
+  },
+  "takeaways": [
+   "The double portion covers only what the father owned at his death, not debts owed to him or later inheritances.",
+   "Dividing part of the estate equally, without protest, gives up the extra share in all of it.",
+   "The brother who marries his brother's childless widow inherits his brother's estate, but only what it held at the death."
+  ]
+ },
+ "Inheritances 4": {
+  "about": "Who is believed about who is an heir: a person's word about his own relatives, and its limits.",
+  "parts": [
+   "A person's word about his heirs",
+   "Taking it back: son or servant",
+   "Common knowledge as proof",
+   "When brothers disagree about another brother"
+  ],
+  "why": {
+   "3": "\"Son\" then \"servant\" can't be taken back. \"Servant\" then \"son\" can: a son can be relied on like a servant.",
+   "4": "At customs it's the other way round: he may have called him his son to avoid paying duty on a servant."
+  },
+  "takeaways": [
+   "A person is believed about who his heirs are, even without other proof.",
+   "He can deny a known son the inheritance, but not a known brother.",
+   "When heirs disagree about another heir, each one's word affects only his own share."
+  ]
+ },
+ "Inheritances 5": {
+  "about": "When it isn't clear who the heir is: a doubtful heir against a certain one, two doubtful heirs, and people who died together.",
+  "parts": [
+   "A doubtful heir, and two doubtful heirs",
+   "A son whose father is unclear",
+   "People who died together"
+  ],
+  "why": {},
+  "takeaways": [
+   "A doubtful heir gets nothing when there's a certain heir; two doubtful heirs share equally.",
+   "When it's unknown who died first, the estate stays with whoever is surely an heir, or is shared.",
+   "Creditors must prove who died first to collect from an inheritance."
+  ]
+ },
+ "Inheritances 6": {
+  "about": "No one can change the Torah's order of inheritance. But a person can give gifts, and can choose among heirs of the same rank.",
+  "parts": [
+   "The order can't be changed",
+   "Choosing among equal heirs",
+   "\"Inherit\" or \"give\": the wording decides",
+   "Converts, and good counsel"
+  ],
+  "why": {
+   "2": "He can't pass over a son for a daughter, but among several sons he can choose one: they're all rightful heirs.",
+   "5": "\"Let him inherit\" can't change the order. \"Give it to him\" is a gift, and a gift is his to give."
+  },
+  "takeaways": [
+   "No one can change who inherits, or the firstborn's share.",
+   "A person can give his property as a gift, even unevenly; the word \"give\" makes it work.",
+   "The Sages didn't approve of taking an estate from the heirs, and warned against favoring one child."
+  ]
+ },
+ "Inheritances 7": {
+  "about": "When heirs may take an estate: only with clear proof of death. Until then, the court looks after the property of someone captured or who fled.",
+  "parts": [
+   "Proof of death",
+   "Captives, and those who fled for their lives",
+   "Someone who left of his own will"
+  ],
+  "why": {
+   "3": "Here the heirs inherit even though the wife can't remarry. The Sages were stricter about marriage, where the sin is so severe.",
+   "8": "The court looks after a captive's property, but not that of someone who left of his own will: he chose to leave it."
+  },
+  "takeaways": [
+   "Heirs need clear proof of death; a report that's enough for a widow to remarry isn't enough for them.",
+   "The court looks after the property of someone taken captive or who fled for his life.",
+   "Someone who left of his own will has his property left as he left it."
+  ]
+ },
+ "Inheritances 8": {
+  "about": "Safeguards for property while its owner is away: who may be given a captive's fields to work, and why a minor's property never goes to a relative.",
+  "parts": [
+   "Not to a minor",
+   "Never a relative over a minor's property",
+   "A case the Sages decided"
+  ],
+  "why": {},
+  "takeaways": [
+   "A captive's fields are worked by a relative, but never by a minor, who might ruin them.",
+   "A minor's property is never given to a relative to work, in case he later claims he inherited it.",
+   "When a minor might have a share, the court appoints a guardian for the whole estate."
+  ]
+ },
+ "Inheritances 9": {
+  "about": "Brothers who haven't divided the estate are partners. Who gets the profit when one of them works it, and what counts as his own.",
+  "parts": [
+   "Partners in an undivided estate",
+   "Improvements, and their profits",
+   "Money one brother says is his",
+   "Shared expenses, and weddings"
+  ],
+  "why": {
+   "2": "Growth from their own work and money goes to them, if they said so first. Growth that came on its own is shared.",
+   "10": "A brother holding a note must prove it was given to him; anyone else is believed. Brothers tend to take from each other."
+  },
+  "takeaways": [
+   "Until the estate is divided, the heirs are partners and share the profits equally.",
+   "One who improves the estate with his own money, after saying so, keeps the gain.",
+   "A brother who says money in his hands is his own must prove it."
+  ]
+ },
+ "Inheritances 10": {
+  "about": "Dividing an estate: when a division is undone, how minors are protected, and choosing a guardian for orphans.",
+  "parts": [
+   "When a division is undone",
+   "Dividing with minors",
+   "Appointing a guardian",
+   "Removing one"
+  ],
+  "why": {
+   "6": "A father may choose anyone as guardian, even a minor. The court must choose someone trustworthy and capable.",
+   "7": "A court's guardian is removed on suspicion; a father's, only when witnesses show he's ruining the estate."
+  },
+  "takeaways": [
+   "A division is undone if another heir or a creditor turns up.",
+   "When some heirs are minors, the court chooses their portion and appoints a guardian.",
+   "The court acts as the orphans' parent: it picks their guardian carefully, and removes him if he's suspect."
+  ]
+ },
+ "Inheritances 11": {
+  "about": "The guardian's job: investing the orphans' money safely, what he may and may not sell, and keeping honest accounts.",
+  "parts": [
+   "Investing orphans' money",
+   "The guardian's powers, and their limits",
+   "Mitzvos and charity",
+   "An honest account"
+  ],
+  "why": {
+   "6": "He may sell fields to buy oxen, since oxen serve the fields. Not fields to buy servants: a new kind of purchase might not work out.",
+   "10": "Mitzvos with a set measure, like tefillin, are bought for them. Charity isn't taken from their property, since it has no limit."
+  },
+  "takeaways": [
+   "Orphans' money is invested with someone trustworthy, on security, where profit is likely and loss unlikely.",
+   "A guardian runs the estate for the orphans' good, but stays away from risky trades and lawsuits.",
+   "He needn't show accounts, but must keep precise ones for himself, before the Father of orphans."
+  ]
+ },
+ "The Sanhedrin and the Penalties within Their Jurisdiction 1": {
+  "about": "The courts the Torah asks for: judges and officers in every city, the Great Sanhedrin of 71, courts of 23, and courts of three.",
+  "parts": [
+   "Judges and officers",
+   "The Great Sanhedrin of 71",
+   "Courts of 23, and of three",
+   "What makes a court good"
+  ],
+  "why": {
+   "5": "Even a city of thousands gets no court without two real scholars. It's the judges' knowledge that makes a court, not the size of the city."
+  },
+  "takeaways": [
+   "Every city in Eretz Yisrael must have judges, and officers to carry out their rulings.",
+   "The Great Sanhedrin has 71 judges; city courts have 23, or three in a small town.",
+   "A court is only as good as its scholars."
+  ]
+ },
+ "The Sanhedrin and the Penalties within Their Jurisdiction 2": {
+  "about": "Who may be a judge: what the Sanhedrin's judges need, and the seven traits every judge needs.",
+  "parts": [
+   "Judges for the Sanhedrin",
+   "Kings, and the High Priest",
+   "The seven traits of a judge",
+   "One judge, or three"
+  ],
+  "why": {
+   "5": "Kings from David's line may judge and be judged. The kings of Israel may do neither: they didn't bow to the Torah's word.",
+   "11": "Torah law allows one judge, the Sages require three. An expert may judge alone, yet it's a mitzvah to have others with him."
+  },
+  "takeaways": [
+   "A judge needs wisdom, humility, fear of G-d, contempt for money, love of truth, people's affection and a good name.",
+   "Sanhedrin judges must also be great in Torah and broad in knowledge.",
+   "Even an expert who may judge alone should have others sit with him: only One judges alone."
+  ]
+ },
+ "The Sanhedrin and the Penalties within Their Jurisdiction 3": {
+  "about": "How and when a court sits, and the sin of appointing an unfit judge.",
+  "parts": [
+   "Court hours",
+   "Not at night",
+   "Sitting in awe",
+   "Appointing judges"
+  ],
+  "why": {
+   "4": "A case can't begin at night, but a money case begun by day may finish at night."
+  },
+  "takeaways": [
+   "Courts judge by day. The Divine Presence rests with a proper court, so the judges sit in awe.",
+   "Appointing an unfit judge, for his looks, his family or his money, is forbidden by the Torah.",
+   "The great sages ran from judging, and sat only when no one else was as fit."
+  ]
+ },
+ "The Sanhedrin and the Penalties within Their Jurisdiction 4": {
+  "about": "Semichah, the ordination passed down from Moshe, and the authority of judges with it and without it.",
+  "parts": [
+   "The chain of semichah",
+   "How it's given, and only in Eretz Yisrael",
+   "Limited authority",
+   "Could it start again?",
+   "Judges in the diaspora"
+  ],
+  "why": {
+   "11": "With one ordained judge left, he and two others can ordain again. With none, the Rambam's view is that all the sages of Eretz Yisrael would have to agree."
+  },
+  "takeaways": [
+   "Semichah passed from Moshe, teacher to student. It's given only in Eretz Yisrael, by three judges.",
+   "It can be limited to certain cases, or to a certain time.",
+   "Without it, judges act on the authority of the courts of Eretz Yisrael, and can't judge fines."
+  ]
+ },
+ "The Sanhedrin and the Penalties within Their Jurisdiction 5": {
+  "about": "Which court decides what: the Sanhedrin of 71, courts of 23 for capital cases, three for money matters, and what courts outside Eretz Yisrael can judge.",
+  "parts": [
+   "Matters for the 71",
+   "Capital cases: 23",
+   "Other matters, and their courts",
+   "Courts in the diaspora"
+  ],
+  "why": {
+   "8": "Fines need ordained judges. Ordinary money matters, like loans, don't, so they can be judged anywhere.",
+   "10": "Medical bills and lost work are real losses, so they're collected abroad. Payment for the injury, the pain and the shame isn't."
+  },
+  "takeaways": [
+   "The great matters, like crowning a king, belong to the Sanhedrin of 71; capital cases need at least 23.",
+   "Money matters need three judges; fines need three ordained ones.",
+   "Courts in the diaspora judge common losses, like loans and damage, but not fines."
+  ]
+ },
+ "The Sanhedrin and the Penalties within Their Jurisdiction 6": {
+  "about": "When a judge makes a mistake, and when a litigant can insist on a higher court.",
+  "parts": [
+   "A judge's mistake",
+   "Who pays for it",
+   "Going to a higher court"
+  ],
+  "why": {
+   "3": "With a license, or accepted by both sides, an expert who errs never pays. Without either, he pays when it can't be undone.",
+   "7": "A borrower must go to the higher court if the lender wants; not the reverse. \"A borrower is a servant to the lender.\""
+  },
+  "takeaways": [
+   "A ruling against an explicit law is reversed.",
+   "A judge who erred pays only if he had no license and wasn't accepted by both sides.",
+   "A lender with proof can make the borrower go to a greater court; not the other way round."
+  ]
+ }
 }

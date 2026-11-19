@@ -82,11 +82,11 @@ process.env.ANTHROPIC_BASE_URL = 'http://localhost:' + claude.address().port;
 process.env.ANTHROPIC_API_KEY = 'test-key';
 
 const tanyaAnswers = [];   // queued answers for particular tests (then fakeSplits)
-// Pretend Claude for Tanya: a good split (typed without vowels, with a heading),
+// Pretend Claude for Tanya: a good split (typed without vowels, with guiding notes),
 // a made-up start, a recap and a summary
 const fakeSplits = { chapterIntro: 'should be dropped mid-chapter', recap: 'So far: every Jew has two souls.', summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
-  { index: 1, heading: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', heading: 'The first soul' }, { he: 'מילים שלא קיימות', en: 'The second soul', heading: 'never shown' }] },
-  { index: 2, heading: '', splits: [] },
+  { index: 1, note: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', note: 'The first soul' }, { he: 'מילים שלא קיימות', en: 'The second soul', note: 'never shown' }] },
+  { index: 2, note: '', splits: [] },
 ]};
 
 // ── Pretend Sefaria ──────────────────────────────────────────────────────────
@@ -188,7 +188,7 @@ check('split at the real start only (vowels ignored); the made-up one is ignored
 check('Hebrew is the exact original text', t1.json.blocks.slice(0, 2).map(b => b.he).join(' '),
   'וְהִנֵּה בְּכָל נֶפֶשׁ יִשְׂרָאֵל יֵשׁ שְׁתֵּי נְפָשׁוֹת. נֶפֶשׁ אַחַת הִיא מִצַּד הַקְּלִיפָּה. ונפש השנית היא חלק אלוק ממעל ממש.');
 check('the Alter Rebbe\'s gloss (hagahah) is marked, without its label', [t1.json.blocks.map(b => b.isHagahah), t1.json.blocks[2].he], [[false, false, true], 'הערה']);
-check('headings: on the segment and on the cut that was found', t1.json.blocks.map(b => b.heading || ''), ['Two souls', 'The first soul', '']);
+check('guiding notes: on the segment and on the cut that was found; the guide says it has notes, not headings', [t1.json.blocks.map(b => b.heading || ''), t1.json.flow], [['Two souls', 'The first soul', ''], 'notes']);
 check('translator\'s footnote kept as a note', t1.json.notes, ['See ch. 2.']);
 check('mid-chapter: recap and summary, no chapter intro', [t1.json.recap, t1.json.summary, t1.json.intro], ['So far: every Jew has two souls.', 'The Alter Rebbe continues explaining the two souls.', '']);
 check('the real cost of each guide is kept with it', t1.json.source === 'cache' && typeof store.get('tanya_enhanced/' + guideDocId(P.chapterSlug, P.startVerse, P.endVerse)).usage?.costUSD, 'number');
@@ -206,12 +206,14 @@ check('a failed run → the next ask says why (502), without trying again', [f1.
 
 // The AI numbered segments by the chapter (2, 3) instead of 1, 2 → still lined up
 const byChapter = JSON.parse(JSON.stringify(fakeSplits)); byChapter.segments.forEach(x => { x.index += P.startVerse - 1; });
-// …and a first answer with no cuts or headings → asked once more, the better one kept
-tanyaAnswers.push({ ...fakeSplits, segments: [] }, byChapter);
+tanyaAnswers.push(byChapter);
 const callsR = claudeCalls;
 await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
 const r1 = await tanya(T, null);
-check('poor first answer → asked once more; chapter-numbered segments still line up', [claudeCalls - callsR, r1.json.blocks.map(b => b.heading || '')], [2, ['Two souls', 'The first soul', '']]);
+check('chapter-numbered segments still line up', [claudeCalls - callsR, r1.json.blocks.map(b => b.heading || '')], [1, ['Two souls', 'The first soul', '']]);
+// Asked once more only when the pieces are still long (notes are optional: a day can have none)
+const { looksGood } = await import('../api/_lib/tanya-guide.js');
+check('pieces of 30 words → asked again; short pieces with no notes → fine', [looksGood([{ en: 'word '.repeat(30) }]), looksGood([{ en: 'One soul comes from the kelipah.' }])], [false, true]);
 
 check('prepare again (bust) by a normal user → 403', (await tanya({ ...T, bust: '1' })).status, 403);
 const callsB = claudeCalls;
@@ -224,7 +226,7 @@ check('written guides are keyed by book, chapter and verses', [writtenKey('Tanya
   ['Iggeret HaKodesh 29|1|8', 'Likkutei Amarim 1|2|end']);
 written[writtenKey(P.chapterSlug, P.startVerse, P.endVerse)] = { chapterIntro: '', recap: 'Written recap.', summary: 'Written summary.', segments: [
   { index: 1, heading: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', heading: 'The first soul' }, { he: 'ונפש השנית', en: 'The second soul', heading: '' }] },
-  { index: 2, heading: '', splits: [] }] };
+  { index: 2, heading: '', splits: [] }] };   // (an older written guide: headings, and still read)
 const callsW = claudeCalls;
 await tanya({ ...T, bust: '1' }, 'token-admin'); await finishBackground();
 const w1 = await tanya(T, null);
