@@ -865,7 +865,11 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #rem-nudge { position:relative; margin:16px 0 0; padding:14px 16px; border-radius:var(--r-m); background:var(--card); }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
-.rb-para { display:block; height:0.7em; }   /* the translation's own paragraph break, inside a halacha */
+.rb-para { display:block; height:0.7em; }
+/* Rambam side by side: the English (with the translator's additions) is about
+   1.5 times the Hebrew, so it gets 60% of the width and each pair comes out
+   about the same height (measured on real chapters, phone and desktop) */
+#native-reader-content { --rb-cols: 1.5fr 1fr; }   /* the translation's own paragraph break, inside a halacha */
 .rb-map, .rb-take { margin:4px 0 0; padding-left:20px; } .rb-map li, .rb-take li { margin:3px 0; } .rb-take li { margin:5px 0; }
 .rb-why { font-family:var(--read-font); font-style:italic; font-size:15px; line-height:1.45; color:var(--t2); border-left:2px solid color-mix(in srgb, var(--rc) 30%, transparent); padding:2px 0 2px 10px; margin:8px 0 12px; }
 .rb-why b { font:600 11px var(--ui-font); font-style:normal; color:var(--t3); margin-right:3px; }
@@ -5336,7 +5340,7 @@ function _renderRambamContent() {
       if (!enRaw && !he) continue;
       // A section title in the contents: a heading, not a numbered paragraph
       if (op?.heads?.[i]) {
-        v += '<div class="rb-sec"' + (lang === 'both' ? ' style="display:grid;grid-template-columns:1fr 1fr;gap:20px;"' : '') + '>'
+        v += '<div class="rb-sec"' + (lang === 'both' ? ' style="display:grid;grid-template-columns:var(--rb-cols);gap:20px;"' : '') + '>'
           + (lang !== 'he' && enRaw ? '<p class="tz-h rb-h">' + escapeHtml(enRaw.replace(/<[^>]+>/g, '')) + '</p>' : '')
           + (lang !== 'en' && he ? '<p class="tz-h rb-h" lang="he" style="direction:rtl;text-align:right;">' + escapeHtml(he.replace(/<[^>]+>/g, '')) + '</p>' : '') + '</div>';
         continue;
@@ -5365,13 +5369,13 @@ function _renderRambamContent() {
         pg.he.forEach((piece, j) => {
           const enPart = styled.slice(k, k + pg.en[j]).join(PARA); k += pg.en[j];
           const last = j === pg.he.length - 1;
-          v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:' + (j ? '4px' : '14px') + ' 0 ' + (last ? '13px' : '6px') + ';' + (last ? 'border-bottom:1px solid var(--border);' : '') + 'align-items:start;">';
+          v += '<div style="display:grid;grid-template-columns:var(--rb-cols);gap:20px;padding:' + (j ? '4px' : '14px') + ' 0 ' + (last ? '13px' : '6px') + ';' + (last ? 'border-bottom:1px solid var(--border);' : '') + 'align-items:start;">';
           v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + (j ? '' : enMark) + enPart + '</p>';
           v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + (j ? '' : heMark) + piece + '</p>';
           v += '</div>';
         });
       } else if (lang === 'both') {
-        v += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
+        v += '<div style="display:grid;grid-template-columns:var(--rb-cols);gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + enMark + en + '</p>';
         v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
