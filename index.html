@@ -833,6 +833,11 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* Every reader, the same pieces (DESIGN.md: "One look for the readers") */
 .rd-vn { font:800 11px var(--ui-font); color:var(--rc); margin:0 5px 0 0; vertical-align:2px; }
 .rd-he .rd-vn { margin:0 0 0 5px; }
+/* A Rambam halacha is a paragraph-length unit, not a verse: its number sits on
+   the line, larger, as in printed editions (Chumash verse numbers stay small) */
+/* (sized from the paragraph, so it follows the text-size setting too) */
+.rd-vn.rb-hn { font-size:.85em; font-weight:800; vertical-align:baseline; margin-right:7px; }
+.rd-he .rd-vn.rb-hn { font-family:inherit; font-size:.95em; font-weight:700; vertical-align:baseline; margin:0 0 0 8px; }
 .rd-ch { display:flex; align-items:center; gap:10px; margin:22px 0 4px; font:800 13px var(--ui-font); color:var(--rc); }
 .rd-ch::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--rc) 30%, transparent); }
 .rd-comm { background:var(--card); border-radius:12px; padding:10px 14px; margin:6px 0 8px; }   /* Rashi: no label and no side bar (it's the only commentary; the bold opening words say it), just a soft ground */
@@ -5360,8 +5365,8 @@ function _renderRambamContent() {
       // Halacha markers: arabic numeral for English side, Hebrew letter for Hebrew side
       // Rendered as a span before the text — stays inline with the paragraph
       if (hs[num]) v += '<p class="tz-h rb-h">' + escapeHtml(hs[num]) + '</p>';
-      const enMark = num ? '<span class="rd-vn">' + num + '</span>' : '';
-      const heMark = num ? '<span class="rd-vn">' + heNum + '</span>' : '';
+      const enMark = num ? '<span class="rd-vn rb-hn">' + num + '</span>' : '';
+      const heMark = num ? '<span class="rd-vn rb-hn">' + heNum + '</span>' : '';
 
       if (lang === 'both' && pg) {
         // Each paragraph beside its Hebrew, in rows that line up
