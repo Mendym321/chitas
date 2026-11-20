@@ -31,8 +31,21 @@ export const parasDocId = ref => Buffer.from(`${ref}|${PARAS_VERSION}`).toString
 // The Hebrew as the app shows it: no tags, single spaces
 export const cleanHe = s => String(s || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 // A halacha's English paragraphs, without the translator's footnotes
+// The translator's footnotes taken out: <sup class="footnote-marker">n</sup>
+// then <i class="footnote">…</i>, which can hold <i>…</i> of its own
+export function withoutFootnotes(s) {
+  let out = String(s || '').replace(/<sup[^>]*class="footnote-marker"[^>]*>.*?<\/sup>/gs, '');
+  for (let at = out.indexOf('<i class="footnote">'); at !== -1; at = out.indexOf('<i class="footnote">')) {
+    let depth = 0, i = at, end = -1;
+    const tag = /<(\/?)i\b[^>]*>/g;
+    tag.lastIndex = at;
+    for (let m; (m = tag.exec(out));) { depth += m[1] ? -1 : 1; if (depth === 0) { end = m.index + m[0].length; break; } }
+    out = out.slice(0, at) + (end === -1 ? '' : out.slice(end));
+  }
+  return out;
+}
 export function enParagraphs(s) {
-  const noNotes = String(s || '').replace(/<sup[^>]*>.*?<\/sup>\s*<i class="footnote">.*?<\/i>/gs, '');
+  const noNotes = withoutFootnotes(s);
   return noNotes.split(/(?:\s*<br\s*\/?>\s*)+/i).map(p => p.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()).filter(Boolean);
 }
 const flat = x => typeof x === 'string' ? [x] : Array.isArray(x) ? x.flatMap(flat) : [];

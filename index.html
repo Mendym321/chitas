@@ -5170,6 +5170,64 @@ const _rbEnParas = s => String(s || '').split(RB_PARA).filter(p => p.replace(new
 // the pieces make up the halacha's Hebrew, and the English has the paragraphs
 // they're for. Not ready within a moment (the first time anyone opens a
 // chapter): the chapter shows without it, and it's there next time.
+// ── Guides written ahead, in data/guides/rambam-ai.json (the weekly batch) ──
+// { "Hiring 11": { about, heads: [[n, heading]], notes: { "6": { text, term } },
+//   splits: { "2": [Hebrew start of English paragraph 2, of 3, ...] } } }
+// Used first; the server's AI (/api/rambam-paras) only fills what's missing.
+// The Hebrew is cut at the written starts the way the server cuts it
+// (api/_lib/tanya-split.js: vowels, punctuation and combined letters ignored).
+function _heSkeleton(text) {
+  let s = '';
+  const map = [];
+  for (let i = 0; i < text.length; i++) {
+    let ch = text[i];
+    if (ch >= '\uFB1D' && ch <= '\uFB4F') ch = ch.normalize('NFKD')[0];
+    if (/[\u0591-\u05BD\u05BF-\u05C7]/.test(ch)) continue;
+    if (/[\s\u05BE\u2010-\u2015-]/.test(ch)) { if (s && s[s.length - 1] !== ' ') { s += ' '; map.push(i); } continue; }
+    if (/[^\p{L}\p{N}]/u.test(ch)) continue;
+    s += ch.toLowerCase(); map.push(i);
+  }
+  return { s, map };
+}
+function _heStarts(text, phrases) {
+  const sk = _heSkeleton(text);
+  let last = 0;
+  return (phrases || []).map(p => {
+    const q = _heSkeleton(String(p || '')).s.trim();
+    if (q.length < 2) return -1;
+    for (let k = sk.s.indexOf(q); k !== -1; k = sk.s.indexOf(q, k + 1)) {
+      let at = sk.map[k];
+      if ((k === 0 || sk.s[k - 1] === ' ') && at > last) {
+        while (at > 0 && /[“"'‘(\[״]/.test(text[at - 1])) at--;
+        last = at;
+        return at;
+      }
+    }
+    return -1;
+  });
+}
+// A halacha's Hebrew cut at the written starts: { he: [pieces], en: [paragraphs per piece] } or null
+function _rbCut(he, paraCount, starts) {
+  const at = _heStarts(he, (starts || []).slice(0, paraCount - 1));
+  const cuts = [], en = [1];
+  at.forEach(p => { if (p > 0) { cuts.push(p); en.push(1); } else en[en.length - 1]++; });
+  if (!cuts.length) return null;
+  const pieces = [0, ...cuts].map((c, k) => he.slice(c, cuts[k] ?? undefined).trim());
+  return pieces.every(Boolean) ? { he: pieces, en } : null;
+}
+// A chapter's splits and guide from the written file, where it has them
+function _rambamWritten(chapter, entry) {
+  if (!entry || chapter._written === entry) return;
+  chapter._written = entry;
+  const paras = { ...(chapter.paras || {}) };
+  Object.entries(entry.splits || {}).forEach(([n, starts]) => {
+    const i = +n - 1, he = chapter.he[i], count = _rbEnParas(chapter.en[i]).length;
+    const cut = he && count > 1 && _rbCut(he, count, starts);
+    if (cut) paras[i] = cut;
+  });
+  chapter.paras = paras;
+  chapter.aiGuide = { about: entry.about || chapter.aiGuide?.about || '', heads: entry.heads || chapter.aiGuide?.heads || [], notes: entry.notes || chapter.aiGuide?.notes || {} };
+}
 const _askRambamParas = ref => fetch('/api/rambam-paras?ref=' + encodeURIComponent(ref)).then(r => r.ok ? r.json() : null).catch(() => null);
 async function _rambamParas(asked, enSegs, heSegs) {
   if (!asked) return { paras: {}, guide: null };
@@ -5311,6 +5369,8 @@ function _renderRambamContent() {
   const guideOf = ch => (lines && lines[ch.title]) || ch.aiGuide?.about || '';
   // The guide's small headings, each before the halacha where a topic starts
   const heads = _guideLines('rambam-heads', _renderRambamContent);
+  const written = _guideLines('rambam-ai', _renderRambamContent);   // the weekly batch (see _rambamWritten)
+  if (written) chapters.forEach(ch => _rambamWritten(ch, written[ch.title]));
   const headsOf = ch => Object.fromEntries((heads && heads[ch.title]) || ch.aiGuide?.heads || []);
   const guideOn = _readerOpt('rambam', 'guide');
 

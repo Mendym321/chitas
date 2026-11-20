@@ -52,6 +52,7 @@ const SHELL_URLS = [
   '/data/guides/chumash.json',
   '/data/guides/rambam.json',
   '/data/guides/rambam-heads.json',
+  '/data/guides/rambam-ai.json',
   '/data/sefer-hamitzvos.json',
   '/data/cycles.json',
   '/data/likkutei-torah.json',
