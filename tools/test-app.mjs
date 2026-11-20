@@ -377,15 +377,16 @@ await check('Rambam "Both": the Hebrew split to match the English paragraphs, ea
   const en = [_cleanHtml(_keepParas('A rule.<br>What is implied? A case.<br>And more.'), []), _cleanHtml(_keepParas('One.<br>Two.'), [])];
   const he = ['כְּלָל. כֵּיצַד? מַעֲשֶׂה. וְעוֹד.', 'אחת. שתים.'];
   const answer = { halachot: { 1: { he: ['כְּלָל.', 'כֵּיצַד? מַעֲשֶׂה. וְעוֹד.'], en: [1, 2] }, 2: { he: ['אחת.', 'לא זה הטקסט'], en: [1, 1] } } };
-  const paras = await _rambamParas(Promise.resolve(answer), en, he);
-  window._rambamData = { chapters: [{ title: 'Sales 9', chapter: 9, en, he, notes: [], paras }] };
+  const { paras, guide } = await _rambamParas(Promise.resolve({ ...answer, guide: { about: 'AI line', heads: [[1, 'AI heading']], notes: { 1: { text: 'Plain words.', term: 'A term: its meaning.' } } } }), en, he);
+  window._rambamData = { chapters: [{ title: 'No Written Guide 9', chapter: 9, en, he, notes: [], paras, aiGuide: guide }] };
   _rv.sid = 'rambam'; _renderRambamContent();
   const el = document.getElementById('native-reader-content');
   const rows = [...el.querySelectorAll('.rf-body.rd-he')].map(p => { const c = p.cloneNode(true); c.querySelectorAll('.rd-vn').forEach(n => n.remove()); return c.textContent.trim(); });
-  const r = [Object.keys(paras), rows, el.querySelectorAll('.rf-body:not(.rd-he) .rb-para').length];
+  const r = [Object.keys(paras), rows, el.querySelectorAll('.rf-body:not(.rd-he) .rb-para').length,
+    el.querySelector('.tz-gt')?.textContent, el.querySelector('.rb-h')?.textContent, el.querySelector('.rb-pw')?.textContent, !!el.querySelector('.rb-pw-ai')];
   el.innerHTML = '';
   return r;
-}, [['0'], ['כְּלָל.', 'כֵּיצַד? מַעֲשֶׂה. וְעוֹד.', 'אחת. שתים.'], 2]);
+}, [['0'], ['כְּלָל.', 'כֵּיצַד? מַעֲשֶׂה. וְעוֹד.', 'אחת. שתים.'], 2, 'AI line', 'AI heading', 'Plain words.A term: its meaning.', true]);
 
 await check('Tehillim "Both": each passuk side by side, English and Hebrew, no rules between', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };

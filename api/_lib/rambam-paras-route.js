@@ -5,11 +5,10 @@
  * plan allows 12 functions, and both prepare a reading aid once and save it.)
  *
  * The chapter's Hebrew split to match the paragraphs of its English
- * translation (see api/_lib/rambam-paras.js), so the reader can show them side
- * by side. Worked out once per chapter (one AI call, about 2 cents) and saved
+ * translation, and its guide (see api/_lib/rambam-paras.js). Worked out once per chapter (one AI call, about 2 cents) and saved
  * for everyone, for good.
  *
- *   200  { ref, halachot: { "3": { he: [pieces], en: [counts] } } }
+ *   200  { ref, halachot: { "3": { he: [pieces], en: [counts] } }, guide: { about, heads, notes } }
  *   202  being worked out right now by someone else: try again later
  *   429  today's limit of new chapters is reached (the text shows without splits)
  *   400/404/502 with { error }
@@ -23,7 +22,7 @@ const NEW_PER_DAY = 120;              // new chapters a day, for everyone (a few
 const LOCK_FOR = 90 * 1000;           // longer than one preparation takes
 
 const send = (res, status, body) => res.status(status).json(body);
-const reply = d => ({ ref: d.ref, halachot: d.halachot || {} });
+const reply = d => ({ ref: d.ref, halachot: d.halachot || {}, guide: d.guide || null });
 
 export async function rambamParasHandler(req, res) {
   if (req.method !== 'GET') return send(res, 405, { error: 'GET only' });
