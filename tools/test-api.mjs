@@ -268,7 +268,12 @@ check('a written guide with a cut that isn\'t in the text → the AI prepares it
   const { parasDocId } = await import('../api/_lib/rambam-paras.js');
   store.set('rambam_paras/' + Buffer.from('Mishneh Torah, Test Laws 3|v1').toString('base64url'), { ref: 'Mishneh Torah, Test Laws 3', halachot: { 1: { he: ['a', 'b'], en: [1, 1] } } });
   const c1 = claudeCalls, old = await run('Mishneh Torah, Test Laws 3');
-  check('a chapter split before the guide was added → that split, no AI call', [old.status, claudeCalls - c1, Object.keys(old.json.halachot), old.json.guide], [200, 0, ['1'], null]);
+  check('a chapter split before the guide was added → made again with its guide (one AI call)', [old.status, claudeCalls - c1, !!old.json.guide], [200, 1, true]);
+  store.set('rambam_paras/' + Buffer.from('Mishneh Torah, Test Laws 4|v1').toString('base64url'), { ref: 'Mishneh Torah, Test Laws 4', halachot: { 1: { he: ['a', 'b'], en: [1, 1] } } });
+  store.set('rambam_paras_usage/all', { date: new Date().toISOString().slice(0, 10), count: 120 });
+  const c2 = claudeCalls, lim = await run('Mishneh Torah, Test Laws 4');
+  check("…but when no new one can be made now (today's limit), the earlier split", [lim.status, claudeCalls - c2, Object.keys(lim.json.halachot)], [200, 0, ['1']]);
+  store.delete('rambam_paras_usage/all');
   const { cutHalacha } = await import('../api/_lib/rambam-paras.js');
   check('no start found → no cut at all', cutHalacha('אבג דהו', 3, ['', 'לא כאן']), null);
 }

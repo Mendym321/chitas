@@ -33,21 +33,22 @@ export async function rambamParasHandler(req, res) {
     const doc = db.collection('rambam_paras').doc(parasDocId(ref));
     const saved = await doc.get();
     if (saved.exists) return send(res, 200, reply(saved.data()));
-    // Split before the guide was added (v1): use that rather than wait for a new one
-    const older = await db.collection('rambam_paras').doc(Buffer.from(`${ref}|v1`).toString('base64url')).get().catch(() => null);
-    if (older?.exists) return send(res, 200, reply(older.data()));
+    // A split saved before the guide was added (v1): the fallback when a new one can't be made now
+    const older = async () => { const d = await db.collection('rambam_paras').doc(Buffer.from(`${ref}|v1`).toString('base64url')).get().catch(() => null); return d?.exists ? d.data() : null; };
 
     // One preparation at a time per chapter
     const lock = db.collection('rambam_paras_locks').doc(parasDocId(ref));
     try { await lock.create({ at: Date.now() }); }
     catch {
       const held = (await lock.get().catch(() => null))?.data?.();
-      if (Date.now() - (held?.at || 0) < LOCK_FOR) return send(res, 202, { preparing: true });
+      if (Date.now() - (held?.at || 0) < LOCK_FOR) { const o = await older(); return o ? send(res, 200, reply(o)) : send(res, 202, { preparing: true }); }
       await lock.set({ at: Date.now() });
     }
     try {
-      if (!(await takeDailyQuota(db, 'all', 'rambam_paras', NEW_PER_DAY))) return send(res, 429, { error: "today's limit of new chapters is reached" });
-      const result = await prepareParas(ref);
+      if (!(await takeDailyQuota(db, 'all', 'rambam_paras', NEW_PER_DAY))) { const o = await older(); return o ? send(res, 200, reply(o)) : send(res, 429, { error: "today's limit of new chapters is reached" }); }
+      let result;
+      try { result = await prepareParas(ref); }
+      catch (e) { const o = await older(); if (o) { console.error('rambam-paras:', e.message, '(showing the earlier split)'); return send(res, 200, reply(o)); } throw e; }
       await doc.set(result);
       return send(res, 200, reply(result));
     } finally {
