@@ -12,7 +12,7 @@
  * - Offline resilience (cached API responses shown if network fails)
  */
 
-const VERSION     = 'v94';
+const VERSION     = 'v95';
 const SHELL_CACHE = `chitas-shell-${VERSION}`;
 const DATA_CACHE  = `chitas-data-${VERSION}`;
 
@@ -52,6 +52,7 @@ const SHELL_URLS = [
   '/data/guides/chumash.json',
   '/data/guides/rambam.json',
   '/data/guides/rambam-heads.json',
+  '/data/guides/rambam-ai.json',
   '/data/sefer-hamitzvos.json',
   '/data/cycles.json',
   '/data/likkutei-torah.json',
