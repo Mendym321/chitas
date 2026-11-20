@@ -871,6 +871,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .rb-para { display:block; height:0.7em; }
+.rb-pw { font-family:var(--read-font); font-size:15.5px; line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--rc) 9%, var(--bg)); border-radius:10px; padding:10px 13px; margin:10px 0 6px; }   /* a hard halacha in plain words */
+.rb-pw-term { display:block; margin-top:6px; font-size:13.5px; color:var(--t3); }
+.rb-pw-ai { font-size:var(--fs-1); color:var(--t3); text-align:center; margin:18px 0 0; }
 /* Rambam side by side: the English (with the translator's additions) is about
    1.5 times the Hebrew, so it gets 60% of the width and each pair comes out
    about the same height (measured on real chapters, phone and desktop) */
@@ -5169,7 +5172,7 @@ const _rbEnParas = s => String(s || '').split(RB_PARA).filter(p => p.replace(new
 // chapter): the chapter shows without it, and it's there next time.
 const _askRambamParas = ref => fetch('/api/rambam-paras?ref=' + encodeURIComponent(ref)).then(r => r.ok ? r.json() : null).catch(() => null);
 async function _rambamParas(asked, enSegs, heSegs) {
-  if (!asked) return {};
+  if (!asked) return { paras: {}, guide: null };
   const got = await Promise.race([asked, new Promise(r => setTimeout(() => r(null), 2500))]);
   const squash = t => String(t || '').replace(/\s+/g, '');
   const out = {};
@@ -5178,7 +5181,10 @@ async function _rambamParas(asked, enSegs, heSegs) {
     if (Array.isArray(h?.he) && Array.isArray(h?.en) && h.he.length === h.en.length && h.he.length > 1
       && squash(h.he.join('')) === squash(heSegs[i]) && _rbEnParas(enSegs[i]).length === h.en.reduce((a, b) => a + b, 0)) out[i] = { he: h.he, en: h.en };
   });
-  return out;
+  // The chapter's guide from the same answer (used where there's no written one; its notes everywhere)
+  const g = got?.guide;
+  const guide = g && typeof g === 'object' ? { about: String(g.about || ''), heads: Array.isArray(g.heads) ? g.heads : [], notes: g.notes && typeof g.notes === 'object' ? g.notes : {} } : null;
+  return { paras: out, guide };
 }
 async function _fetchRambamChapter(ref) {
   const enc = encodeURIComponent(ref);
@@ -5269,7 +5275,8 @@ async function _fetchRambamChapter(ref) {
         // how many sections came (the contents), to check it's the whole day's range
         sectionCount: op.sections ? (Array.isArray(heRes?.he?.[0]) ? heRes.he.length : 1) : null } };
   }
-  return { ref, title, heBook, chapter, en: enSegs, he: heSegs, notes, paras: await _rambamParas(parasAsked, enSegs, heSegs) };
+  const { paras, guide: aiGuide } = await _rambamParas(parasAsked, enSegs, heSegs);
+  return { ref, title, heBook, chapter, en: enSegs, he: heSegs, notes, paras, aiGuide };
 }
 
 function _renderRambamContent() {
@@ -5300,17 +5307,18 @@ function _renderRambamContent() {
   }
 
   const lines = _guideLines('rambam', _renderRambamContent);
-  const guideOf = ch => (lines && lines[ch.title]) || '';
+  // The written guide (by chapter title) where there is one; else the AI's (saved per chapter, with the Hebrew split)
+  const guideOf = ch => (lines && lines[ch.title]) || ch.aiGuide?.about || '';
   // The guide's small headings, each before the halacha where a topic starts
   const heads = _guideLines('rambam-heads', _renderRambamContent);
-  const headsOf = ch => Object.fromEntries((heads && heads[ch.title]) || []);
+  const headsOf = ch => Object.fromEntries((heads && heads[ch.title]) || ch.aiGuide?.heads || []);
   const guideOn = _readerOpt('rambam', 'guide');
 
   // Language, then the options
   let t = _langSeg(readLang, "_setRambamLang('LANG')")
     + (chapters.some(ch => guideOf(ch) || Object.keys(headsOf(ch)).length) ? '<div class="tz-opts">' + _optChip('rambam', 'guide', 'Guide') + '</div>' : '');
 
-  let v = '';
+  let v = '', anyPlain = false;
 
   chapters.forEach((chapter, chIdx) => {
     // Each chapter opens like a printed page: the book, then the chapter
@@ -5395,12 +5403,16 @@ function _renderRambamContent() {
       }
       // Where neighbouring halachos seem to clash: a word on the difference, in the guide's voice
       if (g.why?.[num]) v += '<p class="rb-why"><b>The difference</b> ' + escapeHtml(g.why[num]) + '</p>';
+      // A halacha that's hard to follow: its ruling in plain words (and a term it uses), from the AI's guide
+      const pw = guideOn && num && chapter.aiGuide?.notes?.[num];
+      if (pw?.text) { anyPlain = true; v += '<div class="rb-pw">' + escapeHtml(pw.text) + (pw.term ? '<span class="rb-pw-term">' + escapeHtml(pw.term) + '</span>' : '') + '</div>'; }
     }
     if (g.takeaways?.length) v += '<div class="tz-guide" style="margin-top:18px"><p class="tz-gl">Today\'s takeaways</p><ul class="tz-gt rb-take">'
       + g.takeaways.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul></div>';
   });
 
   el.innerHTML = t + v
+    + (anyPlain ? '<p class="rb-pw-ai">The plain-words notes are AI-written to help you follow; the text is the Rambam\'s.</p>' : '')
     + '<p style="font-size:var(--fs-1);color:var(--t3);text-align:center;margin-top:24px;padding-bottom:8px;">— End of today\'s Rambam —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
 }

@@ -72,7 +72,7 @@ const claude = createServer((req, res) => {
     claudeCalls++;
     claude.lastRequest = JSON.parse(body);
     const sys = claude.lastRequest.system;
-    const answer = JSON.stringify(sys.includes('PIECES') ? (tanyaAnswers.shift() || fakeSplits) : sys.includes('You line up') ? fakeParas : fakeQuiz);
+    const answer = JSON.stringify(sys.includes('PIECES') ? (tanyaAnswers.shift() || fakeSplits) : sys.includes('LINING UP') ? fakeParas : fakeQuiz);
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
       id: 'msg_test', type: 'message', role: 'assistant', model: 'claude-opus-5-5',
       content: [{ type: 'text', text: answer }],
@@ -85,7 +85,9 @@ process.env.ANTHROPIC_API_KEY = 'test-key';
 
 const tanyaAnswers = [];   // queued answers for particular tests (then fakeSplits)
 // Pretend Claude for the Rambam's paragraphs: one start that's in the Hebrew, one that isn't
-const fakeParas = { halachot: [{ index: 1, starts: ['כיצד', 'מילים שאינן כאן'] }] };
+const fakeParas = { halachot: [{ index: 1, starts: ['כיצד', 'מילים שאינן כאן'] }],
+  about: 'Oaths, and a short halacha.', heads: [{ index: 1, heading: 'Oaths' }, { index: 9, heading: 'no such halacha' }],
+  notes: [{ index: 1, text: 'The rule, in plain words.', term: 'Sh\'vuat hesset: a lighter oath.' }, { index: 7, text: 'not a real halacha', term: '' }] };
 // Pretend Claude for Tanya: a good split (typed without vowels, with a heading),
 // a made-up start, a recap and a summary
 const fakeSplits = { chapterIntro: 'should be dropped mid-chapter', recap: 'So far: every Jew has two souls.', summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
@@ -254,8 +256,10 @@ check('a written guide with a cut that isn\'t in the text → the AI prepares it
   const p1 = await run('Mishneh Torah, Test Laws 1');
   check('first time: one AI call; the Hebrew cut at the start that was found, the unfound paragraph kept with the one before',
     [p1.status, claudeCalls - c0, p1.json.halachot], [200, 1, { 1: { he: ['כְּלָל בִּשְׁבוּעוֹת.', 'כֵּיצַד? מַעֲשֶׂה. סוֹף דָּבָר.'], en: [1, 2] } }]);
+  check('…and the chapter\'s guide from the same call, keeping only real halachos', p1.json.guide,
+    { about: 'Oaths, and a short halacha.', heads: [[1, 'Oaths']], notes: { 1: { text: 'The rule, in plain words.', term: 'Sh\'vuat hesset: a lighter oath.' } } });
   const asked = claude.lastRequest.messages[0].content;
-  check('the AI saw only the halacha with paragraphs, without the footnote', [asked.includes('[halacha 1]'), asked.includes('[halacha 2]'), asked.includes('translator'), asked.includes('EN 3: And a last word.')], [true, false, false, true]);
+  check('the AI saw every halacha (for the guide), without the footnote', [asked.includes('[halacha 1]'), asked.includes('[halacha 2]'), asked.includes('translator'), asked.includes('EN 3: And a last word.')], [true, true, false, true]);
   const p2 = await run('Mishneh Torah, Test Laws 1');
   check('asked again → saved, no AI call', [p2.status, claudeCalls - c0, JSON.stringify(p2.json.halachot) === JSON.stringify(p1.json.halachot)], [200, 1, true]);
   store.set('rambam_paras_usage/all', { date: new Date().toISOString().slice(0, 10), count: 120 });
