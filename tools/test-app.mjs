@@ -388,6 +388,16 @@ await check('Rambam "Both": the Hebrew split to match the English paragraphs, ea
   return r;
 }, [['0'], ['כְּלָל.', 'כֵּיצַד? מַעֲשֶׂה. וְעוֹד.', 'אחת. שתים.'], 2, 'AI line', 'AI heading', 'Plain words.A term: its meaning.', true]);
 
+await check('Rambam guides written ahead (data/guides/rambam-ai.json): the Hebrew cut at the written starts (vowels ignored), the line, headings and notes used', () => {
+  const ch = { title: 'Test Laws 1', chapter: 1, notes: [],
+    en: [_cleanHtml(_keepParas('A rule.<br>What is implied? A case.<br>And more.'), [])],
+    he: ['כְּלָל בִּשְׁבוּעוֹת. כֵּיצַד? מַעֲשֶׂה. וְעוֹד דָּבָר.'] };
+  _rambamWritten(ch, { about: 'Written line', heads: [[1, 'Written heading']], notes: { 1: { text: 'Plain.', term: '' } }, splits: { 1: ['כיצד', 'ועוד דבר'] } });
+  const missing = { title: 'Test Laws 2', chapter: 2, notes: [], en: [_cleanHtml(_keepParas('One.<br>Two.'), [])], he: ['אחת. שתים.'] };
+  _rambamWritten(missing, { about: 'x', splits: { 1: ['לא כאן'] } });
+  return [ch.paras[0], ch.aiGuide.about, ch.aiGuide.heads, ch.aiGuide.notes[1].text, Object.keys(missing.paras)];
+}, [{ he: ['כְּלָל בִּשְׁבוּעוֹת.', 'כֵּיצַד? מַעֲשֶׂה.', 'וְעוֹד דָּבָר.'], en: [1, 1, 1] }, 'Written line', [[1, 'Written heading']], 'Plain.', []]);
+
 await check('Tehillim "Both": each passuk side by side, English and Hebrew, no rules between', () => {
   window._tehillimData = { chapters: [{ psalmNum: 18, startVerse: 1, he: ['לַמְנַצֵּחַ', 'וַיֹּאמַר'], en: ['For the leader', 'And he said'] }], psalmLabel: 'Psalms 18–22', dayNum: 3 };
   localStorage.setItem('chitas_lang_tehillim', 'both');
