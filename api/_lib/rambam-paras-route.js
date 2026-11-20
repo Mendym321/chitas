@@ -33,6 +33,9 @@ export async function rambamParasHandler(req, res) {
     const doc = db.collection('rambam_paras').doc(parasDocId(ref));
     const saved = await doc.get();
     if (saved.exists) return send(res, 200, reply(saved.data()));
+    // Split before the guide was added (v1): use that rather than wait for a new one
+    const older = await db.collection('rambam_paras').doc(Buffer.from(`${ref}|v1`).toString('base64url')).get().catch(() => null);
+    if (older?.exists) return send(res, 200, reply(older.data()));
 
     // One preparation at a time per chapter
     const lock = db.collection('rambam_paras_locks').doc(parasDocId(ref));
@@ -52,6 +55,6 @@ export async function rambamParasHandler(req, res) {
     }
   } catch (err) {
     console.error('rambam-paras:', err.message);
-    return send(res, err.status || 502, { error: err.message });
+    return send(res, err.status === 404 ? 404 : 502, { error: err.status === 404 ? err.message : 'not available right now' });
   }
 }
