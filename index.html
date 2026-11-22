@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#1F1B16"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -156,6 +156,17 @@
   .screen.active { display: block; }
   .panel { display: none; position:fixed; inset:0; z-index:500; background:var(--bg); flex-direction:column; }
   .panel.open { display: flex; }
+  /* Edge to edge: on a phone the page runs under the clock and the home bar
+     (the phone app, and the site added to the home screen), so each screen's
+     colour fills them. What sits at the top of a screen moves down by the
+     clock's height (--sat), and the bottom pieces already allow for the home
+     bar. In a browser tab both are 0 and nothing moves. */
+  :root { --sat: env(safe-area-inset-top, 0px); }
+  #tab-learn { padding-top:calc(20px + var(--sat)) !important; }
+  #tab-stats, #tab-profile { padding-top:calc(16px + var(--sat)) !important; }
+  #reader-head, #quiz-head { padding-top:calc(14px + var(--sat)) !important; }
+  #onboarding { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)) !important; }
+  @media (min-width: 1000px) { .tabbar { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; } }
 
   /* Toast */
   #toast { position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);align-items:center;gap:8px;padding:10px 20px;border-radius:999px;font-size:var(--fs-2);font-weight:600;z-index:600;white-space:nowrap;background:var(--card);color:var(--t1);border:1px solid var(--border);box-shadow:0 6px 24px rgba(40,30,10,.16);display:none;pointer-events:none;animation:toastIn .35s cubic-bezier(.2,.7,.2,1); }
@@ -934,10 +945,11 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #ob-welcome .ob-names { margin-top:16px; display:grid; grid-template-columns:repeat(2, auto); gap:6px 26px; font:800 18px var(--ui-font); }
 #ob-welcome .ob-names span { opacity:0; animation:obName .5s ease forwards; animation-delay:calc(.45s + var(--d)); }
 @keyframes obName { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+#ob-welcome .ob-tag { margin:22px 0 0; font:500 16px/1.4 var(--ui-font); color:#CFC5B3; opacity:0; animation:obName .6s ease forwards; animation-delay:1.55s; }   /* what it is, in one line, once the four names are in */
 #ob-welcome .ob-actions { margin-top:auto; width:100%; padding-top:36px; }
 #ob-welcome .ob-start { width:100%; height:56px; border:none; border-radius:999px; background:#FBF7EF; color:#1F1B16; font:800 17px var(--ui-font); cursor:pointer; }
 #ob-welcome .ob-link { display:block; width:100%; margin-top:10px; padding:12px; background:none; border:none; color:#CFC5B3; font:700 15px var(--ui-font); cursor:pointer; }
-@media (prefers-reduced-motion: reduce) { #ob-welcome .ob-rings .rg { animation:none; stroke-dashoffset:0; } #ob-welcome .ob-names span { animation:none; opacity:1; } }
+@media (prefers-reduced-motion: reduce) { #ob-welcome .ob-rings .rg { animation:none; stroke-dashoffset:0; } #ob-welcome .ob-names span, #ob-welcome .ob-tag { animation:none; opacity:1; } }
 @font-face {
   font-family: 'DachHeilig';
   src: url('/fonts/Heilig.otf') format('opentype'), url('https://dach.dev/fonts/Heilig.OTF') format('opentype');   /* our copy, works offline */
@@ -1385,6 +1397,7 @@ window._fsGetDoc = getDoc;
           <span style="color:#E0A030;--d:.15s">Chumash</span><span style="color:#7FA3E6;--d:.4s">Tehillim</span>
           <span style="color:#B98CDB;--d:.65s">Tanya</span><span style="color:#8DBB6A;--d:.9s">Rambam</span>
         </div>
+        <p class="ob-tag">Your daily learning, ready each day</p>
         <div class="ob-actions">
           <button class="ob-start" onclick="obStartGuest()">Start today</button>
           <button class="ob-link" onclick="openSignIn('returning')">I have an account</button>
@@ -3732,6 +3745,28 @@ function _nativePlugin(name) {
   const C = window.Capacitor;
   return C?.isNativePlatform?.() ? (C.Plugins?.[name] || null) : null;
 }
+
+// The phone's clock and battery, drawn over the top of the page (edge to edge):
+// light on the dark welcome, the loader and the readers' coloured tops; on the
+// rest, whatever reads on the page's own background (light or dark theme)
+let _sbLast = '';
+function _statusBarStyle() {
+  const shown = id => { const el = document.getElementById(id); return !!el && getComputedStyle(el).display !== 'none'; };
+  if (shown('app-loader') || shown('onboarding') || shown('chabad-panel') || shown('quiz-panel')) return 'DARK';
+  const m = getComputedStyle(document.body).backgroundColor.match(/\d+(\.\d+)?/g);
+  if (!m) return 'DEFAULT';
+  const [r, g, b] = m.map(Number);
+  return (0.299 * r + 0.587 * g + 0.114 * b) < 128 ? 'DARK' : 'LIGHT';
+}
+function _syncStatusBar() {
+  const sb = _nativePlugin('StatusBar');
+  if (!sb) return;
+  const style = _statusBarStyle();
+  if (style === _sbLast) return;
+  _sbLast = style;
+  try { sb.setStyle({ style }).catch(() => {}); } catch (e) {}
+}
+if (window.Capacitor?.isNativePlatform?.()) setInterval(_syncStatusBar, 300);
 
 // Touch feedback: only three moments in the app use it: 'tap' (a section
 // learned), 'done' (the day finished), 'milestone'. Off with the switch in

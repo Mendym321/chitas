@@ -3,6 +3,7 @@
  *
  *   node batch.mjs plan  [--from YYYY-MM-DD] [--days 10]   what's coming, and what still needs a guide
  *   node batch.mjs tanya "Likkutei Amarim 5|1|7"            a Tanya portion's text, to write its guide
+ *   node batch.mjs pieces "Likkutei Amarim 5|1|7"           a written portion's pieces, with word counts
  *   node batch.mjs rambam "Hiring 11"                       a Rambam chapter's text, to write its guide and splits
  *   node batch.mjs check [--from YYYY-MM-DD] [--days 10]    everything written for those days, against the real text
  *
@@ -108,6 +109,19 @@ if (cmd === 'plan') {
     console.log('\n[' + (i + 1) + ']' + (isHagahahHtml(c.allHe[i], c.allEn[i]) ? ' (GLOSS: no bridge on it)' : ''));
     console.log('HE: ' + noVowels(cleanTanyaHtml(c.allHe[i])));
     console.log('EN: ' + withoutNotes(cleanTanyaHtml(c.allEn[i], [])));
+  }
+} else if (cmd === 'pieces') {
+  // A written portion as the reader shows it: each piece's English word count (>> over 15), and the bridges
+  const key = args[1], [, from, to] = key.split('|'), slug = keyToSlug(key);
+  const c = await fetchChapter(slug);
+  const s = +from - 1, e = to === 'end' ? c.allHe.length : +to;
+  const he = c.allHe.slice(s, e), en = c.allEn.slice(s, e);
+  const blocks = writtenBlocks(writtenGuide(slug, +from, to === 'end' ? null : +to), he.map(x => cleanTanyaHtml(x)), en.map(x => cleanTanyaHtml(x, [])), he.map((x, i) => isHagahahHtml(x, en[i])), +from);
+  if (!blocks) { console.log(key + ': no written entry, or a cut not in the text'); process.exit(1); }
+  for (const b of blocks) {
+    if (b.heading) console.log('   [bridge] ' + b.heading);
+    const t = withoutNotes(String(b.en || '')).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (t) console.log((words(t) > 15 ? '>> ' : '   ') + String(words(t)).padStart(2) + ' | ' + t);
   }
 } else if (cmd === 'rambam') {
   const { en, he } = await fetchRambam(args[1]);
