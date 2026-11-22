@@ -945,10 +945,11 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #ob-welcome .ob-names { margin-top:16px; display:grid; grid-template-columns:repeat(2, auto); gap:6px 26px; font:800 18px var(--ui-font); }
 #ob-welcome .ob-names span { opacity:0; animation:obName .5s ease forwards; animation-delay:calc(.45s + var(--d)); }
 @keyframes obName { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+#ob-welcome .ob-tag { margin:22px 0 0; font:500 16px/1.4 var(--ui-font); color:#CFC5B3; opacity:0; animation:obName .6s ease forwards; animation-delay:1.55s; }   /* what it is, in one line, once the four names are in */
 #ob-welcome .ob-actions { margin-top:auto; width:100%; padding-top:36px; }
 #ob-welcome .ob-start { width:100%; height:56px; border:none; border-radius:999px; background:#FBF7EF; color:#1F1B16; font:800 17px var(--ui-font); cursor:pointer; }
 #ob-welcome .ob-link { display:block; width:100%; margin-top:10px; padding:12px; background:none; border:none; color:#CFC5B3; font:700 15px var(--ui-font); cursor:pointer; }
-@media (prefers-reduced-motion: reduce) { #ob-welcome .ob-rings .rg { animation:none; stroke-dashoffset:0; } #ob-welcome .ob-names span { animation:none; opacity:1; } }
+@media (prefers-reduced-motion: reduce) { #ob-welcome .ob-rings .rg { animation:none; stroke-dashoffset:0; } #ob-welcome .ob-names span, #ob-welcome .ob-tag { animation:none; opacity:1; } }
 @font-face {
   font-family: 'DachHeilig';
   src: url('/fonts/Heilig.otf') format('opentype'), url('https://dach.dev/fonts/Heilig.OTF') format('opentype');   /* our copy, works offline */
@@ -1396,6 +1397,7 @@ window._fsGetDoc = getDoc;
           <span style="color:#E0A030;--d:.15s">Chumash</span><span style="color:#7FA3E6;--d:.4s">Tehillim</span>
           <span style="color:#B98CDB;--d:.65s">Tanya</span><span style="color:#8DBB6A;--d:.9s">Rambam</span>
         </div>
+        <p class="ob-tag">Your daily learning, ready each day</p>
         <div class="ob-actions">
           <button class="ob-start" onclick="obStartGuest()">Start today</button>
           <button class="ob-link" onclick="openSignIn('returning')">I have an account</button>
