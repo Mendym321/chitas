@@ -71,8 +71,8 @@ Use the same name in both stores, because people search for it. On the phone, un
 > • Chumash: the day's aliyah, with Rashi
 > • Tehillim: the daily portion by the monthly cycle, laid out like a printed Tehillim, with Elul's extra chapters in their season
 > • Personal Tehillim: your own chapter and your family's, worked out from each person's Hebrew birthday, and the Rebbe's chapter if you like
-> • Tanya: the day's portion in the Vilna font, with an optional plain-English guide that walks you through it
-> • Rambam: three chapters, one chapter, or Sefer HaMitzvos
+> • Tanya: the day's portion in the Vilna font, with an optional plain-English guide that walks you through the argument
+> • Rambam: three chapters, one chapter, or Sefer HaMitzvos, the Hebrew and English matched paragraph by paragraph, with a line on each chapter and plain-words notes on the halachos that are hard to follow
 > • Hayom Yom: the original, with a clear English translation
 > • In its season: Sefiras HaOmer, with the day's count
 >
@@ -91,9 +91,9 @@ Use the same name in both stores, because people search for it. On the phone, un
 > MADE TO BE QUIET
 > No ads. No tracking. No leaderboards. Use it without an account if you prefer. Light and dark, with comfortable reading fonts.
 >
-> Texts come from Sefaria and the calendar from Hebcal. A question, or a mistake in a text? Write to chitas.daily@gmail.com, or tap "Report a mistake" in any reader.
+> Texts come from Sefaria and the calendar from Hebcal. The guides and Review questions are written with the help of AI, from the day's text, and marked as such; the texts themselves are never changed. A question, or a mistake in a text? Write to chitas.daily@gmail.com, or tap "Report a mistake" in any reader.
 
-What's deliberately not promised: the short notes on the Chumash ("Today in the parsha") and the Rambam ("This chapter") are written ahead in batches, so they appear on most days but not all. They show in screenshot 8, which is a real day, but the description doesn't promise them. If they're kept up every day, add "with a short note on each day's part" to the Chumash and Rambam lines.
+What's deliberately not promised: the short note on the Chumash ("Today in the parsha") is written ahead in batches, so it appears on most days but not all. The Rambam's line and notes are there every day (written ahead where possible, otherwise made by the AI once per chapter and saved), so the description can promise them.
 
 ---
 
@@ -172,7 +172,7 @@ These must match the privacy page. If the app changes what it saves, update both
 | App activity → App interactions | Yes | No | Optional | App functionality |
 | App activity → Other user-generated content (Personal Tehillim; what someone writes in Send feedback or Report a mistake) | Yes | No | Optional | App functionality |
 
-"Shared" means given to another company for its own use. Firebase, Vercel and Resend (which emails feedback to chitas.daily@gmail.com) only process data on Chitas's behalf, and Google says that doesn't count as sharing. Reminders are set on the phone itself and send nothing anywhere. The Review and Tanya guide send only the day's text to Anthropic, never anything about the user, so that isn't user data either.
+"Shared" means given to another company for its own use. Firebase, Vercel and Resend (which emails feedback to chitas.daily@gmail.com) only process data on Chitas's behalf, and Google says that doesn't count as sharing. Reminders are set on the phone itself and send nothing anywhere. The Review, the Tanya guide and the Rambam guide send only the day's text to Anthropic, never anything about the user, so that isn't user data either.
 
 ---
 
@@ -181,7 +181,7 @@ These must match the privacy page. If the app changes what it saves, update both
 **Export compliance / encryption (Apple).** "Does your app use encryption?" **Yes**, then "Does it qualify for any of the exemptions?" **Yes: it only uses standard encryption (HTTPS) built into the operating system.** No paperwork is needed. `app/README.md` (Part 2, one time in Xcode) adds `ITSAppUsesNonExemptEncryption = NO` to the app's settings, so Apple stops asking on every upload.
 
 **Sign-in for review (Apple: App Review Information).** "Sign-in required?" **No.** Notes for the reviewer:
-> Sign-in is optional. Tap "Start today" on the first screen to use the full app without an account. To test an account, use Sign in with Apple from Profile. Account deletion is in Profile → Delete account. Reminders (local notifications) are in Profile → Reminders. The app shows the daily Jewish learning schedule (Chumash, Tehillim, Tanya, Rambam) in Hebrew and English; texts come from Sefaria. It runs on iPhone and iPad.
+> Sign-in is optional. Tap "Start today" on the first screen to use the full app without an account. To test an account, use Sign in with Apple from Profile. Account deletion is in Profile → Delete account. Reminders (local notifications) are in Profile → Reminders. The app shows the daily Jewish learning schedule (Chumash, Tehillim, Tanya, Rambam) in Hebrew and English; texts come from Sefaria. The reading guides and Review questions are generated with AI from the day's text only; no user data is sent, and they are labelled in the app. Beyond the daily texts, the app uses native Sign in with Apple and Google, local notification reminders for each section, and haptics. It runs on iPhone and iPad.
 
 **Google: App access.** "All functionality is available without special access."
 
@@ -200,9 +200,9 @@ These must match the privacy page. If the app changes what it saves, update both
 1. ~~**Final name**~~ Decided: "Chitas: Daily Learning" in the stores, "Chitas" on the phone.
 2. ~~**Developer name**~~ Decided: **Menachem Marcus** (individual accounts on Apple and Google). The app can move to a business account later if needed.
 3. ~~**Hayom Yom English**~~ Done: the app ships its own English translation.
-4. **Fonts**: confirm the OT Vilna, OT Siddur, Shlomo, Taamey Frank and Heilig fonts can be shipped inside an app (web licences sometimes don't cover apps).
+4. ~~**Fonts**~~ Decided: you have permission to ship them.
 5. **Free forever?** If you might charge later, it's easier to decide now: a paid app can't become free and back without hassle, but adding optional in-app purchases later is fine.
-6. **Guide runway**: the written Tanya guides run to 22 November (after that the AI writes each day's, a few cents a day); the Chumash and Rambam notes need a new batch every few weeks. See point 5 of `AUDIT.md`'s launch checklist.
+6. **Guide runway**: written (and checked) so far: Rambam through 1 December, Tanya through 4 December, Chumash through 19 December. Past that the server's AI covers each day in the same style, so nothing breaks; the weekly batch (`docs/guides-batch.md`) keeps the written ones ahead.
 
 ---
 
