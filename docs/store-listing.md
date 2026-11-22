@@ -28,7 +28,7 @@ Upload them in number order. The first three are the ones people see in search r
 | 9 | Hayom Yom, every day | The original, with a clear English translation | Hayom Yom (Apple only) |
 | 10 | Rambam your way | Three chapters, one, or Sefer HaMitzvos. Light or dark. | Rambam, dark mode (Apple only) |
 
-Google takes 8: numbers 1 to 8. The screens show 11 November 2026 (1 Kislev, Toldos), fixed in `tools/store/shoot.mjs` (`DAY`) so the Review questions match the day's Chumash.
+Google takes 8: numbers 1 to 8. The screens show 11 November 2026 (1 Kislev, Toldos), fixed in `tools/store/shoot.mjs` (`DAY`) so the Review questions match the day's Chumash; Tanya (5) shows 21 November and Rambam (10) 24 November (`SHIFT`), days with the guides in their current style: the Tanya's bridges, and the Rambam's matched paragraphs and plain-words notes (on the one-chapter track that day, Forbidden Foods 14).
 
 **Why these.** People who search for a Chitas app already learn, or want to. What they want to know in three seconds: does it have *today's* portions, worked out for me (1); is it the real text, the way I learn it, Hebrew and English with Rashi (2); and does it fit my day (3 and 4). Two things answer that, and both are reasons to have the app rather than a website: it keeps your place when you stop, and it reminds you at your own time for each part, saying what's waiting and opening right to it. So they come early. Then: will I understand it (5), and did it stay with me (6). After that, what no other app does for them: their own family's Tehillim (7) and a quiet record of what they've learned (8), with Hayom Yom (9) and the Rambam tracks (10) on Apple.
 
