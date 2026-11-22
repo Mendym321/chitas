@@ -10,9 +10,9 @@ Tick the boxes as you go (on GitHub you can edit this file and change `[ ]` to `
 
 ## Phase 0: This week (no accounts needed)
 
-- [ ] **0.1 Push everything live.** Tell Claude "push live". This puts the sponsor page, the plaque on Today and the new videos on the website. *Why:* the phone apps show the live website, so whatever is live is what Apple and Google will review.
+- [x] **0.1 Push everything live.** Tell Claude "push live". This puts the sponsor page, the plaque on Today and the new videos on the website. *Why:* the phone apps show the live website, so whatever is live is what Apple and Google will review.
 
-- [x] **0.2 Written guides, in the new style.** Since 18 November the guides help the reader follow along: in Tanya, a few short notes from a "chavrusa" where the thread could be lost; in Rambam, what each chapter decides, its parts, rule headings, "The difference" where neighbouring halachos seem to clash, and today's takeaways. Written so far: Tanya through 11 Dec, Rambam through 13 Dec, Chumash through 19 Dec. *Next batch:* before 11 December.
+- [x] **0.2 Written guides.** In Tanya, a few plain-English bridges between the pieces where the argument takes a step; in Rambam, a line on the chapter, headings, plain-words notes after the hard halachos, and the Hebrew split to match the English paragraphs; in Chumash, one line a day. Written and checked so far: Rambam through 1 Dec, Tanya through 4 Dec, Chumash through 19 Dec. *Next batch:* before 1 December (`docs/guides-batch.md`).
   *Each time:* tell Claude "write the next batch of guides" about a week before they run out. The readers still work without them (the AI writes the Tanya guide each day, in the same style, a few cents), but the hand-written ones are better.
 
 - [x] **0.3 Developer name: Menachem Marcus.** Decided: individual accounts on both stores, under your own legal name (it must match your ID and payment details). The app can move to a business account later; both stores allow a transfer.
@@ -23,7 +23,7 @@ Tick the boxes as you go (on GitHub you can edit this file and change `[ ]` to `
 
 ## Phase 1: The accounts (start now; they take days)
 
-- [ ] **1.1 Apple Developer Program** ($99 a year). https://developer.apple.com/programs/enroll/
+- [x] **1.1 Apple Developer Program** ($99 a year). https://developer.apple.com/programs/enroll/
   - Sign in with your Apple ID (it must have two-factor authentication on: iPhone Settings → your name → Sign-In & Security).
   - Choose **Individual**, enter your legal name (Menachem Marcus), pay, and wait for the "Welcome" email (usually 1 to 2 days).
   - *Why:* it's the only way into the App Store, and Sign in with Apple only works with a paid account.
@@ -55,7 +55,7 @@ Keep both files somewhere you'll find them (your Desktop). *Why:* they tell the 
 - [ ] **3.1** Install **Node.js** and **Xcode** on the Mac.
 - [ ] **3.2** Download the project, run the three commands, and copy in `GoogleService-Info.plist` **before the first build** (without it the app closes as soon as it opens).
 - [ ] **3.3** In Xcode, the one-time settings: signing team, **Sign in with Apple**, the URL type, the **app icon**, the **privacy file**, the **encryption answer**, the version (1.0, build 1).
-- [ ] **3.4** Plug in the iPhone and press ▶. Then check, on the phone:
+- [ ] **3.4** Plug in the iPhone and press ▶ (no cable? Run it on an iPhone simulator first, then try it on the phone through TestFlight, step 5.4). Then check, on the phone:
   - Sign in with Apple, and Continue with Google
   - A reminder (set one a couple of minutes ahead, close the app, wait)
   - Marking a section learned (a light tap), all four (the "success" buzz)
@@ -90,7 +90,7 @@ Follow `app/README.md`, **Part 4**, with `docs/store-listing.md` open beside it.
 - [ ] **5.2 Fill in the page** from `docs/store-listing.md`, section by section: subtitle, description, keywords, links, category (Education), price (Free), age rating (4+), **App Privacy** (section 5), copyright (© 2026 Menachem Marcus).
 - [ ] **5.3 Screenshots and video:** drag in `docs/store/apple/` (iPhone 6.9-inch) and `docs/store/ipad/` (iPad 13-inch), in number order; then the preview video `docs/store/video/chitas-app-preview.mp4`, with the poster frame at 00:00.
 - [ ] **5.4 Upload the build** from Xcode (Any iOS Device → Product → Archive → Distribute → App Store Connect → Upload). After 10 to 30 minutes it appears under **TestFlight**: install it with the TestFlight app and try it once more as it will really be.
-- [ ] **5.5 Review notes:** paste the notes from `docs/store-listing.md` section 6. **Add one sentence** for guideline 4.2 (apps that mostly show a website): *"Beyond the daily texts, the app uses native Sign in with Apple and Google, local notification reminders for each section, and haptics."* This tells the reviewer it's a real app, not just a website in a frame.
+- [ ] **5.5 Review notes:** paste the notes from `docs/store-listing.md` section 6. They already include the sentence for guideline 4.2 (apps that mostly show a website) about Sign in with Apple and Google, reminders and haptics, which tells the reviewer it's a real app, not just a website in a frame, and one saying the guides are made with AI from the text only.
 - [ ] **5.6 Submit for review.** Apple usually answers in 1 to 3 days.
   - **Approved:** press **Release** (or set it to release automatically).
   - **Rejected:** don't worry, it's common for a first app. Copy Apple's message to Claude; most fixes are a small change or a reply in the Resolution Center.
