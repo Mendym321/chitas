@@ -1820,5 +1820,816 @@
     "לפיכך השוחט בהמות"
    ]
   }
+ },
+ "Creditor and Debtor 16": {
+  "about": "Whose risk money is on its way to the lender; sending payment through someone; transferring a debt; a storekeeper told to pay others; selling notes; receipts, and notes marked as paid.",
+  "heads": [
+   [
+    1,
+    "Payment on its way"
+   ],
+   [
+    3,
+    "Transferring a debt"
+   ],
+   [
+    5,
+    "The storekeeper's account"
+   ],
+   [
+    7,
+    "Notes held by others"
+   ],
+   [
+    8,
+    "Receipts and marks of payment"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "\"Throw it and be free\" frees him once he throws it. \"As with a get\" counts it received only once it lands nearer the lender; halfway, he pays half if it's lost.",
+    "term": "Get: a bill of divorce, which counts as given once it lands nearer the wife."
+   },
+   "3": {
+    "text": "A transfer made with all three present binds Levi, unless Reuven was already poor and Shimon misled him. If they dispute when he became poor, Shimon must prove it.",
+    "term": ""
+   },
+   "5": {
+    "text": "Both the worker and the storekeeper swear and collect, so the employer may pay twice. Each swears in front of the other, so they will be ashamed before each other.",
+    "term": ""
+   },
+   "8": {
+    "text": "A third party could have destroyed the note, so his word that it was paid is accepted. A receipt found among the lender's own papers counts for nothing, as if written in jest.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "אמר לו זרק לי חובי בתורת"
+   ],
+   "2": [
+    "החזיר לוי את המנה"
+   ],
+   "3": [
+    "ואם ידע לוי",
+    "טען לוי שהיה ראובן"
+   ],
+   "4": [
+    "וכן אם רצה לוי"
+   ],
+   "5": [
+    "ואמר לו בעל הבית",
+    "והפועל נשבע במעמד",
+    "ושבועה זו תקנת"
+   ],
+   "6": [
+    "וכן אם אמר החנוני"
+   ],
+   "7": [
+    "טען שמעון שפרע"
+   ],
+   "8": [
+    "וכן אם מת השליש",
+    "אבל כתב שיצא"
+   ],
+   "10": [
+    "וכן אם נמצא כתוב"
+   ],
+   "12": [
+    "אמר לחברו שטר לך"
+   ]
+  }
+ },
+ "Creditor and Debtor 17": {
+  "about": "Heirs collecting a note, and their oath; when the borrower died first; heirs who say their father never borrowed; trust clauses and heirs; a minor and a receipt; which currency, and notes without a place or date.",
+  "heads": [
+   [
+    1,
+    "Heirs collecting a note"
+   ],
+   [
+    3,
+    "When the borrower died first"
+   ],
+   [
+    6,
+    "\"He never borrowed\""
+   ],
+   [
+    9,
+    "Currency, place and date"
+   ]
+  ],
+  "notes": {
+   "3": {
+    "text": "Once the borrower died, the lender had to swear to collect from his heirs. When the lender then dies, his heirs can't swear in his place, so they collect nothing, though the note isn't torn.",
+    "term": ""
+   },
+   "5": {
+    "text": "That rule goes no further: a lender who admitted part was paid and then died still has heirs who swear and collect the rest.",
+    "term": ""
+   },
+   "6": {
+    "text": "Saying \"I never borrowed\" against a note is like saying \"I never paid,\" so the debt is collected without an oath.",
+    "term": ""
+   },
+   "9": {
+    "text": "The currency follows where the note was written, or, if it doesn't say, where it is presented. A note without a place or date is still valid, so as not to discourage lending.",
+    "term": "Hazamah: proving witnesses false by showing they were elsewhere at the time."
+   }
+  },
+  "splits": {
+   "1": [
+    "אמר ישבע לי"
+   ],
+   "2": [
+    "ואפלו היה היורש קטן"
+   ],
+   "3": [
+    "ואם עבר הדין",
+    "אין גובין בו"
+   ],
+   "6": [
+    "וכן מלוה שבא להפרע"
+   ],
+   "7": [
+    "אם התנה עליו"
+   ],
+   "9": [
+    "לא היה בשטר שם מקום",
+    "מכאן אתה למד"
+   ]
+  }
+ },
+ "Creditor and Debtor 18": {
+  "about": "A borrower's property as security: taking sold land from buyers, and movables only when written; a field set aside for a debt; a servant who is freed or consecrated; consecrated property; buyers and heirs paying off the creditor.",
+  "heads": [
+   [
+    1,
+    "All his property is pledged"
+   ],
+   [
+    3,
+    "A field set aside"
+   ],
+   [
+    6,
+    "Freed or consecrated"
+   ],
+   [
+    8,
+    "Buyers and heirs"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "If what he owns isn't enough, the lender may take land the borrower sold or gave away after the loan. Land he acquired later is pledged only if the note says so.",
+    "term": "Toreif: taking pledged land back from someone who bought it."
+   },
+   "2": {
+    "text": "Movables can be taken from buyers only if the note pledges them together with land, saying it isn't an asmachta or mere standard wording.",
+    "term": ""
+   },
+   "6": {
+    "text": "Freeing or consecrating him ends the lien, so the servant goes free. The master owes the lender for causing his loss, and the second master is made to free him too, so no one can claim him later.",
+    "term": ""
+   },
+   "8": {
+    "text": "A buyer may keep the field by paying the debt in money, unless it was set aside for that debt.",
+    "term": ""
+   },
+   "10": {
+    "text": "The heirs' 100 counts as paying their father's debt, which is a mitzvah, so the creditor can still take the field for the rest, unless they said the money was for the field.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "לא הספיק לו כל",
+    "במה דברים אמורים בקרקעות"
+   ],
+   "2": [
+    "הקנה לבעל חובו",
+    "וכן אם כתב שכל"
+   ],
+   "3": [
+    "וכן אם לוה ממנו"
+   ],
+   "4": [
+    "במה דברים אמורים בשמכר"
+   ],
+   "6": [
+    "וכן אם הקדישו",
+    "והרי בעל חוב גובה",
+    "ולמה הוא חיב",
+    "וכופין את רבו"
+   ],
+   "7": [
+    "וכשפודין הקרקע"
+   ],
+   "9": [
+    "רצה שמעון ועמד"
+   ],
+   "10": [
+    "ואם אמרו לו אלו"
+   ]
+  }
+ },
+ "Ritual Slaughter 2": {
+  "about": "Where one may slaughter: not ordinary animals in the Temple courtyard, and not in ways that look like idol worship; how the cut is made; no intent needed, but a person must do it; slaughtering for idols or for a sacrifice.",
+  "heads": [
+   [
+    1,
+    "Not in the Temple courtyard"
+   ],
+   [
+    5,
+    "Not like idol worship"
+   ],
+   [
+    7,
+    "How the cut is made"
+   ],
+   [
+    11,
+    "Who does the cutting"
+   ],
+   [
+    14,
+    "Intentions that forbid it"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "An ordinary animal slaughtered in the courtyard is forbidden even for benefit, and is buried. If the slaughter was invalid anyway, or the animal not kosher, it may be used.",
+    "term": ""
+   },
+   "9": {
+    "text": "Cutting the head off in a single stroke one way is valid only if the knife is twice as long as the neck is wide.",
+    "term": ""
+   },
+   "12": {
+    "text": "No intent is needed, so even a minor or a drunk who cuts properly, with others watching, is valid. But a knife that fell by itself isn't: a person must do the slaughtering.",
+    "term": ""
+   },
+   "14": {
+    "text": "Slaughtering for mountains or rivers makes it invalid. For their \"spiritual source\" or for the stars, it is an offering to idols, forbidden even for benefit.",
+    "term": ""
+   },
+   "18": {
+    "text": "For a sacrifice one can bring by a vow, like a burnt or peace offering, it is invalid, like slaughtering a sacrifice outside the Temple. For one that comes only from an obligation, like a sin offering, it is valid.",
+    "term": ""
+   },
+   "21": {
+    "text": "A partner's bad intent forbids the animal. Someone who has no share in it can't forbid it, since he only means to hurt the owner.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "2": [
+    "אפלו שחט לרפואה"
+   ],
+   "3": [
+    "ודברים אלו כלן"
+   ],
+   "6": [
+    "ומתר לשחט על דפן"
+   ],
+   "9": [
+    "הוליך והביא עד",
+    "שחט שני ראשים"
+   ],
+   "10": [
+    "וכן שחיטה העשויה"
+   ],
+   "12": [
+    "אבל סכין שנפלה"
+   ],
+   "13": [
+    "במה דברים אמורים בסביבה"
+   ],
+   "18": [
+    "שחט לשם חטאת"
+   ],
+   "20": [
+    "אבל השוחט לשם עולת"
+   ],
+   "21": [
+    "במה דברים אמורים כשהיה"
+   ]
+  }
+ },
+ "Creditor and Debtor 19": {
+  "about": "Which land each creditor collects: a lender the middle, damages the best, a ketubah the poorest; free property before sold property; land sold to several buyers, or to one; a creditor who waived his claim.",
+  "heads": [
+   [
+    1,
+    "Which land a lender takes"
+   ],
+   [
+    4,
+    "Best, middle and poorest"
+   ],
+   [
+    5,
+    "Land sold to several buyers"
+   ],
+   [
+    8,
+    "A creditor who waived his claim"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "By Torah law a lender gets the poorest land, since a borrower brings out his least. The Sages gave him middle land, so people keep lending. From heirs he gets the poorest.",
+    "term": "Idit, beinonit, zibburit: the best, middle and poorest land."
+   },
+   "3": {
+    "text": "If Levi bought a middle field, the creditor may take from either buyer. If Levi bought the best or the poorest, or left Shimon a middle field like his, the creditor can't take his.",
+    "term": ""
+   },
+   "5": {
+    "text": "Bought at once, each buyer stands in the owner's place. Bought one after another, they collect from the last buyer first, since each earlier one left land to collect from.",
+    "term": ""
+   },
+   "8": {
+    "text": "A creditor who promised the second buyer not to take his land loses the first buyer's too, since that buyer had left him land to collect from. A promise to the first buyer can lead to an endless round, until they compromise.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "ודין תורה שיגבה",
+    "במה דברים אמורים בבא"
+   ],
+   "2": [
+    "נשתדפו בני חורין"
+   ],
+   "3": [
+    "במה דברים אמורים כשלקח"
+   ],
+   "4": [
+    "היו לו עידית וזבורית",
+    "היו לו עידית ובינונית",
+    "היו לו זבורית ובינונית"
+   ],
+   "5": [
+    "מכרן לזה אחר זה",
+    "אפלו היה האחרון"
+   ],
+   "6": [
+    "במה דברים אמורים שלקח",
+    "ולמה אינו אומר"
+   ],
+   "7": [
+    "מכר עידית והניח"
+   ],
+   "8": [
+    "והוא הדין לאשה",
+    "מכר הלוה שדה ללוקח",
+    "וכן האשה בכתבתה"
+   ]
+  }
+ },
+ "Creditor and Debtor 20": {
+  "about": "The order creditors collect in: the earlier debt first, from land owned at the loan; later land and movables go to whoever collects first; dividing among creditors; a note dated only by the month.",
+  "heads": [
+   [
+    1,
+    "The earlier debt first"
+   ],
+   [
+    3,
+    "When none comes first"
+   ],
+   [
+    4,
+    "Dividing among creditors"
+   ],
+   [
+    5,
+    "A note dated only by the month"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "The earliest creditor takes first from land owned when he lent, even from a later creditor who already collected. Land bought after the loans has no order: whoever collects first keeps it.",
+    "term": ""
+   },
+   "2": {
+    "text": "Someone who grabs movables for one creditor gains nothing for him if others are owed too. If the borrower himself has it acquired for a creditor, it is that creditor's.",
+    "term": ""
+   },
+   "4": {
+    "text": "The money is split equally until the smallest debt is paid; that creditor drops out, and the rest is split equally among the others, and so on. Some Geonim split it in proportion to each debt.",
+    "term": ""
+   },
+   "5": {
+    "text": "\"Nissan\" with no day could mean the first or the end of the month, so Shimon loses both to Reuven's dated note and to later buyers. Giving each other power of attorney solves it.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "במה דברים אמורים בקרקעות"
+   ],
+   "2": [
+    "אין דין קדימה במטלטלין",
+    "קדם אחד משאר אדם"
+   ],
+   "4": [
+    "כיצד חולקין",
+    "ואם יגיע לפחות",
+    "כיצד. היו שלשה",
+    "נמצא שם יתר על",
+    "כיצד. נמצאו שם חמש",
+    "נמצא שם שש מאות"
+   ],
+   "5": [
+    "וכן אין שמעון יכול",
+    "והוא הדין בראובן"
+   ]
+  }
+ },
+ "Creditor and Debtor 21": {
+  "about": "A creditor taking land a buyer improved: all of the gain that came by itself, half of what the buyer's work added; produce; gifts and orphans' improvements; sharing the land; a field set aside for the debt.",
+  "heads": [
+   [
+    1,
+    "Land that was improved"
+   ],
+   [
+    3,
+    "Gifts and heirs"
+   ],
+   [
+    5,
+    "Sharing the land"
+   ],
+   [
+    6,
+    "A field set aside"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "The creditor takes all of a rise in value that came by itself, but only half of what the buyer's spending added, as if the two were creditors sharing it. The buyer first gets back what he spent.",
+    "term": ""
+   },
+   "3": {
+    "text": "A seller promises the buyer his improvements, so the buyer can recover them from him. A gift carries no such promise, so improvements made by the one who received it aren't taken at all.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "אלא שאם שבחו",
+    "כיצד. ראובן שהיה",
+    "הורו חכמים גדולים",
+    "ולמה יטרף בעל חוב חצי",
+    "וחוזרין שמעון ולוי"
+   ],
+   "3": [
+    "ולמה יטרף בעל חוב"
+   ],
+   "6": [
+    "ואם היה חצי השבח פחות"
+   ],
+   "7": [
+    "הביאו ראיה שהם",
+    "במה דברים אמורים בשעשה"
+   ]
+  }
+ },
+ "Ritual Slaughter 3": {
+  "about": "The five things that spoil shechitah: pausing, pressing, hiding the knife, cutting too high, and the pipes slipping out; then injuries that make an animal a nevelah while still alive: a pierced gullet, a cut or holed windpipe.",
+  "heads": [
+   [
+    1,
+    "Five things that spoil it"
+   ],
+   [
+    9,
+    "Hidden, pressed, too high"
+   ],
+   [
+    14,
+    "Pipes that slipped"
+   ],
+   [
+    18,
+    "Already a nevelah"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "A pause as long as it takes to lift the animal, lay it down and slaughter it spoils the shechitah, however it happened. A shorter pause doesn't.",
+    "term": "Shehiyah, dirasah, chaladah, hagramah, ikur: pausing, pressing down, covering the knife, cutting too high, the pipes slipping out of place."
+   },
+   "5": {
+    "text": "Once most of what's needed is cut, the shechitah is done, so a pause after that doesn't matter; the rest is like cutting meat.",
+    "term": ""
+   },
+   "6": {
+    "text": "A pause doesn't matter while less than half the windpipe is cut. Once most of it is cut, or the gullet pierced at all, the animal is already a nevelah, so a pause then spoils it.",
+    "term": ""
+   },
+   "13": {
+    "text": "What counts is that most of the pipe was cut properly: a third cut too high at the start, or in the middle, is fine; too high at both the start and the end isn't. Pressing or hiding the knife in the first two thirds spoils it.",
+    "term": ""
+   },
+   "17": {
+    "text": "A cut pipe found slipped must have slipped after the cut, since a loose pipe can't be cut, unless he held the pipes in his hand while cutting.",
+    "term": ""
+   },
+   "19": {
+    "text": "These injuries make it a nevelah while still alive, so shechitah can no longer help it.",
+    "term": "Nevelah: an animal that died without valid shechitah, forbidden to eat."
+   }
+  },
+  "splits": {
+   "4": [
+    "וכן אם שהה כדי"
+   ],
+   "13": [
+    "הגרים בתחלה שליש"
+   ],
+   "19": [
+    "וכן אם נשברה מפרקת"
+   ],
+   "23": [
+    "נקבה נקבים קטנים",
+    "ובעוף כל שאלו"
+   ],
+   "25": [
+    "ואין מדמין אלא"
+   ]
+  }
+ },
+ "Creditor and Debtor 22": {
+  "about": "How a court collects a debt, step by step: demanding payment, thirty days, delays and the ban; the adrachta, tirpa and horadah; how the land is appraised; and returning appraised land when the debt is paid.",
+  "heads": [
+   [
+    1,
+    "Demanding payment"
+   ],
+   [
+    2,
+    "A claim of forgery"
+   ],
+   [
+    6,
+    "The court's writs"
+   ],
+   [
+    14,
+    "Appraising the land"
+   ],
+   [
+    16,
+    "Getting the land back"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "The court first tells him to pay. If he asks for time, he gets 30 days, with no security demanded. If he refuses outright, or the time runs out, the court writes an adrachta on his property.",
+    "term": ""
+   },
+   "3": {
+    "text": "If he doesn't bring his proof, he is banned and given 90 days, time to borrow, to sell, and for his buyer to pay, before the adrachta is written.",
+    "term": "Peticha: a court's writ that places a person under a ban."
+   },
+   "7": {
+    "text": "Once property is found, the adrachta is torn and replaced by a tirpa for that field; then come the appraisal, the oaths, and a horadah giving him the land.",
+    "term": "Tirpa, horadah: the writ to take a particular field, and the writ that puts him in possession of it."
+   }
+  },
+  "splits": {
+   "1": [
+    "אמר הלוה הריני משלם",
+    "ואם רצה המלוה להחרים",
+    "שלמו השלשים ולא"
+   ],
+   "2": [
+    "ואם היה המלוה אלם"
+   ],
+   "3": [
+    "וממתינין לו והוא",
+    "שלמו תשעים יום"
+   ],
+   "4": [
+    "במה דברים אמורים כשהיה"
+   ],
+   "5": [
+    "שמא יאכל אותם"
+   ],
+   "6": [
+    "איש פלוני נתחיב לפלוני בדין",
+    "ואחר כך שמין לו",
+    "איש פלוני נתחיב לפלוני כך"
+   ],
+   "8": [
+    "איש פלוני בן פלוני זכה"
+   ],
+   "11": [
+    "אחר ששמנו לפלוני"
+   ],
+   "14": [
+    "אחד אומר במנה ואחד"
+   ],
+   "17": [
+    "מכרה בעל חוב"
+   ]
+  }
+ },
+ "Creditor and Debtor 23": {
+  "about": "Notes dated too early or too late; writing a note for one side alone; sale deeds that must bear the true date; collecting on testimony alone; replacing lost, worn or partly paid notes; splitting or joining notes.",
+  "heads": [
+   [
+    1,
+    "Early and late dates"
+   ],
+   [
+    5,
+    "Writing for one side"
+   ],
+   [
+    9,
+    "Without a document"
+   ],
+   [
+    12,
+    "Worn and replaced notes"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "An early date would let him take land sold before the loan, so such a note collects only from what the borrower still owns. A late date only weakens the note, so it is valid.",
+    "term": ""
+   },
+   "5": {
+    "text": "With a kinyan, the borrower's property is pledged at once, so the note may be written for him alone. Without one, it might be written in Nissan for a loan made in Tishrei, letting the lender take land too early.",
+    "term": ""
+   },
+   "7": {
+    "text": "A late-dated deed of sale could let a buyer claim a resale that never happened. A late-dated loan note is safe, since the borrower can protect himself with an undated receipt.",
+    "term": ""
+   },
+   "10": {
+    "text": "Two deeds for one field could be used in a scheme to take others' land twice. A replacement deed must say it can't be used to collect, only to prove he owns the field.",
+    "term": ""
+   },
+   "17": {
+    "text": "One note for 100 protects the borrower, since a partial payment weakens it. Two notes of 50 protect him too, since he can't be made to pay all at once. So the court changes neither.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "5": [
+    "במה דברים אמורים בשטר"
+   ],
+   "6": [
+    "וכן מי שנמסרה"
+   ],
+   "7": [
+    "כיצד. כגון שחזר",
+    "ולמה לא נחוש כן"
+   ],
+   "9": [
+    "כיצד. כגון שיש לו"
+   ],
+   "10": [
+    "כיצד. יבוא זה",
+    "ויחזר בקנוניא",
+    "אם כן מי שנאבד"
+   ],
+   "11": [
+    "ואפלו היה החוב לזמן"
+   ],
+   "13": [
+    "ואם כתבו והזקקנו",
+    "ואם לא כתבו כן"
+   ],
+   "14": [
+    "נקרע קרע בית דין"
+   ],
+   "16": [
+    "ואם טען הלוה טענת"
+   ],
+   "17": [
+    "וכן אם הוציא שני שטרות"
+   ]
+  }
+ },
+ "Creditor and Debtor 24": {
+  "about": "Which documents may be written for one side alone, and who pays the scribe; witnesses who must know who the parties are; two people with the same name; notes without the lender's name; two people with notes against each other.",
+  "heads": [
+   [
+    1,
+    "Writing documents"
+   ],
+   [
+    3,
+    "Knowing who is who"
+   ],
+   [
+    8,
+    "Two with the same name"
+   ],
+   [
+    10,
+    "Notes against each other"
+   ]
+  ],
+  "notes": {
+   "3": {
+    "text": "Witnesses must know both parties, or two people could take others' names and make false admissions to each other. A name used in town for 30 days is trusted.",
+    "term": ""
+   },
+   "5": {
+    "text": "Witnesses are presumed to sign only for people they know, who are adults of sound mind, so a claim of a name swap is ignored unless there really are two people with that name.",
+    "term": ""
+   },
+   "8": {
+    "text": "Two men with the same name can't collect from each other, or be collected from, without the witnesses themselves. They should add a grandfather, a sign or their lineage.",
+    "term": ""
+   },
+   "11": {
+    "text": "Where payment comes before the deed, buying his field shows the seller owed him nothing, so the note is void. Where the deed comes first, he may have sold it to have land to collect from.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "אבל אין כותבין שטרי"
+   ],
+   "4": [
+    "לפיכך מי שלא החזק"
+   ],
+   "5": [
+    "וכן חזקה שאין"
+   ],
+   "8": [
+    "וכן אין מגרשין",
+    "וכיצד יעשו אלו"
+   ],
+   "9": [
+    "וכן שני יוסף"
+   ],
+   "10": [
+    "היה זה במאה"
+   ],
+   "11": [
+    "אבל במקום שכותבין"
+   ]
+  }
+ },
+ "Ritual Slaughter 4": {
+  "about": "Who may slaughter: one who knows the laws, and the expert; those who need someone watching; when we assume it was done right; gentiles and apostates; those who deny the Oral Law; the desert, before shechitah was commanded.",
+  "heads": [
+   [
+    1,
+    "One who knows the laws"
+   ],
+   [
+    5,
+    "Those who need someone watching"
+   ],
+   [
+    7,
+    "Assuming it was done right"
+   ],
+   [
+    11,
+    "Gentiles and apostates"
+   ],
+   [
+    17,
+    "In the desert"
+   ]
+  ],
+  "notes": {
+   "8": {
+    "text": "Most people who slaughter are experts, so an animal found slaughtered at home is assumed fine. One found in the street or the trash may have been thrown out as a nevelah.",
+    "term": ""
+   },
+   "12": {
+    "text": "A gentile's slaughter is forbidden by the Torah itself, unlike that of a Jew who doesn't know the laws. The Sages extended it even to a gentile who doesn't serve idols.",
+    "term": ""
+   },
+   "14": {
+    "text": "One who breaks a single law may slaughter, after someone else checks his knife. One who serves idols, breaks Shabbos in public, or denies the Torah counts as a gentile.",
+    "term": ""
+   },
+   "18": {
+    "text": "In the desert, meat could be eaten by simply killing the animal, but slaughtering one meant bringing it as a peace offering. Shechitah for everyday meat began with entering the Land.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "14": [
+    "ואם היה מומר"
+   ]
+  }
  }
 }
