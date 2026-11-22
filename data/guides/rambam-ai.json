@@ -564,5 +564,680 @@
     "והאוכל הזה היה"
    ]
   }
+ },
+ "Creditor and Debtor 4": {
+  "about": "What interest is, and the prohibitions it involves for lender, borrower and everyone involved; returning it; heirs and repentance; extra money found; coins that change; waiving interest; orphans' money.",
+  "heads": [
+   [
+    1,
+    "The prohibition of interest"
+   ],
+   [
+    3,
+    "Returning interest"
+   ],
+   [
+    7,
+    "How serious it is"
+   ],
+   [
+    10,
+    "Extra money found"
+   ],
+   [
+    11,
+    "When a coin changes"
+   ],
+   [
+    13,
+    "Waiving interest"
+   ]
+  ],
+  "notes": {
+   "3": {
+    "text": "There are no lashes, since the interest must be given back. Fixed interest, forbidden by the Torah, is taken back through the court, though not from the lender's heirs.",
+    "term": ""
+   },
+   "4": {
+    "text": "Heirs needn't return interest money, but must return a specific item, for their father's honor, if he had repented before he died.",
+    "term": ""
+   },
+   "10": {
+    "text": "An extra amount one could easily miscount, like 1, 2, 5 or 10, is returned. A larger one is taken as a gift, or as stolen money quietly returned.",
+    "term": ""
+   },
+   "11": {
+    "text": "If the coin was made heavier and prices fell because of it, the increase is deducted. If prices didn't fall, he pays in current coins, unless the increase was more than a fifth.",
+    "term": ""
+   },
+   "13": {
+    "text": "Some Geonim held that a borrower can't waive interest. The Rambam disagrees: he may waive it, like stolen money, as the Sages' teaching about not accepting repayment shows.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "ולמה נקרא שמו נשך"
+   ],
+   "2": [
+    "וכן אסור להתעסק",
+    "הא למדת שהמלוה",
+    "",
+    "והלוה עובר בשנים",
+    "ערב ועדים וכיוצא"
+   ],
+   "4": [
+    "במה דברים אמורים כשעשה"
+   ],
+   "10": [
+    "בכמה הדעת טועה",
+    "וכן אם מצא יתר"
+   ],
+   "11": [
+    "במה דברים אמורים בשהוסיפו"
+   ],
+   "13": [
+    "יראה לי שאין הוראה"
+   ],
+   "14": [
+    "כיצד. אומר לו תהיה"
+   ]
+  }
+ },
+ "Creditor and Debtor 5": {
+  "about": "Interest with gentiles: the Torah's law and the Sages' limits; passing such loans between Jews; guarantors and converts; investments that favor the investor; interest paid before or after, even in words; things like interest; ways around it.",
+  "heads": [
+   [
+    1,
+    "Interest with gentiles"
+   ],
+   [
+    8,
+    "Investments and partnerships"
+   ],
+   [
+    11,
+    "Interest in gifts and words"
+   ],
+   [
+    14,
+    "Like interest, but permitted"
+   ],
+   [
+    15,
+    "Ways around it"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "The Sages limited lending to gentiles at interest to what one needs for a living, so as not to learn from their ways. Borrowing from them is fine, and a Torah scholar may lend for profit.",
+    "term": ""
+   },
+   "3": {
+    "text": "A Jew can't take over another Jew's interest-bearing loan from a gentile. The gentile must take his money back and lend it to the new borrower himself.",
+    "term": ""
+   },
+   "6": {
+    "text": "Interest owed to a gentile who converts: collected if added to the loan before he converted, otherwise not. Interest owed by a gentile who converts is collected in full, so no one says he converted to escape it.",
+    "term": ""
+   },
+   "8": {
+    "text": "Investing so that the investor gains much and risks little is the shade of interest. If it was done, profit and loss are shared as in an iska.",
+    "term": "Iska: one person's money traded by another, with profit and loss shared."
+   },
+   "15": {
+    "text": "Selling wheat for a maneh and buying it back for 90 is allowed in itself, but the Sages forbade it as a way around interest. If done anyway, the full 100 is collected.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "ומצות עשה להשיך"
+   ],
+   "2": [
+    "ותלמיד חכם שאינו"
+   ],
+   "5": [
+    "ועכו\"ם שהלוה את ישראל"
+   ],
+   "6": [
+    "אבל עכו\"ם שלוה מישראל"
+   ],
+   "8": [
+    "ואם נתן חולקין"
+   ],
+   "9": [
+    "אלא אם כן נתן"
+   ],
+   "10": [
+    "וכן לא יתן לו מעות"
+   ],
+   "12": [
+    "וכן אסור לו ללמד"
+   ],
+   "14": [
+    "וכן אומר אדם לחברו"
+   ],
+   "15": [
+    "כיצד. אמר לו הלוני",
+    "ואם עבר ועשה כזה"
+   ]
+  }
+ },
+ "Creditor and Debtor 6": {
+  "about": "Interest the Torah forbids and interest the Sages forbade; living in a borrower's courtyard; an asmachta; sales with a promise to return; fields given as security, the three kinds, and the Geonim's view.",
+  "heads": [
+   [
+    1,
+    "Torah interest and the Sages'"
+   ],
+   [
+    2,
+    "The borrower's courtyard"
+   ],
+   [
+    4,
+    "Sales that aren't final"
+   ],
+   [
+    7,
+    "Property given as security"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "Any agreed increase on a loan, like a free stay, cheaper rent, or a pledged property already producing, is Torah interest and taken back by the court. Anything else is the Sages' shade of interest, which isn't.",
+    "term": "Asmachta: a commitment made on a condition one doesn't expect to happen, so it isn't binding."
+   },
+   "2": {
+    "text": "Living there free without an agreement is the shade of interest, so he should pay rent. If it comes off the debt, the judges decide how much, since the court can't take back the shade of interest.",
+    "term": ""
+   },
+   "4": {
+    "text": "\"If you don't repay in three years, it's mine\" is an asmachta, so the produce comes off the debt. \"It's yours from now if I don't repay\" works: repaid within three years, no produce; after, all of it.",
+    "term": ""
+   },
+   "6": {
+    "text": "Part paid: each eats produce by his share. \"From now, once you pay\": neither eats, and a third party holds it. \"Once you pay\": the seller eats. \"From now, the rest is a debt\": the buyer eats.",
+    "term": ""
+   },
+   "7": {
+    "text": "A courtyard, bathhouse or store gives benefit right away, so using it is fixed interest. A field may or may not produce, so it is only the shade of interest. With a yearly deduction, a field is permitted, a courtyard isn't.",
+    "term": ""
+   },
+   "8": {
+    "text": "These Geonim forbade all security without a deduction, allowing it only as a rental: a set term after which it returns free, or a set rent deducted whenever he repays.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "וכן המלוה את חברו והתנה",
+    "וכן המוכר שדה",
+    "וכל דבר שהוא אסור"
+   ],
+   "2": [
+    "לפיכך אם עדין"
+   ],
+   "4": [
+    "אבל אם אמר לו המוכר"
+   ],
+   "5": [
+    "אבל אם אמר לו הלוקח"
+   ],
+   "6": [
+    "אמר המוכר ללוקח לכשתביא",
+    "וכן הלוקח אסור",
+    "אמר לו המוכר לכשתביא שאר",
+    "אמר לו המוכר קנה מעכשו"
+   ],
+   "7": [
+    "שאין הממשכן את השדה",
+    "וכן אין המשכונא דומה",
+    "וכזה יראה מן הגמרא",
+    "נמצאת למד ששלש",
+    "כיצד. משכן לו מקום",
+    "וכן אם משכן חצרו",
+    "כיצד הוא הנכוי"
+   ],
+   "8": [
+    "וכן הורו שכל משכונא",
+    "כיצד. כגון שהלוהו",
+    "וכן אם התנה בעל"
+   ]
+  }
+ },
+ "Forbidden Foods 15": {
+  "about": "Forbidden food mixed with permitted: taste for a different kind, a majority for the same kind, and the Sages' measures of 60, 100 and 200; what is never cancelled; how the measure is reckoned; taste that spoils; roasting and salting.",
+  "heads": [
+   [
+    1,
+    "Taste and majority"
+   ],
+   [
+    5,
+    "The Sages' measures"
+   ],
+   [
+    9,
+    "When a trace forbids it all"
+   ],
+   [
+    13,
+    "100, 200 and 60"
+   ],
+   [
+    24,
+    "How it is reckoned"
+   ],
+   [
+    28,
+    "Taste that spoils"
+   ],
+   [
+    32,
+    "Roasting and salting"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "A different kind forbids the mixture if its taste comes through. The same kind can't be tasted, so by Torah law a majority of permitted food cancels it.",
+    "term": "Bitul: a forbidden thing cancelled by a larger amount of permitted food."
+   },
+   "3": {
+    "text": "Torah lashes need an olive's size of fat in each three eggs' worth eaten. With less than that, or with only the taste, there are only the Sages' lashes.",
+    "term": ""
+   },
+   "6": {
+    "text": "Libation wine and tevel aren't cancelled at all in their own kind. In a different kind, taste decides, as with everything else.",
+    "term": ""
+   },
+   "10": {
+    "text": "Anything that will become permitted later, like new grain after the omer or muktzeh after the festival, is never cancelled, even in thousands, since there is a way to permit it.",
+    "term": "Muktzeh: something set aside, not for use on Shabbos or a festival."
+   },
+   "13": {
+    "text": "Terumah and the like are cancelled in 101, and a se'ah is taken out for the kohen. In less, the whole mixture becomes meduma.",
+    "term": "Meduma: a mixture with terumah in it, which only a kohen may eat."
+   },
+   "17": {
+    "text": "Most Torah prohibitions are cancelled in 60. The gid's fat is measured the same way, though only the Sages forbade it, since the gid is a creation of its own. The gid itself gives no taste.",
+    "term": "Gid hanasheh: the sciatic nerve, which may not be eaten."
+   },
+   "25": {
+    "text": "One may not add permitted food on purpose to cancel a Torah prohibition. If he did, it is permitted, but the Sages forbade it to him alone, as a penalty.",
+    "term": ""
+   },
+   "32": {
+    "text": "A goat roasted in its fat is all forbidden, since the fat spreads through it. If lean, with fat about one in sixty, he cuts and eats until he reaches the fat. Sinews give no taste, so they are just cut away.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "3": [
+    "וכן אם לא היה בתערבת"
+   ],
+   "6": [
+    "מין במינו שאי אפשר"
+   ],
+   "10": [
+    "וכן כל דבר שיש לו"
+   ],
+   "13": [
+    "כיצד. סאה קמח"
+   ],
+   "14": [
+    "כיצד. רביעית של יין"
+   ],
+   "16": [
+    "ולמה סמכו על שעור"
+   ],
+   "17": [
+    "כיצד. כזית חלב",
+    "וכן שמן של גיד"
+   ],
+   "20": [
+    "ואם טרף אלו"
+   ],
+   "26": [
+    "אבל באסור של דבריהם"
+   ],
+   "28": [
+    "והוא שיהיה פוגם"
+   ],
+   "30": [
+    "וסומכין על פיו"
+   ],
+   "32": [
+    "וכן ירך שצלאה"
+   ],
+   "34": [
+    "וכן בשר דג טמא",
+    "דג טמא שכבשו"
+   ]
+  }
+ },
+ "Creditor and Debtor 7": {
+  "about": "Fields given as security: settling up when the lender leaves, custom on when he can be removed, and what follows from it; selling the land to the lender; higher rent for later payment; trading work; paying workers in advance.",
+  "heads": [
+   [
+    1,
+    "Ending a security arrangement"
+   ],
+   [
+    6,
+    "More cases of security"
+   ],
+   [
+    8,
+    "Higher rent for waiting"
+   ],
+   [
+    10,
+    "Wages and trading work"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "Even if he ate produce worth the whole debt, he isn't sent away with nothing, since that would be collecting the shade of interest by force. With orphans' land he is, and two notes are counted as one.",
+    "term": ""
+   },
+   "3": {
+    "text": "Local custom decides whether the borrower may repay early and remove him. A clear stipulation overrides the custom, but a lender who agrees to leave early, against the custom, must confirm it with a kinyan.",
+    "term": "Kinyan: a formal act that makes a commitment binding."
+   },
+   "4": {
+    "text": "Where he can be removed at any time, the field isn't really his: his creditors can't take it, a firstborn gets no double share of it, and the Sabbatical year cancels the debt. Where he can't, the opposite.",
+    "term": ""
+   },
+   "9": {
+    "text": "A loan to improve the rented field, store or ship is permitted for higher rent, since the property is now worth more. A loan to trade with, or to hire sailors, is forbidden.",
+    "term": ""
+   },
+   "11": {
+    "text": "Trading the same work, weeding for weeding, is fine. Different work, or summer plowing for winter plowing, is not, since plowing in the rainy season is harder.",
+    "term": ""
+   },
+   "12": {
+    "text": "Paying in advance for later work at a lower wage looks like a loan repaid with cheap labor. If the work starts today, it is permitted.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "והיה המלוה אוכל",
+    "היתה הקרקע הממשכנת",
+    "כיצד מחשבין משטר"
+   ],
+   "2": [
+    "וכל הממשכן סתם"
+   ],
+   "3": [
+    "היה המנהג שאין"
+   ],
+   "4": [
+    "ומקום שאינו יכול"
+   ],
+   "9": [
+    "וכן אם השכיר לו חנות"
+   ],
+   "12": [
+    "אבל אם אמר לו עשה"
+   ]
+  }
+ },
+ "Creditor and Debtor 8": {
+  "about": "A higher price for later payment, and a discount for paying early; selling dearer while the seller keeps the risk; buying fruit before it ripens; wages in cheap wheat; extra given freely; renting with wear; tzon barzel; returning interest paid in goods.",
+  "heads": [
+   [
+    1,
+    "A higher price for waiting"
+   ],
+   [
+    5,
+    "Buying before it's ready"
+   ],
+   [
+    9,
+    "Gains that are permitted"
+   ],
+   [
+    12,
+    "Tzon barzel"
+   ],
+   [
+    15,
+    "Returning interest paid in goods"
+   ]
+  ],
+  "notes": {
+   "3": {
+    "text": "Selling for double with payment later is allowed if the seller keeps the risk until it's sold, or the buyer may return what he can't sell at a profit.",
+    "term": ""
+   },
+   "6": {
+    "text": "He must till under the vines, which makes it like buying the tree for its branches. Otherwise his money is a loan, repaid with cheap branches.",
+    "term": ""
+   },
+   "10": {
+    "text": "Here the buyer takes the risk of the price, so it can bring gain or loss. Wine that soured was already going to sour, so he may return it.",
+    "term": ""
+   },
+   "12": {
+    "text": "The owner shares the gain but the shepherd bears the loss, so it is the shade of interest. If the owner keeps the risk of price changes and predators, it is permitted.",
+    "term": "Tzon barzel (\"iron sheep\"): sheep whose value is guaranteed, as if made of iron."
+   }
+  },
+  "splits": {
+   "1": [
+    "וכשיתבענו בדין"
+   ],
+   "3": [
+    "וכן אם מכרה לו בשנים"
+   ],
+   "5": [
+    "אבל אם קנה עגל"
+   ],
+   "10": [
+    "וכן מתר לאדם לקנות"
+   ],
+   "12": [
+    "וכיצד הן צאן ברזל",
+    "הרי זה אסור שהרי"
+   ]
+  }
+ },
+ "Creditor and Debtor 9": {
+  "about": "Paying now for produce delivered later: only once a market price is set, or when the seller has the goods nearly ready; which market price counts; ordering at the lower price; agents; buying from villages and travelers.",
+  "heads": [
+   [
+    1,
+    "When an order may be placed"
+   ],
+   [
+    4,
+    "Which price counts"
+   ],
+   [
+    5,
+    "Ordering at the lower price"
+   ],
+   [
+    7,
+    "Buying from elsewhere"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "Once a market price is set, one may pay now for later delivery at that price, even if the seller has none, since others do. A seller who already has the goods may sell before the price is set.",
+    "term": ""
+   },
+   "2": {
+    "text": "One or two steps from ready counts as having it; three or more counts as not having it at all.",
+    "term": ""
+   },
+   "3": {
+    "text": "Selling whatever he will milk or shear, however much it is, is fine. A set amount at a set price is forbidden, unless it is at the market price.",
+    "term": ""
+   },
+   "5": {
+    "text": "Paying at today's price, one may agree to get the lower price if it falls. Without that, he gets the price of the day he paid. An agent's buyer gets the lower price, or the money back.",
+    "term": "Mi shepara: a curse pronounced on one who backs out of a deal after the money was paid."
+   },
+   "6": {
+    "text": "Selling cheaply for later delivery is allowed only if he has wheat now. Wheat others owe him still has to be collected, so it counts as none.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "כיצד. היה השער",
+    "במה דברים אמורים בשלא",
+    "ופוסק על היין",
+    "במה דברים אמורים בשהיה"
+   ],
+   "2": [
+    "כיצד. גדיש שהיה",
+    "ביצים של יוצר"
+   ],
+   "4": [
+    "היו חטין של לקוטות"
+   ],
+   "5": [
+    "כיצד. היו החטים",
+    "נתן לו המעות סתם",
+    "במה דברים אמורים בפוסק"
+   ],
+   "7": [
+    "ואדם חשוב אסור"
+   ],
+   "9": [
+    "היה מוליך סחורה"
+   ]
+  }
+ },
+ "Forbidden Foods 16": {
+  "about": "What even a trace forbids: leaven, spices, and important things that are never cancelled; living animals; mixtures that mix again; forbidden things that help cancel each other; orlah shells as dye and fuel; cheese; libation wine in mixtures.",
+  "heads": [
+   [
+    1,
+    "Leaven, spice and important things"
+   ],
+   [
+    10,
+    "Mixtures that mix again"
+   ],
+   [
+    13,
+    "Leaven and spice combined"
+   ],
+   [
+    17,
+    "Helping to cancel"
+   ],
+   [
+    20,
+    "Orlah as dye and fuel"
+   ],
+   [
+    26,
+    "Cheese, and burning or burying"
+   ],
+   [
+    28,
+    "Libation wine in mixtures"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "Forbidden yeast or spice enough to leaven or season the food forbids all of it, even at one in a thousand.",
+    "term": "Orlah: the fruit of a tree's first three years, forbidden even for benefit."
+   },
+   "5": {
+    "text": "A forbidden piece among thousands forbids them all, since a piece one serves to guests is important. Once it is taken out, the rest needs sixty times its size.",
+    "term": ""
+   },
+   "10": {
+    "text": "A pomegranate from the forbidden mixture that falls into two others is cancelled by the majority, so one from that second mixture forbids nothing further. Falling into a thousand, it forbids them all.",
+    "term": ""
+   },
+   "11": {
+    "text": "Once these are cracked, cut or opened, the usual measures apply: 201, or 60 for minced meat.",
+    "term": ""
+   },
+   "13": {
+    "text": "Neither yeast alone could leaven the dough, but together they do, so an Israelite may not eat it. A kohen may.",
+    "term": ""
+   },
+   "16": {
+    "text": "If the dough was already leavened or the pot seasoned, ask whether the forbidden yeast or spice could have done it alone. If yes, all is forbidden; if not, the usual measures apply.",
+    "term": ""
+   },
+   "19": {
+    "text": "One forbidden thing can help make up the amount that cancels another. Once something is cancelled, the whole mixture counts as permitted.",
+    "term": ""
+   },
+   "22": {
+    "text": "Baking while the orlah fuel's fire is still there forbids the food, since the forbidden wood improved it. Once the fire is raked out, the heat left is permitted.",
+    "term": ""
+   },
+   "28": {
+    "text": "Pouring onto a drop of libation wine forbids it all. Poured slowly from a small bottle into a cistern, each drop is cancelled as it falls; from a big jug, the stream joins them, so all is forbidden.",
+    "term": ""
+   },
+   "34": {
+    "text": "Wheat absorbs the wine, so taste can't test it. It may be used for benefit, but sold to a gentile only as bread, which a Jew won't buy back.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "2": [
+    "וכן שאור של כלאי"
+   ],
+   "6": [
+    "וכן גיד הנשה שנתבשל"
+   ],
+   "13": [
+    "וכן תבלין של תרומה ושל"
+   ],
+   "14": [
+    "כיצד. שאור של חטין"
+   ],
+   "17": [
+    "כיצד. סאה תרומה"
+   ],
+   "18": [
+    "כיצד. מאה סאה"
+   ],
+   "19": [
+    "כיצד. מאתים סאה"
+   ],
+   "22": [
+    "גרף את כל האש"
+   ],
+   "24": [
+    "קדרה שבשל אותה"
+   ],
+   "25": [
+    "ולמה התירו לו"
+   ],
+   "28": [
+    "במה דברים אמורים בשהורק",
+    "ערה מן החבית"
+   ],
+   "29": [
+    "וכן אם נתערבה חבית"
+   ],
+   "30": [
+    "במה דברים אמורים בשנפל",
+    "והיאך יהיו המים"
+   ],
+   "34": [
+    "ולמה אין בודקין"
+   ],
+   "35": [
+    "ויין שנתערב עם החמץ"
+   ]
+  }
  }
 }

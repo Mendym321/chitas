@@ -68,9 +68,16 @@ async function fetchRambam(title) {
   const ref = 'Mishneh Torah, ' + title, enc = encodeURIComponent(ref);
   const V = 'english|Mishneh Torah, trans. by Eliyahu Touger. Jerusalem, Moznaim Pub. c1986-c2007';
   const flat = x => typeof x === 'string' ? [x] : Array.isArray(x) ? x.flatMap(flat) : [];
+  // Sefaria sometimes answers a burst of requests with an error page: wait and ask again
+  const json = async url => {
+    for (let tries = 0; ; tries++) {
+      try { return await fetch(url).then(r => r.json()); }
+      catch (e) { if (tries >= 4) throw e; await new Promise(r => setTimeout(r, 15000 * (tries + 1))); }
+    }
+  };
   const [en, he] = await Promise.all([
-    fetch(`https://www.sefaria.org/api/v3/texts/${enc}?version=${encodeURIComponent(V)}&fill_in_missing_segments=1`).then(r => r.json()),
-    fetch(`https://www.sefaria.org/api/texts/${enc}?context=0&commentary=0&lang=he`).then(r => r.json()),
+    json(`https://www.sefaria.org/api/v3/texts/${enc}?version=${encodeURIComponent(V)}&fill_in_missing_segments=1`),
+    json(`https://www.sefaria.org/api/texts/${enc}?context=0&commentary=0&lang=he`),
   ]);
   return { en: flat(en?.versions?.[0]?.text || []), he: flat(he?.he || []).map(cleanHe) };
 }
