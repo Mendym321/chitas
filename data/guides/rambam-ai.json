@@ -1,1 +1,568 @@
-{}
+{
+ "Borrowing and Deposit 6": {
+  "about": "When a watchman may pay instead of swearing; what a watchman's oath includes; a watchman's stipulation to guard less; deposits made before witnesses; and disputes over what was returned.",
+  "heads": [
+   [
+    1,
+    "Paying instead of swearing"
+   ],
+   [
+    2,
+    "Agreeing to guard less"
+   ],
+   [
+    4,
+    "Deposits made before witnesses"
+   ],
+   [
+    5,
+    "Which oath, and when"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "If the article is easy to buy, like plain produce, he may simply pay. If not, like an animal or a decorated garment, he first swears it isn't in his hands, since he may have wanted it for himself.",
+    "term": ""
+   },
+   "2": {
+    "text": "The watchman is believed that they agreed he would guard it less carefully, since he could have said it was lost by forces beyond his control. He swears to that, and to the other points.",
+    "term": "Miggo: a claim is believed because the person could have made a better one."
+   },
+   "4": {
+    "text": "With witnesses to this very article, the watchman can't claim he bought it. After his death, someone who gives clear signs gets it, if the judge knows the deceased was unlikely to own it and the claimant didn't visit often.",
+    "term": ""
+   },
+   "5": {
+    "text": "When the owner says the article returned is a different one, damaged, or less, the watchman takes only a sh'vuat hesset. If he admits part of the amount claimed, he takes a Torah oath.",
+    "term": "Sh'vuat hesset: a lighter oath the Sages added, for claims the Torah's oath doesn't cover."
+   }
+  },
+  "splits": {
+   "1": [
+    "אבל אם היה פקדון",
+    "והוא הדין לשאר השומרין",
+    "ואם אמרו הבעלים",
+    "ששמר כדרך השומרין",
+    "ושארעו כך וכך",
+    "ושלא שלח בו יד",
+    "ואם רצה לשלם"
+   ],
+   "2": [
+    "טען השומר שתנאי היה"
+   ],
+   "3": [
+    "ובעל הפקדון שהביא ראיה"
+   ],
+   "4": [
+    "לפיכך אם מת השומר",
+    "והוא שלא יהיה המפקיד",
+    "באו עדים והעידו לדין",
+    "מעשה באחד שהפקיד",
+    "אמר לו המפקיד והלא",
+    "אמר לו שלך החזרתי",
+    "ואמרו חכמים אין מוציאין"
+   ],
+   "5": [
+    "הרי השומר נשבע הסת",
+    "כללו של דבר",
+    "כיצד. מאה סאה"
+   ]
+  }
+ },
+ "Borrowing and Deposit 7": {
+  "about": "Entrusted produce that spoils, and when to sell it; caring for scrolls and garments; using entrusted money; moving an entrusted jug; deposits from women, servants and children; where a deposit is returned; a watchman who must travel.",
+  "heads": [
+   [
+    1,
+    "Produce that spoils"
+   ],
+   [
+    4,
+    "Caring for what's entrusted"
+   ],
+   [
+    5,
+    "Entrusted money"
+   ],
+   [
+    10,
+    "From whom, and where returned"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "Normal shrinkage: he leaves it alone. More than normal: he sells it through a court, to kohanim at the price of terumah, in case the owner had made it terumah.",
+    "term": "Terumah: the portion of produce given to a kohen, which only a kohen may eat."
+   },
+   "4": {
+    "text": "All this care applies only when the owner is overseas. If he is in the same land, the watchman doesn't touch it, even if it is being ruined.",
+    "term": ""
+   },
+   "6": {
+    "text": "Sealed or specially tied money he may not use, so he isn't liable if it's lost or stolen. Money just bound in a bag he may use, so he is a paid watchman: liable for loss or theft, not for armed robbers.",
+    "term": ""
+   },
+   "9": {
+    "text": "Moved for his own needs: he is liable if it breaks, even after he put it back. Moved for the jug's sake: he isn't, even if it broke after he set it down somewhere else.",
+    "term": ""
+   },
+   "11": {
+    "text": "The owner may claim it only where he deposited it, but must accept it if the watchman returns it elsewhere, unless it was deposited in a settled place and brought back in the desert.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "במה דברים אמורים כשחסרו",
+    "וכשהוא מוכרן ימכר"
+   ],
+   "2": [
+    "אף על פי שעמדו"
+   ],
+   "3": [
+    "והוא הדין לשאר הפקדונות"
+   ],
+   "4": [
+    "הפקיד אצלו כסות",
+    "במה דברים אמורים בפקדון"
+   ],
+   "6": [
+    "ואם אינן חתומין"
+   ],
+   "10": [
+    "וכלן שאמרו בשעת"
+   ],
+   "11": [
+    "כיצד. הפקיד אצלו בירושלים",
+    "הפקיד אצלו בישוב"
+   ],
+   "12": [
+    "ודברים של טעם הם"
+   ]
+  }
+ },
+ "Borrowing and Deposit 8": {
+  "about": "Who receives the thief's double payment when a watchman pays instead of swearing; profits that come by themselves; cases the Talmud leaves unresolved; and claiming from the thief.",
+  "heads": [
+   [
+    1,
+    "Who gets the double payment"
+   ],
+   [
+    3,
+    "Profits that come by themselves"
+   ],
+   [
+    5,
+    "Cases left in doubt"
+   ],
+   [
+    6,
+    "Claiming from the thief"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "A watchman who chose to pay rather than swear gets the thief's double, or four or five times, payment. If he swore instead, it goes to the owner. The animal itself, with its wool and young, goes back to the owner.",
+    "term": ""
+   },
+   "2": {
+    "text": "Each of these watchmen earns the double payment by admitting he must pay, when another claim would have freed him. A borrower earns it only once he actually pays.",
+    "term": ""
+   },
+   "3": {
+    "text": "If he paid willingly, a later rise in value is his. If the court had to force him to pay, the article goes back to the owner, and his money, goods or land go back to him.",
+    "term": ""
+   },
+   "5": {
+    "text": "In each of these the Talmud leaves the law unresolved, so the double payment or the gain is split between owner and watchman. Whoever seizes it all first keeps it.",
+    "term": ""
+   },
+   "6": {
+    "text": "Even after swearing, an unpaid watchman may choose to pursue the thief; a paid one must. If a stolen animal is returned and then dies through his negligence, he doesn't pay, but the owner keeps what he seizes.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "ונמצא הגנב משלם",
+    "חזרה הבהמה עצמה",
+    "נשבע השומר ולא רצה",
+    "וכן השוכר פרה"
+   ],
+   "2": [
+    "אבל השואל אינו קונה"
+   ],
+   "3": [
+    "כיצד. הפקיד ארבע סאין",
+    "במה דברים אמורים בשלא"
+   ],
+   "4": [
+    "אף על פי שהטריחו"
+   ],
+   "5": [
+    "או שאמר הריני משלם ומת",
+    "או שלא הספיק לתבע",
+    "או ששלמו הבנים לבנים",
+    "או ששלם השומר מחצה",
+    "שאל שתי פרות",
+    "שאל מהשתפין",
+    "שתפין ששאלו",
+    "שאל מן האשה",
+    "אשה ששאלה",
+    "כל אלו ספק"
+   ],
+   "6": [
+    "קדם ונשבע ואחר כך",
+    "נגנב הפקדון באנס והחזירו"
+   ]
+  }
+ },
+ "Forbidden Foods 13": {
+  "about": "Wine stored in a gentile's courtyard; wine kept pure for a gentile; leaving wine with a gentile under seals; safeguards the Sages added; and money from gentile wine: wages, debts, partnerships and sales.",
+  "heads": [
+   [
+    1,
+    "Wine in a gentile's courtyard"
+   ],
+   [
+    8,
+    "A seal within a seal"
+   ],
+   [
+    13,
+    "Added safeguards"
+   ],
+   [
+    15,
+    "Money from gentile wine"
+   ],
+   [
+    23,
+    "Selling wine to a gentile"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "If the Jew lives in that courtyard, the wine stays permitted even with the door open, since the gentile fears he'll walk in. If he lives elsewhere, he locks it and keeps the key and seal.",
+    "term": ""
+   },
+   "3": {
+    "text": "Here the wine is the gentile's, so a Jew's key and seal don't help: only a guard living in the courtyard keeps it permitted. The gentile wouldn't fear being caught, since at worst he loses the sale.",
+    "term": ""
+   },
+   "15": {
+    "text": "Money from selling most forbidden things is permitted, but not from idolatry or libation wine. The Sages treated ordinary gentile wine the same, so even wages for working with it are forbidden.",
+    "term": "Stam yeinam: ordinary gentile wine, not known to have been poured to an idol, which the Sages forbade."
+   },
+   "21": {
+    "text": "If the gentile sold them on his own, the money is permitted. If the Jew agreed to wait for it, it is forbidden, since he wanted those things to stay, so as to be paid from them.",
+    "term": ""
+   },
+   "23": {
+    "text": "Price set first: the gentile is committed before he touches the wine, so the money is from permitted wine. Measured first: his touch forbids the wine before the sale is settled, so the money is forbidden.",
+    "term": ""
+   },
+   "25": {
+    "text": "Paying the storekeeper in advance makes the Jew the buyer of whatever the worker takes, so it is as if he bought him libation wine.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "2": [
+    "ואם אמר לו אחז"
+   ],
+   "3": [
+    "ואם היה השומר דר בחצר אחרת"
+   ],
+   "4": [
+    "ואין השומר צריך"
+   ],
+   "8": [
+    "כיצד. סתם החבית",
+    "וכן אם צר פי הנוד"
+   ],
+   "15": [
+    "לפיכך עכו\"ם ששכר"
+   ],
+   "22": [
+    "אבל גר ועכו\"ם שירשו"
+   ],
+   "23": [
+    "מדד לו עד שלא פסק"
+   ],
+   "25": [
+    "וכנגד זה בשביעית"
+   ]
+  }
+ },
+ "Creditor and Debtor 1": {
+  "about": "The mitzvah to lend to the poor; not pressing a debtor who can't pay, and the borrower's duty to repay; how a court collects a debt; what is left for the debtor.",
+  "heads": [
+   [
+    1,
+    "The mitzvah to lend"
+   ],
+   [
+    2,
+    "Pressing, and paying back"
+   ],
+   [
+    4,
+    "How a debt is collected"
+   ],
+   [
+    7,
+    "What the debtor keeps"
+   ]
+  ],
+  "notes": {
+   "3": {
+    "text": "A lender may not even pass by a debtor he knows can't pay, so as not to shame him. And a borrower who has the money may not put him off, nor waste the loan.",
+    "term": ""
+   },
+   "4": {
+    "text": "Movables are taken first, then land. Land already pledged to a ketubah or an earlier creditor is still given to this lender, but the earlier claimant may later take it from him.",
+    "term": "Ketubah: the marriage contract, which pledges the husband's property for a sum due to his wife."
+   },
+   "5": {
+    "text": "The weekday clothes of his wife and children, even new ones bought for them, stay theirs. Shabbos and festival clothes, and any jewelry, go to the creditor.",
+    "term": ""
+   },
+   "7": {
+    "text": "He keeps food for 30 days, a year of clothes fitting for him, bedding, sandals, tefillin, and two of each tool of his trade. Oxen, a donkey or a ship are property, not tools, so they are sold.",
+    "term": ""
+   },
+   "8": {
+    "text": "Movables his wife took to live on while he is away go to the creditor, since even he couldn't support his family before paying his debt.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "ומצוה זו גדולה"
+   ],
+   "3": [
+    "וכשם שאסור לזה",
+    "וכן אסור ללוה לקח"
+   ],
+   "4": [
+    "וגובין מכל קרקע",
+    "טען הלוה שמטלטלין"
+   ],
+   "7": [
+    "כיצד. אומר ללוה",
+    "ונותנין לו מן הכל",
+    "",
+    "וכסות שנים עשר חדש",
+    "ומטה לישב עליה",
+    "ונותנין לו סנדליו",
+    "היה אכר או חמר"
+   ]
+  }
+ },
+ "Creditor and Debtor 2": {
+  "about": "A debtor who has nothing: the Torah's law and the oath the Geonim added; when that oath isn't given; guarding creditors against collusion; lending only before witnesses; loans from a servant or a wife.",
+  "heads": [
+   [
+    1,
+    "A debtor with nothing"
+   ],
+   [
+    2,
+    "The Geonim's oath"
+   ],
+   [
+    4,
+    "When not to impose it"
+   ],
+   [
+    5,
+    "Guarding against collusion"
+   ],
+   [
+    7,
+    "Lend before witnesses"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "No one may enter the debtor's home. Because cheats grew common, the Geonim added a severe oath: he owns nothing beyond what he is left, hid nothing, and will give the creditor all he earns beyond his basic needs.",
+    "term": ""
+   },
+   "4": {
+    "text": "The oath is only for cheats. A debtor known to be poor and honest isn't made to swear; one known as a cheat isn't allowed to, and is pressed to pay if the court can.",
+    "term": ""
+   },
+   "6": {
+    "text": "Reuven's admission that Levi's note is unreal or paid can't cancel Shimon's right to it, since they may be scheming together. Shimon swears and collects from Levi.",
+    "term": "Shtar amanah: a note written on trust, before any money was actually lent."
+   }
+  },
+  "splits": {
+   "1": [
+    "ואם לא נמצא ללוה",
+    "ואין אוסרין אותו"
+   ],
+   "2": [
+    "כשראו הגאונים הראשונים",
+    "וכולל בשבועה זו",
+    "גם אחר התקנה הזאת",
+    "נראה לו ממון אחר"
+   ],
+   "4": [
+    "ולא עוד אלא ראוי",
+    "וכן אני אומר שמי",
+    "כללו של דבר"
+   ],
+   "6": [
+    "לפיכך אם אין לראובן",
+    "וכן כל מי שיש עליו"
+   ],
+   "7": [
+    "וכל המלוה בלא עדים"
+   ]
+  }
+ },
+ "Creditor and Debtor 3": {
+  "about": "Collateral: never from a widow, and never utensils for making food; taken only through the court, standing outside; returning what a poor debtor needs; what the court's agent leaves; guarantors and unpaid wages.",
+  "heads": [
+   [
+    1,
+    "Collateral one may not take"
+   ],
+   [
+    4,
+    "Standing outside"
+   ],
+   [
+    5,
+    "Returning what he needs"
+   ],
+   [
+    7,
+    "Guarantors and unpaid wages"
+   ]
+  ],
+  "notes": {
+   "4": {
+    "text": "Only the court's agent may take collateral by force, and even he waits outside. A creditor who took it himself isn't lashed if he gives it back; if it was lost or burnt first, he is, and its value comes off the debt.",
+    "term": ""
+   },
+   "5": {
+    "text": "A poor debtor gets back what he needs when he needs it: the pillow by night, the plow by day. Collateral taken when the loan was given needn't be returned at all.",
+    "term": "Sh'mittah: the seventh year, when outstanding loans are cancelled."
+   },
+   "6": {
+    "text": "The agent leaves his clothes, eating utensils and a bed. Of two of a kind, one is returned. What he doesn't need is held 30 days, then sold through the court.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "ואם חבל מחזירין"
+   ],
+   "2": [
+    "ואם חבל מחזיר בעל"
+   ],
+   "3": [
+    "שנאמר (דברים כד ו)"
+   ],
+   "4": [
+    "ואפלו שליח בית דין",
+    "אם כן מה בין",
+    "עבר בעל חוב ונכנס",
+    "ואם לא קים עשה"
+   ],
+   "5": [
+    "עבר ולא השיב לו",
+    "אם כן הוא שמחזיר",
+    "כדי שלא ישמט החוב",
+    "ולא יעשה מטלטלין",
+    "הא למדת שהממשכן",
+    "במה דברים אמורים שמשכנו"
+   ],
+   "6": [
+    "היו לפניו שני כלים",
+    "עד מתי הוא חיב",
+    "מת הלוה אינו מחזיר"
+   ],
+   "7": [
+    "וכן מי שיש לו שכר"
+   ]
+  }
+ },
+ "Forbidden Foods 14": {
+  "about": "The olive-sized measure for forbidden foods and what counts toward it; eating bit by bit; eating in a way no one enjoys; when danger to life permits forbidden food, and which comes first; one bite under several prohibitions.",
+  "heads": [
+   [
+    1,
+    "The olive-sized measure"
+   ],
+   [
+    7,
+    "Eating bit by bit"
+   ],
+   [
+    10,
+    "Eating without enjoyment"
+   ],
+   [
+    13,
+    "When life is in danger"
+   ],
+   [
+    18,
+    "Several prohibitions at once"
+   ]
+  ],
+  "notes": {
+   "4": {
+    "text": "The size counts as it is when eaten: shrunk below an olive's size, there is no punishment; swollen back, there is. Smaller from the start and then swollen: forbidden, but no lashes.",
+    "term": "Kerait: being cut off, a punishment from Heaven."
+   },
+   "8": {
+    "text": "Small bites add up if the whole olive's size was eaten within the time it takes to eat a p'ras. Over a longer time they don't, even with no pause between bites.",
+    "term": ""
+   },
+   "11": {
+    "text": "Eating it in a way no one enjoys, scalding, raw fat, made bitter or spoiled, brings no punishment. Meat with milk and mixed species of the vineyard are the exception, since the Torah forbids them even without enjoyment.",
+    "term": ""
+   },
+   "12": {
+    "text": "Eating idly still counts, since he enjoyed it. A pleasure that comes to him against his will is permitted, unless he intends it.",
+    "term": ""
+   },
+   "17": {
+    "text": "The lighter prohibition comes first: nevelah before tevel, which carries death by Heaven; Sabbatical-year produce, forbidden only by the Sages, before either; tevel before terumah, if it can't be fixed, since it isn't holy.",
+    "term": "Tevel: produce from which terumah and tithes haven't yet been separated."
+   },
+   "19": {
+    "text": "Each new prohibition here adds something, to benefit, to the altar, to his own eating, to all food, so each one takes hold despite the one before it.",
+    "term": "Me'ilah: using consecrated property for oneself."
+   }
+  },
+  "splits": {
+   "3": [
+    "אפלו אכל כחצי זית"
+   ],
+   "4": [
+    "חזר והניחו בגשמים"
+   ],
+   "16": [
+    "ומאכילין אותו הקל"
+   ],
+   "17": [
+    "טבל ושביעית מאכילין"
+   ],
+   "18": [
+    "לפיכך יש אוכל",
+    "כיצד. כגון טמא"
+   ],
+   "19": [
+    "ועדין היה חלב",
+    "והאוכל הזה היה"
+   ]
+  }
+ }
+}
