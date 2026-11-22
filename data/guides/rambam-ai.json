@@ -1239,5 +1239,586 @@
     "ויין שנתערב עם החמץ"
    ]
   }
+ },
+ "Creditor and Debtor 10": {
+  "about": "Lending produce to be returned in produce: when it is allowed, with no set date, a known market price, or some of the same kind; lending seed to sharecroppers; turning a money debt into produce.",
+  "heads": [
+   [
+    1,
+    "Lending produce for produce"
+   ],
+   [
+    5,
+    "Seed for sharecroppers"
+   ],
+   [
+    6,
+    "Turning a debt into produce"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "With no set date, the borrower could buy at the known price and repay at once, so returning the same amount is no interest, even if prices rise.",
+    "term": ""
+   },
+   "2": {
+    "text": "If he has even a little of the same kind, he may borrow much with no set date. With none and no known price, he must set a money value. A set repayment date is always forbidden.",
+    "term": ""
+   },
+   "5": {
+    "text": "Where the sharecropper supplies the seed, or before he enters the field, the owner may lend wheat for wheat, since he could still remove him. Once he can't, the sharecropper is like anyone else.",
+    "term": ""
+   },
+   "6": {
+    "text": "A money debt may be turned into a produce debt only if the borrower has that produce. If he hadn't, he repays the original money.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "כיצד. היה השער"
+   ],
+   "2": [
+    "לא היתה לו מאותו",
+    "אף על פי שיש לו מאותו"
+   ],
+   "5": [
+    "במה דברים אמורים במקום",
+    "אבל במקום שדרך",
+    "אבל אחר שירד לשדה"
+   ],
+   "6": [
+    "אמר לו צא ועשה",
+    "אם יש לו חטים",
+    "היה ללוה חטים",
+    "הרי שלא היה לו"
+   ]
+  }
+ },
+ "Creditor and Debtor 11": {
+  "about": "Oral loans and loans with a note: repaying, proof, and writing a note; collecting from heirs and buyers; when an oral loan is collected from heirs; an estate's land and movables; the Geonim's ordinance.",
+  "heads": [
+   [
+    1,
+    "Oral loans and written ones"
+   ],
+   [
+    4,
+    "Heirs and buyers"
+   ],
+   [
+    7,
+    "What heirs pay from"
+   ],
+   [
+    11,
+    "The Geonim's ordinance"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "An oral loan needn't be repaid before witnesses, so a claim of having paid is believed, with a sh'vuat hesset. With a note it isn't. Witnesses write a note only when told to, or after a kinyan.",
+    "term": ""
+   },
+   "4": {
+    "text": "A note makes the loan known, so a buyer should have checked, and the lender may take the land from him. An oral loan isn't public, so it is collected from heirs but not from buyers.",
+    "term": ""
+   },
+   "6": {
+    "text": "Witnesses to an oral loan aren't enough against heirs, since he may have repaid without witnesses. Only these three cases let the lender collect from them.",
+    "term": ""
+   },
+   "7": {
+    "text": "By Torah law, a lender can't take an estate's movables from the heirs, only its land.",
+    "term": ""
+   },
+   "8": {
+    "text": "If he seized movables in the father's lifetime, he keeps them, swearing to it if the heirs dispute it. Notes he holds, he must prove he took in the father's lifetime.",
+    "term": ""
+   },
+   "10": {
+    "text": "Shimon, who paid off Reuven's creditor, should pay his own debt to the heirs with that very land, then take it back from them, since Reuven guaranteed the sale.",
+    "term": ""
+   },
+   "11": {
+    "text": "The Geonim let creditors collect from movables too. In the West they wrote it into the note itself, which binds heirs even if the borrower didn't know of the ordinance.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "אבל המלוה את חברו בשטר",
+    "לפיכך האומר לעדים",
+    "קנו מידו שהוא"
+   ],
+   "2": [
+    "וכן אם כתב שטר",
+    "ויש מן הגאונים"
+   ],
+   "3": [
+    "ואם טען שפרע"
+   ],
+   "4": [
+    "אבל מלוה שבשטר"
+   ],
+   "6": [
+    "כשחיב מודה בה",
+    "או שהיתה ההלואה",
+    "או שנדוהו עד",
+    "כל אלו גובין"
+   ],
+   "7": [
+    "ואם לא נודע להם",
+    "במה דברים אמורים בזמן"
+   ],
+   "8": [
+    "טען שמחיים תפסן",
+    "היו הדברים שתפס"
+   ],
+   "10": [
+    "הדין נותן שיבואו",
+    "לפיכך אם היה שמעון"
+   ],
+   "11": [
+    "אבל במערב היו",
+    "וסיג גדול עשו"
+   ]
+  }
+ },
+ "Creditor and Debtor 12": {
+  "about": "Collecting from young heirs: when the court acts for them, through a guardian; claims against their land; selling an estate by announcement; and when such a sale stands.",
+  "heads": [
+   [
+    1,
+    "Not from young heirs"
+   ],
+   [
+    3,
+    "When the court does act"
+   ],
+   [
+    8,
+    "Selling an estate"
+   ],
+   [
+    10,
+    "When the sale stands"
+   ]
+  ],
+  "notes": {
+   "3": {
+    "text": "The exceptions: a gentile's loan with interest, which eats up the estate, and a ketubah, so the woman has means to remarry. If she has already remarried, she waits.",
+    "term": ""
+   },
+   "4": {
+    "text": "These Geonim hold the ketubah is paid early only to stop her support from eating up the estate. So if she would take it all, the orphans gain nothing, and it waits.",
+    "term": ""
+   },
+   "7": {
+    "text": "Witnesses that he held the land three years aren't heard against minors, since testimony needs the other side present. A deed of sale is verified, and then the land is taken.",
+    "term": "Chazakah: holding land openly for three years, which proves ownership."
+   },
+   "9": {
+    "text": "The writ must say the property was identified as the deceased's, or it is invalid.",
+    "term": "Adrachta: a court's writ handing a debtor's property to the creditor."
+   },
+   "11": {
+    "text": "With proper announcements and a careful appraisal, even a big mistake stands. Otherwise a mistake of a sixth cancels the sale. Urgent sales, and servants, notes and movables, need no announcement.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "3": [
+    "וכן אשה שתבעה"
+   ],
+   "4": [
+    "שלא אמרו נזקקין"
+   ],
+   "6": [
+    "וכן קטן שתקף"
+   ],
+   "7": [
+    "אבל אם הוציא שטר"
+   ],
+   "8": [
+    "ובשעה שמכריזין"
+   ],
+   "10": [
+    "ובית דין שמכרו האחריות"
+   ],
+   "11": [
+    "אבל אם לא בדקו",
+    "וכן אם מכרו קרקע",
+    "איזהו העת שאינן",
+    "וכן בית דין שמכרו דברים",
+    "ואלו הן הדברים"
+   ]
+  }
+ },
+ "Forbidden Foods 17": {
+  "about": "Pots used for forbidden food; koshering and immersing utensils bought from gentiles; knives; the Sages' decrees on gentiles' drink, bread and cooking, and the foods they left permitted; children; repulsive food, and keeping oneself holy.",
+  "heads": [
+   [
+    1,
+    "Pots used for forbidden food"
+   ],
+   [
+    3,
+    "Utensils bought from gentiles"
+   ],
+   [
+    9,
+    "Gentiles' drink and bread"
+   ],
+   [
+    14,
+    "Food cooked by gentiles"
+   ],
+   [
+    22,
+    "Gentile foods that are permitted"
+   ],
+   [
+    27,
+    "Children"
+   ],
+   [
+    29,
+    "Keeping oneself holy"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "By Torah law only a pot used that same day forbids the food, since after that the fat in it spoils in taste. The Sages forbade using it ever again, yet food cooked in it from the next day on is permitted.",
+    "term": ""
+   },
+   "3": {
+    "text": "Unused: just immerse it. Used cold: wash and immerse. Used for hot food: boil it out, then immerse. Used on the fire: heat it white-hot, then immerse.",
+    "term": "Hagaalah: purging a utensil in boiling water, to draw out what it absorbed."
+   },
+   "6": {
+    "text": "Only metal dinnerware bought from a gentile needs immersion, and earthenware coated with lead. Borrowed or pledged utensils, and wood or stone ones, need only cleaning.",
+    "term": ""
+   },
+   "9": {
+    "text": "These were forbidden not because of the food itself, but to keep a distance from gentiles and so prevent intermarriage.",
+    "term": ""
+   },
+   "10": {
+    "text": "So drinking at their gathering is forbidden even from one's own cup, while beer taken home is permitted, since the concern is eating together.",
+    "term": ""
+   },
+   "15": {
+    "text": "Only food not eaten raw and fit for a king's table is included, since the decree aims to prevent invitations to meals. If a Jew helps cook it even a little, it is permitted.",
+    "term": ""
+   },
+   "27": {
+    "text": "The court needn't stop a child who acts on his own, but no one may feed him forbidden food or train him to break Shabbos. His father must correct him.",
+    "term": "Sh'vut: an activity the Sages forbade on Shabbos."
+   }
+  },
+  "splits": {
+   "2": [
+    "ומדברי סופרים לא"
+   ],
+   "3": [
+    "ודברים שנשתמש בהן על ידי צונן"
+   ],
+   "4": [
+    "ואם היתה יורה גדולה",
+    "וכלן שנשתמש בהן"
+   ],
+   "5": [
+    "ורמז לה"
+   ],
+   "27": [
+    "במה דברים אמורים בשעשה"
+   ]
+  }
+ },
+ "Creditor and Debtor 13": {
+  "about": "Collecting from a borrower who is away, and the three proofs needed; selling collateral, and the oath; lost collateral and disputes over its value; when a loan is due; where it is repaid.",
+  "heads": [
+   [
+    1,
+    "Collecting while he's away"
+   ],
+   [
+    3,
+    "Collateral"
+   ],
+   [
+    5,
+    "When it is due"
+   ],
+   [
+    8,
+    "Where it is repaid"
+   ]
+  ],
+  "notes": {
+   "3": {
+    "text": "Since he could have claimed he bought the item, he may sell it without waiting. He swears to the amount with a full oath, since miggo can spare him money, but not an oath.",
+    "term": "Miggo: a claim is believed because the person could have made a better one."
+   },
+   "4": {
+    "text": "In each case the lender first swears the collateral is no longer in his hands. Then the one denying the other's figure swears to its value, and any difference admitted is paid.",
+    "term": ""
+   },
+   "6": {
+    "text": "In a dispute over the due date, the borrower swears a sh'vuat hesset. If they disagree only on how many days remain, the lender waits until the shorter date passes.",
+    "term": "Sh'vuat hesset: a lighter oath the Sages added, for claims the Torah's oath doesn't cover."
+   }
+  },
+  "splits": {
+   "1": [
+    "ואם אי אפשר להודיעו",
+    "ודין זה תקנת"
+   ],
+   "2": [
+    "ראיה ראשונה",
+    "ראיה שלישית"
+   ],
+   "3": [
+    "וכן המלוה את חברו על המשכון",
+    "",
+    "ומפני מה אינו נשבע",
+    "שאין אומרין מגו"
+   ],
+   "4": [
+    "אמר המלוה סלע הלויתיך עליו ושקל",
+    "אמר הלוה סלע הלויתני",
+    "אמר הלוה סלע הלויתני",
+    "סלע הלויתיך עליו ושני",
+    "סלע הלויתני עליו ושתים"
+   ],
+   "5": [
+    "וסתם מלוה שלשים"
+   ],
+   "6": [
+    "זה אומר חמשה ימים"
+   ],
+   "8": [
+    "כיצד. המלוה את חברו",
+    "בא הלוה לפרעו"
+   ]
+  }
+ },
+ "Creditor and Debtor 14": {
+  "about": "When a lender with a note must swear; claims that would void a note; notes that can't be verified; a note already repaid; disputes over what a payment was for; lost notes; asking for an oath when there may be a note.",
+  "heads": [
+   [
+    1,
+    "When a note-holder must swear"
+   ],
+   [
+    3,
+    "Claims against a note"
+   ],
+   [
+    7,
+    "A note already repaid"
+   ],
+   [
+    13,
+    "Lost and dropped notes"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "In these five cases the note alone isn't enough, so the lender swears before collecting. On the due date itself, no oath is needed.",
+    "term": "Pogem et shtaro: a lender who admits part of his note was already paid."
+   },
+   "3": {
+    "text": "Some Geonim required an oath for any claim that would void the note. The Rambam's teachers, and he too, require one only for a claim of payment; otherwise the borrower pays first and sues afterwards.",
+    "term": ""
+   },
+   "4": {
+    "text": "The borrower who admits half isn't treated like one returning a lost object, since the note pressed him. That half is collected only from property he still owns, since buyers relied on the witnesses.",
+    "term": ""
+   },
+   "9": {
+    "text": "Witnesses who saw a repayment void the note, even if the lender says it was for another debt. If they only saw money handed over, he is believed, since he could have called it a gift.",
+    "term": ""
+   },
+   "13": {
+    "text": "Without the note in the lender's hands, there is no presumption the debt is unpaid, so the borrower is believed with a sh'vuat hesset, even before the due date.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "",
+    "או שעד אחד מעיד",
+    "והבא לפרע שלא",
+    "והטורף מיד הלוקח",
+    "והנפרעים מן היורש",
+    "כשיתבע השבע ואחר"
+   ],
+   "2": [
+    "טען הלוה ואמר ישבע"
+   ],
+   "3": [
+    "יש מי שהורה שחיב"
+   ],
+   "5": [
+    "ואם קימו המלוה"
+   ],
+   "8": [
+    "אבל אם אמר לו החזרתי"
+   ],
+   "9": [
+    "במה דברים אמורים כשהעידו",
+    "אם אמר בעל השטר",
+    "אמר לו הלוה והלא"
+   ],
+   "10": [
+    "טען ואמר ישבע לי"
+   ],
+   "13": [
+    "והורו רבותי שאפלו",
+    "וכן הורו רבותי שאפלו"
+   ],
+   "15": [
+    "אומרים לו הבא השטר"
+   ]
+  }
+ },
+ "Creditor and Debtor 15": {
+  "about": "Repaying before witnesses: what that condition means, and the Rambam's proof from old manuscripts; a lender believed like two witnesses; a borrower believed that he paid; collecting without an oath.",
+  "heads": [
+   [
+    1,
+    "\"Repay me before witnesses\""
+   ],
+   [
+    3,
+    "Believed like witnesses"
+   ],
+   [
+    6,
+    "A borrower who is believed"
+   ],
+   [
+    7,
+    "Collecting without an oath"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "A borrower told to repay before witnesses is believed that he did, if they died or went away. If particular witnesses were named, he isn't.",
+    "term": ""
+   },
+   "2": {
+    "text": "Some copies of the Talmud read that he isn't believed. The Rambam found old parchment copies, about 500 years old, reading that he is, and it makes sense: he can't keep the witnesses forever. And witnesses who come and testify always free him.",
+    "term": ""
+   },
+   "4": {
+    "text": "\"Believed like two witnesses\" outweighs any number of witnesses, so when paying, the borrower should have the note torn up or declared void. \"Like three\" can be outweighed by four.",
+    "term": ""
+   },
+   "6": {
+    "text": "If the borrower is believed whenever he says he paid, the note can't be collected from heirs or buyers. Even his admission doesn't help against buyers, since the two might be scheming.",
+    "term": ""
+   },
+   "7": {
+    "text": "A condition to collect without an oath holds against him and, if stated, his heirs. Not against buyers, since one can't agree to make others lose.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "טען הלוה ואמר לו וכן",
+    "וכן אם אמר אל תפרעני",
+    "אבל אם אמר לו אל תפרעני"
+   ],
+   "2": [
+    "ומפני טעות זו",
+    "גם ההוראה הזאת",
+    "אף על פי שהספרים",
+    "אבל ודאי אם אמר"
+   ],
+   "4": [
+    "אבל אם אמר לו הרי"
+   ],
+   "6": [
+    "טען הלוה בשטר זה"
+   ],
+   "7": [
+    "וכן אם התנה שיגבה",
+    "בא לגבות מן הלוקח"
+   ]
+  }
+ },
+ "Ritual Slaughter 1": {
+  "about": "The mitzvah of shechitah and its blessing; fish and locusts; where on the neck one slaughters; how much must be cut; what one may slaughter with; checking the knife; and when one may slaughter.",
+  "heads": [
+   [
+    1,
+    "The mitzvah of shechitah"
+   ],
+   [
+    4,
+    "Where on the neck"
+   ],
+   [
+    9,
+    "How much is cut"
+   ],
+   [
+    14,
+    "What one slaughters with"
+   ],
+   [
+    23,
+    "Checking the knife"
+   ],
+   [
+    28,
+    "When one may slaughter"
+   ]
+  ],
+  "notes": {
+   "9": {
+    "text": "Ideally both are cut, the windpipe and the gullet. After the fact, most of one is enough for a bird, and most of both for an animal.",
+    "term": "Simanim: the \"signs,\" the windpipe and gullet that shechitah cuts."
+   },
+   "11": {
+    "text": "Even a hair more than half counts as most. Exactly half of each, or in an animal all of one and half of the other, isn't enough.",
+    "term": ""
+   },
+   "20": {
+    "text": "A reed, tooth or nail that was detached may be used; one still growing in place may not, even with no nick.",
+    "term": ""
+   },
+   "25": {
+    "text": "If he cut bone or wood with it before checking, a nick found then is assumed to come from that, so the slaughter stands.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "ובעוף הוא אומר"
+   ],
+   "2": [
+    "ואסור לאכל מן השחוטה",
+    "ומתר לחתך ממנה"
+   ],
+   "4": [
+    "ועל כל הדברים האלו"
+   ],
+   "5": [
+    "כיצד. בושט מתחלת"
+   ],
+   "6": [
+    "ושעור תרבץ הושט"
+   ],
+   "9": [
+    "וכמה הוא שעור"
+   ],
+   "24": [
+    "לפיכך השוחט בהמות"
+   ]
+  }
  }
 }
