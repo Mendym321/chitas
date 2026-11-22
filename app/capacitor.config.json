@@ -6,7 +6,7 @@
     "url": "https://chitas.vercel.app"
   },
   "ios": {
-    "contentInset": "always"
+    "contentInset": "never"
   },
   "plugins": {
     "FirebaseAuthentication": {
