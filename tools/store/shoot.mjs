@@ -90,18 +90,22 @@ const scrollReaderTo = (p, sel, off = 0) => p.evaluate(([sel, off]) => {
   if (r && el) r.scrollTop += el.getBoundingClientRect().top - r.getBoundingClientRect().top - off;
 }, [sel, off]);
 
-const SHIFT = { hayomyom: -1 };   // a day whose Hayom Yom fills the page
+// Some shots on other days: Hayom Yom on a day whose entry fills the page; Tanya and Rambam
+// on days with the written guides in the current style (Tanya's bridges; the Rambam's
+// paragraphs, chapter line and plain-words notes)
+const SHIFT = { hayomyom: -1, tanya: 10, rambam: 13 };
 const SHOTS = {
   today: async p => {},
   chumash: async p => { await p.evaluate(() => { user.done = { tehillim: true }; openChabadPanel('chumash'); }); await settle(p, 6000); await scrollReaderTo(p, '.rd-comm', 470); await settle(p, 800); },
-  tanya: async p => { await p.evaluate(() => openChabadPanel('tanya')); await settle(p, 8000); },
+  tanya: async p => { await p.evaluate(() => openChabadPanel('tanya')); await settle(p, 8000); await scrollReaderTo(p, '.tz-bridge', 520); await settle(p, 800); },
   tehillim: async p => { await p.evaluate(() => openChabadPanel('tehillim')); await settle(p, 6000); await scrollReaderTo(p, '.th-personal', 10); await p.evaluate(() => _openTehillimPeopleManager()); await settle(p, 1200); },
   hayomyom: async p => { await p.evaluate(() => openExtraReader('hayomYom')); await settle(p, 4000); },
   hayomyom2: async p => { await p.evaluate(() => openExtraReader('hayomYom')); await settle(p, 3000); await p.evaluate(() => _readerGoDay(1)); await settle(p, 3000); },
   hayomyom3: async p => { await p.evaluate(() => openExtraReader('hayomYom')); await settle(p, 3000); await p.evaluate(() => _readerGoDay(-1)); await settle(p, 3000); },
   progress: async p => { await p.evaluate(() => switchTab('stats')); await settle(p, 1800); },
   reminders: async p => { await p.evaluate(() => { switchTab('profile'); openReminders(); }); await settle(p, 1200); },
-  rambam: async p => { await p.evaluate(() => openChabadPanel('rambam')); await settle(p, 6000); },
+  // The one-chapter track that day (Forbidden Foods 14): short halachos, so a plain-words note shows with them
+  rambam: async p => { await p.evaluate(() => { user.rambamTrack = '1'; openChabadPanel('rambam'); }); await settle(p, 6000); await scrollReaderTo(p, '.rb-pw', 620); await settle(p, 800); },
   // Your place: halfway through the day's Tehillim, and the offer to go on from your other device
   place: async p => { await p.evaluate(() => { user.done = { chumash: true }; openChabadPanel('tehillim'); }); await settle(p, 6000);
     await p.evaluate(() => { const r = document.getElementById('native-reader'); r.scrollTop = (r.scrollHeight - r.clientHeight) * .42; onReaderScroll(); });
