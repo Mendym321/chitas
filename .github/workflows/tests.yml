@@ -1,0 +1,48 @@
+# Runs the app's tests on every pull request (and on main), the same 18 sets
+# Claude runs by hand. A red check means something broke: don't merge until
+# it's green. (Every phone shows the live site, so a mistake on main reaches
+# everyone at once: this is the gate in front of it.)
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    # 24.04: our Playwright (1.56) has no browser build for newer Ubuntu yet
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: tools
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            tools/package-lock.json
+      - name: Install (server and tools)
+        run: npm ci --prefix .. && npm ci
+      - name: Install the test browser
+        run: npx playwright install --with-deps chromium
+      - name: Logic
+        run: npm test
+      - name: Server functions
+        run: npm run test:api && npm run test:sponsor
+      - name: The app in a browser
+        run: |
+          for t in test:app test:place test:look test:more test:midnight test:tehillim test:omer test:shm test:rashi test:markdays test:placesync test:prefsync test:rescue test:offline test:signin; do
+            echo "::group::$t"
+            npm run -s "$t"
+            echo "::endgroup::"
+          done

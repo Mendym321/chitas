@@ -1,6 +1,7 @@
 /**
  * GET /api/admin-feedback — the latest 100 feedback messages and mistake
- * reports, newest first, for the admin page. Admins only (ADMIN_UIDS).
+ * reports, newest first, for the admin page; and the 40 errors from people's
+ * phones seen most recently (error_reports, counted). Admins only (ADMIN_UIDS).
  * They hold only what people chose to write (and an email if they left one).
  */
 import { getDb, verifyUserToken, isAdmin } from './_lib/firebase.js';
@@ -13,8 +14,12 @@ export default async function handler(req, res) {
   if (!who) return send(res, 401, { error: 'Sign in first' });
   if (!isAdmin(who)) return send(res, 403, { error: 'admins only' });
   try {
-    const snap = await getDb().collection('feedback').orderBy('createdAt', 'desc').limit(100).get();
-    return send(res, 200, { items: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+    const db = getDb();
+    const [snap, errs] = await Promise.all([
+      db.collection('feedback').orderBy('createdAt', 'desc').limit(100).get(),
+      db.collection('error_reports').orderBy('lastSeen', 'desc').limit(40).get().catch(() => null),
+    ]);
+    return send(res, 200, { items: snap.docs.map(d => ({ id: d.id, ...d.data() })), errors: errs ? errs.docs.map(d => d.data()) : [] });
   } catch (e) {
     console.error('admin-feedback:', e);
     return send(res, 500, { error: 'Could not load feedback. ' + (e.message || '') });

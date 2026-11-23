@@ -4,6 +4,7 @@
  * Run:  cd tools && npm test
  */
 import { applySplits } from '../api/_lib/tanya-split.js';
+import { writtenGuide } from '../api/_lib/tanya-written.js';
 import { cleanTanyaHtml, isHagahahHtml, FN_OPEN, FN_CLOSE } from '../api/_lib/tanya-text.js';
 
 let failed = 0;
@@ -46,6 +47,10 @@ check('real text: nothing added, dropped or changed', joined(real), [RHE, REN]);
 check('a footnote marker between words does not block a match', applySplits('אחת שתים שלש', 'one' + FN_OPEN + '0' + FN_CLOSE + ' two three', [{ he: 'שתים', en: 'two three' }]).length, 2);
 check('hagahah recognised by <small>', [isHagahahHtml('<small>הגהה<br>טקסט</small>', ''), isHagahahHtml('[טקסט בסוגריים]', '')], [true, false]);
 check('hagahah label removed', [cleanTanyaHtml('<small>הגהה<br>וּמַה שֶּׁכָּתוּב</small>'), cleanTanyaHtml('<small>NOTE: As far</small>')], ['וּמַה שֶּׁכָּתוּב', 'As far']);
+
+check('a title on a cut comes through with its piece', applySplits(HE, EN, [{ he: 'נפש אחת היא', en: 'One soul comes', heading: 'A bridge', title: 'The first soul' }]).map(p => [p.heading || '', p.title || '']), [['', ''], ['A bridge', 'The first soul']]);
+const wg = writtenGuide('Tanya,_Part_IV;_Kuntres_Acharon.9', 1, null);
+check('written guides read titles on segments and on cuts', [wg.segments[0].title, wg.segments[1].splits[2].title, wg.segments[2].title], ['A last plea', 'Praying together', '']);
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll Tanya split tests passed');
 process.exit(failed ? 1 : 0);

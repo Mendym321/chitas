@@ -87,6 +87,11 @@ That copies the settings in and opens Xcode.
 2. **Add the Firebase file to the project:** drag `GoogleService-Info.plist`
    from Finder (`ios/App/App/`) onto the yellow **App** folder in Xcode's left
    column. Tick "Copy items if needed" off, and the **App** target on. Finish.
+   If Xcode asks Reference / Copy / Move, choose **Reference files in place**:
+   the file is already in that folder, and a copy comes out named
+   `GoogleService-Info 2.plist`, which Firebase doesn't find. (Then sign-in
+   says "Apple sign-in provider is not enabled". To check, run
+   `ls ios/App/App/ | grep Google`: there must be exactly one, with no "2".)
 3. **Signing & Capabilities** tab: tick "Automatically manage signing" and
    pick your **Team** (your paid developer account).
 4. Still there: **+ Capability** → **Sign in with Apple**.

@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/rambam-paras", "destination": "/api/tanya-enhance?kind=rambam-paras" }
+    { "source": "/api/rambam-paras", "destination": "/api/tanya-enhance?kind=rambam-paras" },
+    { "source": "/api/error-report", "destination": "/api/feedback?kind=error" }
   ]
 }

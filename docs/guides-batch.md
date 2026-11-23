@@ -9,7 +9,7 @@ the owner over many rounds (November 2026); don't drift from them.
 
 | Text | File | What |
 |---|---|---|
-| Tanya | `api/_lib/tanya-written-data.js` | intro or recap, summary, small pieces, a few **bridges** |
+| Tanya | `api/_lib/tanya-written-data.js` | intro or recap, summary, small pieces, a few **bridges** and short **titles** |
 | Rambam | `data/guides/rambam-ai.json` | a line on the chapter, headings, **plain-words notes**, the Hebrew **splits** |
 | Chumash | `data/guides/chumash.json` | one line a day |
 
@@ -32,7 +32,7 @@ for to write, and a TO WRITE list at the end. Write everything on that list.
 (Days the app reads with its own built-in reader, the Tanya's opening pages and
 the Rambam's introduction and mitzvos, aren't listed: leave them.)
 
-## 2. Tanya: bridges
+## 2. Tanya: bridges and titles
 
 `node batch.mjs tanya "Likkutei Amarim 5|1|7"` prints the portion: each
 segment's Hebrew (without vowels) and English.
@@ -45,9 +45,9 @@ Add an entry to `WRITTEN` in `api/_lib/tanya-written-data.js`, keyed exactly as
   flow: 'bridges',
   intro: '…',      // when the portion starts the chapter (verse 1); otherwise recap: '…'
   summary: '…',
-  segs: [          // one entry per segment, in order: [bridge, [[Hebrew start, English start, bridge?], …]]
-    ['', [['ואפילו כל העולם', 'and even if the whole world'], ['היה בעיניך', 'in your own eyes regard']]],
-    ['Two problems with the oath, then. …', [['כי הנה מצינו', 'We find in the Gemara', 'Before he can answer, …']]],
+  segs: [          // one entry per segment, in order: [bridge, [[Hebrew start, English start, bridge?, title?], …], title?]
+    ['', [['ואפילו כל העולם', 'and even if the whole world'], ['היה בעיניך', 'in your own eyes regard']], 'The oath before birth'],
+    ['Two problems with the oath, then. …', [['כי הנה מצינו', 'We find in the Gemara', 'Before he can answer, …', 'Five kinds of people']]],
   ],
 },
 ```
@@ -82,8 +82,20 @@ turns on it"), no remarks about the structure ("this comes up again below"), no
 definitions for their own sake. A bridge goes just before the piece it leads
 into: on the segment (first slot) or on a cut (third slot).
 
-What was tried and dropped, so don't do it: headings that only label topics;
-tags like "THE QUESTION"; short "notes" that point at words or define terms.
+**Titles** (back since 23 Nov 2026, the owner asked for them alongside the
+bridges). A small heading, 2 to 6 plain English words, sentence case, no final
+period, where a new step of the argument begins: "Laws that never happen",
+"Two problems", "Why David was punished", "Shabbos, inside and out". Usually 3
+to 6 a portion, roughly every 3 to 6 pieces, the first on the opening piece.
+A title goes on the segment (third slot) or on a cut (fourth slot; put `''` in
+the bridge slot if there's no bridge there). Where a bridge and a title meet,
+the app shows the bridge, then the title just above the text, so a bridge that
+sums up the last step reads as its close and the title opens the next. Don't
+repeat the bridge's words in the title. `check` warns on a portion without
+titles or a title over 6 words. Glosses get none.
+
+What was tried and dropped, so don't do it: tags like "THE QUESTION" in
+capitals; short "notes" that point at words or define terms.
 
 ## 3. Rambam: line, headings, plain-words notes, splits
 
