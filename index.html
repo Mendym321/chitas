@@ -202,6 +202,15 @@
   html .tz-seg button { padding:9px 4px; }                                                            /* language switch: 30 → 34 (Apple's segmented control is 32) */
   html .rr-go { height:44px; padding:0 18px; }                                                        /* Start: 36 → 44 */
   html #reader-actions > button { min-height:50px; }
+  /* A reader turned sideways (phone app): clear of the notch and the home bar at
+     the sides, and lines kept to a comfortable length, centred */
+  @media (max-width: 999px) {
+    html #reader-head { padding-left:calc(18px + env(safe-area-inset-left, 0px)) !important; padding-right:calc(18px + env(safe-area-inset-right, 0px)) !important; }
+    html #reader-daybar { padding-left:calc(10px + env(safe-area-inset-left, 0px)); padding-right:calc(10px + env(safe-area-inset-right, 0px)); }
+    #native-reader > div { padding-left:calc(18px + env(safe-area-inset-left, 0px)) !important; padding-right:calc(18px + env(safe-area-inset-right, 0px)) !important; max-width:820px; margin:0 auto; }
+    #reader-bottom-bar { padding-left:calc(14px + env(safe-area-inset-left, 0px)) !important; padding-right:calc(14px + env(safe-area-inset-right, 0px)) !important; }
+    #quiz-panel { padding-left:env(safe-area-inset-left, 0px); padding-right:env(safe-area-inset-right, 0px); }
+  }
   .ps-modal-close, .wb-x { position:relative; }
   .ps-modal-close::after, .wb-x::after { content:''; position:absolute; inset:-7px; border-radius:50%; }   /* the sheets' × : 30 → 44 */
   html .ps-add-btn { min-height:44px; }                                                                      /* Add extra learning: 40 → 44 */                                                  /* Mark as learned, Quiz yourself: 43 → 50, the size of iOS's large buttons */   /* the bar runs to the edge; its buttons stop where the home bar's area begins */   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
@@ -3851,7 +3860,21 @@ function _statusBarStyle() {
   const [r, g, b] = m.map(Number);
   return (0.299 * r + 0.587 * g + 0.114 * b) < 128 ? 'DARK' : 'LIGHT';
 }
+// Turning the phone: the app stays upright, and only the readers (and a quiz
+// from them) may turn sideways, for reading Hebrew and English side by side.
+// Needs the screen-orientation plugin (older app builds simply don't lock).
+let _orLast = '';
+function _syncOrientation() {
+  const so = _nativePlugin('ScreenOrientation');
+  if (!so) return;
+  const shown = id => { const el = document.getElementById(id); return !!el && getComputedStyle(el).display !== 'none'; };
+  const want = shown('chabad-panel') || shown('quiz-panel') ? 'any' : 'portrait';
+  if (want === _orLast) return;
+  _orLast = want;
+  try { (want === 'any' ? so.unlock() : so.lock({ orientation: 'portrait' })).catch(() => {}); } catch (e) {}
+}
 function _syncStatusBar() {
+  _syncOrientation();
   const sb = _nativePlugin('StatusBar');
   if (!sb) return;
   const style = _statusBarStyle();

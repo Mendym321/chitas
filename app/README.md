@@ -109,10 +109,11 @@ That copies the settings in and opens Xcode.
 9. **General** tab: **Display Name** `Chitas`, **Version** `1.0`, **Build**
    `1`. Under Supported Destinations leave **iPhone** and **iPad** (the iPad
    screenshots are ready in `docs/store/ipad/`). Under Deployment Info, **iPhone
-   Orientation**: **Portrait** only (untick Upside Down, Landscape Left and
-   Landscape Right), as daily-learning apps do: every screen is laid out for the
-   phone held upright. **iPad Orientation**: leave all four (iPads are turned
-   both ways, and the app has a wide layout for them).
+   Orientation**: **Portrait**, **Landscape Left** and **Landscape Right** (untick
+   only Upside Down). The app itself keeps the phone upright everywhere except
+   the readers, which may turn sideways for reading (the screen-orientation
+   plugin does this; these ticks are what it's allowed to choose from).
+   **iPad Orientation**: leave all four.
 10. Plug in the iPhone, pick it at the top of the window (next to ▶), and
    press **▶**.
 
