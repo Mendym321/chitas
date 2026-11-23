@@ -3884,15 +3884,17 @@ function _syncStatusBar() {
 }
 if (window.Capacitor?.isNativePlatform?.()) setInterval(_syncStatusBar, 300);
 
-// Touch feedback: only three moments in the app use it: 'tap' (a section
-// learned), 'done' (the day finished), 'milestone'. Off with the switch in
-// Profile. In a browser only Android can do it.
-const _HAPTIC_WEB = { tap: [10], done: [12, 70, 12], milestone: [40] };
+// Touch feedback: 'tap' (a section learned: a medium knock), 'done' (the day
+// finished) and 'milestone' (the phone's own success pattern), and 'select'
+// (a light tick as the text size or language changes, as iOS gives its own
+// switches). Off with the switch in Profile. In a browser only Android can do it.
+const _HAPTIC_WEB = { tap: [18], select: [8], done: [20, 70, 20], milestone: [45] };
+const _HAPTIC_IMPACT = { tap: 'MEDIUM', select: 'LIGHT' };
 function haptic(kind) {
   if (user?.haptics === false) return;
   try {
     const H = _nativePlugin('Haptics');
-    if (H) Promise.resolve(kind === 'tap' ? H.impact({ style: 'LIGHT' }) : H.notification({ type: 'SUCCESS' })).catch(() => {});
+    if (H) Promise.resolve(_HAPTIC_IMPACT[kind] ? H.impact({ style: _HAPTIC_IMPACT[kind] }) : H.notification({ type: 'SUCCESS' })).catch(() => {});
     else if (navigator.vibrate) navigator.vibrate(_HAPTIC_WEB[kind]);
   } catch (e) {}
 }
@@ -6420,6 +6422,7 @@ function _readerFontStep(delta) {
   const cur  = _getReaderFontStep(sid);
   const next = Math.max(0, Math.min(_FONT_STEPS - 1, cur + delta));
   if (next === cur) return;
+  haptic('select');
   localStorage.setItem(_readerFontKey(sid), String(next));
   const place = _readerPlace();                       // keep the passage you're on in view
   _applyReaderFontSize(sid);
@@ -6567,7 +6570,7 @@ function _buildSettingsSectionOpts(sectionId) {
 function _langSeg(lang, call) {
   return '<div class="tz-seg" role="group" aria-label="Language">'
     + [['he', 'עברית'], ['both', 'Both'], ['en', 'English']].map(([l, lb]) =>
-      '<button type="button"' + (lang === l ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ' onclick="' + call.replace(/LANG/g, l) + '">' + lb + '</button>').join('')
+      '<button type="button"' + (lang === l ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ' onclick="haptic(\'select\');' + call.replace(/LANG/g, l) + '">' + lb + '</button>').join('')
     + '</div>';
 }
 

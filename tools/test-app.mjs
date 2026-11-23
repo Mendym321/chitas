@@ -733,7 +733,7 @@ await check('a reminder that hasn\'t matched a week: one kind question on Today'
   localStorage.removeItem('chitas_reminders'); user.pastDone = {};
   return [...shown, after];
 }, ['block', 'Your Rambam reminder', 'none']);
-await check('touch feedback uses the phone: a light tap, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
+await check('touch feedback uses the phone: a medium tap, a light tick, and success for the day done', () => { window.__calls = []; haptic('tap'); haptic('select'); haptic('done'); return window.__calls.map(c => c[0] + ' ' + JSON.stringify(c[1])); }, ['impact {"style":"MEDIUM"}', 'impact {"style":"LIGHT"}', 'notification {"type":"SUCCESS"}']);
 await check('touch feedback off: nothing', () => { setHaptics(false); window.__calls = []; haptic('tap'); const n = window.__calls.length; setHaptics(true); return [n, document.getElementById('ps-hap-sw').getAttribute('aria-checked')]; }, [0, 'true']);
 await page.evaluate(() => { delete window.Capacitor; user.done = {}; });
 // The Tanya's opening pages (19 to 23 Kislev): no chapters, so they're read in their own order.
