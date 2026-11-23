@@ -108,7 +108,7 @@ what we checked, why it matters, and what to do. 🔴 before launch, 🟠 soon,
 ## Checked and fine (this time)
 
 - Database rules: only you read your progress (`npm run test:rules`).
-- Every server endpoint that costs money has a daily limit (quizzes 25 a person,
+- Every server endpoint that costs money has a daily limit (new quizzes 20 a person,
   feedback 10, Rambam splits 120 chapters for everyone, Tanya guides only last
   week to tomorrow).
 - Account deletion, the privacy page and Apple's privacy file match what the
