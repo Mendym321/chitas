@@ -704,8 +704,21 @@ await check('turning the time wheel keeps it open (no redraw), and the reminder 
 }, [true, '21:20', '21:20']);
 await check('two sections at one time come as one, saying what\'s waiting', async () => {
   await setReminderTime('tehillim', '08:30'); await new Promise(r => setTimeout(r, 80));
-  const x = window.__sched().at(-1); return [x.title, x.body.includes('Psalms'), x.body.includes('Today\'s portion')];
-}, ['Tehillim and Tanya', true, true]);
+  const x = window.__sched().at(-1); return [x.title, /^Tehillim \d/.test(x.body), x.body.endsWith(' · Tanya'), x.threadIdentifier];
+}, ['Tehillim and Tanya', true, true, 'chitas']);
+await check('reminder words: the Hebrew date for all four, the named day, what\'s left, and Hayom Yom\'s own words', async () => {
+  const d = new Date(2026, 10, 29, 8, 30), saved = user.done;
+  const all = await _reminderText({ at: d, sections: ['chumash', 'tehillim', 'tanya', 'rambam'] });
+  const plain = await _reminderText({ at: new Date(2026, 10, 23, 8, 30), sections: ['chumash', 'tehillim', 'tanya', 'rambam'] });
+  const now = new Date(); now.setHours(23, 0);
+  user.done = { chumash: true, tehillim: true, tanya: true };
+  const last = await _reminderText({ at: now, sections: ['rambam'] });
+  user.done = { chumash: true };
+  const two = await _reminderText({ at: now, sections: ['tanya', 'rambam'] });
+  user.done = saved;
+  const hy = await _reminderText({ at: d, sections: ['hayomYom'] });
+  return [all.title, plain.title, plain.body.startsWith('Vayishlach, Sheni · Tehillim'), last.title, two.title, hy.title, hy.body.length > 20 && hy.body !== 'Today\'s thought'];
+}, ['Chitas · Yud-Tes Kislev', 'Chitas · 13 Kislev', true, 'Last one today: Rambam', 'Tanya and Rambam left today', 'Hayom Yom · Yud-Tes Kislev', true]);
 await check('nothing changed: the phone is left alone', async () => { window.__calls = []; _refreshUI(); await new Promise(r => setTimeout(r, 80)); return window.__calls.length; }, 0);
 await check('Tanya learned today: today\'s reminder is only Tehillim now', async () => {
   await setReminderTime('tanya', '23:58'); await setReminderTime('tehillim', '23:58');

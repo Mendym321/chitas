@@ -2663,7 +2663,8 @@ async function _syncRemindersNow() {
   }
   const sameDay = dateISO(appNow()) === dateISO(new Date());   // past midnight, before 4 am, today's list is still last night's
   const plan = reminderPlans(_reminderTimes(), new Date(), sameDay ? (user.done || {}) : {});
-  const notes = plan.map(p => ({ id: p.id, ..._reminderText(p), schedule: { at: p.at, allowWhileIdle: true }, extra: p.omer ? { omer: p.omer } : { open: p.sections[0] } }));
+  // threadIdentifier: on iPhone they stack as one group, not a pile
+  const notes = await Promise.all(plan.map(async p => ({ id: p.id, ...(await _reminderText(p)), schedule: { at: p.at, allowWhileIdle: true }, threadIdentifier: p.omer ? 'chitas-omer' : 'chitas', extra: p.omer ? { omer: p.omer } : { open: p.sections[0] } })));
   const sig = notes.map(n => n.id + '@' + n.schedule.at.getTime() + n.body).join();
   if (sig === _reminderSig) return;
   _reminderSig = sig;
@@ -2673,20 +2674,68 @@ async function _syncRemindersNow() {
     if (notes.length) await LN.schedule({ notifications: notes });
   } catch (e) { _reminderSig = null; }
 }
-// What's waiting, in a few words, for the day of the reminder
-function _reminderText(p) {
-  if (p.omer) { const c = omerCount(p.omer); return { title: 'Sefiras HaOmer', body: 'Count tonight: night ' + p.omer + ' · ' + c.sefirah.en }; }
+// What a reminder says. Calm and specific: what's actually waiting that day
+// (the parsha and aliya, the kapitlach, the portion), the Hebrew date or the
+// special day, what's left once part of today is learned, and for Hayom Yom
+// the start of the day's thought itself. Never guilt, never "don't lose".
+const _REM_CORE = ['chumash', 'tehillim', 'tanya', 'rambam'];
+const _ALIYA_NAMES = ['Rishon', 'Sheni', 'Shlishi', "Revi'i", 'Chamishi', 'Shishi'];
+const _andList = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a.at(-1) : a[0];
+function _remChumash(d) {
+  const label = getChumashDayLabel(d);
+  const [par, al] = label.split(' · ');
+  if (!al) return label;
+  const n = +((al.match(/Aliya (\d)/) || [])[1]);
+  return (typeof parshaSpelling === 'function' ? parshaSpelling(par) : par) + ', ' + (n ? _ALIYA_NAMES[n - 1] : al);
+}
+// Today's portion as the schedule names it; not its stand-in name from before it loaded
+const _remSub = sec => { const t = schedule?.[sec]?.subtitle; return t && !/^(Tanya Yomi|Daily Rambam|Rambam Yomi|Today)/i.test(t) ? t : ''; };
+// "3 Kislev", or the day itself when it has a name ("Yud-Tes Kislev")
+function _remDayName(d) {
+  const named = (typeof dayNote === 'function' ? dayNote(d, null) : []).filter(x => !/^(Shabbos|Erev Shabbos|Parshas|Day \d)/.test(x));
+  if (named.length) return named[0].split(',')[0];   // "Yud-Tes Kislev", without the rest
+  const h = _hebDay(d);
+  return h.n + ' ' + _hebMonth(h.m);
+}
+async function _remHayomYom(d) {
+  try {
+    const h = _hebDay(d);
+    const HEBCAL = { Tishri: 'Tishrei', Heshvan: 'Cheshvan', Shevat: "Sh'vat", Iyar: 'Iyyar' };
+    const key = _hayomYomKeys(HEBCAL[h.m] || h.m, h.n)[0];
+    const text = String((key && (await _hayomYomData())[key]?.en) || '').replace(/\s+/g, ' ').trim();
+    if (!text) return '';
+    return text.length > 110 ? text.slice(0, 110).replace(/\s+\S*$/, '') + '…' : text;
+  } catch (e) { return ''; }
+}
+async function _reminderText(p) {
+  if (p.omer) { const c = omerCount(p.omer); return { title: 'Sefiras HaOmer · night ' + p.omer, body: 'Tonight\'s count: ' + c.sefirah.en }; }
   const d = p.at, today = dateISO(d) === dateISO(appNow());
-  const what = sec => ({
-    chumash: () => getChumashDayLabel(d),
-    tehillim: () => _tehillimSubtitle(d),
-    tanya: () => (today && schedule?.tanya?.subtitle) || 'Today\'s portion',
-    rambam: () => user.rambamTrack === 'm' ? shmSubtitle(d) : (today && schedule?.rambam?.subtitle) || 'Today\'s chapters',
-    hayomYom: () => 'Today\'s thought',
+  const sm = user.rambamTrack === 'm';
+  const name = sec => sec === 'rambam' && sm ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec];
+  // In a list, each with what it is; alone, just what it is
+  const what = (sec, alone) => ({
+    chumash: () => _remChumash(d),
+    tehillim: () => (alone ? '' : 'Tehillim ') + String(_tehillimSubtitle(d) || '').replace(/^Psalms?\s*/, alone ? 'Kapitlach ' : ''),
+    tanya: () => today && _remSub('tanya') ? (alone ? '' : 'Tanya: ') + _remSub('tanya') : (alone ? 'Today\'s portion' : 'Tanya'),
+    rambam: () => sm ? (alone ? '' : 'Sefer HaMitzvos: ') + shmSubtitle(d)
+      : today && _remSub('rambam') ? (alone ? '' : 'Rambam: ') + _remSub('rambam') : (alone ? 'Today\'s chapters' : 'Rambam'),
+    hayomYom: () => 'Hayom Yom',
   }[sec]?.() || '');
-  const names = p.sections.map(sec => sec === 'rambam' && user.rambamTrack === 'm' ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec]);
-  if (p.sections.length >= 4) return { title: 'Chitas', body: 'Today\'s ' + names.slice(0, -1).join(', ') + ' and ' + names.at(-1) + '.' };
-  return { title: names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names.at(-1) : names[0], body: p.sections.map(what).filter(Boolean).join(' · ') };
+  const secs = p.sections;
+  if (secs.length === 1 && secs[0] === 'hayomYom') {
+    return { title: 'Hayom Yom · ' + _remDayName(d), body: (await _remHayomYom(d)) || 'Today\'s thought' };
+  }
+  // What's left of today's four, once some are learned
+  const left = today ? _REM_CORE.filter(s => !user.done?.[s]) : _REM_CORE;
+  const someDone = left.length < _REM_CORE.length;
+  const core = secs.filter(s => _REM_CORE.includes(s));
+  let title;
+  if (someDone && left.length === 1 && core.length === 1) title = 'Last one today: ' + name(core[0]);
+  else if (someDone && core.length > 1) title = _andList(core.map(name)) + ' left today';
+  else if (core.length === 4) title = 'Chitas · ' + _remDayName(d);
+  else title = _andList(secs.map(name));
+  const body = secs.length === 1 ? what(secs[0], true) : secs.map(s => what(s, false)).filter(Boolean).join(' · ');
+  return { title, body };
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) _syncReminders(); });
 
