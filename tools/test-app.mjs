@@ -280,11 +280,11 @@ await check('Tanya: guide labeled and shown as text; headings, opening word, hag
     c.querySelector('.tz-h')?.textContent, c.querySelector('.tz-open')?.textContent, !!c.querySelector('.tz-hag .tz-he'), c.querySelectorAll('.tanya-fn').length];
   c.querySelector('.tanya-fn').click();
   const note = document.getElementById('rambam-note-popup').querySelector('.rn-text')?.textContent;
-  _toggleTanyaOpt('guide'); _toggleTanyaOpt('nikud');
+  _toggleTanyaOpt('guide');   // (nekudos are always on now: no switch)
   const off = [!!c.querySelector('.tz-guide'), !!c.querySelector('.tz-h'), c.querySelector('.tz-open')?.textContent];
   localStorage.removeItem('chitas_tanya_guide'); localStorage.removeItem('chitas_tanya_nikud');
   return [on, note, off];
-}, [[true, true, false, 'פרק מא', 'The root', 'בְּרַם,', true, 1], 'Jeremiah 23:24.', [false, false, 'ברם,']]);
+}, [[true, true, false, 'פרק מא', 'The root', 'בְּרַם,', true, 1], 'Jeremiah 23:24.', [false, false, 'בְּרַם,']]);
 
 // Real Sefaria text (Touger translation) — see tools/fixtures/rambam-touger.json
 const RAMBAM = JSON.parse(await readFile(new URL('./fixtures/rambam-touger.json', import.meta.url), 'utf8'));
