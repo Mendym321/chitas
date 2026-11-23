@@ -182,7 +182,26 @@
   html:has(#onboarding:not([style*="display: none"])), html:has(#onboarding:not([style*="display: none"])) body { background:#1F1B16; }
   #app:has(> #onboarding:not([style*="display: none"])) { padding-bottom:0; min-height:0; }
   #main-app::before { content:''; position:fixed; top:0; left:0; right:0; height:var(--sat); background:color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); z-index:120; pointer-events:none; }   /* the clock's strip: what scrolls under it is softened, never read through */
-  #reader-bottom-bar { padding-bottom:max(12px, env(safe-area-inset-bottom, 0px)) !important; }   /* the bar runs to the edge; its buttons stop where the home bar's area begins */   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
+  #reader-bottom-bar { padding-bottom:max(12px, env(safe-area-inset-bottom, 0px)) !important; }
+  /* Touch targets: everything tappable is at least 44 points, Apple's minimum
+     (HIG). Where the thing you see should stay small (a tick, a badge, a chip),
+     the tappable area grows around it instead (::after), so the look is unchanged. */
+  .stile .check::after { content:''; position:absolute; inset:-5px; border-radius:50%; }          /* 34 → 44 */
+  .stile-rv::after { content:''; position:absolute; inset:-11px -6px; }                          /* 23 → 45 */
+  #heb-chip, .tz-opt { position:relative; }
+  #heb-chip::after { content:''; position:absolute; inset:-7px -2px; }                            /* 30 → 44 */
+  .tz-opt::after { content:''; position:absolute; inset:-6px -2px; }                             /* chips: 32 → 44 */
+  html .tz-opt { padding:7px 14px; font-size:13px; }                                                  /* and a little easier to read */
+  html .tabbar button { min-height:44px; }                                                            /* 42 → 44 */
+  html #reader-head > button, html #reader-head > a { width:44px !important; height:44px !important; }                       /* 40 → 44 */
+  html #reader-daybar { padding:0 10px; }
+  html #reader-daybar button { min-height:44px; font-size:13px; }                                     /* 26 → 44, 12 → 13 pt */
+  html .tz-seg button { padding:9px 4px; }                                                            /* language switch: 30 → 34 (Apple's segmented control is 32) */
+  html .rr-go { height:44px; padding:0 18px; }                                                        /* Start: 36 → 44 */
+  html #reader-actions > button { min-height:50px; }
+  .ps-modal-close, .wb-x { position:relative; }
+  .ps-modal-close::after, .wb-x::after { content:''; position:absolute; inset:-7px; border-radius:50%; }   /* the sheets' × : 30 → 44 */
+  html .ps-add-btn { min-height:44px; }                                                                      /* Add extra learning: 40 → 44 */                                                  /* Mark as learned, Quiz yourself: 43 → 50, the size of iOS's large buttons */   /* the bar runs to the edge; its buttons stop where the home bar's area begins */   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
   #onboarding { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)) !important; }
   @media (min-width: 1000px) { .tabbar { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; } }
 

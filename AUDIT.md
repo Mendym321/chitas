@@ -1,3 +1,125 @@
+# Blind-spot audit (23 November 2026)
+
+The third check, after the first build on a real iPhone. It looks for what we
+haven't been looking at: what only shows on a phone, what happens when
+something outside the app fails, what nobody would tell us about, and the
+rules (licences, plans, stores) the app now has to live with. Each finding says
+what we checked, why it matters, and what to do. 🔴 before launch, 🟠 soon,
+🟡 when there's time.
+
+## 🔴 Before launch
+
+1. **Sign-in in the iPhone app doesn't work yet.** Both buttons say the sign-in
+   plugin has no providers enabled, though `app/capacitor.config.json` lists
+   `apple.com` and `google.com`. Likely Xcode's copy of the settings is stale.
+   *Next:* `cat ios/App/App/capacitor.config.json`, `npx cap sync ios`, Clean
+   Build Folder, try again (in progress). Quizzes, sync and Personal Tehillim on
+   other devices all need it, and App Review will try it.
+
+2. **The main translations are "non-commercial" licences.** Checked on Sefaria:
+   Touger's Rambam, the Koren Chumash and Tehillim, and the Kehot English Tanya
+   are all **CC BY-NC** (Metsudah Rashi and Silverstein are CC BY). A free app
+   with no ads is fine. Taking money is the grey area: **Sponsor a day** puts
+   paid dedications beside these texts. *Do:* keep sponsoring off until you've
+   either asked (Sefaria can put you in touch with the publishers; Kehot and
+   Moznaim are Chabad houses who may well say yes) or run sponsorships as
+   donations through a non-profit. And add each licence's name to Texts and
+   credits (BY means credit, with the licence named), including that the Tanya
+   English is Kehot's.
+
+3. **Vercel's free plan is for non-commercial use.** The site and its server run
+   on Vercel's Hobby plan, whose terms are personal, non-commercial projects.
+   Taking Stripe payments for sponsorships would need the Pro plan (about $20 a
+   month). Same decision as point 2: sponsoring stays off for now.
+
+4. **We'd never hear about a crash.** Errors on someone's phone are kept on that
+   phone (for the rescue screen) and never reach us. If an update breaks
+   something on one kind of phone, the first we'd know is a one-star review.
+   *Do:* a tiny error report, the message and the app version only, nothing
+   about the person, sent to our server and counted on the admin page (the
+   privacy page gets one line). All 12 server functions are used (Vercel's
+   limit), so it rides inside an existing one, as the Rambam splits do.
+
+5. **One push changes every phone at once, and nothing checks it but us.** The
+   apps show the live website: a mistake that goes live reaches everyone within
+   seconds, with no gradual release. The 18 test sets run only when Claude runs
+   them; GitHub runs nothing. *Do:* a GitHub Action that runs the tests on every
+   pull request and blocks the merge if one fails; and know the way back:
+   Vercel → the project → Deployments → the last good one → "Instant Rollback"
+   (seconds, no code).
+
+## 🟠 Soon
+
+6. **The written guides run out, and the weekly batch isn't automatic.** Written
+   and checked: Rambam through 1 Dec, Tanya through 4 Dec, Chumash through 19
+   Dec. After that the server's AI covers each day (the same style, unchecked).
+   The scheduled weekly batch is switched off (it needs credits on the account).
+   *Do:* a batch here each week, or switch the scheduled task back on.
+
+7. **The AI's credit can run out without warning.** It did once. Then new
+   Review quizzes, Tanya guides and Rambam splits stop being made (the app
+   still works, without them). *Do:* in the Anthropic console, set a monthly
+   limit and the "usage reaches X" email, so you hear before it happens.
+
+8. **Never tried:** the Android app since edge to edge and the clock plugin;
+   the iPad app; the new screens (welcome, All four done, the Tehillim card) in
+   dark mode; an iPhone with a home button (SE), where there's no clock strip or
+   home bar; VoiceOver. Each is a short look on a device or simulator.
+
+9. **The phone's own text size is ignored outside the readers.** The readers
+   have their own size control, but Today, Progress and Profile stay the same
+   when someone turns on Larger Text in the iPhone's settings. Many older
+   learners use it. *Do:* let the app's base size follow the phone's setting
+   (on iPhone, `-apple-system-body`), within limits so the layout holds.
+
+10. **The day changes at midnight, not at nightfall.** At 11:28 PM on Sunday the
+    app showed "12 Kislev" and Sunday's portions, though the Hebrew date was
+    already 13 Kislev. Keeping the day's Chitas until midnight (or bedtime) is
+    a reasonable choice; showing the earlier Hebrew date after nightfall reads
+    as a mistake. *Decide:* keep the portions by the day, but have the date chip
+    say "12 Kislev, 13 from nightfall", or move the whole day at nightfall.
+
+11. **The store pictures are behind the app.** The screenshots and video show
+    the old text size, the old welcome and All four done screens, and no
+    Tehillim card. They're remade with `tools/store/` (a few minutes) once the
+    look settles.
+
+12. **No backup of people's progress.** Firestore keeps one copy. A mistaken
+    delete or a bad update to the data can't be undone. *Do:* turn on
+    point-in-time recovery or a scheduled export (needs the pay-as-you-go plan,
+    which costs cents at this size).
+
+## 🟡 When there's time
+
+13. **Reminders in the Omer season can pass the iPhone's limit.** iOS keeps 64
+    pending notifications. With four different reminder times plus the Omer
+    count, 14 days ahead is up to 70, and iOS drops the last ones quietly.
+    *Do:* plan fewer days ahead when needed, so it stays under 64.
+
+14. **The very first open needs the internet.** After that it works offline
+    (`npm run test:offline`). A first open on a plane shows the rescue screen.
+    Fine for now; App Review is online.
+
+15. **`index.html` is one 600 KB file.** It works, and it's kept offline after
+    the first visit, but every change touches one huge file, which makes
+    mistakes likelier. Worth splitting into a few files when there's a quiet
+    week.
+
+## Checked and fine (this time)
+
+- Database rules: only you read your progress (`npm run test:rules`).
+- Every server endpoint that costs money has a daily limit (new quizzes 20 a person,
+  feedback 10, Rambam splits 120 chapters for everyone, Tanya guides only last
+  week to tomorrow).
+- Account deletion, the privacy page and Apple's privacy file match what the
+  app does, including the AI (the day's text only).
+- Sponsoring is hidden inside the phone apps (Apple's and Google's payment rules).
+- An old phone app keeps working with a newer website: every native feature is
+  checked before use (`_nativePlugin`), so a missing plugin just means no
+  feature, not a crash.
+
+---
+
 # Launch audit (November 2026)
 
 The second deep check, before launch: every part of the app, the server, offline use, and what's still to do. The older audit (October) follows below, for history.
