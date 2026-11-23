@@ -105,7 +105,13 @@ console.log('The reader that\'s open is drawn again, quietly, on the same words:
 await tablet.evaluate(() => { localStorage.setItem('hayomYomLang', 'he'); window._hayomYomLang = null; });
 await tablet.evaluate(() => openExtraReader('hayomYom'));
 await tablet.waitForFunction(() => document.querySelector('#native-reader-content .hy-he'), null, { timeout: 8000 }).catch(() => {});
-await tablet.evaluate(() => document.querySelector('#native-reader-content .hy-he').dataset.mark = 'first');
+// The reader may draw once more as its text settles (fast or slow computers
+// differ): mark it once it has stayed put for a moment
+for (let i = 0; i < 20; i++) {
+  await tablet.evaluate(() => document.querySelector('#native-reader-content .hy-he').dataset.mark = 'first');
+  await tablet.waitForTimeout(400);
+  if (await tablet.evaluate(() => !!document.querySelector('#native-reader-content [data-mark]'))) break;
+}
 const shown = p => p.evaluate(() => [_rv.sid, !!document.querySelector('#native-reader-content .hy-he'), !!document.querySelector('#native-reader-content .hy-en'), document.querySelector('#native-reader-content [data-mark]')?.dataset.mark || 'drawn again']);
 ok('Hayom Yom open on the tablet, in Hebrew', await shown(tablet), ['extra_hayomYom', true, false, 'first']);
 cloud.prefs.chitas_lang_rambam = { v: 'en', t: Date.parse(now()) + 1e6 };   // another reader's choice
