@@ -329,6 +329,16 @@ await test('switching language or text size keeps your passage', async () => {
   expect(a.text === b.text && b.text === c.text, 'same passage', { a, b, c });
 });
 
+await test('Hebrew to English and back keeps the same verse, not just the same pixels', async () => {
+  await open('chumash'); await scrollBy(2400);
+  const unit = () => page.evaluate(() => _readerPlace()?.u);
+  const a = await unit();
+  await page.evaluate(() => _setChumashLang('he')); await settle(300); const b = await unit();
+  await page.evaluate(() => _setChumashLang('en')); await settle(300); const c = await unit();
+  await page.evaluate(() => _setChumashLang('both')); await settle(300); const d = await unit();
+  expect(a && a === b && b === c && c === d, 'same verse', { a, b, c, d });
+});
+
 await test('changing the Chumash translation keeps your place, and the saved place', async () => {
   await open('chumash'); await scrollBy(2400); const a = await where();
   await page.evaluate(() => _setChumashTranslation('koren'));
