@@ -180,7 +180,9 @@
   #app-head { padding-top:calc(20px + var(--sat) + min(var(--sat), 10px)) !important; }
   #reader-head, #quiz-head { padding-top:calc(14px + var(--sat)) !important; }
   html:has(#onboarding:not([style*="display: none"])), html:has(#onboarding:not([style*="display: none"])) body { background:#1F1B16; }
-  #app:has(> #onboarding:not([style*="display: none"])) { padding-bottom:0; min-height:0; }   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
+  #app:has(> #onboarding:not([style*="display: none"])) { padding-bottom:0; min-height:0; }
+  #main-app::before { content:''; position:fixed; top:0; left:0; right:0; height:var(--sat); background:color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); z-index:120; pointer-events:none; }   /* the clock's strip: what scrolls under it is softened, never read through */
+  #reader-bottom-bar { padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; }   /* the reader's buttons clear the home bar */   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
   #onboarding { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)) !important; }
   @media (min-width: 1000px) { .tabbar { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; } }
 
@@ -1996,7 +1998,7 @@ async function signInWith(provider) {
         ? 'This sign-in option isn\'t set up yet. Please use another one.'
         : !navigator.onLine || e?.code === 'auth/network-request-failed'
         ? 'You\'re offline. Connect to the internet to sign in; your learning on this phone is kept meanwhile.'
-        : 'Sign in didn\'t finish (' + (e?.code || 'no answer').replace(/^auth\//, '').replace(/-/g, ' ') + '). Please try again.';
+        : 'Sign in didn\'t finish (' + String(e?.code || e?.message || e?.errorMessage || 'no answer').replace(/^auth\//, '').replace(/-/g, ' ').slice(0, 120) + '). Please try again.';
       err.style.display = 'block';
     }
   } finally {
@@ -2717,6 +2719,12 @@ setInterval(_checkNewDay, 60e3);
 // the wheel: saved, but nothing redrawn (that would close the wheel), and the
 // reminders set again once the wheel has rested
 let _remSyncTimer = null;
+// "23:36" as the phone shows times: 11:36 PM in America, 23:36 where the 24-hour clock is usual
+function _fmtTime(hhmm) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm || '');
+  if (!m) return hhmm || '';
+  try { return new Date(2000, 0, 1, +m[1], +m[2]).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return hhmm; }
+}
 async function setReminderTime(sec, time, quiet) {
   const times = { ..._reminderTimes() };
   const first = !Object.values(times).some(Boolean);
@@ -2785,7 +2793,7 @@ function _showPhonePrefs() {
   if (!native) return;
   const times = _reminderTimes();
   const on = [...REMINDER_SECTIONS, 'omer'].filter(sec => times[sec]);
-  document.getElementById('ps-rem-sub').textContent = !on.length ? 'Off' : on.length === 1 ? (REMINDER_NAMES[on[0]] || 'Omer') + ' ' + times[on[0]] : on.length + ' on';
+  document.getElementById('ps-rem-sub').textContent = !on.length ? 'Off' : on.length === 1 ? (REMINDER_NAMES[on[0]] || 'Omer') + ' ' + _fmtTime(times[on[0]]) : on.length + ' on';
   document.getElementById('ps-hap-sw').setAttribute('aria-checked', user.haptics !== false);
 }
 
@@ -3178,7 +3186,7 @@ function _renderReminderNudge() {
   const name = sec === 'rambam' && user.rambamTrack === 'm' ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec];
   const keep = "try{const s=JSON.parse(localStorage.getItem('chitas_rem_nudge')||'{}');s['" + sec + "']='" + dateISO(now) + "';localStorage.setItem('chitas_rem_nudge',JSON.stringify(s))}catch(e){};_renderReminderNudge()";
   el.innerHTML = '<p class="wb-t" style="font-size:16px;">Your ' + name + ' reminder</p>'
-    + '<p class="wb-s">It comes at ' + times[sec] + ', and that hasn\'t been when you learn it lately. Would another time suit you better?</p>'
+    + '<p class="wb-s">It comes at ' + _fmtTime(times[sec]) + ', and that hasn\'t been when you learn it lately. Would another time suit you better?</p>'
     + '<button class="wb-go" onclick="' + keep + ';openReminders()">Change it</button> '
     + '<button class="wb-go" style="background:var(--card2);color:var(--t1);" onclick="' + keep + '">Keep it</button>';
   el.style.display = 'block';
