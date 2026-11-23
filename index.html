@@ -974,7 +974,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #ob-welcome .ob-rings .rt { opacity:.16; }
 #ob-welcome .ob-rings .rg { stroke-linecap:round; stroke-dasharray:var(--len) var(--len); stroke-dashoffset:var(--len); transform:rotate(-90deg); transform-origin:46px 46px; animation:obRing .9s cubic-bezier(.3,.7,.2,1) forwards; animation-delay:calc(.3s + var(--d)); }
 @keyframes obRing { to { stroke-dashoffset:0; } }
-#ob-welcome .ob-name { margin-top:40px; font:800 50px/1 var(--title-font); letter-spacing:-1.6px; color:#FBF7EF; }
+#ob-welcome .ob-he { margin-top:36px; font-family:'Vilna', serif; font-weight:700; font-size:30px; line-height:1; color:#E0A030; }   /* the name in Hebrew, in the face the Tanya is printed in (as on All four done); there from the start, like the English */
+#ob-welcome .ob-name { margin-top:10px; font:800 50px/1 var(--title-font); letter-spacing:-1.6px; color:#FBF7EF; }
 #ob-welcome .ob-names { margin-top:16px; display:grid; grid-template-columns:repeat(2, auto); gap:6px 26px; font:800 18px var(--ui-font); }
 #ob-welcome .ob-names span { opacity:0; animation:obName .5s ease forwards; animation-delay:calc(.45s + var(--d)); }
 @keyframes obName { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
@@ -1425,6 +1426,7 @@ window._fsGetDoc = getDoc;
           <circle class="rt" cx="46" cy="46" r="20" style="--c:#9560BA"/><circle class="rg" cx="46" cy="46" r="20" style="--c:#9560BA;--len:125.7;--d:.5s"/>
           <circle class="rt" cx="46" cy="46" r="10" style="--c:#659444"/><circle class="rg" cx="46" cy="46" r="10" style="--c:#659444;--len:62.8;--d:.75s"/>
         </svg>
+        <p class="ob-he" lang="he">חת״ת</p>
         <h1 class="ob-name">Chitas</h1>
         <div class="ob-names">
           <span style="color:#E0A030;--d:.15s">Chumash</span><span style="color:#7FA3E6;--d:.4s">Tehillim</span>
@@ -2089,7 +2091,7 @@ function _personalPsalmsHTML(lang) {
 function _thHintHTML() {
   if ((user.tehillimPeople || []).length) return '';
   try { if (localStorage.getItem('chitas_th_hint_off')) return ''; } catch (e) {}
-  return '<div class="th-hint" id="th-hint"><p class="th-hint-t"><b>Your own chapter</b> Each person says the chapter of Tehillim for their age. Add yourself and your family, with a Hebrew birthday, and each chapter appears after today\'s Tehillim.</p>'
+  return '<div class="th-hint" id="th-hint"><p class="th-hint-t"><b>Personal Tehillim</b> Add your own chapter, and your family\'s.</p>'
     + '<div class="th-hint-b"><button type="button" class="th-hint-add" onclick="_openTehillimPeopleManager()">Add people</button><button type="button" class="th-hint-no" onclick="_thHintOff()">Not now</button></div></div>';
 }
 function _thHintOff() {
@@ -6125,15 +6127,15 @@ function _renderTanyaContent() {
   if (!el) return;
   const lang = localStorage.getItem('chitas_lang_tanya') || 'both';
   const guideOn = localStorage.getItem('chitas_tanya_guide') !== 'off';
-  const nikud = localStorage.getItem('chitas_tanya_nikud') !== 'off';
+  const nikud = true;   // always with nekudos (the switch was taken out)
   const fixHe = h => nikud ? h : h.replace(/[֑-ֽֿ-ׇ]/g, '');
   const fixEn = e => _tanyaNoteMarkers(e);
 
-  // Controls: language, then the guide and nekudos switches
+  // Controls: language, then the guide switch
   let t = _langSeg(lang, "_setTanyaLang('LANG')")
     + '<div class="tz-opts">'
     + '<button class="tz-opt' + (guideOn ? ' on' : '') + '" onclick="_toggleTanyaOpt(\'guide\')">Guide</button>'
-    + (lang !== 'en' ? '<button class="tz-opt' + (nikud ? ' on' : '') + '" onclick="_toggleTanyaOpt(\'nikud\')">נקודות</button>' : '')
+
     + '</div>';
 
   // Heading: part and chapter, like the top of a printed page
@@ -9135,7 +9137,10 @@ function showLoader() {
 function _obPlay() {
   const ob = document.getElementById('onboarding');
   if (!ob || getComputedStyle(ob).display === 'none') return;
-  ob.querySelectorAll('.ob-rings .rg, .ob-names span, .ob-tag').forEach(el => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
+  const els = ob.querySelectorAll('.ob-rings .rg, .ob-names span, .ob-tag');
+  els.forEach(el => { el.style.animation = 'none'; });
+  void ob.getBoundingClientRect();   // one real layout pass (an SVG circle has no offsetWidth to force it)
+  els.forEach(el => { el.style.animation = ''; });
 }
 function hideLoader() {
   const el = document.getElementById('app-loader');
