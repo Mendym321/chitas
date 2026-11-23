@@ -10,6 +10,7 @@
 //
 // Prepared once per portion, the first time anyone opens it, then saved in
 // Firestore for good and shared by everyone (see /api/tanya-enhance).
+import { createHash } from 'node:crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
@@ -48,8 +49,9 @@ const GuideSchema = z.object({
   summary: z.string(),
   segments: z.array(z.object({
     index: z.number().int(),
+    title: z.string(),
     bridge: z.string(),
-    splits: z.array(z.object({ he: z.string(), en: z.string(), bridge: z.string() })),
+    splits: z.array(z.object({ he: z.string(), en: z.string(), title: z.string(), bridge: z.string() })),
   })),
 });
 
@@ -59,13 +61,15 @@ const SYSTEM = `You prepare the daily Tanya portion for people who learn it ever
 
 2. BRIDGES. Between the pieces, add a few short bridges: plain-English explanation, shown in a shaded box, that helps a beginner follow the argument, the way the explanatory notes in a good translation do. A bridge either sums up in plain words what the last few pieces established ("Two problems with the oath, then: it seems to contradict the Mishnah, and seeing yourself as wicked should lead either to sadness or to not caring at all."), or says what the next pieces set out to do or ask, when the text doesn't make that obvious ("Before he can answer, he needs to say what 'tzaddik,' 'rasha' and 'beinoni' actually mean."). Give context a beginner lacks only when the argument depends on it ("Rabbah was one of the great sages of the Talmud. If even he could think of himself as a beinoni, a beinoni must be someone on a very high level."). Stay strictly inside the text: explain what it says; never add ideas, sources, opinions or lessons it doesn't contain. One or two plain sentences, under 40 words, warm and direct. Don't overdo it: one bridge per real step of the argument, usually 3 to 6 in a portion, none where the text is already clear, and never just the next piece in other words. Put a bridge on the segment ("bridge", when it comes just before the segment's start) or on a cut ("bridge" in that split), so it stands just before the piece it leads into; use "" everywhere else.
 
+2b. TITLES. Where a new step of the argument begins, give a short title: 2 to 6 plain English words, sentence case, no final period, e.g. "The question", "Two kinds of love", "A proof from the verse", "Back to the main point". It stands above the piece as a small heading, so the reader sees the shape of the portion at a glance. Usually 3 to 6 in a portion, roughly every 3 to 6 pieces. Put it on the segment ("title") or on a cut ("title" in that split); a title and a bridge may stand at the same piece (the bridge comes first, then the title, just above the text). Use "" everywhere else.
+
 3. "chapterIntro": only when the portion starts at the beginning of the chapter. At most 2 short sentences, under 35 words in all: where the previous chapter left off and what this chapter takes up, leading into today (e.g. "Today he begins by..."). Otherwise "".
 
 4. "recap": only when the portion starts in the middle of the chapter. At most 2 short sentences, under 35 words in all: the thread so far, leading into where today picks up (e.g. "Today he answers by..."). Otherwise "".
 
 5. "summary": the synopsis, read after the text. At most 2 short sentences, under 30 words in all: where today's portion landed.
 
-HOW TO WRITE THE GUIDE. Its only job is to help the reader follow the flow of today's Tanya. Write the way a good teacher speaks to a student: plain, warm, everyday English, short sentences (under 20 words). Use the text's own key terms only when needed, and then say what they mean in a few plain words in passing. Bridges are plain English, with no untranslated Hebrew words. Stay precise and faithful to the text: no forward references to later portions, no invented sources, no sermonizing.`;
+HOW TO WRITE THE GUIDE. Its only job is to help the reader follow the flow of today's Tanya. Write the way a good teacher speaks to a student: plain, warm, everyday English, short sentences (under 20 words). Use the text's own key terms only when needed, and then say what they mean in a few plain words in passing. Bridges and titles are plain English, with no untranslated Hebrew words. Stay precise and faithful to the text: no forward references to later portions, no invented sources, no sermonizing.`;
 
 async function askAI({ book, chapterNum, startVerse, heSegs, enSegs, before, previous, feedback }) {
   const parts = [`${book}, chapter ${chapterNum}. ${startVerse > 1 ? "Today's portion starts in the middle of the chapter." : "Today's portion starts at the beginning of the chapter."}`];
@@ -95,10 +99,17 @@ const costOf = u => u ? Math.round(((u.input_tokens || 0) * 4 + (u.output_tokens
 // cycle) is never prepared twice.
 const guideDoc = (db, p) => db.collection('tanya_enhanced').doc(guideDocId(p.chapterSlug, p.startVerse, p.endVerse));
 
+// A written guide's fingerprint: when the written words change, the saved copy
+// is made again from them (no AI), not kept
+const writtenRev = w => w ? createHash('sha1').update(JSON.stringify(w)).digest('hex').slice(0, 12) : '';
+
 export async function readGuide(db, p) {
   try {
     const hit = await guideDoc(db, p).get();
-    if (hit.exists && hit.data().blocks?.length) return hit.data();
+    const saved = hit.exists ? hit.data() : null;
+    const w = writtenGuide(p.chapterSlug, p.startVerse, p.endVerse);
+    if (saved?.model === 'written' && saved.writtenRev !== writtenRev(w)) return null;
+    if (saved?.blocks?.length) return saved;
   } catch (e) { console.warn('tanya cache read:', e.message); }
   return null;
 }
@@ -149,7 +160,8 @@ export function assemble(ai, heSegs, enSegs, hagahah, startVerse) {
     applySplits(he, enSegs[i], splits).forEach((p, k) => {
       if (!p.he && !p.en) return;
       const heading = k === 0 ? String(seg.bridge ?? seg.heading ?? '').trim() : p.heading;
-      blocks.push({ he: p.he, en: p.en, isHagahah: hagahah[i], ...(heading && !hagahah[i] ? { heading } : {}) });
+      const title = k === 0 ? String(seg.title ?? '').trim() : p.title;   // a short heading above the piece
+      blocks.push({ he: p.he, en: p.en, isHagahah: hagahah[i], ...(heading && !hagahah[i] ? { heading } : {}), ...(title && !hagahah[i] ? { title } : {}) });
     });
   });
   return blocks;
@@ -208,7 +220,7 @@ async function generate(db, cacheDoc, chapterSlug, startVerse, endVerse) {
       intro: startVerse === 1 ? String(w.chapterIntro || '').trim() : '',
       recap: startVerse > 1 ? String(w.recap || '').trim() : '',
       summary: String(w.summary || '').trim(),
-      notes, blocks: wBlocks, flow: w.flow || 'headings', model: 'written', generatedAt: new Date().toISOString(),
+      notes, blocks: wBlocks, flow: w.flow || 'headings', model: 'written', writtenRev: writtenRev(w), generatedAt: new Date().toISOString(),
       usage: { inputTokens: 0, outputTokens: 0, costUSD: 0 },
     };
     await cacheDoc.set(guide);

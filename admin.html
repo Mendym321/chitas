@@ -127,8 +127,14 @@ async function loadFeedback(u) {
   if (!box) return;
   try {
     const r = await fetch('/api/admin-feedback', { headers: { authorization: 'Bearer ' + await u.getIdToken() } });
-    const { items = [], error } = await r.json().catch(() => ({}));
+    const { items = [], errors = [], error } = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(error || 'HTTP ' + r.status);
+    const eb = document.getElementById('errors');
+    if (eb) eb.innerHTML = errors.length ? errors.map(x => '<div class="fb"><div class="fb-top"><span class="fb-kind mistake">' + esc(x.count) + (x.count === 1 ? ' time' : ' times') + '</span>'
+      + '<span>last ' + esc(new Date(x.lastSeen).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span></div>'
+      + '<p class="fb-msg">' + esc(x.message) + '</p>'
+      + '<p class="fb-foot">' + esc(x.where || 'no place') + ' · ' + esc(x.version || '') + ' · ' + esc(Object.entries(x.on || {}).map(([k, n]) => k + ' ' + n).join(', ')) + '</p></div>').join('')
+      : '<p class="sub">None. Good.</p>';
     box.innerHTML = items.length ? items.map(f => '<div class="fb"><div class="fb-top"><span class="fb-kind ' + (f.kind === 'mistake' ? 'mistake' : '') + '">' + (f.kind === 'mistake' ? 'Mistake in a text' : 'Feedback') + '</span>'
       + '<span>' + esc(new Date(f.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span></div>'
       + '<p class="fb-msg">' + esc(f.message) + '</p>'
@@ -231,6 +237,7 @@ function render(s) {
 
     + '<h2>Sponsored days</h2><div id="sponsors"><p class="sub">Loading…</p></div>'
     + '<h2>Feedback and mistake reports</h2><div id="feedback"><p class="sub">Loading…</p></div>'
+    + '<h2>Errors on people\'s phones</h2><div id="errors"><p class="sub">Loading…</p></div>'
     + '<p class="note">Counts only people with an account: someone using the app without signing in keeps their progress on their own phone, so it isn\'t here. '
     + 'The numbers name no one, and the server never even reads names, cities or Tehillim names to make them. Feedback shows only what people chose to write (and an email if they left one).</p>'
   );

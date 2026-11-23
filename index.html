@@ -917,7 +917,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rd-ch::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--rc) 30%, transparent); }
 .rd-comm { background:var(--card); border-radius:12px; padding:10px 14px; margin:6px 0 8px; }   /* Rashi: no label and no side bar (it's the only commentary; the bold opening words say it), just a soft ground */
 #chabad-panel-sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.tz-gt { font-family:var(--read-font); font-size:calc(16px * var(--rf-scale, 1)); line-height:1.5; color:var(--t1); }
+.tz-gt { font-family:var(--read-font); font-size:calc(13.5px * var(--rf-scale, 1)); line-height:1.5; color:var(--t1); }
 .tz-gt + .tz-gl { margin-top:12px; }
 
 .tz-ai { font-size:11px; color:var(--t3); margin-top:10px; }
@@ -946,18 +946,19 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .rb-para { display:block; height:0.7em; }
-.rb-pw { font-family:var(--read-font); font-size:calc(15px * var(--rf-scale, 1)); line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--rc) 9%, var(--bg)); border-radius:10px; padding:10px 13px; margin:10px 0 6px; }   /* a hard halacha in plain words */
-.rb-pw-term { display:block; margin-top:6px; font-size:calc(13px * var(--rf-scale, 1)); color:var(--t3); }
+.rb-pw { font-family:var(--read-font); font-size:calc(12.5px * var(--rf-scale, 1)); line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--rc) 9%, var(--bg)); border-radius:10px; padding:10px 13px; margin:10px 0 6px; }   /* a hard halacha in plain words */
+.rb-pw-term { display:block; margin-top:6px; font-size:calc(11.5px * var(--rf-scale, 1)); color:var(--t3); }
 .rb-pw-ai { font-size:var(--fs-1); color:var(--t3); text-align:center; margin:18px 0 0; }
 /* Rambam side by side: the English (with the translator's additions) is about
    1.5 times the Hebrew, so it gets 60% of the width and each pair comes out
    about the same height (measured on real chapters, phone and desktop) */
 #native-reader-content { --rb-cols: 1.5fr 1fr; }   /* the translation's own paragraph break, inside a halacha */
 .rb-map, .rb-take { margin:4px 0 0; padding-left:20px; } .rb-map li, .rb-take li { margin:3px 0; } .rb-take li { margin:5px 0; }
-.rb-why { font-family:var(--read-font); font-style:italic; font-size:15px; line-height:1.45; color:var(--t2); border-left:2px solid color-mix(in srgb, var(--rc) 30%, transparent); padding:2px 0 2px 10px; margin:8px 0 12px; }
+.rb-why { font-family:var(--read-font); font-style:italic; font-size:calc(12.5px * var(--rf-scale, 1)); line-height:1.45; color:var(--t2); border-left:2px solid color-mix(in srgb, var(--rc) 30%, transparent); padding:2px 0 2px 10px; margin:8px 0 12px; }
 .rb-why b { font:600 11px var(--ui-font); font-style:normal; color:var(--t3); margin-right:3px; }
-.tz-bridge { font-family:var(--read-font); font-size:calc(15px * var(--rf-scale, 1)); line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--purple) 7%, var(--bg)); border-radius:10px; padding:10px 13px; margin:8px 0 16px; }   /* Tanya's guide: plain words that help follow the argument */
-.tz-note { font-family:var(--read-font); font-style:italic; font-size:16px; line-height:1.45; color:var(--purple); border-left:2px solid color-mix(in srgb, var(--purple) 30%, transparent); padding:1px 0 1px 11px; margin:22px 0 12px; }   /* Tanya's guide: a word from a chavrusa where the thread could be lost */
+/* Guides (these, .rb-pw, .rb-why, .tz-gt) are set about 85% of the text they explain, as notes in a printed edition are */
+.tz-bridge { font-family:var(--read-font); font-size:calc(12.5px * var(--rf-scale, 1)); line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--purple) 7%, var(--bg)); border-radius:10px; padding:10px 13px; margin:8px 0 16px; }   /* Tanya's guide: plain words that help follow the argument */
+.tz-note { font-family:var(--read-font); font-style:italic; font-size:calc(13px * var(--rf-scale, 1)); line-height:1.45; color:var(--purple); border-left:2px solid color-mix(in srgb, var(--purple) 30%, transparent); padding:1px 0 1px 11px; margin:22px 0 12px; }   /* Tanya's guide: a word from a chavrusa where the thread could be lost */
 .tz-p { margin-bottom:16px; }
 .tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
 .tz-en { font-family:var(--read-font); --rf-sz:16px; --rf-lh:1.5; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
@@ -1391,8 +1392,36 @@ window._fsGetDoc = getDoc;
   // Collect errors from the start, and show the rescue screen if the app
   // still isn't on screen after 15 seconds on screen. (Kept tiny and old-browser safe.)
   window.__bootErrors = [];
-  window.addEventListener('error', function (e) { window.__bootErrors.push((e.message || 'error') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '')); });
-  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; window.__bootErrors.push('Promise: ' + (r && (r.message || r))); });
+  // Errors also go to us (the message, where, the version, the kind of phone;
+  // nothing about the person), so a crash is fixed before anyone has to write
+  // in. Each different error once per phone a day, at most 5 a visit; not from
+  // the developer's own computer, and not the browser's harmless noise.
+  var __errSent = 0;
+  function __reportError(message, where) {
+    try {
+      message = String(message || '').slice(0, 300);
+      if (!message || __errSent >= 5 || /^(localhost|127\.)/.test(location.hostname)) return;
+      if (/ResizeObserver loop|^Script error\.?$|extension:\/\/|Load failed|Failed to fetch|NetworkError|AbortError|cancelled|The operation was aborted|Network request failed/i.test(message + ' ' + where)) return;
+      var key = 'chitas_err_' + (message + where).replace(/\W+/g, '').slice(0, 60), today = new Date().toISOString().slice(0, 10);
+      try { if (localStorage.getItem(key) === today) return; localStorage.setItem(key, today); } catch (e) {}
+      __errSent++;
+      var C = window.Capacitor, native = C && C.isNativePlatform && C.isNativePlatform();
+      var body = JSON.stringify({ message: message, where: where || '', version: 'published ' + new Date(document.lastModified).toISOString().slice(0, 10),
+        platform: native ? (C.getPlatform && C.getPlatform()) || 'ios' : 'web' });
+      if (window.fetch) fetch('/api/error-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function () {});
+    } catch (e) {}
+  }
+  window.addEventListener('error', function (e) {
+    var where = e.filename ? e.filename.split('/').pop().split('?')[0] + ':' + e.lineno : '';
+    window.__bootErrors.push((e.message || 'error') + (where ? ' (' + where + ')' : ''));
+    __reportError(e.message || 'error', where);
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e.reason, m = 'Promise: ' + (r && (r.message || r));
+    window.__bootErrors.push(m);
+    var st = r && r.stack ? String(r.stack).match(/([\w.-]+\.(?:js|html)):(\d+)/) : null;
+    __reportError(m, st ? st[1] + ':' + st[2] : '');
+  });
   function __appVisible() {
     var ob = document.getElementById('onboarding'), m = document.getElementById('main-app');
     var obOn = ob && getComputedStyle(ob).display !== 'none';
@@ -6187,7 +6216,7 @@ async function _loadTanyaNative(sectionId, silent) {
           return _guideUpdate({ guidePending: false, guideError: (body?.error || 'not available') + (status ? ' (' + status + ')' : '') });
         }
         // The guide's text is plain text: escape it (footnote markers survive)
-        const blocks = body.blocks.map(b => ({ he: escapeHtml(b.he), en: escapeHtml(b.en), isHagahah: b.isHagahah === true, heading: b.heading || '' }));
+        const blocks = body.blocks.map(b => ({ he: escapeHtml(b.he), en: escapeHtml(b.en), isHagahah: b.isHagahah === true, heading: b.heading || '', title: b.title || '' }));
         _guideUpdate({ guidePending: false, guideError: '', blocks, notes: body.notes || [],
           guide: { intro: body.intro || '', recap: body.recap || '', summary: body.summary || '', flow: body.flow || 'headings' } });
       });
@@ -6277,6 +6306,8 @@ function _renderTanyaContent() {
     // (guides since Dec 2026, flow 'bridges'), or, in older ones, a heading
     if ((guideOn || b.always) && b.heading && !b.isHagahah)
       v += (g?.flow === 'bridges' && !b.always ? '<p class="tz-bridge">' : g?.flow === 'notes' && !b.always ? '<p class="tz-note">' : '<p class="tz-h">') + escapeHtml(b.heading) + '</p>';
+    // A short title where a new step begins: after any bridge, just above the text it heads
+    if (guideOn && b.title && !b.isHagahah) v += '<p class="tz-h">' + escapeHtml(b.title) + '</p>';
     const opening = d.isFirstSegment && !opened && !b.isHagahah;
     if (!b.isHagahah) opened = true;
     v += piece(b, opening);

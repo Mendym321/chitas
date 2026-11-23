@@ -91,8 +91,8 @@ const fakeParas = { halachot: [{ index: 1, starts: ['כיצד', 'מילים שא
 // Pretend Claude for Tanya: a good split (typed without vowels, with a heading),
 // a made-up start, a recap and a summary
 const fakeSplits = { chapterIntro: 'should be dropped mid-chapter', recap: 'So far: every Jew has two souls.', summary: 'The Alter Rebbe continues explaining the two souls.', segments: [
-  { index: 1, bridge: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', bridge: 'The first soul' }, { he: 'מילים שלא קיימות', en: 'The second soul', bridge: 'never shown' }] },
-  { index: 2, bridge: '', splits: [] },
+  { index: 1, title: 'Two souls', bridge: 'Two souls', splits: [{ he: 'נפש אחת היא', en: 'One soul comes', title: '', bridge: 'The first soul' }, { he: 'מילים שלא קיימות', en: 'The second soul', title: 'never shown', bridge: 'never shown' }] },
+  { index: 2, title: 'The second', bridge: '', splits: [] },
 ]};
 
 // ── Pretend Sefaria ──────────────────────────────────────────────────────────
@@ -197,6 +197,7 @@ check('split at the real start only (vowels ignored); the made-up one is ignored
 check('Hebrew is the exact original text', t1.json.blocks.slice(0, 2).map(b => b.he).join(' '),
   'וְהִנֵּה בְּכָל נֶפֶשׁ יִשְׂרָאֵל יֵשׁ שְׁתֵּי נְפָשׁוֹת. נֶפֶשׁ אַחַת הִיא מִצַּד הַקְּלִיפָּה. ונפש השנית היא חלק אלוק ממעל ממש.');
 check('the Alter Rebbe\'s gloss (hagahah) is marked, without its label', [t1.json.blocks.map(b => b.isHagahah), t1.json.blocks[2].he], [[false, false, true], 'הערה']);
+check('titles: on the segment; never for a cut that wasn\'t found, nor on the gloss', t1.json.blocks.map(b => b.title || ''), ['Two souls', '', '']);
 check('bridges: on the segment and on the cut that was found; the guide says it has bridges', [t1.json.blocks.map(b => b.heading || ''), t1.json.flow], [['Two souls', 'The first soul', ''], 'bridges']);
 check('translator\'s footnote kept as a note', t1.json.notes, ['See ch. 2.']);
 check('mid-chapter: recap and summary, no chapter intro', [t1.json.recap, t1.json.summary, t1.json.intro], ['So far: every Jew has two souls.', 'The Alter Rebbe continues explaining the two souls.', '']);
@@ -331,6 +332,18 @@ console.log('Feedback API:');
   const a = await adminRun('token-admin');
   check('admin page: newest first, only for admins', [(await adminRun('token-u5')).code, a.code, a.body.items.length, a.body.items[0].createdAt >= a.body.items.at(-1).createdAt], [403, 200, 12, true]);
   globalThis.fetch = realFetch; delete process.env.RESEND_API_KEY;
+
+  // Errors from people's phones (/api/error-report, rewritten to ?kind=error)
+  const report = async (body, ip = '5.5.5.5') => { const res = fakeRes(); await fb({ method: 'POST', query: { kind: 'error' }, body, headers: { 'x-forwarded-for': ip } }, res); return res; };
+  const errs = () => [...store].filter(([k]) => k.startsWith('error_reports/')).map(([, v]) => v);
+  const e1 = await report({ message: 'TypeError: x is undefined for me@example.com at /api/q?uid=abc123', where: 'index.html:4120', version: 'published 2026-11-23', platform: 'ios' });
+  await report({ message: 'TypeError: x is undefined for me@example.com at /api/q?uid=abc123', where: 'index.html:4120', version: 'published 2026-11-23', platform: 'web' });
+  check('an error report: saved once and counted, by kind of phone', [e1.code, errs().length, errs()[0].count, errs()[0].on], [200, 1, 2, { ios: 1, web: 1 }]);
+  check('…with nothing personal: no email, no query string', [errs()[0].message.includes('example.com'), errs()[0].message.includes('uid')], [false, false]);
+  check('an empty report → 400', (await report({ message: '' })).code, 400);
+  let lastE; for (let i = 0; i < 30; i++) lastE = await report({ message: 'flood ' + i }, '7.7.7.7');
+  check('31st in a day from one place → 429', [lastE.code, (await report({ message: 'one more' }, '7.7.7.7')).code], [200, 429]);
+  check('the admin page lists them', (await adminRun('token-admin')).body.errors.length > 0, true);
 }
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll API tests passed');

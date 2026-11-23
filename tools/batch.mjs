@@ -155,10 +155,13 @@ if (cmd === 'plan') {
     const bridges = blocks.filter(b => b.heading);
     if (bridges.some(b => words(b.heading) > 45)) warn(`${iso} ${key}: a bridge over 45 words`);
     if (bridges.length > 7) warn(`${iso} ${key}: ${bridges.length} bridges (usually 3 to 6)`);
+    const titles = blocks.filter(b => b.title);
+    if (!titles.length) warn(`${iso} ${key}: no titles (usually 3 to 6)`);
+    if (titles.some(b => words(b.title) > 6)) warn(`${iso} ${key}: a title over 6 words`);
     if (!w.summary || !(w.intro || w.recap)) err(`${iso} ${key}: needs an intro (chapter start) or recap, and a summary`);
     const long = blocks.filter(b => words(withoutNotes(b.en)) > 30).length;
     if (long) warn(`${iso} ${key}: ${long} pieces over 30 words`);
-    console.log(`  ✓ ${iso} ${key}: ${blocks.length} pieces, ${bridges.length} bridges`);
+    console.log(`  ✓ ${iso} ${key}: ${blocks.length} pieces, ${bridges.length} bridges, ${titles.length} titles`);
   }
   // Rambam: every written entry's splits are found in the Hebrew, notes and headings on real halachos
   console.log('Rambam');

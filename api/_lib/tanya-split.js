@@ -58,11 +58,12 @@ export function applySplits(he, en, splits) {
     const last = cuts[cuts.length - 1];
     const h = findStart(he, heSk, sp?.he, last.h);
     const e = findStart(en, enSk, sp?.en, last.e);
-    if (h > 0 && e > 0) cuts.push({ h, e, heading: String(sp?.heading || '').trim() }); // both found, in order
+    if (h > 0 && e > 0) cuts.push({ h, e, heading: String(sp?.heading || '').trim(), title: String(sp?.title || '').trim() }); // both found, in order
   }
   return cuts.map((c, i) => {
     const piece = { he: he.slice(c.h, cuts[i + 1]?.h).trim(), en: en.slice(c.e, cuts[i + 1]?.e).trim() };
     if (c.heading) piece.heading = c.heading;
+    if (c.title) piece.title = c.title;
     return piece;
   });
 }
