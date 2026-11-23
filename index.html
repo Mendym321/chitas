@@ -119,7 +119,7 @@
   .check { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--hi); background: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; color: transparent; transition: background .15s, border-color .15s; }
   .check.on { background: var(--c, var(--ok)); border-color: var(--c, var(--ok)); color: #fff; }
   
-  .tabbar { position: fixed; bottom: calc(14px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 390px; display: flex; justify-content: space-around; padding: 8px; background: var(--ink); border-radius: 22px; z-index: 100; box-shadow: 0 10px 30px rgba(30,20,5,.18); }
+  .tabbar { position: fixed; bottom: max(14px, calc(env(safe-area-inset-bottom) - 13px)); left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 390px; display: flex; justify-content: space-around; padding: 8px; background: var(--ink); border-radius: 22px; z-index: 100; box-shadow: 0 10px 30px rgba(30,20,5,.18); }
   .tabbar button { background: none; border: none; display: flex; align-items: center; gap: 7px; font: 700 var(--fs-2) var(--ui-font); color: var(--ink-soft); padding: 10px 16px; border-radius: 16px; transition: background .2s, color .2s; }
   .tabbar button .tab-l { display: none; }
   .tabbar button.on { background: var(--on-ink); color: var(--ink); }
@@ -182,7 +182,7 @@
   html:has(#onboarding:not([style*="display: none"])), html:has(#onboarding:not([style*="display: none"])) body { background:#1F1B16; }
   #app:has(> #onboarding:not([style*="display: none"])) { padding-bottom:0; min-height:0; }
   #main-app::before { content:''; position:fixed; top:0; left:0; right:0; height:var(--sat); background:color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); z-index:120; pointer-events:none; }   /* the clock's strip: what scrolls under it is softened, never read through */
-  #reader-bottom-bar { padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; }   /* the reader's buttons clear the home bar */   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
+  #reader-bottom-bar { padding-bottom:max(12px, env(safe-area-inset-bottom, 0px)) !important; }   /* the bar runs to the edge; its buttons stop where the home bar's area begins */   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
   #onboarding { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)) !important; }
   @media (min-width: 1000px) { .tabbar { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; } }
 
