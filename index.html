@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<script>
+  // In the phone app: no zooming (pinch, double tap, or the phone zooming in on a
+  // text box), as an app behaves; the reader's text size is the way to bigger text.
+  // In a browser the page can still be zoomed. native-ios: the top's minimum (below)
+  (function () {
+    var C = window.Capacitor;
+    if (!(C && C.isNativePlatform && C.isNativePlatform())) return;
+    document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+    if (C.getPlatform && C.getPlatform() === 'ios') document.documentElement.classList.add('native-ios');
+  })();
+</script>
 <meta name="theme-color" content="#1F1B16"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -162,10 +173,16 @@
      clock's height (--sat), and the bottom pieces already allow for the home
      bar. In a browser tab both are 0 and nothing moves. */
   :root { --sat: env(safe-area-inset-top, 0px); }
-  #tab-learn { padding-top:calc(20px + var(--sat)) !important; }
-  #tab-stats, #tab-profile { padding-top:calc(16px + var(--sat)) !important; }
+  :root.native-ios { --sat: max(env(safe-area-inset-top, 0px), 20px); }   /* the iPhone app always has the clock's strip */
+  html { touch-action: manipulation; }   /* a quick second tap is a tap, never a zoom */
+  /* The header over every tab (greeting, title, Today's rings) sits under the clock,
+     with a little more room than a browser tab needs (min(): none extra where there's no clock strip) */
+  #app-head { padding-top:calc(20px + var(--sat) + min(var(--sat), 10px)) !important; }
   #reader-head, #quiz-head { padding-top:calc(14px + var(--sat)) !important; }
-  html:has(#onboarding:not([style*="display: none"])), html:has(#onboarding:not([style*="display: none"])) body { background:#1F1B16; }   /* the welcome's dark, even when the page is pulled past its ends */
+  html:has(#onboarding:not([style*="display: none"])), html:has(#onboarding:not([style*="display: none"])) body { background:#1F1B16; }
+  #app:has(> #onboarding:not([style*="display: none"])) { padding-bottom:0; min-height:0; }
+  #main-app::before { content:''; position:fixed; top:0; left:0; right:0; height:var(--sat); background:color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); z-index:120; pointer-events:none; }   /* the clock's strip: what scrolls under it is softened, never read through */
+  #reader-bottom-bar { padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; }   /* the reader's buttons clear the home bar */   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
   #onboarding { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)) !important; }
   @media (min-width: 1000px) { .tabbar { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; } }
 
@@ -721,7 +738,15 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #moment-modal.m-full #moment-xp { color:#E0A030 !important; }
 #moment-modal.m-full #moment-btns { margin-top:auto; }
 #moment-modal.m-full .btn-quiet { background:#FBF7EF !important; color:#1F1B16 !important; }
-.done-rings { width:220px; height:220px; margin-bottom:10px; }
+.done-rings { width:200px; height:200px; margin-bottom:6px; }
+.done-recap { width:100%; list-style:none; margin:26px 0 0; padding:16px 18px; border-radius:18px; background:#2A251F; text-align:left; display:flex; flex-direction:column; gap:12px; }
+.done-recap li { display:flex; align-items:baseline; gap:10px; font:500 15px/1.35 var(--ui-font); color:#BDB3A2; opacity:0; animation:obName .5s ease forwards; }
+.done-recap li:nth-child(1) { animation-delay:1.1s } .done-recap li:nth-child(2) { animation-delay:1.25s } .done-recap li:nth-child(3) { animation-delay:1.4s } .done-recap li:nth-child(4) { animation-delay:1.55s }
+.done-recap li::before { content:''; flex:none; width:9px; height:9px; border-radius:50%; background:var(--c); transform:translateY(-1px); }
+.done-recap b { flex:none; min-width:78px; font-weight:700; color:#FBF7EF; }
+.done-recap span { min-width:0; }
+#moment-modal.m-full .btn-link { background:none; border:none; color:#CFC5B3; font:700 15px var(--ui-font); padding:12px; cursor:pointer; }
+@media (prefers-reduced-motion: reduce) { .done-recap li { animation:none; opacity:1; } }
 .done-rings circle { fill:none; stroke:var(--c); stroke-width:8; stroke-linecap:round; stroke-dasharray:var(--len) var(--len); stroke-dashoffset:var(--len); transform:rotate(-90deg); transform-origin:46px 46px; animation:ringClose .8s calc(.25s + var(--i) * .22s) cubic-bezier(.3,.7,.2,1) forwards; }
 @keyframes ringClose { to { stroke-dashoffset:0; } }
 @media (prefers-reduced-motion: reduce) { .done-rings circle { animation:none; stroke-dashoffset:0; } #today-rings .rf { transition:none; } }
@@ -773,6 +798,13 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #app-sub, .wk-num { display:none; }   /* on a computer only */
 /* Tehillim, laid out like a printed Tehillim (_renderTehillimContent) */
 .th-range { font-size:var(--fs-1); color:var(--t3); margin-bottom:6px; text-align:center; }
+.th-hint { direction:ltr; text-align:left; background:var(--card); border-radius:16px; padding:14px 16px 12px; margin:10px 0 20px; }
+.th-hint-t { font-family:var(--read-font); font-size:calc(15px * var(--rf-scale, 1)); line-height:1.5; color:var(--t1); }
+.th-hint-t b { display:block; font:600 var(--fs-2) var(--ui-font); color:var(--c-tehillim); margin-bottom:3px; }
+.th-hint-b { display:flex; gap:8px; margin-top:12px; }
+.th-hint-b button { border:none; border-radius:999px; padding:8px 14px; font:700 13px var(--ui-font); cursor:pointer; }
+.th-hint-add { background:var(--c-tehillim); color:#fff; }
+.th-hint-no { background:none; color:var(--t2); }
 .th-chapter { margin-top:22px; }
 .th-chapter.he { direction:rtl; }
 .th-ch-num { text-align:center; font-size:calc(22px * var(--rf-scale, 1)); font-weight:700; color:var(--t1); line-height:1.2; margin-bottom:6px; }
@@ -854,11 +886,11 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rd-ch::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--rc) 30%, transparent); }
 .rd-comm { background:var(--card); border-radius:12px; padding:10px 14px; margin:6px 0 8px; }   /* Rashi: no label and no side bar (it's the only commentary; the bold opening words say it), just a soft ground */
 #chabad-panel-sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.tz-gt { font-family:var(--read-font); font-size:17px; line-height:1.5; color:var(--t1); }
+.tz-gt { font-family:var(--read-font); font-size:calc(16px * var(--rf-scale, 1)); line-height:1.5; color:var(--t1); }
 .tz-gt + .tz-gl { margin-top:12px; }
 
 .tz-ai { font-size:11px; color:var(--t3); margin-top:10px; }
-.tz-h { display:flex; align-items:center; gap:10px; font:600 13px var(--ui-font); color:var(--purple); margin:26px 0 10px; }
+.tz-h { display:flex; align-items:center; gap:10px; font:600 calc(12.5px * var(--rf-scale, 1)) var(--ui-font); color:var(--purple); margin:26px 0 10px; }
 .tz-h::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--purple) 22%, transparent); }
 .sm-row { padding:14px 0 13px; border-bottom:1px solid var(--border); }
 .sm-row.both { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
@@ -883,8 +915,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .rb-para { display:block; height:0.7em; }
-.rb-pw { font-family:var(--read-font); font-size:15.5px; line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--rc) 9%, var(--bg)); border-radius:10px; padding:10px 13px; margin:10px 0 6px; }   /* a hard halacha in plain words */
-.rb-pw-term { display:block; margin-top:6px; font-size:13.5px; color:var(--t3); }
+.rb-pw { font-family:var(--read-font); font-size:calc(15px * var(--rf-scale, 1)); line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--rc) 9%, var(--bg)); border-radius:10px; padding:10px 13px; margin:10px 0 6px; }   /* a hard halacha in plain words */
+.rb-pw-term { display:block; margin-top:6px; font-size:calc(13px * var(--rf-scale, 1)); color:var(--t3); }
 .rb-pw-ai { font-size:var(--fs-1); color:var(--t3); text-align:center; margin:18px 0 0; }
 /* Rambam side by side: the English (with the translator's additions) is about
    1.5 times the Hebrew, so it gets 60% of the width and each pair comes out
@@ -893,7 +925,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rb-map, .rb-take { margin:4px 0 0; padding-left:20px; } .rb-map li, .rb-take li { margin:3px 0; } .rb-take li { margin:5px 0; }
 .rb-why { font-family:var(--read-font); font-style:italic; font-size:15px; line-height:1.45; color:var(--t2); border-left:2px solid color-mix(in srgb, var(--rc) 30%, transparent); padding:2px 0 2px 10px; margin:8px 0 12px; }
 .rb-why b { font:600 11px var(--ui-font); font-style:normal; color:var(--t3); margin-right:3px; }
-.tz-bridge { font-family:var(--read-font); font-size:16px; line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--purple) 7%, var(--bg)); border-radius:10px; padding:10px 13px; margin:8px 0 16px; }   /* Tanya's guide: plain words that help follow the argument */
+.tz-bridge { font-family:var(--read-font); font-size:calc(15px * var(--rf-scale, 1)); line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--purple) 7%, var(--bg)); border-radius:10px; padding:10px 13px; margin:8px 0 16px; }   /* Tanya's guide: plain words that help follow the argument */
 .tz-note { font-family:var(--read-font); font-style:italic; font-size:16px; line-height:1.45; color:var(--purple); border-left:2px solid color-mix(in srgb, var(--purple) 30%, transparent); padding:1px 0 1px 11px; margin:22px 0 12px; }   /* Tanya's guide: a word from a chavrusa where the thread could be lost */
 .tz-p { margin-bottom:16px; }
 .tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
@@ -932,11 +964,11 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* The day complete: four inks draw together into one gold line */
 
 
-.day-he { font-family:var(--he-font); font-size:30px; color:var(--gold); margin-top:14px; line-height:1; }
+.day-he { font-family:'Vilna', var(--he-font); font-size:34px; color:var(--gold); margin-top:16px; line-height:1; }   /* in the face the Tanya is printed in */
 @media (prefers-reduced-motion: reduce) {   }
 /* Landing: on dark, the four rings close one by one and each name appears */
 #onboarding.ob-dark { background:#1F1B16; }
-#ob-welcome { position:relative; z-index:1; min-height:calc(100vh - 48px); display:flex; flex-direction:column; align-items:center; text-align:center; padding:9vh 0 4px; color:#FBF7EF; }
+#ob-welcome { position:relative; z-index:1; min-height:calc(100vh - 48px - var(--sat) - env(safe-area-inset-bottom, 0px)); display:flex; flex-direction:column; align-items:center; text-align:center; padding:9vh 0 4px; color:#FBF7EF; }
 #ob-welcome .ob-rings { width:min(62vw, 250px); height:min(62vw, 250px); }
 #ob-welcome .ob-rings circle { fill:none; stroke:var(--c); stroke-width:8; }
 #ob-welcome .ob-rings .rt { opacity:.16; }
@@ -1711,6 +1743,7 @@ window._fsGetDoc = getDoc;
     <p id="moment-title" style="font-family:var(--title-font);font-size:var(--fs-6);font-weight:800;letter-spacing:-.6px;color:var(--t1);line-height:1.1;margin-bottom:10px;position:relative;"></p>
     <p id="moment-sub" style="font-size:var(--fs-3);color:var(--t2);line-height:1.55;margin-bottom:8px;position:relative;"></p>
     <p id="moment-xp" style="font-size:var(--fs-2);font-weight:600;color:var(--gold);margin-bottom:24px;position:relative;"></p>
+    <div id="moment-extra"></div>
     <div id="moment-btns" style="display:flex;flex-direction:column;gap:10px;position:relative;"></div>
   </div>
 </div>
@@ -1965,7 +1998,7 @@ async function signInWith(provider) {
         ? 'This sign-in option isn\'t set up yet. Please use another one.'
         : !navigator.onLine || e?.code === 'auth/network-request-failed'
         ? 'You\'re offline. Connect to the internet to sign in; your learning on this phone is kept meanwhile.'
-        : 'Sign in didn\'t finish (' + (e?.code || 'no answer').replace(/^auth\//, '').replace(/-/g, ' ') + '). Please try again.';
+        : 'Sign in didn\'t finish (' + String(e?.code || e?.message || e?.errorMessage || 'no answer').replace(/^auth\//, '').replace(/-/g, ' ').slice(0, 120) + '). Please try again.';
       err.style.display = 'block';
     }
   } finally {
@@ -2050,8 +2083,23 @@ function _personalPsalmsHTML(lang) {
   return h + '</div>';
 }
 
+// Personal Tehillim lives after the day's chapters, where few scroll to find it.
+// So until someone adds a person (or says not now), a small card at the top
+// says what it is, with the way in. Quiet: once, and then it's gone for good.
+function _thHintHTML() {
+  if ((user.tehillimPeople || []).length) return '';
+  try { if (localStorage.getItem('chitas_th_hint_off')) return ''; } catch (e) {}
+  return '<div class="th-hint" id="th-hint"><p class="th-hint-t"><b>Your own chapter</b> Each person says the chapter of Tehillim for their age. Add yourself and your family, with a Hebrew birthday, and each chapter appears after today\'s Tehillim.</p>'
+    + '<div class="th-hint-b"><button type="button" class="th-hint-add" onclick="_openTehillimPeopleManager()">Add people</button><button type="button" class="th-hint-no" onclick="_thHintOff()">Not now</button></div></div>';
+}
+function _thHintOff() {
+  try { localStorage.setItem('chitas_th_hint_off', '1'); } catch (e) {}
+  document.getElementById('th-hint')?.remove();
+}
+
 // Draw it again (a chapter arrived, or someone was added, changed or turned off)
 function _renderPersonalPsalms() {
+  if ((user.tehillimPeople || []).length) document.getElementById('th-hint')?.remove();
   const el = document.getElementById('tehillim-personal');
   if (el && _rv.sid === 'tehillim') el.innerHTML = _personalPsalmsHTML(localStorage.getItem('chitas_lang_tehillim') || 'he');
 }
@@ -2667,7 +2715,17 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) _che
 setInterval(_checkNewDay, 60e3);
 
 // A section's reminder: a time ('HH:MM') or null for off
-async function setReminderTime(sec, time) {
+// quiet: a new time from the time wheel, which iPhones report at every stop of
+// the wheel: saved, but nothing redrawn (that would close the wheel), and the
+// reminders set again once the wheel has rested
+let _remSyncTimer = null;
+// "23:36" as the phone shows times: 11:36 PM in America, 23:36 where the 24-hour clock is usual
+function _fmtTime(hhmm) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm || '');
+  if (!m) return hhmm || '';
+  try { return new Date(2000, 0, 1, +m[1], +m[2]).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return hhmm; }
+}
+async function setReminderTime(sec, time, quiet) {
   const times = { ..._reminderTimes() };
   const first = !Object.values(times).some(Boolean);
   if (time && first) {   // the first one on: the phone asks
@@ -2678,6 +2736,11 @@ async function setReminderTime(sec, time) {
   if (time) times[sec] = time; else delete times[sec];
   try { localStorage.setItem('chitas_reminders', JSON.stringify(times)); localStorage.removeItem('chitas_reminder'); } catch {}
   _reminderSig = null;
+  if (quiet) {
+    clearTimeout(_remSyncTimer);
+    _remSyncTimer = setTimeout(() => { _showPhonePrefs(); _syncReminders(); }, 800);
+    return;
+  }
   _drawReminders();
   _showPhonePrefs();
   await _syncReminders();
@@ -2706,7 +2769,7 @@ function _drawReminders() {
     return '<div class="rem-row"><div class="tpm-row"><div class="tpm-who"><p>' + name + '</p>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>'
       + '<button type="button" role="switch" class="ml-sw" aria-checked="' + on + '" aria-label="' + name + ' reminder" onclick="setReminderTime(\'' + sec + '\',' + (on ? 'null' : '\'' + picks[0][1] + '\'') + ')"></button></div>'
       + (on ? '<div class="rem-when"><div class="tz-opts">' + picks.map(([l, v]) => '<button type="button" class="tz-opt' + (v === t ? ' on' : '') + '" onclick="setReminderTime(\'' + sec + '\',\'' + v + '\')">' + l + '</button>').join('') + '</div>'
-        + '<input type="time" class="ps-time" value="' + t + '" aria-label="' + name + ' time" onchange="this.value && setReminderTime(\'' + sec + '\',this.value)"></div>' : '')
+        + '<input type="time" class="ps-time" value="' + t + '" aria-label="' + name + ' time" onchange="this.value && setReminderTime(\'' + sec + '\',this.value,true)"></div>' : '')
       + '</div>';
   };
   const learning = ['chumash', 'tehillim', 'tanya', 'rambam'].concat((user.extraTracks || []).includes('hayomYom') ? ['hayomYom'] : []);
@@ -2730,7 +2793,7 @@ function _showPhonePrefs() {
   if (!native) return;
   const times = _reminderTimes();
   const on = [...REMINDER_SECTIONS, 'omer'].filter(sec => times[sec]);
-  document.getElementById('ps-rem-sub').textContent = !on.length ? 'Off' : on.length === 1 ? (REMINDER_NAMES[on[0]] || 'Omer') + ' ' + times[on[0]] : on.length + ' on';
+  document.getElementById('ps-rem-sub').textContent = !on.length ? 'Off' : on.length === 1 ? (REMINDER_NAMES[on[0]] || 'Omer') + ' ' + _fmtTime(times[on[0]]) : on.length + ' on';
   document.getElementById('ps-hap-sw').setAttribute('aria-checked', user.haptics !== false);
 }
 
@@ -3123,7 +3186,7 @@ function _renderReminderNudge() {
   const name = sec === 'rambam' && user.rambamTrack === 'm' ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec];
   const keep = "try{const s=JSON.parse(localStorage.getItem('chitas_rem_nudge')||'{}');s['" + sec + "']='" + dateISO(now) + "';localStorage.setItem('chitas_rem_nudge',JSON.stringify(s))}catch(e){};_renderReminderNudge()";
   el.innerHTML = '<p class="wb-t" style="font-size:16px;">Your ' + name + ' reminder</p>'
-    + '<p class="wb-s">It comes at ' + times[sec] + ', and that hasn\'t been when you learn it lately. Would another time suit you better?</p>'
+    + '<p class="wb-s">It comes at ' + _fmtTime(times[sec]) + ', and that hasn\'t been when you learn it lately. Would another time suit you better?</p>'
     + '<button class="wb-go" onclick="' + keep + ';openReminders()">Change it</button> '
     + '<button class="wb-go" style="background:var(--card2);color:var(--t1);" onclick="' + keep + '">Keep it</button>';
   el.style.display = 'block';
@@ -3757,6 +3820,8 @@ let _sbLast = '';
 function _statusBarStyle() {
   const shown = id => { const el = document.getElementById(id); return !!el && getComputedStyle(el).display !== 'none'; };
   if (shown('app-loader') || shown('onboarding') || shown('chabad-panel') || shown('quiz-panel')) return 'DARK';
+  const mm = document.getElementById('moment-modal');
+  if (mm && mm.classList.contains('m-full') && getComputedStyle(mm).display !== 'none') return 'DARK';   // All four done
   const m = getComputedStyle(document.body).backgroundColor.match(/\d+(\.\d+)?/g);
   if (!m) return 'DEFAULT';
   const [r, g, b] = m.map(Number);
@@ -3813,13 +3878,14 @@ function showMoment(opts) {
   document.getElementById('moment-title').textContent = title;
   document.getElementById('moment-sub').textContent = sub;
   document.getElementById('moment-xp').textContent = xp || '';
+  document.getElementById('moment-extra').innerHTML = opts.extra || '';
   // Buttons
   const btnsEl = document.getElementById('moment-btns');
   btnsEl.innerHTML = '';
   (btns || [{ label: 'Keep going', primary: true }]).forEach(b => {
     const btn = document.createElement('button');
     btn.textContent = b.label;
-    btn.className = b.primary ? 'btn-primary' : 'btn-quiet';
+    btn.className = b.primary ? 'btn-primary' : b.link ? 'btn-link' : 'btn-quiet';
     btn.style.width = '100%';
     btn.onclick = () => { closeMoment(); if (b.action) b.action(); };
     btnsEl.appendChild(btn);
@@ -3941,9 +4007,15 @@ function celebrateAllDone(milestone, learn) {
   const sub = learn ? learn.title + '. ' + learn.sub
     : milestone && MILESTONE_LINES[milestone] ? MILESTONE_LINES[milestone]
     : days === 1 ? 'Your first Chitas day' : days + ' days of Chitas';
+  // What you learned today, each in its colour, as the tiles say it
+  const line = s => s ? (s.id === 'chumash' ? _chumashLine(s.subtitle) : String(s.subtitle || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '')) : '';
+  const recap = '<ul class="done-recap">' + SECTION_IDS.map(id => schedule?.[id]
+    ? '<li style="--c:var(--c-' + id + ')"><b>' + escapeHtml(schedule[id].label) + '</b><span>' + escapeHtml(line(schedule[id])) + '</span></li>' : '').join('') + '</ul>';
+  // The moment to offer a reminder: just finished, and none set (only the phone app has them)
+  const offerReminder = !!_nativePlugin('LocalNotifications') && !Object.values(_reminderTimes()).some(Boolean);
   setTimeout(() => showMoment({ full: true, icon: rule, title: 'All four done', sub,
-    xp: (user.streak || 0) > 1 ? user.streak + ' days in a row' : '',
-    btns: [{ label: 'See you tomorrow', primary: false }] }), 250);
+    xp: (user.streak || 0) > 1 ? user.streak + ' days in a row' : '', extra: recap,
+    btns: [{ label: 'See you tomorrow', primary: false }].concat(offerReminder ? [{ label: 'Remind me tomorrow', link: true, action: () => { switchTab('profile'); openReminders(); } }] : []) }), 250);
 }
 
 // ── 4. WELCOME BACK ──────────────────────────────────────────────────────────
@@ -5693,7 +5765,7 @@ function _renderTehillimContent() {
     v += _thChapterHTML(ch, lang, chIdx === 0 && dayNum ? (isHe ? 'יום ' + _toHebrewNumeral(dayNum) : 'Day ' + dayNum) : '');
   });
 
-  el.innerHTML = t + top + v + _elulTehillimHTML(window._tehillimData.elul, lang)
+  el.innerHTML = t + top + _thHintHTML() + v + _elulTehillimHTML(window._tehillimData.elul, lang)
     + '<div id="tehillim-personal">' + _personalPsalmsHTML(lang) + '</div>'
     + '<p style="font-size:var(--fs-1);color:var(--t3);text-align:center;margin-top:12px;padding-bottom:8px;">— End of today\'s Tehillim —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
@@ -6255,9 +6327,12 @@ function openChabadPanel(sectionId) {
 // FONT SIZE SYSTEM  — per-section, 5 steps, persisted in localStorage
 // Steps: 0=smallest … 2=default … 4=largest
 // ════════════════════════════════════════════════════════════════════
-const _FONT_SCALES = [0.89, 1.0, 1.13, 1.28, 1.45];
+// The reader's text sizes. The default is the fourth (1.28 of the base sizes),
+// comfortable on a phone held in the hand; three smaller, two larger.
+// A size someone chose is kept by its step, so these only ever grow at the end.
+const _FONT_SCALES = [0.89, 1.0, 1.13, 1.28, 1.45, 1.64];
 const _FONT_STEPS  = _FONT_SCALES.length;
-const _FONT_DEFAULT = 1; // index of the "no change" step (100%)
+const _FONT_DEFAULT = 3; // the step shown as 100%
 
 function _readerFontKey(sectionId) {
   return 'chitas_fontsize_' + sectionId;
@@ -6266,7 +6341,7 @@ function _readerFontKey(sectionId) {
 function _getReaderFontStep(sectionId) {
   const saved = localStorage.getItem(_readerFontKey(sectionId));
   const n = parseInt(saved);
-  return (!isNaN(n) && n >= 0 && n < _FONT_STEPS) ? n : _FONT_DEFAULT; // default = middle (100%)
+  return (!isNaN(n) && n >= 0 && n < _FONT_STEPS) ? n : _FONT_DEFAULT;
 }
 
 function _applyReaderFontSize(sectionId) {
@@ -6303,7 +6378,7 @@ function _readerFontStep(delta) {
   _applyReaderFontSize(sid);
   _putReaderAt(['chumash', 'rambam', 'tehillim', 'tanya'].includes(sid) ? sid : 'extra_' + sid, place);
   // Subtle toast feedback
-  const pct = Math.round(_FONT_SCALES[next] * 100);
+  const pct = Math.round(_FONT_SCALES[next] / _FONT_SCALES[_FONT_DEFAULT] * 100);   // the default reads 100%
   fire('Text size ' + pct + '%', 'xp');
 }
 
@@ -9055,10 +9130,18 @@ function showLoader() {
   el.classList.remove('hiding');
   el.classList.add('visible');
 }
+// The welcome's rings drawing in, the names and the line after them: played
+// from the start (they first run behind the loading screen, where no one sees them)
+function _obPlay() {
+  const ob = document.getElementById('onboarding');
+  if (!ob || getComputedStyle(ob).display === 'none') return;
+  ob.querySelectorAll('.ob-rings .rg, .ob-names span, .ob-tag').forEach(el => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
+}
 function hideLoader() {
   const el = document.getElementById('app-loader');
-  if (!el || !el.classList.contains('visible')) { document.getElementById('main-app')?.classList.add('ready'); return; }
+  if (!el || !el.classList.contains('visible')) { document.getElementById('main-app')?.classList.add('ready'); _obPlay(); return; }
   el.classList.add('hiding');
+  _obPlay();
   setTimeout(() => {
     el.classList.remove('visible', 'hiding');
     // Reveal main-app now that content is loaded
