@@ -692,6 +692,16 @@ await check('a quick pick moves it; the sheet shows the choice', async () => {
   window.__calls = []; document.querySelector('.rem-row .tz-opt:nth-child(2)').click(); await new Promise(r => setTimeout(r, 80));
   return [new Date(window.__sched().at(-1).schedule.at).getHours() + ':' + new Date(window.__sched().at(-1).schedule.at).getMinutes(), document.querySelector('.rem-row .tz-opt.on').textContent];
 }, ['8:30', 'After Shacharis']);
+await check('turning the time wheel keeps it open (no redraw), and the reminder follows once it rests', async () => {
+  const input = document.querySelector('.ps-time'); window.__calls = [];
+  await setReminderTime('tanya', '21:15', true); await setReminderTime('tanya', '21:20', true);
+  const same = document.querySelector('.ps-time') === input;
+  await new Promise(r => setTimeout(r, 900));
+  const at = new Date(window.__sched().at(-1).schedule.at);
+  const got = [same, _reminderTimes().tanya, at.getHours() + ':' + at.getMinutes()];
+  await setReminderTime('tanya', '08:30');   // back as it was, for the checks after
+  return got;
+}, [true, '21:20', '21:20']);
 await check('two sections at one time come as one, saying what\'s waiting', async () => {
   await setReminderTime('tehillim', '08:30'); await new Promise(r => setTimeout(r, 80));
   const x = window.__sched().at(-1); return [x.title, x.body.includes('Psalms'), x.body.includes('Today\'s portion')];

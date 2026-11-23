@@ -204,8 +204,8 @@ console.log('Translation:');
   await p.evaluate(() => setTheme('light', false));
   const headSize = () => p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('#native-reader-content .th-ch-num')).fontSize));
   const h0 = await headSize();
-  await p.evaluate(() => { localStorage.setItem('chitas_fontsize_tehillim', '4'); _applyReaderFontSize('tehillim'); });
-  ok('the chapter number grows with the text size', Math.round(await headSize() / h0 * 100), 145);
+  await p.evaluate(() => { localStorage.setItem('chitas_fontsize_tehillim', '5'); _applyReaderFontSize('tehillim'); });
+  ok('the chapter number grows with the text size', Math.round(await headSize() / h0 * 100), 128);   // the largest step, 1.64, against the default 1.28
   await p.evaluate(() => document.querySelectorAll('#native-reader-content .th-chapter')[1].scrollIntoView()); await p.waitForTimeout(300);
   await p.screenshot({ path: new URL('./.look/tehillim-large.png', import.meta.url).pathname }).catch(() => {});
   await p.evaluate(() => { localStorage.removeItem('chitas_fontsize_tehillim'); _applyReaderFontSize('tehillim'); });
@@ -217,6 +217,17 @@ console.log('Translation:');
   await p.waitForFunction(() => /dwelling places/.test(document.getElementById('native-reader-content').textContent), null, { timeout: 5000 }).catch(() => {});
   ok('Koren from the gear: the text comes again in Koren, not bold', [(await v3())?.[0].slice(0, 30), (await v3())?.[2]], ['3My soul longs, indeed, it fai', null]);
   ok('the gear shows Koren chosen', await p.evaluate(() => [...document.querySelectorAll('#rs-section-opts button')].find(b => b.querySelector('svg polyline') && /Koren|Silverstein/.test(b.textContent))?.textContent), 'KorenThe Koren Jerusalem Bible');
+  ok('no errors', p.__errors, []);
+  await p.close();
+}
+
+console.log('The Personal Tehillim card:');
+{
+  const p = await openOn('2026-11-20');
+  await p.waitForSelector('#th-hint', { timeout: 5000 }).catch(() => {});
+  ok('no one added yet: the card shows, with its way in', await p.evaluate(() => [!!document.getElementById('th-hint'), !!document.querySelector('.th-hint-add')]), [true, true]);
+  await p.click('.th-hint-no');
+  ok('Not now: gone, and stays gone', await p.evaluate(() => { const gone = !document.getElementById('th-hint'); _renderTehillimContent(); return [gone, !document.getElementById('th-hint'), !!localStorage.getItem('chitas_th_hint_off')]; }), [true, true, true]);
   ok('no errors', p.__errors, []);
   await p.close();
 }

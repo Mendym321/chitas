@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<script>
+  // In the phone app: no zooming (pinch, double tap, or the phone zooming in on a
+  // text box), as an app behaves; the reader's text size is the way to bigger text.
+  // In a browser the page can still be zoomed. native-ios: the top's minimum (below)
+  (function () {
+    var C = window.Capacitor;
+    if (!(C && C.isNativePlatform && C.isNativePlatform())) return;
+    document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+    if (C.getPlatform && C.getPlatform() === 'ios') document.documentElement.classList.add('native-ios');
+  })();
+</script>
 <meta name="theme-color" content="#1F1B16"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -162,10 +173,14 @@
      clock's height (--sat), and the bottom pieces already allow for the home
      bar. In a browser tab both are 0 and nothing moves. */
   :root { --sat: env(safe-area-inset-top, 0px); }
-  #tab-learn { padding-top:calc(20px + var(--sat)) !important; }
-  #tab-stats, #tab-profile { padding-top:calc(16px + var(--sat)) !important; }
+  :root.native-ios { --sat: max(env(safe-area-inset-top, 0px), 20px); }   /* the iPhone app always has the clock's strip */
+  html { touch-action: manipulation; }   /* a quick second tap is a tap, never a zoom */
+  /* The header over every tab (greeting, title, Today's rings) sits under the clock,
+     with a little more room than a browser tab needs (min(): none extra where there's no clock strip) */
+  #app-head { padding-top:calc(20px + var(--sat) + min(var(--sat), 10px)) !important; }
   #reader-head, #quiz-head { padding-top:calc(14px + var(--sat)) !important; }
-  html:has(#onboarding:not([style*="display: none"])), html:has(#onboarding:not([style*="display: none"])) body { background:#1F1B16; }   /* the welcome's dark, even when the page is pulled past its ends */
+  html:has(#onboarding:not([style*="display: none"])), html:has(#onboarding:not([style*="display: none"])) body { background:#1F1B16; }
+  #app:has(> #onboarding:not([style*="display: none"])) { padding-bottom:0; min-height:0; }   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
   #onboarding { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)) !important; }
   @media (min-width: 1000px) { .tabbar { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; } }
 
@@ -773,6 +788,13 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #app-sub, .wk-num { display:none; }   /* on a computer only */
 /* Tehillim, laid out like a printed Tehillim (_renderTehillimContent) */
 .th-range { font-size:var(--fs-1); color:var(--t3); margin-bottom:6px; text-align:center; }
+.th-hint { direction:ltr; text-align:left; background:var(--card); border-radius:16px; padding:14px 16px 12px; margin:10px 0 20px; }
+.th-hint-t { font-family:var(--read-font); font-size:calc(15px * var(--rf-scale, 1)); line-height:1.5; color:var(--t1); }
+.th-hint-t b { display:block; font:600 var(--fs-2) var(--ui-font); color:var(--c-tehillim); margin-bottom:3px; }
+.th-hint-b { display:flex; gap:8px; margin-top:12px; }
+.th-hint-b button { border:none; border-radius:999px; padding:8px 14px; font:700 13px var(--ui-font); cursor:pointer; }
+.th-hint-add { background:var(--c-tehillim); color:#fff; }
+.th-hint-no { background:none; color:var(--t2); }
 .th-chapter { margin-top:22px; }
 .th-chapter.he { direction:rtl; }
 .th-ch-num { text-align:center; font-size:calc(22px * var(--rf-scale, 1)); font-weight:700; color:var(--t1); line-height:1.2; margin-bottom:6px; }
@@ -854,11 +876,11 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rd-ch::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--rc) 30%, transparent); }
 .rd-comm { background:var(--card); border-radius:12px; padding:10px 14px; margin:6px 0 8px; }   /* Rashi: no label and no side bar (it's the only commentary; the bold opening words say it), just a soft ground */
 #chabad-panel-sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.tz-gt { font-family:var(--read-font); font-size:17px; line-height:1.5; color:var(--t1); }
+.tz-gt { font-family:var(--read-font); font-size:calc(16px * var(--rf-scale, 1)); line-height:1.5; color:var(--t1); }
 .tz-gt + .tz-gl { margin-top:12px; }
 
 .tz-ai { font-size:11px; color:var(--t3); margin-top:10px; }
-.tz-h { display:flex; align-items:center; gap:10px; font:600 13px var(--ui-font); color:var(--purple); margin:26px 0 10px; }
+.tz-h { display:flex; align-items:center; gap:10px; font:600 calc(12.5px * var(--rf-scale, 1)) var(--ui-font); color:var(--purple); margin:26px 0 10px; }
 .tz-h::after { content:''; flex:1; height:1px; background:color-mix(in srgb, var(--purple) 22%, transparent); }
 .sm-row { padding:14px 0 13px; border-bottom:1px solid var(--border); }
 .sm-row.both { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
@@ -883,8 +905,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rb-h { color:var(--rc); margin:22px 0 2px; }   /* Rambam's guide headings, in its colour */
 .rb-h::after { background:color-mix(in srgb, var(--rc) 25%, transparent); }
 .rb-para { display:block; height:0.7em; }
-.rb-pw { font-family:var(--read-font); font-size:15.5px; line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--rc) 9%, var(--bg)); border-radius:10px; padding:10px 13px; margin:10px 0 6px; }   /* a hard halacha in plain words */
-.rb-pw-term { display:block; margin-top:6px; font-size:13.5px; color:var(--t3); }
+.rb-pw { font-family:var(--read-font); font-size:calc(15px * var(--rf-scale, 1)); line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--rc) 9%, var(--bg)); border-radius:10px; padding:10px 13px; margin:10px 0 6px; }   /* a hard halacha in plain words */
+.rb-pw-term { display:block; margin-top:6px; font-size:calc(13px * var(--rf-scale, 1)); color:var(--t3); }
 .rb-pw-ai { font-size:var(--fs-1); color:var(--t3); text-align:center; margin:18px 0 0; }
 /* Rambam side by side: the English (with the translator's additions) is about
    1.5 times the Hebrew, so it gets 60% of the width and each pair comes out
@@ -893,7 +915,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .rb-map, .rb-take { margin:4px 0 0; padding-left:20px; } .rb-map li, .rb-take li { margin:3px 0; } .rb-take li { margin:5px 0; }
 .rb-why { font-family:var(--read-font); font-style:italic; font-size:15px; line-height:1.45; color:var(--t2); border-left:2px solid color-mix(in srgb, var(--rc) 30%, transparent); padding:2px 0 2px 10px; margin:8px 0 12px; }
 .rb-why b { font:600 11px var(--ui-font); font-style:normal; color:var(--t3); margin-right:3px; }
-.tz-bridge { font-family:var(--read-font); font-size:16px; line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--purple) 7%, var(--bg)); border-radius:10px; padding:10px 13px; margin:8px 0 16px; }   /* Tanya's guide: plain words that help follow the argument */
+.tz-bridge { font-family:var(--read-font); font-size:calc(15px * var(--rf-scale, 1)); line-height:1.5; color:var(--t2); background:color-mix(in srgb, var(--purple) 7%, var(--bg)); border-radius:10px; padding:10px 13px; margin:8px 0 16px; }   /* Tanya's guide: plain words that help follow the argument */
 .tz-note { font-family:var(--read-font); font-style:italic; font-size:16px; line-height:1.45; color:var(--purple); border-left:2px solid color-mix(in srgb, var(--purple) 30%, transparent); padding:1px 0 1px 11px; margin:22px 0 12px; }   /* Tanya's guide: a word from a chavrusa where the thread could be lost */
 .tz-p { margin-bottom:16px; }
 .tz-he { direction:rtl; text-align:justify; text-align-last:right; font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-weight:500; --rf-sz:20px; --rf-lh:1.72; font-size:var(--rf-sz); line-height:var(--rf-lh); color:var(--t1); }
@@ -936,7 +958,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {   }
 /* Landing: on dark, the four rings close one by one and each name appears */
 #onboarding.ob-dark { background:#1F1B16; }
-#ob-welcome { position:relative; z-index:1; min-height:calc(100vh - 48px); display:flex; flex-direction:column; align-items:center; text-align:center; padding:9vh 0 4px; color:#FBF7EF; }
+#ob-welcome { position:relative; z-index:1; min-height:calc(100vh - 48px - var(--sat) - env(safe-area-inset-bottom, 0px)); display:flex; flex-direction:column; align-items:center; text-align:center; padding:9vh 0 4px; color:#FBF7EF; }
 #ob-welcome .ob-rings { width:min(62vw, 250px); height:min(62vw, 250px); }
 #ob-welcome .ob-rings circle { fill:none; stroke:var(--c); stroke-width:8; }
 #ob-welcome .ob-rings .rt { opacity:.16; }
@@ -2050,8 +2072,23 @@ function _personalPsalmsHTML(lang) {
   return h + '</div>';
 }
 
+// Personal Tehillim lives after the day's chapters, where few scroll to find it.
+// So until someone adds a person (or says not now), a small card at the top
+// says what it is, with the way in. Quiet: once, and then it's gone for good.
+function _thHintHTML() {
+  if ((user.tehillimPeople || []).length) return '';
+  try { if (localStorage.getItem('chitas_th_hint_off')) return ''; } catch (e) {}
+  return '<div class="th-hint" id="th-hint"><p class="th-hint-t"><b>Your own chapter</b> Each person says the chapter of Tehillim for their age. Add yourself and your family, with a Hebrew birthday, and each chapter appears after today\'s Tehillim.</p>'
+    + '<div class="th-hint-b"><button type="button" class="th-hint-add" onclick="_openTehillimPeopleManager()">Add people</button><button type="button" class="th-hint-no" onclick="_thHintOff()">Not now</button></div></div>';
+}
+function _thHintOff() {
+  try { localStorage.setItem('chitas_th_hint_off', '1'); } catch (e) {}
+  document.getElementById('th-hint')?.remove();
+}
+
 // Draw it again (a chapter arrived, or someone was added, changed or turned off)
 function _renderPersonalPsalms() {
+  if ((user.tehillimPeople || []).length) document.getElementById('th-hint')?.remove();
   const el = document.getElementById('tehillim-personal');
   if (el && _rv.sid === 'tehillim') el.innerHTML = _personalPsalmsHTML(localStorage.getItem('chitas_lang_tehillim') || 'he');
 }
@@ -2667,7 +2704,11 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) _che
 setInterval(_checkNewDay, 60e3);
 
 // A section's reminder: a time ('HH:MM') or null for off
-async function setReminderTime(sec, time) {
+// quiet: a new time from the time wheel, which iPhones report at every stop of
+// the wheel: saved, but nothing redrawn (that would close the wheel), and the
+// reminders set again once the wheel has rested
+let _remSyncTimer = null;
+async function setReminderTime(sec, time, quiet) {
   const times = { ..._reminderTimes() };
   const first = !Object.values(times).some(Boolean);
   if (time && first) {   // the first one on: the phone asks
@@ -2678,6 +2719,11 @@ async function setReminderTime(sec, time) {
   if (time) times[sec] = time; else delete times[sec];
   try { localStorage.setItem('chitas_reminders', JSON.stringify(times)); localStorage.removeItem('chitas_reminder'); } catch {}
   _reminderSig = null;
+  if (quiet) {
+    clearTimeout(_remSyncTimer);
+    _remSyncTimer = setTimeout(() => { _showPhonePrefs(); _syncReminders(); }, 800);
+    return;
+  }
   _drawReminders();
   _showPhonePrefs();
   await _syncReminders();
@@ -2706,7 +2752,7 @@ function _drawReminders() {
     return '<div class="rem-row"><div class="tpm-row"><div class="tpm-who"><p>' + name + '</p>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>'
       + '<button type="button" role="switch" class="ml-sw" aria-checked="' + on + '" aria-label="' + name + ' reminder" onclick="setReminderTime(\'' + sec + '\',' + (on ? 'null' : '\'' + picks[0][1] + '\'') + ')"></button></div>'
       + (on ? '<div class="rem-when"><div class="tz-opts">' + picks.map(([l, v]) => '<button type="button" class="tz-opt' + (v === t ? ' on' : '') + '" onclick="setReminderTime(\'' + sec + '\',\'' + v + '\')">' + l + '</button>').join('') + '</div>'
-        + '<input type="time" class="ps-time" value="' + t + '" aria-label="' + name + ' time" onchange="this.value && setReminderTime(\'' + sec + '\',this.value)"></div>' : '')
+        + '<input type="time" class="ps-time" value="' + t + '" aria-label="' + name + ' time" onchange="this.value && setReminderTime(\'' + sec + '\',this.value,true)"></div>' : '')
       + '</div>';
   };
   const learning = ['chumash', 'tehillim', 'tanya', 'rambam'].concat((user.extraTracks || []).includes('hayomYom') ? ['hayomYom'] : []);
@@ -5693,7 +5739,7 @@ function _renderTehillimContent() {
     v += _thChapterHTML(ch, lang, chIdx === 0 && dayNum ? (isHe ? 'יום ' + _toHebrewNumeral(dayNum) : 'Day ' + dayNum) : '');
   });
 
-  el.innerHTML = t + top + v + _elulTehillimHTML(window._tehillimData.elul, lang)
+  el.innerHTML = t + top + _thHintHTML() + v + _elulTehillimHTML(window._tehillimData.elul, lang)
     + '<div id="tehillim-personal">' + _personalPsalmsHTML(lang) + '</div>'
     + '<p style="font-size:var(--fs-1);color:var(--t3);text-align:center;margin-top:12px;padding-bottom:8px;">— End of today\'s Tehillim —</p>'
     + '<div id="reader-bottom-sentinel" style="height:1px;"></div>';
@@ -6255,9 +6301,12 @@ function openChabadPanel(sectionId) {
 // FONT SIZE SYSTEM  — per-section, 5 steps, persisted in localStorage
 // Steps: 0=smallest … 2=default … 4=largest
 // ════════════════════════════════════════════════════════════════════
-const _FONT_SCALES = [0.89, 1.0, 1.13, 1.28, 1.45];
+// The reader's text sizes. The default is the fourth (1.28 of the base sizes),
+// comfortable on a phone held in the hand; three smaller, two larger.
+// A size someone chose is kept by its step, so these only ever grow at the end.
+const _FONT_SCALES = [0.89, 1.0, 1.13, 1.28, 1.45, 1.64];
 const _FONT_STEPS  = _FONT_SCALES.length;
-const _FONT_DEFAULT = 1; // index of the "no change" step (100%)
+const _FONT_DEFAULT = 3; // the step shown as 100%
 
 function _readerFontKey(sectionId) {
   return 'chitas_fontsize_' + sectionId;
@@ -6266,7 +6315,7 @@ function _readerFontKey(sectionId) {
 function _getReaderFontStep(sectionId) {
   const saved = localStorage.getItem(_readerFontKey(sectionId));
   const n = parseInt(saved);
-  return (!isNaN(n) && n >= 0 && n < _FONT_STEPS) ? n : _FONT_DEFAULT; // default = middle (100%)
+  return (!isNaN(n) && n >= 0 && n < _FONT_STEPS) ? n : _FONT_DEFAULT;
 }
 
 function _applyReaderFontSize(sectionId) {
@@ -6303,7 +6352,7 @@ function _readerFontStep(delta) {
   _applyReaderFontSize(sid);
   _putReaderAt(['chumash', 'rambam', 'tehillim', 'tanya'].includes(sid) ? sid : 'extra_' + sid, place);
   // Subtle toast feedback
-  const pct = Math.round(_FONT_SCALES[next] * 100);
+  const pct = Math.round(_FONT_SCALES[next] / _FONT_SCALES[_FONT_DEFAULT] * 100);   // the default reads 100%
   fire('Text size ' + pct + '%', 'xp');
 }
 
@@ -9055,10 +9104,18 @@ function showLoader() {
   el.classList.remove('hiding');
   el.classList.add('visible');
 }
+// The welcome's rings drawing in, the names and the line after them: played
+// from the start (they first run behind the loading screen, where no one sees them)
+function _obPlay() {
+  const ob = document.getElementById('onboarding');
+  if (!ob || getComputedStyle(ob).display === 'none') return;
+  ob.querySelectorAll('.ob-rings .rg, .ob-names span, .ob-tag').forEach(el => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
+}
 function hideLoader() {
   const el = document.getElementById('app-loader');
-  if (!el || !el.classList.contains('visible')) { document.getElementById('main-app')?.classList.add('ready'); return; }
+  if (!el || !el.classList.contains('visible')) { document.getElementById('main-app')?.classList.add('ready'); _obPlay(); return; }
   el.classList.add('hiding');
+  _obPlay();
   setTimeout(() => {
     el.classList.remove('visible', 'hiding');
     // Reveal main-app now that content is loaded
