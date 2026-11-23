@@ -3476,11 +3476,14 @@ function _changeDay(iso, change) {
 //  - a past day you learned: no button, a small line ("✓ You learned this on Wednesday")
 //  - a past day you missed (within the last week): "Catch up · Mark Wednesday as learned"
 //  - further back, or ahead: read only
+const _markVerb = sid => sid === 'tehillim' ? 'read' : 'learned';
 function _setMarkBtn(markBtn, doneOnDay, onMark, weekly) {
   const label = document.getElementById('chabad-mark-label');
   const xp = document.getElementById('chabad-mark-xp');
   const name = _dayName(dayOffset);
   const when = dayOffset === -1 ? 'yesterday' : 'on ' + name;
+  const v = _markVerb(markBtn.dataset.sectionId);   // Tehillim is read; the rest learned
+  const V = v[0].toUpperCase() + v.slice(1);
   if (xp) xp.textContent = '';
   const set = (state, text, click) => {
     markBtn.dataset.state = state;
@@ -3489,14 +3492,14 @@ function _setMarkBtn(markBtn, doneOnDay, onMark, weekly) {
     if (label) label.innerHTML = text;
   };
   if (doneOnDay) {
-    if (dayOffset === 0) set('done', weekly ? 'Learned this week' : 'Learned', null);
-    else set('past', '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> You learned this ' + (weekly ? 'week' : escapeHtml(when)), null);
+    if (dayOffset === 0) set('done', weekly ? V + ' this week' : V, null);
+    else set('past', '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> You ' + v + ' this ' + (weekly ? 'week' : escapeHtml(when)), null);
   } else if (!_canMarkDay(dayOffset)) {
     set('done', dayOffset > 0 ? 'Mark it on the day' : 'Read only', null);
   } else if (dayOffset === 0) {
-    set('todo', weekly ? 'Mark this week as learned' : 'Mark as learned', onMark);
+    set('todo', weekly ? 'Mark this week as ' + v : 'Mark as ' + v, onMark);
   } else {
-    set('todo', '<span class="mk-k">Catch up</span>Mark ' + escapeHtml(dayOffset === -1 ? 'yesterday' : name) + ' as learned', onMark);
+    set('todo', '<span class="mk-k">Catch up</span>Mark ' + escapeHtml(dayOffset === -1 ? 'yesterday' : name) + ' as ' + v, onMark);
   }
 }
 
@@ -4661,7 +4664,7 @@ function unlockMarkDone() {
       markBtn.style.cursor = 'pointer';
       const ml = document.getElementById('chabad-mark-label');
       const mx = document.getElementById('chabad-mark-xp');
-      if (ml) ml.textContent = 'Mark as learned';
+      if (ml) ml.textContent = 'Mark as ' + _markVerb(sid);
 
       markBtn.onclick = () => showConfirm(sid, true);
     }
