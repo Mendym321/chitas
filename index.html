@@ -165,6 +165,7 @@
   #tab-learn { padding-top:calc(20px + var(--sat)) !important; }
   #tab-stats, #tab-profile { padding-top:calc(16px + var(--sat)) !important; }
   #reader-head, #quiz-head { padding-top:calc(14px + var(--sat)) !important; }
+  html:has(#onboarding:not([style*="display: none"])), html:has(#onboarding:not([style*="display: none"])) body { background:#1F1B16; }   /* the welcome's dark, even when the page is pulled past its ends */
   #onboarding { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)) !important; }
   @media (min-width: 1000px) { .tabbar { padding-top:calc(24px + var(--sat)) !important; padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important; } }
 
@@ -3475,11 +3476,14 @@ function _changeDay(iso, change) {
 //  - a past day you learned: no button, a small line ("✓ You learned this on Wednesday")
 //  - a past day you missed (within the last week): "Catch up · Mark Wednesday as learned"
 //  - further back, or ahead: read only
+const _markVerb = sid => sid === 'tehillim' ? 'read' : 'learned';
 function _setMarkBtn(markBtn, doneOnDay, onMark, weekly) {
   const label = document.getElementById('chabad-mark-label');
   const xp = document.getElementById('chabad-mark-xp');
   const name = _dayName(dayOffset);
   const when = dayOffset === -1 ? 'yesterday' : 'on ' + name;
+  const v = _markVerb(markBtn.dataset.sectionId);   // Tehillim is read; the rest learned
+  const V = v[0].toUpperCase() + v.slice(1);
   if (xp) xp.textContent = '';
   const set = (state, text, click) => {
     markBtn.dataset.state = state;
@@ -3488,14 +3492,14 @@ function _setMarkBtn(markBtn, doneOnDay, onMark, weekly) {
     if (label) label.innerHTML = text;
   };
   if (doneOnDay) {
-    if (dayOffset === 0) set('done', weekly ? 'Learned this week' : 'Learned', null);
-    else set('past', '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> You learned this ' + (weekly ? 'week' : escapeHtml(when)), null);
+    if (dayOffset === 0) set('done', weekly ? V + ' this week' : V, null);
+    else set('past', '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> You ' + v + ' this ' + (weekly ? 'week' : escapeHtml(when)), null);
   } else if (!_canMarkDay(dayOffset)) {
     set('done', dayOffset > 0 ? 'Mark it on the day' : 'Read only', null);
   } else if (dayOffset === 0) {
-    set('todo', weekly ? 'Mark this week as learned' : 'Mark as learned', onMark);
+    set('todo', weekly ? 'Mark this week as ' + v : 'Mark as ' + v, onMark);
   } else {
-    set('todo', '<span class="mk-k">Catch up</span>Mark ' + escapeHtml(dayOffset === -1 ? 'yesterday' : name) + ' as learned', onMark);
+    set('todo', '<span class="mk-k">Catch up</span>Mark ' + escapeHtml(dayOffset === -1 ? 'yesterday' : name) + ' as ' + v, onMark);
   }
 }
 
@@ -4424,7 +4428,12 @@ function _readerPlace() {
     if (r.height < 4 || r.bottom <= top + 8) continue;
     const a = _placeText(els[i].textContent).slice(0, 48);
     if (a.length < 6) continue;
-    return { y: Math.round(y), h: reader.scrollHeight, a, i, o: Math.max(0, Math.min(1, (top - r.top) / r.height)) };
+    const place = { y: Math.round(y), h: reader.scrollHeight, a, i, o: Math.max(0, Math.min(1, (top - r.top) / r.height)) };
+    // The verse, halacha or piece it's in: the same in every language, so a
+    // language switch keeps you on the same words, not the same pixels
+    const unit = els[i].closest('[data-u]');
+    if (unit) { const ur = unit.getBoundingClientRect(); place.u = unit.dataset.u; place.uo = Math.max(0, Math.min(1, (top - ur.top) / (ur.height || 1))); }
+    return place;
   }
   return { y: Math.round(y), h: reader.scrollHeight };
 }
@@ -4449,7 +4458,16 @@ function _placeY(place) {
     });
     if (best) return Math.max(0, reader.scrollTop + (best.top - top) + (place.o || 0) * best.height);
   }
-  // The passage isn't on the page any more (e.g. another language): same proportion
+  // The words aren't on the page (another language): the same verse, halacha or
+  // piece (a Rambam paragraph shown joined in one language: its halacha)
+  if (place.u) {
+    const content = document.getElementById('native-reader-content');
+    const find = u => content?.querySelector('[data-u="' + u + '"]');
+    const el = find(place.u) || (/^r\d+-\d+-\d+$/.test(place.u) ? find(place.u.replace(/-\d+$/, '-0')) : null);
+    const r = el?.getBoundingClientRect();
+    if (r && r.height >= 4) return Math.max(0, reader.scrollTop + (r.top - reader.getBoundingClientRect().top) + (find(place.u) ? (place.uo || 0) * r.height : 0));
+  }
+  // Nothing to match: the same proportion
   return place.h ? Math.round(place.y * reader.scrollHeight / place.h) : (place.y || 0);
 }
 
@@ -4646,7 +4664,7 @@ function unlockMarkDone() {
       markBtn.style.cursor = 'pointer';
       const ml = document.getElementById('chabad-mark-label');
       const mx = document.getElementById('chabad-mark-xp');
-      if (ml) ml.textContent = 'Mark as learned';
+      if (ml) ml.textContent = 'Mark as ' + _markVerb(sid);
 
       markBtn.onclick = () => showConfirm(sid, true);
     }
@@ -4910,7 +4928,7 @@ function _renderChumashContent() {
       const num = '<span class="rd-vn">' + vn + '</span>';
       const heNum = '<span class="rd-vn">' + _toHebrewNumeral(vn) + '</span>';
 
-      v += '<div style="margin-bottom:2px;">';
+      v += '<div data-u="c' + rashiKey + '" style="margin-bottom:2px;">';
 
       // rashiComments is an array of {en, he} — one per distinct Rashi comment.
       const rashiComments = rashiOn ? ((rashiMap && rashiMap[rashiKey]) || []) : [];
@@ -5477,22 +5495,22 @@ function _renderRambamContent() {
         pg.he.forEach((piece, j) => {
           const enPart = styled.slice(k, k + pg.en[j]).join(PARA); k += pg.en[j];
           const last = j === pg.he.length - 1;
-          v += '<div style="display:grid;grid-template-columns:var(--rb-cols);gap:20px;padding:' + (j ? '4px' : '14px') + ' 0 ' + (last ? '13px' : '6px') + ';' + (last ? 'border-bottom:1px solid var(--border);' : '') + 'align-items:start;">';
+          v += '<div data-u="r' + chIdx + '-' + i + '-' + j + '" style="display:grid;grid-template-columns:var(--rb-cols);gap:20px;padding:' + (j ? '4px' : '14px') + ' 0 ' + (last ? '13px' : '6px') + ';' + (last ? 'border-bottom:1px solid var(--border);' : '') + 'align-items:start;">';
           v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + (j ? '' : enMark) + enPart + '</p>';
           v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + (j ? '' : heMark) + piece + '</p>';
           v += '</div>';
         });
       } else if (lang === 'both') {
-        v += '<div style="display:grid;grid-template-columns:var(--rb-cols);gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
+        v += '<div data-u="r' + chIdx + '-' + i + '-0" style="display:grid;grid-template-columns:var(--rb-cols);gap:20px;padding:14px 0 13px;border-bottom:1px solid var(--border);align-items:start;">';
         v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + enMark + en + '</p>';
         v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + he + '</p>';
         v += '</div>';
       } else if (lang === 'he') {
-        v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
+        v += '<div data-u="r' + chIdx + '-' + i + '-0" style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
         v += '<p class="rf-body rd-he" style="direction:rtl;text-align:right;font-family:' + HE + ';--rf-sz:19px;--rf-lh:1.92;font-weight:400;color:var(--t1);">' + heMark + (pg ? pg.he.join(PARA) : he) + '</p>';
         v += '</div>';
       } else {
-        v += '<div style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
+        v += '<div data-u="r' + chIdx + '-' + i + '-0" style="padding:14px 0 13px;border-bottom:1px solid var(--border);">';
         v += '<p class="rf-body" style="--rf-sz:15px;--rf-lh:1.82;">' + enMark + en + '</p>';
         v += '</div>';
       }
@@ -6068,14 +6086,16 @@ function _renderTanyaContent() {
   }
 
   // One piece: Hebrew and/or English
+  let pieceNo = 0;
   const piece = (b, opening) => {
+    const u = ' data-u="t' + (pieceNo++) + '"';
     let he = fixHe(b.he || '');
     if (opening) he = he.replace(/^((?:<[^>]+>)*)([^\s<]+)((?:<\/[^>]+>)*)/, '$1<span class="tz-open">$2</span>$3');
     const heP = he ? '<p class="tz-he rf-body" lang="he">' + he + '</p>' : '';
     const enP = b.en ? '<p class="tz-en rf-body">' + fixEn(b.en) + '</p>' : '';
-    if (lang === 'he') return heP ? '<div class="tz-p">' + heP + '</div>' : '';
-    if (lang === 'en') return enP ? '<div class="tz-p">' + enP + '</div>' : '';
-    return '<div class="tz-p both">' + (enP || '<p></p>') + (heP || '<p></p>') + '</div>';
+    if (lang === 'he') return heP ? '<div class="tz-p"' + u + '>' + heP + '</div>' : '';
+    if (lang === 'en') return enP ? '<div class="tz-p"' + u + '>' + enP + '</div>' : '';
+    return '<div class="tz-p both"' + u + '>' + (enP || '<p></p>') + (heP || '<p></p>') + '</div>';
   };
 
   let v = '', inHag = false, opened = false;

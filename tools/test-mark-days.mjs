@@ -78,6 +78,14 @@ console.log("Today's Chumash not learned yet:");
   ok('no errors', p.__errors, []);
   await p.close();
 }
+console.log("Tehillim is read, not learned:");
+{
+  const p = await open(false);
+  await p.evaluate(() => openChabadPanel('tehillim'));
+  await p.waitForTimeout(1500);
+  ok('today: Mark as read', await btn(p), ['todo', 'Mark as read', true]);
+  await p.close();
+}
 console.log("Today's Chumash already learned:");
 {
   const p = await open(true);
