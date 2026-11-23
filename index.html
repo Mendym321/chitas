@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <script>
-  // In the phone app: no zooming (pinch, double tap, or the phone zooming in on a
-  // text box), as an app behaves; the reader's text size is the way to bigger text.
-  // In a browser the page can still be zoomed. native-ios: the top's minimum (below)
+  // In the phone app: edge to edge (viewport-fit=cover: the page runs under the
+  // clock and home bar, and moves its own top and bottom clear), and no zooming
+  // (pinch, double tap, or the phone zooming in on a text box), as an app behaves;
+  // the reader's text size is the way to bigger text. In a browser the page
+  // stays inside the browser's safe area (no notch in the way when the phone is
+  // turned) and can still be zoomed. native-ios: the top's minimum (below)
   (function () {
     var C = window.Capacitor;
     if (!(C && C.isNativePlatform && C.isNativePlatform())) return;
@@ -199,6 +202,15 @@
   html .tz-seg button { padding:9px 4px; }                                                            /* language switch: 30 → 34 (Apple's segmented control is 32) */
   html .rr-go { height:44px; padding:0 18px; }                                                        /* Start: 36 → 44 */
   html #reader-actions > button { min-height:50px; }
+  /* A reader turned sideways (phone app): clear of the notch and the home bar at
+     the sides, and lines kept to a comfortable length, centred */
+  @media (max-width: 999px) {
+    html #reader-head { padding-left:calc(18px + env(safe-area-inset-left, 0px)) !important; padding-right:calc(18px + env(safe-area-inset-right, 0px)) !important; }
+    html #reader-daybar { padding-left:calc(10px + env(safe-area-inset-left, 0px)); padding-right:calc(10px + env(safe-area-inset-right, 0px)); }
+    #native-reader > div { padding-left:calc(18px + env(safe-area-inset-left, 0px)) !important; padding-right:calc(18px + env(safe-area-inset-right, 0px)) !important; max-width:820px; margin:0 auto; }
+    #reader-bottom-bar { padding-left:calc(14px + env(safe-area-inset-left, 0px)) !important; padding-right:calc(14px + env(safe-area-inset-right, 0px)) !important; }
+    #quiz-panel { padding-left:env(safe-area-inset-left, 0px); padding-right:env(safe-area-inset-right, 0px); }
+  }
   .ps-modal-close, .wb-x { position:relative; }
   .ps-modal-close::after, .wb-x::after { content:''; position:absolute; inset:-7px; border-radius:50%; }   /* the sheets' × : 30 → 44 */
   html .ps-add-btn { min-height:44px; }                                                                      /* Add extra learning: 40 → 44 */                                                  /* Mark as learned, Quiz yourself: 43 → 50, the size of iOS's large buttons */   /* the bar runs to the edge; its buttons stop where the home bar's area begins */   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
@@ -2651,7 +2663,8 @@ async function _syncRemindersNow() {
   }
   const sameDay = dateISO(appNow()) === dateISO(new Date());   // past midnight, before 4 am, today's list is still last night's
   const plan = reminderPlans(_reminderTimes(), new Date(), sameDay ? (user.done || {}) : {});
-  const notes = plan.map(p => ({ id: p.id, ..._reminderText(p), schedule: { at: p.at, allowWhileIdle: true }, extra: p.omer ? { omer: p.omer } : { open: p.sections[0] } }));
+  // threadIdentifier: on iPhone they stack as one group, not a pile
+  const notes = await Promise.all(plan.map(async p => ({ id: p.id, ...(await _reminderText(p)), schedule: { at: p.at, allowWhileIdle: true }, threadIdentifier: p.omer ? 'chitas-omer' : 'chitas', extra: p.omer ? { omer: p.omer } : { open: p.sections[0] } })));
   const sig = notes.map(n => n.id + '@' + n.schedule.at.getTime() + n.body).join();
   if (sig === _reminderSig) return;
   _reminderSig = sig;
@@ -2661,20 +2674,68 @@ async function _syncRemindersNow() {
     if (notes.length) await LN.schedule({ notifications: notes });
   } catch (e) { _reminderSig = null; }
 }
-// What's waiting, in a few words, for the day of the reminder
-function _reminderText(p) {
-  if (p.omer) { const c = omerCount(p.omer); return { title: 'Sefiras HaOmer', body: 'Count tonight: night ' + p.omer + ' · ' + c.sefirah.en }; }
+// What a reminder says. Calm and specific: what's actually waiting that day
+// (the parsha and aliya, the kapitlach, the portion), the Hebrew date or the
+// special day, what's left once part of today is learned, and for Hayom Yom
+// the start of the day's thought itself. Never guilt, never "don't lose".
+const _REM_CORE = ['chumash', 'tehillim', 'tanya', 'rambam'];
+const _ALIYA_NAMES = ['Rishon', 'Sheni', 'Shlishi', "Revi'i", 'Chamishi', 'Shishi'];
+const _andList = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a.at(-1) : a[0];
+function _remChumash(d) {
+  const label = getChumashDayLabel(d);
+  const [par, al] = label.split(' · ');
+  if (!al) return label;
+  const n = +((al.match(/Aliya (\d)/) || [])[1]);
+  return (typeof parshaSpelling === 'function' ? parshaSpelling(par) : par) + ', ' + (n ? _ALIYA_NAMES[n - 1] : al);
+}
+// Today's portion as the schedule names it; not its stand-in name from before it loaded
+const _remSub = sec => { const t = schedule?.[sec]?.subtitle; return t && !/^(Tanya Yomi|Daily Rambam|Rambam Yomi|Today)/i.test(t) ? t : ''; };
+// "3 Kislev", or the day itself when it has a name ("Yud-Tes Kislev")
+function _remDayName(d) {
+  const named = (typeof dayNote === 'function' ? dayNote(d, null) : []).filter(x => !/^(Shabbos|Erev Shabbos|Parshas|Day \d)/.test(x));
+  if (named.length) return named[0].split(',')[0];   // "Yud-Tes Kislev", without the rest
+  const h = _hebDay(d);
+  return h.n + ' ' + _hebMonth(h.m);
+}
+async function _remHayomYom(d) {
+  try {
+    const h = _hebDay(d);
+    const HEBCAL = { Tishri: 'Tishrei', Heshvan: 'Cheshvan', Shevat: "Sh'vat", Iyar: 'Iyyar' };
+    const key = _hayomYomKeys(HEBCAL[h.m] || h.m, h.n)[0];
+    const text = String((key && (await _hayomYomData())[key]?.en) || '').replace(/\s+/g, ' ').trim();
+    if (!text) return '';
+    return text.length > 110 ? text.slice(0, 110).replace(/\s+\S*$/, '') + '…' : text;
+  } catch (e) { return ''; }
+}
+async function _reminderText(p) {
+  if (p.omer) { const c = omerCount(p.omer); return { title: 'Sefiras HaOmer · night ' + p.omer, body: 'Tonight\'s count: ' + c.sefirah.en }; }
   const d = p.at, today = dateISO(d) === dateISO(appNow());
-  const what = sec => ({
-    chumash: () => getChumashDayLabel(d),
-    tehillim: () => _tehillimSubtitle(d),
-    tanya: () => (today && schedule?.tanya?.subtitle) || 'Today\'s portion',
-    rambam: () => user.rambamTrack === 'm' ? shmSubtitle(d) : (today && schedule?.rambam?.subtitle) || 'Today\'s chapters',
-    hayomYom: () => 'Today\'s thought',
+  const sm = user.rambamTrack === 'm';
+  const name = sec => sec === 'rambam' && sm ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec];
+  // In a list, each with what it is; alone, just what it is
+  const what = (sec, alone) => ({
+    chumash: () => _remChumash(d),
+    tehillim: () => (alone ? '' : 'Tehillim ') + String(_tehillimSubtitle(d) || '').replace(/^Psalms?\s*/, alone ? 'Kapitlach ' : ''),
+    tanya: () => today && _remSub('tanya') ? (alone ? '' : 'Tanya: ') + _remSub('tanya') : (alone ? 'Today\'s portion' : 'Tanya'),
+    rambam: () => sm ? (alone ? '' : 'Sefer HaMitzvos: ') + shmSubtitle(d)
+      : today && _remSub('rambam') ? (alone ? '' : 'Rambam: ') + _remSub('rambam') : (alone ? 'Today\'s chapters' : 'Rambam'),
+    hayomYom: () => 'Hayom Yom',
   }[sec]?.() || '');
-  const names = p.sections.map(sec => sec === 'rambam' && user.rambamTrack === 'm' ? 'Sefer HaMitzvos' : REMINDER_NAMES[sec]);
-  if (p.sections.length >= 4) return { title: 'Chitas', body: 'Today\'s ' + names.slice(0, -1).join(', ') + ' and ' + names.at(-1) + '.' };
-  return { title: names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names.at(-1) : names[0], body: p.sections.map(what).filter(Boolean).join(' · ') };
+  const secs = p.sections;
+  if (secs.length === 1 && secs[0] === 'hayomYom') {
+    return { title: 'Hayom Yom · ' + _remDayName(d), body: (await _remHayomYom(d)) || 'Today\'s thought' };
+  }
+  // What's left of today's four, once some are learned
+  const left = today ? _REM_CORE.filter(s => !user.done?.[s]) : _REM_CORE;
+  const someDone = left.length < _REM_CORE.length;
+  const core = secs.filter(s => _REM_CORE.includes(s));
+  let title;
+  if (someDone && left.length === 1 && core.length === 1) title = 'Last one today: ' + name(core[0]);
+  else if (someDone && core.length > 1) title = _andList(core.map(name)) + ' left today';
+  else if (core.length === 4) title = 'Chitas · ' + _remDayName(d);
+  else title = _andList(secs.map(name));
+  const body = secs.length === 1 ? what(secs[0], true) : secs.map(s => what(s, false)).filter(Boolean).join(' · ');
+  return { title, body };
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) _syncReminders(); });
 
@@ -3848,7 +3909,21 @@ function _statusBarStyle() {
   const [r, g, b] = m.map(Number);
   return (0.299 * r + 0.587 * g + 0.114 * b) < 128 ? 'DARK' : 'LIGHT';
 }
+// Turning the phone: the app stays upright, and only the readers (and a quiz
+// from them) may turn sideways, for reading Hebrew and English side by side.
+// Needs the screen-orientation plugin (older app builds simply don't lock).
+let _orLast = '';
+function _syncOrientation() {
+  const so = _nativePlugin('ScreenOrientation');
+  if (!so) return;
+  const shown = id => { const el = document.getElementById(id); return !!el && getComputedStyle(el).display !== 'none'; };
+  const want = shown('chabad-panel') || shown('quiz-panel') ? 'any' : 'portrait';
+  if (want === _orLast) return;
+  _orLast = want;
+  try { (want === 'any' ? so.unlock() : so.lock({ orientation: 'portrait' })).catch(() => {}); } catch (e) {}
+}
 function _syncStatusBar() {
+  _syncOrientation();
   const sb = _nativePlugin('StatusBar');
   if (!sb) return;
   const style = _statusBarStyle();
@@ -3858,15 +3933,17 @@ function _syncStatusBar() {
 }
 if (window.Capacitor?.isNativePlatform?.()) setInterval(_syncStatusBar, 300);
 
-// Touch feedback: only three moments in the app use it: 'tap' (a section
-// learned), 'done' (the day finished), 'milestone'. Off with the switch in
-// Profile. In a browser only Android can do it.
-const _HAPTIC_WEB = { tap: [10], done: [12, 70, 12], milestone: [40] };
+// Touch feedback: 'tap' (a section learned: a medium knock), 'done' (the day
+// finished) and 'milestone' (the phone's own success pattern), and 'select'
+// (a light tick as the text size or language changes, as iOS gives its own
+// switches). Off with the switch in Profile. In a browser only Android can do it.
+const _HAPTIC_WEB = { tap: [18], select: [8], done: [20, 70, 20], milestone: [45] };
+const _HAPTIC_IMPACT = { tap: 'MEDIUM', select: 'LIGHT' };
 function haptic(kind) {
   if (user?.haptics === false) return;
   try {
     const H = _nativePlugin('Haptics');
-    if (H) Promise.resolve(kind === 'tap' ? H.impact({ style: 'LIGHT' }) : H.notification({ type: 'SUCCESS' })).catch(() => {});
+    if (H) Promise.resolve(_HAPTIC_IMPACT[kind] ? H.impact({ style: _HAPTIC_IMPACT[kind] }) : H.notification({ type: 'SUCCESS' })).catch(() => {});
     else if (navigator.vibrate) navigator.vibrate(_HAPTIC_WEB[kind]);
   } catch (e) {}
 }
@@ -6394,6 +6471,7 @@ function _readerFontStep(delta) {
   const cur  = _getReaderFontStep(sid);
   const next = Math.max(0, Math.min(_FONT_STEPS - 1, cur + delta));
   if (next === cur) return;
+  haptic('select');
   localStorage.setItem(_readerFontKey(sid), String(next));
   const place = _readerPlace();                       // keep the passage you're on in view
   _applyReaderFontSize(sid);
@@ -6541,7 +6619,7 @@ function _buildSettingsSectionOpts(sectionId) {
 function _langSeg(lang, call) {
   return '<div class="tz-seg" role="group" aria-label="Language">'
     + [['he', 'עברית'], ['both', 'Both'], ['en', 'English']].map(([l, lb]) =>
-      '<button type="button"' + (lang === l ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ' onclick="' + call.replace(/LANG/g, l) + '">' + lb + '</button>').join('')
+      '<button type="button"' + (lang === l ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ' onclick="haptic(\'select\');' + call.replace(/LANG/g, l) + '">' + lb + '</button>').join('')
     + '</div>';
 }
 
@@ -7320,15 +7398,18 @@ function openCredits() {
 }
 
 // ── SHARE ─────────────────────────────────────────────────────────────────────
+// One link for everyone (/get): it opens the App Store on an iPhone, Google Play
+// on Android, the website elsewhere; never the page you happen to be on
+const SHARE_URL = 'https://chitas.vercel.app/get';
 function shareApp() {
   const text = `I'm learning Chitas every day: Chumash, Tehillim, Tanya and Rambam, in one app.${user.streak > 1 ? ' ' + user.streak + ' days in a row.' : ''} Join me.`;
   if (navigator.share) {
-    navigator.share({ title: 'Chitas', text, url: window.location.href })
+    navigator.share({ title: 'Chitas', text, url: SHARE_URL })
       .catch(() => {});
   } else {
-    navigator.clipboard.writeText(text + '\n' + window.location.href)
+    navigator.clipboard.writeText(text + '\n' + SHARE_URL)
       .then(() => fire('Copied to clipboard', 'gold'))
-      .catch(() => fire('Share: ' + window.location.href, 'xp'));
+      .catch(() => fire('Share: ' + SHARE_URL, 'xp'));
   }
 }
 

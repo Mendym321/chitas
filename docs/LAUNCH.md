@@ -121,6 +121,7 @@ Follow `app/README.md`, **Part 4**, with `docs/store-listing.md` open beside it.
 
 - [ ] **8.1 Check both store pages** once they're live: the links, the screenshots, the video.
 - [ ] **8.2 Install from the stores** on a phone that never had the app: first screen, sign in, mark a section, a reminder.
+- [ ] **8.2a Point the share link at the stores:** in `get/index.html` fill in `APP_STORE` (the app's App Store link) and `PLAY_STORE`, and push live. The app's Share button sends `chitas.vercel.app/get`, which then opens the right store on each phone (the website until then). Also add Apple's Smart App Banner to the website (`<meta name="apple-itunes-app" content="app-id=…">` in `index.html`), so iPhone visitors see "Open in the App Store".
 - [ ] **8.3 Announce it**: the App Store and Google Play links, with the store videos.
 - [ ] **8.4 Every few days in the first weeks:** read reviews (answer them, kindly, in each store), the feedback emails, and the admin page (`/admin.html`: people, sections learned, feedback). Send anything odd to Claude.
 - [ ] **8.5 Keep the guides written**: a new batch every few weeks (`AUDIT.md`, launch checklist point 5). Claude can write them; ask a week before they run out.
