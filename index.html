@@ -736,7 +736,15 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #moment-modal.m-full #moment-xp { color:#E0A030 !important; }
 #moment-modal.m-full #moment-btns { margin-top:auto; }
 #moment-modal.m-full .btn-quiet { background:#FBF7EF !important; color:#1F1B16 !important; }
-.done-rings { width:220px; height:220px; margin-bottom:10px; }
+.done-rings { width:200px; height:200px; margin-bottom:6px; }
+.done-recap { width:100%; list-style:none; margin:26px 0 0; padding:16px 18px; border-radius:18px; background:#2A251F; text-align:left; display:flex; flex-direction:column; gap:12px; }
+.done-recap li { display:flex; align-items:baseline; gap:10px; font:500 15px/1.35 var(--ui-font); color:#BDB3A2; opacity:0; animation:obName .5s ease forwards; }
+.done-recap li:nth-child(1) { animation-delay:1.1s } .done-recap li:nth-child(2) { animation-delay:1.25s } .done-recap li:nth-child(3) { animation-delay:1.4s } .done-recap li:nth-child(4) { animation-delay:1.55s }
+.done-recap li::before { content:''; flex:none; width:9px; height:9px; border-radius:50%; background:var(--c); transform:translateY(-1px); }
+.done-recap b { flex:none; min-width:78px; font-weight:700; color:#FBF7EF; }
+.done-recap span { min-width:0; }
+#moment-modal.m-full .btn-link { background:none; border:none; color:#CFC5B3; font:700 15px var(--ui-font); padding:12px; cursor:pointer; }
+@media (prefers-reduced-motion: reduce) { .done-recap li { animation:none; opacity:1; } }
 .done-rings circle { fill:none; stroke:var(--c); stroke-width:8; stroke-linecap:round; stroke-dasharray:var(--len) var(--len); stroke-dashoffset:var(--len); transform:rotate(-90deg); transform-origin:46px 46px; animation:ringClose .8s calc(.25s + var(--i) * .22s) cubic-bezier(.3,.7,.2,1) forwards; }
 @keyframes ringClose { to { stroke-dashoffset:0; } }
 @media (prefers-reduced-motion: reduce) { .done-rings circle { animation:none; stroke-dashoffset:0; } #today-rings .rf { transition:none; } }
@@ -954,7 +962,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* The day complete: four inks draw together into one gold line */
 
 
-.day-he { font-family:var(--he-font); font-size:30px; color:var(--gold); margin-top:14px; line-height:1; }
+.day-he { font-family:'Vilna', var(--he-font); font-size:34px; color:var(--gold); margin-top:16px; line-height:1; }   /* in the face the Tanya is printed in */
 @media (prefers-reduced-motion: reduce) {   }
 /* Landing: on dark, the four rings close one by one and each name appears */
 #onboarding.ob-dark { background:#1F1B16; }
@@ -1733,6 +1741,7 @@ window._fsGetDoc = getDoc;
     <p id="moment-title" style="font-family:var(--title-font);font-size:var(--fs-6);font-weight:800;letter-spacing:-.6px;color:var(--t1);line-height:1.1;margin-bottom:10px;position:relative;"></p>
     <p id="moment-sub" style="font-size:var(--fs-3);color:var(--t2);line-height:1.55;margin-bottom:8px;position:relative;"></p>
     <p id="moment-xp" style="font-size:var(--fs-2);font-weight:600;color:var(--gold);margin-bottom:24px;position:relative;"></p>
+    <div id="moment-extra"></div>
     <div id="moment-btns" style="display:flex;flex-direction:column;gap:10px;position:relative;"></div>
   </div>
 </div>
@@ -3803,6 +3812,8 @@ let _sbLast = '';
 function _statusBarStyle() {
   const shown = id => { const el = document.getElementById(id); return !!el && getComputedStyle(el).display !== 'none'; };
   if (shown('app-loader') || shown('onboarding') || shown('chabad-panel') || shown('quiz-panel')) return 'DARK';
+  const mm = document.getElementById('moment-modal');
+  if (mm && mm.classList.contains('m-full') && getComputedStyle(mm).display !== 'none') return 'DARK';   // All four done
   const m = getComputedStyle(document.body).backgroundColor.match(/\d+(\.\d+)?/g);
   if (!m) return 'DEFAULT';
   const [r, g, b] = m.map(Number);
@@ -3859,13 +3870,14 @@ function showMoment(opts) {
   document.getElementById('moment-title').textContent = title;
   document.getElementById('moment-sub').textContent = sub;
   document.getElementById('moment-xp').textContent = xp || '';
+  document.getElementById('moment-extra').innerHTML = opts.extra || '';
   // Buttons
   const btnsEl = document.getElementById('moment-btns');
   btnsEl.innerHTML = '';
   (btns || [{ label: 'Keep going', primary: true }]).forEach(b => {
     const btn = document.createElement('button');
     btn.textContent = b.label;
-    btn.className = b.primary ? 'btn-primary' : 'btn-quiet';
+    btn.className = b.primary ? 'btn-primary' : b.link ? 'btn-link' : 'btn-quiet';
     btn.style.width = '100%';
     btn.onclick = () => { closeMoment(); if (b.action) b.action(); };
     btnsEl.appendChild(btn);
@@ -3987,9 +3999,15 @@ function celebrateAllDone(milestone, learn) {
   const sub = learn ? learn.title + '. ' + learn.sub
     : milestone && MILESTONE_LINES[milestone] ? MILESTONE_LINES[milestone]
     : days === 1 ? 'Your first Chitas day' : days + ' days of Chitas';
+  // What you learned today, each in its colour, as the tiles say it
+  const line = s => s ? (s.id === 'chumash' ? _chumashLine(s.subtitle) : String(s.subtitle || '').replace(/^Rambam(?: \([^)]*\))?:\s*/, '')) : '';
+  const recap = '<ul class="done-recap">' + SECTION_IDS.map(id => schedule?.[id]
+    ? '<li style="--c:var(--c-' + id + ')"><b>' + escapeHtml(schedule[id].label) + '</b><span>' + escapeHtml(line(schedule[id])) + '</span></li>' : '').join('') + '</ul>';
+  // The moment to offer a reminder: just finished, and none set (only the phone app has them)
+  const offerReminder = !!_nativePlugin('LocalNotifications') && !Object.values(_reminderTimes()).some(Boolean);
   setTimeout(() => showMoment({ full: true, icon: rule, title: 'All four done', sub,
-    xp: (user.streak || 0) > 1 ? user.streak + ' days in a row' : '',
-    btns: [{ label: 'See you tomorrow', primary: false }] }), 250);
+    xp: (user.streak || 0) > 1 ? user.streak + ' days in a row' : '', extra: recap,
+    btns: [{ label: 'See you tomorrow', primary: false }].concat(offerReminder ? [{ label: 'Remind me tomorrow', link: true, action: () => { switchTab('profile'); openReminders(); } }] : []) }), 250);
 }
 
 // ── 4. WELCOME BACK ──────────────────────────────────────────────────────────
