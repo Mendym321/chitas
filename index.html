@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <script>
-  // In the phone app: no zooming (pinch, double tap, or the phone zooming in on a
-  // text box), as an app behaves; the reader's text size is the way to bigger text.
-  // In a browser the page can still be zoomed. native-ios: the top's minimum (below)
+  // In the phone app: edge to edge (viewport-fit=cover: the page runs under the
+  // clock and home bar, and moves its own top and bottom clear), and no zooming
+  // (pinch, double tap, or the phone zooming in on a text box), as an app behaves;
+  // the reader's text size is the way to bigger text. In a browser the page
+  // stays inside the browser's safe area (no notch in the way when the phone is
+  // turned) and can still be zoomed. native-ios: the top's minimum (below)
   (function () {
     var C = window.Capacitor;
     if (!(C && C.isNativePlatform && C.isNativePlatform())) return;
