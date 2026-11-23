@@ -7323,15 +7323,18 @@ function openCredits() {
 }
 
 // ── SHARE ─────────────────────────────────────────────────────────────────────
+// One link for everyone (/get): it opens the App Store on an iPhone, Google Play
+// on Android, the website elsewhere; never the page you happen to be on
+const SHARE_URL = 'https://chitas.vercel.app/get';
 function shareApp() {
   const text = `I'm learning Chitas every day: Chumash, Tehillim, Tanya and Rambam, in one app.${user.streak > 1 ? ' ' + user.streak + ' days in a row.' : ''} Join me.`;
   if (navigator.share) {
-    navigator.share({ title: 'Chitas', text, url: window.location.href })
+    navigator.share({ title: 'Chitas', text, url: SHARE_URL })
       .catch(() => {});
   } else {
-    navigator.clipboard.writeText(text + '\n' + window.location.href)
+    navigator.clipboard.writeText(text + '\n' + SHARE_URL)
       .then(() => fire('Copied to clipboard', 'gold'))
-      .catch(() => fire('Share: ' + window.location.href, 'xp'));
+      .catch(() => fire('Share: ' + SHARE_URL, 'xp'));
   }
 }
 

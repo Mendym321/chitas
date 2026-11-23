@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chitas: Daily Learning</title>
+<meta name="description" content="Chumash, Tehillim, Tanya and Rambam, ready every day, in Hebrew and English.">
+<!-- How the link looks when it's shared (WhatsApp, Messages, email) -->
+<meta property="og:title" content="Chitas: Daily Learning">
+<meta property="og:description" content="Chumash, Tehillim, Tanya and Rambam, ready every day, in Hebrew and English.">
+<meta property="og:image" content="https://chitas.vercel.app/icons/icon-512.png">
+<meta property="og:url" content="https://chitas.vercel.app/get">
+<meta name="theme-color" content="#1F1B16">
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#1F1B16; color:#FBF7EF; font:600 17px/1.4 -apple-system, system-ui, sans-serif; text-align:center; }
+  a { color:#E0A030; }
+</style>
+<script>
+  // The one link the app shares. It sends each person to the right place: the
+  // App Store on an iPhone or iPad, Google Play on Android, the website anywhere
+  // else (and everywhere until a store link below is filled in, at launch).
+  var APP_STORE = '';    // e.g. 'https://apps.apple.com/app/id1234567890'
+  var PLAY_STORE = '';   // e.g. 'https://play.google.com/store/apps/details?id=app.chitas.daily'
+  var WEB = 'https://chitas.vercel.app/';
+  var ua = navigator.userAgent || '';
+  var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var android = /Android/.test(ua);
+  location.replace(ios && APP_STORE ? APP_STORE : android && PLAY_STORE ? PLAY_STORE : WEB);
+</script>
+</head>
+<body>
+<p>Opening Chitas… <a href="https://chitas.vercel.app/">Tap here</a> if nothing happens.</p>
+</body>
+</html>
