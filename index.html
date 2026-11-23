@@ -6888,8 +6888,9 @@ function openReaderMenu(stay) {
     +   '<button type="button" class="rm-home" onclick="closeReaderMenu();_closeReaderNow()">Home</button>'
     + '</div>';
   document.body.appendChild(m);
-  if (stay) m.classList.add('open', 'stay'); else requestAnimationFrame(() => m.classList.add('open'));
-  m.querySelector(stay ? '.rm-when' : '.rm-x')?.focus?.();
+  if (stay === 'drag') _rmSet(m, 0);   // pulled out by the finger (_rmPull): starts shut
+  else if (stay) m.classList.add('open', 'stay'); else requestAnimationFrame(() => m.classList.add('open'));
+  if (stay !== 'drag') m.querySelector(stay ? '.rm-when' : '.rm-x')?.focus?.();
   // Each extra's piece (and Torah Ohr's name), from the schedules on the phone
   extras.filter(id => OFFERED_TRACKS.includes(id)).forEach(id => _trackPiece(id, iso).then(piece => {
     const el = document.getElementById('rm-sub-' + id);
@@ -6926,6 +6927,82 @@ function closeReaderMenu() {
   setTimeout(() => m.remove(), 220);
   document.getElementById('reader-menu-btn')?.focus();
 }
+// ── The menu follows the finger ─────────────────────────────────────────────
+// From the left edge it comes out with the finger, the page dimming as it
+// does; let go and it finishes the way you were going: a flick opens (or
+// shuts) it whatever the distance, a slow pull opens it past 40%, and it
+// finishes at your finger's speed. A light tick when it will stay open.
+// Open, it can be pushed back the same way.
+function _rmSet(m, p, ms) {   // p: 0 shut … 1 open; ms: animate there
+  const panel = m.querySelector('.rm-panel'), shade = m.querySelector('.rm-shade');
+  panel.style.transition = ms ? 'transform ' + ms + 'ms cubic-bezier(.2,.8,.25,1)' : 'none';
+  shade.style.transition = ms ? 'opacity ' + ms + 'ms linear' : 'none';
+  panel.style.transform = 'translateX(' + ((p - 1) * 100).toFixed(2) + '%)';
+  shade.style.opacity = p.toFixed(3);
+}
+const _rmG = { m: null, w: 0, p: 0, from: 0, pts: [], ticked: false };
+function _rmTrack(x) { const t = performance.now(); _rmG.pts.push([x, t]); while (_rmG.pts.length > 2 && t - _rmG.pts[0][1] > 90) _rmG.pts.shift(); }
+function _rmVelocity() { const a = _rmG.pts[0], b = _rmG.pts.at(-1); if (!a || !b || performance.now() - b[1] > 80) return 0; return b[1] > a[1] ? (b[0] - a[0]) / (b[1] - a[1]) : 0; }   // px per ms, + = opening; a finger that has stopped: 0
+// p from the finger: from = where the menu was (0 shut, 1 open) when the finger came down
+function _rmMove(dx) {
+  const g = _rmG; if (!g.m) return;
+  g.p = Math.max(0, Math.min(1, g.from + dx / g.w));
+  const over = g.p > .4;
+  if (over !== g.ticked) { g.ticked = over; if (over) haptic('select'); }
+  _rmSet(g.m, g.p);
+}
+function _rmLet() {
+  const g = _rmG, m = g.m; if (!m) return;
+  g.m = null;
+  const v = _rmVelocity();
+  const open = Math.abs(v) > .35 ? v > 0 : g.p > .4;
+  const left = (open ? 1 - g.p : g.p) * g.w;
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const ms = reduce ? 120 : Math.round(Math.max(140, Math.min(300, left / Math.max(Math.abs(v), .9))));
+  _rmSet(m, open ? 1 : 0, ms);
+  setTimeout(() => {
+    if (!m.isConnected) return;
+    if (!open) { m.remove(); document.getElementById('reader-menu-btn')?.focus(); return; }
+    m.classList.add('open', 'stay');   // settled: the class holds it open, as a tap would
+    m.querySelectorAll('.rm-panel, .rm-shade').forEach(el => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; });
+    requestAnimationFrame(() => m.classList.remove('stay'));
+    if (g.from === 0) m.querySelector('.rm-x')?.focus?.({ preventScroll: true });
+  }, ms + 20);
+}
+// From the edge of the reader (called by the reader's own swipe handling)
+function _rmPullStart(x) {
+  openReaderMenu('drag');
+  const m = document.getElementById('reader-menu');
+  Object.assign(_rmG, { m, w: m.querySelector('.rm-panel').offsetWidth || 300, p: 0, from: 0, pts: [], ticked: false });
+  _rmTrack(x);
+}
+function _rmPull(x, dx) { _rmTrack(x); _rmMove(dx); }
+// Open: drag it back to the left (on the panel or the shade); a tap still works
+(function () {
+  let sx = 0, sy = 0, on = false, dragging = false, swallow = false;
+  document.addEventListener('touchstart', e => {
+    const m = document.getElementById('reader-menu');
+    on = !!m && m.classList.contains('open') && e.touches.length === 1 && m.contains(e.target);
+    dragging = false;
+    if (on) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!on) return;
+    const x = e.touches[0].clientX, dx = x - sx, dy = e.touches[0].clientY - sy;
+    if (!dragging) {
+      if (Math.abs(dx) < 10) return;
+      if (dx > 0 || Math.abs(dx) < Math.abs(dy) * 1.5) { on = false; return; }   // a scroll, or pulling the wrong way
+      const m = document.getElementById('reader-menu');
+      dragging = true; swallow = true;
+      Object.assign(_rmG, { m, w: m.querySelector('.rm-panel').offsetWidth || 300, p: 1, from: 1, pts: [], ticked: true });
+    }
+    _rmTrack(x); _rmMove(dx);
+  }, { passive: true });
+  document.addEventListener('touchend', () => { if (dragging) _rmLet(); on = dragging = false; });
+  document.addEventListener('touchcancel', () => { if (dragging || _rmG.m) _rmLet(); on = dragging = false; });   // the system took the touch: finish either way
+  // The drag isn't a tap on the row it ended on
+  document.addEventListener('click', e => { if (swallow) { swallow = false; if (e.target.closest?.('#reader-menu')) { e.stopPropagation(); e.preventDefault(); } } }, true);
+})();
 function _readerMenuGo(id) {
   closeReaderMenu();
   const cur = String(_rv.sid || '').replace(/^extra_/, '').split(':')[0];
@@ -7579,8 +7656,10 @@ async function _prefetchAllReaders() {
     if (!reader || reader.style.display === 'none') return;
     // Only handle touches that start on or within the reader
     if (!reader.contains(e.target)) return;
-    // A swipe from the left edge closes the reader (like "back" on iPhone)
-    fromEdge = e.touches[0].clientX < 24;
+    // A swipe from the left edge pulls out the menu. In the phone app the edge
+    // is ours (wider, like iPhone's own back swipe); in a browser, Safari keeps
+    // the very edge for its back gesture
+    fromEdge = e.touches[0].clientX < (_nativePlugin('Haptics') ? 32 : 24) && !document.getElementById('reader-menu');
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     touchCurX   = touchStartX;
@@ -7608,7 +7687,11 @@ async function _prefetchAllReaders() {
       }
     }
     if (!swiping) return;
-    if (fromEdge) return; // edge swipe = the menu, no day hints
+    if (fromEdge) {   // edge swipe = the menu, following the finger
+      if (!_rmG.m) _rmPullStart(touchStartX);
+      _rmPull(touchCurX, Math.max(0, dx));
+      return;
+    }
 
     dragPage(reader, dx);
   }, { passive: true });
@@ -7619,7 +7702,7 @@ async function _prefetchAllReaders() {
 
     const dx = touchCurX - touchStartX;
     swiping = false;
-    if (fromEdge) { fromEdge = false; if (dx > 80) openReaderMenu(); return; }   // from the left edge: the menu (where the browser leaves the edge free)
+    if (fromEdge) { fromEdge = false; _rmLet(); return; }   // from the left edge: the menu finishes the way the finger was going
     releasePage(reader, dx, performance.now() - touchStartT);
   }, { passive: true });
 

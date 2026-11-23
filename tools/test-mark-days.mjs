@@ -132,6 +132,45 @@ console.log("The reader's menu: days, the calendar, Today:");
   await p.close();
 }
 
+console.log('The menu follows the finger from the left edge:');
+{
+  const p = await open(false);
+  // A finger, step by step: down at x, moved through xs, up (ms between moves)
+  const finger = (target, x0, xs, ms, lift = true) => p.evaluate(async ([sel, x0, xs, ms, lift]) => {
+    const el = document.querySelector(sel), y = 400;
+    const t = x => new Touch({ identifier: 1, target: el, clientX: x, clientY: y });
+    const fire = (type, x) => el.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches: type === 'touchend' ? [] : [t(x)], changedTouches: [t(x)] }));
+    fire('touchstart', x0);
+    for (const x of xs) { await new Promise(r => setTimeout(r, ms)); fire('touchmove', x); }
+    if (lift) { await new Promise(r => setTimeout(r, ms)); fire('touchend', xs.at(-1)); }
+  }, [target, x0, xs, ms, lift]);
+  const where = () => p.evaluate(() => { const m = document.getElementById('reader-menu'); if (!m) return null;
+    const r = m.querySelector('.rm-panel').getBoundingClientRect(); return { left: Math.round(r.left), w: Math.round(r.width), open: m.classList.contains('open'), shade: +getComputedStyle(m.querySelector('.rm-shade')).opacity }; });
+  await finger('#native-reader', 8, [30, 60, 90, 120], 30, false);
+  const mid = await where();
+  ok('while the finger moves, the menu is out as far as the finger, and the page dims as much', [!!mid, mid && mid.left > -mid.w && mid.left < 0, mid && mid.shade > 0.2 && mid.shade < 0.6, mid && mid.open], [true, true, true, false]);
+  await p.waitForTimeout(200);   // the finger rests, then lifts
+  await p.evaluate(() => document.querySelector('#native-reader').dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [new Touch({ identifier: 1, target: document.querySelector('#native-reader'), clientX: 120, clientY: 400 })] })));
+  await p.waitForTimeout(450);
+  ok('let go slowly before 40%: it slides back in', await where(), null);
+  await finger('#native-reader', 8, [20, 40, 70], 12);   // a quick flick, not far
+  await p.waitForTimeout(450);
+  ok('a flick opens it, however short', await where(), { left: 0, w: (await where())?.w, open: true, shade: 1 });
+  await p.screenshot({ path: shot('menu-pulled') });
+  await finger('#reader-menu .rm-panel', 250, [230, 200, 160, 110], 40);
+  await p.waitForTimeout(450);
+  ok('open, dragged back to the left: it shuts', await where(), null);
+  await finger('#native-reader', 8, [40, 90, 140, 190, 240], 40);   // a slow pull, past 40%
+  await p.waitForTimeout(450);
+  ok('a slow pull past 40% opens it', (await where())?.open, true);
+  await p.evaluate(() => closeReaderMenu()); await p.waitForTimeout(300);
+  await finger('#native-reader', 150, [180, 220, 260], 20);   // not from the edge
+  await p.waitForTimeout(300);
+  ok('from the middle of the page it isn\'t the menu', await where(), null);
+  ok('no errors', p.__errors, []);
+  await p.close();
+}
+
 await browser.close(); server.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll mark-day tests passed');
 process.exit(failed ? 1 : 0);
