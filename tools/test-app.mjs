@@ -221,6 +221,18 @@ await check('Progress: Reviews are one row; tapping it opens the details', () =>
 
 const wide = page.viewportSize();
 await page.setViewportSize({ width: 390, height: 844 });   // pop-ups are pulled on a phone only
+await check('Calendar dates: English, or Hebrew in letters as in a luach; the choice is kept for both calendars', () => {
+  localStorage.removeItem('chitas_cal_dates');
+  openDayPicker();
+  const en = [document.querySelector('#day-picker .cal-m').textContent.includes('20'), !document.querySelector('#day-picker .cal-he')];
+  _setCalDates('he');
+  const cell = document.querySelector('#day-picker .cal-he')?.textContent || '';
+  const he = [/^[\u05D0-\u05EA]{1,2}$/.test(cell), /57\d\d/.test(document.querySelector('#day-picker .cal-m').textContent), localStorage.getItem('chitas_cal_dates'), _PREF_KEYS.includes('chitas_cal_dates')];
+  document.getElementById('day-picker').remove();
+  const progress = /57\d\d/.test(new DOMParser().parseFromString(_learningMonthHTML(), 'text/html').querySelector('.cal-m').textContent);
+  _setCalDates('en'); localStorage.removeItem('chitas_cal_dates');
+  return [...en, ...he, progress];
+}, [true, true, true, true, 'he', true, true]);
 await check('Pop-ups follow your finger: a short pull comes back, a long pull closes, scrolled content and text fields don\'t pull', async () => {
   const wait = ms => new Promise(r => setTimeout(r, ms));
   if (window.matchMedia('(min-width:1000px)').matches) return 'needs a phone-width page';

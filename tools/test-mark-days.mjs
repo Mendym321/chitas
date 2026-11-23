@@ -167,6 +167,13 @@ console.log('The menu follows the finger from the left edge:');
   await finger('#native-reader', 150, [180, 220, 260], 20);   // not from the edge
   await p.waitForTimeout(300);
   ok('from the middle of the page it isn\'t the menu', await where(), null);
+  await p.click('#reader-menu-btn'); await p.waitForTimeout(350);
+  ok('opened by a tap: no focus ring jumps to the ✕', await p.evaluate(() => document.activeElement?.classList.contains('rm-x')), false);
+  await p.evaluate(() => closeReaderMenu()); await p.waitForTimeout(300);
+  await p.keyboard.press('Shift'); await p.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true })));
+  await p.evaluate(() => openReaderMenu()); await p.waitForTimeout(350);
+  ok('opened from the keyboard: focus goes to the ✕, for keyboards and screen readers', await p.evaluate(() => document.activeElement?.classList.contains('rm-x')), true);
+  await p.evaluate(() => closeReaderMenu()); await p.waitForTimeout(300);
   ok('no errors', p.__errors, []);
   await p.close();
 }

@@ -476,7 +476,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #reader-menu .rm-go { color:var(--t3); }
 #reader-menu .rm-row.done .rm-txt { opacity:.5; }   /* just the names: no icons or dots; a colour only in the tick and the one you're reading */
 #reader-menu .rm-x { width:36px; height:36px; border-radius:50%; border:none; background:var(--card2); color:var(--t1); display:flex; align-items:center; justify-content:center; cursor:pointer; }
-#reader-menu .rm-x:focus:not(:focus-visible) { outline:none; }
+#reader-menu .rm-x:focus:not(:focus-visible), #reader-menu-btn:focus:not(:focus-visible) { outline:none; }
+#reader-menu-btn:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
 #reader-menu .rm-x:focus-visible { outline:2px solid var(--t1); outline-offset:2px; }
 #reader-menu h2 { margin:0; font-family:var(--title-font); font-size:26px; font-weight:800; letter-spacing:-.4px; color:var(--t1); }
 #reader-menu .rm-list { flex:1; overflow-y:auto; margin-top:6px; }
@@ -694,6 +695,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .dp-d svg { position:absolute; width:36px; height:36px; left:50%; top:50%; transform:translate(-50%,-50%); }
 .dp-d span { position:relative; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; }
 .dp-d.ahead { color:var(--t2); }
+/* Hebrew dates in the calendars: the day in letters, as in a luach, in the app's own font */
+.cal-he { direction:rtl; }   /* the same font as the numbers and the switch */
+.tz-seg.cal-dates { max-width:200px; margin:10px auto 2px; }
 .dp-d.today span { font-weight:800; text-decoration:underline; text-underline-offset:3px; }
 .dp-d.sel span { background:var(--ink); color:var(--on-ink); text-decoration:none; }
 .dp-d.off { color:var(--hi); cursor:default; }
@@ -3407,6 +3411,26 @@ function renderWeekStrip() {
   el.innerHTML = html;
 }
 
+// The calendars' dates: English (the default) or Hebrew. In Hebrew each day
+// is its Hebrew date in letters, as in a luach, and the Hebrew months lead the
+// heading. One choice for both calendars, kept with your other choices.
+const _calHe = () => { try { return localStorage.getItem('chitas_cal_dates') === 'he'; } catch { return false; } };
+const _hebDayNum = d => hebNumeral(+new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric' }).format(d));
+function _calDatesSeg() {
+  const he = _calHe();
+  return '<div class="tz-seg cal-dates" role="group" aria-label="Dates">'
+    + '<button type="button"' + (he ? ' aria-pressed="false"' : ' class="on" aria-pressed="true"') + ' onclick="_setCalDates(\'en\')">English</button>'
+    + '<button type="button" lang="he"' + (he ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ' onclick="_setCalDates(\'he\')">עברית</button></div>';
+}
+function _setCalDates(v) {
+  if ((v === 'he') === _calHe()) return;
+  haptic('select');
+  try { localStorage.setItem('chitas_cal_dates', v); } catch {}
+  if (document.getElementById('dp-body')) _renderDayPicker();
+  const lc = document.getElementById('learning-cal'); if (lc) lc.innerHTML = _learningMonthHTML();
+  _prefsSoon();   // to your other devices, with your other choices
+}
+
 // ── Go to a day: a month calendar that slides up from the date chip ──────────
 let _pickMonth = 0, _pickOff = null;
 function openDayPicker() {
@@ -3433,25 +3457,30 @@ function _renderDayPicker() {
   const heb = d => hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { month: 'long' }).format(d));
   const h1 = heb(first), h2 = heb(new Date(first.getFullYear(), first.getMonth(), days, 12));
   const offOf = d => Math.round((d - today) / 86400000);
+  const he = _calHe(), hebY = new Intl.DateTimeFormat('en-u-ca-hebrew', { year: 'numeric' }).format(first);
+  const enM = first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), heM = (h1 === h2 ? h1 : h1 + ' – ' + h2) + ' ' + hebY;
   let cells = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(l => '<b>' + l + '</b>').join('');
   for (let i = 0; i < first.getDay(); i++) cells += '<span></span>';
   for (let n = 1; n <= days; n++) {
     const d = new Date(first.getFullYear(), first.getMonth(), n, 12), off = offOf(d);
     const cls = (off === 0 ? ' today' : '') + (off === _pickOff ? ' sel' : '') + (_canReadDay(off) ? '' : ' off') + (off > 0 ? ' ahead' : '');
     cells += '<button class="dp-d' + cls + '"' + (_canReadDay(off) ? ' onclick="_pickOff=' + off + ';_renderDayPicker()"' : ' disabled') + '>'
-      + '<svg viewBox="0 0 32 32" aria-hidden="true">' + (off <= 0 && !isRestDay(d) ? _quarterRing(dayDone(user, d, today), 16, 13, 2.6) : '') + '</svg><span>' + n + '</span></button>';
+      + '<svg viewBox="0 0 32 32" aria-hidden="true">' + (off <= 0 && !isRestDay(d) ? _quarterRing(dayDone(user, d, today), 16, 13, 2.6) : '') + '</svg>'
+      + (he ? '<span class="cal-he" lang="he">' + _hebDayNum(d) + '</span>' : '<span>' + n + '</span>') + '</button>';
   }
   const sel = new Date(today); sel.setDate(today.getDate() + _pickOff);
   const what = _pickOff === 0 ? 'Today.' : _pickOff > 0 ? 'Ahead of today. You can read it now and mark it on the day.'
     : _canMarkDay(_pickOff) ? 'You can still mark this day.' : 'Read only. You can mark today and the last 7 days.';
   body.innerHTML = '<div class="dp-cal"><div class="cal-head">'
     + '<button onclick="_pickMonth--;_renderDayPicker()" aria-label="Previous month">‹</button>'
-    + '<div><p class="cal-m">' + first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + '</p><p class="t-caption">' + (h1 === h2 ? h1 : h1 + ' – ' + h2) + '</p>'
+    + '<div><p class="cal-m">' + (he ? heM : enM) + '</p><p class="t-caption">' + (he ? enM : heM) + '</p>'
     + (dayOffset !== 0 || _pickOff !== 0 || _pickMonth !== 0 ? '<button type="button" class="dp-today" onclick="_pickDay(0)">Today</button>' : '') + '</div>'
     + '<button onclick="_pickMonth++;_renderDayPicker()" aria-label="Next month"' + (_pickMonth >= 2 ? ' disabled' : '') + '>›</button></div>'
-    + '<div class="dp-grid">' + cells + '</div></div>'
-    + '<div class="dp-info"><p>' + sel.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + ' · '
-    + hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(sel)) + '</p><p>' + what + '</p></div>'
+    + '<div class="dp-grid">' + cells + '</div>' + _calDatesSeg() + '</div>'
+    + '<div class="dp-info"><p>' + (he
+      ? sel.toLocaleDateString('en-US', { weekday: 'long' }) + ', ' + hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(sel)) + ' · ' + sel.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      : sel.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + ' · ' + hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(sel)))
+    + '</p><p>' + what + '</p></div>'
     + '<button class="dp-go" onclick="_pickDay(' + _pickOff + ')">' + (_pickOff === dayOffset ? 'Stay on ' : 'Open ') + escapeHtml(_dayName(_pickOff)) + '</button>';
 }
 
@@ -4500,7 +4529,7 @@ function _sendPlaces() {
 // with your account when the app opens or comes back (loadUser).
 const _PREF_KEYS = ['chitas_lang_chumash', 'chitas_lang_tehillim', 'chitas_lang_tanya', 'chitas_lang_rambam', 'hayomYomLang',
   'chitas_chumash_translation', 'chitas_tehillim_translation', 'chitas_chumash_rashi', 'chitas_chumash_guide', 'chitas_rambam_guide',
-  'chitas_tanya_nikud', 'chitas_tanya_guide', 'chitas_daf_commentary', 'chitas_omer_lang'];
+  'chitas_tanya_nikud', 'chitas_tanya_guide', 'chitas_daf_commentary', 'chitas_omer_lang', 'chitas_cal_dates'];
 const _isPrefKey = k => _PREF_KEYS.includes(k) || /^chitas_lang_extra_[A-Za-z]+$/.test(k);
 var _prefsOut = {}, _prefsTimer = null;
 function _prefsKnown() { try { return JSON.parse(localStorage.getItem('chitas_prefs_known') || '{}') || {}; } catch { return {}; } }
@@ -6890,7 +6919,7 @@ function openReaderMenu(stay) {
   document.body.appendChild(m);
   if (stay === 'drag') _rmSet(m, 0);   // pulled out by the finger (_rmPull): starts shut
   else if (stay) m.classList.add('open', 'stay'); else requestAnimationFrame(() => m.classList.add('open'));
-  if (stay !== 'drag') m.querySelector(stay ? '.rm-when' : '.rm-x')?.focus?.();
+  if (stay !== 'drag') _focusIfKeys(m.querySelector(stay ? '.rm-when' : '.rm-x'));
   // Each extra's piece (and Torah Ohr's name), from the schedules on the phone
   extras.filter(id => OFFERED_TRACKS.includes(id)).forEach(id => _trackPiece(id, iso).then(piece => {
     const el = document.getElementById('rm-sub-' + id);
@@ -6925,8 +6954,16 @@ function closeReaderMenu() {
   if (!m) return;
   m.classList.remove('open');
   setTimeout(() => m.remove(), 220);
-  document.getElementById('reader-menu-btn')?.focus();
+  _focusIfKeys(document.getElementById('reader-menu-btn'));
 }
+// Moving focus (to the menu's ✕, back to the menu button) is for keyboards and
+// screen readers. After a tap it only draws a ring round the button on iPhone,
+// so it happens only when the last thing pressed was a key.
+let _byKeys = false;
+document.addEventListener('keydown', e => { if (e.key === 'Tab' || e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') _byKeys = true; }, true);
+document.addEventListener('pointerdown', () => { _byKeys = false; }, true);
+const _focusIfKeys = el => { if (_byKeys) el?.focus?.({ preventScroll: true }); };
+
 // ── The menu follows the finger ─────────────────────────────────────────────
 // From the left edge it comes out with the finger, the page dimming as it
 // does; let go and it finishes the way you were going: a flick opens (or
@@ -6962,11 +6999,10 @@ function _rmLet() {
   _rmSet(m, open ? 1 : 0, ms);
   setTimeout(() => {
     if (!m.isConnected) return;
-    if (!open) { m.remove(); document.getElementById('reader-menu-btn')?.focus(); return; }
+    if (!open) { m.remove(); return; }
     m.classList.add('open', 'stay');   // settled: the class holds it open, as a tap would
     m.querySelectorAll('.rm-panel, .rm-shade').forEach(el => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; });
     requestAnimationFrame(() => m.classList.remove('stay'));
-    if (g.from === 0) m.querySelector('.rm-x')?.focus?.({ preventScroll: true });
   }, ms + 20);
 }
 // From the edge of the reader (called by the reader's own swipe handling)
@@ -7092,7 +7128,7 @@ function _learningMonthHTML() {
   const heb = d => hebMonthSpelling(new Intl.DateTimeFormat('en-u-ca-hebrew', { month: 'long' }).format(d));
   const hebY = new Intl.DateTimeFormat('en-u-ca-hebrew', { year: 'numeric' }).format(first);
   const h1 = heb(first), h2 = heb(new Date(first.getFullYear(), first.getMonth(), days));
-  const R = 13, C = 2 * Math.PI * R;
+  const R = 13, C = 2 * Math.PI * R, he = _calHe();
   let cells = '';
   for (let i = 0; i < first.getDay(); i++) cells += '<span></span>';
   for (let n = 1; n <= days; n++) {
@@ -7104,12 +7140,14 @@ function _learningMonthHTML() {
       : rest ? '<rect x="13.2" y="23.5" width="5.6" height="5" rx=".8" fill="none" stroke="var(--t3)" stroke-width="1.1"/><path d="M14.7 23.5v5" stroke="var(--t3)" stroke-width="1.1"/>'
       : _quarterRing(dayDone(user, d, today), 16, R, 3);
     cells += '<button class="cal-d' + (future ? ' fut' : '') + (rest ? ' rest' : '') + (isT ? ' today' : '') + '" onclick="_calTap(\'' + iso + '\')" aria-label="' + d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '">'
-      + '<svg viewBox="0 0 32 32">' + mark + '</svg><span>' + n + '</span></button>';
+      + '<svg viewBox="0 0 32 32">' + mark + '</svg>' + (he ? '<span class="cal-he" lang="he">' + _hebDayNum(d) + '</span>' : '<span>' + n + '</span>') + '</button>';
   }
+  const enM = first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), heM = (h1 === h2 ? h1 : h1 + ' – ' + h2) + ' ' + hebY;
   return '<div class="cal-head"><button onclick="_calMove(-1)" aria-label="Previous month">‹</button>'
-    + '<div><p class="cal-m">' + first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + '</p><p class="t-caption">' + (h1 === h2 ? h1 : h1 + ' – ' + h2) + ' ' + hebY + '</p></div>'
+    + '<div><p class="cal-m">' + (he ? heM : enM) + '</p><p class="t-caption">' + (he ? enM : heM) + '</p></div>'
     + '<button onclick="_calMove(1)" aria-label="Next month"' + (_calMonth >= 0 ? ' disabled' : '') + '>›</button></div>'
     + '<div class="cal-grid">' + ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(l => '<b>' + l + '</b>').join('') + cells + '</div>'
+    + _calDatesSeg()
     + '<div id="cal-detail" class="cal-detail"><p class="t-caption">Tap a day to see what you learned.</p></div>';
 }
 function _calMove(n) { _calMonth = Math.min(0, _calMonth + n); document.getElementById('learning-cal').innerHTML = _learningMonthHTML(); }
