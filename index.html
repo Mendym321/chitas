@@ -695,8 +695,8 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .dp-d svg { position:absolute; width:36px; height:36px; left:50%; top:50%; transform:translate(-50%,-50%); }
 .dp-d span { position:relative; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; }
 .dp-d.ahead { color:var(--t2); }
-/* Hebrew dates in the calendars: the day in letters, as in a luach */
-.cal-he { font-family:'Vilna','Frank Ruhl Libre','Noto Serif Hebrew',serif; font-size:1.08em; font-weight:600; direction:rtl; }
+/* Hebrew dates in the calendars: the day in letters, as in a luach, in the app's own font */
+.cal-he { direction:rtl; }   /* the same font as the numbers and the switch */
 .tz-seg.cal-dates { max-width:200px; margin:10px auto 2px; }
 .dp-d.today span { font-weight:800; text-decoration:underline; text-underline-offset:3px; }
 .dp-d.sel span { background:var(--ink); color:var(--on-ink); text-decoration:none; }
