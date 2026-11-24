@@ -178,6 +178,30 @@ console.log('The menu follows the finger from the left edge:');
   await p.close();
 }
 
+console.log('A phone on its side: slim bars that slide away while you read:');
+{
+  const p = await open(false);
+  await p.setViewportSize({ width: 844, height: 390 });
+  await p.evaluate(() => { _closeReaderNow(); openChabadPanel('chumash'); }); await p.waitForTimeout(1500);
+  const st = () => p.evaluate(() => ({ away: document.getElementById('chabad-panel').classList.contains('bars-away'),
+    head: document.getElementById('reader-head').offsetHeight, daybar: getComputedStyle(document.getElementById('reader-daybar')).display }));
+  const scroll = async ys => { for (const y of ys) { await p.evaluate(y => { const r = document.getElementById('native-reader'); r.scrollTop = y; r.dispatchEvent(new Event('scroll')); }, y); await p.waitForTimeout(40); } await p.waitForTimeout(350); };
+  const s0 = await st();
+  ok('sideways: one slim bar, and no day bar', [s0.head <= 60, s0.daybar, s0.away], [true, 'none', false]);
+  await scroll([100, 160, 220, 280]);
+  ok('reading on: the bars slide away', (await st()).away, true);
+  await scroll([260, 230, 200]);
+  ok('scrolling back up a little: they come back', (await st()).away, false);
+  await scroll([260, 320, 380]);
+  await p.evaluate(() => { const r = document.getElementById('native-reader'); r.scrollTop = r.scrollHeight; r.dispatchEvent(new Event('scroll')); }); await p.waitForTimeout(350);
+  ok('at the end: back, for Mark as learned', (await st()).away, false);
+  await scroll([300, 360, 420, 480]);
+  await p.setViewportSize({ width: 390, height: 844 }); await p.waitForTimeout(350);
+  ok('turned upright: the bars are back as they always are', [(await st()).away, (await st()).daybar !== 'none'], [false, true]);
+  ok('no errors', p.__errors, []);
+  await p.close();
+}
+
 await browser.close(); server.close();
 console.log(failed ? `\n${failed} FAILED` : '\nAll mark-day tests passed');
 process.exit(failed ? 1 : 0);

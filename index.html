@@ -211,6 +211,27 @@
     #reader-bottom-bar { padding-left:calc(14px + env(safe-area-inset-left, 0px)) !important; padding-right:calc(14px + env(safe-area-inset-right, 0px)) !important; }
     #quiz-panel { padding-left:env(safe-area-inset-left, 0px); padding-right:env(safe-area-inset-right, 0px); }
   }
+  /* A phone on its side: the height is precious. The bars are one slim row
+     each (no clock strip: iPhone hides the clock sideways), the day bar goes
+     (a swipe or the menu changes the day), and while you read on they slide
+     away (.bars-away, set by _readerBars) and come back when you scroll up,
+     tap the text, or reach the end. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    :root.native-ios { --sat: env(safe-area-inset-top, 0px); }
+    html #reader-head { padding-top:6px !important; padding-bottom:6px !important; gap:10px !important; }
+    html #reader-head > button, html #reader-head > a { width:40px !important; height:40px !important; }
+    #reader-head > div { display:flex; align-items:baseline; gap:10px; }
+    #chabad-panel-title { font-size:20px !important; }
+    #chabad-panel-sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    html #reader-daybar { display:none !important; }
+    html #reader-bottom-bar { padding-top:6px !important; padding-bottom:max(6px, env(safe-area-inset-bottom, 0px)) !important; }
+    html #reader-actions > button { min-height:44px; padding-top:6px !important; padding-bottom:6px !important; }
+    #reader-head, #reader-bottom-bar { transition:margin .28s cubic-bezier(.2,.8,.25,1), opacity .2s; }
+    #chabad-panel.bars-away #reader-head { margin-top:calc(-1 * var(--rh, 60px)); opacity:0; pointer-events:none; }
+    #chabad-panel.bars-away #reader-bottom-bar { margin-bottom:calc(-1 * var(--rb, 60px)); opacity:0; pointer-events:none; }
+    #reader-settings-popover { top:56px !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { #reader-head, #reader-bottom-bar { transition:none !important; } }
   .ps-modal-close, .wb-x { position:relative; }
   .ps-modal-close::after, .wb-x::after { content:''; position:absolute; inset:-7px; border-radius:50%; }   /* the sheets' × : 30 → 44 */
   html .ps-add-btn { min-height:44px; }                                                                      /* Add extra learning: 40 → 44 */                                                  /* Mark as learned, Quiz yourself: 43 → 50, the size of iOS's large buttons */   /* the bar runs to the edge; its buttons stop where the home bar's area begins */   /* the welcome is exactly the screen: no room kept for the tab bar */   /* the welcome's dark, even when the page is pulled past its ends */
@@ -4441,8 +4462,44 @@ function _readerProgress(jump) {
 
 // Scroll handler: the progress bar, unlocking Mark Done, and saving your place
 let _scrollSaveTimer = null;
+// The bars on a phone on its side (see the CSS): away while you read on, back
+// when you scroll up a little, at the top or the end, or when you tap the text
+const _sideways = window.matchMedia?.('(orientation: landscape) and (max-height: 520px)');
+let _barsLastY = 0, _barsRun = 0;
+function _readerBars(away) {
+  const panel = document.getElementById('chabad-panel');
+  if (!panel) return;
+  if (away && !_sideways?.matches) away = false;
+  if (away === panel.classList.contains('bars-away')) return;
+  if (away) {   // measured as they are, so they leave by exactly their own height
+    panel.style.setProperty('--rh', document.getElementById('reader-head').offsetHeight + 'px');
+    panel.style.setProperty('--rb', document.getElementById('reader-bottom-bar').offsetHeight + 'px');
+  }
+  panel.classList.toggle('bars-away', away);
+}
+function _readerBarsOnScroll(reader) {
+  if (!_sideways?.matches) { _barsLastY = reader.scrollTop; return; }
+  const y = reader.scrollTop, dy = y - _barsLastY;
+  _barsLastY = y;
+  if (y < 30 || y + reader.clientHeight >= reader.scrollHeight - 40) { _barsRun = 0; _readerBars(false); return; }   // the top, or the end ("Mark as learned")
+  if (_settingsOpen || document.getElementById('reader-menu')) return;
+  _barsRun = (Math.sign(dy) === Math.sign(_barsRun) ? _barsRun : 0) + dy;   // a run in one direction, not a jitter
+  if (_barsRun > 24) _readerBars(true);
+  else if (_barsRun < -24) _readerBars(false);
+}
+_sideways?.addEventListener?.('change', () => { if (!_sideways.matches) _readerBars(false); });
+// A tap on the text (not on a link, a note or a button) brings the bars back, or sends them away
+document.addEventListener('click', e => {
+  if (!_sideways?.matches || !e.target.closest?.('#native-reader') || e.target.closest('a, button, input, sup, [onclick], [role="button"], .fn-ref, .tz-fn')) return;
+  if (window.getSelection?.().toString()) return;
+  const panel = document.getElementById('chabad-panel');
+  _readerBars(!panel?.classList.contains('bars-away'));
+});
+
 function onReaderScroll() {
   _readerProgress();
+  const _r = document.getElementById('native-reader');
+  if (_r) _readerBarsOnScroll(_r);
   const reader = document.getElementById('native-reader');
   const sentinel = document.getElementById('reader-bottom-sentinel');
   if (!reader || !sentinel) return;
@@ -6392,6 +6449,7 @@ function _setTanyaLang(lang) {
 
 
 function openChabadPanel(sectionId) {
+  _readerBars(false);   // the bars in place (a phone on its side hides them while reading)
   const s = schedule[sectionId];
   if (!s) return;
   // New learners pick their Rambam track the first time they open it
@@ -6735,6 +6793,7 @@ function _setReaderLang(sectionId, lang) {
 let _settingsOpen = false;
 
 function openReaderSettings() {
+  _readerBars(false);   // the bars in place (a phone on its side hides them while reading)
   const pop = document.getElementById('reader-settings-popover');
   if (!pop) return;
 
@@ -6792,6 +6851,7 @@ function closeChabadPanel() {
 }
 // Close the reader whatever is open in it (Home in the menu)
 function _closeReaderNow() {
+  _readerBars(false);   // the bars in place (a phone on its side hides them while reading)
   _readerCleanup();
   // Keep your place; nothing owns the reader until the next open
   _readerEnd();
@@ -8136,6 +8196,7 @@ function _toggleExtraTrack(id) {
 
 // ── Extra track reader ─────────────────────────────────────────────────────────
 async function openExtraReader(id) {
+  _readerBars(false);
   const def = EXTRA_TRACK_DEFS[id];
   if (!def) return;
 
