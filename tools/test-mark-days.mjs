@@ -195,6 +195,18 @@ console.log('A phone on its side: slim bars that slide away while you read:');
   await scroll([260, 320, 380]);
   await p.evaluate(() => { const r = document.getElementById('native-reader'); r.scrollTop = r.scrollHeight; r.dispatchEvent(new Event('scroll')); }); await p.waitForTimeout(350);
   ok('at the end: back, for Mark as learned', (await st()).away, false);
+  // Pixel for pixel: a little scroll moves them a little, then they settle to the nearer side
+  await scroll([400, 450, 500, 550, 600]);   // reading on: away
+  await p.evaluate(() => { const r = document.getElementById('native-reader'); r.scrollTop = 580; r.dispatchEvent(new Event('scroll')); });
+  const part = await p.evaluate(() => [_barOff, _barH]);
+  ok('scrolled back 20px: the bar comes 20px back, following the finger', part[0] === part[1] - 20, true);
+  await p.waitForTimeout(450);
+  ok('…and then settles out of the way (nearer side)', (await st()).away, true);
+  ok('the text never jumps: the bars float over it', await p.evaluate(() => getComputedStyle(document.getElementById('reader-head')).position), 'absolute');
+  await p.evaluate(() => openReaderSettings()); await p.waitForTimeout(400);
+  ok('the settings box scrolls inside itself when it\'s taller than the screen', await p.evaluate(() => { const b = document.getElementById('reader-settings-popover'), r = b.getBoundingClientRect();
+    return [getComputedStyle(b).overflowY, r.bottom <= innerHeight + 1]; }), ['auto', true]);
+  await p.evaluate(() => closeReaderSettings()); await p.waitForTimeout(300);
   await scroll([300, 360, 420, 480]);
   await p.setViewportSize({ width: 390, height: 844 }); await p.waitForTimeout(350);
   ok('turned upright: the bars are back as they always are', [(await st()).away, (await st()).daybar !== 'none'], [false, true]);
