@@ -724,6 +724,29 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .dp-d svg { position:absolute; width:36px; height:36px; left:50%; top:50%; transform:translate(-50%,-50%); }
 .dp-d span { position:relative; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; }
 .dp-d.ahead { color:var(--t2); }
+/* Sharing a Review: one quiet button on the results, the sheet, the friend's page */
+.rv-share-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:44px; margin-top:8px; border:none; background:none; color:var(--t2); font:600 var(--fs-2) var(--ui-font); cursor:pointer; }
+#share-sheet { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
+.sh-cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.sh-card { padding:0; border:none; background:var(--card2); border-radius:14px; aspect-ratio:4/5; overflow:hidden; cursor:pointer; display:grid; place-items:center; outline:3px solid transparent; outline-offset:2px; }
+.sh-card.on { outline-color:var(--t1); }
+.sh-card img { width:100%; height:100%; display:block; }
+.sh-go { width:100%; height:54px; margin-top:16px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:800 var(--fs-3) var(--ui-font); display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; }
+.sh-copy { width:100%; min-height:44px; margin-top:6px; border:none; background:none; color:var(--t2); font:600 var(--fs-2) var(--ui-font); cursor:pointer; }
+#shared-review { position:fixed; inset:0; z-index:3000; background:var(--bg); overflow-y:auto; animation:fadeIn .25s ease; }
+#shared-review .sr-in { max-width:430px; margin:0 auto; min-height:100%; box-sizing:border-box; padding:calc(40px + var(--sat, 0px)) 22px calc(28px + env(safe-area-inset-bottom, 0px)); display:flex; flex-direction:column; }
+#shared-review .sr-brand { display:flex; align-items:center; gap:10px; font:800 20px var(--title-font); color:var(--t1); }
+#shared-review .sr-brand img { border-radius:8px; }
+#shared-review h1 { margin:30px 0 0; font:800 34px/1.08 var(--title-font); letter-spacing:-.6px; color:var(--t1); }
+#shared-review .sr-sub { margin-top:12px; font-size:var(--fs-3); line-height:1.45; color:var(--t2); }
+#shared-review .sr-q { margin-top:24px; background:var(--card); border-radius:22px; padding:18px; }
+#shared-review .sr-k { font:700 12px var(--ui-font); letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
+#shared-review .sr-qt { margin-top:10px; font:500 20px/1.35 var(--read-font); color:var(--t1); min-height:27px; }
+#shared-review .sr-go { margin-top:14px; height:54px; border:none; border-radius:999px; background:var(--k); color:var(--k-on); font:800 var(--fs-3) var(--ui-font); cursor:pointer; }
+#shared-review .sr-go:disabled { opacity:.5; cursor:default; }
+#shared-review .sr-foot { margin-top:auto; padding-top:18px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+#shared-review .sr-foot p { font-size:var(--fs-1); line-height:1.4; color:var(--t2); }
+#shared-review .sr-foot button { flex-shrink:0; min-height:44px; padding:0 16px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:700 var(--fs-1) var(--ui-font); cursor:pointer; }
 /* Hebrew dates in the calendars: the day in letters, as in a luach, in the app's own font */
 .cal-he { direction:rtl; }   /* the same font as the numbers and the switch */
 .tz-seg.cal-dates { max-width:200px; margin:10px auto 2px; }
@@ -3970,6 +3993,7 @@ async function _startQuiz(level) {
       data?.error || 'Check your connection and try again.', true);
   }
   quizState.questions = data.questions;
+  quizState.passage = passage;   // for a share link: the same questions for a friend
   renderQuestion();
 }
 
@@ -4217,7 +4241,6 @@ function renderQuestion() {
   const { questions, current, sectionId } = quizState;
   const q = questions[current];
   if (!q) return;
-  const s = schedule[sectionId];
   const total = questions.length;
 
   document.getElementById('quiz-body').innerHTML = `
@@ -4247,7 +4270,6 @@ function selectAnswer(idx) {
 
   const { questions, current, sectionId } = quizState;
   const q = questions[current];
-  const s = schedule[sectionId];
   const correct = q.answer;
   const isRight = idx === correct;
 
@@ -4297,6 +4319,7 @@ function nextQuestion() {
 // Results: the score as a ring, then what you learned, each answer with the
 // line it's from; a missed one can take you straight back to that line
 function showQuizResults() {
+  if (quizState.shared) return _showSharedResults();
   const { score, questions, sectionId, level, answers } = quizState;
   const s = schedule[sectionId];
   const total = questions.length;
@@ -4347,7 +4370,10 @@ function showQuizResults() {
     + '<div style="display:flex;gap:8px;margin-top:16px;">'
     +   '<button onclick="_startQuiz(\'' + other + '\')" style="flex:1;height:50px;border-radius:999px;background:var(--card2);border:none;color:var(--t1);font-size:var(--fs-2);font-weight:700;cursor:pointer;font-family:inherit;">' + QUIZ_LEVELS[other].label + ' · ' + QUIZ_LEVELS[other].count + '</button>'
     +   '<button id="done-btn" style="flex:1;height:50px;border-radius:999px;background:' + _qc() + ';border:none;color:' + _qon() + ';font-size:var(--fs-2);font-weight:800;cursor:pointer;font-family:inherit;">Done</button>'
-    + '</div><div style="height:20px;"></div></div>';
+    + '</div>'
+    // Sharing is there if you want it, quietly: one small button, never a prompt
+    + (quizState.passage ? '<button type="button" class="rv-share-btn" onclick="openReviewShare()">' + _shareIcon + 'Share your result</button>' : '')
+    + '<div style="height:20px;"></div></div>';
   document.getElementById('done-btn').onclick = () => { closeQuiz(); renderSectionsForOffset(_viewedISO()); };
   document.getElementById('quiz-panel').scrollTop = 0;
 }
@@ -4378,6 +4404,236 @@ function _findInReader(sid, quote) {
   };
   look();
 }
+
+
+// ── Sharing a Review: a card, and the same questions for a friend ───────────
+// Easy to find, never pushed: one quiet button on the results, no prompts.
+// The card (a picture) shows the score, the portion and the first question,
+// never the answers and never a name; the link opens the same questions for
+// anyone, with no account (the server only reads a saved quiz for it).
+const _shareIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 14v5a2 2 0 002 2h10a2 2 0 002-2v-5"/></svg>';
+const _b64u = str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const _unb64u = str => decodeURIComponent(escape(atob(String(str).replace(/-/g, '+').replace(/_/g, '/'))));
+const _SEC_NAME = { chumash: 'Chumash', tanya: 'Tanya', rambam: 'Rambam' };
+function _reviewShareData() {
+  const st = quizState, s = schedule?.[st.sectionId];
+  return { s: st.sectionId, l: st.level, p: st.passage, r: st.score, n: st.questions.length, d: st.iso || dateISO(appNow()),
+    t: st.sectionId === 'chumash' ? _chumashLine(s?.subtitle) : String(s?.subtitle || ''), q: st.questions[0]?.q || '' };
+}
+const _reviewLink = data => SHARE_URL.replace(/\/get$/, '/') + '?review=' + _b64u(JSON.stringify({ s: data.s, l: data.l, p: data.p, r: data.r, n: data.n, d: data.d, t: data.t }));
+// "י״ד כסלו": the day in letters, and the month, in Hebrew
+function _hebDateHe(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  let n = hebNumeral(+new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric' }).format(d));
+  n = n.length > 1 ? n.slice(0, -1) + '״' + n.slice(-1) : n + '׳';
+  const m = new Intl.DateTimeFormat('he-u-ca-hebrew', { month: 'long' }).format(d);
+  return n + ' ' + m;
+}
+
+// The card, 1080 × 1350 (what WhatsApp and Instagram show whole). 'score': in
+// the section's colour; 'challenge': dark, "I got 3 of 4". The app's own fonts.
+async function _drawReviewCard(kind, data) {
+  await Promise.all(['800 80px "Bricolage Grotesque"', '700 40px "DM Sans"', 'italic 400 40px "Crimson Pro"', '700 50px Vilna'].map(f => document.fonts?.load?.(f).catch(() => {})));
+  const W = 1080, H = 1350, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const acc = css('--c-' + data.s) || '#E0A030', on = css('--on-' + data.s) || '#2E1E00';
+  const INK = '#2B2112', CREAM = '#FBF6EC', today = data.d === dateISO(appNow());
+  const sec = _SEC_NAME[data.s] || 'Review';
+  const font = (w, px, fam) => { x.font = w + ' ' + px + 'px ' + fam; };
+  const B = '"Bricolage Grotesque", sans-serif', D = '"DM Sans", sans-serif';
+  const rr = (x0, y0, w, h, r) => { x.beginPath(); x.roundRect ? x.roundRect(x0, y0, w, h, r) : x.rect(x0, y0, w, h); };
+  const wrap = (text, maxW, maxLines) => {
+    const words = String(text).split(/\s+/), lines = [];
+    let line = '';
+    for (const w of words) {
+      const t = line ? line + ' ' + w : w;
+      if (x.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+    }
+    if (line) lines.push(line);
+    if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, '') + '…'; }
+    return lines;
+  };
+  const logo = (x0, y0, size) => {
+    x.fillStyle = '#FBF7EF'; rr(x0, y0, size, size, size * .22); x.fill();
+    [['#E0A030', .39], ['#3F6FC0', .30], ['#8B54B0', .21], ['#5E8A3C', .12]].forEach(([col, r]) => {
+      x.beginPath(); x.arc(x0 + size / 2, y0 + size / 2, size * r, 0, Math.PI * 2); x.strokeStyle = col; x.lineWidth = size * .068; x.stroke();
+    });
+  };
+  const head = (ink) => {
+    logo(68, 68, 80);
+    x.fillStyle = ink; font(800, 46, B); x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText('Chitas', 168, 110);
+    x.direction = 'rtl'; x.textAlign = 'right'; font(700, 54, 'Vilna, serif'); x.fillText(_hebDateHe(data.d), W - 68, 110);
+    x.direction = 'ltr'; x.textAlign = 'left';
+  };
+  x.textBaseline = 'alphabetic';
+  if (kind === 'challenge') {
+    const hi = 'color-mix(in srgb, ' + acc + ' 70%, white)';
+    const hiCol = (() => { const t = document.createElement('span'); t.style.color = hi; document.body.appendChild(t); const v = getComputedStyle(t).color; t.remove(); return v; })();
+    x.fillStyle = '#1E1A16'; x.fillRect(0, 0, W, H);
+    head(CREAM);
+    x.textBaseline = 'alphabetic';
+    font(800, 104, B); x.fillStyle = CREAM;
+    const a = 'I got ', b = data.r + ' of ' + data.n;
+    x.fillText(a, 68, 360); const aw = x.measureText(a).width;
+    x.fillStyle = hiCol; x.fillText(b, 68 + aw, 360);
+    x.fillStyle = CREAM; x.fillText('on ' + (today ? "today's " : '') + sec + '.', 68, 470);
+    font(500, 38, D); x.fillStyle = '#CFC5B4';
+    wrap(data.t, W - 136, 2).forEach((l, i) => x.fillText(l, 68, 560 + i * 52));
+    const gap = 16, bw = (W - 136 - gap * (data.n - 1)) / data.n;
+    for (let i = 0; i < data.n; i++) { x.fillStyle = i < data.r ? hiCol : '#3A332B'; rr(68 + i * (bw + gap), 680, bw, 96, 24); x.fill(); }
+    font(600, 28, D); x.fillStyle = '#A89D8B'; x.fillText(QUIZ_LEVELS[data.l].label + ' · ' + data.n + ' questions on ' + (today ? "today's" : 'the') + ' text', 68, 830);
+    x.fillStyle = hiCol; rr(68, 1060, W - 136, 222, 52); x.fill();
+    x.fillStyle = '#1E1A16'; font(800, 56, B);
+    x.fillText(data.r === data.n ? 'Can you get ' + data.n + ' of ' + data.n + '?' : 'Can you beat ' + data.r + '?', 116, 1160);
+    font(600, 30, D); x.fillText('Tap to try the same questions · free', 116, 1222);
+  } else {
+    x.fillStyle = acc; x.fillRect(0, 0, W, H);
+    head(on);
+    x.textBaseline = 'alphabetic'; x.fillStyle = on;
+    font(700, 30, D); x.globalAlpha = .8; x.fillText(((today ? "Today's " : '') + sec + ' review').toUpperCase(), 68, 300); x.globalAlpha = 1;
+    font(800, 80, B); wrap(data.t, W - 136, 2).forEach((l, i) => x.fillText(l, 68, 390 + i * 86));
+    const py = data.t && x.measureText(data.t).width > W - 136 ? 560 : 480;
+    font('italic 400', 44, '"Crimson Pro", serif');
+    const qLines = data.q ? wrap(data.q, W - 256, 3) : [];
+    const ph = 390 + qLines.length * 58 + (qLines.length ? 50 : 0);   // the box fits what's in it
+    x.fillStyle = CREAM; rr(68, py, W - 136, ph, 60); x.fill();
+    x.fillStyle = INK; font(800, 240, B); x.fillText(data.r + '/' + data.n, 128, py + 260);
+    const sw = x.measureText(data.r + '/' + data.n).width;
+    font(700, 48, B); x.fillStyle = '#6B5428'; x.fillText(data.r === data.n ? 'all right' : 'right', 128 + sw + 28, py + 248);
+    const gap = 20, bw = (W - 256 - gap * (data.n - 1)) / data.n;
+    for (let i = 0; i < data.n; i++) { x.fillStyle = i < data.r ? acc : '#E6DCC8'; rr(128 + i * (bw + gap), py + 310, bw, 28, 14); x.fill(); }
+    if (qLines.length) { x.fillStyle = '#4A3A1C'; font('italic 400', 44, '"Crimson Pro", serif'); qLines.forEach((l, i) => x.fillText(l, 128, py + 420 + i * 58)); }
+    x.fillStyle = on; font(800, 54, B);
+    x.fillText(data.r === data.n ? 'Can you get ' + data.n + '/' + data.n + '?' : 'Can you beat ' + data.r + '/' + data.n + '?', 68, 1196);
+    font(600, 30, D); x.globalAlpha = .85; x.fillText('The same ' + data.n + ' questions · free', 68, 1250); x.globalAlpha = 1;
+    x.fillStyle = INK; x.beginPath(); x.arc(W - 132, 1212, 64, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = CREAM; x.lineWidth = 9; x.lineCap = 'round'; x.lineJoin = 'round';
+    x.beginPath(); x.moveTo(W - 160, 1212); x.lineTo(W - 104, 1212); x.moveTo(W - 128, 1186); x.lineTo(W - 102, 1212); x.lineTo(W - 128, 1238); x.stroke();
+  }
+  return c;
+}
+
+// The sheet: the two cards to choose from, then the phone's own share
+let _shareKind = 'score', _shareCards = {};
+async function openReviewShare() {
+  const data = _reviewShareData();
+  document.getElementById('share-sheet')?.remove();
+  const m = document.createElement('div');
+  m.id = 'share-sheet';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = '<div class="dp-sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title">'
+    + '<div class="dp-head"><div><p class="ps-modal-title" id="sh-title">Share your result</p><p class="ps-modal-sub">Your score and the first question. No name, no answers.</p></div>'
+    + '<button type="button" class="ps-modal-close" aria-label="Close" onclick="document.getElementById(\'share-sheet\').remove()">×</button></div>'
+    + '<div class="sh-cards" role="radiogroup" aria-label="Card">'
+    +   '<button type="button" role="radio" class="sh-card" data-k="score" aria-label="Score card"><span class="spinner"></span></button>'
+    +   '<button type="button" role="radio" class="sh-card" data-k="challenge" aria-label="Challenge card"><span class="spinner"></span></button></div>'
+    + '<button type="button" class="sh-go" onclick="_shareReview()">' + _shareIcon + 'Share</button>'
+    + '<button type="button" class="sh-copy" onclick="_copyReviewLink()">Copy link</button></div>';
+  document.body.appendChild(m);
+  const pick = k => { _shareKind = k; m.querySelectorAll('.sh-card').forEach(b => { b.classList.toggle('on', b.dataset.k === k); b.setAttribute('aria-checked', b.dataset.k === k); }); };
+  m.querySelectorAll('.sh-card').forEach(b => b.onclick = () => { haptic('select'); pick(b.dataset.k); });
+  pick(_shareKind);
+  _shareCards = {};
+  for (const k of ['score', 'challenge']) {
+    const cv = await _drawReviewCard(k, data);
+    _shareCards[k] = cv;
+    const b = m.querySelector('.sh-card[data-k="' + k + '"]');
+    if (b) b.innerHTML = '<img alt="" src="' + cv.toDataURL('image/png') + '">';
+  }
+}
+async function _shareReview() {
+  const data = _reviewShareData(), link = _reviewLink(data);
+  const cv = _shareCards[_shareKind] || await _drawReviewCard(_shareKind, data);
+  const text = (data.r === data.n ? 'Can you get ' + data.n + '/' + data.n : 'Can you beat ' + data.r + '/' + data.n) + ' on ' + (data.d === dateISO(appNow()) ? "today's " : '') + (_SEC_NAME[data.s] || '') + '?';
+  const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+  const file = blob && new File([blob], 'chitas-review.png', { type: 'image/png' });
+  try {
+    if (file && navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], text: text + ' ' + link });
+    else if (navigator.share) await navigator.share({ text, url: link });
+    else { _copyReviewLink(); const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'chitas-review.png'; a.click(); return; }
+    document.getElementById('share-sheet')?.remove();
+  } catch (e) { /* closed the share sheet: nothing to do */ }
+}
+function _copyReviewLink() {
+  const link = _reviewLink(_reviewShareData());
+  (navigator.clipboard?.writeText(link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
+}
+
+// ── A friend opens the link: the same questions, no account needed ──────────
+let _sharedIn = null;
+function _sharedFromUrl() {
+  try {
+    const v = new URLSearchParams(location.search).get('review');
+    if (!v) return null;
+    const d = JSON.parse(_unb64u(v));
+    if (!_SEC_NAME[d.s] || !QUIZ_LEVELS[d.l] || !d.p || !(d.n > 0)) return null;
+    return d;
+  } catch (e) { return null; }
+}
+async function _openSharedReview(d) {
+  _sharedIn = d;
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}   // a reload doesn't ask again
+  const today = d.d === dateISO(appNow()), sec = _SEC_NAME[d.s];
+  const m = document.createElement('div');
+  m.id = 'shared-review';
+  m.style.setProperty('--k', 'var(--c-' + d.s + ')'); m.style.setProperty('--k-on', 'var(--on-' + d.s + ')');
+  m.innerHTML = '<div class="sr-in">'
+    + '<div class="sr-brand"><img src="/icons/icon-192.png" alt="" width="34" height="34"><span>Chitas</span></div>'
+    + '<h1>A friend got ' + (+d.r) + ' of ' + (+d.n) + ' on ' + (today ? "today's " : '') + sec + '.</h1>'
+    + '<p class="sr-sub">The same ' + (+d.n) + ' questions' + (d.t ? ', on ' + escapeHtml(d.t) : '') + '. About two minutes. No sign-up.</p>'
+    + '<div class="sr-q"><p class="sr-k">Question 1 of ' + (+d.n) + '</p><p class="sr-qt" id="sr-qt"><span class="spinner"></span></p></div>'
+    + '<button type="button" class="sr-go" id="sr-go" disabled>Try the questions</button>'
+    + '<div class="sr-foot"><p>Chumash, Tehillim, Tanya and Rambam, ready each day.</p><button type="button" onclick="_closeSharedReview()">Get started</button></div>'
+    + '</div>';
+  document.body.appendChild(m);
+  let data = null;
+  try {
+    const r = await fetch('/api/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ section: d.s, level: d.l, ...d.p, shared: true }) });
+    data = await r.json().catch(() => null);
+  } catch (e) {}
+  const qt = document.getElementById('sr-qt'), go = document.getElementById('sr-go');
+  if (!qt) return;
+  if (!data?.questions?.length) { qt.textContent = data?.error || 'Couldn\'t load the questions. Check your connection and try again.'; return; }
+  qt.textContent = data.questions[0].q;
+  go.disabled = false;
+  go.onclick = () => {
+    m.remove();
+    quizState = { shared: d, sectionId: d.s, iso: d.d, level: d.l, questions: data.questions, current: 0, score: 0, answered: false, missed: [], answers: [] };
+    document.getElementById('quiz-title').textContent = sec + ' review';
+    document.getElementById('quiz-subtitle').textContent = d.t || '';
+    const qp = document.getElementById('quiz-panel');
+    qp.style.setProperty('--rc', 'var(--c-' + d.s + ')'); qp.style.setProperty('--rc-on', 'var(--on-' + d.s + ')');
+    qp.style.display = 'flex';
+    renderQuestion();
+  };
+}
+function _closeSharedReview() { document.getElementById('shared-review')?.remove(); }
+function _showSharedResults() {
+  const { score, questions, answers, shared: d } = quizState, total = questions.length;
+  const len = (2 * Math.PI * 50).toFixed(1);
+  const check = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const items = answers.map(a => '<div class="rv-item"><span class="rv-dot' + (a.right ? ' ok' : '') + '" aria-label="' + (a.right ? 'Right' : 'Missed') + '">' + check + '</span>'
+    + '<div style="flex:1;min-width:0;"><p class="rv-a">' + escapeHtml(a.options[a.answer]) + '</p><p class="rv-q">' + escapeHtml(a.q) + '</p>'
+    + (a.quote ? '<p class="rv-quote">“' + escapeHtml(a.quote) + '”</p>' : '') + '</div></div>').join('');
+  const vs = score > d.r ? 'One better than your friend.' : score === d.r ? 'The same as your friend.' : 'Your friend got ' + d.r + '.';
+  const newHere = getComputedStyle(document.getElementById('onboarding') || document.body).display !== 'none' && !!document.getElementById('onboarding');
+  document.getElementById('quiz-body').innerHTML =
+    '<div style="animation:fadeUp .35s ease both;">'
+    + '<div class="rv-top"><div class="rv-ring" role="img" aria-label="' + score + ' of ' + total + ' right">'
+    +   '<svg viewBox="0 0 112 112"><circle cx="56" cy="56" r="50"/><circle cx="56" cy="56" r="50" style="--len:' + (len * score / total).toFixed(1) + '"/></svg><b>' + score + '/' + total + '</b></div>'
+    +   '<div><h3>You got ' + score + ' of ' + total + '</h3><p>' + vs + ' Each answer below shows the line it comes from.</p></div></div>'
+    + '<div class="rv-list">' + items + '</div>'
+    + '<button id="done-btn" style="width:100%;margin-top:16px;height:52px;border-radius:999px;background:' + _qc() + ';border:none;color:' + _qon() + ';font-size:var(--fs-3);font-weight:800;cursor:pointer;font-family:inherit;">'
+    +   (newHere ? 'Learn it every day, free' : 'Done') + '</button>'
+    + '<div style="height:20px;"></div></div>';
+  document.getElementById('done-btn').onclick = () => { _sharedIn = null; closeQuiz(); };
+  document.getElementById('quiz-panel').scrollTop = 0;
+}
+// A link with ?review=… opens the friend's page once the app is on screen
+window.addEventListener('load', () => { const d = _sharedFromUrl(); if (d) setTimeout(() => _openSharedReview(d), 700); });
 
 // Start a review straight away (from Today or the reader); guests are asked to sign in
 function _reviewNow(sid, level) {
