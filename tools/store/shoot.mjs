@@ -93,7 +93,9 @@ const scrollReaderTo = (p, sel, off = 0) => p.evaluate(([sel, off]) => {
 // Some shots on other days: Hayom Yom on a day whose entry fills the page; Tanya and Rambam
 // on days with the written guides in the current style (Tanya's bridges; the Rambam's
 // paragraphs, chapter line and plain-words notes)
-const SHIFT = { hayomyom: -1, tanya: 10, rambam: 13 };
+// Tanya on 24 Nov: its guide has the bridges and the titles (and the server prepares
+// Tanya only for the last week, so a later shoot moves this on)
+const SHIFT = { hayomyom: -1, tanya: 13, rambam: 13 };
 const SHOTS = {
   today: async p => {},
   chumash: async p => { await p.evaluate(() => { user.done = { tehillim: true }; openChabadPanel('chumash'); }); await settle(p, 6000); await scrollReaderTo(p, '.rd-comm', 470); await settle(p, 800); },

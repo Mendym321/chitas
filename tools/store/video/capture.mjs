@@ -72,10 +72,11 @@ const seed = (today) => {                                          // today: wha
 // questions (review.mjs, from this day's Chumash) match, and every scene is one day.
 const DAY = '2026-11-11';
 
-async function open(today = { chumash: true, tehillim: true }) {
+async function open(today = { chumash: true, tehillim: true }, shift = 0) {
   const p = await ctx.newPage();
   p.on('pageerror', e => console.log('  page error:', e.message.split('\n')[0]));
-  await p.clock.install({ time: new Date(DAY + 'T08:40:00') });
+  const t = new Date(DAY + 'T08:40:00'); t.setDate(t.getDate() + shift);   // a scene may show another day (shift)
+  await p.clock.install({ time: t });
   await p.addInitScript(seed, today);
   await p.goto(BASE + '/');
   await p.waitForFunction(() => typeof init === 'function' && typeof dayNote === 'function', null, { timeout: 20000 });
@@ -140,7 +141,8 @@ const SCENES = {
   // The guides: each text opened with its guide on, the guide's box in view (its place goes
   // next to the frames, for the outline the video draws around it)
   guide_chumash: guideScene('chumash', () => localStorage.setItem('chitas_chumash_guide', 'on')),
-  guide_tanya:   guideScene('tanya',   () => localStorage.setItem('chitas_tanya_guide', '1')),
+  // Tanya on 24 Nov: the server prepares Tanya's guide only for the last week, and that day has the titles
+  guide_tanya:   { ...guideScene('tanya',   () => localStorage.setItem('chitas_tanya_guide', '1')), shift: 13 },
   guide_rambam:  guideScene('rambam',  () => localStorage.setItem('chitas_rambam_guide', 'on')),
   review: {
     setup: async p => { await p.evaluate(async () => { window._fb = { ...(window._fb || {}), getIdToken: async () => 't', saveUser: async () => {} }; openQuiz('chumash'); });
@@ -177,7 +179,7 @@ for (const [name, scene] of Object.entries(SCENES)) {
   const n = TIMING[name].frames;
   const dir = OUT + name + '/';
   await rm(dir, { recursive: true, force: true }); await mkdir(dir, { recursive: true });
-  const p = await open(scene.today);
+  const p = await open(scene.today, scene.shift || 0);
   await scene.setup(p);
   if (scene.where) await writeFile(dir + 'where.json', JSON.stringify(await p.evaluate(sels => Object.fromEntries(Object.entries(sels).map(([k, sel]) => {
     const r = document.querySelector(sel)?.getBoundingClientRect(); return [k, r ? [Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)] : null];
