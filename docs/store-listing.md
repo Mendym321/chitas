@@ -204,7 +204,7 @@ These must match the privacy page. If the app changes what it saves, update both
 3. ~~**Hayom Yom English**~~ Done: the app ships its own English translation.
 4. ~~**Fonts**~~ Decided: you have permission to ship them.
 5. **Free forever?** If you might charge later, it's easier to decide now: a paid app can't become free and back without hassle, but adding optional in-app purchases later is fine.
-6. **Guide runway**: written (and checked) so far: Rambam through 1 December, Tanya through 4 December, Chumash through 19 December. Past that the server's AI covers each day in the same style, so nothing breaks; the weekly batch (`docs/guides-batch.md`) keeps the written ones ahead.
+6. **Guide runway**: written (and checked) so far: Rambam through 8 December, Tanya through 5 December, Chumash through 19 December. Past that the server's AI covers each day in the same style, so nothing breaks; the weekly batch (`docs/guides-batch.md`) keeps the written ones ahead.
 
 ---
 

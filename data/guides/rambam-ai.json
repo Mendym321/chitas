@@ -2631,5 +2631,1418 @@
     "ואם היה מומר"
    ]
   }
+ },
+ "Creditor and Debtor 25": {
+  "about": "When a guarantor becomes bound; collecting from the borrower first; the kablan; guaranteeing a ketubah or a sale; a conditional guarantee; partners and two guarantors; no set amount; guaranteeing the person.",
+  "heads": [
+   [
+    1,
+    "When a guarantor is bound"
+   ],
+   [
+    3,
+    "The borrower first"
+   ],
+   [
+    5,
+    "A guarantor or a kablan"
+   ],
+   [
+    6,
+    "A ketubah or a sale"
+   ],
+   [
+    8,
+    "A guarantee on a condition"
+   ],
+   [
+    9,
+    "Partners and several guarantors"
+   ],
+   [
+    13,
+    "No amount named"
+   ],
+   [
+    14,
+    "Guaranteeing the person"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "A guarantee given after the loan binds only with a kinyan. Given as the money changes hands, or to a court that lets the borrower go on his word, it binds without one.",
+    "term": "Kinyan: a formal act that makes a commitment binding."
+   },
+   "3": {
+    "text": "The lender claims from the borrower first, and from the guarantor only if the borrower has nothing. If the borrower is violent or won't come to court, the lender may go to the guarantor first.",
+    "term": ""
+   },
+   "5": {
+    "text": "Only \"Give him and I will give you\" makes a kablan, who may be asked first. Every other wording, even with the word \"kablan\", makes an ordinary guarantor.",
+    "term": "Kablan: a guarantor who takes the debt on himself, so the lender may claim from him first."
+   },
+   "7": {
+    "text": "Levi taking responsibility for the field is an asmachta and doesn't bind him. Only a kinyan to pay whenever Shimon asks makes him liable.",
+    "term": "Asmachta: a commitment hanging on a condition, which the person doesn't truly expect to pay, so it isn't binding."
+   },
+   "13": {
+    "text": "With no amount named, some Geonim hold the guarantor liable for everything. The Rambam rules he owes nothing, since he never knew what he was taking on.",
+    "term": ""
+   },
+   "14": {
+    "text": "Guaranteeing to bring the borrower is not guaranteeing the money. Even if he adds that he'll pay if he fails, the Rambam leans to calling it an asmachta, so he isn't liable.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "אבל אם קנו מידו"
+   ],
+   "2": [
+    "וכן אם בית דין עשו"
+   ],
+   "3": [
+    "היה הלוה אלם"
+   ],
+   "4": [
+    "אמר על מנת שאפרע"
+   ],
+   "5": [
+    "אבל אם אמר לו הלוהו"
+   ],
+   "8": [
+    "כיצד כגון שאמר לו"
+   ],
+   "13": [
+    "יש מן הגאונים שהורה"
+   ],
+   "14": [
+    "וכן אם אמר לו אחר"
+   ]
+  }
+ },
+ "Creditor and Debtor 26": {
+  "about": "A guarantor added to a promissory note; thirty days' grace; when the guarantor is asked first; the borrower's oath; when a guarantor who paid is repaid; proof of payment; disputes; servants, wives and minors.",
+  "heads": [
+   [
+    1,
+    "A guarantor in the note"
+   ],
+   [
+    2,
+    "When to claim from him"
+   ],
+   [
+    6,
+    "Repaying the guarantor"
+   ],
+   [
+    8,
+    "Disputes"
+   ],
+   [
+    9,
+    "Servants, wives and minors"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "A guarantor added after the witnesses signed, or written in only as \"so-and-so is guarantor\", can't be collected from property he sold. Written in with the borrower before the witnesses signed, he can.",
+    "term": ""
+   },
+   "3": {
+    "text": "With a kablan the lender claims from whoever he likes. An ordinary guarantor is asked first only when the borrower is far away, or died leaving young orphans.",
+    "term": ""
+   },
+   "4": {
+    "text": "Before the guarantor pays, the poor borrower must swear he has nothing, so that the two can't plot together to take the guarantor's money.",
+    "term": ""
+   },
+   "6": {
+    "text": "A guarantor who pays is repaid only if the borrower told him to guarantee and pay. Paying on his own, he loses the money: the borrower might have had the debt waived.",
+    "term": ""
+   },
+   "8": {
+    "text": "In each of these disputes, whoever claims money must bring proof. Without it, the other side swears, as in any claim of money.",
+    "term": "Sh'vuat hesset: a lighter oath the Sages added, for claims the Torah's oath doesn't cover."
+   },
+   "11": {
+    "text": "A minor's guarantee never binds him, even after he grows up. Whoever lent on his word loses the money.",
+    "term": ""
+   },
+   "12": {
+    "text": "A woman's debt from before her marriage is paid now if it was written in a note. A verbal one waits until she is divorced or widowed, since her husband holds her property like a buyer.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "היה הערב בגופו של שטר"
+   ],
+   "6": [
+    "במה דברים אמורים כשאמר",
+    "מת הלוה וקדם הערב",
+    "היה המלוה עכו\"ם"
+   ],
+   "8": [
+    "",
+    "או שאמר הערב ללוה",
+    "או שאמר הערב פרעתי",
+    "או שאמר המלוה ערבת",
+    "או ישבע הנתבע"
+   ]
+  }
+ },
+ "Creditor and Debtor 27": {
+  "about": "Documents in any language, and those signed by gentiles; safeguards against forgery: the last line, the gap before the signatures, the court's validation, erasures, letters and numbers; when the top and bottom differ.",
+  "heads": [
+   [
+    1,
+    "Language, and gentile documents"
+   ],
+   [
+    3,
+    "Guarding against forgery"
+   ],
+   [
+    6,
+    "The court's validation"
+   ],
+   [
+    8,
+    "Erasures"
+   ],
+   [
+    12,
+    "Letters and numbers"
+   ],
+   [
+    14,
+    "When the wording differs"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "Any language is fine if the document is made the Jewish way with Jewish witnesses. Gentile-signed ones count only for a sale or loan paid before them, made in their courts and checked, and even then not against sold property.",
+    "term": "Expropriating sold property: collecting a debt from land the borrower sold after the loan was made."
+   },
+   "3": {
+    "text": "The last line repeats the document, but nothing is learned from it alone, since a forger could have written it in a gap above the signatures.",
+    "term": ""
+   },
+   "4": {
+    "text": "A gap of two lines before the signatures, measured in the witnesses' handwriting, makes it invalid. Filling the gap with signatures of invalid witnesses keeps it valid; filling it with ink strokes does not.",
+    "term": ""
+   },
+   "9": {
+    "text": "A document written and signed wholly on an erased surface is valid: a second erasure would show, and witnesses sign over an erasure only if it was made before them.",
+    "term": ""
+   },
+   "12": {
+    "text": "Text on an erased surface with signatures on clean paper is invalid, even with a note from the witnesses, since the text could be erased again and replaced without it showing.",
+    "term": ""
+   },
+   "14": {
+    "text": "When the top and bottom of a note differ, the bottom is followed. The top is written only to restore a single letter rubbed out below.",
+    "term": ""
+   },
+   "16": {
+    "text": "When a note can be read two ways, the holder collects the smaller amount, since he is the one taking money. If he already seized the larger, it isn't taken back without clear proof.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "אבל כל השטרות שחותמיהן",
+    "והורו רבותי שאפלו",
+    "אם לא ידעו דיני ישראל"
+   ],
+   "2": [
+    "ולמה לא יגבה"
+   ],
+   "4": [
+    "שתי שיטין שאמרו בכתב",
+    "היו העדים מרחקין מן הכתב יתר",
+    "ואם מלאהו בשריטה"
+   ],
+   "5": [
+    "וכן אם היה השטר ושני עדים",
+    "אין מקימין שטר זה"
+   ],
+   "8": [
+    "ואם היה המחק במקום"
+   ],
+   "9": [
+    "ואם תאמר שמא נמחק"
+   ],
+   "10": [
+    "שמא הקיום היה רחוק"
+   ],
+   "11": [
+    "ואם כתבו העדים אנחנו"
+   ],
+   "12": [
+    "מפני שהוא מוחק אותו",
+    "שאלו היה בו מקום",
+    "ומתקון השטרות להתבונן"
+   ],
+   "13": [
+    "ואם נזדמן לו"
+   ],
+   "14": [
+    "ולמה אין הולכין",
+    "היה בו מלמעלה שם"
+   ],
+   "15": [
+    "כתוב בו מלמעלה קפל",
+    "מעשה בשטר שהיה",
+    "אם כן למה לא נאמר"
+   ],
+   "16": [
+    "לפיכך כל שטר שיש"
+   ],
+   "17": [
+    "סליקו להו"
+   ]
+  }
+ },
+ "Plaintiff and Defendant 1": {
+  "about": "The three oaths of the Torah and those the Sages added; refusing an oath; turning a sh'vuat hesset back; no oath on a doubtful claim; a ban before swearing; adding claims to an oath; claims that bring no oath.",
+  "heads": [
+   [
+    1,
+    "The Torah's oaths"
+   ],
+   [
+    3,
+    "The Sages' oath"
+   ],
+   [
+    4,
+    "Refusing to swear"
+   ],
+   [
+    6,
+    "Turning the oath back"
+   ],
+   [
+    7,
+    "Certain and doubtful claims"
+   ],
+   [
+    11,
+    "Before the oath"
+   ],
+   [
+    12,
+    "Adding claims"
+   ],
+   [
+    15,
+    "Claims with no oath"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "The Torah requires an oath only of one who admits part of a claim, one contradicted by a single witness, and a watchman; each swears and is free. The Sages' oaths are taken the same solemn way, holding a sacred object.",
+    "term": ""
+   },
+   "3": {
+    "text": "Denying everything, paying what he admits on the spot, saying it was waived or returned, or admitting a different item: no Torah oath, but the Sages require a sh'vuat hesset.",
+    "term": "Sh'vuat hesset: a lighter oath the Sages added, for claims the Torah's oath doesn't cover."
+   },
+   "5": {
+    "text": "Refusing a Torah oath, he pays. Refusing an oath of the Sages that would free him, he is put under a ban for thirty days, then given lashes, but his property isn't taken.",
+    "term": ""
+   },
+   "6": {
+    "text": "Only a sh'vuat hesset can be turned back onto the plaintiff, who then swears and collects. A Torah oath, or a Sages' oath like it, can't be turned back.",
+    "term": ""
+   },
+   "7": {
+    "text": "No oath at all on a claim the plaintiff isn't sure of: \"I think you owe me\", \"my father said so\", \"you were the only one there\".",
+    "term": ""
+   },
+   "9": {
+    "text": "Admitting the debt but unsure he repaid it, he must pay. Saying it on his own, with no one claiming, he owes nothing in court, only before Heaven.",
+    "term": ""
+   },
+   "12": {
+    "text": "Once he must swear, the plaintiff may add any other money claims to the same oath, even that he was once sold to him as a servant.",
+    "term": "Gilgul sh'vuah: adding other claims to an oath someone already has to take."
+   },
+   "16": {
+    "text": "A claim that wouldn't cost money even if admitted, like a promise, a curse or an insult, brings no oath. An injury does: even on his own word he'd pay the costs of it.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "וכן אם כפר בכל",
+    "וכן למדו מפי השמועה"
+   ],
+   "2": [
+    "וכל אחד מן השלשה"
+   ],
+   "3": [
+    "",
+    "או שהודה במקצת ונתנו",
+    "או שאמר אמת",
+    "או שטענו חטים",
+    "אבל חכמי הגמרא"
+   ],
+   "4": [
+    "אבל מי שנתחיב שבועה מדבריהן",
+    "והורו רבותי שאם"
+   ],
+   "5": [
+    "וכל מי שחלה עליו"
+   ],
+   "6": [
+    "ואין לך מי שנשבע"
+   ],
+   "7": [
+    "כיצד כמדמה לי"
+   ],
+   "8": [
+    ""
+   ],
+   "9": [
+    "מפני שהוא יודע",
+    "אבל אם אין לו תובע"
+   ],
+   "11": [
+    "ותקנה טובה"
+   ],
+   "12": [
+    "ועד היכן כח גלגול",
+    "וכבר בארנו שאין"
+   ],
+   "15": [
+    "כיצד אמרת שתתן"
+   ],
+   "16": [
+    "אתה בישתני"
+   ],
+   "17": [
+    "אבל אם אמר חבלתי"
+   ]
+  }
+ },
+ "Ritual Slaughter 5": {
+  "about": "What a treifah is; the eight kinds given at Sinai; derusah: which predators and which animals, with the claw, on purpose, while alive; checking an attacked animal; doubtful attacks.",
+  "heads": [
+   [
+    1,
+    "What makes a treifah"
+   ],
+   [
+    4,
+    "Derusah: who attacks whom"
+   ],
+   [
+    7,
+    "When an attack counts"
+   ],
+   [
+    8,
+    "Checking after an attack"
+   ],
+   [
+    11,
+    "A doubtful attack"
+   ]
+  ],
+  "notes": {
+   "3": {
+    "text": "All eight kinds come from Sinai, but only derusah is written in the Torah, so every doubt about it forbids the animal. Some doubts about the other seven leave it permitted.",
+    "term": "Treifah: an animal with a fatal injury or defect, forbidden even if it was slaughtered properly."
+   },
+   "4": {
+    "text": "Cattle count as attacked only by a lion; sheep and goats by a wolf or anything larger; kids and lambs even by a cat or a fox; and birds all the more so.",
+    "term": "Derusah: an animal clawed by a predator."
+   },
+   "7": {
+    "text": "It counts only with the claw of a forepaw, struck on purpose, while the predator is alive. A bite or a hind paw matters only if it pierced inside, and then the organs are checked.",
+    "term": ""
+   },
+   "9": {
+    "text": "The animal is slaughtered and checked from the thigh to the head. No sign of the attack and no other defect: it is permitted. Flesh reddened over the intestines: it is a treifah.",
+    "term": ""
+   },
+   "11": {
+    "text": "A doubtful attack is checked like a certain one. A silent fox among crowing hens may have struck; if it was roaring, killed one, or all were silent, there is no concern.",
+    "term": ""
+   },
+   "12": {
+    "text": "If it's unclear that a predator came in at all, or a bloodied bird came out of trees or reeds, there is no concern: it may have been hurt by the branches.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "7": [
+    "ואין דריסה אלא בכונת"
+   ],
+   "11": [
+    "כיצד ארי שנכנס",
+    "וכן שועל או נמיה"
+   ],
+   "12": [
+    "וכן עוף שנכנס"
+   ]
+  }
+ },
+ "Plaintiff and Defendant 2": {
+  "about": "One suspected of swearing falsely: who he is, witnesses versus his own word; the plaintiff swearing instead; when the plaintiff is the suspect; an oath found false; regaining trust.",
+  "heads": [
+   [
+    1,
+    "Who may not swear"
+   ],
+   [
+    4,
+    "A suspect defendant"
+   ],
+   [
+    8,
+    "A suspect plaintiff"
+   ],
+   [
+    9,
+    "Found out afterwards"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "One who once swore falsely, or is disqualified as a witness for a sin, whether of the Torah or of the Sages, isn't given an oath, even if the plaintiff wants it.",
+    "term": ""
+   },
+   "3": {
+    "text": "Only witnesses make him suspect. If he says it about himself, he may still swear: if he is truthful let him swear; if not, let him admit the claim.",
+    "term": ""
+   },
+   "4": {
+    "text": "When a suspect defendant owes a Torah oath, the plaintiff swears instead and collects. If both are suspect, the defendant, unable to swear, pays.",
+    "term": ""
+   },
+   "7": {
+    "text": "If the suspect owes only a sh'vuat hesset, the plaintiff doesn't swear in his place: that oath is itself a concession, so the defendant goes free without swearing.",
+    "term": "Sh'vuat hesset: a lighter oath the Sages added, for claims the Torah's oath doesn't cover."
+   },
+   "8": {
+    "text": "When the plaintiff is the suspect, the defendant can't turn the oath back onto him. He must swear or pay.",
+    "term": ""
+   },
+   "9": {
+    "text": "If it turns out the one who swore was already suspect, his oath counts for nothing: what it won is taken back, or the other side swears and collects.",
+    "term": ""
+   },
+   "12": {
+    "text": "Proved after his oath to have owed, he pays, but isn't counted a false swearer, since no one testified he hadn't paid.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "2": [
+    "וכן כל הפסול לעדות"
+   ],
+   "3": [
+    "אף על פי שחוששין לו"
+   ],
+   "4": [
+    "היו שניהם חשודין",
+    "היה החשוד שומר"
+   ],
+   "5": [
+    "וכן פוגם שטרו"
+   ],
+   "8": [
+    "ואין שומעין לזה"
+   ],
+   "11": [
+    "וכבר בארנו בשבועות"
+   ]
+  }
+ },
+ "Plaintiff and Defendant 3": {
+  "about": "How much must be admitted and denied for an oath, and the coins involved; dates, nuts and utensils; one witness; the admission must match the claim; two kinds claimed together; a loan or a deposit.",
+  "heads": [
+   [
+    1,
+    "How much"
+   ],
+   [
+    5,
+    "Utensils"
+   ],
+   [
+    6,
+    "One witness"
+   ],
+   [
+    8,
+    "Admitting something else"
+   ],
+   [
+    11,
+    "Two kinds claimed"
+   ],
+   [
+    14,
+    "A loan or a deposit"
+   ]
+  ],
+  "notes": {
+   "2": {
+    "text": "For a Torah oath he must admit at least a p'rutah and deny at least two silver ma'ah, the Jerusalem coin. The Rambam rejects his teachers' smaller figure.",
+    "term": "P'rutah: the smallest coin that counts as money, half a barleycorn of silver."
+   },
+   "4": {
+    "text": "Produce and goods are valued: the part denied must be worth two ma'ah, and the part admitted a p'rutah.",
+    "term": ""
+   },
+   "5": {
+    "text": "Utensils aren't valued: admitting one needle and denying another brings an oath, since the verse puts utensils together with money.",
+    "term": ""
+   },
+   "6": {
+    "text": "With one witness, denying even a p'rutah brings an oath. Less than a p'rutah isn't money, and the court doesn't hear it.",
+    "term": ""
+   },
+   "8": {
+    "text": "Admitting something other than what was claimed, like barley for wheat or silver coins for gold, brings no Torah oath.",
+    "term": ""
+   },
+   "10": {
+    "text": "He doesn't even pay for the barley, since the plaintiff says it isn't owed. But if the plaintiff took it, it isn't taken back.",
+    "term": ""
+   },
+   "11": {
+    "text": "Claimed together, admitting one of two kinds brings an oath. If he cut in before the second claim to trick, he swears; if in good faith, he doesn't.",
+    "term": ""
+   },
+   "15": {
+    "text": "\"Not liable\" in these cases means free of the Torah oath; he still swears a sh'vuat hesset.",
+    "term": "Sh'vuat hesset: a lighter oath the Sages added, for claims the Torah's oath doesn't cover."
+   }
+  },
+  "splits": {
+   "1": [
+    "וכמה היא פרוטה"
+   ],
+   "2": [
+    "ולפי שזה שהצריכו",
+    "ורבותי הורו שכפירת"
+   ],
+   "3": [
+    "מנה לי בידך"
+   ],
+   "4": [
+    "חמשה או ששה אגוזים"
+   ],
+   "5": [
+    "שנאמר שמות כב ו כסף או כלים",
+    "טענו כסף וכלים"
+   ],
+   "6": [
+    "כיצד פרוטה או שוה",
+    "וכן בשבועת השומרים"
+   ],
+   "8": [
+    "כיצד כור חטים",
+    "דינר זהב יש לי",
+    "וכן אם אמר לו עשרה"
+   ],
+   "9": [
+    "וכן אם טענו אזור"
+   ],
+   "10": [
+    "ואם תפס התובע"
+   ],
+   "11": [
+    "התחיל הטוען ואמר"
+   ],
+   "13": [
+    ""
+   ],
+   "15": [
+    "אמר בעל הכלי",
+    "כל מקום שנאמר"
+   ]
+  }
+ },
+ "Plaintiff and Defendant 4": {
+  "about": "An oath only for a claim of set measure, weight or number, and an admission he could have denied; one who is like returning a lost object; a pledge; admitting part and unsure of the rest; one witness he doesn't deny.",
+  "heads": [
+   [
+    1,
+    "A set amount"
+   ],
+   [
+    4,
+    "What he could deny"
+   ],
+   [
+    5,
+    "Like returning a lost object"
+   ],
+   [
+    6,
+    "A pledge"
+   ],
+   [
+    7,
+    "Unsure of the rest"
+   ],
+   [
+    8,
+    "One witness"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "Only a claim of an exact measure, weight or number brings an oath: \"ten dinarim\", not \"a purse full of them\" or \"a bundle you never counted before me\".",
+    "term": ""
+   },
+   "4": {
+    "text": "Admitting the part written in a promissory note isn't a real admission, since he couldn't deny it anyway; he swears only a sh'vuat hesset on the rest.",
+    "term": "Sh'vuat hesset: a lighter oath the Sages added, for claims the Torah's oath doesn't cover."
+   },
+   "5": {
+    "text": "Admitting more than could be proved from him, he is like one returning a lost object, whom the Sages freed from oaths. An heir who is sure of the debt makes it a real admission.",
+    "term": ""
+   },
+   "6": {
+    "text": "With a pledge, the lender may claim up to its value. Worth 80: the lender swears to 80 and takes it, and the borrower swears on the other 20.",
+    "term": ""
+   },
+   "7": {
+    "text": "Admitting half and unsure of the rest, he owes an oath he can't take, so he pays it all.",
+    "term": ""
+   },
+   "8": {
+    "text": "Agreeing with a single witness but claiming a debt in return or that he paid, he can't swear against the witness, so he pays.",
+    "term": ""
+   },
+   "10": {
+    "text": "If witnesses prove half of a claim he denied, he pays that half and swears on the rest, just as if he had admitted it.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "כיצד עשרה דינרין",
+    "אבל אמר לו כיס"
+   ],
+   "4": [
+    "כיצד מי שטען"
+   ],
+   "5": [
+    "אף על פי שאין מחיבין",
+    "וכן האומר לחברו אמר",
+    "אבל יורש שטען"
+   ],
+   "6": [
+    "אין המשכון שוה",
+    "היה שוה שמונים",
+    "כפר בכל ואמר"
+   ],
+   "7": [
+    "ויש לו להחרים"
+   ],
+   "8": [
+    "ומפני מה אינו",
+    "לפיכך שטר שיש",
+    "מעשה באחד שחטף"
+   ],
+   "9": [
+    "חזר ואמר פרעתי"
+   ]
+  }
+ },
+ "Plaintiff and Defendant 5": {
+  "about": "No Torah oath over land, servants, promissory notes or consecrated property; claims mixing these with movables; crops ready to harvest; rent; a promissory note lost or held back; the claims of a minor, a deaf-mute or a shoteh.",
+  "heads": [
+   [
+    1,
+    "Land, servants and notes"
+   ],
+   [
+    3,
+    "Mixed claims"
+   ],
+   [
+    4,
+    "Crops and rent"
+   ],
+   [
+    6,
+    "Promissory notes"
+   ],
+   [
+    9,
+    "Minors"
+   ],
+   [
+    12,
+    "A deaf-mute, a shoteh, a blind man"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "The verse speaks of money or utensils, so land, servants and notes bring no Torah oath, only a sh'vuat hesset. For consecrated property the Sages required a full oath, so it isn't treated lightly.",
+    "term": "Sh'vuat hesset: a lighter oath the Sages added, for claims the Torah's oath doesn't cover."
+   },
+   "3": {
+    "text": "Only when he admits some of the movables and denies the rest does his oath reach the land claimed along with them.",
+    "term": ""
+   },
+   "4": {
+    "text": "Grapes or grain ready to be cut count as movables. While they still need the ground, they count as land.",
+    "term": ""
+   },
+   "5": {
+    "text": "Rent is money, not land, so a disputed month's rent brings an oath like any movable.",
+    "term": ""
+   },
+   "6": {
+    "text": "If he admits he was given the note and lost it, he owes nothing, not even a sh'vuat hesset: losing a promissory note, even through negligence, isn't a liability.",
+    "term": ""
+   },
+   "9": {
+    "text": "A minor's claim brings no Torah oath: what is admitted to him is like returning a lost object, and his claim isn't a full one. A watchman for a minor still swears.",
+    "term": ""
+   },
+   "10": {
+    "text": "A sh'vuat hesset is taken on a minor's claim, so no one can take a child's money and walk away. It can't be turned back onto the child.",
+    "term": ""
+   },
+   "11": {
+    "text": "A minor sued over business he gains from pays if he admits it. For damage or injury he caused, he never pays, even when grown.",
+    "term": ""
+   },
+   "12": {
+    "text": "A deaf-mute or a shoteh is outside all claims and oaths, for or against him. A blind man is like anyone else.",
+    "term": "Shoteh: a person not of sound mind."
+   }
+  },
+  "splits": {
+   "1": [
+    "ועל כלן נשבע שבועת"
+   ],
+   "2": [
+    "וכן אם טען ואמר חצר",
+    "וכן החופר בשדה"
+   ],
+   "3": [
+    "אבל אם הודה במקצת כלים",
+    "וכן הדין בטענו"
+   ],
+   "4": [
+    "אבל אם היו צריכים"
+   ],
+   "5": [
+    "ואם היה שכר החדש"
+   ],
+   "6": [
+    "הפך עליו הרי",
+    "ואם אמר הנתבע אמת"
+   ],
+   "8": [
+    "טען זה שהוא יודע"
+   ],
+   "9": [
+    "וכן אם כפר בכל ובא",
+    "נמצאת אומר קטן",
+    "אבל אם שמר לקטן",
+    "וכן אם הודה שהיה"
+   ],
+   "10": [
+    "נמצאת למד שהקטן"
+   ],
+   "11": [
+    "ואם טענו בדבר שאין"
+   ]
+  }
+ },
+ "Ritual Slaughter 6": {
+  "about": "Nekuvah: the eleven organs a hole in which makes a treifah; the brain, heart, gall bladder, liver and needles found in them; what seals a hole; the stomachs and intestines; a bird's crop and gizzard; the spleen; organs missing or extra.",
+  "heads": [
+   [
+    1,
+    "The eleven organs"
+   ],
+   [
+    3,
+    "Brain and heart"
+   ],
+   [
+    6,
+    "Gall bladder and liver"
+   ],
+   [
+    10,
+    "What seals a hole"
+   ],
+   [
+    11,
+    "Stomachs and intestines"
+   ],
+   [
+    17,
+    "In a bird"
+   ],
+   [
+    19,
+    "The spleen"
+   ],
+   [
+    20,
+    "Missing or extra"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "A hole of any size reaching the inside of any one of these eleven makes the animal a treifah.",
+    "term": "Nekuvah: an animal with a hole through a vital organ."
+   },
+   "3": {
+    "text": "Only a hole in the inner membrane, the one next to the brain, makes it a treifah. Past the glands where the neck begins, a hole doesn't.",
+    "term": ""
+   },
+   "9": {
+    "text": "A large needle with its point facing in must have pierced on the way in: treifah. Blunt end in, it came through a vessel: permitted. A small needle, sharp at both ends: treifah.",
+    "term": ""
+   },
+   "10": {
+    "text": "Permitted fat or flesh sealing a hole saves the animal, except a few firm fats and membranes, and a beast's fat that is forbidden in a domestic animal.",
+    "term": ""
+   },
+   "12": {
+    "text": "A needle through the wall of the second stomach: blood at the hole means it happened in life, a treifah; no blood means it was pushed through after the slaughter.",
+    "term": ""
+   },
+   "14": {
+    "text": "A hole of unknown age is compared with a fresh hole made beside it. If they look alike, it came after the slaughter and the animal is kosher.",
+    "term": ""
+   },
+   "19": {
+    "text": "The spleen isn't one of the eleven. A hole right through its thick end makes a treifah; if a dinar's thickness remains, or the hole is in the thin end, it's permitted.",
+    "term": ""
+   },
+   "20": {
+    "text": "Any of these organs missing, or doubled, makes a treifah, since an extra one counts as missing. Not so the spleen.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "10": [
+    "וחלב חיה שכנגדו"
+   ],
+   "13": [
+    "כל אחד מן בני המעים"
+   ],
+   "14": [
+    "בני מעים שבא זאב",
+    "נמצאו נקובין"
+   ],
+   "16": [
+    "במה דברים אמורים שנקב"
+   ],
+   "17": [
+    "וכל הטרפות שוות",
+    "וזפק שנקב גגו"
+   ],
+   "19": [
+    "כיצד הטחול ראשו"
+   ],
+   "20": [
+    "וכן אם נברא בשני",
+    "כיצד נטל אחד"
+   ]
+  }
+ },
+ "Plaintiff and Defendant 6": {
+  "about": "Claims and answers must be exact; when a defendant becomes a proven denier, and when not; details witnesses weren't asked to remember; admissions made in jest, or before hidden witnesses.",
+  "heads": [
+   [
+    1,
+    "Exact claims and answers"
+   ],
+   [
+    2,
+    "A proven denier"
+   ],
+   [
+    4,
+    "Details witnesses miss"
+   ],
+   [
+    6,
+    "Admissions outside court"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "Both sides must say exactly what happened, since a vague \"I owe nothing\" may hide a mistake, like repaying the lender's son. Denying the loan, then shown to have borrowed, he can't switch to \"I repaid\": he pays.",
+    "term": "Miggo: a claim believed because he could have said something better for himself."
+   },
+   "2": {
+    "text": "Saying the money was a gift or a repayment, he is believed with a sh'vuat hesset. Only a denial in court, contradicted by two witnesses, makes him a proven denier.",
+    "term": "Sh'vuat hesset: a lighter oath the Sages added, for claims the Torah's oath doesn't cover."
+   },
+   "3": {
+    "text": "Denying the loan when witnesses saw it repaid, he still pays: denying it was as good as saying he never repaid, and his own word outweighs theirs.",
+    "term": ""
+   },
+   "4": {
+    "text": "Witnesses who don't recall a repayment, or a small detail like standing by a pillar, don't make him a liar: people remember only what they were asked to witness.",
+    "term": ""
+   },
+   "6": {
+    "text": "\"Yes, I owe you\", said before people not asked to be witnesses, isn't testimony. If he says he was joking, he swears a sh'vuat hesset and is free.",
+    "term": ""
+   },
+   "7": {
+    "text": "Even hidden witnesses don't bind him. Testimony needs the borrower to say \"you are my witnesses\", or to stay silent when the lender says it before him.",
+    "term": ""
+   },
+   "8": {
+    "text": "The court still asks him why he doesn't pay what he said he owed. If he offers no defence, the court doesn't offer one for him.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "ואפלו היה חכם גדול",
+    "וכן אם טען הטוען ואמר",
+    "הרי שטען עליו שהלוהו",
+    "אבל אם השיב איני חיב"
+   ],
+   "2": [
+    "ולעולם אין אדם מחזק"
+   ],
+   "3": [
+    "וכן אם הוציא עליו"
+   ],
+   "4": [
+    "כיוצא בו תן לי"
+   ],
+   "6": [
+    "ואפלו אמר לא היו"
+   ],
+   "7": [
+    "אמר לו לא שמא תכפני",
+    "ולמחר תבעו בדין",
+    "מעשה באחד שהיו",
+    "וכן אחד היו אומרים"
+   ],
+   "8": [
+    "אמר אין לו אצלי"
+   ]
+  }
+ },
+ "Ritual Slaughter 7": {
+  "about": "The lung: its membranes and tubes; holes, sealed or not; a lung stuck to a rib; a closed spot, a hissing sound and the water test; a lung gone soft, and blisters; a needle or a worm; forbidden and permitted colours; a bird that fell into fire.",
+  "heads": [
+   [
+    1,
+    "Holes in the lung"
+   ],
+   [
+    5,
+    "Checking the lung"
+   ],
+   [
+    9,
+    "Softening and blisters"
+   ],
+   [
+    14,
+    "A needle or a worm"
+   ],
+   [
+    15,
+    "Colours"
+   ],
+   [
+    20,
+    "A bird in the fire"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "A hole through both of the lung's membranes makes a treifah; through one alone, it doesn't, even if the outer one is entirely gone.",
+    "term": "Treifah: an animal with a fatal injury or defect, forbidden even if slaughtered properly."
+   },
+   "3": {
+    "text": "A hole in a bronchial tube makes a treifah even if another tube covers it. A rib pressed over a hole doesn't seal it, except where the lobes rest on it.",
+    "term": ""
+   },
+   "5": {
+    "text": "A lung stuck to a rib may hide a hole. It's peeled off with care: a hole matching a sore on the rib came from the peeling; with no sore, it was there before slaughter.",
+    "term": ""
+   },
+   "7": {
+    "text": "A hissing lung is put in lukewarm water and blown up. Bubbles mean a hole: a treifah. None mean only the inner membrane is torn. No bubbles always means no hole.",
+    "term": ""
+   },
+   "11": {
+    "text": "Two blisters side by side make a treifah, since a hole between them is likely and can't be checked. If one drains into the other, it is really one.",
+    "term": ""
+   },
+   "16": {
+    "text": "A lung changed, even in a spot, to one of five forbidden colours counts as holed. Permitted colours are fine even over the whole lung. It is blown up and rubbed before judging.",
+    "term": ""
+   },
+   "20": {
+    "text": "A bird's organs changed in colour by fire count as missing: a treifah, if the change stays after they are lightly boiled and rubbed.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "3": [
+    "נקבה האום של ראה"
+   ],
+   "5": [
+    "וכיצד עושין בה"
+   ],
+   "6": [
+    "וכיצד בודקין אותו"
+   ],
+   "7": [
+    "ואם לא נכר המקום"
+   ],
+   "9": [
+    "כיצד עושין נוקבין"
+   ],
+   "12": [
+    "ראה שנמצאת נקובה",
+    "נמצא הנקב במקום"
+   ],
+   "13": [
+    "נמצא הנקב באחד"
+   ],
+   "15": [
+    "יש שם מראות"
+   ],
+   "17": [
+    "וחריע הוא הצבע"
+   ],
+   "21": [
+    "ולא עוד אלא בני",
+    "וכן הושט שנמצא"
+   ]
+  }
+ },
+ "Plaintiff and Defendant 7": {
+  "about": "Admitting a debt before witnesses or a court: when it binds, when a record may be written, and when a later 'I paid' or 'I swore' is believed; changing one's claim in court.",
+  "heads": [
+   [
+    1,
+    "An admission before witnesses"
+   ],
+   [
+    3,
+    "An admission before a court"
+   ],
+   [
+    5,
+    "\"I paid\" after a ruling"
+   ],
+   [
+    8,
+    "Changing a claim"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "An admission made as an admission, not in passing chatter, before two people is testimony, even if he never said \"you are my witnesses\".",
+    "term": "Sh'vuat hesset: a lighter oath, instituted by the Sages, taken by one who denies a claim entirely."
+   },
+   "2": {
+    "text": "Witnesses to an admission may testify to it, but write it down as a document only if he told them: \"Write, sign and give it to him.\"",
+    "term": ""
+   },
+   "3": {
+    "text": "A court that summoned him in its usual place may write his admission down. Judges he gathered himself may not: he might pay and then face the document too.",
+    "term": ""
+   },
+   "5": {
+    "text": "An admission or a ruling in a lawsuit he came to himself isn't a document: if he later says \"I paid\", he is believed with a sh'vuat hesset.",
+    "term": ""
+   },
+   "6": {
+    "text": "Told \"Go and pay him\" and caught lying about paying, he is presumed a liar about that money. Told only \"You owe him\", he isn't: he may have been stalling.",
+    "term": ""
+   },
+   "8": {
+    "text": "A litigant may change his claim until witnesses contradict it. After that, only if he explains how his first claim meant the new one, and only while still in court.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "טען כשבאו אלו העדים"
+   ],
+   "2": [
+    "אבל אין כותבין",
+    "וכן אם הודה בבית"
+   ],
+   "3": [
+    "אבל אם לא היו קבועין"
+   ],
+   "4": [
+    "היה כתוב בשטר"
+   ],
+   "5": [
+    "במה דברים אמורים בשלא",
+    "בין שאמרו הדינין",
+    "כתבו לי הודיתי",
+    "וכן מי שנתחיב שבועה"
+   ],
+   "6": [
+    "אמרו לו חיב אתה",
+    "לפיכך אם חזר פעם"
+   ],
+   "8": [
+    "אבל מאחר שיבואו עדים",
+    "והוא שלא יצא מבית"
+   ]
+  }
+ },
+ "Plaintiff and Defendant 8": {
+  "about": "Movable property belongs to whoever holds it, even if witnesses knew it was once the claimant's. The exception: things made to be lent or rented out, and what that phrase really means.",
+  "heads": [
+   [
+    1,
+    "Possession decides"
+   ],
+   [
+    3,
+    "Things made for lending"
+   ],
+   [
+    5,
+    "Stolen or lost"
+   ],
+   [
+    9,
+    "What \"made for lending\" means"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "Whoever holds movable property is presumed its owner. If he says \"you sold it to me\" or \"gave it to me\", he takes a sh'vuat hesset and keeps it, even against witnesses who knew it was yours.",
+    "term": "Sh'vuat hesset: a lighter oath, instituted by the Sages, taken by one who denies a claim entirely."
+   },
+   "3": {
+    "text": "Things made to be lent or rented out stay their owner's: holding one proves nothing, since it may well have been borrowed.",
+    "term": ""
+   },
+   "4": {
+    "text": "That holds only if the article is seen in his hands. If not, he could have denied having it at all, so he is believed that he has it because it was sold to him.",
+    "term": ""
+   },
+   "5": {
+    "text": "If the owner says it was stolen or lost, and the holder says he bought it from someone else, it stays with the holder with no oath: no claim is made against him.",
+    "term": ""
+   },
+   "9": {
+    "text": "Not things that can be lent (that's everything, even a cloak) but things made from the start to be rented out: big pots for party halls, gold-inlaid jewellery for brides.",
+    "term": ""
+   },
+   "10": {
+    "text": "Something people won't lend, because the risk outweighs the fee, like a shochet's knife, never counts as made for lending, even if he lent it now and then.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "כיצד",
+    "והנתבע אומר"
+   ],
+   "3": [
+    "כיצד",
+    "ואפלו מת שמעון"
+   ],
+   "4": [
+    "אבל אם ראובן טען"
+   ],
+   "6": [
+    "טען אתה מכרתו",
+    "מכאן אתה למד"
+   ],
+   "7": [
+    "אפלו הביא זה עדים"
+   ],
+   "9": [
+    "אבל דברים העשויין",
+    "וכן אם היה לאדם"
+   ],
+   "10": [
+    "ראיה לדברינו",
+    "ודבר זה עקר גדול"
+   ]
+  }
+ },
+ "Ritual Slaughter 8": {
+  "about": "Chaserah, a missing part: the lung's lobes, too few, too many or merged, and a lung shrivelled by fright; the legs. Netulah, a part removed: the leg sinews, the liver, the upper jaw. Last, the kidneys.",
+  "heads": [
+   [
+    1,
+    "The lung's lobes"
+   ],
+   [
+    9,
+    "A frightened animal"
+   ],
+   [
+    11,
+    "The legs"
+   ],
+   [
+    16,
+    "Netulah: a part removed"
+   ],
+   [
+    25,
+    "The kidneys"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "The lung has five lobes: three on the right, two on the left, plus a small \"rose\" on the right that isn't counted. A lung missing a lobe makes a treifah.",
+    "term": "Treifah: an animal with a fatal injury or defect, forbidden even if slaughtered properly."
+   },
+   "4": {
+    "text": "An extra lobe at the back, by the ribs, makes a treifah: an extra part counts like a missing one. At the side or front, by the heart, it doesn't.",
+    "term": ""
+   },
+   "9": {
+    "text": "A lung shrivelled by fright from thunder or lightning recovers; from people, like seeing another animal slaughtered, it doesn't. Soaked in water a full day: if it returns to normal, the animal is permitted.",
+    "term": ""
+   },
+   "11": {
+    "text": "Born missing a hind leg, or with an extra one: a treifah. A foreleg cut off doesn't matter; a hind leg only if cut above the top joint, by the body.",
+    "term": ""
+   },
+   "16": {
+    "text": "Netulah: three parts whose removal makes a treifah, though being born without them doesn't: the sinews above the heel, the liver, the upper jaw.",
+    "term": "Netulah: \"removed\", a part taken away after birth."
+   },
+   "21": {
+    "text": "A liver removed makes a treifah, unless an olive's size remains where it hangs and an olive's size by the gall bladder.",
+    "term": ""
+   },
+   "25": {
+    "text": "Missing or extra kidneys don't matter. A kidney very small, decaying, or with moisture or murky fluid does; clear water doesn't.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "וחמש אנות יש",
+    "לפיכך אם לא נמצאת"
+   ],
+   "11": [
+    "נחתך הרגל מן"
+   ],
+   "15": [
+    "שבטרפות תחתך"
+   ],
+   "21": [
+    "נדלדלה הכבד"
+   ]
+  }
+ },
+ "Plaintiff and Defendant 9": {
+  "about": "A craftsman doesn't own what's in his shop by holding it. Things carried out hidden under a cloak; a felled tree and eaten produce; two people both holding one garment.",
+  "heads": [
+   [
+    1,
+    "A craftsman's shop"
+   ],
+   [
+    4,
+    "Hidden under a cloak"
+   ],
+   [
+    6,
+    "A tree, a field's produce"
+   ],
+   [
+    7,
+    "Both holding it"
+   ]
+  ],
+  "notes": {
+   "1": {
+    "text": "Things in a craftsman's hands came in for repair, so holding them proves nothing: an owner with witnesses that the article is his takes it back with a sh'vuat hesset.",
+    "term": "Sh'vuat hesset: a lighter oath, instituted by the Sages, taken by one who denies a claim entirely."
+   },
+   "2": {
+    "text": "If the article isn't seen in his shop, the craftsman is believed that it was sold to him, since he could have said he returned it.",
+    "term": ""
+   },
+   "4": {
+    "text": "Leaving with things hidden under his cloak, from someone who doesn't sell his things, he isn't believed that he bought them: he hid them in order to deny it.",
+    "term": ""
+   },
+   "6": {
+    "text": "One who says he's off to cut the tree he bought, and cuts it, is presumed honest: no one is that bold with someone else's tree. So too one who eats a field's produce.",
+    "term": ""
+   },
+   "7": {
+    "text": "Two holding one article, each saying \"it's all mine\", each swear they own no less than half, and split it. The oath stops people grabbing others' garments.",
+    "term": ""
+   },
+   "8": {
+    "text": "\"All mine\" against \"half mine\": three quarters and one quarter. An oath to collect covers only what one gets, not all one claims.",
+    "term": ""
+   },
+   "12": {
+    "text": "If one pulls it away in court and the other stays silent, the silence counts as agreeing, even if he protests later.",
+    "term": ""
+   }
+  },
+  "splits": {
+   "1": [
+    "כיצד",
+    "ויש גאונים שדנו"
+   ],
+   "2": [
+    "ואפלו מסרו לתקן",
+    "ואם הוציאו הואיל",
+    "לפיכך אם טען האמן",
+    "ואם אין הכלי נראה"
+   ],
+   "4": [
+    "במה דברים אמורים",
+    "אבל בעל הבית העשוי",
+    "וכן אם יצא בהן",
+    "אבל דברים העשויין"
+   ],
+   "5": [
+    "ואם טען היורש"
+   ],
+   "6": [
+    "וכן היורד לשדה",
+    "חזקה היא שאין",
+    "ואין צריך לומר"
+   ],
+   "7": [
+    "ושבועה זו תקנת"
+   ],
+   "8": [
+    "מכאן אתה למד"
+   ],
+   "10": [
+    "וכל חלוקה האמורה"
+   ],
+   "12": [
+    "חזר השני ותקפה"
+   ]
+  }
  }
 }
