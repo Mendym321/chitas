@@ -180,11 +180,25 @@ check('…opened: what it is about (named by the server, not the phone), and the
 check('a short link that doesn\'t exist → 404; a bad one → 400', [(await call({ shareId: 'ZZZZZZZZ' }, null)).status, (await call({ shareId: 'x' }, null)).status], [404, 400]);
 check('a short link for a bad passage is refused', (await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['nope'] }, r: 1, n: 4, d: '2026-11-24' } }, null)).status, 400);
 check('nothing personal is kept with a short link', Object.keys([...store].find(([k]) => k.startsWith('share_links/'))[1]).sort(), ['createdAt', 'd', 'k', 'l', 'n', 'p', 'r', 's']);
+const named = await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 2:4-2:19'] }, r: 3, n: 4, d: '2026-11-24', nm: 'Mendy Cohen' } }, null);
+const odd = await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 2:4-2:19'] }, r: 2, n: 4, d: '2026-11-24', nm: '<b>http://x.co</b>' } }, null);
+check('a first name, if shown: the first word only, letters only', [(await call({ shareId: named.json.id }, null)).json.share?.nm, (await call({ shareId: odd.json.id }, null)).json.share?.nm, named.json.id !== mk.json.id], ['Mendy', undefined, true]);
+const { cleanName } = await import('../api/quiz.js');
+check('names in any alphabet; nothing else', ['מנחם', "D'Arcy", 'Mary-Ann', '1234', 'a.b', ''].map(cleanName), ['מנחם', "D'Arcy", 'Mary-Ann', '', '', '']);
 const get = async query => { const res = { headers: {}, status(c) { res.code = c; return res; }, setHeader(k, v) { res.headers[k] = v; }, send(b) { res.body = b; return res; }, json(j) { res.body = j; return res; } }; await handler({ method: 'GET', query, headers: { host: 'chitas.vercel.app' } }, res); return res; };
 const pic = await get({ img: mk.json.id });
 check('the link preview picture: a PNG drawn by the server, 1200 wide', [pic.code, pic.headers?.['Content-Type'], Buffer.isBuffer(pic.body) && pic.body.readUInt32BE(16)], [200, 'image/png', 1200]);
 const pg = await get({ page: mk.json.id });
-check('the link page: preview tags, the picture, then on to the app', [pg.code, /og:image" content="https:\/\/chitas\.vercel\.app\/api\/quiz\?img=/.test(pg.body), /Can you beat 3 of 4 on the Chumash review\?/.test(pg.body), pg.body.includes('/?r=' + mk.json.id), pg.body.includes('Made-up')], [200, true, true, true, false]);
+const pgN = await (async () => { const res = { headers: {}, status(c) { res.code = c; return res; }, setHeader(k, v) { res.headers[k] = v; }, send(b) { res.body = b; return res; } }; await handler({ method: 'GET', query: { page: named.json.id }, headers: { host: 'chitas.vercel.app' } }, res); return res; })();
+check('the preview speaks as the sharer, name or not ("I got…"); the name is for the friend\'s page', [/I got 3 of 4 on the Chumash review\. Can you beat it\?/.test(pgN.body), pgN.body.includes('Mendy')], [true, false]);
+const dayMk = await call({ makeShare: { day: true, d: '2026-11-25', st: 9, nm: 'Mendy' } }, null);
+const dayRd = await call({ shareId: dayMk.json.id }, null);
+check('a finished day: a short link, read back with the streak and name, no questions needed', [dayMk.status, dayRd.status, dayRd.json.share?.kind, dayRd.json.share?.st, dayRd.json.share?.nm], [200, 200, 'day', 9, 'Mendy']);
+const dayPg = await (async () => { const res = { headers: {}, status(c) { res.code = c; return res; }, setHeader(k, v) { res.headers[k] = v; }, send(b) { res.body = b; return res; } }; await handler({ method: 'GET', query: { page: dayMk.json.id }, headers: { host: 'chitas.vercel.app' } }, res); return res; })();
+const dayPic = await (async () => { const res = { headers: {}, status(c) { res.code = c; return res; }, setHeader(k, v) { res.headers[k] = v; }, send(b) { res.body = b; return res; } }; await handler({ method: 'GET', query: { img: dayMk.json.id }, headers: { host: 'chitas.vercel.app' } }, res); return res; })();
+check('…its preview: "I learned all of today\'s Chitas · 9 days in a row", and the day card', [/I learned all of today&#39;s Chitas · 9 days in a row/.test(dayPg.body), dayPic.code, dayPic.headers['Content-Type']], [true, 200, 'image/png']);
+check('a day with a bad streak is refused', (await call({ makeShare: { day: true, d: '2026-11-25', st: -3 } }, null)).status, 400);
+check('the link page: preview tags, the picture, then on to the app', [pg.code, /og:image" content="https:\/\/chitas\.vercel\.app\/api\/quiz\?img=/.test(pg.body), /I got 3 of 4 on the Chumash review\. Can you beat it\?/.test(pg.body), pg.body.includes('/?r=' + mk.json.id), pg.body.includes('Made-up')], [200, true, true, true, false]);
 
 console.log('Tanya enhance:');
 // Today on the (pretend) schedule: chapter 1 from verse 2 to its end

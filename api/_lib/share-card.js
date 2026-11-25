@@ -65,7 +65,24 @@ function head(ink, dateInk, iso) {
 }
 
 // The layout for one shared result: { s, l, r, n, d, t, q, k }, today = the server's date
+// A finished day: the four rings closed, "All four learned", the four names, the streak
+const RINGS = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><g fill="none" stroke-width="11" stroke-linecap="round"><circle cx="100" cy="100" r="88" stroke="#E0A030"/><circle cx="100" cy="100" r="68" stroke="#3F6FC0"/><circle cx="100" cy="100" r="48" stroke="#8B54B0"/><circle cx="100" cy="100" r="28" stroke="#5E8A3C"/></g><path d="M91 101l6 6 13-14" fill="none" stroke="#2B2112" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>').toString('base64');
+function dayLayout(x, todayISO) {
+  const names = [['Chumash', '#B07A12'], ['Tehillim', '#3F6FC0'], ['Tanya', '#8B54B0'], ['Rambam', '#4F7532']];
+  return h('div', { width: W, height: H, background: '#FBF7EF', padding: '48px 64px', alignItems: 'center', gap: 56, fontFamily: 'DM', color: INK },
+    h('div', { flex: 1, flexDirection: 'column', height: '100%' },
+      head(INK, '#B07A12', x.d),
+      t({ marginTop: 'auto', fontFamily: 'Bricolage', fontSize: 78, lineHeight: 1.02, letterSpacing: -2 }, 'All four learned'),
+      t({ marginTop: 6, fontSize: 30, color: '#5C4B2C', fontWeight: 600 }, x.d === todayISO ? 'today' : 'on ' + new Date(x.d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' })),
+      h('div', { marginTop: 26, gap: 22, fontSize: 28, fontWeight: 700 }, ...names.map(([n, c]) => t({ color: c }, n))),
+      h('div', { marginTop: 'auto', alignItems: 'center', gap: 14 },
+        x.st > 1 ? h('div', { background: '#2B2112', color: '#FBF7EF', borderRadius: 999, padding: '10px 22px', fontSize: 26, fontWeight: 700 }, t({}, x.st + ' days in a row')) : t({}, ''),
+        t({ fontSize: 24, color: '#6B5D47', fontWeight: 600 }, 'Learn it with me · free'))),
+    { type: 'img', props: { src: RINGS, width: 380, height: 380 } });
+}
+
 function layout(x, todayISO) {
+  if (x.kind === 'day') return dayLayout(x, todayISO);
   const sec = SECTION[x.s] || SECTION.chumash, today = x.d === todayISO;
   const all = x.r === x.n, ask = all ? 'Can you get ' + x.n + ' of ' + x.n + '?' : 'Can you beat ' + x.r + '?';
   if (x.k === 'challenge') {

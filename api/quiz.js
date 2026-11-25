@@ -18,9 +18,10 @@
  * only ever READS a saved quiz: it never makes one, so a shared link can't
  * cost anything. 404 when that quiz isn't saved.
  *
- * Short links: { makeShare: { s, l, p, r, n, d, t } } saves what a shared link
- * needs (the passage, the score, the day) under a short code, kept in
- * share_links/ (nothing about the person), and answers { id }. The same result
+ * Short links: { makeShare: { s, l, p, r, n, d, k, nm } } saves what a shared
+ * link needs (the passage, the score, the day, and the sharer's first name if
+ * they chose to show it: letters only, up to 20) under a short code, kept in
+ * share_links/, and answers { id }. The same result
  * gets the same code. Up to 60 a day per address (hashed). { shareId } reads
  * it back with the saved questions: { share, questions, level }.
  *
@@ -112,6 +113,11 @@ export function passageLabel(s, p) {
     return parts[0][1] + ' ' + parts[0][2] + (parts.length > 1 ? '–' + parts.at(-1)[2] : '');
   return parts.map(x => x[1] + ' ' + x[2]).join(', ');
 }
+// A first name, as letters only (any alphabet), with a space, ' or - inside; up to 20
+export function cleanName(v) {
+  const s = String(v || '').normalize('NFC').trim().split(/\s+/)[0] || '';
+  return /^[\p{L}][\p{L}'\-]{0,19}$/u.test(s) ? s : '';
+}
 const todayNY = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 const SEC_NAME = { chumash: 'Chumash', tanya: 'Tanya', rambam: 'Rambam' };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -122,11 +128,14 @@ const shortCode = str => { let n = BigInt('0x' + createHash('sha256').update(str
 
 async function makeShare(req, res) {
   const b = req.body.makeShare || {};
+  if (b.day) return makeDayShare(req, res, b);
   const q = validateQuizRequest({ section: b.s, level: b.l, ...(b.p || {}) });
   const r = Number(b.r), n = Number(b.n);
   if (q.error || !Number.isInteger(n) || n < 1 || n > 10 || !Number.isInteger(r) || r < 0 || r > n || !/^\d{4}-\d{2}-\d{2}$/.test(String(b.d)))
     return res.status(400).json({ error: 'bad share' });
   const share = { s: q.section, l: q.level, p: q.section === 'tanya' ? { tanya: q.tanya } : { refs: q.refs }, r, n, d: String(b.d), k: b.k === 'challenge' ? 'challenge' : 'score' };
+  const nm = cleanName(b.nm);
+  if (nm) share.nm = nm;   // shown as "Mendy got 3 of 4" on the friend's page; never on the picture
   try {
     const db = getDb();
     const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
@@ -137,12 +146,29 @@ async function makeShare(req, res) {
   } catch (e) { console.error('quiz share:', e.message); return res.status(502).json({ error: 'not saved' }); }
 }
 // A short link's result and its saved questions, or { status, error }
+// A finished day ("All four done"): { day: true, d, st (the streak), nm }
+async function makeDayShare(req, res, b) {
+  const st = Number(b.st);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(b.d)) || !Number.isInteger(st) || st < 0 || st > 10000) return res.status(400).json({ error: 'bad share' });
+  const share = { kind: 'day', d: String(b.d), st };
+  const nm = cleanName(b.nm);
+  if (nm) share.nm = nm;
+  try {
+    const db = getDb();
+    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+    if (!await takeDailyQuota(db, 'ip-' + createHash('sha256').update(ip).digest('hex').slice(0, 24), 'shares', 60)) return res.status(429).json({ error: 'enough for today' });
+    const id = shortCode(JSON.stringify(share));
+    await db.collection('share_links').doc(id).set({ ...share, createdAt: new Date().toISOString() });
+    return res.status(200).json({ id });
+  } catch (e) { console.error('quiz day share:', e.message); return res.status(502).json({ error: 'not saved' }); }
+}
 async function loadShare(id) {
   if (!/^[0-9A-Za-z]{8}$/.test(String(id))) return { status: 400, error: 'bad link' };
   const db = getDb();
   const doc = await db.collection('share_links').doc(id).get();
   if (!doc.exists) return { status: 404, error: 'This link isn\'t available any more' };
   const { createdAt, ...share } = doc.data();
+  if (share.kind === 'day') return { share, questions: [] };
   const q = validateQuizRequest({ section: share.s, level: share.l, ...share.p });
   if (q.error) return { status: 404, error: 'This link isn\'t available any more' };
   const hit = await db.collection('quiz_cache').doc(quizDocId(q.key)).get();
@@ -175,8 +201,13 @@ async function sharePage(req, res) {
   try { x = await loadShare(code); } catch (e) {}
   const go = host + '/?r=' + encodeURIComponent(/^[0-9A-Za-z]{8}$/.test(code) ? code : '');
   const ok = x && !x.error;
-  const title = ok ? (x.share.r === x.share.n ? 'Can you get ' + x.share.n + ' of ' + x.share.n : 'Can you beat ' + x.share.r + ' of ' + x.share.n) + ' on the ' + SEC_NAME[x.share.s] + ' review?' : 'Chitas';
-  const desc = ok ? x.share.t + ' · The same ' + x.share.n + ' questions, free on Chitas' : 'Chumash, Tehillim, Tanya and Rambam, ready each day.';
+  // The preview sits in the sharer's own message, so it speaks as them ("I got…");
+  // the page the friend opens names them (the app, index.html)
+  const day = ok && x.share.kind === 'day';
+  const title = !ok ? 'Chitas'
+    : day ? 'I learned all of today\'s Chitas' + (x.share.st > 1 ? ' · ' + x.share.st + ' days in a row' : '')
+    : 'I got ' + x.share.r + ' of ' + x.share.n + ' on the ' + SEC_NAME[x.share.s] + ' review. Can you ' + (x.share.r === x.share.n ? 'too?' : 'beat it?');
+  const desc = !ok || day ? 'Chumash, Tehillim, Tanya and Rambam, ready each day. Learn it with me, free.' : x.share.t + ' · The same ' + x.share.n + ' questions, free on Chitas';
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=300');
   return res.status(200).send('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'

@@ -725,11 +725,14 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .dp-d span { position:relative; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; }
 .dp-d.ahead { color:var(--t2); }
 /* Sharing a Review: one quiet button on the results, the sheet, the friend's page */
-.rv-share-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:44px; margin-top:8px; border:none; background:none; color:var(--t2); font:600 var(--fs-2) var(--ui-font); cursor:pointer; }
+.rv-share-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:48px; margin-top:10px; border:1.5px solid var(--border); border-radius:999px; background:none; color:var(--t1); font:700 var(--fs-2) var(--ui-font); cursor:pointer; }   /* a real button, the quietest of the three */
 #share-sheet { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
 .sh-cards { display:grid; grid-template-columns:1fr; gap:10px; }
 .sh-off { font-size:var(--fs-1); color:var(--t3); padding:0 12px; text-align:center; }
 .sh-more { display:flex; justify-content:center; gap:8px; }
+.sh-name { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; margin-top:6px; font:600 var(--fs-2) var(--ui-font); color:var(--t1); }
+.sh-name i { font-style:normal; color:var(--t3); font-weight:500; }
+.sh-name input { width:22px; height:22px; accent-color:var(--ink); }
 .sh-card { padding:0; border:none; background:var(--card2); border-radius:12px; aspect-ratio:1200/630; overflow:hidden; cursor:pointer; display:grid; place-items:center; outline:3px solid transparent; outline-offset:2px; }
 .sh-card.on { outline-color:var(--t1); }
 .sh-card img { width:100%; height:100%; display:block; }
@@ -740,6 +743,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #shared-review .sr-brand { display:flex; align-items:center; gap:10px; font:800 20px var(--title-font); color:var(--t1); }
 #shared-review .sr-brand img { border-radius:8px; }
 #shared-review h1 { margin:30px 0 0; font:800 34px/1.08 var(--title-font); letter-spacing:-.6px; color:var(--t1); }
+#shared-review .sr-rings { width:150px; height:150px; margin-top:28px; align-self:center; }
+#shared-review .sr-rings circle { fill:none; stroke-width:11; stroke-linecap:round; }
+#shared-review .sr-rings path { fill:none; stroke:var(--t1); stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
 #shared-review .sr-sub { margin-top:12px; font-size:var(--fs-3); line-height:1.45; color:var(--t2); }
 #shared-review .sr-q { margin-top:24px; background:var(--card); border-radius:22px; padding:18px; }
 #shared-review .sr-k { font:700 12px var(--ui-font); letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
@@ -4250,8 +4256,27 @@ function celebrateAllDone(milestone, learn) {
     + '</div></div>';
   // The moment to offer a reminder: just finished, and none set (only the phone app has them)
   const offerReminder = !!_nativePlugin('LocalNotifications') && !Object.values(_reminderTimes()).some(Boolean);
+  _makeDayLink(iso);   // ready by the time "Share your day" is tapped
   setTimeout(() => showMoment({ full: true, icon: rings, title: 'All four done', sub, xp: '', extra: tiles + next,
-    btns: [{ label: 'See you tomorrow', primary: false }].concat(offerReminder ? [{ label: 'Remind me tomorrow', link: true, action: () => { switchTab('profile'); openReminders(); } }] : []) }), 250);
+    btns: [{ label: 'See you tomorrow', primary: false }, { label: 'Share your day', link: true, action: _shareDay }]
+      .concat(offerReminder ? [{ label: 'Remind me tomorrow', link: true, action: () => { switchTab('profile'); openReminders(); } }] : []) }), 250);
+}
+// Sharing a finished day: a link whose preview is the day card (the four rings
+// closed, the streak), and a page for the friend: "Mendy learned all of today's
+// Chitas", with "Start today". Offered once, quietly, on All four done.
+let _dayLinkP = null;
+function _makeDayLink(iso) {
+  return (_dayLinkP = fetch('/api/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ makeShare: { day: true, d: iso, st: user.streak || 1, ...(_shareName() ? { nm: _shareName() } : {}) } }) })
+    .then(r => r.json()).then(j => j?.id ? _SITE() + 'r/' + j.id : _SITE()).catch(() => _SITE()));
+}
+async function _shareDay() {
+  const link = await (_dayLinkP || _makeDayLink(dateISO(appNow())));
+  const text = "I learned all of today's Chitas" + ((user.streak || 0) > 1 ? ', ' + user.streak + ' days in a row' : '') + '.';
+  try {
+    if (navigator.share) await navigator.share({ text, url: link });
+    else (navigator.clipboard?.writeText(text + ' ' + link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
+  } catch (e) {}
 }
 // "ט״ו כסלו": the day in letters, and the month, in Hebrew
 function _hebDateHeb(iso) {
@@ -4451,7 +4476,7 @@ const _unb64u = str => decodeURIComponent(escape(atob(String(str).replace(/-/g, 
 const _SEC_NAME = { chumash: 'Chumash', tanya: 'Tanya', rambam: 'Rambam' };
 function _reviewShareData() {
   const st = quizState, s = schedule?.[st.sectionId];
-  return { s: st.sectionId, l: st.level, p: st.passage, r: st.score, n: st.questions.length, d: st.iso || dateISO(appNow()),
+  return { s: st.sectionId, l: st.level, p: st.passage, r: st.score, n: st.questions.length, d: st.iso || dateISO(appNow()), nm: _shareName(),
     t: st.sectionId === 'chumash' ? _chumashLine(s?.subtitle) : String(s?.subtitle || ''), q: st.questions[0]?.q || '' };
 }
 // The link: a short code the server keeps (chitas.vercel.app/?r=k3F9xQ2a); if
@@ -4463,10 +4488,13 @@ const _reviewLink = data => _SITE() + '?review=' + _b64u(JSON.stringify({ s: dat
 // picture WhatsApp and iMessage show above the message (tapping it opens the
 // link). One code per card kind. Offline: the long link, which has no picture.
 const _shareLinks = {};
+// Your first name on the friend's page ("Mendy got 3 of 4"), if you choose; never on the picture
+const _myFirstName = () => String(user?.name || '').trim().split(/\s+/)[0] || '';
+const _shareName = () => { try { if (localStorage.getItem('chitas_share_name') === 'off') return ''; } catch (e) {} return _myFirstName(); };
 function _makeShareLink(data, kind = 'score') {
-  const key = kind + '|' + JSON.stringify([data.s, data.l, data.p, data.r, data.n, data.d]);
+  const key = kind + '|' + JSON.stringify([data.s, data.l, data.p, data.r, data.n, data.d, data.nm]);
   return _shareLinks[key] || (_shareLinks[key] = fetch('/api/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ makeShare: { s: data.s, l: data.l, p: data.p, r: data.r, n: data.n, d: data.d, k: kind } }) })
+    body: JSON.stringify({ makeShare: { s: data.s, l: data.l, p: data.p, r: data.r, n: data.n, d: data.d, k: kind, ...(data.nm ? { nm: data.nm } : {}) } }) })
     .then(r => r.json()).then(j => j?.id ? { id: j.id, link: _SITE() + 'r/' + j.id } : { link: _reviewLink(data) })
     .catch(() => { delete _shareLinks[key]; return { link: _reviewLink(data) }; }));
 }
@@ -4485,12 +4513,15 @@ function openReviewShare() {
     + '<div class="sh-cards" role="radiogroup" aria-label="Card">'
     +   '<button type="button" role="radio" class="sh-card" data-k="score" aria-label="Score card"><span class="spinner"></span></button>'
     +   '<button type="button" role="radio" class="sh-card" data-k="challenge" aria-label="Challenge card"><span class="spinner"></span></button></div>'
+    + (_myFirstName() ? '<label class="sh-name"><span>Show my first name <i>(' + escapeHtml(_myFirstName()) + ')</i></span><input type="checkbox" id="sh-name"' + (_shareName() ? ' checked' : '') + '></label>' : '')
     + '<button type="button" class="sh-go" onclick="_shareReview()">' + _shareIcon + 'Share</button>'
     + '<div class="sh-more"><button type="button" class="sh-copy" onclick="_copyReviewLink()">Copy link</button><button type="button" class="sh-copy" onclick="_saveReviewCard()">Save the picture</button></div></div>';
   document.body.appendChild(m);
   const pick = k => { _shareKind = k; m.querySelectorAll('.sh-card').forEach(b => { b.classList.toggle('on', b.dataset.k === k); b.setAttribute('aria-checked', b.dataset.k === k); }); };
   m.querySelectorAll('.sh-card').forEach(b => b.onclick = () => { haptic('select'); pick(b.dataset.k); });
   pick(_shareKind);
+  const nameSw = m.querySelector('#sh-name');
+  if (nameSw) nameSw.onchange = () => { try { localStorage.setItem('chitas_share_name', nameSw.checked ? 'on' : 'off'); } catch (e) {} haptic('select'); _makeShareLink(_reviewShareData(), 'score'); _makeShareLink(_reviewShareData(), 'challenge'); };
   for (const k of ['score', 'challenge']) _makeShareLink(data, k).then(({ id }) => {
     const b = m.querySelector('.sh-card[data-k="' + k + '"]');
     if (!b) return;
@@ -4546,6 +4577,7 @@ async function _openSharedReview(d) {
       pre = await r.json().catch(() => null);
     } catch (e) {}
     if (!pre?.share) { fire(pre?.error || 'That link couldn\'t be opened. Check your connection.', 'xp'); return; }
+    if (pre.share.kind === 'day') { _openSharedDay(pre.share); return; }
     d = pre.share;
   }
   _sharedIn = d;
@@ -4555,7 +4587,7 @@ async function _openSharedReview(d) {
   m.style.setProperty('--k', 'var(--c-' + d.s + ')'); m.style.setProperty('--k-on', 'var(--on-' + d.s + ')');
   m.innerHTML = '<div class="sr-in">'
     + '<div class="sr-brand"><img src="/icons/icon-192.png" alt="" width="34" height="34"><span>Chitas</span></div>'
-    + '<h1>A friend got ' + (+d.r) + ' of ' + (+d.n) + ' on ' + (today ? "today's " : '') + sec + '.</h1>'
+    + '<h1>' + (d.nm ? escapeHtml(d.nm) : 'A friend') + ' got ' + (+d.r) + ' of ' + (+d.n) + ' on ' + (today ? "today's " : '') + sec + '.</h1>'
     + '<p class="sr-sub">The same ' + (+d.n) + ' questions' + (d.t ? ', on ' + escapeHtml(d.t) : '') + '. About two minutes. No sign-up.</p>'
     + '<div class="sr-q"><p class="sr-k">Question 1 of ' + (+d.n) + '</p><p class="sr-qt" id="sr-qt"><span class="spinner"></span></p></div>'
     + '<button type="button" class="sr-go" id="sr-go" disabled>Try the questions</button>'
@@ -4584,6 +4616,23 @@ async function _openSharedReview(d) {
     renderQuestion();
   };
 }
+// A shared day: who learned it, the streak, and a way in
+function _openSharedDay(d) {
+  const today = d.d === dateISO(appNow());
+  const when = today ? "today's" : new Date(d.d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }) + "'s";
+  const newHere = !!document.getElementById('onboarding') && getComputedStyle(document.getElementById('onboarding')).display !== 'none';
+  const m = document.createElement('div');
+  m.id = 'shared-review';
+  m.style.setProperty('--k', '#2B2112'); m.style.setProperty('--k-on', '#FBF7EF');
+  m.innerHTML = '<div class="sr-in">'
+    + '<div class="sr-brand"><img src="/icons/icon-192.png" alt="" width="34" height="34"><span>Chitas</span></div>'
+    + '<svg class="sr-rings" viewBox="0 0 200 200" aria-hidden="true">' + [[88, 'chumash'], [68, 'tehillim'], [48, 'tanya'], [28, 'rambam']].map(([r, id]) => '<circle cx="100" cy="100" r="' + r + '" style="stroke:var(--c-' + id + ')"/>').join('') + '<path d="M91 101l6 6 13-14"/></svg>'
+    + '<h1>' + (d.nm ? escapeHtml(d.nm) : 'A friend') + ' learned all of ' + when + ' Chitas.</h1>'
+    + '<p class="sr-sub">Chumash, Tehillim, Tanya and Rambam' + (d.st > 1 ? ', ' + (+d.st) + ' days in a row' : '') + '. Each day\'s learning is ready here, with Hebrew and English side by side and a guide to follow along.</p>'
+    + '<button type="button" class="sr-go" onclick="_closeSharedReview()">' + (newHere ? 'Start today, free' : 'Open Today') + '</button>'
+    + '</div>';
+  document.body.appendChild(m);
+}
 function _closeSharedReview() { document.getElementById('shared-review')?.remove(); }
 function _showSharedResults() {
   const { score, questions, answers, shared: d } = quizState, total = questions.length;
@@ -4592,7 +4641,8 @@ function _showSharedResults() {
   const items = answers.map(a => '<div class="rv-item"><span class="rv-dot' + (a.right ? ' ok' : '') + '" aria-label="' + (a.right ? 'Right' : 'Missed') + '">' + check + '</span>'
     + '<div style="flex:1;min-width:0;"><p class="rv-a">' + escapeHtml(a.options[a.answer]) + '</p><p class="rv-q">' + escapeHtml(a.q) + '</p>'
     + (a.quote ? '<p class="rv-quote">“' + escapeHtml(a.quote) + '”</p>' : '') + '</div></div>').join('');
-  const vs = score > d.r ? 'One better than your friend.' : score === d.r ? 'The same as your friend.' : 'Your friend got ' + d.r + '.';
+  const who = d.nm ? escapeHtml(d.nm) : 'your friend';
+  const vs = score > d.r ? (score - d.r === 1 ? 'One' : score - d.r) + ' better than ' + who + '.' : score === d.r ? 'The same as ' + who + '.' : (d.nm ? who : 'Your friend') + ' got ' + d.r + '.';
   const newHere = getComputedStyle(document.getElementById('onboarding') || document.body).display !== 'none' && !!document.getElementById('onboarding');
   document.getElementById('quiz-body').innerHTML =
     '<div style="animation:fadeUp .35s ease both;">'
