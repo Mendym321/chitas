@@ -4272,10 +4272,9 @@ function _makeDayLink(iso) {
 }
 async function _shareDay() {
   const link = await (_dayLinkP || _makeDayLink(dateISO(appNow())));
-  const text = "I learned all of today's Chitas" + ((user.streak || 0) > 1 ? ', ' + user.streak + ' days in a row' : '') + '.';
-  try {
-    if (navigator.share) await navigator.share({ text, url: link });
-    else (navigator.clipboard?.writeText(text + ' ' + link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
+  try {   // just the link: its preview says it ("I learned all of today's Chitas")
+    if (navigator.share) await navigator.share({ url: link });
+    else (navigator.clipboard?.writeText(link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
   } catch (e) {}
 }
 // "ט״ו כסלו": the day in letters, and the month, in Hebrew
@@ -4531,17 +4530,17 @@ function openReviewShare() {
     img.src = '/api/quiz?img=' + id;
   });
 }
-const _shareText = data => (data.r === data.n ? 'Can you get ' + data.n + '/' + data.n : 'Can you beat ' + data.r + '/' + data.n) + ' on ' + (data.d === dateISO(appNow()) ? "today's " : 'the ') + (_SEC_NAME[data.s] || '') + ' review?';
 async function _shareReview() {
   const data = _reviewShareData(), { link } = await _makeShareLink(data, _shareKind);
   try {
-    if (navigator.share) { await navigator.share({ text: _shareText(data), url: link }); document.getElementById('share-sheet')?.remove(); }
+    // Just the link: its preview says it all ("I got 3 of 4… Can you beat it?"), once
+    if (navigator.share) { await navigator.share({ url: link }); document.getElementById('share-sheet')?.remove(); }
     else _copyReviewLink();
   } catch (e) { /* closed the share sheet: nothing to do */ }
 }
 async function _copyReviewLink() {
   const data = _reviewShareData(), { link } = await _makeShareLink(data, _shareKind);
-  (navigator.clipboard?.writeText(_shareText(data) + ' ' + link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
+  (navigator.clipboard?.writeText(link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
 }
 // The card as a picture of its own (for a status or a story): saved, or shared as a file
 async function _saveReviewCard() {
@@ -7886,25 +7885,26 @@ function openCredits() {
   m.innerHTML = '<div class="dp-sheet" role="dialog" aria-label="Texts and credits" style="max-height:86vh;overflow-y:auto;"><div class="dp-grab"></div>'
     + '<p class="del-t">Texts and credits</p>'
     + '<p class="cr-h">Texts, from Sefaria (sefaria.org)</p>'
-    + row('Chumash', 'Hebrew text, with The Koren Jerusalem Bible translation')
-    + row('Rashi', 'The Metsudah Chumash / Rashi translation, Metsudah Publications')
-    + row('Tehillim', 'Hebrew text, with Rabbi Shraga Silverstein\'s translation (The Rashi Ketuvim) or The Koren Jerusalem Bible')
-    + row('Tanya', 'Hebrew text and English translation as published on Sefaria')
-    + row('Rambam', 'Mishneh Torah, translated by Rabbi Eliyahu Touger, Moznaim Publishing')
-    + row('Daf Yomi', 'Talmud Bavli, with the William Davidson Edition translation')
-    + row('Nach Yomi', 'Hebrew text, with The Koren Jerusalem Bible translation')
-    + row('Halacha Yomis', 'Kitzur Shulchan Aruch, Hebrew text and English translation as published on Sefaria')
-    + row('Likkutei Torah and Torah Ohr', 'Hebrew text, Kehot Publication Society')
+    + row('Chumash', 'Hebrew text, with the translation you choose: the Metsudah Chumash (Metsudah Publications, CC BY), Rabbi Shraga Silverstein\'s Rashi Chumash (CC BY), The Koren Jerusalem Bible (CC BY-NC) or The Kehot Chumash (© Chabad House Publications)')
+    + row('Rashi', 'The Metsudah Rashi Chumash, Metsudah Publications (CC BY)')
+    + row('Tehillim', 'Hebrew text, with Rabbi Shraga Silverstein\'s The Rashi Ketuvim (CC BY) or The Koren Jerusalem Bible (CC BY-NC)')
+    + row('Tanya', 'Hebrew text and English translation, Kehot Publication Society (CC BY-NC)')
+    + row('Rambam', 'Mishneh Torah, translated by Rabbi Eliyahu Touger, Moznaim Publishing (CC BY-NC)')
+    + row('Daf Yomi', 'Talmud Bavli, the William Davidson Edition (CC BY-NC)')
+    + row('Nach Yomi', 'Hebrew text, with The Koren Jerusalem Bible (CC BY-NC)')
+    + row('Halacha Yomis', 'Kitzur Shulchan Aruch, translated by Rabbi Avrohom Davis, Metsudah Publications (CC BY)')
+    + row('Likkutei Torah and Torah Ohr', 'Hebrew text, Kehot Publication Society (CC BY-NC)')
+    + row('The licences', 'CC BY: free to use with credit. CC BY-NC: free to use with credit, not for commercial use. Chitas is free, with no ads. creativecommons.org/licenses')
     + '<p class="cr-h">Hayom Yom</p>'
     + row('Hayom Yom', 'The Hebrew and Yiddish original, with an English translation made for Chitas from the original')
     + '<p class="cr-h">Calendar</p>'
-    + row('Hebcal', 'The Jewish calendar, the parsha, and the schedules of Tehillim, Rambam, Daf Yomi, Nach Yomi and Kitzur Shulchan Aruch Yomi (hebcal.com)')
+    + row('Hebcal', 'The Jewish calendar, the parsha, and the schedules of Tehillim, Rambam, Daf Yomi, Nach Yomi and Kitzur Shulchan Aruch Yomi (hebcal.com, CC BY 4.0)')
     + '<p class="cr-h">Written with AI</p>'
-    + row('Review and the Tanya guide', 'Written by Claude (Anthropic) from the day\'s text. Every Review answer is checked against a quote from the text; the guide never changes the text itself.')
+    + row('Review and the guides', 'The Review, the Tanya guide and the Rambam guide are written with Claude (Anthropic) from the day\'s text. Every Review answer is checked against a quote from the text; the guides never change the text itself.')
     + '<p class="cr-h">Fonts</p>'
     + row('OT Siddur and OT Vilna', 'By Levi Chyrek, Otzar Fonts (fonts.otzar.io). Used with permission.')
     + row('Hebrew, also', 'Frank Ruhl Libre, Taamey Frank CLM, Shlomo, Heilig (Likkutei Torah)')
-    + row('English', 'Bricolage Grotesque, Crimson Pro')
+    + row('English', 'Bricolage Grotesque, DM Sans, Crimson Pro (SIL Open Font License)')
     + '<button class="del-no" style="margin-top:16px;" onclick="document.getElementById(\'credits-sheet\').remove()">Close</button>'
     + '</div>';
   document.body.appendChild(m);

@@ -167,19 +167,21 @@ async function loadShare(id) {
   const db = getDb();
   const doc = await db.collection('share_links').doc(id).get();
   if (!doc.exists) return { status: 404, error: 'This link isn\'t available any more' };
-  const { createdAt, ...share } = doc.data();
-  if (share.kind === 'day') return { share, questions: [] };
+  const { createdAt, opens, ...share } = doc.data();
+  if (share.kind === 'day') return { share, questions: [], id, opens };
   const q = validateQuizRequest({ section: share.s, level: share.l, ...share.p });
   if (q.error) return { status: 404, error: 'This link isn\'t available any more' };
   const hit = await db.collection('quiz_cache').doc(quizDocId(q.key)).get();
   if (!hit.exists) return { status: 404, error: 'These questions aren\'t available any more' };
-  return { share: { ...share, t: passageLabel(share.s, share.p) }, questions: hit.data().questions, level: q.level };
+  return { share: { ...share, t: passageLabel(share.s, share.p) }, questions: hit.data().questions, level: q.level, id, opens };
 }
 async function readShare(req, res) {
   try {
     const x = await loadShare(req.body.shareId);
     if (x.error) return res.status(x.status).json({ error: x.error });
-    return res.status(200).json(x);
+    const { id, opens, ...out } = x;
+    await getDb().collection('share_links').doc(id).update({ opens: (opens || 0) + 1 }).catch(() => {});   // counted (only a number) for the admin page
+    return res.status(200).json(out);
   } catch (e) { console.warn('quiz share read:', e.message); return res.status(502).json({ error: 'Couldn\'t load the questions' }); }
 }
 // The link preview: the picture, and the page that carries it

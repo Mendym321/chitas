@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   try {
     const db = getDb();
     const usageDay = new Date().toISOString().slice(0, 10);   // the daily limits count by the server's (UTC) day
-    const [users, quizzes, quizUse, tanyaUse, guides, failed, signups] = await Promise.all([
+    const [users, quizzes, quizUse, tanyaUse, guides, failed, signups, shares] = await Promise.all([
       db.collection('users').select('lastDate', 'done', 'pastDone', 'streak', 'quizDone', 'pastQuizDone', 'rambamTrack', 'extraTracks').get(),
       db.collection('quiz_cache').select('createdAt').get(),
       db.collection('quiz_usage').where('date', '==', usageDay).get(),
@@ -32,6 +32,7 @@ export default async function handler(req, res) {
       db.collection('tanya_enhanced').count().get(),
       db.collection('tanya_locks').where('state', '==', 'failed').count().get(),
       signupDates().catch(() => []),
+      db.collection('share_links').select('kind', 'opens', 'createdAt').get().catch(() => null),
     ]);
     const sum = snap => snap.docs.reduce((n, d) => n + (d.get('count') || 0), 0);
     const body = summarize(users.docs.map(d => d.data()), {
@@ -44,6 +45,13 @@ export default async function handler(req, res) {
         tanyaRequestsToday: sum(tanyaUse),
       },
     });
+    // Sharing: links made in the last 30 days (a Review or a whole day), and how many friends opened them
+    const since = new Date(Date.parse(today + 'T12:00:00Z') - 30 * 864e5).toISOString().slice(0, 10);
+    const recent = (shares?.docs || []).map(d => d.data()).filter(x => String(x.createdAt || '') >= since);
+    body.shares = {
+      reviews: recent.filter(x => x.kind !== 'day').length, days: recent.filter(x => x.kind === 'day').length,
+      opened: recent.filter(x => x.opens > 0).length, opens: recent.reduce((t, x) => t + (x.opens || 0), 0),
+    };
     cached = { key: today, at: Date.now(), body };
     return send(res, 200, body);
   } catch (e) {
