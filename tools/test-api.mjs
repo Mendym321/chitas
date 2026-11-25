@@ -172,6 +172,19 @@ check('a shared review, no account: the saved questions', [shared.status, shared
 const notSaved = await call({ ...BODY, refs: ['Genesis 4:1-4:26'], shared: true }, null);
 check('a shared review never makes a quiz: not saved → 404, no AI call', [notSaved.status, claudeCalls - callsBefore], [404, 0]);
 check('a shared review with a bad passage → 400', (await call({ ...BODY, refs: ['nope'], shared: true }, null)).status, 400);
+const mk = await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 2:4-2:19'] }, r: 3, n: 4, d: '2026-11-24', t: 'Made-up words' } }, null);
+check('a short link: an 8-letter code, the same for the same result', [mk.status, /^[0-9A-Za-z]{8}$/.test(mk.json.id || ''),
+  (await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 2:4-2:19'] }, r: 3, n: 4, d: '2026-11-24' } }, null)).json.id === mk.json.id], [200, true, true]);
+const rd = await call({ shareId: mk.json.id }, null);
+check('…opened: what it is about (named by the server, not the phone), and the saved questions', [rd.status, rd.json.share?.r, rd.json.share?.t, rd.json.questions?.length], [200, 3, 'Bereishis 2:4–2:19', 4]);
+check('a short link that doesn\'t exist → 404; a bad one → 400', [(await call({ shareId: 'ZZZZZZZZ' }, null)).status, (await call({ shareId: 'x' }, null)).status], [404, 400]);
+check('a short link for a bad passage is refused', (await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['nope'] }, r: 1, n: 4, d: '2026-11-24' } }, null)).status, 400);
+check('nothing personal is kept with a short link', Object.keys([...store].find(([k]) => k.startsWith('share_links/'))[1]).sort(), ['createdAt', 'd', 'k', 'l', 'n', 'p', 'r', 's']);
+const get = async query => { const res = { headers: {}, status(c) { res.code = c; return res; }, setHeader(k, v) { res.headers[k] = v; }, send(b) { res.body = b; return res; }, json(j) { res.body = j; return res; } }; await handler({ method: 'GET', query, headers: { host: 'chitas.vercel.app' } }, res); return res; };
+const pic = await get({ img: mk.json.id });
+check('the link preview picture: a PNG drawn by the server, 1200 wide', [pic.code, pic.headers?.['Content-Type'], Buffer.isBuffer(pic.body) && pic.body.readUInt32BE(16)], [200, 'image/png', 1200]);
+const pg = await get({ page: mk.json.id });
+check('the link page: preview tags, the picture, then on to the app', [pg.code, /og:image" content="https:\/\/chitas\.vercel\.app\/api\/quiz\?img=/.test(pg.body), /Can you beat 3 of 4 on the Chumash review\?/.test(pg.body), pg.body.includes('/?r=' + mk.json.id), pg.body.includes('Made-up')], [200, true, true, true, false]);
 
 console.log('Tanya enhance:');
 // Today on the (pretend) schedule: chapter 1 from verse 2 to its end
