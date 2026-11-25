@@ -12,7 +12,7 @@ Tick the boxes as you go (on GitHub you can edit this file and change `[ ]` to `
 
 - [x] **0.1 Push everything live.** Tell Claude "push live". This puts the sponsor page, the plaque on Today and the new videos on the website. *Why:* the phone apps show the live website, so whatever is live is what Apple and Google will review.
 
-- [x] **0.2 Written guides.** In Tanya, a few plain-English bridges between the pieces where the argument takes a step; in Rambam, a line on the chapter, headings, plain-words notes after the hard halachos, and the Hebrew split to match the English paragraphs; in Chumash, one line a day. Written and checked so far: Rambam through 1 Dec, Tanya through 4 Dec, Chumash through 19 Dec. *Next batch:* before 1 December (`docs/guides-batch.md`).
+- [x] **0.2 Written guides.** In Tanya, a few plain-English bridges between the pieces where the argument takes a step; in Rambam, a line on the chapter, headings, plain-words notes after the hard halachos, and the Hebrew split to match the English paragraphs; in Chumash, one line a day. Written and checked so far: Rambam through 8 Dec, Tanya through 5 Dec, Chumash through 19 Dec. *Next batch:* before 8 December (`docs/guides-batch.md`).
   *Each time:* tell Claude "write the next batch of guides" about a week before they run out. The readers still work without them (the AI writes the Tanya guide each day, in the same style, a few cents), but the hand-written ones are better.
 
 - [x] **0.3 Developer name: Menachem Marcus.** Decided: individual accounts on both stores, under your own legal name (it must match your ID and payment details). The app can move to a business account later; both stores allow a transfer.
