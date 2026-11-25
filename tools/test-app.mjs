@@ -18,6 +18,7 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'applic
 // Tiny static file server for the repo folder
 const server = createServer(async (req, res) => {
   const path = decodeURIComponent(req.url.split('?')[0]);
+  if (path === '/api/quiz' && req.method === 'GET') return res.writeHead(200, { 'Content-Type': 'image/png' }).end(await readFile(join(ROOT, 'icons/icon-32.png')));   // a shared card's picture
   try {
     const body = await readFile(join(ROOT, path === '/' ? 'index.html' : path));
     res.writeHead(200, { 'Content-Type': TYPES[extname(path) || '.html'] || 'application/octet-stream' }).end(body);
@@ -917,22 +918,29 @@ console.log('Sharing a Review:');
   const res = await page.evaluate(() => [!!document.querySelector('.rv-share-btn'), document.querySelectorAll('#quiz-body button').length, !!document.getElementById('share-sheet')]);
   if (JSON.stringify(res) === JSON.stringify([true, 4, false])) console.log('  ✓ the results offer sharing quietly: one small button, no pop-up');
   else { failed++; console.log('  ✗ results share button', res); }
-  const cards = await page.evaluate(async () => { await openReviewShare(); return ['score', 'challenge'].map(k => [_shareCards[k]?.width, _shareCards[k]?.height, document.querySelector('.sh-card[data-k="' + k + '"] img') !== null]); });
-  if (JSON.stringify(cards) === JSON.stringify([[1080, 1350, true], [1080, 1350, true]])) console.log('  ✓ two cards, drawn at 1080 × 1350, to choose from');
-  else { failed++; console.log('  ✗ share cards', cards); }
-  let made = null;
-  await page.route(url + 'api/quiz', async r => { made = JSON.parse(r.request().postData()).makeShare; await r.fulfill({ json: { id: 'Ab3dE9xQ' } }); });
-  const link = await page.evaluate(async () => { const l = await _makeShareLink({ s: 'chumash', l: 'quick', p: { refs: ['Genesis 32:31-33:5'] }, r: 3, n: 4, d: dateISO(appNow()), t: 'Vayishlach · Aliya 3' }); document.getElementById('share-sheet')?.remove(); closeQuiz(); return l; });
-  await page.unroute(url + 'api/quiz');
-  if (link === 'https://chitas.vercel.app/?r=Ab3dE9xQ' && made?.r === 3 && made?.p?.refs?.[0] === 'Genesis 32:31-33:5') console.log('  ✓ the link is short: chitas.vercel.app/?r= and an 8-letter code');
-  else { failed++; console.log('  ✗ short link', link, made); }
+  const made = [];
+  await page.route(u => u.href.startsWith(url + 'api/quiz'), async r => {
+    const b = JSON.parse(r.request().postData()); made.push(b.makeShare);
+    await r.fulfill({ json: { id: b.makeShare.k === 'challenge' ? 'Ch4llng3' : 'Ab3dE9xQ' } });
+  });
+  await page.evaluate(() => openReviewShare());
+  await page.waitForFunction(() => document.querySelectorAll('.sh-card img').length === 2, null, { timeout: 5000 }).catch(() => {});
+  const cards = await page.evaluate(() => [...document.querySelectorAll('.sh-card')].map(b => [b.dataset.k, b.querySelector('img')?.getAttribute('src')]));
+  if (JSON.stringify(cards) === JSON.stringify([['score', '/api/quiz?img=Ab3dE9xQ'], ['challenge', '/api/quiz?img=Ch4llng3']]) && made.every(m => m.r === 3 && m.n === 4 && !('t' in m)))
+    console.log('  ✓ the two cards, as your friend will see them (drawn by the server), to choose from');
+  else { failed++; console.log('  ✗ share cards', cards, made); }
+  const link = await page.evaluate(async () => (await _makeShareLink(_reviewShareData(), 'score')).link);
+  await page.evaluate(() => { document.getElementById('share-sheet')?.remove(); closeQuiz(); });
+  await page.unroute(u => u.href.startsWith(url + 'api/quiz'));
+  if (link === 'https://chitas.vercel.app/r/Ab3dE9xQ') console.log('  ✓ the link is short: chitas.vercel.app/r/ and an 8-letter code');
+  else { failed++; console.log('  ✗ short link', link); }
   const friend = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await friend.clock.install({ time: noonToday() });
   let asked = null;
   await friend.route(u => !u.href.startsWith(url), r => r.abort());
   await friend.route(url + 'api/quiz', async r => { asked = JSON.parse(r.request().postData());
     await r.fulfill({ json: { share: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 32:31-33:5'] }, r: 3, n: 4, d: await friend.evaluate(() => dateISO(appNow())), t: 'Vayishlach · Aliya 3' }, questions: Q, level: 'quick' } }); });
-  await friend.goto(link.replace('https://chitas.vercel.app/', url), { waitUntil: 'load' });
+  await friend.goto(url + '?r=Ab3dE9xQ', { waitUntil: 'load' });
   await friend.waitForFunction(() => document.getElementById('sr-go') && !document.getElementById('sr-go').disabled, null, { timeout: 8000 }).catch(() => {});
   const land = await friend.evaluate(() => [document.querySelector('#shared-review h1')?.textContent, document.getElementById('sr-qt')?.textContent, location.search]);
   const askOk = asked && asked.shareId === 'Ab3dE9xQ';

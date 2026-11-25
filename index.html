@@ -727,8 +727,10 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 /* Sharing a Review: one quiet button on the results, the sheet, the friend's page */
 .rv-share-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:44px; margin-top:8px; border:none; background:none; color:var(--t2); font:600 var(--fs-2) var(--ui-font); cursor:pointer; }
 #share-sheet { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
-.sh-cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.sh-card { padding:0; border:none; background:var(--card2); border-radius:14px; aspect-ratio:4/5; overflow:hidden; cursor:pointer; display:grid; place-items:center; outline:3px solid transparent; outline-offset:2px; }
+.sh-cards { display:grid; grid-template-columns:1fr; gap:10px; }
+.sh-off { font-size:var(--fs-1); color:var(--t3); padding:0 12px; text-align:center; }
+.sh-more { display:flex; justify-content:center; gap:8px; }
+.sh-card { padding:0; border:none; background:var(--card2); border-radius:12px; aspect-ratio:1200/630; overflow:hidden; cursor:pointer; display:grid; place-items:center; outline:3px solid transparent; outline-offset:2px; }
 .sh-card.on { outline-color:var(--t1); }
 .sh-card img { width:100%; height:100%; display:block; }
 .sh-go { width:100%; height:54px; margin-top:16px; border:none; border-radius:999px; background:var(--ink); color:var(--on-ink); font:800 var(--fs-3) var(--ui-font); display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; }
@@ -4424,151 +4426,70 @@ function _reviewShareData() {
 // it can't be made (offline), the long link that carries it all
 const _SITE = () => SHARE_URL.replace(/\/get$/, '/');
 const _reviewLink = data => _SITE() + '?review=' + _b64u(JSON.stringify({ s: data.s, l: data.l, p: data.p, r: data.r, n: data.n, d: data.d, t: data.t }));
-let _shareLinkP = null;
-function _makeShareLink(data) {
-  return (_shareLinkP = fetch('/api/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ makeShare: { s: data.s, l: data.l, p: data.p, r: data.r, n: data.n, d: data.d, t: data.t } }) })
-    .then(r => r.json()).then(j => j?.id ? _SITE() + '?r=' + j.id : _reviewLink(data)).catch(() => _reviewLink(data)));
-}
-// "י״ד כסלו": the day in letters, and the month, in Hebrew
-function _hebDateHe(iso) {
-  const d = new Date(iso + 'T12:00:00');
-  let n = hebNumeral(+new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric' }).format(d));
-  n = n.length > 1 ? n.slice(0, -1) + '״' + n.slice(-1) : n + '׳';
-  const m = new Intl.DateTimeFormat('he-u-ca-hebrew', { month: 'long' }).format(d);
-  return n + ' ' + m;
+// The short link for one card (chitas.vercel.app/r/k3F9xQ2a): the server
+// keeps the result under a code and draws the card as the link's preview, the
+// picture WhatsApp and iMessage show above the message (tapping it opens the
+// link). One code per card kind. Offline: the long link, which has no picture.
+const _shareLinks = {};
+function _makeShareLink(data, kind = 'score') {
+  const key = kind + '|' + JSON.stringify([data.s, data.l, data.p, data.r, data.n, data.d]);
+  return _shareLinks[key] || (_shareLinks[key] = fetch('/api/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ makeShare: { s: data.s, l: data.l, p: data.p, r: data.r, n: data.n, d: data.d, k: kind } }) })
+    .then(r => r.json()).then(j => j?.id ? { id: j.id, link: _SITE() + 'r/' + j.id } : { link: _reviewLink(data) })
+    .catch(() => { delete _shareLinks[key]; return { link: _reviewLink(data) }; }));
 }
 
-// The card, 1080 × 1350 (what WhatsApp and Instagram show whole). 'score': in
-// the section's colour; 'challenge': dark, "I got 3 of 4". The app's own fonts.
-async function _drawReviewCard(kind, data) {
-  await Promise.all(['800 80px "Bricolage Grotesque"', '700 40px "DM Sans"', 'italic 400 40px "Crimson Pro"', '700 50px Vilna'].map(f => document.fonts?.load?.(f).catch(() => {})));
-  const W = 1080, H = 1350, c = document.createElement('canvas');
-  c.width = W; c.height = H;
-  const x = c.getContext('2d');
-  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-  const acc = css('--c-' + data.s) || '#E0A030', on = css('--on-' + data.s) || '#2E1E00';
-  const INK = '#2B2112', CREAM = '#FBF6EC', today = data.d === dateISO(appNow());
-  const sec = _SEC_NAME[data.s] || 'Review';
-  const font = (w, px, fam) => { x.font = w + ' ' + px + 'px ' + fam; };
-  const B = '"Bricolage Grotesque", sans-serif', D = '"DM Sans", sans-serif';
-  const rr = (x0, y0, w, h, r) => { x.beginPath(); x.roundRect ? x.roundRect(x0, y0, w, h, r) : x.rect(x0, y0, w, h); };
-  const wrap = (text, maxW, maxLines) => {
-    const words = String(text).split(/\s+/), lines = [];
-    let line = '';
-    for (const w of words) {
-      const t = line ? line + ' ' + w : w;
-      if (x.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
-    }
-    if (line) lines.push(line);
-    if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, '') + '…'; }
-    return lines;
-  };
-  const logo = (x0, y0, size) => {
-    x.fillStyle = '#FBF7EF'; rr(x0, y0, size, size, size * .22); x.fill();
-    [['#E0A030', .39], ['#3F6FC0', .30], ['#8B54B0', .21], ['#5E8A3C', .12]].forEach(([col, r]) => {
-      x.beginPath(); x.arc(x0 + size / 2, y0 + size / 2, size * r, 0, Math.PI * 2); x.strokeStyle = col; x.lineWidth = size * .068; x.stroke();
-    });
-  };
-  const head = (ink) => {
-    logo(68, 68, 80);
-    x.fillStyle = ink; font(800, 46, B); x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText('Chitas', 168, 110);
-    x.direction = 'rtl'; x.textAlign = 'right'; font(700, 54, 'Vilna, serif'); x.fillText(_hebDateHe(data.d), W - 68, 110);
-    x.direction = 'ltr'; x.textAlign = 'left';
-  };
-  x.textBaseline = 'alphabetic';
-  if (kind === 'challenge') {
-    const hi = 'color-mix(in srgb, ' + acc + ' 70%, white)';
-    const hiCol = (() => { const t = document.createElement('span'); t.style.color = hi; document.body.appendChild(t); const v = getComputedStyle(t).color; t.remove(); return v; })();
-    x.fillStyle = '#1E1A16'; x.fillRect(0, 0, W, H);
-    head(CREAM);
-    x.textBaseline = 'alphabetic';
-    font(800, 104, B); x.fillStyle = CREAM;
-    const a = 'I got ', b = data.r + ' of ' + data.n;
-    x.fillText(a, 68, 360); const aw = x.measureText(a).width;
-    x.fillStyle = hiCol; x.fillText(b, 68 + aw, 360);
-    x.fillStyle = CREAM; x.fillText('on ' + (today ? "today's " : '') + sec + '.', 68, 470);
-    font(500, 38, D); x.fillStyle = '#CFC5B4';
-    wrap(data.t, W - 136, 2).forEach((l, i) => x.fillText(l, 68, 560 + i * 52));
-    const gap = 16, bw = (W - 136 - gap * (data.n - 1)) / data.n;
-    for (let i = 0; i < data.n; i++) { x.fillStyle = i < data.r ? hiCol : '#3A332B'; rr(68 + i * (bw + gap), 680, bw, 96, 24); x.fill(); }
-    font(600, 28, D); x.fillStyle = '#A89D8B'; x.fillText(QUIZ_LEVELS[data.l].label + ' · ' + data.n + ' questions on ' + (today ? "today's" : 'the') + ' text', 68, 830);
-    x.fillStyle = hiCol; rr(68, 1060, W - 136, 222, 52); x.fill();
-    x.fillStyle = '#1E1A16'; font(800, 56, B);
-    x.fillText(data.r === data.n ? 'Can you get ' + data.n + ' of ' + data.n + '?' : 'Can you beat ' + data.r + '?', 116, 1160);
-    font(600, 30, D); x.fillText('Tap to try the same questions · free', 116, 1222);
-  } else {
-    x.fillStyle = acc; x.fillRect(0, 0, W, H);
-    head(on);
-    x.textBaseline = 'alphabetic'; x.fillStyle = on;
-    font(700, 30, D); x.globalAlpha = .8; x.fillText(((today ? "Today's " : '') + sec + ' review').toUpperCase(), 68, 300); x.globalAlpha = 1;
-    font(800, 80, B); wrap(data.t, W - 136, 2).forEach((l, i) => x.fillText(l, 68, 390 + i * 86));
-    const py = data.t && x.measureText(data.t).width > W - 136 ? 560 : 480;
-    font('italic 400', 44, '"Crimson Pro", serif');
-    const qLines = data.q ? wrap(data.q, W - 256, 3) : [];
-    const ph = 390 + qLines.length * 58 + (qLines.length ? 50 : 0);   // the box fits what's in it
-    x.fillStyle = CREAM; rr(68, py, W - 136, ph, 60); x.fill();
-    x.fillStyle = INK; font(800, 240, B); x.fillText(data.r + '/' + data.n, 128, py + 260);
-    const sw = x.measureText(data.r + '/' + data.n).width;
-    font(700, 48, B); x.fillStyle = '#6B5428'; x.fillText(data.r === data.n ? 'all right' : 'right', 128 + sw + 28, py + 248);
-    const gap = 20, bw = (W - 256 - gap * (data.n - 1)) / data.n;
-    for (let i = 0; i < data.n; i++) { x.fillStyle = i < data.r ? acc : '#E6DCC8'; rr(128 + i * (bw + gap), py + 310, bw, 28, 14); x.fill(); }
-    if (qLines.length) { x.fillStyle = '#4A3A1C'; font('italic 400', 44, '"Crimson Pro", serif'); qLines.forEach((l, i) => x.fillText(l, 128, py + 420 + i * 58)); }
-    x.fillStyle = on; font(800, 54, B);
-    x.fillText(data.r === data.n ? 'Can you get ' + data.n + '/' + data.n + '?' : 'Can you beat ' + data.r + '/' + data.n + '?', 68, 1196);
-    font(600, 30, D); x.globalAlpha = .85; x.fillText('The same ' + data.n + ' questions · free', 68, 1250); x.globalAlpha = 1;
-    x.fillStyle = INK; x.beginPath(); x.arc(W - 132, 1212, 64, 0, Math.PI * 2); x.fill();
-    x.strokeStyle = CREAM; x.lineWidth = 9; x.lineCap = 'round'; x.lineJoin = 'round';
-    x.beginPath(); x.moveTo(W - 160, 1212); x.lineTo(W - 104, 1212); x.moveTo(W - 128, 1186); x.lineTo(W - 102, 1212); x.lineTo(W - 128, 1238); x.stroke();
-  }
-  return c;
-}
-
-// The sheet: the two cards to choose from, then the phone's own share
-let _shareKind = 'score', _shareCards = {};
-async function openReviewShare() {
+// The sheet: the two cards (as your friend will see them), then the phone's own share
+let _shareKind = 'score';
+function openReviewShare() {
   const data = _reviewShareData();
   document.getElementById('share-sheet')?.remove();
   const m = document.createElement('div');
   m.id = 'share-sheet';
   m.onclick = e => { if (e.target === m) m.remove(); };
   m.innerHTML = '<div class="dp-sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title">'
-    + '<div class="dp-head"><div><p class="ps-modal-title" id="sh-title">Share your result</p><p class="ps-modal-sub">Your score and the first question. No name, no answers.</p></div>'
+    + '<div class="dp-head"><div><p class="ps-modal-title" id="sh-title">Share your result</p><p class="ps-modal-sub">A link with your card. Your score and the first question; no name, no answers.</p></div>'
     + '<button type="button" class="ps-modal-close" aria-label="Close" onclick="document.getElementById(\'share-sheet\').remove()">×</button></div>'
     + '<div class="sh-cards" role="radiogroup" aria-label="Card">'
     +   '<button type="button" role="radio" class="sh-card" data-k="score" aria-label="Score card"><span class="spinner"></span></button>'
     +   '<button type="button" role="radio" class="sh-card" data-k="challenge" aria-label="Challenge card"><span class="spinner"></span></button></div>'
     + '<button type="button" class="sh-go" onclick="_shareReview()">' + _shareIcon + 'Share</button>'
-    + '<button type="button" class="sh-copy" onclick="_copyReviewLink()">Copy link</button></div>';
+    + '<div class="sh-more"><button type="button" class="sh-copy" onclick="_copyReviewLink()">Copy link</button><button type="button" class="sh-copy" onclick="_saveReviewCard()">Save the picture</button></div></div>';
   document.body.appendChild(m);
   const pick = k => { _shareKind = k; m.querySelectorAll('.sh-card').forEach(b => { b.classList.toggle('on', b.dataset.k === k); b.setAttribute('aria-checked', b.dataset.k === k); }); };
   m.querySelectorAll('.sh-card').forEach(b => b.onclick = () => { haptic('select'); pick(b.dataset.k); });
   pick(_shareKind);
-  _makeShareLink(data);   // the short link, ready by the time you tap Share
-  _shareCards = {};
-  for (const k of ['score', 'challenge']) {
-    const cv = await _drawReviewCard(k, data);
-    _shareCards[k] = cv;
+  for (const k of ['score', 'challenge']) _makeShareLink(data, k).then(({ id }) => {
     const b = m.querySelector('.sh-card[data-k="' + k + '"]');
-    if (b) b.innerHTML = '<img alt="" src="' + cv.toDataURL('image/png') + '">';
-  }
+    if (!b) return;
+    if (!id) { b.innerHTML = '<span class="sh-off">Your card shows once you\'re online</span>'; return; }
+    const img = new Image();
+    img.alt = ''; img.onload = () => { b.innerHTML = ''; b.appendChild(img); };
+    img.src = '/api/quiz?img=' + id;
+  });
 }
+const _shareText = data => (data.r === data.n ? 'Can you get ' + data.n + '/' + data.n : 'Can you beat ' + data.r + '/' + data.n) + ' on ' + (data.d === dateISO(appNow()) ? "today's " : 'the ') + (_SEC_NAME[data.s] || '') + ' review?';
 async function _shareReview() {
-  const data = _reviewShareData(), link = await (_shareLinkP || _makeShareLink(data));
-  const cv = _shareCards[_shareKind] || await _drawReviewCard(_shareKind, data);
-  const text = (data.r === data.n ? 'Can you get ' + data.n + '/' + data.n : 'Can you beat ' + data.r + '/' + data.n) + ' on ' + (data.d === dateISO(appNow()) ? "today's " : '') + (_SEC_NAME[data.s] || '') + '?';
-  const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
-  const file = blob && new File([blob], 'chitas-review.png', { type: 'image/png' });
+  const data = _reviewShareData(), { link } = await _makeShareLink(data, _shareKind);
   try {
-    if (file && navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], text: text + ' ' + link });
-    else if (navigator.share) await navigator.share({ text, url: link });
-    else { _copyReviewLink(); const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'chitas-review.png'; a.click(); return; }
-    document.getElementById('share-sheet')?.remove();
+    if (navigator.share) { await navigator.share({ text: _shareText(data), url: link }); document.getElementById('share-sheet')?.remove(); }
+    else _copyReviewLink();
   } catch (e) { /* closed the share sheet: nothing to do */ }
 }
 async function _copyReviewLink() {
-  const link = await (_shareLinkP || _makeShareLink(_reviewShareData()));
-  (navigator.clipboard?.writeText(link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
+  const data = _reviewShareData(), { link } = await _makeShareLink(data, _shareKind);
+  (navigator.clipboard?.writeText(_shareText(data) + ' ' + link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
+}
+// The card as a picture of its own (for a status or a story): saved, or shared as a file
+async function _saveReviewCard() {
+  const { id } = await _makeShareLink(_reviewShareData(), _shareKind);
+  if (!id) { fire('Your card shows once you\'re online', 'xp'); return; }
+  try {
+    const blob = await (await fetch('/api/quiz?img=' + id)).blob();
+    const file = new File([blob], 'chitas-review.png', { type: 'image/png' });
+    if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file] });
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'chitas-review.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+  } catch (e) {}
 }
 
 // ── A friend opens the link: the same questions, no account needed ──────────

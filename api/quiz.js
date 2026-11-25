@@ -23,6 +23,13 @@
  * share_links/ (nothing about the person), and answers { id }. The same result
  * gets the same code. Up to 60 a day per address (hashed). { shareId } reads
  * it back with the saved questions: { share, questions, level }.
+ *
+ * GET ?page=<code> (the link chitas.vercel.app/r/<code>, by a rewrite): a tiny
+ * page that sends people on to the app, with the tags WhatsApp, iMessage and
+ * the rest read for a link preview. GET ?img=<code>: that preview picture,
+ * drawn here from the saved result (api/_lib/share-card.js). Everything on
+ * the picture and the page is worked out here from the passage; nothing a
+ * phone sends is printed on it.
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
@@ -32,6 +39,7 @@ import { getDb, verifyUser } from './_lib/firebase.js';
 import { takeDailyQuota } from './_lib/quota.js';
 import { englishSegments, tanyaSegments } from './_lib/sefaria.js';
 import { LEVELS, validateQuizRequest, checkQuestions } from './_lib/quiz-core.js';
+import { shareCardPng, SHARE_CARD_SIZE } from './_lib/share-card.js';
 
 export const config = { maxDuration: 60 };
 
@@ -86,6 +94,25 @@ async function fetchPassage(req) {
   return { label: 'Chumash with Rashi', text: parts.join('\n\n') };
 }
 
+// The portion's name, from the passage itself: "Bereishis 32:31–33:5",
+// "Kuntres Acharon 6", "Creditor and Debtor 4–6"
+const BOOKS = { Genesis: 'Bereishis', Exodus: 'Shemos', Leviticus: 'Vayikra', Numbers: 'Bamidbar', Deuteronomy: 'Devarim' };
+export function passageLabel(s, p) {
+  if (s === 'tanya') {
+    const m = String(p?.tanya?.chapterSlug || '').match(/;_?([A-Za-z_']+)\.(\d+)$/);
+    return m ? m[1].replace(/_/g, ' ') + ' ' + m[2] : 'Tanya';
+  }
+  const refs = (p?.refs || []).map(String);
+  if (s === 'chumash') return refs.map(r => r.replace(/^(\w+)/, b => BOOKS[b] || b).replace(/-/g, '–')).join(' · ');
+  const parts = refs.map(r => r.replace(/^Mishneh Torah, /, '').match(/^(.*) (\d+)$/)).filter(Boolean);
+  if (parts.length && parts.every(x => x[1] === parts[0][1]))
+    return parts[0][1] + ' ' + parts[0][2] + (parts.length > 1 ? '–' + parts.at(-1)[2] : '');
+  return parts.map(x => x[1] + ' ' + x[2]).join(', ');
+}
+const todayNY = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+const SEC_NAME = { chumash: 'Chumash', tanya: 'Tanya', rambam: 'Rambam' };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 const quizDocId = key => createHash('sha256').update(key + '|' + CACHE_VERSION).digest('hex').slice(0, 40);
 const B62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const shortCode = str => { let n = BigInt('0x' + createHash('sha256').update(str).digest('hex').slice(0, 16)), out = ''; for (let i = 0; i < 8; i++) { out += B62[Number(n % 62n)]; n /= 62n; } return out; };
@@ -96,7 +123,7 @@ async function makeShare(req, res) {
   const r = Number(b.r), n = Number(b.n);
   if (q.error || !Number.isInteger(n) || n < 1 || n > 10 || !Number.isInteger(r) || r < 0 || r > n || !/^\d{4}-\d{2}-\d{2}$/.test(String(b.d)))
     return res.status(400).json({ error: 'bad share' });
-  const share = { s: q.section, l: q.level, p: q.section === 'tanya' ? { tanya: q.tanya } : { refs: q.refs }, r, n, d: String(b.d), t: String(b.t || '').slice(0, 80) };
+  const share = { s: q.section, l: q.level, p: q.section === 'tanya' ? { tanya: q.tanya } : { refs: q.refs }, r, n, d: String(b.d), k: b.k === 'challenge' ? 'challenge' : 'score' };
   try {
     const db = getDb();
     const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
@@ -106,23 +133,61 @@ async function makeShare(req, res) {
     return res.status(200).json({ id });
   } catch (e) { console.error('quiz share:', e.message); return res.status(502).json({ error: 'not saved' }); }
 }
+// A short link's result and its saved questions, or { status, error }
+async function loadShare(id) {
+  if (!/^[0-9A-Za-z]{8}$/.test(String(id))) return { status: 400, error: 'bad link' };
+  const db = getDb();
+  const doc = await db.collection('share_links').doc(id).get();
+  if (!doc.exists) return { status: 404, error: 'This link isn\'t available any more' };
+  const { createdAt, ...share } = doc.data();
+  const q = validateQuizRequest({ section: share.s, level: share.l, ...share.p });
+  if (q.error) return { status: 404, error: 'This link isn\'t available any more' };
+  const hit = await db.collection('quiz_cache').doc(quizDocId(q.key)).get();
+  if (!hit.exists) return { status: 404, error: 'These questions aren\'t available any more' };
+  return { share: { ...share, t: passageLabel(share.s, share.p) }, questions: hit.data().questions, level: q.level };
+}
 async function readShare(req, res) {
-  const id = req.body.shareId;
-  if (!/^[0-9A-Za-z]{8}$/.test(id)) return res.status(400).json({ error: 'bad link' });
   try {
-    const db = getDb();
-    const doc = await db.collection('share_links').doc(id).get();
-    if (!doc.exists) return res.status(404).json({ error: 'This link isn\'t available any more' });
-    const { createdAt, ...share } = doc.data();
-    const q = validateQuizRequest({ section: share.s, level: share.l, ...share.p });
-    if (q.error) return res.status(404).json({ error: 'This link isn\'t available any more' });
-    const hit = await db.collection('quiz_cache').doc(quizDocId(q.key)).get();
-    if (!hit.exists) return res.status(404).json({ error: 'These questions aren\'t available any more' });
-    return res.status(200).json({ share, questions: hit.data().questions, level: q.level });
+    const x = await loadShare(req.body.shareId);
+    if (x.error) return res.status(x.status).json({ error: x.error });
+    return res.status(200).json(x);
   } catch (e) { console.warn('quiz share read:', e.message); return res.status(502).json({ error: 'Couldn\'t load the questions' }); }
+}
+// The link preview: the picture, and the page that carries it
+async function shareImage(req, res) {
+  try {
+    const x = await loadShare(req.query.img);
+    if (x.error) return res.status(x.status).send(x.error);
+    const png = await shareCardPng({ ...x.share, q: x.questions[0]?.q || '' }, todayNY());
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+    return res.status(200).send(png);
+  } catch (e) { console.error('share image:', e.message); return res.status(502).send('not drawn'); }
+}
+async function sharePage(req, res) {
+  const code = String(req.query.page || '');
+  const host = 'https://' + (req.headers['x-forwarded-host'] || req.headers.host || 'chitas.vercel.app');
+  let x = null;
+  try { x = await loadShare(code); } catch (e) {}
+  const go = host + '/?r=' + encodeURIComponent(/^[0-9A-Za-z]{8}$/.test(code) ? code : '');
+  const ok = x && !x.error;
+  const title = ok ? (x.share.r === x.share.n ? 'Can you get ' + x.share.n + ' of ' + x.share.n : 'Can you beat ' + x.share.r + ' of ' + x.share.n) + ' on the ' + SEC_NAME[x.share.s] + ' review?' : 'Chitas';
+  const desc = ok ? x.share.t + ' · The same ' + x.share.n + ' questions, free on Chitas' : 'Chumash, Tehillim, Tanya and Rambam, ready each day.';
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  return res.status(200).send('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>' + esc(title) + '</title>'
+    + '<meta property="og:type" content="website"><meta property="og:site_name" content="Chitas">'
+    + '<meta property="og:title" content="' + esc(title) + '"><meta property="og:description" content="' + esc(desc) + '">'
+    + '<meta property="og:url" content="' + esc(host + '/r/' + code) + '">'
+    + (ok ? '<meta property="og:image" content="' + esc(host + '/api/quiz?img=' + code) + '"><meta property="og:image:width" content="' + SHARE_CARD_SIZE.width + '"><meta property="og:image:height" content="' + SHARE_CARD_SIZE.height + '"><meta property="og:image:alt" content="' + esc(title) + '"><meta name="twitter:card" content="summary_large_image">' : '')
+    + '<meta http-equiv="refresh" content="0;url=' + esc(go) + '"></head><body style="font-family:sans-serif;background:#FBF7EF;color:#2B2112">'
+    + '<p><a href="' + esc(go) + '">Open Chitas</a></p><script>location.replace(' + JSON.stringify(go) + ')</script></body></html>');
 }
 
 export default async function handler(req, res) {
+  if (req.method === 'GET' && req.query?.img) return shareImage(req, res);
+  if (req.method === 'GET' && req.query?.page !== undefined) return sharePage(req, res);
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   if (req.body?.makeShare) return makeShare(req, res);
