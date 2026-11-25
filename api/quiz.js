@@ -12,6 +12,11 @@
  *    isn't really in the text are dropped (api/_lib/quiz-core.js).
  *  - One quiz per passage + level is saved in Firestore and shared by everyone,
  *    so most requests never call the AI. New quizzes are limited per user per day.
+ *
+ * Shared reviews ({ ..., shared: true }): someone sent a friend their result,
+ * and the friend answers the same questions, with no account. Such a request
+ * only ever READS a saved quiz: it never makes one, so a shared link can't
+ * cost anything. 404 when that quiz isn't saved.
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
@@ -77,6 +82,16 @@ async function fetchPassage(req) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+
+  if (req.body?.shared === true) {
+    const q = validateQuizRequest(req.body);
+    if (q.error) return res.status(400).json({ error: q.error });
+    try {
+      const hit = await getDb().collection('quiz_cache').doc(createHash('sha256').update(q.key + '|' + CACHE_VERSION).digest('hex').slice(0, 40)).get();
+      if (hit.exists) return res.status(200).json({ questions: hit.data().questions, level: q.level, shared: true });
+    } catch (e) { console.warn('quiz shared read:', e.message); return res.status(502).json({ error: 'Couldn\'t load the questions' }); }
+    return res.status(404).json({ error: 'These questions aren\'t available any more' });
+  }
 
   const uid = await verifyUser(req);
   if (!uid) return res.status(401).json({ error: 'Please sign in to take quizzes' });

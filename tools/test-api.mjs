@@ -166,6 +166,12 @@ check('second person, same passage → saved quiz, no new AI call', [second.stat
 for (let i = 1; i <= 19; i++) await call({ ...BODY, refs: ['Genesis 2:' + (i + 4) + '-2:19'] });
 check('21st new quiz in a day → 429', (await call({ ...BODY, refs: ['Genesis 3:1-3:21'] })).status, 429);
 check('…but saved quizzes still work', (await call(BODY)).status, 200);
+const callsBefore = claudeCalls;
+const shared = await call({ ...BODY, shared: true }, null);
+check('a shared review, no account: the saved questions', [shared.status, shared.json.questions?.length, shared.json.shared], [200, 4, true]);
+const notSaved = await call({ ...BODY, refs: ['Genesis 4:1-4:26'], shared: true }, null);
+check('a shared review never makes a quiz: not saved → 404, no AI call', [notSaved.status, claudeCalls - callsBefore], [404, 0]);
+check('a shared review with a bad passage → 400', (await call({ ...BODY, refs: ['nope'], shared: true }, null)).status, 400);
 
 console.log('Tanya enhance:');
 // Today on the (pretend) schedule: chapter 1 from verse 2 to its end

@@ -908,6 +908,38 @@ const shown = await page4.evaluate(() => getComputedStyle(document.getElementByI
 if (shown) console.log('  ✓ app shows (not a blank screen) when the cloud never answers');
 else { failed++; console.log('  ✗ blank screen when the cloud never answers'); }
 
+// Sharing a Review: the card, the link, and a friend answering with no account
+console.log('Sharing a Review:');
+{
+  const Q = [0, 1, 2, 3].map(i => ({ q: 'Question ' + (i + 1) + ' on the text?', options: ['Right', 'Wrong one', 'Wrong two', 'Wrong three'], answer: 0, explanation: 'Because.', quote: 'a line' }));
+  await page.evaluate(Q => { document.getElementById('quiz-panel').style.display = 'none'; openQuiz('chumash');
+    Object.assign(quizState, { level: 'quick', questions: Q, passage: { refs: ['Genesis 32:31-33:5'] }, score: 3, current: 4, answers: Q.map((q, i) => ({ ...q, picked: i === 2 ? 1 : 0, right: i !== 2 })) }); showQuizResults(); }, Q);
+  const res = await page.evaluate(() => [!!document.querySelector('.rv-share-btn'), document.querySelectorAll('#quiz-body button').length, !!document.getElementById('share-sheet')]);
+  if (JSON.stringify(res) === JSON.stringify([true, 4, false])) console.log('  ✓ the results offer sharing quietly: one small button, no pop-up');
+  else { failed++; console.log('  ✗ results share button', res); }
+  const cards = await page.evaluate(async () => { await openReviewShare(); return ['score', 'challenge'].map(k => [_shareCards[k]?.width, _shareCards[k]?.height, document.querySelector('.sh-card[data-k="' + k + '"] img') !== null]); });
+  if (JSON.stringify(cards) === JSON.stringify([[1080, 1350, true], [1080, 1350, true]])) console.log('  ✓ two cards, drawn at 1080 × 1350, to choose from');
+  else { failed++; console.log('  ✗ share cards', cards); }
+  const link = await page.evaluate(() => { document.getElementById('share-sheet')?.remove(); closeQuiz(); return _reviewLink({ ..._reviewShareData(), s: 'chumash', l: 'quick', p: { refs: ['Genesis 32:31-33:5'] }, r: 3, n: 4, d: dateISO(appNow()), t: 'Vayishlach · Aliya 3' }); });
+  const friend = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await friend.clock.install({ time: noonToday() });
+  let asked = null;
+  await friend.route(u => !u.href.startsWith(url), r => r.abort());
+  await friend.route(url + 'api/quiz', async r => { asked = JSON.parse(r.request().postData()); await r.fulfill({ json: { questions: Q, level: 'quick', shared: true } }); });
+  await friend.goto(link.replace('https://chitas.vercel.app/', url), { waitUntil: 'load' });
+  await friend.waitForFunction(() => document.getElementById('sr-go') && !document.getElementById('sr-go').disabled, null, { timeout: 8000 }).catch(() => {});
+  const land = await friend.evaluate(() => [document.querySelector('#shared-review h1')?.textContent, document.getElementById('sr-qt')?.textContent, location.search]);
+  const askOk = asked && asked.shared === true && asked.section === 'chumash' && asked.refs?.[0] === 'Genesis 32:31-33:5' && !('authorization' in (asked || {}));
+  if (askOk && land[0] === "A friend got 3 of 4 on today's Chumash." && land[1] === 'Question 1 on the text?' && land[2] === '') console.log('  ✓ the link opens the friend\'s page: no name, the first question, the same passage asked for');
+  else { failed++; console.log('  ✗ friend landing', land, asked); }
+  await friend.click('#sr-go');
+  for (let i = 0; i < 4; i++) { await friend.click('#opt-0'); await friend.click('#quiz-feedback button'); }
+  const done = await friend.evaluate(() => [document.querySelector('.rv-top h3')?.textContent, /One better than your friend/.test(document.querySelector('.rv-top p')?.textContent || '')]);
+  if (JSON.stringify(done) === JSON.stringify(['You got 4 of 4', true])) console.log('  ✓ the friend answers with no account and sees how they did');
+  else { failed++; console.log('  ✗ friend results', done); }
+  await friend.close();
+}
+
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));
 if (unexpected.length) { failed++; console.log('  ✗ uncaught page errors:\n      ' + unexpected.join('\n      ')); }
 else console.log('  ✓ no uncaught JavaScript errors');
