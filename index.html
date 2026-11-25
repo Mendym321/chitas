@@ -4420,7 +4420,16 @@ function _reviewShareData() {
   return { s: st.sectionId, l: st.level, p: st.passage, r: st.score, n: st.questions.length, d: st.iso || dateISO(appNow()),
     t: st.sectionId === 'chumash' ? _chumashLine(s?.subtitle) : String(s?.subtitle || ''), q: st.questions[0]?.q || '' };
 }
-const _reviewLink = data => SHARE_URL.replace(/\/get$/, '/') + '?review=' + _b64u(JSON.stringify({ s: data.s, l: data.l, p: data.p, r: data.r, n: data.n, d: data.d, t: data.t }));
+// The link: a short code the server keeps (chitas.vercel.app/?r=k3F9xQ2a); if
+// it can't be made (offline), the long link that carries it all
+const _SITE = () => SHARE_URL.replace(/\/get$/, '/');
+const _reviewLink = data => _SITE() + '?review=' + _b64u(JSON.stringify({ s: data.s, l: data.l, p: data.p, r: data.r, n: data.n, d: data.d, t: data.t }));
+let _shareLinkP = null;
+function _makeShareLink(data) {
+  return (_shareLinkP = fetch('/api/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ makeShare: { s: data.s, l: data.l, p: data.p, r: data.r, n: data.n, d: data.d, t: data.t } }) })
+    .then(r => r.json()).then(j => j?.id ? _SITE() + '?r=' + j.id : _reviewLink(data)).catch(() => _reviewLink(data)));
+}
 // "י״ד כסלו": the day in letters, and the month, in Hebrew
 function _hebDateHe(iso) {
   const d = new Date(iso + 'T12:00:00');
@@ -4535,6 +4544,7 @@ async function openReviewShare() {
   const pick = k => { _shareKind = k; m.querySelectorAll('.sh-card').forEach(b => { b.classList.toggle('on', b.dataset.k === k); b.setAttribute('aria-checked', b.dataset.k === k); }); };
   m.querySelectorAll('.sh-card').forEach(b => b.onclick = () => { haptic('select'); pick(b.dataset.k); });
   pick(_shareKind);
+  _makeShareLink(data);   // the short link, ready by the time you tap Share
   _shareCards = {};
   for (const k of ['score', 'challenge']) {
     const cv = await _drawReviewCard(k, data);
@@ -4544,7 +4554,7 @@ async function openReviewShare() {
   }
 }
 async function _shareReview() {
-  const data = _reviewShareData(), link = _reviewLink(data);
+  const data = _reviewShareData(), link = await (_shareLinkP || _makeShareLink(data));
   const cv = _shareCards[_shareKind] || await _drawReviewCard(_shareKind, data);
   const text = (data.r === data.n ? 'Can you get ' + data.n + '/' + data.n : 'Can you beat ' + data.r + '/' + data.n) + ' on ' + (data.d === dateISO(appNow()) ? "today's " : '') + (_SEC_NAME[data.s] || '') + '?';
   const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
@@ -4556,8 +4566,8 @@ async function _shareReview() {
     document.getElementById('share-sheet')?.remove();
   } catch (e) { /* closed the share sheet: nothing to do */ }
 }
-function _copyReviewLink() {
-  const link = _reviewLink(_reviewShareData());
+async function _copyReviewLink() {
+  const link = await (_shareLinkP || _makeShareLink(_reviewShareData()));
   (navigator.clipboard?.writeText(link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
 }
 
@@ -4565,6 +4575,8 @@ function _copyReviewLink() {
 let _sharedIn = null;
 function _sharedFromUrl() {
   try {
+    const code = new URLSearchParams(location.search).get('r');
+    if (code && /^[0-9A-Za-z]{8}$/.test(code)) return { code };
     const v = new URLSearchParams(location.search).get('review');
     if (!v) return null;
     const d = JSON.parse(_unb64u(v));
@@ -4573,8 +4585,17 @@ function _sharedFromUrl() {
   } catch (e) { return null; }
 }
 async function _openSharedReview(d) {
-  _sharedIn = d;
   try { history.replaceState(null, '', location.pathname); } catch (e) {}   // a reload doesn't ask again
+  let pre = null;
+  if (d.code) {   // a short link: what it's about, and the questions, from the server
+    try {
+      const r = await fetch('/api/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shareId: d.code }) });
+      pre = await r.json().catch(() => null);
+    } catch (e) {}
+    if (!pre?.share) { fire(pre?.error || 'That link couldn\'t be opened. Check your connection.', 'xp'); return; }
+    d = pre.share;
+  }
+  _sharedIn = d;
   const today = d.d === dateISO(appNow()), sec = _SEC_NAME[d.s];
   const m = document.createElement('div');
   m.id = 'shared-review';
@@ -4588,8 +4609,8 @@ async function _openSharedReview(d) {
     + '<div class="sr-foot"><p>Chumash, Tehillim, Tanya and Rambam, ready each day.</p><button type="button" onclick="_closeSharedReview()">Get started</button></div>'
     + '</div>';
   document.body.appendChild(m);
-  let data = null;
-  try {
+  let data = pre;
+  if (!data) try {
     const r = await fetch('/api/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ section: d.s, level: d.l, ...d.p, shared: true }) });
     data = await r.json().catch(() => null);

@@ -172,6 +172,14 @@ check('a shared review, no account: the saved questions', [shared.status, shared
 const notSaved = await call({ ...BODY, refs: ['Genesis 4:1-4:26'], shared: true }, null);
 check('a shared review never makes a quiz: not saved → 404, no AI call', [notSaved.status, claudeCalls - callsBefore], [404, 0]);
 check('a shared review with a bad passage → 400', (await call({ ...BODY, refs: ['nope'], shared: true }, null)).status, 400);
+const mk = await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 2:4-2:19'] }, r: 3, n: 4, d: '2026-11-24', t: 'Bereishis · Sheni' } }, null);
+check('a short link: an 8-letter code, the same for the same result', [mk.status, /^[0-9A-Za-z]{8}$/.test(mk.json.id || ''),
+  (await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 2:4-2:19'] }, r: 3, n: 4, d: '2026-11-24', t: 'Bereishis · Sheni' } }, null)).json.id === mk.json.id], [200, true, true]);
+const rd = await call({ shareId: mk.json.id }, null);
+check('…opened: what it is about, and the saved questions, no account', [rd.status, rd.json.share?.r, rd.json.share?.t, rd.json.questions?.length], [200, 3, 'Bereishis · Sheni', 4]);
+check('a short link that doesn\'t exist → 404; a bad one → 400', [(await call({ shareId: 'ZZZZZZZZ' }, null)).status, (await call({ shareId: 'x' }, null)).status], [404, 400]);
+check('a short link for a bad passage is refused', (await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['nope'] }, r: 1, n: 4, d: '2026-11-24' } }, null)).status, 400);
+check('nothing personal is kept with a short link', Object.keys([...store].find(([k]) => k.startsWith('share_links/'))[1]).sort(), ['createdAt', 'd', 'l', 'n', 'p', 'r', 's', 't']);
 
 console.log('Tanya enhance:');
 // Today on the (pretend) schedule: chapter 1 from verse 2 to its end

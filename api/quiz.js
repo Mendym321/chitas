@@ -17,6 +17,12 @@
  * and the friend answers the same questions, with no account. Such a request
  * only ever READS a saved quiz: it never makes one, so a shared link can't
  * cost anything. 404 when that quiz isn't saved.
+ *
+ * Short links: { makeShare: { s, l, p, r, n, d, t } } saves what a shared link
+ * needs (the passage, the score, the day) under a short code, kept in
+ * share_links/ (nothing about the person), and answers { id }. The same result
+ * gets the same code. Up to 60 a day per address (hashed). { shareId } reads
+ * it back with the saved questions: { share, questions, level }.
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
@@ -80,9 +86,47 @@ async function fetchPassage(req) {
   return { label: 'Chumash with Rashi', text: parts.join('\n\n') };
 }
 
+const quizDocId = key => createHash('sha256').update(key + '|' + CACHE_VERSION).digest('hex').slice(0, 40);
+const B62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const shortCode = str => { let n = BigInt('0x' + createHash('sha256').update(str).digest('hex').slice(0, 16)), out = ''; for (let i = 0; i < 8; i++) { out += B62[Number(n % 62n)]; n /= 62n; } return out; };
+
+async function makeShare(req, res) {
+  const b = req.body.makeShare || {};
+  const q = validateQuizRequest({ section: b.s, level: b.l, ...(b.p || {}) });
+  const r = Number(b.r), n = Number(b.n);
+  if (q.error || !Number.isInteger(n) || n < 1 || n > 10 || !Number.isInteger(r) || r < 0 || r > n || !/^\d{4}-\d{2}-\d{2}$/.test(String(b.d)))
+    return res.status(400).json({ error: 'bad share' });
+  const share = { s: q.section, l: q.level, p: q.section === 'tanya' ? { tanya: q.tanya } : { refs: q.refs }, r, n, d: String(b.d), t: String(b.t || '').slice(0, 80) };
+  try {
+    const db = getDb();
+    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+    if (!await takeDailyQuota(db, 'ip-' + createHash('sha256').update(ip).digest('hex').slice(0, 24), 'shares', 60)) return res.status(429).json({ error: 'enough for today' });
+    const id = shortCode(JSON.stringify(share));
+    await db.collection('share_links').doc(id).set({ ...share, createdAt: new Date().toISOString() });
+    return res.status(200).json({ id });
+  } catch (e) { console.error('quiz share:', e.message); return res.status(502).json({ error: 'not saved' }); }
+}
+async function readShare(req, res) {
+  const id = req.body.shareId;
+  if (!/^[0-9A-Za-z]{8}$/.test(id)) return res.status(400).json({ error: 'bad link' });
+  try {
+    const db = getDb();
+    const doc = await db.collection('share_links').doc(id).get();
+    if (!doc.exists) return res.status(404).json({ error: 'This link isn\'t available any more' });
+    const { createdAt, ...share } = doc.data();
+    const q = validateQuizRequest({ section: share.s, level: share.l, ...share.p });
+    if (q.error) return res.status(404).json({ error: 'This link isn\'t available any more' });
+    const hit = await db.collection('quiz_cache').doc(quizDocId(q.key)).get();
+    if (!hit.exists) return res.status(404).json({ error: 'These questions aren\'t available any more' });
+    return res.status(200).json({ share, questions: hit.data().questions, level: q.level });
+  } catch (e) { console.warn('quiz share read:', e.message); return res.status(502).json({ error: 'Couldn\'t load the questions' }); }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
+  if (req.body?.makeShare) return makeShare(req, res);
+  if (typeof req.body?.shareId === 'string') return readShare(req, res);
   if (req.body?.shared === true) {
     const q = validateQuizRequest(req.body);
     if (q.error) return res.status(400).json({ error: q.error });

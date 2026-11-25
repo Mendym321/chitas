@@ -920,17 +920,23 @@ console.log('Sharing a Review:');
   const cards = await page.evaluate(async () => { await openReviewShare(); return ['score', 'challenge'].map(k => [_shareCards[k]?.width, _shareCards[k]?.height, document.querySelector('.sh-card[data-k="' + k + '"] img') !== null]); });
   if (JSON.stringify(cards) === JSON.stringify([[1080, 1350, true], [1080, 1350, true]])) console.log('  ✓ two cards, drawn at 1080 × 1350, to choose from');
   else { failed++; console.log('  ✗ share cards', cards); }
-  const link = await page.evaluate(() => { document.getElementById('share-sheet')?.remove(); closeQuiz(); return _reviewLink({ ..._reviewShareData(), s: 'chumash', l: 'quick', p: { refs: ['Genesis 32:31-33:5'] }, r: 3, n: 4, d: dateISO(appNow()), t: 'Vayishlach · Aliya 3' }); });
+  let made = null;
+  await page.route(url + 'api/quiz', async r => { made = JSON.parse(r.request().postData()).makeShare; await r.fulfill({ json: { id: 'Ab3dE9xQ' } }); });
+  const link = await page.evaluate(async () => { const l = await _makeShareLink({ s: 'chumash', l: 'quick', p: { refs: ['Genesis 32:31-33:5'] }, r: 3, n: 4, d: dateISO(appNow()), t: 'Vayishlach · Aliya 3' }); document.getElementById('share-sheet')?.remove(); closeQuiz(); return l; });
+  await page.unroute(url + 'api/quiz');
+  if (link === 'https://chitas.vercel.app/?r=Ab3dE9xQ' && made?.r === 3 && made?.p?.refs?.[0] === 'Genesis 32:31-33:5') console.log('  ✓ the link is short: chitas.vercel.app/?r= and an 8-letter code');
+  else { failed++; console.log('  ✗ short link', link, made); }
   const friend = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await friend.clock.install({ time: noonToday() });
   let asked = null;
   await friend.route(u => !u.href.startsWith(url), r => r.abort());
-  await friend.route(url + 'api/quiz', async r => { asked = JSON.parse(r.request().postData()); await r.fulfill({ json: { questions: Q, level: 'quick', shared: true } }); });
+  await friend.route(url + 'api/quiz', async r => { asked = JSON.parse(r.request().postData());
+    await r.fulfill({ json: { share: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 32:31-33:5'] }, r: 3, n: 4, d: await friend.evaluate(() => dateISO(appNow())), t: 'Vayishlach · Aliya 3' }, questions: Q, level: 'quick' } }); });
   await friend.goto(link.replace('https://chitas.vercel.app/', url), { waitUntil: 'load' });
   await friend.waitForFunction(() => document.getElementById('sr-go') && !document.getElementById('sr-go').disabled, null, { timeout: 8000 }).catch(() => {});
   const land = await friend.evaluate(() => [document.querySelector('#shared-review h1')?.textContent, document.getElementById('sr-qt')?.textContent, location.search]);
-  const askOk = asked && asked.shared === true && asked.section === 'chumash' && asked.refs?.[0] === 'Genesis 32:31-33:5' && !('authorization' in (asked || {}));
-  if (askOk && land[0] === "A friend got 3 of 4 on today's Chumash." && land[1] === 'Question 1 on the text?' && land[2] === '') console.log('  ✓ the link opens the friend\'s page: no name, the first question, the same passage asked for');
+  const askOk = asked && asked.shareId === 'Ab3dE9xQ';
+  if (askOk && land[0] === "A friend got 3 of 4 on today's Chumash." && land[1] === 'Question 1 on the text?' && land[2] === '') console.log('  ✓ the short link opens the friend\'s page: no name, the first question');
   else { failed++; console.log('  ✗ friend landing', land, asked); }
   await friend.click('#sr-go');
   for (let i = 0; i < 4; i++) { await friend.click('#opt-0'); await friend.click('#quiz-feedback button'); }
