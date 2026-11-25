@@ -18,9 +18,10 @@
  * only ever READS a saved quiz: it never makes one, so a shared link can't
  * cost anything. 404 when that quiz isn't saved.
  *
- * Short links: { makeShare: { s, l, p, r, n, d, t } } saves what a shared link
- * needs (the passage, the score, the day) under a short code, kept in
- * share_links/ (nothing about the person), and answers { id }. The same result
+ * Short links: { makeShare: { s, l, p, r, n, d, k, nm } } saves what a shared
+ * link needs (the passage, the score, the day, and the sharer's first name if
+ * they chose to show it: letters only, up to 20) under a short code, kept in
+ * share_links/, and answers { id }. The same result
  * gets the same code. Up to 60 a day per address (hashed). { shareId } reads
  * it back with the saved questions: { share, questions, level }.
  *
@@ -112,6 +113,11 @@ export function passageLabel(s, p) {
     return parts[0][1] + ' ' + parts[0][2] + (parts.length > 1 ? '–' + parts.at(-1)[2] : '');
   return parts.map(x => x[1] + ' ' + x[2]).join(', ');
 }
+// A first name, as letters only (any alphabet), with a space, ' or - inside; up to 20
+export function cleanName(v) {
+  const s = String(v || '').normalize('NFC').trim().split(/\s+/)[0] || '';
+  return /^[\p{L}][\p{L}'\-]{0,19}$/u.test(s) ? s : '';
+}
 const todayNY = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 const SEC_NAME = { chumash: 'Chumash', tanya: 'Tanya', rambam: 'Rambam' };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -127,6 +133,8 @@ async function makeShare(req, res) {
   if (q.error || !Number.isInteger(n) || n < 1 || n > 10 || !Number.isInteger(r) || r < 0 || r > n || !/^\d{4}-\d{2}-\d{2}$/.test(String(b.d)))
     return res.status(400).json({ error: 'bad share' });
   const share = { s: q.section, l: q.level, p: q.section === 'tanya' ? { tanya: q.tanya } : { refs: q.refs }, r, n, d: String(b.d), k: b.k === 'challenge' ? 'challenge' : 'score' };
+  const nm = cleanName(b.nm);
+  if (nm) share.nm = nm;   // shown as "Mendy got 3 of 4" on the friend's page; never on the picture
   try {
     const db = getDb();
     const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
@@ -175,7 +183,9 @@ async function sharePage(req, res) {
   try { x = await loadShare(code); } catch (e) {}
   const go = host + '/?r=' + encodeURIComponent(/^[0-9A-Za-z]{8}$/.test(code) ? code : '');
   const ok = x && !x.error;
-  const title = ok ? (x.share.r === x.share.n ? 'Can you get ' + x.share.n + ' of ' + x.share.n : 'Can you beat ' + x.share.r + ' of ' + x.share.n) + ' on the ' + SEC_NAME[x.share.s] + ' review?' : 'Chitas';
+  const title = !ok ? 'Chitas' : x.share.nm
+    ? x.share.nm + ' got ' + x.share.r + ' of ' + x.share.n + ' on the ' + SEC_NAME[x.share.s] + ' review. Can you ' + (x.share.r === x.share.n ? 'too?' : 'beat it?')
+    : (x.share.r === x.share.n ? 'Can you get ' + x.share.n + ' of ' + x.share.n : 'Can you beat ' + x.share.r + ' of ' + x.share.n) + ' on the ' + SEC_NAME[x.share.s] + ' review?';
   const desc = ok ? x.share.t + ' · The same ' + x.share.n + ' questions, free on Chitas' : 'Chumash, Tehillim, Tanya and Rambam, ready each day.';
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=300');

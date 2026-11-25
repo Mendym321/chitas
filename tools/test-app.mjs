@@ -939,16 +939,16 @@ console.log('Sharing a Review:');
   let asked = null;
   await friend.route(u => !u.href.startsWith(url), r => r.abort());
   await friend.route(url + 'api/quiz', async r => { asked = JSON.parse(r.request().postData());
-    await r.fulfill({ json: { share: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 32:31-33:5'] }, r: 3, n: 4, d: await friend.evaluate(() => dateISO(appNow())), t: 'Vayishlach · Aliya 3' }, questions: Q, level: 'quick' } }); });
+    await r.fulfill({ json: { share: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 32:31-33:5'] }, r: 3, n: 4, d: await friend.evaluate(() => dateISO(appNow())), t: 'Vayishlach · Aliya 3', nm: 'Mendy' }, questions: Q, level: 'quick' } }); });
   await friend.goto(url + '?r=Ab3dE9xQ', { waitUntil: 'load' });
   await friend.waitForFunction(() => document.getElementById('sr-go') && !document.getElementById('sr-go').disabled, null, { timeout: 8000 }).catch(() => {});
   const land = await friend.evaluate(() => [document.querySelector('#shared-review h1')?.textContent, document.getElementById('sr-qt')?.textContent, location.search]);
   const askOk = asked && asked.shareId === 'Ab3dE9xQ';
-  if (askOk && land[0] === "A friend got 3 of 4 on today's Chumash." && land[1] === 'Question 1 on the text?' && land[2] === '') console.log('  ✓ the short link opens the friend\'s page: no name, the first question');
+  if (askOk && land[0] === "Mendy got 3 of 4 on today's Chumash." && land[1] === 'Question 1 on the text?' && land[2] === '') console.log('  ✓ the short link opens the friend\'s page: who it\'s from, the first question');
   else { failed++; console.log('  ✗ friend landing', land, asked); }
   await friend.click('#sr-go');
   for (let i = 0; i < 4; i++) { await friend.click('#opt-0'); await friend.click('#quiz-feedback button'); }
-  const done = await friend.evaluate(() => [document.querySelector('.rv-top h3')?.textContent, /One better than your friend/.test(document.querySelector('.rv-top p')?.textContent || '')]);
+  const done = await friend.evaluate(() => [document.querySelector('.rv-top h3')?.textContent, /One better than Mendy/.test(document.querySelector('.rv-top p')?.textContent || '')]);
   if (JSON.stringify(done) === JSON.stringify(['You got 4 of 4', true])) console.log('  ✓ the friend answers with no account and sees how they did');
   else { failed++; console.log('  ✗ friend results', done); }
   await friend.close();
