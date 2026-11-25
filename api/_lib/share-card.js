@@ -7,6 +7,7 @@
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 const W = 1200, H = 630;
 const SECTION = {
@@ -17,15 +18,22 @@ const SECTION = {
 const LEVEL = { quick: 'Quick review', deep: 'Deep dive' };
 const INK = '#2B2112', CREAM = '#FBF6EC', DARK = '#1E1A16';
 
-// The fonts, read once per server (the paths are written out so Vercel ships the files)
+// The fonts, read once per server: from the project's files when they're there
+// (tests, a computer), else from our own site, where they're public files
+// (Vercel runs this as older-style code, which can't find files beside itself)
+const FONT_SITE = 'https://chitas.vercel.app/fonts/';
+const fontFile = async name => {
+  try { return await readFile(join(process.cwd(), 'fonts', name)); }
+  catch (e) { const r = await fetch(FONT_SITE + encodeURIComponent(name)); if (!r.ok) throw new Error('font ' + name + ': ' + r.status); return Buffer.from(await r.arrayBuffer()); }
+};
 let fontsP = null;
 const fonts = () => fontsP || (fontsP = Promise.all([
-  readFile(new URL('../../fonts/BricolageGrotesque-ExtraBold.ttf', import.meta.url)).then(data => ({ name: 'Bricolage', data, weight: 800 })),
-  readFile(new URL('../../fonts/DMSans-SemiBold.ttf', import.meta.url)).then(data => ({ name: 'DM', data, weight: 600 })),
-  readFile(new URL('../../fonts/DMSans-Bold.ttf', import.meta.url)).then(data => ({ name: 'DM', data, weight: 700 })),
-  readFile(new URL('../../fonts/CrimsonPro-Italic.ttf', import.meta.url)).then(data => ({ name: 'Crimson', data, style: 'italic', weight: 400 })),
-  readFile(new URL('../../fonts/OT Vilna Basic-VF.ttf', import.meta.url)).then(data => ({ name: 'Vilna', data, weight: 700 })),
-]));
+  fontFile('BricolageGrotesque-ExtraBold.ttf').then(data => ({ name: 'Bricolage', data, weight: 800 })),
+  fontFile('DMSans-SemiBold.ttf').then(data => ({ name: 'DM', data, weight: 600 })),
+  fontFile('DMSans-Bold.ttf').then(data => ({ name: 'DM', data, weight: 700 })),
+  fontFile('CrimsonPro-Italic.ttf').then(data => ({ name: 'Crimson', data, style: 'italic', weight: 400 })),
+  fontFile('OT Vilna Basic-VF.ttf').then(data => ({ name: 'Vilna', data, weight: 700 })),
+]).catch(e => { fontsP = null; throw e; }));
 
 // A small piece of layout: h('div', { style }, ...children)
 const h = (type, style, ...children) => ({ type, props: { style: { display: 'flex', boxSizing: 'border-box', ...style }, children: children.length <= 1 ? children[0] : children } });
