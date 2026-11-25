@@ -166,7 +166,7 @@ async function shareImage(req, res) {
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
     return res.status(200).send(png);
-  } catch (e) { console.error('share image:', e.message); return res.status(502).send('not drawn'); }
+  } catch (e) { console.error('share image:', e); return res.status(502).send('not drawn: ' + String(e?.message || e).slice(0, 300)); }   // the reason, to put it right
 }
 async function sharePage(req, res) {
   const code = String(req.query.page || '');
