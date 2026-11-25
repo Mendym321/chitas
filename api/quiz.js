@@ -39,7 +39,10 @@ import { getDb, verifyUser } from './_lib/firebase.js';
 import { takeDailyQuota } from './_lib/quota.js';
 import { englishSegments, tanyaSegments } from './_lib/sefaria.js';
 import { LEVELS, validateQuizRequest, checkQuestions } from './_lib/quiz-core.js';
-import { shareCardPng, SHARE_CARD_SIZE } from './_lib/share-card.js';
+// The preview-picture tools are loaded only when a picture is asked for, so the
+// quiz itself never depends on them
+const SHARE_CARD_SIZE = { width: 1200, height: 630 };
+const shareCard = () => import('./_lib/share-card.js');
 
 export const config = { maxDuration: 60 };
 
@@ -158,6 +161,7 @@ async function shareImage(req, res) {
   try {
     const x = await loadShare(req.query.img);
     if (x.error) return res.status(x.status).send(x.error);
+    const { shareCardPng } = await shareCard();
     const png = await shareCardPng({ ...x.share, q: x.questions[0]?.q || '' }, todayNY());
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
