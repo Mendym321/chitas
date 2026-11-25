@@ -952,6 +952,17 @@ console.log('Sharing a Review:');
   if (JSON.stringify(done) === JSON.stringify(['You got 4 of 4', true])) console.log('  ✓ the friend answers with no account and sees how they did');
   else { failed++; console.log('  ✗ friend results', done); }
   await friend.close();
+  // A shared day
+  const dayFriend = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await dayFriend.clock.install({ time: noonToday() });
+  await dayFriend.route(u => !u.href.startsWith(url), r => r.abort());
+  await dayFriend.route(url + 'api/quiz', async r => r.fulfill({ json: { share: { kind: 'day', d: await dayFriend.evaluate(() => dateISO(appNow())), st: 9, nm: 'Mendy' }, questions: [] } }));
+  await dayFriend.goto(url + '?r=Dy9Shar3', { waitUntil: 'load' });
+  await dayFriend.waitForSelector('#shared-review h1', { timeout: 8000 }).catch(() => {});
+  const dayLand = await dayFriend.evaluate(() => [document.querySelector('#shared-review h1')?.textContent, /9 days in a row/.test(document.querySelector('#shared-review .sr-sub')?.textContent || ''), document.querySelector('#shared-review .sr-go')?.textContent]);
+  if (JSON.stringify(dayLand) === JSON.stringify(["Mendy learned all of today's Chitas.", true, 'Start today, free'])) console.log('  ✓ a shared day: who learned it, the streak, and a way in');
+  else { failed++; console.log('  ✗ shared day landing', dayLand); }
+  await dayFriend.close();
 }
 
 const unexpected = pageErrors.filter(m => !/Failed to fetch|NetworkError|firebase|import/i.test(m));

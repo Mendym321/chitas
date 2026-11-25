@@ -725,7 +725,7 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 .dp-d span { position:relative; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; }
 .dp-d.ahead { color:var(--t2); }
 /* Sharing a Review: one quiet button on the results, the sheet, the friend's page */
-.rv-share-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:44px; margin-top:8px; border:none; background:none; color:var(--t2); font:600 var(--fs-2) var(--ui-font); cursor:pointer; }
+.rv-share-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:48px; margin-top:10px; border:1.5px solid var(--border); border-radius:999px; background:none; color:var(--t1); font:700 var(--fs-2) var(--ui-font); cursor:pointer; }   /* a real button, the quietest of the three */
 #share-sheet { position:fixed; inset:0; z-index:2000; background:rgba(31,27,22,.45); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
 .sh-cards { display:grid; grid-template-columns:1fr; gap:10px; }
 .sh-off { font-size:var(--fs-1); color:var(--t3); padding:0 12px; text-align:center; }
@@ -743,6 +743,9 @@ html.reader-open, html.reader-open body { overflow: hidden; }
 #shared-review .sr-brand { display:flex; align-items:center; gap:10px; font:800 20px var(--title-font); color:var(--t1); }
 #shared-review .sr-brand img { border-radius:8px; }
 #shared-review h1 { margin:30px 0 0; font:800 34px/1.08 var(--title-font); letter-spacing:-.6px; color:var(--t1); }
+#shared-review .sr-rings { width:150px; height:150px; margin-top:28px; align-self:center; }
+#shared-review .sr-rings circle { fill:none; stroke-width:11; stroke-linecap:round; }
+#shared-review .sr-rings path { fill:none; stroke:var(--t1); stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
 #shared-review .sr-sub { margin-top:12px; font-size:var(--fs-3); line-height:1.45; color:var(--t2); }
 #shared-review .sr-q { margin-top:24px; background:var(--card); border-radius:22px; padding:18px; }
 #shared-review .sr-k { font:700 12px var(--ui-font); letter-spacing:.6px; text-transform:uppercase; color:var(--t3); }
@@ -4253,8 +4256,27 @@ function celebrateAllDone(milestone, learn) {
     + '</div></div>';
   // The moment to offer a reminder: just finished, and none set (only the phone app has them)
   const offerReminder = !!_nativePlugin('LocalNotifications') && !Object.values(_reminderTimes()).some(Boolean);
+  _makeDayLink(iso);   // ready by the time "Share your day" is tapped
   setTimeout(() => showMoment({ full: true, icon: rings, title: 'All four done', sub, xp: '', extra: tiles + next,
-    btns: [{ label: 'See you tomorrow', primary: false }].concat(offerReminder ? [{ label: 'Remind me tomorrow', link: true, action: () => { switchTab('profile'); openReminders(); } }] : []) }), 250);
+    btns: [{ label: 'See you tomorrow', primary: false }, { label: 'Share your day', link: true, action: _shareDay }]
+      .concat(offerReminder ? [{ label: 'Remind me tomorrow', link: true, action: () => { switchTab('profile'); openReminders(); } }] : []) }), 250);
+}
+// Sharing a finished day: a link whose preview is the day card (the four rings
+// closed, the streak), and a page for the friend: "Mendy learned all of today's
+// Chitas", with "Start today". Offered once, quietly, on All four done.
+let _dayLinkP = null;
+function _makeDayLink(iso) {
+  return (_dayLinkP = fetch('/api/quiz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ makeShare: { day: true, d: iso, st: user.streak || 1, ...(_shareName() ? { nm: _shareName() } : {}) } }) })
+    .then(r => r.json()).then(j => j?.id ? _SITE() + 'r/' + j.id : _SITE()).catch(() => _SITE()));
+}
+async function _shareDay() {
+  const link = await (_dayLinkP || _makeDayLink(dateISO(appNow())));
+  const text = "I learned all of today's Chitas" + ((user.streak || 0) > 1 ? ', ' + user.streak + ' days in a row' : '') + '.';
+  try {
+    if (navigator.share) await navigator.share({ text, url: link });
+    else (navigator.clipboard?.writeText(text + ' ' + link) || Promise.reject()).then(() => fire('Link copied', 'xp')).catch(() => prompt('Copy this link', link));
+  } catch (e) {}
 }
 // "ט״ו כסלו": the day in letters, and the month, in Hebrew
 function _hebDateHeb(iso) {
@@ -4555,6 +4577,7 @@ async function _openSharedReview(d) {
       pre = await r.json().catch(() => null);
     } catch (e) {}
     if (!pre?.share) { fire(pre?.error || 'That link couldn\'t be opened. Check your connection.', 'xp'); return; }
+    if (pre.share.kind === 'day') { _openSharedDay(pre.share); return; }
     d = pre.share;
   }
   _sharedIn = d;
@@ -4592,6 +4615,23 @@ async function _openSharedReview(d) {
     qp.style.display = 'flex';
     renderQuestion();
   };
+}
+// A shared day: who learned it, the streak, and a way in
+function _openSharedDay(d) {
+  const today = d.d === dateISO(appNow());
+  const when = today ? "today's" : new Date(d.d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }) + "'s";
+  const newHere = !!document.getElementById('onboarding') && getComputedStyle(document.getElementById('onboarding')).display !== 'none';
+  const m = document.createElement('div');
+  m.id = 'shared-review';
+  m.style.setProperty('--k', '#2B2112'); m.style.setProperty('--k-on', '#FBF7EF');
+  m.innerHTML = '<div class="sr-in">'
+    + '<div class="sr-brand"><img src="/icons/icon-192.png" alt="" width="34" height="34"><span>Chitas</span></div>'
+    + '<svg class="sr-rings" viewBox="0 0 200 200" aria-hidden="true">' + [[88, 'chumash'], [68, 'tehillim'], [48, 'tanya'], [28, 'rambam']].map(([r, id]) => '<circle cx="100" cy="100" r="' + r + '" style="stroke:var(--c-' + id + ')"/>').join('') + '<path d="M91 101l6 6 13-14"/></svg>'
+    + '<h1>' + (d.nm ? escapeHtml(d.nm) : 'A friend') + ' learned all of ' + when + ' Chitas.</h1>'
+    + '<p class="sr-sub">Chumash, Tehillim, Tanya and Rambam' + (d.st > 1 ? ', ' + (+d.st) + ' days in a row' : '') + '. Each day\'s learning is ready here, with Hebrew and English side by side and a guide to follow along.</p>'
+    + '<button type="button" class="sr-go" onclick="_closeSharedReview()">' + (newHere ? 'Start today, free' : 'Open Today') + '</button>'
+    + '</div>';
+  document.body.appendChild(m);
 }
 function _closeSharedReview() { document.getElementById('shared-review')?.remove(); }
 function _showSharedResults() {
