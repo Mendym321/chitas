@@ -15,7 +15,7 @@
   ],
   "functions": {
     "api/quiz.js": {
-      "includeFiles": "{fonts/*.ttf,node_modules/satori/dist/index.cjs,node_modules/{@shuding/opentype.js,camelize,color-name,css-background-parser,css-box-shadow,css-color-keywords,css-gradient-parser,css-to-react-native,escape-html,fflate,hex-rgb,linebreak,parse-css-color,postcss-value-parser,tiny-inflate,unicode-trie}/**}"
+      "includeFiles": "fonts/*.ttf"
     }
   }
 }
