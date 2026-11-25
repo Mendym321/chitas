@@ -1236,6 +1236,23 @@ html.reader-open, html.reader-open body { overflow: hidden; }
   #signin-sheet > div, body > div[style*="align-items: flex-end"] > div { border-radius:28px !important; border-bottom:1px solid var(--border) !important; }
   .dp-sheet, .ps-modal-sheet { max-width:480px !important; border-radius:28px !important; }
   #moment-modal.m-full #moment-card { max-width:none !important; }
+  #moment-modal.m-full #moment-btns { max-width:400px; }   /* All four done: the buttons as wide as the tiles, not the screen */
+  /* Welcome: the four tiles on the left, the words and buttons on the right */
+  #onboarding > div { max-width:1040px !important; }
+  #ob-welcome { max-width:none; min-height:min(680px, calc(100vh - 48px)); display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); grid-template-rows:auto 1fr auto auto 1fr; grid-template-areas:"top top" "tiles ." "tiles title" "tiles tag" "tiles actions"; column-gap:88px; }
+  #ob-welcome .ob-top { grid-area:top; }
+  #ob-welcome .ob-tiles { grid-area:tiles; align-self:center; margin-top:24px; gap:18px 14px; }
+  #ob-welcome .ob-tile { height:200px; border-radius:28px; padding:20px 22px; }
+  #ob-welcome .ob-tile b { font-size:24px; }
+  #ob-welcome .ob-tile span { font-size:14px; }
+  #ob-welcome .ob-title { grid-area:title; margin-top:0; font-size:clamp(40px, 3.4vw, 46px); letter-spacing:-1.1px; }
+  #ob-welcome .ob-tag { grid-area:tag; font-size:19px; max-width:440px; }
+  #ob-welcome .ob-actions { grid-area:actions; align-self:start; max-width:380px; padding-top:32px; }
+  /* A friend's link: the same column, larger, lower on the screen */
+  #shared-review .sr-in { max-width:540px; padding-top:calc(9vh + var(--sat, 0px)); }
+  #shared-review h1 { font-size:46px; letter-spacing:-1px; }
+  #shared-review .sr-rings { width:200px; height:200px; }
+  #shared-review .sr-sub { font-size:18px; }
 }
 </style>
 <!-- Firebase SDK -->
