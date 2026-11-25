@@ -224,6 +224,10 @@ function render(s) {
     + '<div class="tile"><b>' + n(s.reviews.quick) + ' · ' + n(s.reviews.deep) + '</b><span>quick · deep dive</span></div>'
     + '<div class="tile"><b>' + (s.reviews.rightPct == null ? '–' : s.reviews.rightPct + '%') + '</b><span>answers right</span></div></div>'
 
+    + (s.shares ? '<h2>Sharing, 30 days</h2><div class="tiles">'
+      + '<div class="tile"><b>' + n(s.shares.reviews + s.shares.days) + '</b><span>links shared (' + n(s.shares.reviews) + ' reviews · ' + n(s.shares.days) + ' days)</span></div>'
+      + '<div class="tile"><b>' + n(s.shares.opened) + '</b><span>of them opened by a friend</span></div>'
+      + '<div class="tile"><b>' + n(s.shares.opens) + '</b><span>times opened in all</span></div></div>' : '')
     + '<h2>Questions and guides made (AI)</h2><div class="tiles">'
     + '<div class="tile"><b>' + n(s.ai.quizzesSaved) + '</b><span>reviews made and saved (each is shared by everyone on that day)</span></div>'
     + '<div class="tile"><b>' + n(s.ai.quizRequestsToday) + '</b><span>review requests today, by ' + n(s.ai.quizPeopleToday) + ' people</span></div>'

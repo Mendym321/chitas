@@ -428,4 +428,18 @@ export const WRITTEN = {
     ['', [['כמו ששבת ה מיוד', 'as G–d ceased from']]],
   ],
 },
+
+'Likkutei Amarim 1|13|end': {
+  flow: 'bridges',
+  recap: 'Yesterday: the beinoni can\'t be someone half good and half bad, since even one small sin makes a person "wicked". Today: who a real tzaddik is, and the first of the two souls in every Jew.',
+  summary: 'A real tzaddik has no evil inclination left; having more good deeds than sins only wins the case in judgment. Every Jew has two souls. The first gives life to the body and is the source of his traits, bad and good.',
+  segs: [
+    ['', [['הוא שם המושאל', 'this is only the figurative'], ['ומקרי צדיק בדינו', 'and he is deemed'], ['אבל לענין אמיתת', 'But concerning the true'], ['צדיקים יצר טוב', 'that the righteous are motivated'], ['שאין לו יצר הרע', 'that is, void of'], ['אבל כל מי שלא הגיע', 'But whoever has not attained']], 'The real tzaddik'],
+    ['', [['עמד ושתלן', 'so He planted them']]],
+    ['So who is the beinoni? To answer, he first explains that every Jew has two souls.', [['דלכל איש ישראל', 'that in every Jew'], ['נפש אחת מצד הקליפה', 'There is one soul'], ['והיא המתלבשת', '[and] which is clothed'], ['וממנה באות כל המדות', 'From it stem all'], ['כעס וגאוה', 'These are: anger and pride'], ['ותאות התענוגים', 'the appetite for pleasures'], ['והוללות וליצנות', 'frivolity and scoffing']], 'Two souls'],
+    ['', [], 'Good traits too'],
+    ['', [['שיש בה גם כן טוב', 'which also contains good']]],
+    ['', [['וכל טיבו דעבדין', 'that all the good'], ['וכדאיתא בגמרא', 'So the Gemara comments'], ['שכל צדקה וחסד', 'that all the charity']]],
+  ],
+},
 };

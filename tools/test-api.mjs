@@ -177,9 +177,10 @@ check('a short link: an 8-letter code, the same for the same result', [mk.status
   (await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 2:4-2:19'] }, r: 3, n: 4, d: '2026-11-24' } }, null)).json.id === mk.json.id], [200, true, true]);
 const rd = await call({ shareId: mk.json.id }, null);
 check('…opened: what it is about (named by the server, not the phone), and the saved questions', [rd.status, rd.json.share?.r, rd.json.share?.t, rd.json.questions?.length], [200, 3, 'Bereishis 2:4–2:19', 4]);
+check('each time a friend opens it is counted (a number only)', store.get('share_links/' + mk.json.id)?.opens, 1);
 check('a short link that doesn\'t exist → 404; a bad one → 400', [(await call({ shareId: 'ZZZZZZZZ' }, null)).status, (await call({ shareId: 'x' }, null)).status], [404, 400]);
 check('a short link for a bad passage is refused', (await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['nope'] }, r: 1, n: 4, d: '2026-11-24' } }, null)).status, 400);
-check('nothing personal is kept with a short link', Object.keys([...store].find(([k]) => k.startsWith('share_links/'))[1]).sort(), ['createdAt', 'd', 'k', 'l', 'n', 'p', 'r', 's']);
+check('nothing personal is kept with a short link', Object.keys([...store].find(([k]) => k.startsWith('share_links/'))[1]).sort(), ['createdAt', 'd', 'k', 'l', 'n', 'opens', 'p', 'r', 's']);
 const named = await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 2:4-2:19'] }, r: 3, n: 4, d: '2026-11-24', nm: 'Mendy Cohen' } }, null);
 const odd = await call({ makeShare: { s: 'chumash', l: 'quick', p: { refs: ['Genesis 2:4-2:19'] }, r: 2, n: 4, d: '2026-11-24', nm: '<b>http://x.co</b>' } }, null);
 check('a first name, if shown: the first word only, letters only', [(await call({ shareId: named.json.id }, null)).json.share?.nm, (await call({ shareId: odd.json.id }, null)).json.share?.nm, named.json.id !== mk.json.id], ['Mendy', undefined, true]);
@@ -333,6 +334,7 @@ console.log('Admin stats API:');
   check('signed in, not an admin → 403, no numbers', [(await run('token-u7')).code, (await run('token-u7')).body?.accounts], [403, undefined]);
   const r = await run('token-admin');
   check('the admin gets counts', [r.code, r.body.active.today >= 1, r.body.accounts.signIns], [200, true, 1]);
+  check('…and the sharing numbers (counts only)', Object.keys(r.body.shares || {}), ['reviews', 'days', 'opened', 'opens']);
   check('…and nothing personal', ['Private Name', 'Somewhere', 'Bubby', 'u7'].filter(w => JSON.stringify(r.body).includes(w)), []);
 }
 

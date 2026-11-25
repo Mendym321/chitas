@@ -65,7 +65,7 @@ Use the same name in both stores, because people search for it. On the phone, un
 > Stop in the middle of a chapter, and next time it opens at the same line. Sign in, and your place follows you: say Tehillim on your phone in the morning and finish on your tablet at night, or start the Rambam on the computer and finish it on the bus.
 >
 > CHECK WHAT STAYED WITH YOU
-> When you've learned, take a quick Review: a few questions written from today's Chumash, Tanya or Rambam, each with the answer explained and the line it comes from. Or a deep dive, when you have more time.
+> When you've learned, take a quick Review: a few questions written from today's Chumash, Tanya or Rambam, each with the answer explained and the line it comes from. Or a deep dive, when you have more time. Then, if you like, send it to a friend: they get the same questions, free, with no sign-up.
 >
 > WHAT'S INSIDE
 > • Chumash: the day's aliyah, with Rashi
@@ -146,14 +146,15 @@ These must match the privacy page. If the app changes what it saves, update both
 
 | Data type | Collected | Linked to the user | Used for tracking | Purpose |
 |---|---|---|---|---|
-| Contact info → Name | Yes | Yes | No | App functionality |
+| Contact info → Name (from sign-in; and the first name on a shared Review or day link, if the person leaves "Show my first name" on) | Yes | Yes | No | App functionality |
 | Contact info → Email address | Yes | Yes | No | App functionality |
 | Identifiers → User ID | Yes | Yes | No | App functionality |
 | User content → Other user content (names and birthdays added in Personal Tehillim) | Yes | Yes | No | App functionality |
 | Usage data → Product interaction (which sections were marked, Review results, and where you stopped reading, so it opens there on your other devices) | Yes | Yes | No | App functionality |
 | User content → Customer support (what someone writes in "Send feedback" or "Report a mistake", with an email if they leave one) | Yes | No (saved without the account) | No | App functionality |
+| Diagnostics → Other diagnostic data (an error's message, where in the app, the app's version and the kind of phone, so crashes are fixed) | Yes | No (no account, name or address goes with it) | No | App functionality |
 | Location | No (the city is typed in by the user and saved as a setting; Apple doesn't count that as location data) | | | |
-| Everything else (health, financial, contacts, photos, browsing, search, diagnostics, purchases) | No | | | |
+| Everything else (health, financial, contacts, photos, browsing, search, purchases) | No | | | |
 
 "Tracking" here means following people across other companies' apps and websites. Chitas does none of this, so **no App Tracking Transparency prompt is needed**.
 
@@ -166,10 +167,11 @@ These must match the privacy page. If the app changes what it saves, update both
 
 | Data type | Collected | Shared | Optional? | Purpose |
 |---|---|---|---|---|
-| Personal info → Name | Yes | No | Optional (only with sign-in) | App functionality, Account management |
+| Personal info → Name (and a first name on a shared link, if chosen) | Yes | No | Optional (only with sign-in) | App functionality, Account management |
 | Personal info → Email address | Yes | No | Optional | Account management |
 | Personal info → User IDs | Yes | No | Optional | Account management |
 | App activity → App interactions | Yes | No | Optional | App functionality |
+| App info and performance → Crash logs / Diagnostics (an error's message, place, app version and kind of phone; nothing about the person) | Yes | No | Required | App functionality |
 | App activity → Other user-generated content (Personal Tehillim; what someone writes in Send feedback or Report a mistake) | Yes | No | Optional | App functionality |
 
 "Shared" means given to another company for its own use. Firebase, Vercel and Resend (which emails feedback to chitas.daily@gmail.com) only process data on Chitas's behalf, and Google says that doesn't count as sharing. Reminders are set on the phone itself and send nothing anywhere. The Review, the Tanya guide and the Rambam guide send only the day's text to Anthropic, never anything about the user, so that isn't user data either.
@@ -181,7 +183,7 @@ These must match the privacy page. If the app changes what it saves, update both
 **Export compliance / encryption (Apple).** "Does your app use encryption?" **Yes**, then "Does it qualify for any of the exemptions?" **Yes: it only uses standard encryption (HTTPS) built into the operating system.** No paperwork is needed. `app/README.md` (Part 2, one time in Xcode) adds `ITSAppUsesNonExemptEncryption = NO` to the app's settings, so Apple stops asking on every upload.
 
 **Sign-in for review (Apple: App Review Information).** "Sign-in required?" **No.** Notes for the reviewer:
-> Sign-in is optional. Tap "Start today" on the first screen to use the full app without an account. To test an account, use Sign in with Apple from Profile. Account deletion is in Profile → Delete account. Reminders (local notifications) are in Profile → Reminders. The app shows the daily Jewish learning schedule (Chumash, Tehillim, Tanya, Rambam) in Hebrew and English; texts come from Sefaria. The reading guides and Review questions are generated with AI from the day's text only; no user data is sent, and they are labelled in the app. Beyond the daily texts, the app uses native Sign in with Apple and Google, local notification reminders for each section, and haptics. It runs on iPhone and iPad.
+> Sign-in is optional. Tap "Start today" on the first screen to use the full app without an account. To test an account, use Sign in with Apple from Profile. Account deletion is in Profile → Delete account. Reminders (local notifications) are in Profile → Reminders. The app shows the daily Jewish learning schedule (Chumash, Tehillim, Tanya, Rambam) in Hebrew and English; texts come from Sefaria. The reading guides and Review questions are generated with AI from the day's text only; no user data is sent, and they are labelled in the app. Beyond the daily texts, the app uses native Sign in with Apple and Google, local notification reminders for each section, and haptics. It runs on iPhone and iPad. After a Review, or on finishing all four, the result can be shared as a link ("Share your result", "Share your day"); the link opens a web page where anyone can answer the same questions without an account.
 
 **Google: App access.** "All functionality is available without special access."
 
@@ -202,7 +204,7 @@ These must match the privacy page. If the app changes what it saves, update both
 3. ~~**Hayom Yom English**~~ Done: the app ships its own English translation.
 4. ~~**Fonts**~~ Decided: you have permission to ship them.
 5. **Free forever?** If you might charge later, it's easier to decide now: a paid app can't become free and back without hassle, but adding optional in-app purchases later is fine.
-6. **Guide runway**: written (and checked) so far: Rambam through 1 December, Tanya through 4 December, Chumash through 19 December. Past that the server's AI covers each day in the same style, so nothing breaks; the weekly batch (`docs/guides-batch.md`) keeps the written ones ahead.
+6. **Guide runway**: written (and checked) so far: Rambam through 8 December, Tanya through 5 December, Chumash through 19 December. Past that the server's AI covers each day in the same style, so nothing breaks; the weekly batch (`docs/guides-batch.md`) keeps the written ones ahead.
 
 ---
 
