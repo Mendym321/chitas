@@ -5595,7 +5595,7 @@ async function _loadChumashNative(sectionId, silent) {
 
     // Fetch Torah and Rashi in parallel. A day can have several refs joined
     // by "|" (Simchas Torah: end of Devarim + start of Bereishis).
-    const transKeyword = (CHUMASH_TRANSLATIONS.find(t => t.id === (localStorage.getItem('chitas_chumash_translation') || 'metsudah')) || CHUMASH_TRANSLATIONS[0]).keyword;
+    const transKeyword = CHUMASH_TRANSLATIONS.find(t => t.id === _chumashTransId()).keyword;
     const refs = aliyahRef.split('|');
     const joinChunks = parts => ({ chunks: parts.flatMap(p => p.chunks), versionTitle: parts[0]?.versionTitle || '' });
     const [torah, rashi] = await Promise.all([
@@ -6931,7 +6931,7 @@ function _buildSettingsSectionOpts(sectionId) {
 
   if (sectionId === 'chumash') {
     const lang  = localStorage.getItem('chitas_lang_chumash') || 'both';
-    const curId = localStorage.getItem('chitas_chumash_translation') || 'metsudah';
+    const curId = _chumashTransId();
     html += _rsLangToggle('chumash', lang);
     html += _rsDivider();
     // Inline translation picker — radio-style rows, no separate modal
@@ -7885,7 +7885,7 @@ function openCredits() {
   m.innerHTML = '<div class="dp-sheet" role="dialog" aria-label="Texts and credits" style="max-height:86vh;overflow-y:auto;"><div class="dp-grab"></div>'
     + '<p class="del-t">Texts and credits</p>'
     + '<p class="cr-h">Texts, from Sefaria (sefaria.org)</p>'
-    + row('Chumash', 'Hebrew text, with the translation you choose: the Metsudah Chumash (Metsudah Publications, CC BY), Rabbi Shraga Silverstein\'s Rashi Chumash (CC BY), The Koren Jerusalem Bible (CC BY-NC) or The Kehot Chumash (© Chabad House Publications)')
+    + row('Chumash', 'Hebrew text, with the translation you choose: the Metsudah Chumash (Metsudah Publications, CC BY), Rabbi Shraga Silverstein\'s Rashi Chumash (CC BY) or The Koren Jerusalem Bible (CC BY-NC)')
     + row('Rashi', 'The Metsudah Rashi Chumash, Metsudah Publications (CC BY)')
     + row('Tehillim', 'Hebrew text, with Rabbi Shraga Silverstein\'s The Rashi Ketuvim (CC BY) or The Koren Jerusalem Bible (CC BY-NC)')
     + row('Tanya', 'Hebrew text and English translation, Kehot Publication Society (CC BY-NC)')
@@ -9535,19 +9535,23 @@ const CHUMASH_TRANSLATIONS = [
   { id: 'metsudah',  label: 'Metsudah',         sub: 'Metsudah Publications, 2009',               keyword: 'Metsudah Chumash'         },
   { id: 'silverstein', label: 'Rabbi Silverstein', sub: 'The Torah — Rabbi Shraga Silverstein',   keyword: 'Silverstein'               },
   { id: 'koren',     label: 'Koren',             sub: 'The Koren Jerusalem Bible',                 keyword: 'Koren Jerusalem'           },
-  { id: 'kehot',     label: 'Kehot',             sub: 'Kehot Chumash, Chabad House Publications', keyword: 'Kehot'                     },
 ];
+// The saved choice, or Metsudah if it isn't one we offer (the Kehot Chumash was
+// taken out in Nov 2026: it's under copyright, so a choice of it reads as Metsudah)
+function _chumashTransId() {
+  const id = localStorage.getItem('chitas_chumash_translation');
+  return CHUMASH_TRANSLATIONS.some(t => t.id === id) ? id : 'metsudah';
+}
 
 function _getChumashTransLabel() {
-  const id = localStorage.getItem('chitas_chumash_translation') || 'metsudah';
-  return CHUMASH_TRANSLATIONS.find(t => t.id === id)?.label || 'Metsudah';
+  return CHUMASH_TRANSLATIONS.find(t => t.id === _chumashTransId()).label;
 }
 
 function _openChumashTranslationPicker() {
   const existing = document.getElementById('chumash-trans-modal');
   if (existing) existing.remove();
 
-  const current = localStorage.getItem('chitas_chumash_translation') || 'metsudah';
+  const current = _chumashTransId();
   const modal = document.createElement('div');
   modal.id = 'chumash-trans-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
