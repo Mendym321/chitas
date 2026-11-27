@@ -9,7 +9,7 @@
       "id": "today",
       "color": "cream",
       "head": "All of Chitas and Rambam,\nevery day",
-      "beats": 3
+      "beats": 4
     },
     {
       "id": "place",
@@ -116,7 +116,7 @@
       "id": "end",
       "color": "ink",
       "head": "",
-      "beats": 4
+      "beats": 3
     }
   ]
 }

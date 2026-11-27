@@ -109,8 +109,8 @@ const SCENES = {
   today: {
     setup: async p => { await wait(p, 4000); },                    // the tiles name the day's pieces once their texts are in
     act: async (p, f) => {                                          // marking, then the list drawn again, as the tick's own flow does
-      if (f === 14) await p.evaluate(() => { markDone('tanya'); renderSectionsForOffset(_viewedISO()); });
-      if (f === 44) await p.evaluate(() => { markDone('rambam'); renderSectionsForOffset(_viewedISO()); });
+      if (f === 10) await p.evaluate(() => { markDone('tanya'); renderSectionsForOffset(_viewedISO()); });
+      if (f === 26) await p.evaluate(() => { markDone('rambam'); renderSectionsForOffset(_viewedISO()); });
     },
   },
   // Keeping your place, all real: reading Chumash with Rashi; the text closed (back to Today, in
