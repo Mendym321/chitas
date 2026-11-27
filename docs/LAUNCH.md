@@ -17,7 +17,7 @@ Tick the boxes as you go (on GitHub you can edit this file and change `[ ]` to `
 
 - [x] **0.3 Developer name: Menachem Marcus.** Decided: individual accounts on both stores, under your own legal name (it must match your ID and payment details). The app can move to a business account later; both stores allow a transfer.
 
-- [ ] **0.4 Check the contact email works:** send a test to **chitas.daily@gmail.com** and make sure you can read it. *Why:* it's on the store pages, the privacy page and the support page, and Apple may write to it.
+- [x] **0.4 Check the contact email works:** send a test to **chitas.daily@gmail.com** and make sure you can read it. *Why:* it's on the store pages, the privacy page and the support page, and Apple may write to it.
 
 ---
 
@@ -40,7 +40,7 @@ Tick the boxes as you go (on GitHub you can edit this file and change `[ ]` to `
 
 Follow `app/README.md`, **Part 1**:
 
-- [ ] **2.1** Turn on **Apple** sign-in in Firebase.
+- [x] **2.1** Turn on **Apple** sign-in in Firebase.
 - [x] **2.2** Add the **iOS app** (bundle ID `app.chitas.daily`) and download **GoogleService-Info.plist**.
 - [ ] **2.3** Add the **Android app** (package `app.chitas.daily`) and download **google-services.json**.
 
