@@ -214,7 +214,7 @@ Four 28-second videos, made from the real app, with original music composed for 
 
 | File | For | Size |
 |---|---|---|
-| `chitas-app-preview.mp4` | App Store, "App Preview" in the iPhone 6.9-inch slot | 886 × 1920, 30 fps |
+| `chitas-app-preview.mp4` | App Store, "App Preview" in the iPhone (medium display) box | 886 × 1920, 30 fps |
 | `chitas-promo.mp4` | Google Play's promo video (a YouTube link) | 1920 × 1080, 30 fps |
 | `chitas-coming-soon-vertical.mp4` | Sharing now, before the App Store: WhatsApp status, Instagram stories, phones. Ends on "Coming soon to the App Store" and chitas.vercel.app | 886 × 1920 |
 | `chitas-coming-soon-wide.mp4` | The same, for YouTube, email and websites | 1920 × 1080 |
@@ -236,7 +236,7 @@ The store versions end on the name only: Apple and Google don't allow a web addr
 
 Keeping your place gets the most time, so it can be told clearly, and reminders follow it: both are reasons to have the app rather than a website. The three guides go by quickly under one headline. Everything shows one day, 11 November 2026, fixed in `tools/store/video/capture.mjs` (`DAY`), as in the screenshots, except Tanya, shown on 24 November (`shift` on its scene, `SHIFT` in `shoot.mjs`): the server prepares Tanya's guide only for the last week, and that day's guide has the titles. A later remake moves that day on. The reminder is shown on the phone's lock screen. Apple's previews must show the app itself, so a reviewer could object to the lock screen in the App Store preview; if that happens, that one scene can show the notification over the app instead, or the app's Reminders screen (Google, YouTube and the coming-soon videos have no such rule). On the App Store the preview **plays silently** on its own, so every scene carries a headline, already there on the first frame; the music is for people who tap the sound on.
 
-**App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone 6.9-inch media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:00**, the Today screen under its headline (there from the first frame), so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
+**App Store:** in the version's page, drag `chitas-app-preview.mp4` onto the iPhone "medium display" media area, before the screenshots. Apple then asks for a **poster frame** (the still shown before it plays): pick **00:00**, the Today screen under its headline (there from the first frame), so it looks like screenshot 1. iPad previews are optional; the iPad screenshots are enough.
 
 **Google Play:** upload `chitas-promo.mp4` to YouTube (Visibility: **Unlisted**; and in YouTube Studio → Monetization, ads **off**, as Google requires), then paste its link into Play Console → Store listing → Video.
 
