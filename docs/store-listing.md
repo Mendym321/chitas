@@ -51,7 +51,7 @@ Use the same name in both stores, because people search for it. On the phone, un
 > Chitas, reimagined. A beautiful, easy way to learn Chumash, Tehillim, Tanya and Rambam every day, with guides, quizzes and your progress in one place.
 
 **Keywords** (Apple only, 100; commas, no spaces after them; words already in the name and subtitle don't need repeating)
-> chabad,lubavitch,torah,rashi,hayom yom,rebbe,jewish,parsha,psalms,sefer hamitzvos,limud,yomi
+> chabad,lubavitch,torah,rashi,hayom,yom,psalms,jewish,parsha,chassidus,maimonides,tehilim,rebbe,quiz
 
 ---
 
@@ -60,12 +60,6 @@ Use the same name in both stores, because people search for it. On the phone, un
 > Chitas, reimagined.
 >
 > A beautiful, easy way to learn Chumash, Tehillim, Tanya and Rambam every day. Open the app and today's learning is waiting, in Hebrew and English.
->
-> Personal Tehillim
-> Your own chapter of Tehillim, and your family's, worked out from each person's Hebrew birthday, with the Rebbe's chapter if you like. Add the people you say Tehillim for, and their chapters are there every day.
->
-> Helpful reminders
-> A gentle reminder for each part, at the time you usually learn it. It tells you what's waiting, and one tap opens it.
 >
 > Helpful guides
 > Plain-English guides walk you through the Tanya, and short notes explain the harder halachos in the Rambam. There when you want them, out of the way when you don't.
@@ -78,6 +72,12 @@ Use the same name in both stores, because people search for it. On the phone, un
 >
 > Your place, saved
 > Stop mid-chapter and it opens on the same line next time, on your phone, tablet or computer.
+>
+> Personal Tehillim
+> Your own chapter of Tehillim, and your family's, worked out from each person's Hebrew birthday, with the Rebbe's chapter if you like. Add the people you say Tehillim for, and their chapters are there every day.
+>
+> Helpful reminders
+> A gentle reminder for each part, at the time you usually learn it. It tells you what's waiting, and one tap opens it.
 >
 > Simple from the first tap
 > No setup and no account needed. Light and dark, with comfortable reading fonts.
