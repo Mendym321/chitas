@@ -48,7 +48,7 @@ Use the same name in both stores, because people search for it. On the phone, un
 > Daily Chumash with Rashi, Tehillim, Tanya and Rambam, in Hebrew and English.
 
 **Promotional text** (Apple only, 170; can be changed any time without a new review)
-> Today's Chumash, Tehillim, Tanya and Rambam, ready when you open it, in Hebrew and English. Stop anywhere, and pick up right there, even on your other devices.
+> Chitas, reimagined. A beautiful, easy way to learn Chumash, Tehillim, Tanya and Rambam every day, with guides, quizzes and your progress in one place.
 
 **Keywords** (Apple only, 100; commas, no spaces after them; words already in the name and subtitle don't need repeating)
 > chabad,lubavitch,torah,rashi,hayom yom,rebbe,jewish,parsha,psalms,sefer hamitzvos,limud,yomi
@@ -57,41 +57,36 @@ Use the same name in both stores, because people search for it. On the phone, un
 
 ## 2. Description (Apple 4000, Google 4000)
 
-> Chitas is the daily Chumash, Tehillim, Tanya and Rambam, ready the moment you open it.
+> Chitas, reimagined.
 >
-> No working out where today's portion starts and ends, no switching between books and websites. Today's four are waiting, each opened to the right place for the day, in Hebrew and English side by side. Learn them in any order, mark each part as you finish it, and watch the day's four rings close.
+> A beautiful, easy way to learn Chumash, Tehillim, Tanya and Rambam every day. Open the app and today's learning is waiting, in Hebrew and English.
 >
-> PICK UP RIGHT WHERE YOU STOPPED
-> Stop in the middle of a chapter, and next time it opens at the same line. Sign in, and your place follows you: say Tehillim on your phone in the morning and finish on your tablet at night, or start the Rambam on the computer and finish it on the bus.
+> Personal Tehillim
+> Your own chapter of Tehillim, and your family's, worked out from each person's Hebrew birthday, with the Rebbe's chapter if you like. Add the people you say Tehillim for, and their chapters are there every day.
 >
-> CHECK WHAT STAYED WITH YOU
-> When you've learned, take a quick Review: a few questions written from today's Chumash, Tanya or Rambam, each with the answer explained and the line it comes from. Or a deep dive, when you have more time. Then, if you like, send it to a friend: they get the same questions, free, with no sign-up.
+> Helpful reminders
+> A gentle reminder for each part, at the time you usually learn it. It tells you what's waiting, and one tap opens it.
 >
-> WHAT'S INSIDE
-> • Chumash: the day's aliyah, with Rashi
-> • Tehillim: the daily portion by the monthly cycle, laid out like a printed Tehillim, with Elul's extra chapters in their season
-> • Personal Tehillim: your own chapter and your family's, worked out from each person's Hebrew birthday, and the Rebbe's chapter if you like
-> • Tanya: the day's portion in the Vilna font, with an optional plain-English guide that walks you through the argument
-> • Rambam: three chapters, one chapter, or Sefer HaMitzvos, the Hebrew and English matched paragraph by paragraph, with a line on each chapter and plain-words notes on the halachos that are hard to follow
-> • Hayom Yom: the original, with a clear English translation
-> • In its season: Sefiras HaOmer, with the day's count
+> Helpful guides
+> Plain-English guides walk you through the Tanya, and short notes explain the harder halachos in the Rambam. There when you want them, out of the way when you don't.
 >
-> MORE LEARNING (BETA)
-> Add Daf Yomi, Nach Yomi, Halacha Yomis or the week's Likkutei Torah, if you learn them too.
+> Quizzes
+> A few quick questions after you learn, each with the answer explained. See what stayed with you, and send it to a friend to try.
 >
-> SEE YOUR LEARNING ADD UP
-> Your days in a row, the month on a calendar, and everything you've learned: pesukim of Chumash, chapters of Tehillim, days of Tanya and halachos of Rambam. Milestones mark a finished parsha, all of Tehillim, your best month. It counts what you did, never what you missed, and Shabbos and Yom Tov never break your run.
+> Track your learning
+> Your streak, a calendar of your month, and everything you've learned adding up. Shabbos and Yom Tov never break a streak.
 >
-> REMINDERS
-> A gentle reminder for each part, at the time you usually learn it. It says what's waiting, and a tap opens it.
+> Your place, saved
+> Stop mid-chapter and it opens on the same line next time, on your phone, tablet or computer.
 >
-> ANY DAY, ANY DEVICE
-> Read ahead or go back to any day. Missed one? Mark it within a week. Sign in with Apple or Google, and everything you've learned is on your phone, tablet and computer.
+> Simple from the first tap
+> No setup and no account needed. Light and dark, with comfortable reading fonts.
 >
-> MADE TO BE QUIET
-> No ads. No tracking. No leaderboards. Use it without an account if you prefer. Light and dark, with comfortable reading fonts.
+> Also inside: Chumash with Rashi, Hayom Yom in Hebrew and English, Rambam as three chapters, one chapter or Sefer HaMitzvos, Sefiras HaOmer in its season, and Daf Yomi, Nach Yomi and more (beta).
 >
-> Texts come from Sefaria and the calendar from Hebcal. The guides and Review questions are written with the help of AI, from the day's text, and marked as such; the texts themselves are never changed. A question, or a mistake in a text? Write to chitas.daily@gmail.com, or tap "Report a mistake" in any reader.
+> No ads.
+>
+> Texts from Sefaria. The guides and quizzes are written with AI from the day's text, and labelled in the app.
 
 What's deliberately not promised: the short note on the Chumash ("Today in the parsha") is written ahead in batches, so it appears on most days but not all. The Rambam's line and notes are there every day (written ahead where possible, otherwise made by the AI once per chapter and saved), so the description can promise them.
 
