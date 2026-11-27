@@ -88,7 +88,7 @@ Follow `app/README.md`, **Part 4**, with `docs/store-listing.md` open beside it.
 
 - [ ] **5.1 Create the app** in App Store Connect (https://appstoreconnect.apple.com): New App, name **Chitas: Daily Learning**, bundle ID `app.chitas.daily`, SKU `chitas-daily`.
 - [ ] **5.2 Fill in the page** from `docs/store-listing.md`, section by section: subtitle, description, keywords, links, category (Education), price (Free), age rating (4+), **App Privacy** (section 5), copyright (© 2026 Menachem Marcus).
-- [ ] **5.3 Screenshots and video:** drag in `docs/store/apple/` (iPhone 6.9-inch) and `docs/store/ipad/` (iPad 13-inch), in number order; then the preview video `docs/store/video/chitas-app-preview.mp4`, with the poster frame at 00:00.
+- [ ] **5.3 Screenshots and video:** drag in `docs/store/iphone-6.3/` (the "iPhone with Dynamic Island, medium display" box: 1206 × 2622) and `docs/store/ipad/` (iPad 13-inch), in number order; then the preview video `docs/store/video/chitas-app-preview.mp4`, with the poster frame at 00:00.
 - [ ] **5.4 Upload the build** from Xcode (Any iOS Device → Product → Archive → Distribute → App Store Connect → Upload). After 10 to 30 minutes it appears under **TestFlight**: install it with the TestFlight app and try it once more as it will really be.
 - [ ] **5.5 Review notes:** paste the notes from `docs/store-listing.md` section 6. They already include the sentence for guideline 4.2 (apps that mostly show a website) about Sign in with Apple and Google, reminders and haptics, which tells the reviewer it's a real app, not just a website in a frame, and one saying the guides are made with AI from the text only.
 - [ ] **5.6 Submit for review.** Apple usually answers in 1 to 3 days.
