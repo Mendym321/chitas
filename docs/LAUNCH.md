@@ -41,7 +41,7 @@ Tick the boxes as you go (on GitHub you can edit this file and change `[ ]` to `
 Follow `app/README.md`, **Part 1**:
 
 - [ ] **2.1** Turn on **Apple** sign-in in Firebase.
-- [ ] **2.2** Add the **iOS app** (bundle ID `app.chitas.daily`) and download **GoogleService-Info.plist**.
+- [x] **2.2** Add the **iOS app** (bundle ID `app.chitas.daily`) and download **GoogleService-Info.plist**.
 - [ ] **2.3** Add the **Android app** (package `app.chitas.daily`) and download **google-services.json**.
 
 Keep both files somewhere you'll find them (your Desktop). *Why:* they tell the phone apps which Firebase project (accounts, saved progress) they belong to.
@@ -52,10 +52,10 @@ Keep both files somewhere you'll find them (your Desktop). *Why:* they tell the 
 
 ### iPhone (needs the Mac): `app/README.md`, Part 2
 
-- [ ] **3.1** Install **Node.js** and **Xcode** on the Mac.
-- [ ] **3.2** Download the project, run the three commands, and copy in `GoogleService-Info.plist` **before the first build** (without it the app closes as soon as it opens).
-- [ ] **3.3** In Xcode, the one-time settings: signing team, **Sign in with Apple**, the URL type, the **app icon**, the **privacy file**, the **encryption answer**, the version (1.0, build 1).
-- [ ] **3.4** Plug in the iPhone and press ▶ (no cable? Run it on an iPhone simulator first, then try it on the phone through TestFlight, step 5.4). Then check, on the phone:
+- [x] **3.1** Install **Node.js** and **Xcode** on the Mac.
+- [x] **3.2** Download the project, run the three commands, and copy in `GoogleService-Info.plist` **before the first build** (without it the app closes as soon as it opens).
+- [x] **3.3** In Xcode, the one-time settings: signing team, **Sign in with Apple**, the URL type, the **app icon**, the **privacy file**, the **encryption answer**, the version (1.0, build 1).
+- [x] **3.4** Plug in the iPhone and press ▶ (no cable? Run it on an iPhone simulator first, then try it on the phone through TestFlight, step 5.4). Then check, on the phone:
   - Sign in with Apple, and Continue with Google
   - A reminder (set one a couple of minutes ahead, close the app, wait)
   - Marking a section learned (a light tap), all four (the "success" buzz)
